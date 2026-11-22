@@ -337,3 +337,337 @@ lake cache (`DRISHTI_LAKE_CACHE` unset or a new folder) and a scratch Maven repo
 
 The clone under `~/.cache/drishti-lanes/fable-g4/` is deleted. No repository other than this plan branch was written; no Maven
 repository, no `~/.m2` entry, no stack and no lake was touched. `main` and the tags were not touched.
+
+---
+
+# i7b gate 4 review, part 2 (final): the late pieces and the full runs
+
+Run on 2026-11-22, 03:15 to 04:45, in **fresh clones from `origin`** of all five repositories under `~/.cache/drishti-lanes/fable-g4p2/`
+(deleted afterwards), a scratch Maven repository there (never `~/.m2`), a fresh Python 3.13 environment with the pinned Lake wheel, an empty
+lake cache, every heavy command through `heavy.sh`. No sub-agent was used; every claim below was opened or run by me. No product code was
+changed; nothing was pushed but this file.
+
+| Repository | Candidate | Commit reviewed and run | Ancestry checked |
+|---|---|---|---|
+| `drishti` | `wip/g4-rehearsal-rx` | `10753f4dbba3905d146c6d777348ee9602058f93` (= `origin`'s head; the 32 `g4/*` lane branches are all ancestors of it) | pins: Tools `1.1.0`, Rachana `1.0.0`, Lake `0.9.1`, Elements `3.3.1`; no `-SNAPSHOT`, no `.dev0` |
+| `drishti-rachana` | 1.0.0 = `develop` | `66b3c9c7bf7c92c278da4e1ec6420ad021c83820` | holds `cc577818`, `7b16e0a0`; 8 commits after `v0.12.0` |
+| `drishti-lake` | 0.9.1 = `develop` | `336524bf898c8cf3c66a2ee41c9dd8b5593ec7dc` | holds `bcff31d`, `d94023b`, `eafbd4e`, `94dd281`, `78a8422` (part 1's F2); 13 commits after `v0.9.0` |
+| `drishti-elements` | 3.3.1 = `develop` | `20661f098a10d664d592dd8384442157436aba36` | 2 commits after `v3.3.0`; no file of the tree vendored in Drishti (`static/vendor/drishti-elements/3.3.1/`) differs from it |
+| `drishti-tools` | tag `v1.1.0` | `4d3567a` | the tag |
+
+The Lake wheel built here from `336524b` has the SHA-256 of `lib/lake-wheel.pin` (`81241d9c…f60a16`): the build is reproducible and
+`lakewheel.py` says ok.
+
+## Verdict
+
+**NOT YET GOLDEN.** Much of part 1 is closed well: F1, F2, F3, F5, F6, F10, F11 and F13 are fixed at their cause with tests that hold
+them, the four VaR and ES goldens pass on data files that are byte for byte `main`'s, and the headline is proven end to end: on a demo lake
+built here by the pinned loader, the server answers **VaR 167,372,692 and ES 210,131,972** for the bank on 2026-11-06 (desk rates
+74,633,680 / 79,246,576). But the final head was never run whole, and running it whole, with four probes, found six blockers. Four are
+about a number being wrong with no word:
+
+- **F20 (Lake 0.9.1):** compaction can still change what readers see. When the load committed last has an earlier run id than an
+  older load, Delta and Iceberg readers answer the **superseded** copies after `lake maintain --compact`. Shown by a run.
+- **F21 (Lake 0.9.1):** on Delta, a promoted column that first arrives in a later load of an existing table is **dropped silently**
+  (Iceberg adds it). It is why `VarInputsApiTest` is red: a matured position's `MATURITY_DATE` is lost and it enters VaR (736 for 636).
+- **F22 (Drishti):** a retired VaR setting in the site's own `config/engines/var.yaml` (where `main` keeps `scenario-window` and
+  `confidence`) is neither read nor refused: the server starts and VaR runs on the defaults. Shown by a run.
+- **F25 (Rachana 1.0.0):** measure functions are still parsed by the level 1.0 parser, without an end check: in a BI model with
+  `functions:`, a measure `A if C else B` becomes `A`. One conformance case is still `verified: false`.
+
+and two are about the proof:
+
+- **F23 (Drishti):** the head is red: 121 of 5,302 Java tests fail (117 in `drishti-server`: the test fixtures still write the `was:` key
+  that F8 e removed) and 3 console tests. The last four merges were proved by targeted runs only.
+- **F24 (Drishti):** `./mvnw clean verify` in a fresh clone stops at module 27 of 52: a Delta plugin test needs the exec jar that the
+  reactor builds 20 modules later.
+
+None needs new design. F22 to F25 are small; F20 and F21 each need one decision in Lake.
+
+## 1. What was run
+
+| Suite | Command | Result |
+|---|---|---|
+| Tools `v1.1.0` | `./mvnw clean install` (scratch repository) | **green**: 126 tests, 0 failed, 1 skipped (`LibreOfficeOpensTest`: no LibreOffice here) |
+| Rachana `66b3c9c7` | `./mvnw clean install` (the verify with its lanes) | **green**: 1,119 Java tests, 0 failed, 0 skipped; Node 43; Python 98; conformance JVM = Node at 1.2: 2,589 cases, 2,426 pass, 163 unsupported (the 148 protocol cases, which the protocol lane runs, and 15 others), 0 failing; protocol lane: reference 57 of 148, Python 57 of 148, **live 148 of 148**; browser lane green |
+| Rachana, the unverified case | `protocol_check.py --live --only 'protocol/write#*'` | 21 of 21; `a-reused-change-id-with-other-content-is-refused` **passes** (409 `rdp.write.conflict`, `reused: true`, the audit `write-submitted`, `write-reused`, `write-sent`) |
+| Lake `336524b` | `./mvnw clean install -DskipTests`, then `tools/ci/check.py` | **green**: 447 Java tests, 0 failed, 1 skipped (`CodecsTest`); delta-rs interop 3 + 3 + 2, none skipped; Python 148 passed; parity kit **642 results twice, stable**; coverage and additive gates; equal to the reference. (The kit failed in my first try only because it runs Maven offline and a new Maven repository lacks the dependency plugin: F38.) |
+| Elements `20661f0` | `tools/run_tests.py` | **green, nothing skipped**: Node 407 + 37 budget; pytest 200 + 4 budget |
+| Drishti `10753f4db`, as asked | `./mvnw clean verify` in the fresh clone | **RED, stops at module 27 of 52**: `DeltaAfterMaintenanceTest` (F24) |
+| Drishti, with the jar built first | the Maven command of `drishti.py build all`, then `./mvnw clean verify -fae` | **RED**: 46 modules run, `drishti-server` fails (118 of 4,503 tests), five modules skipped behind it |
+| Drishti, the complete run | `./mvnw clean verify -Dmaven.test.failure.ignore=true` (52 modules, 42:43 min) | **5,302 tests, 121 failed (44 failures, 77 errors) in 25 classes, 10 skipped**: `drishti-server` 117 in 22 classes, `banking-service` 3, `drishti-engine` 1 (F23). Green inside it: `VarGoldenMatrixTest` (with the headline), `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` (6), `PackagedVarGoldenTest` (2), `VarApiTest` (15), `VarFormatEqualityTest`, `ExposureFormatEqualityTest`, `VarShardClusterTest` (8), `ArchitectureRulesTest` (36), `ToolsAdoptionGuardTest` (4), `ModuleHostServerTest` (4), `ModuleSettingsTest` (5), `FormApiTest` (10), `KafkaTradeEditTest`, `SourceShapeTest` (12), `OfficialSinkTest` (5), `IcebergMovedConnectorFileTest`, `StartOnFewCoresTest` |
+| Drishti Python tools | `pytest tools -n 4 --dist loadfile --ignore=tools/browser` | **green**: 1,445 passed, 22 skipped, 148 subtests (1,467 collected) |
+| Drishti console | `pytest drishti-console/tests -n 4 --dist loadfile -m "not browser"` (the Node tests are inside it) | **RED**: 3,044 passed, **3 failed**, 94 skipped (F23) |
+| Browser smoke, Chromium | page walk, page widths, top-bar widths, render parity, live grid, embed elements, 4 workers | 427 passed, **1 failed** (`test_live_grid_browser`: the tray read before it updated; 15 of 15 alone: F33) |
+| Browser smoke, WebKit | page walk and page widths, 4 workers | 116 passed, **7 failed**, one cause (F33); page widths alone: 115 of 115 |
+| Demo lake and the headline | `lake demo --engine java --as-of 2026-11-06` (102 tables, 3.7 GB, 4 minutes), `start server --demo`, `GET /api/v1/risk/var/scope` | **BANK 167,372,692 / 210,131,972; DESK-RATES 74,633,680 / 79,246,576** (250 scenarios, 99% and 97.5%): equal to `container_smoke.json` |
+
+Two failures did not repeat and are counted as flaky, not as red: `ReactiveApiTest.anEventReachesTheTriggersOnce` (failed in the second
+run, passed in the complete one) and `AbandonedReadsTest` (the reverse; 33 reads against at most 27). `VarInputsApiTest` was run again
+alone on a quiet machine: the same two failures, so it is not load (F21).
+
+## 2. The checks asked for
+
+| | Check | Result |
+|---|---|---|
+| a | `ModuleSettingsTest.theModulesKeyIsTheOnlyOneRead` sets an old key and expects it ignored | **Right as a unit**: `ModuleSettingsSchema.resolve` never reads an old key; the refusal is the post-processor's, held by `aSiteThatSetsAnOldNameStopsTheStartAndNamesTheNewKey` and `ModuleSettingsSiteSetsTest`. **By a run:** `start server --server-arg=--drishti.var.scenario-window=400` exits 1 with "the server cannot start: settings names that were retired are still set; rename each one: `drishti.var.scenario-window` (set in commandLineArgs) is retired: use `drishti.module.banking.var.window`". **The same key in `config/engines/var.yaml` starts the server: F22.** |
+| b | `LakeFileWritesTest` and `${lake.data.dir:./data}` | **Still there**: `lake/drishti-lake-host/src/test/java/com/ash/drishti/lakehost/LakeFileWritesTest.java:84` (`root: ${lake.data.dir:./data}/delta/risklake`). Only the prefix was changed. F31. |
+| c | The connector `where` push-down "restored" | **It does not push down, here or on `main`.** `RowPredicate.pushdown()` has one reader in main code, `SourceShape.java:524`, which prints it for Health. A shaped connector answers `scan` with nothing (`ConnectorInstance.java:277`), reads every row of the kind and then tests it (`ShapedColumns.java:67-84`). What level 1.2 broke and the lane restored is the **list** (and the system a `where` fixes); `SourceShapeTest` holds that. F27. |
+| d | The four goldens bit-identical and the headline asserted | **Yes.** The six golden data files have no differing line against `main`; the four tests pass on them in the complete run. `VarGoldenMatrixTest.headlineFigures` (`:113-119`) asserts 167,372,692 and 210,131,972 in three hierarchies on the committed set, and the API run gives the same on the demo lake. |
+| e | F1 by a run | **Yes**, in the complete run: `ModuleHostServerTest.aModuleStoppedOrStartedAfterStartIsSeenByTheServersScreensAtOnce` previews a Sutra through `/api/v1/studio/preview`, unloads the module (leak check clean), gets 422 "the function 'greeter_greet' is off: its module 'greeter' is not running on this server", loads it again and previews again. The test is the real path, not bent. |
+| f | Conflict markers, temp folders | No conflict marker in any tracked file (the guard `test_no_conflict_markers` passed). After the Java runs the clone is clean (`git status` empty; only `data/tmp/maven`, Maven's own). **After the Python, console and browser suites 19 folders stay in `/tmp`** (`tmp*` 15, `drishti-data-*` 2, `drishti-console-tests-*` 2; 2.3 GB with pytest's own): F34. I removed them. |
+
+## 3. Part 1's findings, re-read at their lines
+
+| # | State | Evidence at `10753f4db` |
+|---|---|---|
+| F1 blocker | **CLOSED** | `compute/drishti-rachana/.../LiveCompiler.java`: the one holder (`get()` is the current instance's compiler; `follow` drops what was built on an older one). No `ElCompiler` bean; `RowPredicate.java:50` and `DocPath` compile through it; the only `new ElCompiler(` left in main code are two benchmarks. Test: check e. |
+| F2 blocker | **CLOSED** | the pin is Lake 0.9.1 = `336524b`, which holds `d94023b` and the maintain work; jars and wheel from one commit (`lib/lake-wheel.pin`); `VarApiTest` 15 of 15 in the complete run. |
+| F3 | **CLOSED** | `live/DrishtiLiveTables.java:98-109` (a `q-` name without a source is `expired`, never a kind); `release` calls Rachana's `LiveTables.undeclare`; `FormApiTest.aSearchsTableThatLeftTheCapAnswersExpiredAndRunningTheSearchAgainOpensIt` passes. |
+| F4 | **PARKED** by the owner | named in `G4_REHEARSAL.md:894` ("parked to the combined i8 by name"). It is named **only there**: no i8 list on the plan branch holds it (F39). |
+| F5 | **CLOSED** | `EditService.submit` compares kind, record and items (`409 DRS-9303`, audited `edit-id-reused`); on the Data Protocol `ChangeSink.priorDigest` (`409 rdp.write.conflict`, `reused: true`); `KafkaTradeEditTest` passes. |
+| F6 | **CLOSED** | `ArchitectureRulesTest.drishtiImportsOnlyLakesPublicPackages` (`:188-193`) has no exception list; a non-public Lake package is named by two **test** classes only (`DeltaDeletionVectorTest`, `ExternalFixtures`). Rows go through the loader (`lakehost.LakeRowsLoad`). |
+| F7 | **CLOSED as I recommended; OPEN as an owner question** | `tools/lake/build.py:964`: `--engine auto|deltalake|java`. The owner had said to keep four engines: section 6. |
+| F8 | **a to k CLOSED in main code; not in the tests; the sweep is not empty** | a: `render/1.2.0`, `web/embed/`, `drishti_geomap.js` are gone; b: `RetiredNames`; c: `was:` is `retired:` and refused (but F22); d to k as the log says. Left behind: the fixtures of e and the test of f (F23); l is not done; nine more leftovers (F28). The decision was "all leftovers removed". |
+| F9 | **CLOSED (T3 to T10); T11 deferred by the owner** | guards `noMessageDigestOutsideTools`, `httpClientsStartInDrishtiTools`, `zipWritingOnlyWhereItIsToday`, `ToolsAdoptionGuardTest` (4) pass. The two Python workbook writers stay by the owner's word; `noJavaCodeRunsAPythonWorkbookWriter` holds that no server path runs them. |
+| F10 | **CLOSED** | `tools/drillkit/lake_cache.py:69` (`loader_key`: the pinned version, the wheel pin and digest, the `lake-*` jars' CRCs); its test passes. |
+| F11 | **CLOSED** | `lib/lake-wheel.pin` is the one place; `requirements.txt` says `drishti-lake==0.9.1`; the quickstart's three commands worked here as written. |
+| F12 | **PARTLY** | the listed lines are fixed. Still open: every `github.com/drishti-platform/<product>` link (89 places) is dead: only the index repository exists in the organisation, the products are still `ajsinha/*`. More in F30. |
+| F13 | **CLOSED** | the assertion is in the normal suite; the API run proves the demo lake. |
+| F14 to F19 nice | **OPEN**, unchanged | `ComputeEngine` union; `DrishtiChangeSink.java:155` (`REFUSED` with the exception's text); `MappedIdMap` twice; `DrishtiLakeCli` usage, `DrishtiLakeLoad`, `drishti-testroots`, `tools/xlsx_before_after/` (4 files); `SseEmitter(0L)`; `URLDecoder` at `LiveTablesController.java:230`. None gates the tag. |
+
+## 4. New findings
+
+Paths are in `drishti` at `10753f4db` unless a repository is named.
+
+### Blockers
+
+**F20. BLOCKER (Lake 0.9.1). Compaction changes what readers see when commit order and run-id order disagree.**
+- `drishti-lake` `java/lake-load/.../DeltaUpkeep.java:297-338` (`compacted`: the newest copies in one group, the older in a second) and
+  `:139` with `LakeUndo.java:482-531` (`rewriteGroups`: **one commit** for both files); the reader's order is
+  `lake-delta/.../DeltaTable.java:349-360` (`newestLast`: the commit that added the file, **then** the time in its largest `_load_id`).
+  Iceberg behaves the same. A run id is the loader's start time, in **local** time with no offset (`LakeLoad.java:92-101`).
+- Why: before compaction the commit decides, so the load committed last wins whatever its run id says. After compaction both files
+  come from one commit, the tie falls to the run-id time, and the file of "older copies" wins when its loads started later.
+- The run (each step its own JVM, the candidate's jars): three appends of one business date: `c` (`P-3`); `a` (`P-1`, `P-2` = 10, 20;
+  `--run-id 20261121T131510.000-1-1`); `b` (`P-1`, `P-2` = 11, 21; `--run-id 20261121T131500.000-2-1`, committed last). Readers see
+  **11, 21** before `lake maintain --compact` and **10, 20** after it, on **Delta and Iceberg**; the files store keeps 11, 21. No row is
+  lost; the answer changes. With two files only, compaction has nothing to do and the fault hides; every kit case lets the loader
+  make its ids in order, so `maintain/safety-compact` cannot see it.
+- When it happens with nobody naming a run id: two loads of one date that overlap (the one that started first commits last); the inbox,
+  which fixes one run id for every table of an archive and loads them one by one; the hour repeated when clocks go back; two loader hosts
+  whose clocks differ. For Drishti: P&L vectors or positions sent again during the day, then the scheduled maintenance: VaR on the
+  older vectors, no error.
+- Fix (Lake's choice): two commits a date, the older copies first; or an order mark on the rewritten files that `newestLast` reads
+  before the run id. Then a kit case with named run ids (this recipe) on every store and storage.
+- **The design asked about** (the newest copies in one file, the older in one more; a second run changes nothing; an undo still finds
+  the older copy; `dataChange: false`; an append-only table allowed) reads right and is what Delta's `OPTIMIZE` permits; my second probe
+  (an id twice inside one load) changed nothing on any store. Besides F20, two remarks: the newest file ignores `--target-file-mb` and
+  `file-rows` (`Integer.MAX_VALUE` at `:139`), so on a big date compaction and relayout can undo each other's work; and a whole date is
+  held in memory while it is rewritten.
+
+**F21. BLOCKER (Lake 0.9.1). On Delta, a promoted column that first arrives in a later load is dropped silently; Iceberg adds it.**
+- The run (the candidate's jars): load 1 of a date with `promote: [DESK, BASE_PV]`; load 2 of the same date (replace) with
+  `promote: [DESK, BASE_PV, MATURITY_DATE]` and a row carrying `MATURITY_DATE: 2026-01-15`. Both loads exit 0 with nothing rejected. On
+  **Delta** the table's promoted columns are still `DESK, BASE_PV` and the value reads null; on **Iceberg** the column is there with its value.
+- Why: it breaks the storage-parity rule, and it loses data with no word. `LOADER.md` says nothing of a new column and no kit case
+  holds it. For VaR the optional columns `MATURITY_DATE`, `TRADE_STATUS`, `SCENARIO_SET_ID` (`VarIntake.java:53`) are read as columns:
+  a feed that starts sending one after the table exists is ignored.
+- It is what reddens Drishti: `VarInputsApiTest.maturedRecordsAreCountedByGrain…` adds a matured position and trade to an existing
+  day through the fixtures, which since `9eeb453ed` write through the loader (`testkit.ManifestLoad`, `LakeRowsLoad`); the bank's VaR
+  is then **736, not 636** ("matured records never enter the figure"), and the next test fails on the same state. Twice, the second time alone.
+- Fix: one rule on every store, written in LOADER.md with a kit case: add the column (as Iceberg does and as Drishti's writer did), or
+  refuse the load naming it. Never accept and drop.
+
+**F22. BLOCKER (Drishti). A retired setting in a site's engine file is neither read nor refused.**
+- `kernel/drishti-packs/.../ModuleSettingsEnvironmentPostProcessor.java:98-115` (`siteSets` skips every property source named
+  `engines/<name>.yaml`: the site's `config/engines/*.yaml` as well as the jar's copy); `:55-61` (a manifest that cannot be read:
+  a warning and no check at all).
+- Why: on `main` the place of `scenario-window`, `confidence`, `es-confidence`, `threads`, `hot-dates` **is** the site's
+  `config/engines/var.yaml`, under `drishti.var` (`main`'s file, `:26-47`). A site that upgrades with its edited file gets the
+  defaults with no word: another VaR.
+- The run: `scenario-window: 400` and `confidence: 0.95` added under `drishti.var` in `config/engines/var.yaml`; the server starts;
+  `/api/v1/admin/modules/banking/settings` says window 250, confidence 0.99.
+- Fix: skip only the **shipped** copies, as `EngineSwitches.shipped` (`:150-153`) already does for the switch names; a manifest that
+  cannot be read stops the start. Test: a real start (`SpringApplication`) with a site engine file, not the post-processor called by hand.
+
+**F23. BLOCKER (Drishti). The head is red; the last merges were never run whole.**
+
+| Suite | Failing | Cause | From |
+|---|---|---|---|
+| `drishti-server`, 22 classes, 117 tests (`bi.mq.*` 14 classes, `LanguagesApiTest`, `FieldParamsApiTest`, `ModelAcceptanceTest`, `TransformInputsApiTest`, `BiAiTest`, `NetLiveBiTest`, `RunClusterTest`, `StatementApiTest`, `StatementRowsTest`) | "DRS-9600 unknown key 'was'", then "no dataset … is published" | F8 e took `was:` out of `TableDef` and the 22 shipped table files and touched **no test file**: `kernel/drishti-server/src/test/resources/bi/folders/*/bi/*.table.yaml` (ten files) and `MqEngineTest`, `DerivationTest` still write it | `75cac24dc` |
+| `VarExplainApiTest.theOldExplainPathsAnswerForOneReleaseWithTheirOldBody` | 404 | F8 f removed the paths; their test stayed | `61a429d46` |
+| `VarInputsApiTest` (2) | VaR 736 for 636 | F21 | `9eeb453ed` (fixtures on the loader) |
+| console `test_settings_catalogue`, `test_docs_rot` (settings) | `CONFIGURATION.md` names `drishti.embed.search.max-results` and `drishti.embed.limits.searches-per-user-per-minute`, which nothing reads | the catalogue was not regenerated after the embed leftovers left | `0979bd248` |
+| console `test_java_launch_guard` | `tools/lake/test_delta_interop.py:322`: `parametrize("engine", ["java", "deltalake"])` read as a java command built by hand | the guard's pattern, or the line | `9eeb453ed` |
+
+The log's own words say why: "F8 a, c, e verification: tables (17) … banking (62) … **Not run here:** `ModuleSettingsTest` …", and the
+two Lake re-pins carry no proof row. `ModuleSettingsTest` and `ModuleSettingsControllerTest` do pass in my complete run. Fix the five
+rows; then the rule of the drill lessons: a full `clean verify` and both Python suites on the merged head before a gate is asked.
+
+**F24. BLOCKER of the proof (Drishti). A fresh clone cannot pass `./mvnw clean verify`.**
+- `plugins/drishti-plugin-delta/src/test/.../DeltaAfterMaintenanceTest.java:61-66` runs `tools/lake/maintain.py`, which since the Lake
+  move runs "in the server's exec jar: none in `<home>/lib`". On `main` the tool was delta-rs alone.
+- Why it matters twice: the fresh build is red; and on a developer's or a lane's tree the test silently runs whatever jar an **earlier**
+  build left in `lib/`, so it proves the old loader (part 1's F10 again, in a test).
+- Fix: the test belongs after the assembly (`drishti-modules-it`, whose tests already wait for the packaged jar), or the tool takes the
+  reactor's class path (`LAKE_CLASSPATH`). Then one fresh-clone `clean verify` in the pre-drill check.
+
+**F25. BLOCKER (Rachana 1.0.0). The retired level 1.0 is still the default of four public entry points; one drops text silently.**
+- `drishti-rachana` `java/rachana-core/.../el/Parser.java:127-137` (the measure-function parse: the level 1.0 lexer, **no end-of-input
+  check**), used by `MeasureFunctions.java:38,87`; `FormRules.java:127` and `CheckedMode.java:40,80` (`parse(text)`, and `require`, which
+  checks at 1.2 and returns a tree parsed at 1.0); `Parser.java:165-167`. `ElSource` (122 lines, in `api-surface.txt`) is the reader of
+  the removed `rachana upgrade` and has no caller. `Rachana.java:102-103,180` still says "1.0 unless raised".
+- The run (the candidate's `rachana-core-1.0.0.jar`), `MeasureFunctions.expand` with `net(x) = x - 1`:
+  `net(NOTIONAL) if A else 0` gives `NOTIONAL - 1`; `NOTIONAL if A else net(B)` gives `NOTIONAL`; `net(NOTIONAL) total rubbish )(` gives
+  `NOTIONAL - 1`; `net(NOTIONAL ?? 0)`, `net(NOTIONAL) ** 2` and `net(1_000)` are refused though each compiles at 1.2.
+- Why: Drishti expands **every** measure of a model that declares `functions:` (`kernel/drishti-server/.../bi/layer/ModelDefParser.java:117-125`;
+  documented in `docs/guides/bi/TABLES_AND_MODELS.md:492`). The missing end check is on `main` too, but there the level had no trailing
+  `if … else`; at the one level 1.2 that is the conditional, so a correct measure is cut to its first operand and a report shows a
+  wrong number. No shipped model declares `functions:`; a site's may. The BI lowerings themselves pass `Grammar.LEVEL`
+  (`NodeLowering.java:61`, `Expressions.java:87`, `FormulaLowering.java:107`, `Trees.java:40`, `LayerTables.java:237`): this path was missed.
+- Fix: the macro parse reads at the instance's level with the end check; the one-argument `parse` and `require` read `Grammar.LEVEL`;
+  `ElSource` and the 1.0 branches leave with the level, or the docs say why each stays. Cases for the inputs above; in Drishti a
+  `BiApiTest` case of a model with a function and a conditional measure.
+- **The unverified case** `protocol/write#a-reused-change-id-with-other-content-is-refused`: read against PROTOCOL 16 and 10.1 and
+  run (section 1). Its expectation is what the specification says and what the live runtime answers. **It may be flipped** to
+  `verified: true`, with its line in `conformance/1/VERIFIED.md`. Until that commit exists 1 of 2,589 cases is unverified and the G2
+  rule (zero) is not met at `66b3c9c7`.
+
+### Must fix
+
+**F26. MUST-FIX. The old-name refusal is a stack trace.** The run of check a prints `java.lang.IllegalStateException` and its frames
+around the two useful lines (`DrishtiApplication.main:105`). An operator's first sight of the rule should be the two lines and exit 1.
+
+**F27. MUST-FIX. A connector's `where` is said to be pushed down and is not.** As check c. `docs/guides/DATA_LAKE_GUIDE.md:1457` ("pushed
+down to the store (partition and file pruning where possible)"), `RowPredicate.java:41-43`, `SourceShape.java:41` and Health's `pushdown`
+line say so; no store receives a filter from it. Not a regression and never a wrong row (every row is tested), but a table shared by
+several trading systems is read whole for each system's connector. Give the list to the store's read (Lake's read API prunes: READ_API
+2.7) with a test that counts the files opened, or take the claim out of the guide, the javadoc and Health.
+
+**F28. MUST-FIX. Compatibility leftovers the F8 sweep still finds** (the decision: all removed; an old name stops the start).
+
+| # | Where | What |
+|---|---|---|
+| m | `kernel/drishti-module-runtime/.../ModuleRuntime.java:248` | "console plugin format 1 is read for one release" |
+| n | `kernel/drishti-server/.../pivot/PivotFunctionsController.java:218-226`, `application.yaml:400`, `PivotCellExplainer.java:38` | `POST /api/v1/pivot/explain`, "DEPRECATED, kept for one release" (F8 f removed the VaR and MR ones) |
+| o | `kernel/drishti-server/.../cli/SutraCli.java:767`, `SutraCases.java:28` | one `.json` file a case, "deprecated (2.9.4)", still read (F8 j removed the Python twin) |
+| p | `engines/memory-lake.yaml:25`, `EngineSwitches.java:111-125` | memory stores in "the old place, read for one more release with a warning" |
+| q | `kernel/drishti-packs/.../PackPaths.java:84-98` | the old `./packs` folder: "This fallback ends in the next release" |
+| r | `kernel/drishti-packs/.../edition/EditionEnvironmentPostProcessor.java:144-166`, `EditionConfiguration.java:136,178` | the server only **lists** `drishti.edition` and `drishti.branding.*` on Health; the console refuses them (F8 g): two answers to one retired name |
+| s | `kernel/drishti-server/.../pivot/PivotScaleController.java:76,89`, `PivotInline.java:43`, `engines/pivot.yaml:21`, `ErrorCode.java:68` (`DRS-1024`), `SimmService.java:198`, `FrtbService.java:150` | readers and words of retired switch names: `PivotScaleController` reads **only** `drishti.pivot.enabled`, a name that now stops the start, so its own check can never say "off"; `pivot.yaml` says the old name "still works"; `DRS-1024` and the two `switchedOn()` are dead |
+| t | `kernel/drishti-common/.../PackSamples.java:213` | `catalog.json` "of earlier releases: still read" |
+| u | `VarIntake.java:369-373` (`REPORTING_CCY`, "a deprecated alias"), `AiProperties.java:24` (Ask's deprecated `endpoint`), `SourcesProperties.java:30` (connectors in the server's configuration, "deprecated") | three more aliases; the owner may keep them, by name |
+| l | part 1's row | `PackStateStore`, `LoadStore`'s first-read import, the override migration, `FileUserStore`, `FileAuditLog`: "named for the release after Gate 4" in the log; the decision said G4 |
+
+**F29. MUST-FIX (owner's word). 76 console tests are skipped as "parked to i6: writes to a lake (owner 2026-11-15)"**
+(`test_expression_recipes` 72, `test_admin_lakes` 2, `test_admin_lake_maintain` 1, `test_python_runtime_answers` 1). The same on `main`,
+so no test was lost in G4 (no `@Disabled` at the head, as `main`; 180 Python skip marks against `main`'s 187), but i6 has shipped and the
+park names no later release: run them again or park them by name.
+
+**F30. MUST-FIX. Documents that do not say what the code does** (with the docs wave, before the drill).
+
+| Document | Line | What |
+|---|---|---|
+| README, QUICKSTART_DEVELOPERS and 87 other places | | `github.com/drishti-platform/<product>` links: only `drishti-platform/drishti-platform` exists; the quickstart itself clones `ajsinha/drishti-lake` at `:147` |
+| `drishti-platform` `COMPATIBILITY.md` (the index repository) | the `i7b` row | Lake `0.9.x (v0.9.0)`, Elements `3.3.0 (v3.3.0)`: the pins are 0.9.1 and 3.3.1 |
+| `docs/admin/CONFIGURATION.md` | 3395, 3400 | two embed settings nothing reads (F23) |
+| `docs/architecture/adr/021-embedding-is-html-over-the-wire.md` | 29-41 | describes embed v1 (`/embed/v1/…`), deleted in this gate |
+| `docs/architecture/DATA_ARCHITECTURE.md` | 3255 | names `tools/lake/filedate.py` (deleted) |
+| `docs/QUICKSTART_DEVELOPERS.md` | section 4 | the map names `drishti-banking`, `drishti-compute-banking`, `lake-io`, `lake-delta`, `lake-iceberg`, `lake-load`, `drishti-elements` as modules of this repository |
+| `docs/admin/BENCHMARK.md` | 187, 793 | `--engine drishti`, an engine that no longer exists (say in one line which engine the recorded run used) |
+| `docs/guides/OPERATIONS_GUIDE.md` | 2535 | "older builds found once in `_drishti-lake/runs/*.json`" |
+| DATA_GUIDE 1157, VAR_GUIDE 2008, DEVELOPER_GUIDE 2165, 2178, 2745, `plugins/drishti-plugin-kafka/README.md:548` | | examples with a relative default (`${DRISHTI_DELTA_ROOT:./data/delta/demo}`), against the explicit-paths rule |
+| `pom.xml` | 109 | the comment names the candidate `7649778`; the pin is `336524b` |
+
+**F31. MUST-FIX (small). `LakeFileWritesTest.java:84` keeps `${lake.data.dir:./data}`**, a relative default; `test_no_relative_paths`
+does not read Java test sources, so nothing holds it. The same rule at `IdentityProperties.java:66` (`jdbc:sqlite:./data/identity/drishti.db`
+as the default; ADMIN_GUIDE 494 documents it).
+
+**F32. MUST-FIX. Tests decided by a clock.** `VarInputsApiTest.rewrite` (`:127-137`) waits `Thread.sleep(1500)` for "the connector's
+refresh"; `AbandonedReadsTest` (33 reads against 27 under load) and `ReactiveApiTest.anEventReachesTheTriggersOnce` (the repeated
+event not seen as a repeat, once in two runs) each failed once and passed once here. The second is an exactly-once promise: find out
+whether the test or the product lost the first event.
+
+**F33. MUST-FIX. The browser smoke is not stable beside other work.** Chromium: `test_live_grid_browser.test_a_row_opens_the_record_panel…`
+reads "My changes (1)" right after the status text, before the tray updates (`test_live_grid_browser.py:149`; 15 of 15 alone). WebKit with four
+workers: 7 of 123 fail on one cause, `/approvals/api/count` "due to access control checks": WebKit logs a fetch that a navigation
+cancelled, and the page walk counts the line as a fault (`drishti_app.js:164` does catch it). Abort the count on `pagehide` or teach
+the walk that one line; wait on the tray's own signal.
+
+**F34. MUST-FIX. The Python, console and browser suites leave temp folders.** 19 folders in `/tmp` after one run of each (`tmp*`,
+`drishti-data-*`, `drishti-console-tests-*`; 2.3 GB with `pytest-of-<user>`), and `data/dumps`, `data/qa`, `data/run`, `data/logs` in
+the checkout. `drill.sh` cleans after itself; a plain `pytest` (what a developer and every lane runs) does not. Fixtures on `tmp_path`,
+or one session finaliser.
+
+### Nice
+
+**F35. NICE.** `RowPredicate.test` answers false for any evaluation failure (`:130-141`): right for a row rule (fails closed), but for a
+connector's `where` a bad expression hides every row with no word in Health. Count the failures.
+
+**F36. NICE (Rachana).** The level's history still reads through Core's javadoc (`ElCompiler.java:29-33`, `CheckedMode.java:44,55`:
+"at a language level (`1.0`, `1.1`)"). With F25, say what each remaining mention is for.
+
+**F37. NICE.** The index repository `drishti-platform/drishti-platform` is **public** and holds the build scripts and the compatibility
+table of a proprietary product. Probably meant; say so once in its README, or make it private.
+
+**F38. NICE (Lake, Elements).** `tools/ci/check.py` and `tools/tck/tck.py` run Maven with `-o`, and `dependency:build-classpath` is not
+fetched by the build itself: with a new Maven repository the kit fails with "No plugin found for prefix 'dependency'". Name the plugin's
+version in the pom or drop `-o` for that call. `check.py` and Elements' `run_tests.py` leave `/tmp/pytest-of-<user>/pytest-N`; give
+them a `--basetemp` under the build folder, as Rachana's lane does.
+
+**F39. NICE (plan).** F4 is parked "by name" only in the rehearsal log. Put the line in the combined i8's list on the plan branch, with
+part 1's two options.
+
+## 5. Part 1's checklist
+
+| # | Item | State |
+|---|---|---|
+| 1 | Cross-stack versions | the pins equal the candidates and each other (the table at the top); the tags `v1.0.0`, `v0.9.1`, `v3.3.1` do not exist yet (by design: they follow this gate); COMPATIBILITY is stale (F30) |
+| 2 | Every suite, fresh clone, once | section 1: the four products green; Drishti red (F23, F24) |
+| 3 | The goldens and the headline | check d and the API run: **proven** |
+| 4 | F1 by a run | check e: **proven** |
+| 5 | F2 by a run | `VarApiTest` 15 of 15; the pin holds `d94023b` |
+| 6 | The late lanes read | Rachana 1.0.0: F25; BI at 1.2: the lowerings are on the one level, model functions are not (F25); Lake 0.9.1: F20, F21; the rest reads right (`TableProperties`: one mapping for the two product properties, append-only refuses what removes rows, the retention is vacuum's floor; keep-days counted on the calendar on every store; the public surface for hosts); test fixes and triage: no assertion found bent to pass, `IcebergMovedConnectorFileTest` holds the state and the relocate pair again |
+| 7 | Each must-fix closed or moved in writing | section 3: F4 moved (log only), F7 an owner question, F8 not empty, F12 the links |
+| 8 | Shims, final sweep | F28 |
+| 9 | Docs | the quickstart's wheel and build steps, the demo lake and the server start ran here as written; `test_docs_rot` and `settings_catalogue` red on `CONFIGURATION.md` (F23); the other docs tests pass; F30 |
+| 10 | Guards hold what the gate found | the F6 rule, the F1 test, the F3 test, the F10 key: all present and green. Missing: a real start for F22, a fresh-clone build for F24, F31 |
+| 11 | Nothing left on disk or in git | check f and F34; `main` and every tag untouched; the 32 lane branches are merged and still on `origin` (delete by name at the release) |
+
+## 6. Owner decisions: done, and one open question
+
+| Decision | Done? |
+|---|---|
+| F9 T3 to T11 in G4; T11 waits for tools 1.2.0 (`Zips`) | yes; the four zip writers are listed in `zipWritingOnlyWhereItIsToday` |
+| F8 all leftovers removed; old names stop the start naming the new key | a to k in main code yes; **F22 (engine files), F23 (the tests of e and f), F28 (m to u, l)** no |
+| Renderer 1.2.0 and embed v1 deleted | yes (one renderer folder `static/render/3.3.1/`, one embed module `routes/embed_v2_routes.py`) |
+| F4 parked to the combined i8 by name | in the log only (F39) |
+| The Python xlsx writers stay; no server path calls them | yes, with a guard |
+
+**Open question, recorded and not decided here:** `lake build` and `lake demo` have lost the Python `drishti` engine: `--engine` is now
+`auto`, `java`, `deltalake` (`tools/lake/build.py:964`; the log's "Lake 0.9.1 final candidate" row). **The owner had said to keep four
+engines.** Bringing it back means a writer in Python that commits through Lake's Java writer, which Lake 0.9.1 no longer offers a host
+(`LakeCli` left the public surface). The owner decides: keep the removal (it matches "one Java way, one Python way"), or ask Lake for a
+public entry and restore it.
+
+## 7. What to tag
+
+**Nothing from this gate but Elements.**
+
+| Repository | Tag | Commit | State |
+|---|---|---|---|
+| `drishti-elements` | `v3.3.1` | **`20661f098a10d664d592dd8384442157436aba36`** | **golden: can be tagged now** (its suite green with nothing skipped, the release commit, the tree Drishti vendors) |
+| `drishti-rachana` | `v1.0.0` | `66b3c9c7` + F25 + the case flipped with its `VERIFIED.md` line | not yet |
+| `drishti-lake` | `v0.9.1` | `336524b` + F20 and F21, each with its kit case (the note on the `v0.9.0` release, "fixed in 0.9.1", is true only then) | not yet |
+| `drishti` | the G4-golden head | `10753f4db` + F22, F23, F24 + the re-pin of the two products (poms, wheel pin) + F28 as the owner rules | not yet |
+
+The re-check of this part is short: the fixes read; the probes of F20, F21 and F25 and the start of F22 run again; one fresh-clone
+`./mvnw clean verify`, the two Python suites and the smoke on the new head; the suites of Rachana and Lake.
+
+## 8. State left behind
+
+The folder `~/.cache/drishti-lanes/fable-g4p2/` (five clones and a copy, the scratch Maven repository, the Python environment, a copy of
+the install with the demo lake, the logs) is deleted, and so are the `/tmp` folders my runs left. No repository other than this plan
+branch was written; `~/.m2`, the owner's stack, `/home/ashutosh/IdeaProjects/drishti`, `main` and every tag were not touched. The probe
+servers ran on port 28480 and were stopped; nothing of mine is running.
