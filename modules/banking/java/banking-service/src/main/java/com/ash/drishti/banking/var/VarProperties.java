@@ -21,7 +21,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The VaR engine (VAR_GUIDE.md): value at risk for any set of trades from the stored P&amp;L vectors, in the server.
@@ -94,7 +93,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param pinned the pinned dates (VAR_GUIDE.md section 26.8): month-, quarter-, year- and fiscal-year-ends, the stress window and named
  *     dates, each kept on disk (default) or in memory
  */
-@ConfigurationProperties("drishti.var")
 public record VarProperties(Boolean enabled, Double confidence, Double esConfidence, String rankRule, Integer componentWindow,
         Boolean componentScaleToVar, Integer threads, Integer parallelRows, Long memoryBudgetMb, Integer rowsPerChunk, Integer hotDates,
         Integer historyDays, Integer histogramBins, Integer maxParts, Kinds kinds, Map<String, Map<String, String>> access, Integer pathPage,
@@ -390,9 +388,9 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
     public VarProperties {
         enabled = enabled == null || enabled;
         // refused at start when out of range (never silently replaced): VaR at 99% or 95%, ES at 97.5% (VAR_GUIDE.md section 18.5)
-        confidence = confidence == null ? 0.99 : checkConfidence(confidence, "drishti.var.confidence");
-        esConfidence = esConfidence == null ? 0.975 : checkConfidence(esConfidence, "drishti.var.es-confidence");
-        scenarioWindow = checkWindow(scenarioWindow, "drishti.var.scenario-window");
+        confidence = confidence == null ? 0.99 : checkConfidence(confidence, "drishti.module.banking.var.confidence");
+        esConfidence = esConfidence == null ? 0.975 : checkConfidence(esConfidence, "drishti.module.banking.var.es-confidence");
+        scenarioWindow = checkWindow(scenarioWindow, "drishti.module.banking.var.window");
         rankRule = rankRule == null || rankRule.isBlank() ? "kth-worst" : rankRule.trim().toLowerCase(Locale.ROOT);
         componentWindow = componentWindow == null || componentWindow < 1 ? 5 : componentWindow;
         componentScaleToVar = componentScaleToVar == null || componentScaleToVar;

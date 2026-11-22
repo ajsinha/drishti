@@ -35,7 +35,7 @@ import java.util.Set;
  * <p>A row whose level column is empty (an empty text and a missing value alike) is placed under a <b>(Blank)</b> node at that level, under
  * its real parent, the deeper levels continuing beneath it: nothing is dropped. A (Blank) node's own value is {@link #BLANK} and its id is
  * always a path ({@code MGMT~DIV-MARKETS/~}), even in an {@code ids: leaf} hierarchy, so two (Blank) desks under two divisions never
- * collide. Its name is the hierarchy's {@code empty-label} (the server's {@code drishti.var.hierarchy.empty-label} when not set).
+ * collide. Its name is the hierarchy's {@code empty-label} (the server's {@code drishti.module.banking.var.hierarchy.empty-label} when not set).
  *
  * @param id the hierarchy's id, upper case ({@code [A-Z][A-Z0-9_]*})
  * @param title what the screens call it ({@code Limit letters})

@@ -42,7 +42,7 @@ public final class TableCodes {
     public static final String RULE = "DRS-9608";
     /** A name the catalogue does not hold: a table, a model, a column, a measure, an alias. */
     public static final String REFERENCE = "DRS-9609";
-    /** Two definitions with one name, or a {@code was:} name that another definition holds. */
+    /** Two definitions with one name, or a retired name that another definition holds. */
     public static final String DUPLICATE = "DRS-9610";
     /** Tables over tables that come back to themselves. */
     public static final String CYCLE = "DRS-9611";

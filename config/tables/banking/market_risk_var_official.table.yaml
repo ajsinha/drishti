@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.market_risk_var_official
-was: market-risk-var-official
 version: 1.0.0
 title: VaR official results (every version)
 description: "The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchies, one row per node, business date and result version (a restated date adds a version), as published to risk-results/var-official."

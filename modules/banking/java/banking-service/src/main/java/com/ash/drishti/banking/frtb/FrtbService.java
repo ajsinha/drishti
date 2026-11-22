@@ -98,7 +98,7 @@ public final class FrtbService {
             d = Files.readAllBytes(dir.resolve("frtb-sa-drc-rrao.yaml"));
             prm = FrtbParams.parse(s, d, Map.of());
         } catch (IOException e) {
-            why = "DRS-5329 the FRTB-SA parameter files are not in " + dir.toAbsolutePath() + " (drishti.frtb.parameters-dir)";
+            why = "DRS-5329 the FRTB-SA parameter files are not in " + dir.toAbsolutePath() + " (drishti.module.banking.frtb.parameters-dir)";
         } catch (IllegalArgumentException e) {
             why = "DRS-5329 " + e.getMessage();
         }

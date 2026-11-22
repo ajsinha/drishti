@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.banking.frtb;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Position sensitivities and FRTB-SA on the server (FRTB_SA_GUIDE.md section 9), {@code drishti.frtb}.
@@ -34,7 +33,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param cacheMinutes how long a date's sensitivities stay in memory after they are read
  * @param playgroundTemplate a bank's workbook template folder (blank: the built-in {@code playground/frtb-sa/template/})
  */
-@ConfigurationProperties("drishti.frtb")
 public record FrtbProperties(Boolean enabled, String parametersDir, String sensitivityKind, String factorKind, String defaultRiskKind,
         String residualRiskKind, Boolean rraoFromPositions, Integer maxFactors, String recipesDir, Integer cacheMinutes,
         String playgroundTemplate) {
@@ -61,7 +59,7 @@ public record FrtbProperties(Boolean enabled, String parametersDir, String sensi
         return com.ash.drishti.api.resolution.ModuleHomes.current().flatMap(h -> h.dir("banking"))
                 .or(() -> com.ash.drishti.api.resolution.ModuleHomes.resolve(System::getProperty).dir("banking"))
                 .orElseThrow(() -> new IllegalStateException("the FRTB parameters' folder: banking is not among the modules the boot gave this"
-                        + " process; set drishti.frtb.parameters-dir (DRISHTI_FRTB_PARAMETERS)"));
+                        + " process; set drishti.module.banking.frtb.parameters-dir (DRISHTI_FRTB_PARAMETERS)"));
     }
 
     /** The defaults (tests, and a server without the block). */

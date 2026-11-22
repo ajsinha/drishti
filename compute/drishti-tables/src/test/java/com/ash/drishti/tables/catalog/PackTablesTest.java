@@ -39,7 +39,6 @@ class PackTablesTest {
         List<TableDef> t = PackTables.generate(new PackTables.KindInfo("trading", "trade", "2", columns, Map.of("DESK", "desk"), Map.of(), false,
                 Map.of("LEGS", legs)));
         assertThat(t).extracting(TableDef::name).containsExactly("trading.trade", "trading.trade_legs");
-        assertThat(t.get(0).was()).isEqualTo("pack.trading.trade");
         assertThat(t.get(0).columns().get("DESK").references()).isEqualTo("desk");
         assertThat(t.get(1).grain()).isEqualTo("$.LEGS[*]");
         assertThat(t.get(1).columns().get("CURRENCY").path()).isEqualTo("@.CURRENCY");

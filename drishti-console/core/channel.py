@@ -14,7 +14,7 @@
 
 """One live channel: everything live one caller needs on ONE connection (docs/guides/EMBED_GUIDE.md, build step 4).
 
-Extracted from the console's ``/api/channel`` so the embed stream (``/embed/v1/channel``) runs the very same logic. The class
+Extracted from the console's ``/api/channel`` so the embed stream (``/embed/v2/channel``) runs the very same logic. The class
 knows no cookies, requests or session: the identity it runs as, the callable that turns an upstream event into what the
 browser wants, the subscription limit and the ``who`` fingerprint are all passed in; the owner of a channel is the user plus
 the host application (empty for the console), so one caller can never add to another's channel.

@@ -127,7 +127,7 @@ class VarShardClusterTest {
                 "--drishti.var.hierarchies.LL.levels=LIMIT_LETTER > DESK", "--drishti.var.hierarchies.LL.word=LL",
                 "--drishti.var.hierarchies.LL.limits=var-limit", "--drishti.var.official.on-start=false",
                 "--drishti.var.official.root=" + node.resolve("official"), "--drishti.var.official.currencies[0]=EUR",
-                "--drishti.var.threads=2", "--drishti.var.tier.close-grace-seconds=0", "--drishti.var.currencies[0]=USD",
+                "--drishti.module.banking.var.threads=2", "--drishti.var.tier.close-grace-seconds=0", "--drishti.var.currencies[0]=USD",
                 "--drishti.security.enabled=true", "--drishti.security.secret=" + SECRET, "--drishti.security.registered-users-only=false",
                 "--drishti.security.roles.risk.kinds[0]=*", "--drishti.security.roles.risk.raw=true"));
         return a;

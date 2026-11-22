@@ -19,7 +19,6 @@ import com.ash.drishti.banking.compute.ccr.ExposureMath;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The exposure engine (docs/guides/EXPOSURE_GUIDE.md section 18.1): exposure profiles (EE, ENE, EEE, PFE, EPE, EEPE) for any counterparty scope
@@ -64,7 +63,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param fiscalYearEnd the bank's fiscal year-end, {@code MM-DD}; blank: none
  * @param pinned the pinned dates, as VaR's (VAR_GUIDE.md section 26.8)
  */
-@ConfigurationProperties("drishti.ccr.exposure")
 public record ExposureProperties(Boolean enabled, List<Double> confidence, Double limitConfidence, String rankRule, String collateralModel,
         String imModel, Double alpha, Integer contributionWindow, Integer hotDates, Double memoryBudgetGb, String hotFolder, String tier,
         Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds, Integer maxScopeNettingSets, Integer maxParts, Integer histogramBins,

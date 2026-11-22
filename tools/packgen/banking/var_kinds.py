@@ -78,7 +78,7 @@ SERVED_BY = {"position": "var-positions", "system-basket": "var-system-baskets",
 _INPUTS = ["pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "var-limit"]
 #: the reporting currency every VaR answer takes (2.9.4): USD unless asked, any currency with scenario FX on the date
 _CCY = {"ccy": {"type": "text", "default": "USD"}}
-#: the lens of a VaR answer (2.9.7, VAR_GUIDE.md section 18.6): the horizon, the 10-day method (default: drishti.var.ten-day-method) and
+#: the lens of a VaR answer (2.9.7, VAR_GUIDE.md section 18.6): the horizon, the 10-day method (default: drishti.module.banking.var.ten-day-method) and
 #: the confidences (none: the configured ones; one of drishti.var.confidences and es-confidences)
 _LENS = {"horizon": {"type": "enum", "options": ["1d", "10d"], "default": "1d"},
          "method": {"type": "enum", "options": ["default", "sqrt10", "sum"], "default": "default"},

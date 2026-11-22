@@ -24,7 +24,6 @@ The Reports page and scheduled searches, export (PDF, PNG, Excel, CSV), subscrip
 - [Guide](#guide)
   - [1. Distribution: the Reports page, export and subscriptions](#1-distribution-the-reports-page-export-and-subscriptions)
   - [2. Alerts on numbers](#2-alerts-on-numbers)
-  - [3. Embedding a report in another web application](#3-embedding-a-report-in-another-web-application)
 - [Tutorial: BI that runs itself, scheduled searches and subscriptions](#tutorial-bi-that-runs-itself-scheduled-searches-and-subscriptions)
   - [Part D · BI that runs itself](#part-d--bi-that-runs-itself)
   - [Part E · Scheduled searches and subscriptions](#part-e--scheduled-searches-and-subscriptions)
@@ -370,41 +369,6 @@ Administrators see the tiles that notify, who is alerted now and the history at 
 The Alerts page, the form, the history and the inbox keep to the screen at 390 px:
 
 ![The Alerts page at 390 px](../img/bi-alerts/alerts-phone-390.png)
-
-### 3. Embedding a report in another web application
-
-Export and subscriptions send a report **out**; embedding **shows it in place**, in another application's own page, live, for that application's
-user. It is a Drishti Element, `<drishti-report>`, in a Shadow DOM, with **no iframe**. Every attribute, event, the token provider and the
-framework samples are in [EMBED_GUIDE.md](../EMBED_GUIDE.md); this is what a report author and an administrator need to know. The walk-through is
-[tutorial 20](../../tutorials/20-embed-drishti.md).
-
-```html
-<drishti-report id="rep" report="file:report:live-trading-desk" theme="light"></drishti-report>
-<drishti-report id="one" report="file:report:live-trading-desk" visual="by-desk" chrome="bare"></drishti-report>
-```
-
-![A host application's page with the live report in a card](../img/bi-elements/host-report.png)
-
-* **What is in it.** The page tabs, the slicers, the business date, bookmarks, *click a mark to filter or highlight*, **cross-filtering** between
-  its visuals, *show as a table* and the live bar; a live report follows its data, each tick asking the visuals again **as the person looking**. A
-  click tells the host (`drishti:filter-changed`, with the selections in force). `page="grid"` shows one page; `visual="by-desk"` one visual alone,
-  as a card of the host's own.
-
-![The same card after a click on the DESK-RATES bar](../img/bi-elements/host-report-selected.png)
-
-![One visual of a report](../img/bi-elements/host-one-visual.png)
-
-* **Always masked.** An embedded call masks `drishti.security.redact` fields and the model's masked columns **whatever the user's roles** (a user
-  with `raw` still sees `•••`); the element tells the host which columns were masked (`drishti:masked`). Row rules are the user's, per call.
-* **Which hosts may show which reports** (Admin → Embedding): the host application is registered with the scope **`embed:report`**; its *Kinds and
-  reports it may show* list is the allow-list (`report:file:report:live-trading-desk`, or `report:*`). A report off the list is refused `DRS-8005`.
-  Only a **published** report is embedded.
-* **Phone.** The element uses the report's `layouts.phone` when **the element** is 640 px or narrower (section 8.4):
-
-![The report in the host's page at 390 px, with the report's phone layout](../img/bi-elements/host-phone-390.png)
-
-* **Not in the element:** drill down and through, *Alert me*, *Show the rows*, Export and Subscribe (use the console), Vega-Lite and Python visuals,
-  the entity view; two elements of one report do not cross-filter each other.
 
 ## Tutorial: BI that runs itself, scheduled searches and subscriptions
 

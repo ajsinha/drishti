@@ -65,12 +65,12 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.var.hierarchies.LEGAL.limits=var-limit",
         "drishti.var.positions.rules[0].name=securities", "drishti.var.positions.rules[0].groups[0]=Fixed income",
         "drishti.var.positions.rules[0].key[0]=SECURITY_ID",
-        "drishti.var.official.on-start=false", "drishti.var.system-baskets.seed=false",
+        "drishti.var.official.on-start=false", "drishti.module.banking.var.system-baskets.seed=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
         "drishti.security.roles.keeper.kinds[0]=*", "drishti.security.roles.keeper.raw=true",
         "drishti.security.roles.keeper.permissions[0]=var:system-baskets",
-        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
+        "drishti.module.banking.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)

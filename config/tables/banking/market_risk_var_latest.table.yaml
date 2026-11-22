@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.market_risk_var_latest
-was: market-risk-var-latest
 version: 1.0.0
 title: VaR official results (latest version)
 description: "One row per hierarchy node and business date: the latest result version of the official end-of-day VaR and ES published to risk-results/var-official."

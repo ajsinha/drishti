@@ -67,12 +67,12 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.var.hierarchies.LEGAL.levels=LEGAL_ENTITY", "drishti.var.hierarchies.LEGAL.ids=leaf",
         "drishti.var.hierarchies.LEGAL.limits=var-limit",
         "drishti.var.official.on-start=false", "drishti.var.official.publish=false", "drishti.var.currencies=USD",
-        "drishti.var.hot-dates=2", "drishti.var.confidence=0.95",
+        "drishti.module.banking.var.hot-dates=2", "drishti.module.banking.var.confidence=0.95",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
         "drishti.security.roles.desk-y.kinds[0]=*", "drishti.security.roles.desk-y.raw=true",
         "drishti.var.access.desk-y[MGMT~DESK-Y]=positions", "drishti.under-construction.file=../../../../config/under-construction.yaml",
-        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.engines.mr-cube.enabled=true",
+        "drishti.module.banking.var.threads=2", "drishti.var.tier.close-grace-seconds=0", "drishti.engines.mr-cube.enabled=true",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)

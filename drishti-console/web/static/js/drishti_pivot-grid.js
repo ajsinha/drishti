@@ -16,7 +16,7 @@
 /* A retired name, kept only as a loader. Pivot rows are drawn by drishti-grid (Drishti Elements) since 2.9.11.e; the renderer 1.2.0, whose
    released folder never changes, still loads js/pivot-grid.js before js/tree-rows.js. So this file draws nothing: it adds the console's
    drishti-grid bundle and the libraries it requires (drishti-core, drishti-inputs, drishti-chart) to the page (once, in order, before the scripts loaded after it), and tree rows find the grid. The
-   embed routes serve the same bundles beside the scripts (/embed/v1/elements/..., /embed/v2/elements/...), so the base works there too.
+   embed routes serve the same bundles beside the scripts (/embed/v2/elements/...), so the base works there too.
    Deleted with the renderer 1.2.0 (renderer 2.0.0 draws with the libraries; Drishti Elements' docs/DESIGN.md, step 8). */
 (function () {
   "use strict";

@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.trading_cashflows_cashflows
-was: trading-cashflows-cashflows
 version: 1.0.0
 title: "Trade legs and cashflows: cashflows"
 description: The cashflows table of the model trading-cashflows.

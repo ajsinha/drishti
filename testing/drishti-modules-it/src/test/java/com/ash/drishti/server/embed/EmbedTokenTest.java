@@ -62,7 +62,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.security.redact=trader,counterparty,mtm,COUNTERPARTY", "drishti.security.registered-users-only=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
         "drishti.security.oidc.enabled=true", "drishti.security.oidc.client-id=drishti",
-        "drishti.embed.enabled=true", "drishti.embed.limits.searches-per-user-per-minute=4", "drishti.embed.issuer=https://drishti.test", "drishti.embed.audiences[0]=https://console.test",
+        "drishti.embed.enabled=true", "drishti.embed.issuer=https://drishti.test", "drishti.embed.audiences[0]=https://console.test",
         "drishti.embed.apps[0].id=gitops", "drishti.embed.apps[0].name=Declared in config", "drishti.embed.apps[0].origins[0]=https://gitops.bank.example",
         "drishti.embed.apps[0].scopes[0]=embed:view",
         "drishti.embed.apps[0].secret-sha256=20b67fe342b673443bdc90ed8cb3855e255991539dce4a9c15c252c6a39f1475"})
@@ -424,68 +424,6 @@ class EmbedTokenTest {
         String tok = token(app, secret, u);
         refused(call(tok, CRM, VIEW), 400, "DRS-8005");
         assertThat(call(tok, CRM, "/api/v1/views/counterparty/CP-MERIDIAN-RE").getResponse().getStatus()).isEqualTo(200);
-    }
-
-    @Test
-    void aReportOpensOnlyWithTheReportScopeAndOnlyForTheReportsTheApplicationLists() throws Exception {
-        String user = uid("rue");
-        user(user, "full");
-        String plainApp = uid("crm-");
-        String viewOnly = token(plainApp, register(plainApp, Map.of("scopes", List.of("embed:view"))), user);
-        refused(call(viewOnly, CRM, "/api/v1/bi/reports/trades-overview"), 403, "DRS-5002");                    // embed:report was not granted
-        refused(run(post("/api/v1/bi/reports/trades-overview/query").header("Authorization", "Bearer " + viewOnly).contentType(MediaType.APPLICATION_JSON).content("{}")), 403, "DRS-5002");
-
-        String narrow = uid("rep-");
-        String tok = token(narrow, register(narrow, Map.of("scopes", List.of("embed:report"), "kinds", List.of("report:trades-overview"))), user);
-        refused(call(tok, CRM, "/api/v1/bi/reports/counterparty-risk"), 400, "DRS-8005");                      // not on the application's list
-        refused(call(tok, CRM, "/api/v1/bi/reports/dataset"), 403, "DRS-5002");                                  // authoring calls are never for an embed token
-        refused(call(tok, CRM, VIEW), 403, "DRS-5002");                                                          // views need embed:view
-        for (String ok : new String[] {"/api/v1/bi/reports/trades-overview", "/api/v1/bi/reports/catalogue"}) {
-            assertThat(call(tok, CRM, ok).getResponse().getContentAsString()).as(ok).doesNotContain("DRS-8005").doesNotContain("DRS-5002");
-        }
-        MvcResult q = run(post("/api/v1/bi/reports/trades-overview/query").header("Authorization", "Bearer " + tok).header("Origin", CRM)
-                .contentType(MediaType.APPLICATION_JSON).content("{\"page\":\"overview\",\"visual\":\"by-desk\"}"));
-        assertThat(q.getResponse().getContentAsString()).doesNotContain("DRS-8005").doesNotContain("DRS-5002");
-        refused(run(post("/api/v1/bi/reports/trades-overview/versions").header("Authorization", "Bearer " + tok).contentType(MediaType.APPLICATION_JSON).content("{}")), 403, "DRS-5002");
-
-        String any = uid("rep-");
-        String all = token(any, register(any, Map.of("scopes", List.of("embed:report"), "kinds", List.of("report:*"))), user);
-        assertThat(call(all, CRM, "/api/v1/bi/reports/counterparty-risk").getResponse().getContentAsString()).doesNotContain("DRS-8005");
-        refused(call(all, CRM, VIEW), 403, "DRS-5002");
-    }
-
-    @Test
-    void theSearchScopeOpensOnlyTheSearchAndItIsCutToTheApplicationsKindsAndRateLimited() throws Exception {
-        String user = uid("sam");
-        user(user, "full");
-        String viewApp = uid("crm-");
-        String viewOnly = token(viewApp, register(viewApp, Map.of("scopes", List.of("embed:view"))), user);
-        refused(call(viewOnly, CRM, "/api/v1/embed/search?q=MX-2000"), 403, "DRS-5002");                          // embed:search was not granted
-
-        String app = uid("sea-");
-        String tok = token(app, register(app, Map.of("scopes", List.of("embed:search"))), user);
-        MvcResult found = call(tok, CRM, "/api/v1/embed/search?q=MX-2000");
-        assertThat(found.getResponse().getStatus()).as(found.getResponse().getContentAsString()).isEqualTo(200);
-        JsonNode body = json.readTree(found.getResponse().getContentAsString());
-        assertThat(body.path("results").isArray()).isTrue();
-        assertThat(body.path("results").size()).isLessThanOrEqualTo(10);
-        assertThat(found.getResponse().getContentAsString()).doesNotContain("\"complete\"");                      // titles and ids only
-        refused(call(tok, CRM, VIEW), 403, "DRS-5002");                                                           // the search scope opens the search and nothing else
-        refused(call(tok, CRM, "/api/v1/command/suggest?q=MX-2000"), 403, "DRS-5002");
-        assertThat(json.readTree(call(tok, CRM, "/api/v1/embed/search?q=M").getResponse().getContentAsString()).path("note").asText()).contains("at least");
-
-        String narrow = uid("sea-");
-        String kindTok = token(narrow, register(narrow, Map.of("scopes", List.of("embed:search"), "kinds", List.of("counterparty"))), user);
-        assertThat(call(kindTok, CRM, "/api/v1/embed/search?q=MX-2000").getResponse().getContentAsString()).doesNotContain("\"kind\":\"trade\"");
-
-        String rated = uid("sea-");
-        String limited = token(rated, register(rated, Map.of("scopes", List.of("embed:search"))), user);
-        for (int i = 0; i < 4; i++) {
-            assertThat(call(limited, CRM, "/api/v1/embed/search?q=MX-2000").getResponse().getStatus()).isEqualTo(200);
-        }
-        MvcResult over = call(limited, CRM, "/api/v1/embed/search?q=MX-2000");
-        refused(over, 429, "DRS-8004");
-        assertThat(Long.parseLong(over.getResponse().getHeader("Retry-After"))).isBetween(1L, 60L);
     }
 
     @Test

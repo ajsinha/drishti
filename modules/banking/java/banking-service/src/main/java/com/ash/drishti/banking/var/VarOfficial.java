@@ -486,7 +486,7 @@ final class VarOfficial implements AutoCloseable {
         r.put("SES", f.get("ses"));
         r.put("STRESS_SET_ID", f.get("stressSet"));
         r.put("SCENARIO_SET_ID", d.book().scenarioSet());
-        r.put("SCENARIO_WINDOW", (long) d.book().width());             // the newest N scenarios used (drishti.var.scenario-window)
+        r.put("SCENARIO_WINDOW", (long) d.book().width());             // the newest N scenarios used (drishti.module.banking.var.window)
         r.put("STANDALONE_SUM", f.get("sumStandalone"));
         r.put("DIVERSIFICATION", f.get("diversification"));
         r.put("HYPO_PNL", f.get("hypoPnl"));

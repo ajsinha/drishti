@@ -33,7 +33,7 @@ FIRST_TAG = "v2.9.11.d"
 COLUMNS = ("java main", "java test", "console python", "console js")
 BEGIN = "<!-- code-volume:begin (tools/code_volume.py --write) -->"
 END = "<!-- code-volume:end -->"
-NOT_CONSOLE_JS = re.compile(r"/static/vendor/|/web/embed/|\.min\.js$")
+NOT_CONSOLE_JS = re.compile(r"/static/vendor/|\.min\.js$")
 
 
 def category(path: str) -> str | None:

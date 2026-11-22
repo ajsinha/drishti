@@ -55,7 +55,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  * VaR engine's own answer, the export recalculated by headless LibreOffice against it to the cent, the ids, the limits and the refusals,
  * the estimate and the empty template.
  */
-@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/var-playground-api", "drishti.rachana.hot-reload=false", "drishti.var.scenario-window=all", "drishti.packs.enabled=finance",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/var-playground-api", "drishti.rachana.hot-reload=false", "drishti.module.banking.var.window=all", "drishti.packs.enabled=finance",
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
         "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK",
@@ -65,10 +65,10 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.var.hierarchies.LEGAL.limits=var-limit",
         "drishti.sources.routes.scenario-pv=risk-lake", "drishti.sources.routes.fx-scenario=risk-lake",
         "drishti.var.official.on-start=false", "drishti.var.official.publish=false", "drishti.var.currencies=USD",
-        "drishti.var.hot-dates=1", "drishti.var.playground.max-ids=3",
+        "drishti.module.banking.var.hot-dates=1", "drishti.var.playground.max-ids=3",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.security.roles.risk.kinds[0]=*", "drishti.security.roles.risk.raw=true",
-        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
+        "drishti.module.banking.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)

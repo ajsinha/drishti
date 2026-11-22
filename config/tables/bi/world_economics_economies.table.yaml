@@ -14,7 +14,6 @@
 
 rachana: 3
 table: bi.world_economics_economies
-was: world-economics-economies
 version: 1.0.0
 title: "World economics: economies"
 description: The economies table of the model world-economics.

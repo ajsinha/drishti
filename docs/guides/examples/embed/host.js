@@ -16,7 +16,7 @@
 /* The part every host page shares: tell Drishti Elements where a user's embed token comes from.
    Your own backend asks Drishti for it (server to server, RFC 8693, the application's secret never reaches the browser); the page only calls your backend.
    Here that backend is tools/elements-demo/server.py (GET /api/drishti-token); in your application it is one endpoint of your own. */
-export const SCOPES = 'embed:view embed:about embed:report embed:search';
+export const SCOPES = 'embed:view embed:about';
 
 export function configureDrishti() {
   window.DrishtiElements.configure({
@@ -37,5 +37,5 @@ export async function demoSignIn(user = 'viewer') {
   return user;
 }
 
-/** What every sample shows: the entity the search picked, and the report. */
-export const START = { kind: 'trade', id: '1000008', report: 'file:report:live-trading-desk' };
+/** What every sample shows first: an entity. */
+export const START = { kind: 'trade', id: '1000008' };

@@ -49,7 +49,7 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.sources.connectors-dir=target/hierarchy-upgrade/connectors", "drishti.data.dir=${lake.module.root}/target/hierarchy-upgrade/data",
         "DRISHTI_DELTA_ROOT=target/hierarchy-upgrade/data/delta/demo",      // the older files' root and the demo lake's: one folder
         "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.on-start=false", "drishti.ccr.exposure.close-grace-seconds=0",
-        "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
+        "drishti.module.banking.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 @Import(PinnedBusinessDate.class)

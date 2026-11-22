@@ -666,7 +666,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_SUTRA_WATCH` | `drishti.rachana.watch` | `auto` | How Sutra hot reload notices edits: `auto` (file events, polling when they are unavailable) or `poll`. |
 | `DRISHTI_LABS_CALC` | `drishti.calc.enabled` | `false` | Labs: allow Calc (Python in the browser, a scratch pad that never publishes). |
 | `DRISHTI_VAR_ENABLED` | `drishti.var.enabled` | `true` | Run the VaR engine (`/api/v1/var`, the VaR explorer). |
-| `DRISHTI_VAR_THREADS` | `drishti.var.threads` | `0` | Cores the VaR engine's vector sums use (`0`: every core). |
+| `DRISHTI_VAR_THREADS` | `drishti.module.banking.var.threads` | `0` | Cores the VaR engine's vector sums use (`0`: every core). |
 | `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | Most memory one date's P&L vectors take (`0`: a quarter of the heap). |
 | `DRISHTI_VAR_TIER` | `drishti.var.tier.mode` | `mapped` | Where a loaded date's vectors live: `mapped` (a memory-mapped float32 hot file per date) or `heap` (float64 on the heap). |
 | `DRISHTI_VAR_HOT_DIR` | `drishti.var.tier.dir` | `<data>/var/hot` | The VaR hot files' folder (one folder per business date); under the data folder unless set. |
@@ -682,11 +682,11 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_EXPOSURE_KEEP_HOT_FILES` | `drishti.ccr.exposure.keep-on-shutdown` | `false` | Keep the exposure hot files across restarts (the server images set `true`). |
 | `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW` | `drishti.var.intraday.kafka.window` | `5m` | The PV topic's window: everything received in it is appended to the lake as one intraday batch and applied (`30s`, `5m`, `1h`). |
 | `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | `drishti.var.intraday.kafka.max-trades` | `500` | A window is applied earlier once this many trades wait. |
-| `DRISHTI_VAR_CONFIDENCE` | `drishti.var.confidence` | `0.99` | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)); every label follows it; limits are set against it. |
-| `DRISHTI_VAR_ES_CONFIDENCE` | `drishti.var.es-confidence` | `0.975` | Expected shortfall's confidence. |
-| `DRISHTI_VAR_TEN_DAY_METHOD` | `drishti.var.ten-day-method` | `sqrt10` | What a 10-day VaR without a named method is: `sqrt10` (the 1-day × √10) or `sum` (10 consecutive days, overlapping windows). |
-| `DRISHTI_VAR_SCENARIO_WINDOW` | `drishti.var.scenario-window` | `250` | The scenarios used: N ≥ 20, the newest N of each date's set (250: one year, the Basel minimum), or `all` (the scenario set's length). |
-| `DRISHTI_VAR_ROOT_NAME` | `drishti.var.root-name` | empty | The name of the top of the VaR tree (every hierarchy's root node); empty keeps the hierarchy data's `NAME` (*Drishti Bank* in the demo). `drishti.var.root-names` (a map, hierarchy to name) wins for one hierarchy. Read when a date loads: restart the server (or reload the dates) after changing it. |
+| `DRISHTI_VAR_CONFIDENCE` | `drishti.module.banking.var.confidence` | `0.99` | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)); every label follows it; limits are set against it. |
+| `DRISHTI_VAR_ES_CONFIDENCE` | `drishti.module.banking.var.es-confidence` | `0.975` | Expected shortfall's confidence. |
+| `DRISHTI_VAR_TEN_DAY_METHOD` | `drishti.module.banking.var.ten-day-method` | `sqrt10` | What a 10-day VaR without a named method is: `sqrt10` (the 1-day × √10) or `sum` (10 consecutive days, overlapping windows). |
+| `DRISHTI_VAR_SCENARIO_WINDOW` | `drishti.module.banking.var.window` | `250` | The scenarios used: N ≥ 20, the newest N of each date's set (250: one year, the Basel minimum), or `all` (the scenario set's length). |
+| `DRISHTI_VAR_ROOT_NAME` | `drishti.module.banking.var.root-name` | empty | The name of the top of the VaR tree (every hierarchy's root node); empty keeps the hierarchy data's `NAME` (*Drishti Bank* in the demo). `drishti.var.root-names` (a map, hierarchy to name) wins for one hierarchy. Read when a date loads: restart the server (or reload the dates) after changing it. |
 | `DRISHTI_VAR_OFFICIAL` | `drishti.var.official.enabled` | `true` | Capture every node officially at the end of each loaded date, and publish it to `risk-results/var-official`. |
 | `DRISHTI_VAR_OFFICIAL_FORMAT` | `drishti.var.official.format` | `delta` | `iceberg` publishes the official VaR results to Iceberg; BI's `var-results` connector follows by itself. |
 | `DRISHTI_EXPOSURE_OFFICIAL_FORMAT` | `drishti.ccr.exposure.official.format` | `delta` | The same for the official exposure results and BI's `exposure-results`. |
@@ -781,7 +781,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_VIEWS_REFRESH_MIN_SECONDS` | `views.refresh_min_seconds` | `5` | The fastest any panel refreshes (a Sutra's `refresh:`, [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 9](../guides/RACHANA_REFERENCE.md#9-live-panels-refresh-control-and-freshness)), in seconds (1 to 3600): a Sutra or a reader asking for faster gets this. |
 | `DRISHTI_UI_DESIGNER` | `ui.designer` | `false` | The Sutra designer: **Customize** on every entity page, **Describe** under Build, New screen, and the **Outline** and **Grid** modes ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid)). Off: pages and the Build workbench are unchanged. |
 | `DRISHTI_HOME_FACTS` | `ui.facts.enabled` | `true` | Home's **Did you know** tile, the fact of the day for a signed-in user ([USER_GUIDE.md](../guides/USER_GUIDE.md#home-the-fact-of-the-day)). `false`: no tile. |
-| `DRISHTI_EMBED_ENABLED` | `embed.enabled` | `false` | Serve `/embed/v1/` (Elements 1.x, HTML) and `/embed/v2/` (Elements 2.0 and the client-side renderer, the ViewModel as JSON) for host applications registered at the server (EMBED_GUIDE.md). |
+| `DRISHTI_EMBED_ENABLED` | `embed.enabled` | `false` | Serve `/embed/v2/` (Elements 2.x and the client-side renderer, the ViewModel as JSON) for host applications registered at the server (EMBED_GUIDE.md). |
 | `DRISHTI_EMBED_SIGN_IN` | `embed.sign_in.enabled` | `true` | The sign-in window of `auth: 'popup'` (`/embed/v2/sign-in`), through `auth.oidc`. |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | Turn console sign-in on. |
 | `DRISHTI_SESSION_SECRET` | `auth.session_secret` | empty | The session cookie secret (at least 32 characters); environment only. |
@@ -1444,13 +1444,10 @@ Off by default. A host application's backend buys a short embed token at the ser
 | `allow-wildcard-origins` | `false` | Let an application register `https://*.suffix` origins (review apps). |
 | `assertion-max-age` | `60s` | The longest life (`exp` minus `iat`) of a client assertion or user assertion a host signs. |
 | `sign-in-window` | `true` (`DRISHTI_EMBED_SIGN_IN_WINDOW`) | The renderer's optional sign-in window (`auth: 'popup'`, [EMBED_GUIDE.md 10.1](../guides/EMBED_GUIDE.md#42-a-page-without-a-backend-the-sign-in-window)): a registered host's page with no backend signs its user in through single sign-on in a window opened on a click, and this server makes the embed token (`POST /api/v1/embed/sign-in-window`, the console only). Needs `drishti.security.oidc`. `false` refuses it (`403 DRS-8003`); hosts keep the token exchange. |
-| `scopes` | `embed:view`, `embed:about`, `embed:report`, `embed:search` | Each embed scope with the `METHOD path` patterns it opens. A token calls nothing else, and nothing writes (the one POST that reads, `POST /api/v1/bi/reports/*/query`, is listed in `embed:report`). Keys keep their colon in brackets: `[embed:view]`, `[embed:about]`, `[embed:report]`, `[embed:search]`. `embed:search` opens `GET /api/v1/embed/search` for `<drishti-search>` (a masked, read-only search across Drishti, cut to the application's kinds). `embed:report` opens a published BI report for `<drishti-report>` and only for a host application whose `kinds` list names `report:<id>` or `report:*`. |
+| `scopes` | `embed:view`, `embed:about` | Each embed scope with the `METHOD path` patterns it opens. A token calls nothing else, and nothing writes. Keys keep their colon in brackets: `[embed:view]`, `[embed:about]`, `[embed:report]`, `[embed:search]`. `embed:search` opens `GET /api/v1/embed/search` for `<drishti-search>` (a masked, read-only search across Drishti, cut to the application's kinds). `embed:report` opens a published BI report for `<drishti-report>` and only for a host application whose `kinds` list names `report:<id>` or `report:*`. |
 | `limits.tokens-per-minute` | `120` | Token requests per host application per minute (`429 DRS-8004`). |
 | `limits.views-per-minute` | `600` | The default `callsPerMinute` of a new application: calls per application per minute. |
 | `limits.views-per-user-per-minute` | `60` | The default `userCallsPerMinute` of a new application. |
-| `limits.searches-per-user-per-minute` | `30` | Searches one user may make per application per minute through `<drishti-search>` (scope `embed:search`), on top of the call rates (`429 DRS-8004`). |
-| `search.max-results` | `10` | Most results one search returns (1 to 50). |
-| `search.min-chars` | `2` | Shortest query that is searched; a shorter one gets an empty answer and a note. |
 | `apps` | empty | Host applications declared in configuration (GitOps), shown in Admin → Embedding as *from config* and read-only; see below. |
 
 **Declaring applications in configuration** (`application.yaml`, a pack's settings or the environment). Each entry takes the fields of a registration; the client secret is never written, only its hash, `printf '%s' "$SECRET" | sha256sum`. An entry is checked like a registration when the server starts, and an invalid one stops the start with its id and the problem. A configured application cannot be changed, rotated, disabled or deleted through the API or the page (`409`); an id in both places is the configured one.
@@ -1479,7 +1476,7 @@ In the console's `config/application.yaml` (or `--embed.key=value`). Off by defa
 
 | Key | Default | Meaning |
 |---|---|---|
-| `embed.enabled` | `false` (`DRISHTI_EMBED_ENABLED`) | Serve `/embed/v1/...`. Off: nothing under `/embed/` exists. Needs the server's `drishti.embed.enabled` and `drishti.security.enabled`. |
+| `embed.enabled` | `false` (`DRISHTI_EMBED_ENABLED`) | Serve `/embed/v2/...`. Off: nothing under `/embed/` exists. Needs the server's `drishti.embed.enabled` and `drishti.security.enabled`. |
 | `embed.origins_ttl_seconds` | `60` | How long the registered origins (the CORS allow-list, from the server's `/api/v1/embed/apps/origins`) are reused. A new application's origin works within this time. |
 | `embed.jwks_ttl_seconds` | `300` | How long the server's embed signing keys (`/api/v1/embed/jwks`) are reused. |
 | `embed.jwks_min_refetch_seconds` | `10` | A token naming an unknown key id (the server rotated its key) refetches the key set, but at most this often. |
@@ -1487,13 +1484,13 @@ In the console's `config/application.yaml` (or `--embed.key=value`). Off by defa
 | `embed.rate_per_minute` | `600` | Calls per host application per minute; over it `429 DRS-8004` with `Retry-After`. `0` = unlimited. |
 | `embed.max_streams` | `64` | Live subscriptions all embed channels together may hold open (each uses a connection of `backend.pool_size`). Beyond it a channel open is `429 DRS-8004`. `0` = unlimited. |
 | `embed.recheck_seconds` | `60` | An open stream asks the server this often whether its token still passes (user, application, scopes). |
-| `embed.token_grace_seconds` | `30` | After a stream's token expires, how long the console waits for a fresh one (`POST /embed/v1/channel/{cid}/token`) before ending the stream with `DRS-8001`. |
+| `embed.token_grace_seconds` | `30` | After a stream's token expires, how long the console waits for a fresh one (`POST /embed/v2/channel/{cid}/token`) before ending the stream with `DRS-8001`. |
 | `embed.compress_min_bytes` | `512` | Payloads smaller than this are not compressed (Brotli when installed, else gzip). |
 | `embed.sign_in.enabled` | `true` (`DRISHTI_EMBED_SIGN_IN`) | The sign-in window of `auth: 'popup'` on this console (`/embed/v2/sign-in`, [EMBED_GUIDE.md 10.1](../guides/EMBED_GUIDE.md#42-a-page-without-a-backend-the-sign-in-window)). Needs `auth.oidc.enabled` and `auth.token_secret`; off, or without them, the window answers `DRS-8003` and pages keep the token exchange. |
 | `embed.sign_in.redirect_uri` | empty | Where the provider sends the window back; empty: `<console>/embed/v2/sign-in/callback`. Register it at the provider beside `auth.oidc.redirect_uri`. |
 | `embed.sign_in.refresh` | `true` | Renew the window's token silently with the provider's refresh token while the SSO session lasts (the refresh token sealed with AES-GCM, held in the page's memory, unreadable there). `false`: the person clicks again when the token ends. |
 | `embed.sign_in.max_hours` | `0` | The longest a window sign-in is renewed; `0`: `auth.session_hours`. |
-| `embed.lifecycle` | empty | Announces the end of an embed API major: `{"1": {deprecation: 2027-01-01, sunset: 2027-07-01, link: https://drishti.example/migrating}}`. From the `deprecation` day every `/embed/v1/` answer carries `Deprecation: @<epoch>` (RFC 9745) and, whenever a `sunset` is set, `Sunset: <HTTP date>` (RFC 8594) and a `Link: <...>; rel="deprecation"`; from the `sunset` day the embed calls are `410 DRS-8006`. Nothing is announced by default. See [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle). |
+| `embed.lifecycle` | empty | Announces the end of an embed API major: `{"2": {deprecation: 2027-01-01, sunset: 2027-07-01, link: https://drishti.example/migrating}}`. From the `deprecation` day every `/embed/v2/` answer carries `Deprecation: @<epoch>` (RFC 9745) and, whenever a `sunset` is set, `Sunset: <HTTP date>` (RFC 8594) and a `Link: <...>; rel="deprecation"`; from the `sunset` day the embed calls are `410 DRS-8006`. Nothing is announced by default. See [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle). |
 
 ### `drishti.security.oidc` — single sign-on
 
@@ -2857,7 +2854,7 @@ Off by default: with `enabled: false` nothing under `/embed/` exists. Host appli
 
 | Key | Default | Meaning |
 |---|---|---|
-| `enabled` | `false` (`DRISHTI_EMBED_ENABLED`) | Serve `/embed/v1/` (view, channel, resolve, the element's script and sheet). |
+| `enabled` | `false` (`DRISHTI_EMBED_ENABLED`) | Serve `/embed/v2/` (view, channel, resolve, the renderer's files). |
 | `origins_ttl_seconds` | `60` | How long the console keeps the origins its server's host applications registered (the CORS allow-list). A new or changed application is known within this time. |
 
 ### `auth`
@@ -3006,7 +3003,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [Platform alert rules: `config/alerts/platform-alerts.yaml`](#platform-alert-rules-configalertsplatform-alertsyaml) | 13 |
 | [Data feeds: `config/feeds/<feed>.yaml`](#data-feeds-configfeedsfeedyaml) | 24 |
 | [Report definitions: `config/reports/banking/`](#report-definitions-configreportsbanking) | 23 |
-| [SIMM parameter files: `drishti.simm.parameters-dir`](#simm-parameter-files-drishtisimmparameters-dir) | 29 |
+| [SIMM parameter files: `drishti.module.banking.simm.parameters-dir`](#simm-parameter-files-drishtimodulebankingsimmparameters-dir) | 29 |
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
@@ -4043,7 +4040,29 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 ### Compute engines: `config/engines/*.yaml`
 
-One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake, the data inbox), `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. `application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and `drishti.py server engines` write only the switch and `changed`; every other key is edited in the file ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). The old switch names are listed last: a site that sets one stops the server at start, which names the new key.
+One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake, the data inbox), `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under its own prefix (`drishti.var.*`), except the few the banking module owns (`drishti.module.banking.*`: the manifest's `settings:`; their old `drishti.var.*` names are retired and a site that sets one stops the start, naming the new key). `application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and `drishti.py server engines` write only the switch and `changed`; every other key is edited in the file ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). The old switch names are listed last: a site that sets one stops the server at start, which names the new key.
+
+#### `drishti.module`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
+|---|---|---|---|---|---|---|---|---|
+| `drishti.module.banking.var.confidence` | number | `0.99` | `DRISHTI_VAR_CONFIDENCE` | server (each node its own) | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)) | restart |  | everyday |
+| `drishti.module.banking.var.es-confidence` | number | `0.975` | `DRISHTI_VAR_ES_CONFIDENCE` | server (each node its own) | expected shortfall's | restart |  | everyday |
+| `drishti.module.banking.var.ten-day-method` | string | `sqrt10` | `DRISHTI_VAR_TEN_DAY_METHOD` | server (each node its own) | 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days) | restart |  | admin |
+| `drishti.module.banking.var.window` | integer | `250` | `DRISHTI_VAR_SCENARIO_WINDOW` | server (each node its own) | the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo) | restart |  | everyday |
+| `drishti.module.banking.var.rank-rule` | string | `kth-worst` |  | server (each node its own) | kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated | restart |  | admin |
+| `drishti.module.banking.var.threads` | integer | `0` | `DRISHTI_VAR_THREADS` | server (each node its own) | cores the vector sums use (0: every core) | restart |  | expert |
+| `drishti.module.banking.var.hot-dates` | integer | `10` | `DRISHTI_VAR_HOT_DATES` | server (each node its own) | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay | restart |  | admin |
+| `drishti.module.banking.var.root-name` | string | empty | `DRISHTI_VAR_ROOT_NAME` | server (each node its own) | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy's root.name (else its title) | restart |  | admin |
+| `drishti.module.banking.var.hierarchy.empty-label` | string | `(Blank)` | `DRISHTI_VAR_HIERARCHY_EMPTY_LABEL` | server (each node its own) | the node a row with an empty (or unpromoted) level value sits under; a hierarchy's empty-label wins | restart |  | admin |
+| `drishti.module.banking.var.system-baskets.seed` | boolean | `true` | `DRISHTI_VAR_SYSTEM_BASKETS_SEED`, `DRISHTI_DEMO_ENABLED` | server (each node its own) | import a loaded pack's seed (market-risk: seeds/system-baskets.yaml) once into an empty system scope at start | restart |  | admin |
+| `drishti.module.banking.exposure.limit-confidence` | number | `0.95` |  | server (each node its own) | the PFE credit limits are set on; the default q of an answer | restart |  | everyday |
+| `drishti.module.banking.exposure.rank-rule` | string | `kth` |  | server (each node its own) | kth (the ceil(P q)-th smallest exposure) or interpolated | restart |  | admin |
+| `drishti.module.banking.sensitivities.cache-minutes` | integer | `10` |  | server (each node its own) | how long a date's sensitivities stay in memory after they are read | restart |  | expert |
+| `drishti.module.banking.frtb.parameters-dir` | string | `<module:banking>/packs/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  | admin |
+| `drishti.module.banking.simm.parameters-dir` | string | `<config>/simm` | `DRISHTI_SIMM_PARAMETERS` | server (each node its own) | the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed) | restart |  | admin |
+| `drishti.module.banking.simm.default-version` | string | `""` |  | server (each node its own) | the version for a CSA naming none and for analytic scopes; blank: the installed one with the latest effective date | restart |  | admin |
+| `drishti.module.banking.mr-cube.sbm-max-cells` | integer | `60` |  | server (each node its own) | the most cells whose FRTB-SA SBM one view computes (a run of the FRTB-SA engine per cell scope) | restart |  | admin |
 
 #### `drishti.engines.var`
 
@@ -4062,17 +4081,10 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.var.confidence` | number | `0.99` | `DRISHTI_VAR_CONFIDENCE` | server (each node its own) | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)) | restart |  | everyday |
-| `drishti.var.es-confidence` | number | `0.975` | `DRISHTI_VAR_ES_CONFIDENCE` | server (each node its own) | expected shortfall's | restart |  | everyday |
 | `drishti.var.confidences` | list | `[0.95, 0.975, 0.99, 0.995]` |  | server (each node its own) | the VaR confidences offered on the VaR page, in commands and the API (the default is always offered) | restart |  | everyday |
 | `drishti.var.es-confidences` | list | `[0.95, 0.975, 0.99]` |  | server (each node its own) | the ES confidences offered the same way (es-confidence is always offered) | restart |  | everyday |
-| `drishti.var.ten-day-method` | string | `sqrt10` | `DRISHTI_VAR_TEN_DAY_METHOD` | server (each node its own) | 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days) | restart |  | admin |
-| `drishti.var.scenario-window` | integer | `250` | `DRISHTI_VAR_SCENARIO_WINDOW` | server (each node its own) | the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo) | restart |  | everyday |
-| `drishti.var.rank-rule` | string | `kth-worst` |  | server (each node its own) | kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated | restart |  | admin |
 | `drishti.var.component-window` | integer | `5` |  | server (each node its own) | component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR | restart |  | admin |
-| `drishti.var.threads` | integer | `0` | `DRISHTI_VAR_THREADS` | server (each node its own) | cores the vector sums use (0: every core) | restart |  | expert |
 | `drishti.var.memory-budget-mb` | integer | `0` | `DRISHTI_VAR_MEMORY_MB` | server (each node its own) | heap tier only: most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204. The mapped tier is bounded by the disk (hard) and the page cache (advisory) | restart |  | expert |
-| `drishti.var.hot-dates` | integer | `10` | `DRISHTI_VAR_HOT_DATES` | server (each node its own) | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay | restart |  | admin |
 | `drishti.var.refusal-ttl-seconds` | integer | `300` |  | server (each node its own) | a date refused for room (capacity, disk) is remembered this long: asked again, 503 at once with Retry-After, no lake read; forgotten sooner when room is freed (0: not remembered) | restart |  | admin |
 | `drishti.var.open-heap-mb` | integer | `0` | `DRISHTI_VAR_OPEN_HEAP_MB` | server (each node its own) | the byte safety net over every open book's heap (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least a tenth of the heap); over it the least recently used dates' currency, then stress books, then whole dates leave | restart |  | expert |
 | `drishti.var.fiscal-year-end` | string | empty | `DRISHTI_FISCAL_YEAR_END` | server (each node its own) | the bank's fiscal year-end, MM-DD (for example 10-31); blank: none (the fiscal-year-end pin is off) | restart |  | admin |
@@ -4089,7 +4101,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.currencies` | string | `USD,EUR,CAD,JPY,GBP` | `DRISHTI_VAR_CURRENCIES` | server (each node its own) | reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask | restart |  | admin |
 | `drishti.var.currency-retention-dates` | integer | `5` | `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | server (each node its own) | newest business dates whose listed currencies are built ahead and kept on disk | restart |  | admin |
 | `drishti.var.preload-previous-date` | boolean | `true` | `DRISHTI_VAR_PRELOAD_PREVIOUS_DATE` | server (each node its own) | at start, open the business date before the newest too (after the newest), so the first Why it moved after a restart compares two open dates; the busy protection may refuse it (then it opens on the first ask) | restart |  | admin |
-| `drishti.var.root-name` | string | empty | `DRISHTI_VAR_ROOT_NAME` | server (each node its own) | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy's root.name (else its title) | restart |  | admin |
 | `drishti.var.access` | map | `{}` |  | server (each node its own) | per role, per node: positions \| aggregate (drishti.var.access.&lt;role&gt;\[MGMT~DESK-RATES]=aggregate) | restart |  | admin |
 
 #### `drishti.var.stress`
@@ -4181,12 +4192,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.intraday.kafka.window` | duration | `5m` | `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW` | server (each node its own) | everything received in a window: one intraday batch in the lake, applied | restart |  | expert |
 | `drishti.var.intraday.kafka.max-trades` | integer | `500` | `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | server (each node its own) | a window applied earlier once this many trades wait | restart |  | expert |
 
-#### `drishti.var.hierarchy`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
-|---|---|---|---|---|---|---|---|---|
-| `drishti.var.hierarchy.empty-label` | string | `(Blank)` | `DRISHTI_VAR_HIERARCHY_EMPTY_LABEL` | server (each node its own) | the node a row with an empty (or unpromoted) level value sits under; a hierarchy's empty-label wins | restart |  | admin |
-
 #### `drishti.var.sharding`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
@@ -4217,12 +4222,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.kinds.fx-spot` | string | `fx-spot` |  | server (each node its own) | the FX history scenario rates are derived from when not supplied (the market-data pack's) | restart |  | admin |
 | `drishti.var.kinds.limit` | string | `var-limit` |  | server (each node its own) | the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it | restart |  | admin |
 | `drishti.var.kinds.valuation` | string | `trade-valuation` |  | server (each node its own) | the trade valuations a VaR by a trade column the vectors do not carry joins by trade id (by=attribute:TRADER\_ID) | restart |  | admin |
-
-#### `drishti.var.system-baskets`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
-|---|---|---|---|---|---|---|---|---|
-| `drishti.var.system-baskets.seed` | boolean | `true` | `DRISHTI_VAR_SYSTEM_BASKETS_SEED`, `DRISHTI_DEMO_ENABLED` | server (each node its own) | import a loaded pack's seed (market-risk: seeds/system-baskets.yaml) once into an empty system scope at start | restart |  | admin |
 
 #### `drishti.var.positions`
 
@@ -4273,8 +4272,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
 | `drishti.ccr.exposure.confidence` | list | `[0.95, 0.99]` |  | server (each node its own) | PFE confidences computed for every answer (any q in (0.5, 1) may be asked) | restart |  | everyday |
-| `drishti.ccr.exposure.limit-confidence` | number | `0.95` |  | server (each node its own) | the PFE credit limits are set on; the default q of an answer | restart |  | everyday |
-| `drishti.ccr.exposure.rank-rule` | string | `kth` |  | server (each node its own) | kth (the ceil(P q)-th smallest exposure) or interpolated | restart |  | admin |
 | `drishti.ccr.exposure.collateral-model` | string | `lagged` |  | server (each node its own) | lagged (called at the look-back point), current (today's collateral on every path) or none | restart |  | admin |
 | `drishti.ccr.exposure.im-model` | string | `current` |  | server (each node its own) | current (the initial margin held today on every path) or none | restart |  | admin |
 | `drishti.ccr.exposure.alpha` | number | `1.4` |  | server (each node its own) | EAD\_IMM = alpha x EEPE (informational) | restart |  | admin |
@@ -4341,8 +4338,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 |---|---|---|---|---|---|---|---|---|
 | `drishti.frtb.sensitivity-kind` | string | `position-sensitivity` |  | server (each node its own) | the position sensitivities (SENS) | restart |  | admin |
 | `drishti.frtb.factor-kind` | string | `risk-factor` |  | server (each node its own) | the factor dictionary (RFAC) | restart |  | admin |
-| `drishti.frtb.cache-minutes` | integer | `10` |  | server (each node its own) | how long a date's sensitivities stay in memory after they are read | restart |  | expert |
-| `drishti.frtb.parameters-dir` | string | `<module:banking>/packs/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  | admin |
 | `drishti.frtb.default-risk-kind` | string | `default-risk` |  | server (each node its own) | the DRC inputs; none served: "DRC not computed", never 0 | restart |  | admin |
 | `drishti.frtb.residual-risk-kind` | string | `residual-risk` |  | server (each node its own) | the RRAO inputs; none served: derived from the positions' product types and notionals | restart |  | admin |
 | `drishti.frtb.rrao-from-positions` | boolean | `true` |  | server (each node its own) | derive the RRAO from PRODUCT\_TYPE (the parameter file's mapping) and the VaR book's notionals | restart |  | admin |
@@ -4368,8 +4363,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.simm.parameters-dir` | string | `<config>/simm` | `DRISHTI_SIMM_PARAMETERS` | server (each node its own) | the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed) | restart |  | admin |
-| `drishti.simm.default-version` | string | `""` |  | server (each node its own) | the version for a CSA naming none and for analytic scopes; blank: the installed one with the latest effective date | restart |  | admin |
 | `drishti.simm.netting-set-kind` | string | `netting-set` |  | server (each node its own) | the netting sets and their trades | restart |  | admin |
 | `drishti.simm.csa-kind` | string | `csa` |  | server (each node its own) | the CSAs; their SIMM terms (SIMM\_VERSION, IM\_COLLECT\_REGIMES, IM\_POST\_REGIMES, IM\_CALCULATION\_CURRENCY, add-ons) when present | restart |  | admin |
 | `drishti.simm.add-on-kind` | string | `simm-addon` |  | server (each node its own) | the notional add-on lines; none served: no notional add-on | restart |  | admin |
@@ -4392,7 +4385,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.cube.mr.sbm-max-cells` | integer | `60` |  | server (each node its own) | the most cells whose FRTB-SA SBM one view computes (a run of the FRTB-SA engine per cell scope) | restart |  | admin |
 | `drishti.cube.mr.stressed-max-cells` | integer | `100` |  | server (each node its own) | the most cells whose stressed VaR one view computes, scope by scope | restart |  | admin |
 | `drishti.cube.mr.sparkline-dates` | integer | `20` |  | server (each node its own) | the open business dates a sparkline reads (a date not open here is not opened for one) | restart |  | admin |
 | `drishti.cube.mr.sparkline-max-cells` | integer | `600` |  | server (each node its own) | the most cells of a view that get a sparkline | restart |  | admin |
@@ -5793,7 +5785,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `hierarchies.<name>.levels` | string | `none` |  | the pack | The promoted columns, top first: DIVISION &gt; DESK &gt; TT\_BOOK (each in layout.&lt;kind&gt;.columns of every source kind) | live |  | admin |
 | `hierarchies.<name>.level-names` | string | `each column in lower case` |  | the pack | The level of each column's nodes, also the reference kind their names are read from: division &gt; desk &gt; book | live |  | admin |
 | `hierarchies.<name>.root` | map | `{id: BANK, name: <title>}` |  | the pack | The root node's id and name | live |  | admin |
-| `hierarchies.<name>.empty-label` | string | `drishti.var.hierarchy.empty-label` |  | the pack | The name of a (Blank) node: rows with an empty level value | live |  | admin |
+| `hierarchies.<name>.empty-label` | string | `drishti.module.banking.var.hierarchy.empty-label` |  | the pack | The name of a (Blank) node: rows with an empty level value | live |  | admin |
 | `hierarchies.<name>.ids` | string | `path` |  | the pack | path or leaf: how node ids are made | live |  | admin |
 | `hierarchies.<name>.word` | string | `none` |  | the pack | The scope word naming a node (LL:LL-0003) | live |  | admin |
 | `hierarchies.<name>.limits` | string | `none` |  | the pack | The kind its nodes' VaR limits come from (var-limit) | live |  | admin |
@@ -6294,11 +6286,11 @@ One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a r
 | `step-titles` | map | `{}` |  | server | A step's title on the screens ({approver: CRO}) | live (read when a run is made) |  | admin |
 | `step-titles.*` | string | none |  | server | One step's title | live (read when a run is made) |  | admin |
 
-### SIMM parameter files: `drishti.simm.parameters-dir`
+### SIMM parameter files: `drishti.module.banking.simm.parameters-dir`
 
-One YAML per ISDA SIMM version (`drishti.simm.parameters-dir`, default `<config>/simm`), read and checked at start: the bank's licensed numbers, never shipped. The structure is `docs/architecture/capital-parameters/simm.yaml`, every number empty; a version with a number missing is refused with `DRS-5333` ([SIMM_GUIDE.md section 4](../guides/SIMM_GUIDE.md#4-the-licensed-parameter-file)).
+One YAML per ISDA SIMM version (`drishti.module.banking.simm.parameters-dir`, default `<config>/simm`), read and checked at start: the bank's licensed numbers, never shipped. The structure is `docs/architecture/capital-parameters/simm.yaml`, every number empty; a version with a number missing is refused with `DRS-5333` ([SIMM_GUIDE.md section 4](../guides/SIMM_GUIDE.md#4-the-licensed-parameter-file)).
 
-#### A SIMM version's parameter file: `<drishti.simm.parameters-dir>/<version>.yaml` (docs/guides/SIMM_GUIDE.md section 4)
+#### A SIMM version's parameter file: `<drishti.module.banking.simm.parameters-dir>/<version>.yaml` (docs/guides/SIMM_GUIDE.md section 4)
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
@@ -6515,7 +6507,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DATA_DIR` | `drishti.data.dir`, `lakes.data_dir` | `<home>/data` | console, server | The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default. |
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | server | Packs new users get until an admin says otherwise (empty: every installed pack). |
 | `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), the demo lake's root (config/lakes/demo.yaml) | `${lake.data.dir}/delta` | engine, packs | a folder or s3://bucket/prefix |
-| `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled`, `drishti.var.system-baskets.seed` (engine) | `true` | engine, server | run the demo source (the packs' sample data) |
+| `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled`, `drishti.module.banking.var.system-baskets.seed` (engine) | `true` | engine, server | run the demo source (the packs' sample data) |
 | `DRISHTI_DISTRIBUTION` | `drishti.distribution`, `distribution` | empty | console, server | The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names config/distributions/drishti.&lt;name&gt;.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank: Drishti All, exactly as before. Also --distribution=&lt;name&gt; on the command line (drishti.py start server --distribution &lt;name&gt;). |
 | `DRISHTI_DISTRIBUTIONS_DIR` | `drishti.distributions-dir` | `<config>/distributions` | server | the distribution files and kernel.yaml (the kernel's packs and words) |
 | `DRISHTI_DOCTOR_PORTS` | drishti.py doctor | none | tools | The ports doctor checks |
@@ -6569,7 +6561,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `drishti.identity.force-password-change-on-reset` | `false` | server | after an administrator resets a password, the user must change it at the next sign-in |
 | `DRISHTI_FRED_SERIES` | fred-feed series | `DGS10,DFF` | packs | The FRED series read |
 | `DRISHTI_FRTB_ENABLED` | `drishti.engines.frtb-sa.enabled` (engine) | `true` | engine | run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live) |
-| `DRISHTI_FRTB_PARAMETERS` | `drishti.frtb.parameters-dir` (engine) | `<module:banking>/packs/market-risk/capital` | engine | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) |
+| `DRISHTI_FRTB_PARAMETERS` | `drishti.module.banking.frtb.parameters-dir` (engine) | `<module:banking>/packs/market-risk/capital` | engine | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) |
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `<data>/governance` | server | where proposals are kept with store: file; with content (the default) they are in the content store |
 | `DRISHTI_HAMMER_TOKEN` | the Explain hammer's bearer token | `(none)` | tools | The token tools/drillkit/explain\_hammer.py sends to a server with sign-in on (else its --token) |
 | `DRISHTI_HEARTBEAT_SECONDS` | build\_demo\_lakes.py | `30` | tools | How often a long lake build prints that it is alive |
@@ -6700,7 +6692,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_SHOTS_SERVER_PORT` | screenshot tools | none | tools | The port of the server the screenshot tools start |
 | `DRISHTI_SHOTS_WORK` | screenshot tools | none | tools | The screenshot tools' working folder |
 | `DRISHTI_SIMM_ENABLED` | `drishti.engines.simm.enabled` (engine) | `true` | engine | run SIMM on this node: /api/v1/simm, SIMM, PLAY SIMM; needs sensitivities (live) |
-| `DRISHTI_SIMM_PARAMETERS` | `drishti.simm.parameters-dir` (engine) | `<config>/simm` | engine | the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed) |
+| `DRISHTI_SIMM_PARAMETERS` | `drishti.module.banking.simm.parameters-dir` (engine) | `<config>/simm` | engine | the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed) |
 | `DRISHTI_STOP_KEY` | `drishti.launcher.stop-key` | empty | server | the key `drishti.py start server` makes and keeps in the pid file; `stop server` sends it straight from this machine (loopback, no proxy header) to stop gracefully on every OS; empty: every call refused (403); never logged |
 | `DRISHTI_STORE_ACCESS_KEY` | `s3.access-key` (store) | empty | store | empty: the AWS default credentials chain |
 | `DRISHTI_STORE_FILE` | `drishti.store.file` | `<config>/store/store.yaml` | server | The content store (docs/architecture/DATA\_ARCHITECTURE.md): user content every node of a cluster can reach. Its settings are in their own file. |
@@ -6743,14 +6735,14 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_USERS_FILE` | `drishti.identity.users-file` | `<data>/identity/users.json` | server | The files of the file user store and the file audit log (FileUserStore, FileAuditLog); the server keeps users in the identity database and the audit trail in the content store. |
 | `DRISHTI_US_EQUITIES_BENCHMARK` | us-equities benchmark | `SPY` | packs | The index an equity's beta is measured against |
 | `DRISHTI_US_EQUITIES_PRICES_ENABLED` | us-equities-prices enabled | `false` | packs | The us-equities pack's live prices (internal use only) |
-| `DRISHTI_VAR_CONFIDENCE` | `drishti.var.confidence` (engine) | `0.99` | engine | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)) |
+| `DRISHTI_VAR_CONFIDENCE` | `drishti.module.banking.var.confidence` (engine) | `0.99` | engine | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)) |
 | `DRISHTI_VAR_CURRENCIES` | `drishti.var.currencies` (engine) | `USD,EUR,CAD,JPY,GBP` | engine | reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask |
 | `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | `drishti.var.currency-retention-dates` (engine) | `5` | engine | newest business dates whose listed currencies are built ahead and kept on disk |
 | `DRISHTI_VAR_ENABLED` | `drishti.engines.var.enabled` (engine) | `true` | engine | run the VaR engine on this node: /api/v1/var, VAR, SMAT, PLAY VAR, regulatory VaR (live) |
-| `DRISHTI_VAR_ES_CONFIDENCE` | `drishti.var.es-confidence` (engine) | `0.975` | engine | expected shortfall's |
+| `DRISHTI_VAR_ES_CONFIDENCE` | `drishti.module.banking.var.es-confidence` (engine) | `0.975` | engine | expected shortfall's |
 | `DRISHTI_VAR_EXPLAIN_ENABLED` | `drishti.var.explain.enabled` (engine) | `true` | engine | the tab, the command, the API and the workbook |
-| `DRISHTI_VAR_HIERARCHY_EMPTY_LABEL` | `drishti.var.hierarchy.empty-label` (engine) | `(Blank)` | engine | the node a row with an empty (or unpromoted) level value sits under; a hierarchy's empty-label wins |
-| `DRISHTI_VAR_HOT_DATES` | `drishti.var.hot-dates` (engine) | `10` | engine | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay |
+| `DRISHTI_VAR_HIERARCHY_EMPTY_LABEL` | `drishti.module.banking.var.hierarchy.empty-label` (engine) | `(Blank)` | engine | the node a row with an empty (or unpromoted) level value sits under; a hierarchy's empty-label wins |
+| `DRISHTI_VAR_HOT_DATES` | `drishti.module.banking.var.hot-dates` (engine) | `10` | engine | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay |
 | `DRISHTI_VAR_HOT_DIR` | `drishti.var.tier.dir` (engine) | `<data>/var/hot` | engine | one folder per business date; never under the repository |
 | `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | `drishti.var.intraday.kafka.max-trades` (engine) | `500` | engine | a window applied earlier once this many trades wait |
 | `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW` | `drishti.var.intraday.kafka.window` (engine) | `5m` | engine | everything received in a window: one intraday batch in the lake, applied |
@@ -6767,14 +6759,14 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_VAR_PV_STREAM` | pv-updates enabled | `false` | packs | Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches |
 | `DRISHTI_VAR_PV_TOPIC` | pv-updates topic | `drishti.risk.pv-updates` | packs | Its topic: JSON Lines of scenario-pv or pnl-vector records per message |
 | `DRISHTI_VAR_READ_THREADS` | `drishti.var.read.threads` (engine) | `0` | engine | files (or runs of row groups) decoded at once for one load, delivered in file order (0: half the cores, at most 8; 1: on the load's own thread) |
-| `DRISHTI_VAR_ROOT_NAME` | `drishti.var.root-name` (engine) | empty | engine | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy's root.name (else its title) |
-| `DRISHTI_VAR_SCENARIO_WINDOW` | `drishti.var.scenario-window` (engine) | `250` | engine | the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo) |
+| `DRISHTI_VAR_ROOT_NAME` | `drishti.module.banking.var.root-name` (engine) | empty | engine | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy's root.name (else its title) |
+| `DRISHTI_VAR_SCENARIO_WINDOW` | `drishti.module.banking.var.window` (engine) | `250` | engine | the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo) |
 | `DRISHTI_VAR_SMAT_MAX_DAYS` | `drishti.var.smat.max-days` (engine) | `60` | engine | the most business dates a scenario matrix (SMAT &lt;id&gt; N, GET /api/v1/var/matrix) reads |
 | `DRISHTI_VAR_STRESS_ENABLED` | `drishti.var.stress.enabled` (engine) | `true` | engine | offer Normal / Stressed (off: a stressed request is refused; the stress set's rows are still kept apart) |
 | `DRISHTI_VAR_STRESS_WINDOW_ENABLED` | `drishti.var.stress-window.enabled` (engine) | `true` | engine | the tool and its API (off: refused in words) |
-| `DRISHTI_VAR_SYSTEM_BASKETS_SEED` | `drishti.var.system-baskets.seed` (engine) | `true` | engine | import a loaded pack's seed (market-risk: seeds/system-baskets.yaml) once into an empty system scope at start |
-| `DRISHTI_VAR_TEN_DAY_METHOD` | `drishti.var.ten-day-method` (engine) | `sqrt10` | engine | 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days) |
-| `DRISHTI_VAR_THREADS` | `drishti.var.threads` (engine) | `0` | engine | cores the vector sums use (0: every core) |
+| `DRISHTI_VAR_SYSTEM_BASKETS_SEED` | `drishti.module.banking.var.system-baskets.seed` (engine) | `true` | engine | import a loaded pack's seed (market-risk: seeds/system-baskets.yaml) once into an empty system scope at start |
+| `DRISHTI_VAR_TEN_DAY_METHOD` | `drishti.module.banking.var.ten-day-method` (engine) | `sqrt10` | engine | 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days) |
+| `DRISHTI_VAR_THREADS` | `drishti.module.banking.var.threads` (engine) | `0` | engine | cores the vector sums use (0: every core) |
 | `DRISHTI_VAR_TIER` | `drishti.var.tier.mode` (engine) | `mapped` | engine | mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap |
 | `DRISHTI_VAR_VERSION_CHECK` | `drishti.var.version-check` (engine) | `30s` | engine | an open date compares its lake version this often on a request; moved: reloaded in the background (0: off) |
 | `DRISHTI_VIEWS_REFRESH_MIN_SECONDS` | `views.refresh_min_seconds` | `5` | console | The fastest any panel refreshes (refresh: in a Sutra, RACHANA\_REFERENCE.md 9), in seconds: a Sutra or a reader asking for faster gets this. |

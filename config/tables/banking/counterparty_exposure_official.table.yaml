@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.counterparty_exposure_official
-was: counterparty-exposure-official
 version: 1.0.0
 title: Exposure official results (every version)
 description: "The official end-of-day exposure (EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, one row per scope, business date and result version (a restated date adds a version), as published to risk-results/exposure-official-cpty."

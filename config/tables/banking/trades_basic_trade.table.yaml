@@ -14,7 +14,6 @@
 
 rachana: 3
 table: banking.trades_basic_trade
-was: trades-basic-trade
 version: 1.0.0
 title: "Trades, the basics: trade"
 description: The trade table of the model trades-basic.

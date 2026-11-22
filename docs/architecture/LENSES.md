@@ -343,7 +343,7 @@ added. **Code:** [`var.html`](../../drishti-console/plugins/banking/templates/te
 | H8 | Method strip | the answer's `lens` | — | **Built** |
 | H9 | Every panel follows the horizon | `horizon`, `method`, `confidence`, `esConfidence` on every endpoint | — | **Built** |
 | H10 | Remembered and in the address (`?h=10d&m=sum`) | the person's settings (`varView`) | — | **Built** |
-| H11 | Commands `VAR BANK 10D [SQRT|SUM]` | the command grammar; `drishti.var.ten-day-method` | — | **Built** (with confidences: `VAR BANK 95`, `VAR BANK ES 95`) |
+| H11 | Commands `VAR BANK 10D [SQRT|SUM]` | the command grammar; `drishti.module.banking.var.ten-day-method` | — | **Built** (with confidences: `VAR BANK 95`, `VAR BANK ES 95`) |
 | H12 | Menu (desktop alternative) with one line per entry | — | RL15 | **Partly built**: the drop-down without the per-entry lines (in the tooltip) |
 | H13 | Phone: full-width control | — | — | **Built** |
 | H14 | Confidence and ES pickers | `drishti.var.confidences`, `drishti.var.es-confidences` | — | **Built** |

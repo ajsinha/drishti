@@ -642,8 +642,8 @@ scattered to shard owners. Roles exist to size and isolate work (a whole-bank BI
 |---|---|---|---|---|
 | **Edge** | load balancer pair, TLS, optional OIDC pre-auth | no stickiness; health `GET /readyz` on the console | 2 / 2 / 2 | app servers |
 | **Console** | `drishti-console`, 4 workers | `DRISHTI_CONSOLE_WORKERS=4`, `backend.urls`, `discover: true`, the same `DRISHTI_SESSION_SECRET`, token secret and relay key | 2 / 3 / 4–6 | shard owners, loaders |
-| **VaR coordinator** | full packs or the `risk` edition; sharding on, `coordinator-only: true` | `drishti.var.threads` half the cores when BI also runs | 0 (all-in-one) / 2 / 3 | loaders |
-| **VaR shard owner** | `market-risk` (and what it needs); `peer-only-packs: [market-risk]` optional | the sharding block, `zone-tag: az`, `drishti.var.threads: 0` (every core), BI off | 3 / 6 / 16 | BI, loaders, consoles |
+| **VaR coordinator** | full packs or the `risk` edition; sharding on, `coordinator-only: true` | `drishti.module.banking.var.threads` half the cores when BI also runs | 0 (all-in-one) / 2 / 3 | loaders |
+| **VaR shard owner** | `market-risk` (and what it needs); `peer-only-packs: [market-risk]` optional | the sharding block, `zone-tag: az`, `drishti.module.banking.var.threads: 0` (every core), BI off | 3 / 6 / 16 | BI, loaders, consoles |
 | **Exposure server** | `counterparty-risk` | `drishti.ccr.exposure.*` | 1 / 1 / 1 (exposure runs on one server) | VaR owners (page cache) |
 | **BI and reporting** | Rūpaka, BI runs, scheduled reports | `config/runs/runs.yaml` workers, `drishti.bi.query.*` | 0 / 2 / 3 | VaR owners |
 | **Data-serving** | entity pages, search, type-ahead, data map, World, Market | connector caches, `index.max-disk` | 0 / 2 / 3 | VaR owners |
@@ -725,7 +725,7 @@ set both). The free-space guard and every cap: section 15.8.
 | `lb-1`, `lb-2` | 2 | 4 / 8 GB | HAProxy + keepalived VIP, TLS, health `GET /readyz` on 17480, no stickiness |
 | `con-1..3` | 3 | 4 / 8 GB / 20 GB | `DRISHTI_CONSOLE_WORKERS=4`, `DRISHTI_BACKEND_URLS=https://coord-1:18480,https://coord-2:18480`, `DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true`, one `DRISHTI_CONSOLE_RELAY_KEY`, ports 17490–17493 open between the consoles |
 | `coord-1..2` | 2 | 16 / 64 GB / 100 GB | `-Xmx36g`, `drishti.var.sharding.coordinator-only=true`, tags `az:dc1-a` / `az:dc1-b` |
-| `var-1..6` | 6 | 16 / 128 GB / 800 GB NVMe | `-Xmx36g`, `drishti.var.threads=0`, tags split over two racks or halls |
+| `var-1..6` | 6 | 16 / 128 GB / 800 GB NVMe | `-Xmx36g`, `drishti.module.banking.var.threads=0`, tags split over two racks or halls |
 | `exp-1` | 1 | 16 / 128 GB / 2 TB NVMe | counterparty-risk |
 | `bi-1..2` | 2 | 16 / 64 GB / 500 GB | Rūpaka, `config/runs/runs.yaml` workers 2–4 |
 | `data-1..2` | 2 | 16 / 64 GB / 1 TB NVMe | entity pages, search, World, Market |
@@ -824,7 +824,7 @@ drishti:
     threads: 0                  # every core
     tier: { mode: mapped, max-disk-gb: 600, keep-on-shutdown: true }
     sharding: { zone-tag: az, stable-seconds: 30, grace-seconds: 30, call-timeout-seconds: 30, rebalance-seconds: 2 }
-# a coordinator: the same, plus  drishti.var.sharding.coordinator-only: true  and  drishti.var.threads: <half the cores>
+# a coordinator: the same, plus  drishti.var.sharding.coordinator-only: true  and  drishti.module.banking.var.threads: <half the cores>
 ```
 
 Every key: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivarsharding--var-sharding-across-drishtinet).
@@ -976,12 +976,12 @@ restarted for it: container health checks use liveness, routing uses readiness. 
 
 A shard's partial goes to its first ready owner; the replica serves when the first refuses or fails, so the first owners carry the partial
 load. Ad-hoc whole-bank scopes ("the bank without desk X") from many people at once share every owner's memory bandwidth: about 10 to 25
-such scopes a second over 6 owners (estimate). Give coordinators that also serve BI half the cores for VaR (`drishti.var.threads`), and keep
+such scopes a second over 6 owners (estimate). Give coordinators that also serve BI half the cores for VaR (`drishti.module.banking.var.threads`), and keep
 BI off the owners. BI queries are bounded on their own (`drishti.bi.query.max-concurrent`, `max-concurrent-per-user`).
 
 ### 7.4 No sticky sessions: the console relay
 
-A browser's live channel (`GET /api/channel`, or an embedded element's `/embed/v1/channel`) is held by the console worker that opened it; the
+A browser's live channel (`GET /api/channel`, or an embedded element's `/embed/v2/channel`) is held by the console worker that opened it; the
 browser's later calls on it (adding and removing panes, an embed's token renewal, the pack wizard's job calls) reach whichever worker on
 whichever console the balancer picks. **The relay** passes each such call to the worker that holds the channel, so **the load balancer needs
 no stickiness**:
@@ -2101,7 +2101,7 @@ server: a sharded cluster divides the hot files, page cache and loads among memb
 
 - **The console is the first limit.** One worker process serves about 40 pages a second; one console of 4 workers 69–70 pages a second at
   50 users, against 140–150 requests a second for one server. Two consoles of 4 vCPU carry 300 to 500 active people.
-- **VaR sums** run on `drishti.var.threads` (0: every core), split above `drishti.var.parallel-rows`; the whole bank from float32 rows runs at
+- **VaR sums** run on `drishti.module.banking.var.threads` (0: every core), split above `drishti.var.parallel-rows`; the whole bank from float32 rows runs at
   memory bandwidth (about 55 to 70 GB/s on 24 threads). Any scope's bits are the same whatever the core count. On a shard owner give VaR every
   core and turn BI off; on a coordinator that serves BI, half the cores.
 - **A date's first open** decodes its files on `drishti.var.read.threads` (half the cores, at most 8), bounded by `drishti.var.read.buffer-mb`

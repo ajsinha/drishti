@@ -257,7 +257,7 @@ public final class TableReads implements ModelAnswers.Rows {
         }
         String filter = filters.isEmpty() ? null : filters.size() == 1 ? filters.get(0)
                 : String.join(" && ", filters.stream().map(f -> "(" + f + ")").toList());
-        TableDef def = new TableDef(t.name(), t.was(), t.version(), t.about(), root, grain, filter, t.columns(), t.keys(), t.keepLatest(), t.says(),
+        TableDef def = new TableDef(t.name(), t.version(), t.about(), root, grain, filter, t.columns(), t.keys(), t.keepLatest(), t.says(),
                 t.materialize(), t.asOf(), t.retention(), t.refresh(), t.rules(), t.hiddenFor(), t.tests());
         return new Resolved(def, root);
     }

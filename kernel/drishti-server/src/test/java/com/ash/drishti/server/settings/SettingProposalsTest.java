@@ -63,18 +63,18 @@ class SettingProposalsTest {
     @Test
     void aProposalChangesNothingUntilASecondAdministratorApprovesIt() throws Exception {
         Files.writeString(local, "# mine\ndrishti.history.max-days: 30\n");
-        SettingProposals.Proposal p = proposals.propose("drishti.var.confidence", "engines", "0.975", "0.99", "the board asked", "mara");
+        SettingProposals.Proposal p = proposals.propose("drishti.module.banking.var.confidence", "engines", "0.975", "0.99", "the board asked", "mara");
         assertThat(p.state()).isEqualTo("proposed");
-        assertThat(Files.readString(local)).doesNotContain("drishti.var.confidence");
+        assertThat(Files.readString(local)).doesNotContain("drishti.module.banking.var.confidence");
         assertThatThrownBy(() -> proposals.decide(p.id(), true, "", "mara"))
                 .isInstanceOfSatisfying(DrishtiException.class, e -> assertThat(e.errorCode()).isEqualTo(ErrorCode.FOUR_EYES));
         SettingProposals.Proposal done = proposals.decide(p.id(), true, "ok", "li");
         assertThat(done.state()).isEqualTo("approved");
         assertThat(done.applied()).isTrue();
         String text = Files.readString(local);
-        assertThat(text).startsWith("# mine\ndrishti.history.max-days: 30\n").contains("drishti.var.confidence: 0.975   # Admin -> Configuration: proposal "
+        assertThat(text).startsWith("# mine\ndrishti.history.max-days: 30\n").contains("drishti.module.banking.var.confidence: 0.975   # Admin -> Configuration: proposal "
                 + p.id() + " by mara, approved by li");
-        assertThat(audited).containsExactly("mara setting-proposed setting/drishti.var.confidence", "li setting-approved setting/drishti.var.confidence");
+        assertThat(audited).containsExactly("mara setting-proposed setting/drishti.module.banking.var.confidence", "li setting-approved setting/drishti.module.banking.var.confidence");
     }
 
     @Test
@@ -92,9 +92,9 @@ class SettingProposalsTest {
         assertThatThrownBy(() -> proposals.propose("drishti.security.secret", "server", "x", "", "why", "mara"))
                 .isInstanceOfSatisfying(DrishtiException.class, e -> assertThat(e.errorCode()).isEqualTo(ErrorCode.BAD_REQUEST));
         assertThatThrownBy(() -> proposals.propose("url", "connectors", "x", "", "why", "mara")).isInstanceOf(DrishtiException.class);
-        assertThatThrownBy(() -> proposals.propose("drishti.var.confidence", "engines", "0.9", "", " ", "mara")).isInstanceOf(DrishtiException.class);
-        proposals.propose("drishti.var.confidence", "engines", "0.9", "", "why", "mara");
-        assertThatThrownBy(() -> proposals.propose("drishti.var.confidence", "engines", "0.95", "", "why", "li"))
+        assertThatThrownBy(() -> proposals.propose("drishti.module.banking.var.confidence", "engines", "0.9", "", " ", "mara")).isInstanceOf(DrishtiException.class);
+        proposals.propose("drishti.module.banking.var.confidence", "engines", "0.9", "", "why", "mara");
+        assertThatThrownBy(() -> proposals.propose("drishti.module.banking.var.confidence", "engines", "0.95", "", "why", "li"))
                 .isInstanceOfSatisfying(DrishtiException.class, e -> assertThat(e.errorCode()).isEqualTo(ErrorCode.PROPOSAL_CONFLICT));
     }
 
@@ -104,9 +104,9 @@ class SettingProposalsTest {
         SettingProposals.Proposal approved = proposals.decide(a, true, "", "li");
         assertThat(approved.applied()).isFalse();
         assertThat(proposals.markApplied(a, "li").applied()).isTrue();
-        String b = proposals.propose("drishti.var.scenario-window", "engines", "500", "250", "longer", "mara").id();
+        String b = proposals.propose("drishti.module.banking.var.window", "engines", "500", "250", "longer", "mara").id();
         assertThat(proposals.decide(b, false, "not now", "li").state()).isEqualTo("rejected");
-        String c = proposals.propose("drishti.var.scenario-window", "engines", "260", "250", "a bit longer", "mara").id();
+        String c = proposals.propose("drishti.module.banking.var.window", "engines", "260", "250", "a bit longer", "mara").id();
         assertThatThrownBy(() -> proposals.withdraw(c, "li")).isInstanceOf(DrishtiException.class);
         assertThat(proposals.withdraw(c, "mara").state()).isEqualTo("withdrawn");
         assertThat(Files.exists(local)).isFalse();
