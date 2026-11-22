@@ -130,7 +130,7 @@ run refuses to start, and stops between steps, when the machine has less memory 
 
 | Store | Container | Server profile and settings |
 |---|---|---|
-| `delta` | none | the default profile, `DRISHTI_DELTA_ROOT` at the scratch lake, `DRISHTI_DELTA_ENGINE=native` |
+| `delta` | none | the default profile, `DRISHTI_DELTA_ROOT` at the scratch lake |
 | `postgres` | `postgres:18-alpine`, port 15432 | `postgres` |
 | `duckdb` | none | `duckdb`, `DRISHTI_DUCKDB_PATH` at the scratch file |
 | `files` | none | `files`, `DRISHTI_FILES_ROOT` at the scratch folder |

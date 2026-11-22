@@ -65,13 +65,9 @@ import org.springframework.core.env.Environment;
  * each module's {@code blotters/*.live.yaml} and the site's {@code config/blotters}, read with Drishti's profile keys (kind, query, links,
  * edit roles, save, editable-by) and checked against the formats and the kinds' data contracts; a kind without a declaration has a default
  * one from its search or promoted columns ({@code kind-<kind>}), declared in code on first use. Mounted on the Data Protocol by
- * {@link LiveTablesController}.
- *
- * <p>Off until the switch-over ({@code drishti.live-sets.engine: rachana}; the default is {@code liveset}): the entry gate of the switch (I7B_DUPLICATES DD-6) is
- * not met (cut line DC1, docs/plans/G4_REHEARSAL.md "Pass 3: live tables"), so the liveset engine stays the one serving the console and
- * this adapter is proved by its tests only; no second wire runs.
+ * {@link LiveTablesController}. A FORM's result and the search page's are queries on tables declared in code ({@link FormResults},
+ * their sources in {@link LiveSources}). The one engine of live tables, blotters and FORM results.
  */
-@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "drishti.live-sets.engine", havingValue = "rachana")
 @Configuration(proxyBeanMethods = false)
 public class DrishtiLiveTables {
 
@@ -91,22 +87,23 @@ public class DrishtiLiveTables {
             com.ash.drishti.engine.search.SearchProperties searchProps, com.ash.drishti.engine.command.Mnemonics mnemonics, EditableFields fields,
             ObjectProvider<EditRuntime> edits, Entitlements entitlements, ObjectProvider<com.ash.drishti.identity.AuditLog> auditLog,
             com.ash.rachana.format.Formats formats, com.ash.drishti.packs.PackRegistry packs,
-            ObjectProvider<com.ash.drishti.server.switches.CommandCatalog> catalog, Environment env) {
-        Duration budget = Duration.ofSeconds(env.getProperty("drishti.live-sets.store-timeout-seconds", Long.class, 120L));
-        KindBindings bindings = routerBindings(router, search, budget);
+            ObjectProvider<com.ash.drishti.server.switches.CommandCatalog> catalog, LiveSources sources, KindBindings bindings, Environment env) {
         LiveTables.Options o = LiveTables.Options.DEFAULTS.withFlushMs(env.getProperty("drishti.live-sets.flush-ms", Long.class, 50L))
                 .withWindowCapacity(env.getProperty("drishti.live-sets.window-capacity", Integer.class, 5_000))
                 .withMaxSnapshotRows(env.getProperty("drishti.live-sets.default-max-rows", Integer.class, 250_000));
         Map<String, LiveTableSpec> specs = new java.util.concurrent.ConcurrentHashMap<>();
         LiveTables lt = new LiveTables(new LiveTables.Resolver() {
             @Override
-            public SnapshotSource snapshot(String kind) {
-                return new KindSnapshot(kind, bindings, keyOf(specs, kind));
+            public SnapshotSource snapshot(String name) {
+                // a table declared in code (a FORM's result) reads its kind as its source says: the day, whole or by columns, the members
+                return sources.get(name).<SnapshotSource>map(x -> new KindSnapshot(x.kind(), bindings, List.of(com.ash.drishti.engine.search.SearchFilter.KEY),
+                        x.at(), x.whole(), x.peers(), null)).orElseGet(() -> new KindSnapshot(name, bindings, keyOf(specs, name)));
             }
 
             @Override
-            public LiveStream stream(String kind) {
-                return new KindStream(kind, bindings, keyOf(specs, kind));
+            public LiveStream stream(String name) {
+                return sources.get(name).<LiveStream>map(x -> new KindStream(x.kind(), bindings, List.of(com.ash.drishti.engine.search.SearchFilter.KEY),
+                        x.peerStream())).orElseGet(() -> new KindStream(name, bindings, keyOf(specs, name)));
             }
         }, o, Clock.systemUTC());
         EditRuntime rt = edits.getIfAvailable();
@@ -116,7 +113,9 @@ public class DrishtiLiveTables {
                 off.add(s.strip());
             }
         }
-        lt.authoriser(new DrishtiAuthoriser(specs::get, rights(entitlements, rt, off)));
+        DrishtiAuthoriser authoriser = new DrishtiAuthoriser(specs::get, rights(entitlements, rt, off));
+        lt.authoriser(authoriser);
+        AUTHORISERS.put(lt, authoriser);
         com.ash.drishti.identity.AuditLog a = auditLog.getIfAvailable();
         if (a != null) {
             lt.audit(e -> a.record(String.valueOf(e.get("caller") instanceof com.ash.drishti.kernel.api.security.Principal p ? p.user() : e.get("caller")),
@@ -149,7 +148,48 @@ public class DrishtiLiveTables {
             return own.isPresent() ? own : defaultSpec(kind, contractColumns(packs, kind), Set.of(), mnemonics.codeFor(kind), "id", narrow);
         });
         DEFAULTS.put(lt, defaults);
+        SPECS.put(lt, specs);
         return lt;
+    }
+
+    /** The sources of the tables declared in code (a FORM's result), by name. */
+    @Bean
+    public LiveSources liveSources() {
+        return new LiveSources();
+    }
+
+    /** The bindings of every kind through the source router, for the tables declared in code. */
+    @Bean
+    public KindBindings kindBindings(SourceRouter router, com.ash.drishti.engine.search.StructuredSearch search, Environment env) {
+        return routerBindings(router, search, Duration.ofSeconds(env.getProperty("drishti.live-sets.store-timeout-seconds", Long.class, 120L)));
+    }
+
+    /** The declarations one engine's authoriser and write-back know, by name. */
+    static final Map<LiveTables, Map<String, LiveTableSpec>> SPECS = java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
+    /** Declares a table made in code (a FORM's result): known to the authoriser and the write-back as a file's declaration is. */
+    public static void declare(LiveTables lt, LiveTableSpec spec) {
+        Map<String, LiveTableSpec> specs = SPECS.get(lt);
+        if (specs != null) {
+            specs.put(spec.name(), spec);
+        }
+        lt.declare(spec);
+    }
+
+    /** The authoriser of one engine. */
+    static final Map<LiveTables, DrishtiAuthoriser> AUTHORISERS = java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+
+    /** Why a person may not edit a table (the site's switches, their rights), or null when they may or it cannot be told. */
+    public static String readOnly(LiveTables lt, String name, com.ash.drishti.kernel.api.security.Principal p) {
+        DrishtiAuthoriser a = AUTHORISERS.get(lt);
+        if (a == null) {
+            return null;
+        }
+        try {
+            return a.view(p, name).readOnlyReason();
+        } catch (com.ash.rachana.live.spi.Authoriser.Refusal e) {
+            return e.getMessage();
+        }
     }
 
     /** The kinds' default declarations of one engine (made on first use). */
@@ -186,7 +226,7 @@ public class DrishtiLiveTables {
         }
     }
 
-    private static void declare(LiveTables lt, Map<String, LiveTableSpec> specs, Path f, Predicate<String> formats,
+    static void declare(LiveTables lt, Map<String, LiveTableSpec> specs, Path f, Predicate<String> formats,
             Function<String, Optional<Set<String>>> contract) {
         try {
             LiveTableSpec s = LiveTableSpec.read(Files.readString(f), f.getFileName().toString(), PROFILE_KEYS, formats);
@@ -232,6 +272,11 @@ public class DrishtiLiveTables {
         return out;
     }
 
+    /** What decides what a person sees: roles and embedding app, masks, administrator. */
+    static String signature(Entitlements entitlements, com.ash.drishti.kernel.api.security.Principal p) {
+        return p.securitySignature() + "|masks=" + entitlements.masks(p) + "|admin=" + entitlements.isAdmin(p);
+    }
+
     /** Drishti's rights over a person: the entitlements, the write-back's settings and the site's switches. */
     static DrishtiAuthoriser.Rights rights(Entitlements entitlements, EditRuntime rt, Set<String> editsOff) {
         return new DrishtiAuthoriser.Rights() {
@@ -242,7 +287,7 @@ public class DrishtiLiveTables {
 
             @Override
             public String signature(com.ash.drishti.kernel.api.security.Principal p) {
-                return p.securitySignature() + "|masks=" + entitlements.masks(p) + "|admin=" + entitlements.isAdmin(p);
+                return DrishtiLiveTables.signature(entitlements, p);
             }
 
             @Override
@@ -297,6 +342,9 @@ public class DrishtiLiveTables {
         };
     }
 
+    /** The most records a past day's table lists when no source keeps the day whole. */
+    static final int LIST_MAX = 250_000;
+
     /** The bindings of every kind through the source router. */
     static KindBindings routerBindings(SourceRouter router, com.ash.drishti.engine.search.StructuredSearch search, Duration budget) {
         return new KindBindings() {
@@ -324,8 +372,38 @@ public class DrishtiLiveTables {
 
             @Override
             public Map<String, DataNode> fetch(String kind, Collection<String> ids) {
+                return fetch(kind, ids, AsOf.LATEST);
+            }
+
+            @Override
+            public Optional<Store> store(String kind, AsOf at) {
+                return router.columnar(kind).isEmpty() ? Optional.empty() : Optional.of(routerStore(router, kind, budget, at));
+            }
+
+            @Override
+            public boolean documents(String kind, AsOf at, Consumer<com.ash.drishti.api.EntityDocument> sink) throws Exception {
+                if (at == null || at.isLatest()) {
+                    return documents(kind, sink);
+                }
+                java.util.concurrent.atomic.AtomicInteger given = new java.util.concurrent.atomic.AtomicInteger();
+                router.documents(kind, at, d -> {
+                    given.incrementAndGet();
+                    sink.accept(d);
+                });
+                if (given.get() > 0) {
+                    return true;
+                }
+                // a day no source keeps whole (carried from an earlier day, as the search reads it): its records listed, then fetched
+                var hits = router.list(kind, "", LIST_MAX, budget, at, new com.ash.drishti.engine.source.SourceFailures()).hits();
+                router.fetchAll(hits.stream().map(h -> h.ref()).toList(), budget, at, new com.ash.drishti.engine.source.SourceFailures())
+                        .values().forEach(sink);
+                return true;
+            }
+
+            @Override
+            public Map<String, DataNode> fetch(String kind, Collection<String> ids, AsOf at) {
                 Map<String, DataNode> out = new HashMap<>();
-                router.fetchAll(ids.stream().map(id -> EntityRef.of(kind, id)).toList(), budget, AsOf.LATEST).forEach((ref, d) -> {
+                router.fetchAll(ids.stream().map(id -> EntityRef.of(kind, id)).toList(), budget, at).forEach((ref, d) -> {
                     if (d != null && !d.deleted()) {
                         out.put(ref.id(), d.data());
                     }
@@ -348,15 +426,20 @@ public class DrishtiLiveTables {
 
     /** A kind's durable store as a table pages it: its lake columns projected, records fetched by id, the router's data version. */
     static KindBindings.Store routerStore(SourceRouter router, String kind, Duration budget) {
+        return routerStore(router, kind, budget, AsOf.LATEST);
+    }
+
+    /** The same at a business date: the lake read as of that day (its time travel). */
+    static KindBindings.Store routerStore(SourceRouter router, String kind, Duration budget, AsOf at) {
         return new KindBindings.Store() {
             @Override
             public String version() {
-                return router.dataVersion(kind, AsOf.LATEST).orElse("");
+                return router.dataVersion(kind, at).orElse("");
             }
 
             @Override
             public boolean project(List<String> fields, KindBindings.Projection sink) throws Exception {
-                Optional<com.ash.drishti.api.ColumnSet> cs = router.columns(kind, fields, AsOf.LATEST, budget);
+                Optional<com.ash.drishti.api.ColumnSet> cs = router.columns(kind, fields, at, budget);
                 if (cs.isEmpty()) {
                     return false;
                 }
@@ -379,7 +462,7 @@ public class DrishtiLiveTables {
             @Override
             public Map<String, DataNode> fetch(Collection<String> ids) {
                 Map<String, DataNode> out = new HashMap<>();
-                router.fetchAll(ids.stream().map(id -> EntityRef.of(kind, id)).toList(), budget, AsOf.LATEST).forEach((ref, d) -> {
+                router.fetchAll(ids.stream().map(id -> EntityRef.of(kind, id)).toList(), budget, at).forEach((ref, d) -> {
                     if (d != null && !d.deleted()) {
                         out.put(ref.id(), d.data());
                     }
@@ -512,13 +595,22 @@ public class DrishtiLiveTables {
 
     /** The top-level fields of a kind's data contract; empty when no loaded pack has one. */
     static Optional<Set<String>> contractFields(com.ash.drishti.packs.PackRegistry packs, String kind) {
-        Optional<JsonNode> n = contract(packs, kind);
-        if (n.isEmpty()) {
+        return contract(packs, kind).flatMap(DrishtiLiveTables::contractFields);
+    }
+
+    /** The top-level fields of one contract file ({@code fields} and {@code nested}); empty when it cannot be read or names none. */
+    static Optional<Set<String>> contractFields(Path file) {
+        try {
+            return contractFields(new ObjectMapper(new YAMLFactory()).readTree(file.toFile()));
+        } catch (IOException e) {
             return Optional.empty();
         }
+    }
+
+    private static Optional<Set<String>> contractFields(JsonNode n) {
         Set<String> out = new LinkedHashSet<>();
-        n.get().path("fields").forEach(x -> out.add(x.path("name").asText()));
-        n.get().path("nested").fieldNames().forEachRemaining(name -> out.add(name.replace("[]", "")));
+        n.path("fields").forEach(x -> out.add(x.path("name").asText()));
+        n.path("nested").fieldNames().forEachRemaining(name -> out.add(name.replace("[]", "")));
         return out.isEmpty() ? Optional.empty() : Optional.of(out);
     }
 

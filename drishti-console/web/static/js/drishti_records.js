@@ -14,8 +14,9 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Records everywhere: every table of records of the console is drishti-grid's LiveSetGrid (live and static mode), mounted by this one file. A page marks
-   a host with data-records and one of three things: data-live-set (the id of a result set of the server's live engine: the rows are read from
-   /api/live/<id>/rows and tick when the set is live; data-drishti-offset and data-limit name the page of a larger set), data-rows (a result without a record key:
+   a host with data-records and one of three things: data-live-set (the name of a live table of the server: the rows are read through the Data Protocol,
+   /api/rdp/tables/<name>/query with the declaration's query (a FORM's filter, its order), its changes follow on the console's live channel (live:<name>)
+   while the table is live; the grid's record panel writes through /api/rdp/tables/<name>/write; data-drishti-offset and data-limit name the page of a larger set), data-rows (a result without a record key:
    a JSON array of plain rows, shown in the grid's static mode: no merge, no edit, the panel shows the row's JSON) or nothing (a script calls
    Drishti.records.mount(host, {rows, columns, title}) with rows it has read). data-spec holds the set's declaration (or, static, {title, columns}). The
    grid's own look, its sort, filter, grouping, record panel and Pivot, are the same everywhere; nothing of a table is drawn by a page. */
@@ -72,6 +73,99 @@
   function fill(host) { if (fitted.indexOf(host) < 0) { fitted.push(host); } host.setAttribute('data-records-fill', ''); fit(host); setTimeout(function () { fit(host); }, 60); }
   function json(text, fallback) { try { return text ? JSON.parse(text) : fallback; } catch (e) { return fallback; } }
 
+  /** A ULID (sortable change id): a retry of one change reuses it. */
+  function ulid() {
+    var A = '0123456789ABCDEFGHJKMNPQRSTVWXYZ', t = Date.now(), out = '', i;
+    for (i = 0; i < 10; i++) { out = A.charAt(t % 32) + out; t = Math.floor(t / 32); }
+    var r = new Uint8Array(16);
+    (window.crypto || {}).getRandomValues ? window.crypto.getRandomValues(r) : r.forEach(function (x, j) { r[j] = Math.floor(Math.random() * 256); });
+    for (i = 0; i < 16; i++) { out += A.charAt(r[i] % 32); }
+    return out;
+  }
+  function b64url(text) { return btoa(unescape(encodeURIComponent(text))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  /** One live table of the Data Protocol as the grid's live mode reads it: api (rows, row, edit, window) and channel (hello, rows, resync, gone).
+      Rows are {id, version, seq, doc}: the key's values, the row version column (none: -1, every change replaces), the row by column name. A patch's
+      update carries the fields that changed: it is merged into the row held. */
+  function rdpTable(name, query, key, version, live) {
+    var base = drishti_url('/api/rdp'), held = new Map(), total = null;
+    function call(method, path, body) {
+      return fetch(base + path, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' },
+        body: body ? JSON.stringify(body) : undefined }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) { var er = j.error || j, e = new Error(er.message || er.detail || ('HTTP ' + r.status)); e.code = er.code; e.status = r.status; e.current = er.current; throw e; }
+          return j;
+        });
+      });
+    }
+    function idOf(row) { return key.map(function (k) { return row[k] === null || row[k] === undefined ? '' : String(row[k]); }).join('|'); }
+    function asRow(doc) { return { id: idOf(doc), version: version && doc[version] !== null && doc[version] !== undefined ? doc[version] : -1, seq: 0, doc: doc }; }
+    function rowsOf(page) {
+      var cols = (page.columns || []).map(function (c) { return typeof c === 'string' ? c : c.name; });
+      return (page.values || []).map(function (v) { var d = {}; cols.forEach(function (c, i) { d[c] = v[i]; }); return d; });
+    }
+    function keyFilter(id) {
+      var parts = String(id).split('|'), args = key.map(function (k, i) { return { op: '==', args: [{ col: k }, { lit: parts[i] }] }; });
+      return args.length === 1 ? args[0] : { op: '&&', args: args };
+    }
+    var api = {
+      rows: function (p) {
+        var body = { limit: (p && p.limit) || 500 };
+        if (query.filter) { body.filter = query.filter; }
+        if (p && p.sort) { body.sort = [{ col: p.sort, dir: p.descending ? 'desc' : 'asc' }]; } else if (query.sort) { body.sort = query.sort; }
+        if (p && p.offset) { body.offset = p.offset; }
+        return call('POST', '/tables/' + encodeURIComponent(name) + '/query', body).then(function (page) {
+          var docs = rowsOf(page);
+          held.clear();
+          docs.forEach(function (d) { held.set(idOf(d), d); });
+          total = typeof page.total === 'number' ? page.total : docs.length;
+          return { live: live, total: total, seq: (page.version || {}).seq || 0, rows: docs.map(asRow) };
+        });
+      },
+      row: function (id) {
+        return call('POST', '/tables/' + encodeURIComponent(name) + '/query', { filter: keyFilter(id), limit: 1 }).then(function (page) {
+          var d = rowsOf(page)[0];
+          if (!d) { var e = new Error('the record is no longer in this table'); e.status = 404; throw e; }
+          var r = asRow(d);
+          r.seq = (page.version || {}).seq || 0;
+          return r;
+        });
+      },
+      edit: function (b) {
+        var set = {}, from = {};
+        (b.items || []).forEach(function (i) { set[i.field] = i.to; from[i.field] = i.from; });
+        var change = { id: b.id || ulid(), op: 'update', key: String(b.entity).split('|'), basedOn: b.basedOn, set: set, from: from };
+        if (b.reason) { change.reason = b.reason; }
+        return call('POST', '/tables/' + encodeURIComponent(name) + '/write', change).then(function (a) {
+          return { changes: [{ id: a.change || change.id, state: a.state === 'held' ? 'awaiting' : a.state, message: a.message }] };
+        });
+      },
+      window: function () { return Promise.resolve({}); }        // the stream sends the table's changes (no window): rows the grid does not hold
+                                                                  // move its count and "N new", which reads the newest page again
+    };
+    function patch(h, p) {
+      if (Array.isArray(p.reset)) { h.resync(); return; }
+      var upserts = [], removes = [], fresh = true;
+      (p.remove || []).forEach(function (k) { var id = (Array.isArray(k) ? k : [k]).map(function (x) { return x === null || x === undefined ? '' : String(x); }).join('|'); held.delete(id); removes.push(id); });
+      (p.update || []).concat(p.add || []).forEach(function (r) { var id = idOf(r); if (held.has(id)) { fresh = false; } var d = Object.assign({}, held.get(id) || {}, r); held.set(id, d); upserts.push(asRow(d)); });
+      if (typeof p.total === 'number') { total = p.total; }
+      h.rows({ upserts: upserts, removes: removes, countOnly: !removes.length && fresh, top: (p.top || []).map(function (k) { return (Array.isArray(k) ? k : [k]).map(String).join('|'); }), total: total === null ? undefined : total });
+    }
+    var channel = {
+      subscribe: function (h) {
+        var sub = 'live:' + name + (query.filter ? '~' + b64url(JSON.stringify(query.filter)) : '');
+        var off = window.Drishti.Channel.subscribe(sub, {
+          msg: function (m) { patch(h, (m && m.data) || {}); },
+          gap: function () { h.resync(); },
+          gone: function (m) { h.gone(m); },
+          error: function () { h.error(); }
+        });
+        setTimeout(function () { h.hello({ stream: name, live: live }); }, 0);   // the minimal stream has no hello of its own: subscribed is following
+        return off;
+      }
+    };
+    return { api: api, channel: channel };
+  }
+
   /** Draws one table of records into host. o: {set, live, spec, rows, columns, title, offset, limit, layout, keyField, rowActions, small}. Answers the LiveSetGrid (or null). */
   function mount(host, o) {
     var grid = window.Drishti.elements && window.Drishti.elements.grid;
@@ -81,8 +175,9 @@
     if (o.small) { host.classList.add('rc-small'); }
     var opts = { spec: o.spec || { title: o.title, columns: o.columns }, offset: o.offset || 0, snapshotRows: o.limit || undefined, layout: o.layout || 'wells', onChart: chart, keyField: o.keyField, rowActions: o.rowActions };
     if (o.set) {
-      opts.api = grid.httpLiveApi({ id: o.set });
-      opts.channel = o.live && window.Drishti.Channel ? { subscribe: function (h) { return window.Drishti.Channel.subscribe('live:' + o.set, h); } } : NONE;
+      var spec = opts.spec, t = rdpTable(o.set, spec.query || {}, spec.key && spec.key.length ? spec.key : ['id'], spec.version || null, !!o.live);
+      opts.api = Object.assign(grid.httpLiveApi({ id: o.set }), t.api);    // the change history and the tray are the write-back's (/api/changes)
+      opts.channel = o.live && window.Drishti.Channel ? t.channel : NONE;
     } else {
       opts.rows = o.rows || [];
     }

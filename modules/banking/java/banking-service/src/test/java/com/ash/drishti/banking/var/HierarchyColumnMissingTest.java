@@ -44,17 +44,8 @@ import org.springframework.test.web.servlet.MockMvc;
  * {@code LIMIT_LETTER} (an upgraded server whose data predates the letters). A level column no source promotes and no loaded pack's layout
  * names is a typo: refused (DRS-5213).
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.risk-lake.plugin=delta",
-        "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit",
-        "drishti.sources.connectors.risk-lake.settings.domain=risk",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
-                + "PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,"
-                + "SCENARIO_SET_ID,BATCH_ID,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS,TRADE_CURRENCY",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
-        "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.scenario-set=risk-lake",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/hierarchy-column-missing", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.scenario-set=risk-lake",
         "drishti.sources.routes.var-limit=risk-lake",
         "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
         "drishti.var.hierarchies.MGMT.level-names=desk > book", "drishti.var.hierarchies.MGMT.ids=leaf",
@@ -71,11 +62,15 @@ import org.springframework.test.web.servlet.MockMvc;
 @Import(PinnedBusinessDate.class)
 class HierarchyColumnMissingTest {
 
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("hierarchy-column-missing");
+    }
+
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
         Path lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "var-nocol-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake);
-        r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
+        r.add("test-connectors.risk-lake.root", lake::toString);
     }
 
     @Autowired MockMvc mvc;

@@ -141,7 +141,7 @@ def test_pack_page_is_closed_to_non_admins(client, backend, monkeypatch):
 def test_the_lists_link_every_name(client, backend, monkeypatch):
     async def admin(method, path, ident, body=None, timeout=None, headers=None, **params):
         if path == "/connectors" and method == "GET":
-            return {"connectors": [{**CONNECTOR}], "directory": "/srv/c", "watch": "WATCHING", "misnamed": [], "fileProblems": {}, "deprecated": [], "knownKinds": []}
+            return {"connectors": [{**CONNECTOR}], "directory": "/srv/c", "watch": "WATCHING", "misnamed": [], "fileProblems": {}, "knownKinds": []}
         if path == "/connectors/plugins":
             return {"plugins": []}
         if path == "/packs":

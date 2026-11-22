@@ -12,10 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A stand-in server for the live result sets (the grid's live mode): the trade blotter's declaration as GET /api/v1/live describes it, a page
-of rows, one record whole, the stream (hello, then rows or resync, pushed by the test), a stream's window, a blotter's edit with the server's
-version check (409 naming who changed it) and the write-back's change list. Synthetic trades only; the real rules are the server's
-(LiveSetTest). Used by test_live_grid_browser.py."""
+"""A stand-in server for the live tables (the grid's live mode over the Data Protocol): the trade blotter's schema as GET /api/v1/rdp/tables/trade
+gives it (its write rules for a person who may edit), a page (POST .../query, one record whole when the filter fixes the key), the minimal change
+stream (msg patches and gap, pushed by the test), a write with the server's version check (409 naming who changed it) answered held for four
+eyes, and the write-back's change list. Synthetic trades only; the real rules are the server's (LiveTablesAdapterTest). Used by
+test_live_grid_browser.py."""
 import asyncio
 import copy
 import json
@@ -65,17 +66,24 @@ class LiveBackend(ChartBackend):
         self.backlog = []
 
     # -- what a test does to the server ------------------------------------------------------------------------------------------------------
-    def spec(self) -> dict:
-        s = {"id": "trade", "title": "Trade blotter", "kind": "trade", "query": "trade", "key": "TRADE_ID", "version": "TRADE_VERSION", "changedBy": "UPDATED_BY",
-             "changedAt": "SOURCE_UPDATE_TIME", "columns": self.columns(), "groupBy": [], "subtotals": ["QUANTITY"], "sort": dict(self.order),
-             "links": [{"label": "Explain", "href": "/explain/trade/{TRADE_ID}"}, {"label": "VaR", "href": "/var?scope=book:{PORTFOLIO}"},
-                       {"label": "Limits", "href": "/limits?book={PORTFOLIO}"}], "retention": None, "tray": True, "module": "trading",
-             "editable": self.editable, "readOnly": None if self.editable else "your role holds no edit power"}
+    def schema(self) -> dict:
+        types = {"number": "number", "amount": "number"}
+        cols = [{"name": c["field"], "label": c["label"], "type": types.get(c.get("type"), "string"), **({"fmt": c["format"]} if c.get("format") else {})}
+                for c in self.columns()]
+        s = {"name": "trade", "title": "Trade blotter", "key": ["TRADE_ID"], "rowVersion": "TRADE_VERSION", "changedBy": "UPDATED_BY",
+             "changedAt": "SOURCE_UPDATE_TIME", "columns": cols, "view": {"sort": [{"col": self.order["field"], "dir": "desc" if self.order["descending"] else "asc"}],
+                                                                        "subtotals": ["QUANTITY"]},
+             "profile": {"kind": "trade", "links": [{"label": "Explain", "href": "/explain/trade/{TRADE_ID}"}, {"label": "VaR", "href": "/var?scope=book:{PORTFOLIO}"},
+                                                    {"label": "Limits", "href": "/limits?book={PORTFOLIO}"}]},
+             "tray": True, "live": {"state": "up"}, "version": {"epoch": "e1", "seq": self.seq}}
         off = getattr(self, "excludes", None)
-        if off:                                                     # the source systems switched off that feed the kind (LiveSetController)
-            s.update({"excludes": list(off), "banner": "excludes " + ", ".join(off) + " (switched off)"})
+        if off:                                                     # the source systems switched off that feed the kind
+            s["excludes"] = list(off)
+        if not self.editable:
+            s["readOnly"] = "your role holds no edit power"
         if self.editable:
-            s.update({"fields": FIELDS, "approval": "none", "reason": "optional"})
+            s["write"] = {"columns": {f["bind"]: {k: v for k, v in (("type", f["type"]), ("min", f["min"]), ("options", [o["value"] for o in f["options"]]))
+                                                 if v not in (None, [])} for f in FIELDS if f["bind"] != "TRADE_ID"}, "reason": "optional"}
         return s
 
     def columns(self) -> list:
@@ -84,20 +92,20 @@ class LiveBackend(ChartBackend):
         f = self.order["field"]
         return COLUMNS if any(c["field"] == f for c in COLUMNS) else COLUMNS + [{"field": f, "label": "Updated", "type": "datetime"}]
 
-    def shown(self, doc: dict) -> dict:
-        return {"id": doc["TRADE_ID"], "version": doc["TRADE_VERSION"], "seq": self.seq, "doc": copy.deepcopy(doc)}
-
     def push(self, upserts=(), removes=(), kind="rows", top=(), count_only=False) -> None:
-        """Sends one stream event from the test's thread: a rows event of these records (already changed in ``docs``), or a resync; ``top``:
-        the rows a paged viewer at the top of a newest-first order inserts (LiveSet.Window); ``count_only``: only the total moved."""
+        """Sends one stream frame from the test's thread: a patch of these records (already changed in ``docs``: every field of each), or a gap
+        (the reader resyncs); ``top``: the rows a viewer at the top of a newest-first order puts on top; ``count_only``: only the total moved."""
         self.seq += 1
-        ev = {"type": kind, "total": len(self.docs), "seq": self.seq}
         if kind == "rows":
-            ev.update({"upserts": [self.shown(self.docs[i]) for i in upserts], "removes": list(removes), "countOnly": count_only})
+            data = {"table": "trade", "total": len(self.docs)}
+            if not count_only:
+                data["update"] = [copy.deepcopy(self.docs[i]) for i in upserts]
+                data["remove"] = [[r] for r in removes]
             if top:
-                ev["top"] = list(top)
+                data["top"] = [[t] for t in top]
+            ev = ("msg", {"t": "msg", "table": "trade", "epoch": "e1", "seq": self.seq, "data": data})
         else:
-            ev["reason"] = "more than 5000 records changed before they could be sent"
+            ev = ("gap", {"t": "gap", "table": "trade", "recoverable": False, "reason": "more than 5000 records changed before they could be sent"})
         if self.loop is None:
             self.backlog.append(ev)
         else:
@@ -112,43 +120,52 @@ class LiveBackend(ChartBackend):
         self.push([trade_id])
 
     # -- the server's calls ------------------------------------------------------------------------------------------------------------------
+    @staticmethod
+    def _page(docs, names, total) -> dict:
+        return {"columns": [{"name": n} for n in names], "values": [[copy.deepcopy(d.get(n)) for n in names] for d in docs], "total": total,
+                "version": {"epoch": "e1", "seq": 0}}
+
     async def _send(self, method, path, ident=None, **kw):
-        if path == "/live":
-            return {"sets": [self.spec()]}
-        if path.startswith("/live/trade/rows/"):
-            self.raw_reads += 1
-            d = self.docs.get(path.rsplit("/", 1)[1].split("?")[0])
-            if d is None:
-                raise BackendError(404, "DRS-1001", "no such trade")
-            return self.shown(d)
-        if path.startswith("/live/trade/rows"):
-            f = self.order["field"]
-            rows = sorted(self.docs.values(), key=lambda t: (str(t.get(f)), t["TRADE_ID"]), reverse=self.order["descending"])
-            return {"set": self.spec(), "live": True, "total": len(rows), "seq": self.seq, "offset": 0, "rows": [self.shown(t) for t in rows[:self.page]]}
-        if path.endswith("/window"):
+        if path == "/rdp/tables/trade" and method == "GET":
+            return self.schema()
+        if path == "/rdp/tables/trade/query":
+            body = kw.get("json") or {}
+            f = body.get("filter") or {}
+            if f.get("op") == "==" and (f.get("args") or [{}])[0].get("col") == "TRADE_ID":     # one record whole: every field
+                self.raw_reads += 1
+                d = self.docs.get(str(f["args"][1].get("lit")))
+                return self._page([d] if d else [], sorted(d) if d else ["TRADE_ID"], 1 if d else 0)
+            sort = (body.get("sort") or [{"col": self.order["field"], "dir": "desc" if self.order["descending"] else "asc"}])[0]
+            rows = sorted(self.docs.values(), key=lambda t: (str(t.get(sort["col"])), t["TRADE_ID"]), reverse=sort.get("dir") == "desc")
+            off = int(body.get("offset") or 0)
+            cut = rows[off:off + (self.page or int(body.get("limit") or 500))]
+            return self._page(cut, [c["field"] for c in self.columns()], len(rows))
+        if path.startswith("/rdp/changes/") and path.endswith("/window"):
             self.windows.append(kw.get("json"))
-            return {"stream": "x", "paged": not (kw.get("json") or {}).get("all")}
-        if path == "/live/trade/edit":
-            return self.edit(kw["json"])
+            return {}
+        if path == "/rdp/tables/trade/write":
+            return self.write(kw["json"])
         if path.startswith("/changes"):
             return {"changes": [c for c in self.changes if "mine=true" not in path or c["by"] == "me"]}
         return await super()._send(method, path, ident, **kw)
 
-    def edit(self, body: dict) -> dict:
+    def write(self, change: dict) -> dict:
         if not self.editable:
-            raise BackendError(403, "DRS-9300", "blotter trade is read-only for you: " + "your role holds no edit power")
-        self.edits.append(body)
-        d = self.docs[body["entity"]]
-        if d["TRADE_VERSION"] != body["basedOn"]:
-            raise BackendError(409, "DRS-9301", f"trade {body['entity']} is at version {d['TRADE_VERSION']}, changed by {d['UPDATED_BY']} at {d['SOURCE_UPDATE_TIME']}; "
-                               f"you edited version {body['basedOn']}: open it again and edit from what is there")
-        change = {"id": f"chg-{len(self.changes) + 1:026d}", "kind": "trade", "entity": body["entity"], "state": "awaiting", "needed": 1, "by": "me",
-                  "at": "2026-11-14T10:00:00", "reason": body.get("reason", ""), "items": [{"path": i["field"], "from": i["from"], "to": i["to"]} for i in body["items"]]}
-        self.changes.insert(0, change)
-        return {"changes": [{"id": change["id"], "state": "awaiting", "needed": 1}]}
+            raise BackendError(403, "rdp.write.forbidden", "you may not change trade: your role holds no edit power")
+        entity = change["key"][0]
+        self.edits.append({"entity": entity, "basedOn": change.get("basedOn"), "reason": change.get("reason", ""),
+                           "items": [{"field": k, "from": (change.get("from") or {}).get(k), "to": v} for k, v in (change.get("set") or {}).items()]})
+        d = self.docs[entity]
+        if d["TRADE_VERSION"] != change.get("basedOn"):
+            raise BackendError(409, "rdp.write.conflict", f"trade {entity} is at version {d['TRADE_VERSION']}, changed by {d['UPDATED_BY']} at "
+                               f"{d['SOURCE_UPDATE_TIME']}; you edited version {change.get('basedOn')}: open it again and edit from what is there")
+        item = {"id": change["id"], "kind": "trade", "entity": entity, "state": "awaiting", "needed": 1, "by": "me", "at": "2026-11-14T10:00:00",
+                "reason": change.get("reason", ""), "items": self.edits[-1]["items"] and [{"path": i["field"], "from": i["from"], "to": i["to"]} for i in self.edits[-1]["items"]]}
+        self.changes.insert(0, item)
+        return {"change": change["id"], "state": "held", "message": "waiting for approval (1 needed)"}
 
     async def sse(self, path, ident=None, opened=None):
-        if not path.startswith("/live/trade/stream"):
+        if not path.startswith("/rdp/changes?table=trade"):
             async for pair in super().sse(path, ident, opened):
                 yield pair
             return
@@ -157,7 +174,6 @@ class LiveBackend(ChartBackend):
         for ev in self.backlog:
             self.queue.put_nowait(ev)
         self.backlog = []
-        yield "hello", json.dumps({"stream": "stream-0001-abcdef", "total": len(self.docs), "live": True})
         while True:
-            ev = await self.queue.get()
-            yield ev["type"], json.dumps(ev)
+            name, frame = await self.queue.get()
+            yield name, json.dumps(frame)

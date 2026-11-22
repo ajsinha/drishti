@@ -549,7 +549,11 @@ def _ranges(text: str) -> set[str]:
 
 
 # Codes the documents name as reserved or retired on purpose (the error code table says which).
-RESERVED_CODES = {"DRS-3001"}
+# Codes Rachana (outside this repository) defines as RCH-nnnn, which DrishtiBinder answers as DRS-nnnn of the same number (SPLIT_PLAN 8.3e), and two
+# retired in IMPLEMENTATION_PLAN (the Python what-if engines).
+RACHANA_CODES = {f"DRS-{n}" for n in (2009, 2010, 2012, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2029, 2030, 2031, 2033, 2035, 2036, 2037, 2038, 2039,
+                                      2056, 2057, 2058, 2059, 5020, 5022, 5023, 5024)}
+RESERVED_CODES = {"DRS-3001", "DRS-5205", "DRS-5446"} | RACHANA_CODES
 # What a worked example adds: DEVELOPER_GUIDE section 5 builds an endpoint answering DRS-4005 and a drishti.notices setting.
 EXAMPLE_NAMES = {"docs/guides/DEVELOPER_GUIDE.md": {"DRS-4005", "drishti.notices.max-length"}}
 

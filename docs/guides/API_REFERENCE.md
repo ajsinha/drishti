@@ -450,21 +450,21 @@ a value is cut to 8,192 characters and a match that takes over 50 ms is `DRS-401
 `drishti.search.regex.max-pattern`, `.max-program`, `.max-input` and `.timeout-ms`. The form's other limits are
 `drishti.search.form.max-values` (500, an `in` list), `.max-inferred-fields` (14), `.enum-max` (12), `.sample-rows` (200) and `.enum-scan-rows` (1,000: how many rows of a kind are read to find the values of a dropdown, up to the search's own limit; the first 200 of a kind can all be one product group, such as the rates trades, which left the other products out of the list).
 
-### 2.8a Live result sets and blotters (`/live`)
+### 2.8a Live tables and blotters (`/rdp`)
 
-One engine behind every blotter and every FORM result that ticks; the declarations, the merge by key and version, the edit gate and the
-write path are in [Live results and blotters](LIVE_RESULTS_GUIDE.md#9-the-api).
+One engine behind every blotter and every FORM result: Rachana's live tables on the Data Protocol; the declarations, the merge by key and
+version, the edit gate and the write path are in [Live results and blotters](LIVE_RESULTS_GUIDE.md#9-the-api).
 
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/live` | the declarations the caller may open (`editable`, `readOnly` for them; an editable one's `fields` with `readonly`, `pattern`, `maxLength`); for administrators those set aside (`problems`, each `DRS-9307`) and the open sets. Every answer of `/live` is kept to the caller (their masks and row scope); a search's set is read only by the audience it was filled for |
-| `GET` | `/live/{id}/rows` | a page: `offset`, `limit` (at most 5,000), `sort`, `descending`, `filter`, `query`; `{set, live, total, seq, rows[{id, version, seq, doc}]}` |
-| `GET` | `/live/{id}/rows/{entity}` | one record whole, masked for the caller (the panel's Raw JSON) |
-| `GET` | `/live/query` | a search's matches as a live set (a FORM's result, the search page's): `q` (the search), `offset`, `limit` (1,000), `sort`, `descending`, `filter`, `again` (Search pressed: a static set is read afresh); the page as `/live/{id}/rows` plus `search` (`columns`, `labels`, `matched`, `scanned`, `partial`, `failed`, `noData`, `pivot`); `set.id` streams while `live` is true (the live business date and a kind with a `live:` binding). One set per search, business date and masking, shared |
-| `GET` | `/live/kinds/{word}/rows` | a kind's own set (`POS <GO>`): `word` is its mnemonic or name; its module's declaration, else the default made from its contract (the key fields, else the promoted columns); a kind a lake keeps as columns is paged from the store (every record, the total exact); `capped: true` only when a kind that cannot be paged holds more than `drishti.live-sets.default-max-rows` (250,000) |
-| `GET` | `/live/{id}/stream` | server-sent events: `hello`, then `rows` `{upserts, removes, total, seq, countOnly}` or `resync` |
-| `POST` | `/live/{id}/stream/{stream}/window` | the page a stream shows: `{ids}` or `{all: true}`; the stream's owner only |
-| `POST` | `/live/{id}/edit` | `{entity, basedOn, reason, items[{field, from, to}]}`; `403 DRS-9302` read-only (with why, audited), `409 DRS-9303` a stale version |
+| `GET` | `/rdp/tables` | the tables the caller may read |
+| `GET` | `/rdp/tables/{name}` | the schema for the caller: columns (masked ones marked), key, `rowVersion`, `view`, `live`, `write` (what they may change, with the rules) or `readOnly` (why not), the profile (`kind`, `links`), `tray`, `excludes` |
+| `POST` | `/rdp/tables/{name}/query` | a page: `columns`, `filter` (a filter tree), `sort`, `limit` (at most 5,000), `offset`, `group`; `{columns, values, total, version}` |
+| `POST` | `/rdp/tables/{name}/write` | `{id, op, key, basedOn, set, from, reason}`; `{change, state, message}`; `403 rdp.write.forbidden` read-only (with why, audited), `409 rdp.write.conflict` a stale version, `422 rdp.write.invalid` a field rule |
+| `GET`, `POST` | `/rdp/changes` | server-sent events of a table: `msg` (a patch) and `gap`; `table`, `after`, `filter`, `window` |
+| `POST` | `/rdp/changes/{sub}/window` | the rows a windowed stream sends: `{keys, top}`; the stream's owner only |
+| `GET` | `/rdp/searches` | a search as a query on a table (a FORM's result, the search page's): `q`; `{table, query, live, page, search}`, on the caller's business date |
+| `GET` | `/rdp/kinds/{word}` | the table of a kind (`POS <GO>`): `word` is its mnemonic or name; its module's declaration, else the default made from its contract |
 
 ### 2.9 Pivot of a table, a page's table or a search's matches
 
@@ -3279,7 +3279,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9304 | 503 | Edit lane busy | The record's lane is full (`lanes.max-lane-depth`): try again in a moment; your draft is kept |
 | DRS-9305 | 404 | Change not found | no such change id (HTTP 404) |
 | DRS-9306 | 503 | Edits paused | edits are paused: the edit primary named by `edit.primary` is not reachable, or the cluster has no shared edit log (use PostgreSQL for the server's database, or name an edit primary); reading is not affected (HTTP 503) |
-| DRS-9307 | 422 | Live set declaration invalid | a live result set's declaration (`blotters/*.blotter.yaml`) was set aside at load: its shape, a format not in `formats.yaml`, a field not in the kind's data contract, or an editable field with no write path. `GET /api/v1/live` lists why for administrators; asking for the set answers this code (HTTP 422) |
+| DRS-9307 | 422 | Live table declaration invalid | a live table's declaration (`blotters/*.live.yaml`) was set aside at load: its shape, a format not in `formats.yaml`, a field not in the kind's data contract, or an editable form that names no save. Admin lists why for administrators; asking for the set answers this code (HTTP 422) |
 | DRS-9308 | 409 | No write path | a change to a record cannot be sent: no connector that serves its kind (for its source system) offers writes; switch on the source module's live connector or bind one in Admin → Data bindings (write) |
 | DRS-9309 | 409 | Several write paths | the kind has more than one write path and the record names no source system: name one in Admin → Data bindings (write) |
 | DRS-9501 | 503 | Busy: sign-in waits | busy protection: the server is very short of memory (after clean-up, over `drishti.admission.memory-refuse-sign-in`, 92%), so a new sign-in waits; people signed in keep working. `Retry-After` says when to try again; the body carries `busy`, `title`, `because`, `retryAfterSeconds` ([OPERATIONS_GUIDE.md section 12.5](OPERATIONS_GUIDE.md#147-busy-protection-refuse-politely-never-fall-over)) |

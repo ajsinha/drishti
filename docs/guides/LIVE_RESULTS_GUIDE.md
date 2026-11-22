@@ -40,16 +40,17 @@ and blotters work in every distribution; the trade blotter and the source system
 
 ## 1. One engine, and what uses it
 
-A **live result set** is the snapshot of the records that hold a condition, from the kind's durable store (Delta, Iceberg or files, through
-the bindings), plus the live changes of the kind's `live:` binding (Kafka, RabbitMQ, ActiveMQ), merged **by key and version**, plus an optional
-edit path and an optional retention. What uses it:
+A **live table** (Rachana's live tables, `rachana-live`, served on the Data Protocol at `/api/v1/rdp`) is the snapshot of a kind's records
+from its durable store (Delta, Iceberg or files, through the bindings), plus the live changes of the kind's `live:` binding (Kafka,
+RabbitMQ, ActiveMQ), merged **by key and version**, plus an optional edit path and an optional retention. Drishti's adapter
+(`com.ash.drishti.server.live`) gives the engine its snapshots, streams, rights and write-back. What uses it:
 
 | User | What it is |
 |---|---|
-| A blotter | a declaration with columns, grouping, links and, optionally, edits |
-| A FORM or the search page | the search's matches as a set: a blotter without `edit:` |
-| A bare mnemonic (`POS <GO>`, `TRD`, `NEWS`) | the kind's own set; a default declaration is made from its contract |
-| A monitor, drill-through, a preview | the same set, opened from another page |
+| A blotter | a declaration (`<name>.live.yaml`) with columns, grouping, links and, optionally, edits |
+| A FORM or the search page | the search compiled to a query on a table of the kind: a filter tree, an order and a limit |
+| A bare mnemonic (`POS <GO>`, `TRD`, `NEWS`) | the kind's own table; a default declaration is made from its contract |
+| A monitor, drill-through, a preview | the same table, opened from another page |
 | A SQL or BI table | the static grid: the same component without the live channel |
 
 The trading module's trade blotter is the first declaration ([the trading module](../../modules/trading/docs/guide.md)).
@@ -80,7 +81,7 @@ Open a blotter from its module's menu (the trading module's is **Trading › Tra
    declaration's `subtotals:` are summed per group and stay current as trades tick), **Pause** (rows that arrive are not applied; Resume reads
    the set again), **Pivot ›** and **My changes (n)**.
 2. **Ticking.** A change to a trade arrives over the browser's one live channel and the changed cells flash; a replayed or older version is
-   ignored. A set larger than the grid holds (5,000 rows) shows `5,000 of 120,000` and the server sends changes of the rows in view only.
+   ignored. A table larger than the grid holds (5,000 rows) shows `5,000 of 120,000`; a change of a row it does not hold moves the count and **N new**.
 3. **A record's panel.** Click a row. *Record*: the fields. With the edit power they are a form with a **Reason** (required or optional as the
    declaration says); without it they are plain text, with the words of why ("Read-only for you: ..."), and there is no edit control at all.
    Submit sends the change on the version you opened; the answer is in words (*waiting for 1 approver (four eyes)*, *on its way to the source*).
@@ -100,7 +101,7 @@ reflects it):
 
 | | Read-only when |
 |---|---|
-| The site's configuration | the declaration names no `edit:`; write-back is off (`edit.enabled`); the site switched this blotter's edits off (its id in `drishti.live-sets.edits-off`); the connector's command is missing, refused or its writes are off (Admin → Edits) |
+| The site's configuration | the declaration names no `edit:`; write-back is off (`edit.enabled`); the site switched this blotter's edits off (its name in `drishti.live-sets.edits-off`); the connector's command is missing, refused or its writes are off (Admin → Edits) |
 | The person's rights | no **edit** power; the kind is not theirs to open; none of the form's fields is editable by their roles (`roles:`, `editable-by:`) |
 
 **The edit power for trades** ships with the trading pack as the role **`trade-editor`** (`kinds: [trade]`, `edit: true`). The plain
@@ -109,14 +110,14 @@ names it in `roles:`, so a trade-editor may change the book, price and quantity 
 `editable-by:`). A pack's role may carry `edit: true` like `approve:` or `calc:`; a site may still define its own roles in
 `drishti.security.roles`.
 
-A person who may not edit sees no edit controls (`editable: false` and `readOnly: <why>` in the declaration the API gives them). A crafted
-request is refused with `403 DRS-9302` and the reason, and audited (`edit-refused`). Four eyes apply on top. Finer entitlements (per desk,
+A person who may not edit sees no edit controls (no `write` and `readOnly: <why>` in the schema the API gives them). A crafted
+request is refused with `403 rdp.write.forbidden` and the reason, and audited (`write-refused`). Four eyes apply on top. Finer entitlements (per desk,
 per field) come with the security release.
 
 ## 4. Versions, conflicts, the outbox, four eyes and the audit
 
 - **Versions.** The declaration's `version:` field is the guard. An edit carries `basedOn`, the version the person saw. If the record moved since,
-  the answer is `409 DRS-9303` naming the version, who changed it and when; **Reload** opens it again. The same guard runs again when the change is
+  the answer is `409 rdp.write.conflict` naming the version, who changed it and when; **Reload** opens it again. The same guard runs again when the change is
   applied at the source, so a change that raced another is refused there too.
 - **Outbox.** The change is recorded as pending in the same transaction that applies it, sent once per record in order, and resent after a failover with
   the **same change id**; the source treats a repeat as already applied.
@@ -154,24 +155,29 @@ node answering, the embedding app) is in section 7, "Who sees what".
 
 ## 6. The declaration
 
-`blotters/<id>.blotter.yaml` in a module, or `config/blotters/` for a site's own. The trading module's
-[`trade.blotter.yaml`](../../modules/trading/blotters/trade.blotter.yaml) in short:
+`blotters/<name>.live.yaml` in a module, or `config/blotters/` for a site's own: a Rachana live-table declaration
+([LIVE_TABLES.md](https://github.com/ajsinha/drishti-rachana/blob/develop/docs/guides/LIVE_TABLES.md) section 2) with Drishti's profile
+keys (`kind`, `links`, the edit's `roles`, `save` and `editable-by`). The trading module's
+[`trade.live.yaml`](../../modules/trading/blotters/trade.live.yaml) in short:
 
 ```yaml
-blotter: trade                     # its id
+rachana: 1
+live-table: trade                  # its name: /api/v1/rdp/tables/trade, the page /live/trade
 title: Trade blotter
-kind: trade
-query: "trade where TRADE_STATUS != 'CANCELLED'"   # the rows (the search grammar); absent: every record of the kind
-key: TRADE_ID                      # the record's key (absent: the entity id)
-version: TRADE_VERSION             # the version: changes merge by it, and an edit on an older one is refused
-changed-at: SOURCE_UPDATE_TIME     # said when a stale edit is refused (changed-by: names who, when the kind's contract has such a field)
-columns: [{field: TRADE_ID, label: Trade, type: id}, {field: PRICE, type: number, format: price4}, ...]   # type: text, number, amount, date, datetime, list, status, id
-group-by: []                       # the grouping it opens with
+kind: trade                        # the kind it holds (its access, masks and row rules are the kind's)
+snapshot: trade                    # the kind's durable records, through the bindings
+stream: trade                      # the kind's live: binding (absent: a static table)
+where: "@.TRADE_STATUS != 'CANCELLED'"   # the rows it holds (Rachana-EL over the row); absent: every record of the kind
+key: TRADE_ID                      # the row's key: an edit names the row by it, so the edit form has no key field
+version: TRADE_VERSION             # changes merge by it, and an edit on an older one is refused
+changed-by: UPDATED_BY             # said when a stale edit is refused, with changed-at
+changed-at: SOURCE_UPDATE_TIME
+columns: [{name: TRADE_ID, label: Trade}, {name: PRICE, type: number, fmt: price4}, ...]   # type: string, integer, number, decimal, date, timestamp, list
 subtotals: [QUANTITY]              # summed per group
-sort: {field: SOURCE_UPDATE_TIME, descending: true}
+sort: {col: SOURCE_UPDATE_TIME, dir: desc}
 links: [{label: VaR, href: "/var?scope=book:{PORTFOLIO}"}]   # paths of the console, {FIELD} filled from the row
-retention: {ttl: 1d, on: SOURCE_UPDATE_TIME, max-rows: 100000}   # the live side's age limit (by a field, else arrival) and row cap
-tray: true                         # the tray of the person's changes
+retention: {ttl: 1d, on: SOURCE_UPDATE_TIME, max-rows: 100000}   # the live side's age limit and row cap
+tray: true                         # the person's pending changes, served as trade.changes
 edit:                              # a Rachana form with save: (RACHANA_REFERENCE.md, forms): fields, checks, roles, where it goes
   edit: cells
   roles: [trade-editor, trader, middle-office, admin]
@@ -179,72 +185,65 @@ edit:                              # a Rachana form with save: (RACHANA_REFERENC
   save: {target: source, command: amend-trade, approval: none, reason: optional}
 ```
 
-Every declaration is **checked at load**, beyond its own shape:
-
-- each column's `format:` is a named format of `formats.yaml` (the bundled one and the packs': `price4` is the trading pack's);
-- every field it names (columns, key, version, who and when, grouping, subtotals, sort, retention, the edit's binds) is in the kind's
-  data contract (`contracts/<kind>.contract.yaml` of the pack that owns the kind; a kind without a contract is checked for formats only);
-- every editable field has a **write path**: it binds a record field, and not one that names or stamps the record (the key, the version,
-  who and when: mark those `readonly: true`).
-
-A declaration with problems is set aside with every problem in words, under `DRS-9307`: `GET /api/v1/live` lists them for
-administrators (Admin), and asking for the set answers `422 DRS-9307` with the reason; the others load.
-The `edit:` form joins the Sutras' forms in the write-back under the name `live:<id>`, so its checks, roles and approval rules are the
-write-back's own.
+Every declaration is **checked at load**: Rachana checks its shape, its formats (each `fmt` a named format of `formats.yaml`, the bundled
+one and the packs') and its edit form; Drishti adds that every column is in the kind's data contract (`contracts/<kind>.contract.yaml`
+of the pack that owns the kind; a kind without a contract is checked for formats only), that a link is a path of this console, and that
+an editable table's form says where its changes go (`save:`). A declaration with problems is set aside with every problem in words, listed
+in Admin, and never served; the others load. The `edit:` form joins the Sutras' forms in the write-back under the name `live:<name>`, so
+its checks, roles and approval rules are the write-back's own.
 
 ## 7. The engine: snapshot, deltas, scale, retention
 
-One engine behind every blotter and every FORM result (`com.ash.drishti.server.liveset`):
+One engine behind every blotter and every FORM result: Rachana's live tables, with Drishti's adapter (`com.ash.drishti.server.live`):
 
 1. **Snapshot, paged from the store**: a kind a lake keeps as columns (Delta, Iceberg or files, through the bindings) is never read into
-   memory. For each order (the key, else the chosen sort, ascending or descending), filter and audience the set keeps an *index*: the keys
-   of the records that hold the query, in order, with the sort column's values, read in one pass of those columns (the documents once when
-   a field is not a column). A page fetches only its own rows whole, by id; the total is the index's count. The index is read again when
-   the store's version moves (a load); a few are kept, the latest asked for. Other kinds (no columns) are read whole in one pass, else
-   from the search's matches. The snapshot is the lake's (the kind's `read:` binding, a `union` of source systems included), read by
-   columns: an order by a field the lake does not keep as a column (the trade blotter's `SOURCE_UPDATE_TIME`, which the lake leaves in
-   each document) never turns the read into one of every document. The lake's records then keep the key order **after** the live rows
-   that carry the field: in a newest-first order the new and changed trades come first, then every trade of the lake. Promote the field
-   to a lake column (`promote:` of the pack's `lake:` table) to order the lake's own records by it too.
+   memory (the source's tier `columns`). For each order, filter and audience the table keeps an *index*: the keys of the rows that hold the
+   condition, in order, with the sort column's values, read in one projection of the columns it lists. A page fetches only its own rows
+   whole, by id; the total is the index's count. The index is read again when the store's version moves (a load). Other kinds are read
+   whole in one pass (tier `whole`), up to `drishti.live-sets.default-max-rows` rows (the table says `capped`). An order by a field the
+   lake does not keep as a column (the trade blotter's `SOURCE_UPDATE_TIME`) keeps the lake's records in key order **after** the live rows
+   that carry the field: in a newest-first order the new and changed trades come first. Promote the field to a lake column to order the
+   lake's own records by it too.
 2. **Live deltas**: the kind's `live:` binding, subscribed to **before** the snapshot is read; what arrives meanwhile is applied after it.
-   Every change merges **by key and version**: a newer version replaces the row, an older or equal one is dropped (no duplicates, never back
-   in time), a deletion or a row that no longer holds the query leaves. Skipped versions are counted (the record is whole, so the newest is
-   still right).
-   Paged from the store, the set keeps **only the live side** (the records changed since it opened, and the keys deleted or no longer
-   holding the query); each page merges it with the store's order by key: a changed record shadows the store's (and takes its place by the
-   sort), a removed one hides it, a new one joins; the total is the store's count with the same corrections, so it is exact.
-3. **Who sees what** (session isolation: nothing of any person is kept in a shared set): every request makes a *reader* of the person
-   (their **audience**: roles and embedding app, which also decide the Drishti*net nodes a search reaches, their masks, their row scope,
-   whether they see which node answered). A declared set's rows are shared, and **every read is kept to the reader**: pages, totals, each
-   viewer's stream (a record outside their scope is never sent; one that leaves it is a removal to them), the panel's Raw JSON and an edit's
-   record. A **search's set** is filled for one audience and read only by it: another person's request for its id is answered as if it did
-   not exist. Kind access (the role, the kind's pack switched on for them) is checked on every request. Changes are coalesced per record and
-   flushed every `flush-ms` (50 ms).
-4. **Scale**: pages of at most 5,000 rows (`offset`, `limit`, `sort`, `filter`: a text found in the shown columns' values as the reader
-   sees them); a paged viewer is sent changes of the rows it shows and the new total only, with one exception that keeps a blotter
-   readable: **new and changed rows on top**. A declaration whose own order is newest first (`sort:` descending by its `changed-at` or
-   its `version`, as the trade blotter's `sort: {field: SOURCE_UPDATE_TIME, descending: true}`) puts every new or changed row first, so
-   a viewer whose page starts at the first row of that order (the grid says `top: true` with its window) is sent those rows to insert on
-   top (`top: [ids]` in the `rows` event); the grid keeps the declaration's order, so the row lands first within the flush (50 ms). A
-   viewer scrolled down, or sorted otherwise, gets the new total and a **N new** button that goes back to the newest; a viewer more than `window-capacity` (5,000)
-   records behind is sent one `resync` instead of a queue (back-pressure: a burst never queues without bound). 10,000 updates apply in well
-   under a second and reach a viewer as one coalesced event. At a million records (a narrow kind) the first page takes about half a second
-   (the index read once), a first sorted page under a second, every later page and a page after a live change a millisecond or two
-   (`StorePagesTest`); memory holds the keys and the sort column, never the records.
+   Every change merges **by key and version**: a newer version replaces the row, an older or equal one is dropped, a deletion or a row that
+   no longer holds the table's `where` leaves. A binding whose broker is absent is `paused` with its reason, and the table keeps serving its
+   snapshot.
+3. **Who sees what** (session isolation: nothing of any person is kept in a shared table): every request is read through the person's
+   **view** (the authoriser: their kind access, their row rule as a test of each row, their masks; their audience is everything that
+   decides what they see). A table's rows are shared, and **every read is kept to the reader**: pages, totals, each stream (a row outside
+   their scope is never sent; one that leaves it is a removal to them), one record whole and an edit's row. A filter or an order on a
+   column masked for the reader is refused; a masked value never leaves the server. Changes are coalesced per row and flushed every
+   `flush-ms` (50 ms).
+4. **Scale**: pages of at most 5,000 rows (`offset`, `limit`, `sort`, `filter`: a filter tree on the columns as the reader sees them).
+   The console's grid follows a table on the browser's one live channel: every patch of the table reaches it, merged by key and version;
+   a row it does not hold (it shows a page of a larger table) moves the count and a **N new** button that reads the newest page again. A
+   windowed stream of the protocol (`POST /changes` with `window`; the reader names the keys it shows and `top` when its page starts at the
+   first row of a newest-first order) is sent only the changes of those rows, new and changed rows on top, and the count of the others. A
+   reader more than `window-capacity` (5,000) rows behind is sent one `gap` instead of a queue (back-pressure: a burst never queues without
+   bound). 10,000 updates apply in well under a second and reach a viewer coalesced. At 100,000 records (a narrow kind) the first page takes
+   about half a second (the index read once), a first sorted page under a second, every later page and a page after a live change a
+   millisecond or two (`LiveTablesAdapterTest`); memory holds the keys and the sort column, never the records.
 5. **Retention**: `retention:` trims the live side every 30 s (older than `ttl` by its field, else by arrival; beyond `max-rows`, oldest
    first); the durable store keeps its own.
-6. A set nobody has viewed for ten minutes is closed.
-7. **A search is a set too**: a FORM's result and the search page's are the search's matches as a set (`GET /api/v1/live/query`): the
-   search's rows, columns and order, then the kind's live changes merged in by key while the business date is the live one (static
-   otherwise, and when the kind has no `live:` binding). One set per search, business date and **audience**: people who see differently
-   (other roles, masks or row scope) get their own set, filled and kept as they see it, so a masked value never picks, orders or filters
-   rows and a row outside a person's scope never reaches them, live changes included. Pressing Search again reads a static set afresh; a
-   live one is current already.
-8. **A bare mnemonic is the kind's set**: `POS <GO>` opens the kind's own set a page at a time (`GET /api/v1/live/kinds/POS/rows`). A
-   module's declaration of the kind is used when there is one; otherwise a default is made from the kind's contract (its key fields as
-   columns, else its promoted columns; the entity id as the key; read-only). No YAML per mnemonic is needed. A kind a lake keeps as columns
-   is paged from it (every record counted: a bank's 1.3 million positions are all there); a kind that cannot be paged is read into memory
-   up to `drishti.live-sets.default-max-rows` records, and the set says when it stopped there (`capped`).
+6. A table nobody has read for ten minutes is closed (its declaration stays; it is read again when asked).
+7. **A search is a query on a table**: a FORM's result and the search page's (`GET /api/v1/rdp/searches?q=`) are the search compiled
+   once (`SearchFilter`: the search grammar's condition, its field names spelt as the kind spells them, text equality ignoring case,
+   amounts expanded) into a **filter tree** (PROTOCOL 7, through Rachana's `FilterTree`), an order and a limit, read from a table of the kind
+   that holds the columns the search needs (declared on first use, `q-<hash>`, shared by everyone who searches over those columns on that
+   day). The answer is the table, the query, the first page and the search's summary; the next pages and the changes are the protocol's
+   (`POST /tables/{t}/query`, `/changes` with the same filter). The rows, their count and their order are the search's (`FormResultsParityTest`).
+   A condition outside the tree's subset (`matches`, `size`, a link) stays in the table itself (its `where:`); a condition on a field masked
+   for the person matches no row, as the search does. An id pattern (`TRD MX-2*`) is a condition on the key column.
+8. **As of a business date**: on the live business date the table follows the kind's changes; on any other day it is a static snapshot
+   of that day (the lake's time travel: the bindings read the kind as of the date, the table has no stream) and says `live: false`.
+9. **Across Drishti*net**: when other members hold records of the kind for the person (the cluster routing's scatter targets), the search's
+   table spans them: this node's rows, then each member's share of the search (asked as the person, one hop, within the scatter budget),
+   merged by key, the higher row version winning a key two members hold; each member's changes arrive over `GET /api/v1/net/changes/{kind}`
+   (its own records, masked there for the person). Such a table is read whole and is the person's audience's own, so isolation holds
+   across the members.
+10. **A bare mnemonic is the kind's table**: `POS <GO>` opens the kind's own table a page at a time (`GET /api/v1/rdp/kinds/POS` names
+   it). A module's declaration of the kind is used when there is one; otherwise a default is made from the kind's contract (its key fields
+   as columns, else its promoted columns; the record's id as the key; read-only). No YAML per mnemonic is needed.
 
 ## 8. Writing back to the record's own source
 
@@ -279,21 +278,24 @@ Iceberg and file connectors never write per change.
 
 ## 9. The API
 
+The Data Protocol ([PROTOCOL.md](https://github.com/ajsinha/drishti-rachana/blob/develop/spec/1/data-protocol/PROTOCOL.md)) at `/api/v1/rdp`,
+as the signed-in person:
+
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/api/v1/live` | the declarations the caller may open (each with `editable` and `readOnly` for them, and for an editable one its `fields`: `id`, `label`, `type`, `bind`, `required`, `readonly`, `pattern`, `maxLength`, `min`, `max`, `options`); for administrators those set aside (`problems`, each with `DRS-9307`) and the open sets (`paged`, `storeRows`) |
-| `GET` | `/api/v1/live/{id}/rows` | a page: `offset`, `limit` (≤ 5,000), `sort`, `descending`, `filter`, `query`; `{set, live, total, seq, rows[{id, version, seq, doc}]}` |
-| `GET` | `/api/v1/live/{id}/rows/{entity}` | one record whole (the panel's Raw JSON), masked for the caller |
-| `GET` | `/api/v1/live/query` | a search's matches as a set (FORM, the search page): `q`, `offset`, `limit`, `sort`, `descending`, `filter`, `again`; the page plus `search` (what the search said) |
-| `GET` | `/api/v1/live/kinds/{word}/rows` | a kind's own set by its mnemonic or name (`POS <GO>`); `capped` when it stopped at the default cap |
-| `GET` | `/api/v1/live/{id}/stream` | server-sent events: `hello` `{stream, total, live}`, then `rows` `{upserts, removes, top, total, seq, countOnly}` or `resync` |
-| `POST` | `/api/v1/live/{id}/stream/{stream}/window` | the page the stream shows: `{ids: [...], top}` (`top`: it starts at the first row of the declared order), or `{all: true}` |
-| `POST` | `/api/v1/live/{id}/edit` | an edit: `{entity, basedOn, reason, items[{field, from, to}]}`; `403 DRS-9302` read-only (why), `409 DRS-9303` stale |
+| `GET` | `/api/v1/rdp/tables` | the tables the caller may read |
+| `GET` | `/api/v1/rdp/tables/{name}` | the schema for this reader: columns (masked ones marked), key, `rowVersion`, `view`, `live` (`up` or `paused` with why), `write` (the columns they may change, with their rules) or `readOnly` (why not), the profile (`kind`, `links`), `tray`, `excludes` (the trading systems switched off that feed the kind) |
+| `POST` | `/api/v1/rdp/tables/{name}/query` | a page: `{columns?, filter?, sort?, limit?, offset?, group?}`; `{columns, values, total, version}` |
+| `POST` | `/api/v1/rdp/tables/{name}/write` | a change: `{id, op: update, key, basedOn, set, from?, reason?}`; `{change, state, message}` (`held` while it waits for four eyes); `403 rdp.write.forbidden` read-only (why), `409 rdp.write.conflict` stale (who changed it), `422 rdp.write.invalid` a field rule |
+| `GET`, `POST` | `/api/v1/rdp/changes` | server-sent events of a table (`table`, `after`, `filter`, `window`): `msg` frames with a patch (`reset`, `remove`, `update`, `add`, `total`, `top`), `gap` when the reader must read again |
+| `POST` | `/api/v1/rdp/changes/{sub}/window` | the rows a windowed stream sends: `{keys, top}`; only its own reader |
+| `GET` | `/api/v1/rdp/searches?q=` | a search as a query on a table (FORM, the search page), on the person's business date: `{table, query, live, page, search}` |
+| `GET` | `/api/v1/rdp/kinds/{word}` | the table of a kind by its mnemonic or name (`POS <GO>`): `{table}` |
 
-The console passes these on as the person: `GET /api/live`, `GET /api/live/{id}/rows[/{entity}]`, `POST /api/live/{id}/edit` and
-`POST /api/live/{id}/stream/{stream}/window`; the stream is the console's channel (`/api/channel?s=live:{id}`, events `hello`, `rows`,
-`resync`). The page is `/live/{id}`; the module's menu entry (`console/plugin.yaml`) links to `/live/trade`. The component is the grid's live
-mode ([ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md) section 5.5).
+The console passes these on as the person (`/api/rdp/...`); the changes are the console's channel (`/api/channel?s=live:{table}`, a FORM's
+result `live:{table}~{filter}`, events `msg` and `gap`). The page is `/live/{name}`; the module's menu entry (`console/plugin.yaml`) links
+to `/live/trade`. The component is the grid's live mode over the Data Protocol
+([ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md) section 5.5), mounted by `js/drishti_records.js`.
 
 ## 10. Settings
 
@@ -301,7 +303,7 @@ mode ([ELEMENTS.md](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs
 |---|---|---|
 | `drishti.live-sets.flush-ms` | `50` | how often viewers' windows are sent their changes |
 | `drishti.live-sets.window-capacity` | `5000` | records waiting per viewer before it is asked to resync |
-| `drishti.live-sets.dir` | `config/blotters` | the site's own declarations |
+| `drishti.live-sets.dir` | `config/blotters` | the site's own declarations (`*.live.yaml`) |
 | (none) | | the modules' `blotters/` folders are read from each module's folder as the module boot gave it (a module's only while it is on) |
 | `drishti.live-sets.edits-off` | (none) | the blotters whose edits the site switched off, by id (`trade,exposure`) |
 | `drishti.live-sets.default-max-rows` | `250000` | the most records a kind's default set (a bare mnemonic) reads into memory when its store cannot page it |
@@ -314,26 +316,29 @@ Every one is in [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.live-set
 A new blotter is one file. An inventory blotter, complete:
 
 ```yaml
-# modules/stores/blotters/stock.blotter.yaml: a warehouse's stock, one row per bin and item
-blotter: stock
+# modules/stores/blotters/stock.live.yaml: a warehouse's stock, one row per bin and item
+rachana: 1
+live-table: stock
 title: Stock on hand
 kind: stock                                   # a kind with a data contract (contracts/stock.contract.yaml)
-query: "stock where QTY_ON_HAND > 0"
+snapshot: stock
+stream: stock
+where: "@.QTY_ON_HAND > 0"
 key: BIN_ITEM_ID
 version: ROW_VERSION
 changed-by: UPDATED_BY
 changed-at: UPDATED_AT
 columns:
-- { field: BIN_ITEM_ID, label: Bin/item, type: id, width: 140 }
-- { field: WAREHOUSE, label: Warehouse }
-- { field: SKU, label: SKU }
-- { field: QTY_ON_HAND, label: On hand, type: amount, format: amount0 }
-- { field: REORDER_LEVEL, label: Reorder at, type: number }
-- { field: STATUS, label: Status, type: status }
-- { field: UPDATED_AT, label: Updated, type: datetime }
+- { name: BIN_ITEM_ID, label: Bin/item, width: 140 }
+- { name: WAREHOUSE, label: Warehouse }
+- { name: SKU, label: SKU }
+- { name: QTY_ON_HAND, label: On hand, type: number, fmt: amount0 }
+- { name: REORDER_LEVEL, label: Reorder at, type: number }
+- { name: STATUS, label: Status }
+- { name: UPDATED_AT, label: Updated, type: timestamp }
 group-by: [WAREHOUSE]
 subtotals: [QTY_ON_HAND]
-sort: { field: UPDATED_AT, descending: true }
+sort: { col: UPDATED_AT, dir: desc }
 links:
 - { label: Item, href: "/items/{SKU}" }
 retention: { ttl: 2d, on: UPDATED_AT, max-rows: 200000 }
@@ -342,7 +347,6 @@ edit:
   edit: cells
   roles: [stock-controller, admin]
   fields:
-  - { id: id, label: Bin/item, bind: BIN_ITEM_ID, readonly: true }
   - { id: qty, label: On hand, bind: QTY_ON_HAND, type: number, min: 0, required: true }
   - { id: level, label: Reorder at, bind: REORDER_LEVEL, type: number, min: 0 }
   save: { target: source, command: adjust-stock, approval: none, reason: required }
@@ -350,7 +354,7 @@ edit:
 
 Then the module lists it (`blotters: {folder: blotters, list: [stock]}` in `module.yaml`), the site binds the kind (`read:` the store, `live:` the
 messaging connector) and gives the connector the `adjust-stock` command under `writes:` (section 8). No code is written: the page is at
-`/live/stock`, the API at `/api/v1/live/stock/rows`, and the Pivot, the tray, the Raw JSON and the audit come with the engine.
+`/live/stock`, the table at `/api/v1/rdp/tables/stock`, and the Pivot, the tray, the Raw JSON and the audit come with the engine.
 
 ## 12. Retention in every store
 

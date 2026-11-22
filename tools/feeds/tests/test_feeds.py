@@ -286,7 +286,8 @@ def test_inbox_several_tables_and_dates_go_as_one_tar(spec, data, monkeypatch):
                      "lei-mapping/2026-11-06/lei-mapping.2026-11-06.jsonl.gz", "lei-mapping/2026-11-07/lei-mapping.2026-11-07.jsonl.gz"]
     assert ready["rows"] == 3 + 2 + 4 + 2 and ready["sha256"] == hashlib.sha256(tar.read_bytes()).hexdigest()
     sys.path.insert(0, str(ROOT / "tools" / "lake"))
-    import archives
+    import lakewheel  # noqa: F401  (the drishti-lake wheel on the path)
+    from drishti_lake import archives
     plan = archives.plan(tar, layout="feed")
     assert sorted(plan.datasets) == ["lei-country", "lei-mapping"]
 

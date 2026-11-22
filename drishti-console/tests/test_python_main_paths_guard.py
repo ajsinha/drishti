@@ -50,7 +50,6 @@ ALLOWED: list[tuple[str, str, str]] = [
     ("tools/drillkit/affected.py", './/m:module', "an XPath, not a path"),
     ("tools/docs/shots/t05.py", "text.replace(\"./docs/tutorials", "the old text in a stored connector file, replaced by the absolute folder"),
     ("tools/drillkit/affected.py", '"./mvnw"', "run with cwd=ROOT (the drill's own subprocess call)"),
-    ("tools/lake/archives.py", "leading './' dropped", "a docstring about archive member names (zip-slip safe parsing)"),
     ("drishti_compute/worker.py", "os.getcwd()", "remembers the worker's folder to return to after a request chdirs into its scratch folder"),
 ]
 

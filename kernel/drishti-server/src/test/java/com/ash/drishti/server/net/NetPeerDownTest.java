@@ -77,11 +77,12 @@ class NetPeerDownTest {
         NetNodes.folder(root.resolve("b/net"), p[1], List.of("region:emea"), List.of(), List.of(p[0]));
         NetNodes.folder(root.resolve("c/net"), p[2], List.of("region:emea"), List.of(), List.of(p[0]));
         cluster = new NetNodes(root);
-        String domain = "--drishti.sources.connectors.finance-lake.settings.domain=desk";
-        String lake = "--drishti.sources.connectors.finance-lake.settings.root=";
-        cluster.start("a", p[0], NetForwardTest.secure(lake + lakeA, domain, "--drishti.sources.plugins.demo.enabled=false", NOCACHE));
-        cluster.start("b", p[1], NetForwardTest.secure(lake + lakeB, domain, "--drishti.sources.plugins.demo.enabled=false", NOCACHE));
-        cluster.start("c", p[2], NetForwardTest.secure(lake + empty, domain, "--drishti.sources.plugins.demo.enabled=false", NOCACHE));
+        NetHistoryMasksTest.lake(cluster, "a", lakeA);
+        NetHistoryMasksTest.lake(cluster, "b", lakeB);
+        NetHistoryMasksTest.lake(cluster, "c", empty);
+        cluster.start("a", p[0], NetForwardTest.secure("--drishti.sources.plugins.demo.enabled=false", NOCACHE));
+        cluster.start("b", p[1], NetForwardTest.secure("--drishti.sources.plugins.demo.enabled=false", NOCACHE));
+        cluster.start("c", p[2], NetForwardTest.secure("--drishti.sources.plugins.demo.enabled=false", NOCACHE));
         assertThat(NetNodes.await(20_000, () -> List.of("a", "b", "c").stream().allMatch(n -> cluster.node(n).bean(DigestService.class).table()
                 .nodes().size() == 3))).as("every node has every digest").isTrue();
         // B's digest says from when to when it holds trades (SOAK-01): what a node that goes down could hold

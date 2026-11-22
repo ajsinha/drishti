@@ -181,12 +181,12 @@ class LakeTest(unittest.TestCase):
             dry = quiet(maintain.run_detailed, cfg, True, date(2026, 10, 16))
             t = dry["tables"][0]
             self.assertEqual(t["before"]["files"], 6)
-            self.assertEqual(t["retention"]["dates"], ["2026-10-13", "2026-10-14"])     # one business day back from Friday: Thu kept
-            self.assertEqual((t["estimate"]["files"], t["estimate"]["dates"]), (2, 2))
+            self.assertEqual(t["retention"]["dates"], ["2026-10-13", "2026-10-14", "2026-10-15"])     # keep-business-days 1: the newest date kept (Lake's rule)
+            self.assertEqual((t["estimate"]["files"], t["estimate"]["dates"]), (1, 1))
             self.assertEqual(len(maintain.add_actions(DeltaTable(uri))), 6)             # nothing changed
             real = quiet(maintain.run_detailed, cfg, False, date(2026, 10, 16))
             t = real["tables"][0]
-            self.assertEqual(t["after"]["files"], 2)
+            self.assertEqual(t["after"]["files"], 1)
             self.assertTrue(maintain.changed(t))
             (pack, table, body), = maintain.signal_bodies(real["tables"], "run-1")
             self.assertEqual((pack, table, body["kind"], body["businessDate"], body["rows"], body["source"]),

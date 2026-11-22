@@ -52,6 +52,8 @@ def _error(r: httpx.Response, text: str) -> "BackendError":
         body = body if isinstance(body, dict) else {}
     except ValueError:
         body = {}
+    if isinstance(body.get("error"), dict) and "code" not in body:   # the Data Protocol's refusal: {"error": {code, message, ...}}
+        body = {**body["error"], "detail": body["error"].get("message", "")}
     err = BackendError(r.status_code, body.get("code", f"HTTP-{r.status_code}"), body.get("detail", text[:200]))
     err.problems = body.get("problems", [])
     err.extra = body
@@ -285,16 +287,21 @@ class BackendClient:
         """Structured search: TRD where mtm > 1m order by mtm desc limit 50."""
         return await self._get("/search", ident, q=q)
 
-    async def live_query(self, q: str, ident=None, again: bool = True, limit: int = 1000) -> dict:
-        """A search's matches as a live result set (``GET /api/v1/live/query``): ``{set, live, total, seq, offset, rows: [{id, version, seq,
-        doc}], search}``; ``again``: Search pressed (a static set is read afresh)."""
-        return await self._get("/live/query", ident, q=q, again=str(bool(again)).lower(), limit=limit)
+    async def live_query(self, q: str, ident=None) -> dict:
+        """A search as a query on a live table (``GET /api/v1/rdp/searches``): ``{table, query, live, page, search}``, the first page read
+        for the person (docs/guides/LIVE_RESULTS_GUIDE.md section 7)."""
+        return await self._get("/rdp/searches", ident, q=q)
 
     async def live_kind(self, word: str, ident=None, offset: int = 0, limit: int = 100, sort: str = "", descending: bool = False) -> dict:
-        """A page of a kind's own live result set (a bare mnemonic, ``POS <GO>``): its module's declaration, else the default one made from
-        its contract (``GET /api/v1/live/kinds/{word}/rows``)."""
-        params = {"offset": offset, "limit": limit, **({"sort": sort, "descending": str(bool(descending)).lower()} if sort else {})}
-        return await self._get(f"/live/kinds/{quote(word, safe='')}/rows", ident, **params)
+        """A page of a kind's own live table (a bare mnemonic, ``POS <GO>``): its module's declaration, else the default one made from its
+        contract (``GET /api/v1/rdp/kinds/{word}``, then the table's schema and a query): ``{table, schema, page}``."""
+        table = (await self._get(f"/rdp/kinds/{quote(word, safe='')}", ident))["table"]
+        schema = await self._get(f"/rdp/tables/{quote(table, safe='')}", ident)
+        query: dict = {"limit": limit, **({"offset": offset} if offset else {})}
+        if sort:
+            query["sort"] = [{"col": sort, "dir": "desc" if descending else "asc"}]
+        page = await self._send("POST", f"/rdp/tables/{quote(table, safe='')}/query", ident, json=query)
+        return {"table": table, "schema": schema, "page": page, "offset": offset}
 
     async def form(self, pack: str, kind: str = "", ident=None, kinds_only: bool = False) -> dict:
         """The search form of a pack's kind (query by form): its fields, declared or inferred, and the kinds you may open;
@@ -760,11 +767,12 @@ class BackendClient:
         async for pair in self._events("/api/v1" + path, None, headers, opened, node=node):
             yield pair
 
-    async def sse_post(self, path: str, ident, body: dict, node: str | None = None):
+    async def sse_post(self, path: str, ident, body: dict, node: str | None = None, opened: list | None = None):
         """Yields ``(event, data)`` from a server SSE endpoint under /api/v1 that is asked with a POST body (a progressive pivot answer:
-        ``/pivot/query?progressive=true``, docs/guides/bi/README.md); ``node`` as for ``sse``."""
+        ``/pivot/query?progressive=true``, docs/guides/bi/README.md; a live table's filtered changes, ``/rdp/changes``); ``node`` and
+        ``opened`` as for ``sse``."""
         headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
-        async for pair in self._events("/api/v1" + path, None, headers, None, node=node, method="POST", body=body):
+        async for pair in self._events("/api/v1" + path, None, headers, opened, node=node, method="POST", body=body):
             yield pair
 
     async def _events(self, path: str, params: dict | None, headers: dict, opened: list | None, node: str | None = None,

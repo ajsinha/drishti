@@ -397,6 +397,21 @@ public final class StructuredSearch {
         return List.copyOf(out);
     }
 
+    /** The result columns of a query before any document is read: what it reads, then the kind's search columns (the pack's key fields). */
+    public List<String> columns(SearchQuery q, String kind) {
+        return columnsFor(q, kind, List.of(), d -> d);
+    }
+
+    /** A Rachana-EL text compiled by the search's own compiler (its functions), refused with the search's words when it cannot be read. */
+    Expr compiled(String source, String what) {
+        return compile(source, what);
+    }
+
+    /** The formats a search's values are read with. */
+    Formats formats() {
+        return formats;
+    }
+
     /** A field name no entity of the kind has: the closest known names, or what the kind's fields are. */
     private static DrishtiException unknownField(String kind, String path, FieldNames names) {
         String name = path.substring(2);

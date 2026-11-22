@@ -2416,7 +2416,7 @@ load manifest: /scratch/demo/lake/_drishti-lake/runs/20261028T085451-1591296.man
 The tests: Drishti Lake's `lake-load` tests (its repository) (equality with the Python path on both formats, through the connectors; one commit a
 date; a stopped load; S3 on S3Mock, a zip and a .tgz on S3 included; gz, multi-member gz, many gz, zstd, byte ranges, 1 vs many threads,
 a tiny budget: identical tables; the 10K throughput; `ArchivesTest`: the shared archive cases, datasets, refusals) and
-`python3 -m pytest tools/lake/test_javaload.py tools/lake/test_archives.py`.
+`python3 -m pytest tools/lake/test_javaload.py`.
 
 ### 7.14 The AWS connectors' tool scripts: S3 Tables and Delta Lake on S3
 

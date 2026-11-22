@@ -19,6 +19,7 @@ whole stored record (fields the grid has no column for), collapsible, with a Cop
 opened it and masked fields as masked; grouping keeps live subtotals; resync starts again from a snapshot; Pivot › opens the Pivot with the same
 kind, filters, grouping and numbers; the layout holds on a desktop and a phone, light and dark."""
 import json
+import os
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -37,7 +38,7 @@ CELL = ".dg-live-grid .dg-row[data-key='{key}'] [data-col='{col}'] .dg-text"
 def browser():
     with sync_api.sync_playwright() as p:
         try:
-            b = p.chromium.launch()
+            b = getattr(p, os.environ.get("DRISHTI_TEST_BROWSER", "chromium")).launch()   # chromium; firefox or webkit by the environment
         except Exception as e:  # noqa: BLE001
             pytest.skip(f"needs Playwright's Chromium: {str(e).splitlines()[0]}")
         yield b
@@ -54,7 +55,7 @@ def stack():
 
 def opened(browser, url, width=1440, height=900, scheme="light", mobile=False):
     ctx = browser.new_context(viewport={"width": width, "height": height}, bypass_csp=True, color_scheme=scheme, is_mobile=mobile, has_touch=mobile,
-                              permissions=["clipboard-read", "clipboard-write"])
+                              permissions=["clipboard-read", "clipboard-write"] if browser.browser_type.name == "chromium" else [])
     pg = ctx.new_page()
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)))
@@ -110,15 +111,12 @@ def test_a_page_says_which_source_systems_it_excludes(browser, stack):
     assert not pg.errors, pg.errors
 
 
-def test_the_grid_tells_the_server_the_page_it_shows(browser, stack):
+def test_the_grid_follows_the_tables_changes_without_a_window(browser, stack):
     url, backend = stack
     pg = opened(browser, url)
-    pg.wait_for_function("() => true")
-    for _ in range(50):
-        if backend.windows:
-            break
-        pg.wait_for_timeout(100)
-    assert backend.windows[0] == {"all": True}                                # the whole set fits: the viewer holds every row
+    pg.wait_for_timeout(300)
+    assert backend.windows == []                                              # the channel's stream carries the table's changes: no window to move
+    assert not pg.errors, pg.errors
 
 
 def test_resync_starts_again_from_a_snapshot(browser, stack):
@@ -214,8 +212,9 @@ def test_raw_json_is_the_whole_stored_record_collapsible_copyable_and_masked(bro
     assert raw.locator("details:not([open])").count() == 0
     panel.locator("[data-act=copy]").click()
     pg.wait_for_selector("[data-act=copy][data-copied]")
-    copied = json.loads(pg.evaluate("navigator.clipboard.readText()"))
-    assert copied["BOOKING_SYSTEM"] == "MUREX" and copied["TRADER_TAX_ID"] == "•••" and copied["LEGS"][0]["CCY"] == "USD"
+    if browser.browser_type.name == "chromium":                                  # reading the clipboard back needs Chromium's permission
+        copied = json.loads(pg.evaluate("navigator.clipboard.readText()"))
+        assert copied["BOOKING_SYSTEM"] == "MUREX" and copied["TRADER_TAX_ID"] == "•••" and copied["LEGS"][0]["CCY"] == "USD"
     backend.tick("T-005", PRICE=3.5)                                              # changed since it was opened
     pg.wait_for_selector(".dg-live-changed:not([hidden])")
     pg.click("[data-act=reload]")                                                 # reopening reads the record again, whole
@@ -287,34 +286,23 @@ def first_is(key):
     return f"() => window.Drishti.LivePage.grid.grid.model.idAt(0) === '{key}'"
 
 
-def test_a_new_trade_shows_on_top_of_an_unfiltered_paged_blotter_within_a_second(browser, stack):
-    """The trade blotter's own order is newest first (sort: SOURCE_UPDATE_TIME descending). A viewer holding only a page of the set, at its
-    top, is sent a new trade to insert there (the event's top) and shows it first within a second; rows that land outside the page move
-    the count and the "N new" button, which goes back to the newest."""
+def test_a_new_trade_outside_a_paged_blotters_page_moves_the_count_and_n_new_opens_it_on_top(browser, stack):
+    """The trade blotter's own order is newest first (sort: SOURCE_UPDATE_TIME descending). A viewer holding only a page of the table is sent
+    every change of it; a trade it does not hold moves the count and the "N new" button, which reads the newest page again: the new trade first."""
     url, backend = stack
     backend.order = {"field": "SOURCE_UPDATE_TIME", "descending": True}
-    backend.page = 10                                                           # thirty trades, a snapshot of ten: the viewer is paged
+    backend.page = 10                                                           # thirty trades, a page of ten: the viewer is paged
     ids = sorted(backend.docs)
     for i, k in enumerate(ids):
         backend.docs[k]["SOURCE_UPDATE_TIME"] = f"2026-11-14T09:{i:02d}:00Z"
     pg = opened(browser, url)
     pg.wait_for_function(first_is(ids[-1]))                                     # the newest first
     assert "10 of 30 rows" in pg.locator(".dg-live-chip").inner_text()
-    for _ in range(50):
-        if backend.windows and backend.windows[-1].get("ids"):
-            break
-        pg.wait_for_timeout(100)
-    assert backend.windows[-1].get("top") is True, backend.windows[-1]           # the grid tells the server its page starts at the top
     backend.docs["T-050"] = {**backend.docs[ids[0]], "TRADE_ID": "T-050", "TRADE_VERSION": 1, "SOURCE_UPDATE_TIME": "2026-11-14T10:00:00Z"}
-    backend.push(["T-050"], top=["T-050"])
-    pg.wait_for_function(first_is("T-050"), timeout=1000)                      # on top within a second
-    assert pg.locator(".dg-live-grid .dg-row[data-key='T-050']").count() == 1
-    assert pg.locator(".dg-live-new").is_hidden()
-    backend.docs["T-051"] = {**backend.docs[ids[0]], "TRADE_ID": "T-051", "TRADE_VERSION": 1, "SOURCE_UPDATE_TIME": "2026-11-14T10:01:00Z"}
-    backend.push([], count_only=True)                                           # outside the page (as for a viewer scrolled away)
-    pg.wait_for_selector(".dg-live-new:not([hidden])", timeout=1000)
+    backend.push(["T-050"])
+    pg.wait_for_selector(".dg-live-new:not([hidden])", timeout=2000)
     assert pg.locator(".dg-live-new").inner_text() == "1 new"
     pg.locator(".dg-live-new").click()
-    pg.wait_for_function(first_is("T-051"))
+    pg.wait_for_function(first_is("T-050"))
     assert pg.locator(".dg-live-new").is_hidden()
     assert not pg.errors, pg.errors

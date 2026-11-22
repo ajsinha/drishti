@@ -182,7 +182,7 @@ Every connector also takes `source-name`, `mode.*`, `domain`, `stale-after`, `un
 
 - **Id rule:** `id`, unique per business day; sort order `id ASC`, so manifest and footer bounds let a read skip all but one row group.
 - **Table properties the loader sets:** `format-version` 2, `write.parquet.row-group-size-bytes` 1048576, zstd compression, no
-  metrics for `doc`, full metrics for `id`, `drishti.layout.file-rows` 250000.
+  metrics for `doc`, full metrics for `id`, the table property `layout.file-rows` 250000.
 - **Nested data** stays inside `doc`; small kinds (curves, counterparties) need no layout.
 - **Disk caches**: `<data>/cache/<connector>/idmaps/<kind>/<date>@<fingerprint>.idmap` (memory-mapped id maps) and
   `<data>/cache/<connector>/docs` (documents read, RocksDB), kept across restarts; `id-map-disk.enabled`, `doc-disk-cache.enabled`.

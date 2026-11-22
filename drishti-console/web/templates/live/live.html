@@ -13,9 +13,9 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# One live result set, /live/<id> (a blotter declaration: modules/<module>/blotters/<id>.blotter.yaml): the live mode of drishti-grid
-   (Drishti Elements) with its record panel and tray. The page only hands the declaration, the /api/live calls and the console's live channel
-   (live:<id>) to the component; every rule (rights, masks, versions, four eyes) is the server's. #}
+{# One live table, /live/<name> (a blotter: modules/<module>/blotters/<name>.live.yaml): the live mode of drishti-grid (Drishti Elements)
+   with its record panel and tray. The page only hands the table's declaration (from its schema), the Data Protocol calls (/api/rdp) and the
+   console's live channel (live:<name>) to the component; every rule (rights, masks, versions, four eyes) is the server's. #}
 {% extends "base.html" %}
 {% block title %}{{ spec.title or live_id }} · Live · {{ PRODUCT }}{% endblock %}
 {% block screen %}live{% endblock %}

@@ -915,8 +915,8 @@ routes: {trade: trade-endur}        template: trade-endur, settings: {root: /srv
 
 - **Nobody but you writes a file.** The server reads the templates where they are and writes no connector file at start, reload or
   deploy: `config/connectors/` stays empty until a site needs an override. An override inherits every key of its template and changes
-  only those it names (a key set to `null` removes the inherited one). `drishti.sources.connectors.<name>.<key>` (for example
-  `--drishti.sources.connectors.trade-murex.enabled=false`) still changes one setting from the server's configuration.
+  only those it names (a key set to `null` removes the inherited one). A connector is never set by a property: `enabled: false` in
+  an override file (`config/connectors/trade-murex.yaml`) switches a template's connector off.
 - **Changing it, live.** Edit the file, use **Admin → Connectors** or the terminal; the server applies it to that connector only (reads in
   flight get `connectors-drain`, 3 s; a new file starts a connector, a deleted one stops it). Every earlier text is kept in
   `data/connectors/history/` and can be restored from the page. A variable a file refers to still needs a restart.
@@ -1520,7 +1520,7 @@ The *Install* section has three cards: **a pack** (links to Admin → Packs → 
 with a mapping at the top, the file's own key against its name, and the readers' and parsers' errors (warnings do not stop it). If a file of that
 name exists the card lists what depends on it; placing it then needs *Replace* and the name typed, and the old file is archived first. The file is
 placed atomically (a table or model in `config/tables/<domain>/`) and appears in the catalogue at once. A dataset file in BI's old form
-(`<name>.dataset.yaml`) is refused with `DRS-9196`: run `drishti.py tables migrate` and upload the tables and model it writes.
+(`<name>.dataset.yaml`) is refused with `DRS-9196`: write it as a table and a model and upload those.
 
 ![The BI file card after choosing a file: what the server found in it, and the button to place it](img/artifacts/06-bi-upload.jpg)
 
@@ -2524,7 +2524,7 @@ A lake that is only ever written grows without bound. **Maintenance** does what 
 
 | Step | What it does | Setting |
 |---|---|---|
-| **Retention** | deletes business dates older than the window, counted back from today in `schedule.zone` (or `--as-of`), never from the newest date in the table; a run that would delete more than `max-drop-share` (0.5) of a table's rows deletes nothing and says why (`--force-drop` overrides) | `keep-business-days` (blank keeps all; the shipped file 520) |
+| **Retention** | keeps the newest `keep-business-days` business dates on or before today in `schedule.zone` (or `--as-of`) and deletes the older ones (Drishti Lake's `lake maintain`, the same rule on Delta and Iceberg), never counting from a date after today; a run that would delete more than `max-drop-share` (0.5) of a table's rows deletes nothing and says why (`--force-drop` overrides) | `keep-business-days` (blank keeps all; the shipped file 520) |
 | **Compaction** | merges each date's small files; a table whose pack declares a layout is rewritten in it, only for dates that drifted | `compact`, `target-file-mb` (128) |
 | **Checkpoint** | writes a Delta checkpoint, so readers replay a short log | `checkpoint` (on) |
 | **Vacuum** | removes files no version uses, older than the window; *known at* reaches back that far, no further | `vacuum-hours` (168) |
@@ -3404,7 +3404,7 @@ BI reads only tables and models of the table layer, and only Rachana. Nothing is
 |---|---|
 | A file under `config/bi/datasets` or `config/bi/models` says `DRS-9196`; Admin → Artifacts refuses a `.dataset.yaml` | BI's old form: write it as a table or a model under `config/tables/` ([TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md)) |
 | An expression says `DRS-9100` | not Rachana (`and`, `or`, `None`, `x if c else y`, `&&`, `[Measure]`): rewrite it ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#rachana-el-expressions)) |
-| A dataset with `from:` or `derived:` says `DRS-9190` | write it as tables and a model of the layer |
+| A dataset with `from:` or `derived:` says `DRS-9196` | write it as tables and a model of the layer |
 | A bookmark to the dataset wizard or model designer opens Build › Tables & models | those screens are replaced: open the table or model there |
 
 ### 21.11 BI: refresh, live, visuals, Python and AI

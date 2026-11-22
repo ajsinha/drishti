@@ -72,15 +72,11 @@ import org.springframework.test.web.servlet.MvcResult;
  * the same text but their name; a desk head sees only their desk's trades with MTM, an analyst every trade with MTM masked. Also the Excel file's print
  * setup, the Studio's preview of draft YAML, and the report schema's checks of a statement ({@code DRS-9038}).
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/statement-api", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/stmt-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/stmt-api-overlay/added.yaml",
         "drishti.bi.dir=${drishti.test.dir}/stmt-api-folder", "drishti.tables.root=${drishti.test.dir}/stmt-api-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/stmt-api-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/stmt-api-connectors", "drishti.sources.plugins.file.enabled=false",
-        "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.stmt-lake.plugin=file", "drishti.sources.connectors.stmt-lake.kinds[0]=trade",
-        "drishti.sources.connectors.stmt-lake.settings.rescan-seconds=3600",
-        "drishti.sources.connectors.stmt-lake.settings.layout.trade.columns=TRADE_ID,DESK,PORTFOLIO,LEGAL_ENTITY,NOTIONAL,MTM,TRADE_DATE",
+        "drishti.packs.samples=developers", "drishti.sources.plugins.file.enabled=false",
         "drishti.collab.console-url=https://drishti.test", "drishti.collab.email.from=drishti@localhost", "spring.mail.host=127.0.0.1",
         "spring.mail.properties.mail.smtp.connectiontimeout=4000", "spring.mail.properties.mail.smtp.timeout=4000",
         "drishti.distribution.subscriptions.tick=1h", "drishti.distribution.export.timeout=120s"})
@@ -88,6 +84,10 @@ import org.springframework.test.web.servlet.MvcResult;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class StatementApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("statement-api");
+    }
 
     static final String DAY = "2026-09-30";
     static final String REPORT = "file:report:monthly-statement";
@@ -142,7 +142,7 @@ class StatementApiTest {
         Path f = root.resolve("lake").resolve(DAY).resolve("trade.jsonl");
         Files.createDirectories(f.getParent());
         Files.write(f, lines, StandardCharsets.UTF_8);
-        r.add("drishti.sources.connectors.stmt-lake.settings.root", () -> root.resolve("lake").toString());
+        r.add("test-connectors.stmt-lake.root", () -> root.resolve("lake").toString());
         r.add("spring.mail.port", () -> PORT);
     }
 

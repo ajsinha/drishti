@@ -131,8 +131,9 @@ def archive_docs(members):
 
 def convert_archive(src: pathlib.Path, out: str | None, dataset: str | None, force: bool, say=print) -> int:
     """An archive into JSON Lines: one file (no folders) or one file per folder (DATA_GUIDE.md section 2.7). Returns the line count."""
-    import archives
-    plan = archives.plan(src, dataset)
+    import lakewheel  # noqa: F401  (the drishti-lake wheel on the path)
+    from drishti_lake import archives
+    plan = archives.plan(src, dataset, layout="rows")
     for note in plan.notes:
         say(f"{src.name}: {note}")
     if not plan.folders:
@@ -152,7 +153,8 @@ def convert_archive(src: pathlib.Path, out: str | None, dataset: str | None, for
 def convert(src: pathlib.Path, out: str | None = None, rows_document: bool = False, force: bool = False, say=print,
             dataset: str | None = None) -> int:
     """Writes src's documents as JSON Lines to out (a path, "-" for standard output, None for the default). Returns the line count."""
-    import archives
+    import lakewheel  # noqa: F401  (the drishti-lake wheel on the path)
+    from drishti_lake import archives
     if src.is_file() and archives.is_archive(src.name):
         return convert_archive(src, out, dataset, force, say)
     return convert_docs(src, documents(src, rows_document), out if out else str(default_out(src)), force, say)

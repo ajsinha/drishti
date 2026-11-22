@@ -52,19 +52,19 @@ import org.springframework.test.web.servlet.ResultActions;
  * is read, each kind of visual query runs on the engine as three different people (rows and masks), slicers, cross-filter, highlight, drill-down, top-N
  * and "show the rows" give the right numbers, the designer's endpoints check and write YAML, and the refusals carry their DRS codes.
  */
-@SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/bi-report-api", "drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-report-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-report-overlay/added.yaml",
         "drishti.bi.dir=${drishti.test.dir}/bi-report-folder", "drishti.tables.root=${drishti.test.dir}/bi-report-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-report-store/${random.uuid}",
-        "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/bi-report-connectors", "drishti.sources.plugins.file.enabled=false",
-        "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.rep-lake.plugin=file", "drishti.sources.connectors.rep-lake.kinds[0]=trade",
-        "drishti.sources.connectors.rep-lake.settings.rescan-seconds=3600",
-        "drishti.sources.connectors.rep-lake.settings.layout.trade.columns=desk,book,currency,notional,mtm,tradeDate"})
+        "drishti.packs.samples=developers", "drishti.sources.plugins.file.enabled=false"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BiReportApiTest {
+
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("bi-report-api");
+    }
 
     static final String REPORT = "file:report:lake-report";
     static Path root;
@@ -93,7 +93,7 @@ class BiReportApiTest {
         root = com.ash.drishti.server.TestRun.temp("drishti-bi-report-lake");
         day("2026-10-07");
         day("2026-10-08");
-        r.add("drishti.sources.connectors.rep-lake.settings.root", () -> root.resolve("lake").toString());
+        r.add("test-connectors.rep-lake.root", () -> root.resolve("lake").toString());
     }
 
     static {

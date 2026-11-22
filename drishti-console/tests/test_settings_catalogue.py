@@ -180,7 +180,7 @@ def test_the_engines_area_lists_every_engine_file_key_and_the_old_names(tmp_path
         eid = f.stem
         assert f"drishti.engines.{eid}.enabled" in keys, eid
     assert {"drishti.var.hot-dates", "drishti.regulatory.average-days", "drishti.ccr.exposure.alpha", "drishti.frtb.max-factors",
-            "drishti.simm.max-factors", "drishti.sensitivities.factor-kind", "drishti.lake.memory.job-threads"} <= keys
+            "drishti.simm.max-factors", "drishti.frtb.factor-kind", "drishti.lake.memory.job-threads"} <= keys
     assert {"drishti.var.enabled", "drishti.ccr.exposure.enabled", "drishti.frtb.enabled", "drishti.simm.enabled"} <= keys
     server = {r.key for r in cat.yaml_rows("server", [ROOT / "kernel/drishti-server/src/main/resources/application.yaml"], "server", "restart")}
     assert not {k for k in server if k.startswith(("drishti.var.", "drishti.frtb.", "drishti.simm.", "drishti.ccr.exposure.", "drishti.lake.memory."))}

@@ -1122,8 +1122,8 @@ routes: { netting-set: credit-store, margin-call: collateral-store }
   `connectorsNotConfigured`, and Admin → Packs → **Data source** offers a **Create** link pre-filled from your template.
 - **Archives carry names and templates only.** `pack make`, `pack bundle` and Deploy archive never ship a site's settings; the deploy preview lists the
   connectors the site lacks, and **Create connectors** writes their files from your templates.
-- **Precedence**, highest first: environment variables and `drishti.sources.connectors.<name>.…` in the server's own configuration (they warn), the
-  connector file, the pack's template ([CONFIGURATION.md](../admin/CONFIGURATION.md)). `drishti.py connector list|get|apply|test|reset`
+- **Precedence**, highest first: the
+  connector file (its `${VARIABLE}` placeholders read the environment), the pack's template ([CONFIGURATION.md](../admin/CONFIGURATION.md)). `drishti.py connector list|get|apply|test|reset`
   ([CLI_REFERENCE.md](CLI_REFERENCE.md#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)) does from a terminal what Admin →
   Connectors does.
 

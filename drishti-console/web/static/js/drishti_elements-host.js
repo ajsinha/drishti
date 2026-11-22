@@ -23,7 +23,7 @@
   'use strict';
   var E = window.Drishti && window.Drishti.elements, core = E && E.core;
   if (!core || !core.configure) { return; }
-  core.configure({ endpoints: { live: '/api/live', changes: '/api/changes', pivotPage: '/pivot', capabilities: '/api/v1/data/capabilities' } });
+  core.configure({ endpoints: { live: '/api/rdp', changes: '/api/changes', pivotPage: '/pivot', capabilities: '/api/v1/data/capabilities' } });
   var own = drishti_url('/static/elements/');          // drishti-core installed drishti_url (the console's URL sub-path)
   [['drishti-insight', ['drishti-core']], ['drishti-risk', ['drishti-core', 'drishti-grid', 'drishti-chart']]].forEach(function (l) {
     var short = l[0].replace('drishti-', '');

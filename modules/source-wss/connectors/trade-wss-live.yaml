@@ -35,7 +35,7 @@ settings:
     SOURCE_SYSTEM: WSS
   map: mappings/wss-trade.yaml
 writes:
-  amend-trade:                          # the trade blotter's command (modules/trading/blotters/trade.blotter.yaml): one name, each system's own connector
+  amend-trade:                          # the trade blotter's command (modules/trading/blotters/trade.live.yaml): one name, each system's own connector
     kind: trade
     kafka:
       topic: ${DRISHTI_WSS_TOPIC:drishti.trading.wss.trades}

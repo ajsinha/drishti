@@ -13,8 +13,8 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The live result set behind a table of records (docs/guides/LIVE_RESULTS_GUIDE.md section 7), as attributes of its panel: the set's id
-  (its changes stream from /api/v1/live/<id>/stream), whether it ticks, its total and the sequence the rows are consistent with.
-  The grid's live mode follows them; a static set (no live binding, or a past business date) says data-live="off".
+{# The live table behind a table of records (docs/guides/LIVE_RESULTS_GUIDE.md section 7), as attributes of its panel: the table's name
+  (its changes stream on the live channel, live:<name>), whether it ticks and its total. The grid's live mode follows them; a static
+  table (a past business date) says data-live="off".
 #}
-{% if data and data.live and data.live.set %} data-live-set="{{ data.live.set }}" data-live="{{ 'on' if data.live.live else 'off' }}" data-live-total="{{ data.live.total }}" data-live-seq="{{ data.live.seq }}"{% endif %}
+{% if data and data.live and data.live.table %} data-live-set="{{ data.live.table }}" data-live="{{ 'on' if data.live.live else 'off' }}" data-live-total="{{ data.live.total }}"{% endif %}

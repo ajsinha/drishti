@@ -155,33 +155,4 @@ class ContentRunsTest {
         assertThat(cb.claim(s, next)).isTrue();
         assertThat(ca.claim(s, next)).as("fired on b already").isFalse();
     }
-
-    @Test
-    void theRowsAndTheResultFolderAreImportedOnce() throws Exception {
-        FileContentStore store = new FileContentStore(dir.resolve("fstore"));
-        RunRecords.Memory rows = new RunRecords.Memory();
-        Instant t = Instant.now();
-        Run done = Run.planned("r-old-1", "viewer", "viewer", "mq", "{}", "c".repeat(64), "sig-v", Tier.AD_HOC_HEAVY, "local", "{}", "old", t)
-                .moveTo(RunState.QUEUED, null, null, t);
-        rows.save(done);
-        RunShares.Memory shares = new RunShares.Memory();
-        shares.save(new RunShares.Share("r-old-1", "bob", "same", null, "viewer", t));
-        RunsProperties p = RunsProperties.defaults(dir.resolve("old"));
-        new RunStore(p).write("c".repeat(64), "sig-v", "r-old-1", "viewer", Map.of("rowCount", 1, "rows", List.of(List.of("X", 1))), 1);
-        new RunStore(p).promote("desk-pnl", Map.of("answer", Map.of("rowCount", 0)), 5);
-
-        assertThat(RunImport.run(store, rows, shares, new RunSchedules.Memory(), p.store().dir()).failed()).isZero();
-        ContentRunStore results = new ContentRunStore(p, store);
-        assertThat(new ContentRunRecords(store, 0).get("r-old-1")).isPresent();
-        assertThat(new ContentRunRecords.Shares(store).get("r-old-1", "bob")).isPresent();
-        assertThat(results.read("c".repeat(64), "sig-v")).get().extracting(m -> m.get("rowCount")).isEqualTo(1);
-        assertThat(results.usageOf("viewer")).containsEntry("results", 1);
-        assertThat(results.snapshotVersions("desk-pnl")).containsExactly(1);
-
-        new ContentRunRecords(store, 0).save(done.moveTo(RunState.CANCELLED, null, "gone", t));
-        store.deleteLatest(ContentRunRecords.key("r-old-1"));
-        assertThat(RunImport.run(store, rows, shares, null, p.store().dir())).isEqualTo(new RunImport.Result(0, 0, 0));
-        assertThat(new ContentRunRecords(store, 0).get("r-old-1")).as("a deleted run does not come back").isEmpty();
-        assertThat(Files.isDirectory(p.store().dir().resolve("results"))).as("the files are kept").isTrue();
-    }
 }

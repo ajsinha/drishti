@@ -129,21 +129,5 @@ public interface EmbedAppRows {
             store.deleteLatest(key(id));
             seen.get().remove(id);
         }
-
-        /** The one-time import: each row of the table not yet in the store (an application deleted since stays deleted: the marker). */
-        public int importFrom(IdentityRepositories.EmbedApps apps) {
-            String marker = "system/imports/embed-apps-jpa.json";
-            if (store.get(marker).isPresent()) {
-                return 0;
-            }
-            int n = 0;
-            for (EmbedAppEntity e : apps.findAll()) {
-                if (docs.create(key(e.id), e)) {
-                    n++;
-                }
-            }
-            docs.create(marker, Map.of("imported", n, "at", System.currentTimeMillis()));
-            return n;
-        }
     }
 }

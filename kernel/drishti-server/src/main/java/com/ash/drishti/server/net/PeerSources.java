@@ -22,6 +22,7 @@ import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.engine.source.SourceRouter;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +102,19 @@ public final class PeerSources implements SourceRouter.Fallback {
     public Optional<com.ash.drishti.api.EntityDocument> gather(EntityRef ref, AsOf asOf, com.ash.drishti.api.EntityDocument local) {
         GroupGather g = groups;
         return g == null ? Optional.empty() : g.gather(ref, asOf, local);
+    }
+
+    /**
+     * The other members' changes of a kind for one person (a live table that spans the members): one relay per member a search of the kind
+     * asks for them ({@link SearchScatter#targets}); none while forwarding is off. Closing the handle stops every relay.
+     */
+    public com.ash.drishti.api.Subscription subscribeKind(String kind, Principal p, java.util.function.Consumer<com.ash.drishti.api.EntityDocument> l) {
+        SearchScatter sc = scatter;
+        List<com.ash.drishti.api.Subscription> subs = new ArrayList<>();
+        for (String node : sc == null ? List.<String>of() : sc.targets(kind, p)) {
+            subs.add(source(node).subscribeKind(kind, p, l));
+        }
+        return () -> subs.forEach(com.ash.drishti.api.Subscription::close);
     }
 
     private PeerSource source(String nodeId) {

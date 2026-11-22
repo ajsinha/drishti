@@ -45,7 +45,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 ### Public data feeds
 
-Real market data from public sources, each its own connector and **off by default**. Switch one on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). Feed data has its own identifiers, so it never collides with the bank's own, and it keeps its history, so a picked date shows that day's value.
+Real market data from public sources, each its own connector and **off by default**. Switch one on with its environment variable (or `enabled: true` in the connector's file). Feed data has its own identifiers, so it never collides with the bank's own, and it keeps its history, so a picked date shows that day's value.
 
 | Connector | Switch | Kind | What |
 |---|---|---|---|

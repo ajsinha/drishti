@@ -44,18 +44,8 @@ import org.springframework.test.web.servlet.MvcResult;
  * {@code 404 DRS-1020} from the engines' gate; the pivot engine's VaR source stays, with VaR, ES, PV and trades by the positions' columns
  * only: no hierarchy level, no MR measure, no option, each refused in words; the same cells' VaR as with the cube on.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors.risk-lake.plugin=delta",
-        "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
-        "drishti.sources.connectors.risk-lake.kinds[2]=var-limit",
-        "drishti.sources.connectors.risk-lake.settings.domain=risk",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.columns=TRADE_ID,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,PORTFOLIO,"
-                + "PRODUCT_GROUP,PRODUCT_TYPE,SECURITY_ID,CURRENCY,COUNTERPARTY,DIRECTION,QUANTITY,PV,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,"
-                + "SCENARIO_SET_ID,BATCH_ID,VALUE_TYPE,GRAIN,POSITION_ID,SOURCE_SYSTEM,TRADE_IDS,TRADE_CURRENCY",
-        "drishti.sources.connectors.risk-lake.settings.layout.pnl-vector.vectors=PNL",
-        "drishti.sources.connectors.var-positions.plugin=var-positions", "drishti.sources.connectors.var-positions.kinds[0]=position",
-        "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
+@SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/mr-cube-off", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.pnl-vector=risk-lake", "drishti.sources.routes.position=var-positions",
         "drishti.sources.routes.scenario-set=risk-lake", "drishti.sources.routes.var-limit=risk-lake",
         "drishti.var.hierarchies.MGMT.title=Management", "drishti.var.hierarchies.MGMT.levels=DESK > TT_BOOK",
         "drishti.var.hierarchies.MGMT.level-names=desk > book", "drishti.var.hierarchies.MGMT.ids=leaf",
@@ -70,11 +60,15 @@ import org.springframework.test.web.servlet.MvcResult;
 @Import(PinnedBusinessDate.class)
 class MrCubeOffTest {
 
+    static {
+        com.ash.drishti.server.ConnectorFixtures.copy("mr-cube-off");
+    }
+
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
         Path lake = Files.createDirectories(Path.of(TestRoots.module(), "target", "mr-cube-off-lake-"+ System.nanoTime())).toAbsolutePath();
         VarLakeFixture.write(lake);
-        r.add("drishti.sources.connectors.risk-lake.settings.root", lake::toString);
+        r.add("test-connectors.risk-lake.root", lake::toString);
         r.add("drishti.var.official.root", lake::toString);
     }
 

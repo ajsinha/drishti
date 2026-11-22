@@ -11,39 +11,51 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Every "rows of records" result is a live result set (docs/guides/LIVE_RESULTS_GUIDE.md section 7): a FORM's result and the search page's
-are the server's live set of the search (``GET /api/v1/live/query``), static when the kind has no live binding or the business date is
-not the live one, ticking otherwise. This module is the one place the console turns a set's page into what a result table draws: the
-search's summary (columns, labels, matched, scanned, failed, noData, pivot), the rows with their cells, and ``live`` (the set's id, whether
-it ticks, its total and sequence) that the grid's live mode follows through ``/api/v1/live/{set}/stream``.
+"""Every "rows of records" result is a query on a live table (docs/guides/LIVE_RESULTS_GUIDE.md section 7): a FORM's result and the search
+page's are the server's search opened on a table of the kind (``GET /api/v1/rdp/searches``: the table, the query with its filter tree, sort
+and limit, the first page, the search's summary), following the kind's changes on the live business date and a static snapshot of any
+other day. This module is the one place the console turns such a page into what a result table draws: the search's summary (columns,
+labels, matched, noData, pivot), the rows with their cells, and ``live`` (the table, its query, whether it ticks, its total) that the grid's
+live mode follows through the Data Protocol (``/api/rdp``, js/drishti_records.js).
 
 A search on two business dates side by side (``vs=``) is a comparison, not a set of records: it stays the search's own answer."""
 from __future__ import annotations
 
-TITLE = "_title"               # where the server's set keeps a search row's title (LiveSetConfiguration.TITLE)
+KEY = "id"                     # the key column of a search's table (SearchFilter.KEY)
 
 
-async def run(backend, q: str, ident, again: bool = True) -> dict:
-    """The search ``q`` as a live result set, in the shape the result tables read (see :func:`as_search`). ``again``: the person pressed
-    Search (a static set is read afresh; a live one is current already)."""
-    return as_search(await backend.live_query(q, ident, again=again))
+async def run(backend, q: str, ident) -> dict:
+    """The search ``q`` as a query on a live table, in the shape the result tables read (see :func:`as_search`)."""
+    return as_search(await backend.live_query(q, ident))
 
 
-def as_search(page: dict) -> dict:
-    """A live set's page as the search's summary plus ``rows`` ``[{ref, title, values}]`` (values at the summary's column paths) and
-    ``live``: ``{set, live, total, seq}``."""
-    data = dict(page.get("search") or {})
-    kind = data.get("kind") or (page.get("set") or {}).get("kind")
+def page_rows(page: dict) -> list[dict]:
+    """A Data Protocol page's rows as maps by column name (``{columns: [{name}], values: [[...]]}``)."""
+    cols = [c.get("name") if isinstance(c, dict) else c for c in page.get("columns") or []]
+    return [dict(zip(cols, v)) for v in page.get("values") or []]
+
+
+def as_search(answer: dict) -> dict:
+    """A search's table and first page as the search's summary plus ``rows`` ``[{ref, title, values}]`` (values at the summary's column paths)
+    and ``live``: ``{table, query, key, live, total}``."""
+    data = dict(answer.get("search") or {})
+    kind = data.get("kind")
     cols = data.get("columns") or []
+    if "page" not in answer and "set" in answer:        # a module's kernel page (Asker.live): rows {id, doc}, the table in set
+        s = answer.get("set") or {}
+        answer = {**answer, "table": s.get("table") or s.get("id"), "query": s.get("query") or {},
+                  "page": {"columns": [{"name": k} for k in ((answer.get("rows") or [{}])[0].get("doc") or {})],
+                           "values": [list((r.get("doc") or {}).values()) for r in answer.get("rows") or []], "total": answer.get("total")}}
+    page = answer.get("page") or {}
     rows = []
-    for r in page.get("rows") or []:
-        doc = r.get("doc") or {}
-        rows.append({"ref": {"kind": kind, "id": r.get("id")}, "title": doc.get(TITLE) or r.get("id"),
-                     "values": {c: value_at(doc, c) for c in cols}})
+    for r in page_rows(page):
+        rid = r.get(KEY)
+        rows.append({"ref": {"kind": kind, "id": rid}, "title": rid, "values": {c: value_at(r, c) for c in cols}})
     data["rows"] = rows
-    data["live"] = {"set": (page.get("set") or {}).get("id"), "live": bool(page.get("live")), "total": page.get("total"), "seq": page.get("seq")}
-    # the sources (a trading system's connector each) that answer from an earlier date than the one asked: shown per source system
-    data["asOfNotices"] = page.get("asOfNotices") or []
+    total = page.get("total")
+    data["live"] = {"table": answer.get("table"), "query": answer.get("query") or {}, "key": [KEY], "live": bool(answer.get("live")),
+                    "total": total if total is not None else len(rows)}
+    data["asOfNotices"] = answer.get("asOfNotices") or []
     return data
 
 
@@ -106,7 +118,7 @@ def titled(rows: list[dict]) -> bool:
 
 
 def grid_spec(data: dict | None, titled: bool = False) -> dict:
-    """The declaration the records grid (drishti-grid's LiveSetGrid) draws a result with: the id first (the key, pinned), the title when it says
+    """The declaration the records grid (drishti-grid's LiveSetGrid, over the Data Protocol) draws a result with: the id first (the key, pinned), the title when it says
     more than the id, then each column at its field (a number column by its values), as the search's labels name them. Never editable here: a
     result is read, the record's page edits."""
     d = data or {}
@@ -127,7 +139,8 @@ def grid_spec(data: dict | None, titled: bool = False) -> dict:
     live = d.get("live") or {}
     noun = (d.get("kind") or "").replace("-", " ")
     noun = (noun[:-1] + "ies" if noun[-1:] == "y" and noun[-2:-1] not in "aeiou" else noun + "s") if noun else "rows"
-    return {"id": live.get("set") or "result", "title": d.get("title") or mnemonic, "kind": d.get("kind") or "", "noun": noun, "columns": cols, "groupBy": [], "subtotals": [],
+    return {"id": live.get("table") or "result", "table": live.get("table"), "query": live.get("query") or {}, "key": live.get("key") or [KEY],
+            "title": d.get("title") or mnemonic, "kind": d.get("kind") or "", "noun": noun, "columns": cols, "groupBy": [], "subtotals": [],
             "links": [], "editable": False, "readOnly": "a search result: open the record's page to change it", "fields": [], "tray": False}
 
 
@@ -152,18 +165,57 @@ def compared_rows(data: dict | None, vs: str = "") -> tuple[list[dict], list[dic
     return cols, rows
 
 
-def kind_page(page: dict) -> dict:
-    """A page of a kind's own set (a bare mnemonic) in the same shape: the declaration's columns, the set's total as matched and scanned,
-    and ``paged`` (offset, shown, total) for the pager."""
-    spec = page.get("set") or {}
-    cols = [c for c in spec.get("columns") or [] if c.get("field")]
+def table_spec(table: str, schema: dict) -> dict:
+    """A live table's schema (``GET /api/v1/rdp/tables/{name}``) as the declaration the records grid draws: its columns (the key first, a
+    number column by its type), its own order, grouping and subtotals, its links, and for a reader who may edit (the schema's ``write``) the
+    editable fields with their rules; ``readOnly`` says why not otherwise."""
+    key = schema.get("key") or []
+    view = schema.get("view") or {}
+    numeric = ("integer", "decimal", "number")
+    cols = []
+    for c in schema.get("columns") or []:
+        name = c.get("name")
+        t = "id" if name in key[:1] else "number" if c.get("type") in numeric else "date" if c.get("type") == "date" else "datetime" if c.get("type") == "timestamp" else "text"
+        col = {"field": name, "label": c.get("label") or name, "type": t}
+        if c.get("fmt"):
+            col["format"] = c["fmt"]
+        cols.append(col)
+    sort = (view.get("sort") or [None])[0] or {}
+    write = schema.get("write") or {}
+    fields = []
+    for name, rule in (write.get("columns") or {}).items():
+        f = {"id": name, "bind": name, "label": next((c["label"] for c in cols if c["field"] == name), name), "type": rule.get("type") or "text"}
+        for k in ("required", "min", "max", "pattern"):
+            if rule.get(k) is not None:
+                f[k] = rule[k]
+        if rule.get("options"):
+            f["options"] = [o if isinstance(o, dict) else {"value": o, "label": str(o)} for o in rule["options"]]
+        fields.append(f)
+    kind = schema.get("kind") or (schema.get("profile") or {}).get("kind") or table
+    return {"id": table, "table": table, "query": {}, "key": key, "version": schema.get("rowVersion"), "title": schema.get("title") or table,
+            "kind": kind, "noun": "rows", "columns": cols, "groupBy": view.get("groupBy") or [], "subtotals": view.get("subtotals") or [],
+            "links": schema.get("links") or (schema.get("profile") or {}).get("links") or [], "sort": {"field": sort.get("col"), "descending": sort.get("dir") == "desc"} if sort else {},
+            "editable": bool(fields), "readOnly": None if fields else (write.get("readOnly") or schema.get("readOnly") or "read only"),
+            "fields": fields, "tray": bool(schema.get("tray")), "reason": write.get("reason"),
+            **({"excludes": list(schema["excludes"]), "banner": "excludes " + ", ".join(schema["excludes"]) + " (switched off)"} if schema.get("excludes") else {})}
+
+
+def kind_page(answer: dict) -> dict:
+    """A page of a kind's own table (a bare mnemonic) in the search's shape: the table's columns, its total as matched and scanned, and
+    ``paged`` (offset, shown, total) for the pager."""
+    table, schema, page = answer.get("table"), answer.get("schema") or {}, answer.get("page") or {}
+    spec = table_spec(table, schema)
+    cols = [c for c in spec["columns"] if c.get("field")]
     paths = ["$." + c["field"] for c in cols]
     total = int(page.get("total") or 0)
-    search = {"kind": spec.get("kind"), "mnemonic": spec.get("mnemonic") or spec.get("title"), "columns": paths,
-              "labels": {p: c.get("label") or c["field"] for p, c in zip(paths, cols)}, "matched": total, "scanned": total,
-              "partial": bool(page.get("capped")), "failed": [], "elapsedMs": page.get("elapsedMs", 0)}
-    data = as_search({**page, "search": search})
-    data["paged"] = {"offset": int(page.get("offset") or 0), "shown": len(data["rows"]), "total": total}
+    key = spec["key"][0] if spec["key"] else KEY
+    rows = []
+    for r in page_rows(page):
+        rows.append({"ref": {"kind": spec["kind"], "id": r.get(key)}, "title": r.get(key), "values": {p: value_at(r, p) for p in paths}})
+    data = {"kind": spec["kind"], "mnemonic": spec["title"], "columns": paths, "labels": {p: c["label"] for p, c in zip(paths, cols)},
+            "matched": total, "scanned": total, "partial": bool(schema.get("capped")), "failed": [], "elapsedMs": 0, "rows": rows,
+            "live": {"table": table, "query": {}, "key": spec["key"], "live": bool(schema.get("live")), "total": total}}
+    data["paged"] = {"offset": int(answer.get("offset") or 0), "shown": len(rows), "total": total}
     return data
 
 

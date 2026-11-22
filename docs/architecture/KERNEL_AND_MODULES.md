@@ -271,7 +271,7 @@ person, **by the same body**: the controller and the typed service call one meth
 | `history().series(p, ref, path, days, to)` | `GET /api/v1/history/{kind}/{id}/series` | `RecordReads.series` |
 | `dates()` | `GET /api/v1/business-date` (`current`, `selected`, `live`) | the server's business dates (`drishti.business-date.*`, a fixed `today` included) |
 | `settings().of(p)` | `GET /api/v1/me/settings` | `MySettings.of` |
-| `live().query(p, query, limit)` | `GET /api/v1/live/query?again=true` | `LivePages.query` |
+| `live().query(p, query, limit)` | `GET /api/v1/rdp/searches` | `FormResults.answer` |
 | `pivots().inline(p, request)`, `pivots().figures(…)` | `POST /api/v1/pivot/inline` | `PivotInline.inline` (the engine switch, the edition's `PIVOT`, the audit row) |
 | `lenses().block(lens, block)` | a block of `config/lenses/<module>/<lens>.yaml` | `KernelLenses.whole` |
 | `access()` | the entitlements a REST path applies (`requireOpen`, the masks) | `Entitlements` |

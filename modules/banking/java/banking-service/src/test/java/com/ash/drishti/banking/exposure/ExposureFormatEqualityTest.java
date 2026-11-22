@@ -53,8 +53,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * Exposure has one reporting currency (the lake's), so there is no second currency to compare.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
-        "drishti.sources.connectors-dir=target/exposure-format-equality/connectors",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors-dir=target/exposure-format-equality/connectors",
         "drishti.sources.routes.simulation-run=ccr-lake", "drishti.sources.routes.exposure-path=ccr-lake",
         "drishti.sources.routes.netting-set=ccr-lake", "drishti.sources.routes.csa=ccr-lake", "drishti.sources.routes.collateral-balance=ccr-lake",
         "drishti.sources.routes.counterparty=ccr-lake", "drishti.sources.routes.counterparty-group=ccr-lake",
@@ -88,6 +87,7 @@ class ExposureFormatEqualityTest {
             ExposureHierarchyFixture.writeIceberg(DELTA, ICEBERG);
             Path conn = Files.createDirectories(BASE.resolve("connectors"));
             Files.writeString(conn.resolve("ccr-lake.yaml"), ccrLake("delta", DELTA));
+            Files.writeString(conn.resolve("finance-lake.yaml"), "enabled: false\n");
         } catch (Exception e) {
             throw new IllegalStateException("the two lakes cannot be written: " + e, e);
         }

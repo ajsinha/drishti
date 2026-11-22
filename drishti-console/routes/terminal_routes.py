@@ -310,8 +310,8 @@ _BARE = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,31}$")      # one word, no conditi
 
 async def _narrowing_form(request: Request, word: str, e: BackendError) -> str:
     """The form of a kind the server never lists whole (its contract's ``list: requires``: SPV, PNLV, FXS): the server refused the bare
-    list (400, naming the fields), so the person is shown the kind's search form with the server's one line on why; "" otherwise."""
-    if e.status != 400 or " where " not in str(e.detail):
+    list (422 rdp.query.narrow, naming the fields), so the person is shown the kind's search form with the server's one line on why; "" otherwise."""
+    if e.code != "rdp.query.narrow" and (e.status != 400 or " where " not in str(e.detail)):
         return ""
     try:
         funcs = await request.app.state.backend.functions(ident(request))

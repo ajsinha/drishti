@@ -86,7 +86,7 @@ hadoop engine retired) cherry-picked first, then finished. About 61,000 lines le
 | Settings | The product's options under its names (`lake.*`, `LAKE_*`): archive caps, business zone, Parquet row group and page, lakes dir, footer and Iceberg caches, loader trace. `drishti.home`, `drishti.data.dir`, `drishti.config.dir`, `drishti.tmp-dir` stand for the lake's folders when those are not set. |
 | Source plugins | Delta and Iceberg on `com.ash.lake.read` only (`LakeReader`, `TableReader`, `TableSnapshot`, `DayFiles`, `DataFile`, `IdMap`, `ColumnBlock`, `VectorRequest`, `Documents.withVectors`): no Kernel or Iceberg type, no package-private class. `VectorBatches` back in the Delta adapter (RA-7). `LakeReads` (lake-host) opens a connector's lake, maps a failed read to `UnreadableData` and keeps the connector's own listings. |
 | Memory lake | `ConnectorRows`: the connectors as the product's `RowSource`; `Retention` held by the server (`RetentionHolder`); `MemoryBinding` in `server.memlake`; `MemoryStores.of(runtime)` everywhere. |
-| Duplicates gone | Drishti's `RowFeed` (the product's, in the runtime's business zone, for every store loader); the hadoop engine's leftovers: the `engine`, `hadoop.*` and `lz4-via-native` settings, `DRISHTI_DELTA_ENGINE`, the launcher's `--engine`, the Windows workflow line, the delta-s3 example's row, the hadoop jars of `plugin-delta`. |
+| Duplicates gone | Drishti's `RowFeed` (the product's, in the runtime's business zone, for every store loader); the hadoop engine's leftovers: the `engine`, `hadoop.*` and `lz4-via-native` settings, the Delta engine variable, the launcher's `--engine`, the Windows workflow line, the delta-s3 example's row, the hadoop jars of `plugin-delta`. |
 | Python | `tools/lake/filedate.py` deleted: 15 callers on `drishti_lake.filedate`; `hostdates.py` keeps `local_day` and `of_input` (host). The loader starts as `DrishtiLakeCli load`; `lakeconfig`, `undo`, `relocate`, `delete`, `deltaread` start the product's mains. |
 | Tests | Tests of the table layer's internals deleted (their cases are the TCK's: `NamedTables`, `NewTables`, Iceberg layout, orphan files, REST and S3 catalogs, S3 natives, pyiceberg, `AppendNewestLoadTest`, `PythonPathEqualityTest`). Iceberg fixtures (contract rows, vector lakes, the server's mirror) written by the one loader (`format: loader-rows`). TLS and proxy fixtures from `tools-testkit`. |
 
@@ -117,7 +117,7 @@ hadoop engine retired) cherry-picked first, then finished. About 61,000 lines le
 | R8 | `jsonstream`, `archives`, `lakeconfig`, `laketables`, `maintain*`, `delete`, `undo`, `relocate`, `scan`, `deltaread`, `ownership`, `compare_lakes`, `memory_*` stay in `tools/lake` | the wheel has no `inputs`-compatible stream (JSON arrays, archive guards) and no lake-cli parts yet (SPLIT_STATUS L10 "not yet") | Lake (L10 parts), then Drishti | M |
 | R9 | `drishti_lake` must be on the tools' path (here `PYTHONPATH` to the product's `python/`) | the wheel is not in the console's environment | Drishti (D1, D5: install the pinned wheel) | S |
 | R10 | `testing/drishti-testroots` is still a shim; Drishti's tests use `lake-tck`'s `TestRoots` | L6 | Drishti | S |
-| R11 | Docs not rewritten: `CONFIGURATION.md` (regenerate), `DATA_LAKE_GUIDE`, `DATA_ARCHITECTURE`, `CLI_REFERENCE`, `OPERATIONS_GUIDE`, `DEVELOPER_GUIDE`, the plugin READMEs (the hadoop engine's places, old module and class names, `DRISHTI_LAKE_CLASSPATH`); `tools/packmake.py` and the bench scripts still name `DRISHTI_DELTA_ENGINE`; the capacity workbook's setting names | D7 | Drishti | M |
+| R11 | Docs not rewritten: `CONFIGURATION.md` (regenerate), `DATA_LAKE_GUIDE`, `DATA_ARCHITECTURE`, `CLI_REFERENCE`, `OPERATIONS_GUIDE`, `DEVELOPER_GUIDE`, the plugin READMEs (the hadoop engine's places, old module and class names, `DRISHTI_LAKE_CLASSPATH`); `tools/packmake.py` and the bench scripts still name the Delta engine variable; the capacity workbook's setting names | D7 | Drishti | M |
 | R12 | `ArchitectureRulesTest` still names `StorageProviders` and the old packages; `PackagedVarGoldenTest`, browser tests, the TCK inside Drishti and a delta-rs read of the rebuilt lake not run | D6, D8 | Drishti | S to M |
 | R13 | The process runtime lives in one holder (`DrishtiLake`), installed at start and read by the plugins | `SourceContext` carries no runtime | Drishti (the plugin context hands the runtime) | S |
 
@@ -133,7 +133,7 @@ hadoop engine retired) cherry-picked first, then finished. About 61,000 lines le
 | R7 | closed | One id-map format, Drishti Lake's `LKIDMAP1` (`MappedIdFile` writes and reads it; strings in String order). What stays Drishti's: the lifecycle (reader guard, unmap, registry, TTL, cap), which `IdMaps` does not have. A file written by either is read by the other (`MappedIdMapTest`, same bytes) |
 | R8 | partly | One launcher for the Java tools (`stores.loader_command`, `LAKE_CLASSPATH`, else the exec jar): undo, retention, relocate, maintain, deltaread, lakes, load. The Iceberg writers (`lake build --format iceberg`, `ingest_jsonl --store iceberg`, `stores.copy`) go through one `loaderows.py` onto `DrishtiLakeCli load` with `format: loader-rows`. Left in `tools/lake` (no product equivalent): `jsonstream` JSON arrays, `scan`, `ownership`, `compare_lakes`, `memory_*`. `data load --store iceberg` is refused with a pointer to `lake build --format iceberg` until rebuilt on the one loader (the files store's `JsonlLoader` is Drishti's and works) |
 | R9 | closed | `drishti-lake==0.9.0.dev0` in `drishti-console/requirements.txt` from `lib/wheels` (`--find-links`, pure-Python wheel, no executable); tools find the wheel by themselves where it is not installed (`tools/lake/lakewheel.py`, or `LAKE_PYTHON` for development). The wheel is not committed |
-| R11 | closed | Every hadoop-engine mention and old module name in the guides, plugin READMEs, examples, deploy scripts and tools; the settings catalogue (`engine`, `hadoop.*`, `lz4-*` gone from the connectors; `LAKE_CLASSPATH` one variable for the tools); `CONFIGURATION.md` regenerated and checked; `DRISHTI_DELTA_ENGINE`, `DRISHTI_ICEBERG_CLASSPATH`, `DRISHTI_LAKE_CLASSPATH` gone. Left as they were: history in `IMPLEMENTATION_PLAN`, `BENCHMARK` results, the generated bench result files; Iceberg's `catalog: hadoop` is the path-based catalog's name and stays |
+| R11 | closed | Every hadoop-engine mention and old module name in the guides, plugin READMEs, examples, deploy scripts and tools; the settings catalogue (`engine`, `hadoop.*`, `lz4-*` gone from the connectors; `LAKE_CLASSPATH` one variable for the tools); `CONFIGURATION.md` regenerated and checked; the Delta engine variable, `DRISHTI_ICEBERG_CLASSPATH`, `DRISHTI_LAKE_CLASSPATH` gone. Left as they were: history in `IMPLEMENTATION_PLAN`, `BENCHMARK` results, the generated bench result files; Iceberg's `catalog: hadoop` is the path-based catalog's name and stays |
 | R12 | closed | `ArchitectureRulesTest`, 30 of 30, analysing `com.ash.drishti` and `com.ash.lake`: (1) the lake-layer rules keep their text (they run on the product's classes now on the class path); (2) added `theLakeProductKnowsNoDrishti`, `sourcePluginsReadThroughThePublicReadApi` (Delta, Iceberg, Iceberg-external plugins: no table-layer, Kernel, Iceberg, Parquet or Hadoop type) and `onlyTheLakeHostBuildsTheRuntime`; (3) **narrowed**: `temporaryFilesComeFromTempFiles` now covers Drishti's classes only (the product has its own `TempFiles` and four legitimate callers of `Files.createTemp*`; Drishti Lake has no rule of its own for it: a Lake item) |
 | build | closed | `packaging/dist` and `drishti-modules-it` build and test-compile (three test fixtures moved to the runtime and the one loader) |
 | tests | closed | `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest` pass (bit-identical); `PackagedVarGoldenTest` passes (2 of 2, the exec jar and the `.dmod` packages, the demo lake built by `lake demo --engine java`); Delta plugin 94 of 94 (R1 and R2 included), Iceberg 49, Iceberg-external 7, `drishti-lake-host` 6, `drishti-packs` 69, `ArchitectureRulesTest` 30. Banking's kernel-internals allowance names `lakehost` instead of the old lake packages (conformance C1) |
@@ -277,7 +277,7 @@ Owner direction: no customers, so no compatibility code. Removed from the produc
 | S1 | `tables/migrate` (9 classes), `bi/migrate` (7), `StoredTablesMigration`, `PivotFormulaMigration`, the `migrate` command of `TablesCli` and `tablescli.py`, `bi migrate` of `bilang.py`, the setting `drishti.bi.migrate.*`; `PivotFormulaMigrationTest`, `StoredTablesMigrationTest`, `TablesMigratorTest`, `NullRuleTest`, `BoardMigrationApiTest` | about 4,300 |
 | S2 | the DEL reader: `DelParser`, `DelToRachana`, `DelAst`, `DelTablesTranslator`, the `Legacy` mode of `Expressions`, the setting `drishti.bi.expr.legacy`, `OLD_SYNTAX` | about 1,100 |
 | S3 | `LegacyNames` and its calls (`.uploads`, `.previous`) | 134 |
-| S4 | `LakeRelocateOnStart`, `tools/lake/relocate.py`, `lake relocate`, `drishti.lakes.relocate-on-start` | 330 |
+| S4 | `LakeRelocateOnStart`, tools/lake/relocate.py, `lake relocate`, drishti.lakes.relocate-on-start | 330 |
 | S5 | `ApiAlias`, `ApiAliasFilter`, `api.legacy`, `EngineKeyAliases` (it aliased names nothing read) | 250 |
 | S6 | `lake migrate-config` (Python side) | 50 |
 | S7 | `LegacyImport` (users.json), `NoteImport`, `SharedLib.migrate` / `previousDefault` and its test, the `plugin-dir` default | 650 |
@@ -296,7 +296,7 @@ Owner rule restated: no shim is kept "for tests" either. What was left in part 1
 | S7 | `FormatSchemas.LEGACY`: a bad value of any format key is an error (`DRS-9032`), not a warning for the keys a 2.3 report could hold | 20 |
 | S7 | the console's `/bi/b/<id>` redirect (alerts and runs already link to `/bi/r/<id>`; the fixtures that held the old address changed first), Help's `aliases:` (pack guides name their section by its id: 30 `help.yaml` files) and `moved:` (about 400 lines) with `section_id`, `lib.moved`, the settings catalogue rows and the tests of the old addresses; the links of `developer.md` that used old slugs | 520 |
 | S7 | `LegacyListAggregates` (the "before" oracle): `SutraAggregateParityTest` compares the engine with Rachana Core (`new ElCompiler()`, no host function) over the same Sutras and cases | 143 |
-| S6 (Lake) | `LakesCli migrate-config`, `LakeFiles.migrate`, `adoptDemo`, `demoRoot` and their helpers, `ConnectorLake.legacy` and its `LakeCheck` note; `api-surface.txt` and CHANGELOG; Drishti's three tests of the same code; `tools/ci/check.py` **green** (build, delta-rs interop 3+3+2 with none skipped, Python tests, parity kit twice, coverage gates, equal to the reference). drishti-lake `main` `94dd281` | 497 |
+| S6 (Lake) | `LakesCli migrate-config`, `LakeFiles.migrate`, `adoptDemo`, `demoRoot` and their helpers, `ConnectorLake.legacy` and its `LakeCheck` note; `api-surface.txt` and CHANGELOG; Drishti's three tests of the same code; tools/ci/check.py **green** (build, delta-rs interop 3+3+2 with none skipped, Python tests, parity kit twice, coverage gates, equal to the reference). drishti-lake `main` `94dd281` | 497 |
 
 Also fixed at the cause: `NodeLowering` threw a null pointer for `rank()` (a window function with no measure); it now refuses with a message (the DEL reader used to catch this before Rachana's lowering saw it). The window test's `rank(x, 'sideways')` case is dropped: the current checker accepts it (a Rachana question, not a shim).
 
@@ -320,6 +320,17 @@ Also fixed at the cause: `NodeLowering` threw a null pointer for `rank()` (a win
 | `rank(x, 'sideways')` | **Not re-added.** Rachana `develop` refuses it only from language level 1.1 (`CatalogueArgs`); the server runs level 1.0 (kept on purpose), which keeps the reference's acceptance. The case returns with the move to level 1.1. |
 
 **Not done, named:** `drishti.sources.connectors.<name>.*` as a property (the overlay the cluster launcher's `enabled=false` flags and about 70 tests use) still binds and still warns; removing it means every one of those tests defining its connector as a file. The other one-time imports (`BiImport`, `DesignImport`, `RunImport`, `ProposalStore`, `LoadsConfig`, `EmbedAppRows`, the audit import) are the same kind of shim as `CollabImport` and are not in this part. `PersistedNames` (Lake) is as in part 2. `test_docs_rot` has five failures that were there before this part (paths and headings moved by earlier passes: the Rachana package paths, `tables migrate` and `bi migrate` still named in two documents, links to removed engine headings).
+
+### Part 4 (2026-11-21, `g4/shims-4` from `wip/g4-rehearsal-rx` `d06a8d6e2`)
+
+| Item | Done | Lines |
+|---|---|---|
+| Connector property overlay | `drishti.sources.connectors.<name>.*` as a property or environment variable no longer binds: `ConnectorManager` refuses the start naming the file to write (`<connectors-dir>/<name>.yaml`); its deprecation warning, the `application` origin banner and the `deprecated` field of the connectors API, the console's banner, `applicationDefined`, are removed. The packs' loaders still hand the files' own values to the server as the internal `drishti.sources.connectors.*` properties (their one internal form). About 60 tests: the connectors are files of `testing/connectors/<set>/` (README there), copied by `ConnectorFixtures.copy` into the run folder and named as `connectors-dir`; a value only the running test knows is a placeholder `${test-connectors.<connector>.<setting>}`; the net tests write a node's files with `NetNodes.connector` / `off`; the shard tests write them beside `risk-lake.yaml`. `ConnectorManagerTest` proves the refusal. | about 700 removed, 150 fixture files |
+| Cluster launcher | the stack's `off:` (and the connectors a lake leaves without tables) are written as `enabled: false` override files in the node's own connectors folder (`data/stack/nodes/<node>/connectors/`, marked, removed again when no longer listed); no `--drishti.sources.connectors...` argument. A `home: repo` node takes no `off:` (refused with the way to do it in `config/connectors/`). `deploy/stack/stack.yaml` needs no change (its `off:` lists are on `home` nodes b and c); its comments and README now say how. The owner's own stack.yaml: nothing to change either, unless a `home: repo` node lists `off:`. | |
+| One-time imports | `BiImport`, `DesignImport`, `RunImport`, the governance proposals' folder import (`ProposalStore.importFolder`), the loads config files import (`LoadsConfig.Overrides.importFiles`), `EmbedAppRows.Content.importFrom`, the audit table copy (`JpaAuditLog.copyTo`), `JpaBiStore.allMarks/allUsage/allSettings`, their tests, `system/imports/*` markers, and the import paragraphs of DATA_ARCHITECTURE, CONFIGURATION (regenerated; `settings_catalogue --check` green) and the settings comments. | about 900 |
+| `test_docs_rot` | five failures fixed at the cause: the paths of Rachana's moved classes (named as Rachana's classes), the removed `tables migrate` and `bi migrate` commands, stale anchors, the Rachana codes DrishtiBinder answers as `DRS-2xxx` and two retired codes (listed), `DRS-9190` (the dead `EXPR_CONVERT` removed; the documents say `DRS-9196`), and `config/engines/sensitivities.yaml`, whose `drishti.sensitivities.*` keys nothing read (the code binds `drishti.frtb.*`): now `drishti.frtb.*`. | |
+
+**Not done, named:** `PackStateStore` (the table and document import into the switch ledger), `LoadStore`'s `<data>/loads/<pack>.json` first-read import, the data-source override migration (`connector-migrated`), `drishti.identity.users-file` and `audit-file` with `FileUserStore` and `FileAuditLog` (only tests use them). VarApiTest `aDateThatIsNotOneRun...` and the three Iceberg-loader tests (`VarShardClusterTest`, `VarFormatEqualityTest`, `ExposureFormatEqualityTest`: "the vector field 'PNL' is not a list of numbers") fail on the base branch too.
 
 ## Pass 3: live tables (2026-11-21), on `g4/live` merged into `wip/g4-rehearsal-rx`
 
@@ -372,6 +383,58 @@ them. Lines removed: 0.
 | `LiveSetTest` (8), `StorePagesTest` (3), `LiveIsolationTest` (3), `LiveQueryTest` (5), `LiveBlotterBrokerAbsentTest` (1): the engine that still serves | pass |
 | VaR/ES goldens | not affected (no engine or test-data file changed; not run) |
 
+
+### Pass 3 live tables, the switch-over (2026-11-21, on `g4/live-2` from `wip/g4-rehearsal-rx`)
+
+The owner's rule (no dual machinery at the drill) overrides cut line DC1: the switch is made and the liveset engine deleted. Built against
+drishti-rachana `develop` (`7b16e0a0`, with LV5 below), Drishti Lake `94dd281` (Lake `main` 0.9.0 refuses `${drishti.data.dir}` in a lake
+file since G3 F5: every `config/lakes/*.yaml` must move to `${lake.data.dir}` before the re-pin; the Spring context does not start
+otherwise) and Drishti Tools 1.0.0-SNAPSHOT (the branch's pin), in `~/.cache/drishti-lanes/g4-live2/m2`.
+
+**What was built**
+
+| Gap | Where | How |
+|---|---|---|
+| LV1 search grammar → filter tree | `drishti-engine` `SearchFilter` (one compiler) | `SearchQuery.pick` and the search's own name resolution, the condition made row-relative (`@.X`), `startsWith` as `starts_with`, Rachana's `FilterTree.of` for the tree; an id pattern is a condition on `id`; the order a `{col, dir}` (else by id), the limit the search's. A condition outside the tree's subset (`matches`, `size`, links) has no tree and stays in the table's `where:` |
+| FORM results | `server.live.FormResults`, `GET /api/v1/rdp/searches` | a table of the kind per (columns, day[, kept condition][, audience when spanning]) declared in code (`q-<hash>`, its source in `LiveSources`), read with `{filter, sort, limit}`; whole when a column is not a lake column; a condition on a field masked for the person answers no row (the protocol refuses such a filter, 403) |
+| As-of dates | `KindBindings` with `AsOf`, `KindSnapshot` | a day other than the live one reads the lake as of that day (columns and documents) and the table has no stream (`live: false`) |
+| Drishti*net fan-out | `KindSnapshot.Peers`, `KindStream.Peers`, `PeerSources.subscribeKind`, `GET /api/v1/net/changes/{kind}` | for a person whose search the cluster routing scatters: the table is the audience's own, whole; its snapshot is this node's rows then each member's share of the search (as the person, one hop), merged by key (higher row version wins when given); each member's changes over the new peer stream (its own records, masked there) |
+| LV5 | Rachana `develop` `cc577818` | `ProtocolHost.keys` public (case `ProtocolHostTest.keysAreReadAsTheProtocolSendsThem`); the mount's copy deleted |
+| Profile in the schema | `LiveTablesController` | `GET /tables/{name}` adds `profile` (kind, links), `tray`, `readOnly` (why not, from the authoriser) and `excludes` (switched-off trading systems) for the grid |
+
+**Lines**: 2,310 added, 5,213 removed against `d06a8d6e2`.
+
+**Deleted**: `server/liveset/*` (8 files, 3,302 lines), its 6 tests (`LiveSetTest`, `StorePagesTest`, `LiveQueryTest`, `LiveIsolationTest`,
+`LiveBlotterBrokerAbsentTest`, `ContractColumnsTest`) and `LiveSetValidationTest`, `/api/v1/live/*`, the console's `/api/live/*`,
+`drishti.live-sets.engine`; `trade.blotter.yaml` is `trade.live.yaml` (LV2: no key field in the form). `KernelLiveQueries` reads
+`FormResults` (the kernel API `LiveQueries` keeps its shape). The console's grids (FORM results, the search page, bare mnemonics, the
+blotter page, the trading landing) paint through the same LiveSetGrid over a Data Protocol adapter in `js/drishti_records.js`
+(query, record, write; changes on the one live channel, `live:<table>[~<filter>]`, events `msg` and `gap`).
+
+**Ported and proved**
+
+| Check | Result |
+|---|---|
+| `LiveTablesAdapterTest` (11 LiveSet/StorePages scenarios), `LiveIsolationTest` (3, ported: shared table, scope on reads and changes, whole and paged; masked column refused; audience), `ContractColumnsTest` (3) | pass |
+| `FormApiTest`, `FormResultsParityTest` (10 searches: rows, count, order and columns equal the search's; tree vs kept condition; as-of), `LiveTableValidationTest` (3), `KafkaTradeEditTest` (write through `/rdp/tables/trade/write`, four eyes held then applied once, stale refused) | pass (9, 3, 3, 1; `StructuredSearchTest` 11 unchanged) |
+| Console: `test_live_results`, `test_live_routes`, `test_form_routes`, `test_base_path*` with the browser tests | 93 pass |
+| Blotter browser tests `test_live_grid_browser` (pinned Playwright 1.64.1) | Chromium 15/15; WebKit 15/15 (LD_PRELOAD of `~/.cache/drishti-lanes/webkit-libs`; the clipboard read-back is Chromium-only) |
+| VaR/ES goldens | not affected (no engine, VaR or test-data file changed) |
+| `ArchitectureRulesTest` | pass (30) |
+| `KafkaBlotterTest` (the plug-in as a blotter's source and write path) | pass (3) |
+| `LiveBlotterBrokerAbsentTest` (ported: snapshot served, `live: paused` with the binding's reason) | pass |
+
+**Behaviour that changed (findings)**
+
+| # | Finding |
+|---|---|
+| LS1 | A FORM's rows have no title column (a table row has no search title); the id is shown |
+| LS2 | The console's grid follows the table unwindowed on the shared live channel: a change of a row a paged grid does not hold moves its count and **N new** (no top insertion within a second); a windowed stream remains the protocol's (`POST /changes` with `window`) for a client that holds its own connection |
+| LS3 | A source failure answers `503 rdp.unavailable` without the source's words (POS/PORT on a server with no VaR inputs) |
+| LS4 | `asOfNotices` are carried by a search's answer (`/rdp/searches`); a bare mnemonic's table page does not carry them |
+| LS7 | The write-back gives a change its own id: Rachana's change id is not the approvals id (find it by `GET /api/v1/changes?mine=true&entity=`) |
+| LS5 | LV4 stays (no caller in `ChangeSink.accept`; the mount marks the person); the tray's release/reject in the table are not wired (`held` is Drishti's approvals) |
+| LS6 | `LiveSources` keeps at most 2,000 code-declared tables; Rachana has no undeclare, so a declaration outlives its source when evicted (read again on next use) |
 
 ## Pass 3: renderer (2026-11-21), on `g4/renderer` merged into `wip/g4-rehearsal-rx`
 
@@ -438,7 +501,7 @@ same: the parity suite):
 
 Drishti Elements `develop` `3c9908f` and `5ddb94f` (not tagged: the lead tags 3.2.1 after the G3 gate), vendored as the release tree of a fresh
 clone of `5ddb94f` (`cli.py dist`) under the pin folder `3.2.0` (its manifest still says 3.2.0; `VENDOR.md` names the commit and the dev label
-3.2.1-dev). Elements' `tools/run_tests.py`: every pass green, nothing skipped.
+3.2.1-dev). Elements' tools/run_tests.py: every pass green, nothing skipped.
 
 | # | State | What was done |
 |---|---|---|
@@ -463,6 +526,17 @@ the tables' filter box, pages and one-level trees, the Data table disclosure and
 sizing to its content, and Explain's metric panels. Closed here: the candlestick Data table (server texts). New with `behaviours: 'console'`:
 a small funnel after each column heading and a Clear filters and a Chart button in the table's bar. Pass 3's before/after shots are no longer
 on disk (its scratch folder was cleared); this pass's after shots (14 ViewModels × 2 themes × 2 widths) are in the lane's scratch folder.
+
+## Follow-ups (2026-11-21, on `g4/follow-ups`, against Drishti Lake `eafbd4e`)
+
+| # | State | What was done |
+|---|---|---|
+| Delta upkeep | closed (one part stays) | A Delta table is kept by Drishti Lake's `lake maintain` (`LakeMaintain`: keep-days under the drop guard and the retention floor, row retention, compaction, checkpoint, vacuum; `maintain.lake_command` builds the command, the JSON line becomes the report's `retention`, `row-retention`, `compact`, `checkpoint`, `vacuum`). The delta-rs compaction, checkpoint, vacuum, retention counting and estimate code is deleted. Two things stay on delta-rs, both read-only or Lake's gap: the report's file counts and sizes (`add_actions`), and the pack's sorted layout (`relayout`, `keep_stats_small`): Lake's compaction does not keep a laid-out table's id order, so a laid-out table is relaid first and Lake compacts nothing. **Lake item**: sorted layout for Delta tables (Iceberg has it). The retention rule is now Lake's on Delta as on Iceberg: the newest `keep-business-days` dates on or before today are kept (it was the dates within that many business days back, one more); tests and the Operations guide say so. A Delta lake on S3 reads its `AWS_*` options from the environment of the maintenance command. The Drishti jar needs a Lake build that holds `LakeMaintain` (pin `drishti.lake.version` when Lake tags); tests ran with `LAKE_CLASSPATH` on Lake's own class path |
+| Archive rule | closed | `tools/lake/archives.py`, `tools/lake/test_archives.py` and the shared fixtures folder deleted; every host path imports `drishti_lake.archives` (the `rows` layout asked for by name in `convertcmd`). Lake's own tests run the shared fixtures. The host's `target.lake` values are lake names (`javaload`), none a folder |
+| Python failures | closed | `test_config_readers_guard`: `mrloader/contract.py` and `test_launchers.py` read the packs through `resolved.pack_dirs()`; `jsonschema` is declared in `requirements-test.txt`; `test_sdk_builds_genomics` takes its read-only Maven repository from `MAVEN_ARGS` (`-Dmaven.repo.local.tail`), else `~/.m2` (it needs the product's pinned Lake and Tools boms to be installed there: on a machine without them it cannot build, whatever the test does) |
+| Python result | | `tools` (1,464 tests, 4 workers): 1,427 pass, 30 skipped, 7 fail, none from these changes: `test_sdk_builds_genomics` x2 and `test_pack_new_source` (Maven offline, the boms above), `test_tablescli` x2 (the `migrate` command Lake removed), `test_clusterlakes` (lake nodes switch off the stores' connectors), `genomics_showcase` generator drift. `test_maintain`, `test_maintain_admin` (on Lake's class path): 20 pass. VaR and ES goldens: no Java changed |
+| WebKit | closed | `tools/browser/webkit_env.py` (no root: `apt-get download` + `dpkg -x` of four libraries and what they need, `LD_PRELOAD`, validation switched off; `--check`), used by `drishti-console/tests/browser_engine.py`: `DRISHTI_BROWSER=webkit` makes every test's `p.chromium` the chosen engine (TEST_HARNESS.md 3.31). Playwright 1.64.0 matches the installed WebKit build |
+| WebKit run | | The 59 console browser files that start no server of their own (the others need a built server jar for this branch, which this machine has not): 376 pass, 247 skip, 64 fail, 4 error. Causes: 32 `render.test` does not resolve (Chromium's `--host-resolver-rules` has no WebKit equivalent: the render harness's origin), 15 `clipboard-write` is not a WebKit permission (`test_live_grid`, `test_records`), 4 errors the VaR engine (needs the server), 5 a sideways-scroll at phone width (`test_page_widths`, 477 px against 390: a real WebKit layout finding), 3 a Content-Security-Policy refusal of an evaluated string, the rest single tests (`test_panel_polish` 4, `test_smat`, `test_table_chart`, `test_help_hub`, `test_bi_catalogue_tabs`, `test_admin_samples`). The 178 server-starting files were not run on WebKit |
 
 ## Pass 3: level 1.2 (2026-11-21), on `g4/level-12` from `wip/g4-rehearsal-rx` (`d06a8d6e2`)
 
