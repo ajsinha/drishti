@@ -175,6 +175,20 @@ class ArchitectureRulesTest {
                     "com.ash.lake.load..", "com.ash.lake.inbox..", "com.ash.lake.files..", "io.delta..", "org.apache.iceberg..",
                     "org.apache.parquet..", "org.apache.hadoop..");
 
+    private static final java.util.Set<String> LAKE_PUBLIC = java.util.Set.of("com.ash.lake", "com.ash.lake.config", "com.ash.lake.contract",
+            "com.ash.lake.inbox", "com.ash.lake.load", "com.ash.lake.memory", "com.ash.lake.memory.store", "com.ash.lake.read", "com.ash.lake.spi");
+
+    /** Lake follow-up list (G4 gate F6): com.ash.lake.common.RowFeed, delta.write.LakeWriter/LakeManifest, iceberg.table.IcebergAppender, io.*. */
+    private static final java.util.Set<String> LAKE_FOLLOW_UP = java.util.Set.of(
+            "com.ash.drishti.benchmarks.HistoryBench", "com.ash.drishti.lakehost.LakeReads", "com.ash.drishti.lakehost.DrishtiLake",
+            "com.ash.drishti.testkit.LoaderRows", "com.ash.drishti.testkit.s3.MinioServer", "com.ash.drishti.testkit.s3.ConditionalWrites",
+            "com.ash.drishti.testroots.RecordedAnswers",
+            "com.ash.drishti.plugin.file.JsonlLoader", "com.ash.drishti.plugin.jdbc.PostgresLoader", "com.ash.drishti.plugin.mongodb.MongoLoader",
+            "com.ash.drishti.plugin.redis.RedisLoader", "com.ash.drishti.plugin.cassandra.CassandraLoader", "com.ash.drishti.plugin.duckdb.DuckDbLoader",
+            "com.ash.drishti.plugin.aerospike.AerospikeLoader",
+            "com.ash.drishti.banking.official.DeltaSink", "com.ash.drishti.banking.official.IcebergSink", "com.ash.drishti.banking.official.OfficialSink",
+            "com.ash.drishti.banking.official.LakeAppends", "com.ash.drishti.banking.var.VarPvStream");
+
     /**
      * Drishti imports only Drishti Lake's public packages (the surface of its java/api-surface.txt: com.ash.lake, config, contract, inbox, load,
      * memory, memory.store, read, spi; the test kit com.ash.lake.tck is test support). A Lake release can change anything else with no surface diff.
@@ -190,20 +204,6 @@ class ArchitectureRulesTest {
                     (com.tngtech.archunit.core.domain.JavaClass t) -> t.getPackageName().startsWith("com.ash.lake.")
                             && !LAKE_PUBLIC.contains(t.getPackageName()) && !t.getPackageName().startsWith("com.ash.lake.tck")))
             .allowEmptyShould(true);
-
-    private static final java.util.Set<String> LAKE_PUBLIC = java.util.Set.of("com.ash.lake", "com.ash.lake.config", "com.ash.lake.contract",
-            "com.ash.lake.inbox", "com.ash.lake.load", "com.ash.lake.memory", "com.ash.lake.memory.store", "com.ash.lake.read", "com.ash.lake.spi");
-
-    /** Lake follow-up list (G4 gate F6): com.ash.lake.common.RowFeed, delta.write.LakeWriter/LakeManifest, iceberg.table.IcebergAppender, io.*. */
-    private static final java.util.Set<String> LAKE_FOLLOW_UP = java.util.Set.of(
-            "com.ash.drishti.benchmarks.HistoryBench", "com.ash.drishti.lakehost.LakeReads", "com.ash.drishti.lakehost.DrishtiLake",
-            "com.ash.drishti.testkit.LoaderRows", "com.ash.drishti.testkit.s3.MinioServer", "com.ash.drishti.testkit.s3.ConditionalWrites",
-            "com.ash.drishti.testroots.RecordedAnswers",
-            "com.ash.drishti.plugin.file.JsonlLoader", "com.ash.drishti.plugin.jdbc.PostgresLoader", "com.ash.drishti.plugin.mongodb.MongoLoader",
-            "com.ash.drishti.plugin.redis.RedisLoader", "com.ash.drishti.plugin.cassandra.CassandraLoader", "com.ash.drishti.plugin.duckdb.DuckDbLoader",
-            "com.ash.drishti.plugin.aerospike.AerospikeLoader",
-            "com.ash.drishti.banking.official.DeltaSink", "com.ash.drishti.banking.official.IcebergSink", "com.ash.drishti.banking.official.OfficialSink",
-            "com.ash.drishti.banking.official.LakeAppends", "com.ash.drishti.banking.var.VarPvStream");
 
     /** The one runtime of the process lives in lake-host (DrishtiLake): the engine and the packs never build or hold a lake runtime themselves. */
     @ArchTest
