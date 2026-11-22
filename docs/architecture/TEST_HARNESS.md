@@ -194,6 +194,19 @@ budget. Failed tests run once more, file by file, two files at a time (`DRILL_BR
 and everything under it (`--under`, read before the monitor is started: inside it `$BASHPID` was the monitor itself, which then
 recorded only its own process).
 
+### 3.10a The drill's journal and `--resume`
+
+Every test of the drill's stage-two lanes leaves a trace as it finishes: one line of `<data>/drill/journal.jsonl`
+`{lane, id, outcome, seconds, commit, key, module}` (`tools/drillkit/drill_journal.py`). Pytest tests (browser, other, tools-a, tools-b,
+anywhere) are written by the `drill_timings` plugin at each test's teardown, by the one controller process, with one O_APPEND write per line;
+a test killed half way leaves nothing. Java classes are written from Surefire's `TEST-*.xml` as each class finishes (a watcher in the lane's
+copy, one last scan after Maven ends). `key` is a hash of the test's own files: for pytest its file and the `conftest.py` files above it; for
+Java its source file and its module's `pom.xml`, so a changed test never counts as done. `tools/drill.sh --resume` reads the journal of the
+same commit (other commits' lines are dropped at the start): a pytest test that passed with the same key is deselected (a list written before
+the lane starts, so every xdist worker collects the same tests); a Java class whose every method passed is left out of Surefire
+(`-Dsurefire.excludesFile`, or out of the lane's `-Dtest` list); a failed or missing test, and a class killed before its report, runs again. The
+gate always runs. The summary prints per lane what passed, failed and was resumed.
+
 ### 3.11 Quick file checks
 
 A check that only reads the repository's files (a guard, a lint, a registry or a generated document that must be current) needs no

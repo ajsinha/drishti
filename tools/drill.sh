@@ -29,6 +29,9 @@
 #   tools/drill.sh --lanes a,b  the gate, then these lanes only (browser, other, tools-a, tools-b, java21, java25, containers, anywhere); verify only
 #   DRILL_CONTAINERS=full|smoke the containers lane: full runs every Testcontainers test after the browser lane as well as the smoke test;
 #                               smoke never; default: full only when the diff since origin/main needs it (container_smoke.py full-needed)
+#   tools/drill.sh --resume     a full drill that skips what already passed at this very commit: every finished test of the lanes is a line of
+#                               <data>/drill/journal.jsonl (tools/drillkit/drill_journal.py); with --resume a test that passed there with the
+#                               same key (hash of its own files) is not run again; failed and missing tests run. The gate always runs.
 #   tools/drill.sh --affected [--base REF] [--dry-run]   only the Maven modules and test files the diff against REF (default origin/develop) can reach
 #                               (tools/drillkit/affected.py; for builders, never a release proof; working-tree edits included; no push)
 #   DRILL_MVN_ARGS="..."        extra Maven arguments for every Maven run (e.g. -Ddrishti.test.forks=1 to run the test classes serially)
@@ -81,7 +84,7 @@ export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"   # producti
 # would fill: ./mvnw starts Maven with -Djava.io.tmpdir=<repo>/data/tmp/maven (in a copy, the copy's own), the test forks get
 # <module>/target/tmp (the parent pom's argLine), and the console and tool tests start java through tools/javacmd.py.
 
-MODE=auto; PUSH=1; KEEP_GOING=0; GATE_ONLY=0; FIX=0; ONLY_LANES=""
+MODE=auto; PUSH=1; KEEP_GOING=0; GATE_ONLY=0; FIX=0; ONLY_LANES=""; RESUME=0
 if [[ "${1:-}" == --affected ]]; then
   shift; base=(); dry=()
   while (( $# )); do
@@ -105,9 +108,10 @@ for a in "${args[@]}"; do
     --full) MODE=full ;;
     --no-push) PUSH=0 ;;
     --keep-going) KEEP_GOING=1 ;;
+    --resume) RESUME=1 ;;
     --fix) FIX=1; MODE=full ;;
     --lanes=*) ONLY_LANES=${a#--lanes=}; MODE=full; PUSH=0 ;;
-    *) echo "drill: unknown option $a (use --docs, --full, --fix, --lanes=a,b, --no-push, --keep-going, --gate, --affected)" >&2; exit 2 ;;
+    *) echo "drill: unknown option $a (use --docs, --full, --fix, --resume, --lanes=a,b, --no-push, --keep-going, --gate, --affected)" >&2; exit 2 ;;
   esac
 done
 
@@ -154,6 +158,33 @@ DRILL_TMP="${DRISHTI_DRILL_TMP:-$DATA/tmp/drill}"; mkdir -p "$DRILL_TMP"; DRILL_
 export TMPDIR="$DRILL_TMP"
 DURATIONS="$LOGS/durations.json"; KNOWN=tools/drill-known.txt; PLAN=tools/drillkit/drill_plan.py
 T0=$SECONDS; STAGES=()
+# The journal (tools/drillkit/drill_journal.py): one line per finished test of the stage-two lanes, so a killed drill resumes (--resume).
+# Lines of other commits are dropped; the resume lists of the last run and its counts are this run's own.
+JOURNAL_PY=tools/drillkit/drill_journal.py
+export DRILL_COMMIT; DRILL_COMMIT=$(git rev-parse HEAD)
+export DRILL_JOURNAL="$LOGS/journal.jsonl" DRILL_RESUMED="$LOGS/journal-resumed.jsonl"
+rm -f "$LOGS"/resume-*.jsonl "$DRILL_RESUMED"
+python3 "$JOURNAL_PY" prune
+resume_list() {   # lane: the passed tests of the journal at this commit, for the lane's pytest (nothing when not resuming)
+  (( RESUME )) || return 0
+  local n; n=$(python3 "$JOURNAL_PY" snapshot --lane "$1" --out "$LOGS/resume-$1.jsonl")
+  echo "drill: resume $1: $n tests passed earlier at this commit (skipped when their files are unchanged)"
+}
+resume_java() {   # lane, then the Maven arguments the lane uses: the -Dtest list less its finished classes (sets JAVA_RESUME_ARGS)
+  JAVA_RESUME_ARGS=()
+  (( RESUME )) || return 0
+  local lane=$1 list=${2:-} f="$LOGS/resume-$1.txt" n
+  if [[ -n $list ]]; then
+    local left; left=$(python3 "$JOURNAL_PY" java-done --root "$REPO" --lane "$lane" --list "$list")
+    n=$(( $(tr ',' '\n' <<< "$list" | grep -c .) - $(tr ',' '\n' <<< "$left" | grep -c .) ))
+    JAVA_LIST_LEFT=$left
+  else
+    python3 "$JOURNAL_PY" java-done --root "$REPO" --lane "$lane" --out "$f" 2> "$f.n"; n=$(cat "$f.n"); rm -f "$f.n"
+    (( n )) && JAVA_RESUME_ARGS=(-Dsurefire.excludesFile="$f")
+  fi
+  echo "drill: resume $lane: $n finished classes not run again"
+  (( n )) && python3 "$JOURNAL_PY" resumed --lane "$lane" --count "$n" || true
+}
 stage_done() { STAGES+=("$(printf '%-44s %5ss' "$1" "$(( SECONDS - $2 ))")"); echo "drill: ${STAGES[-1]}"; }
 
 # Workers. The browser lane is what load breaks (a page that misses a tick under a busy CPU), so it gets few workers and normal
@@ -297,10 +328,14 @@ console_files() {   # name, workers, failed files re-run at a time, then the fil
   local out="$LOGS/console-$name.txt" rc=0 dist=loadfile
   # the browser lane by test: a file's tests stay one group on one worker unless they are marked spread (TEST_HARNESS.md)
   [[ $name == browser ]] && dist=loadgroup
+  if [[ $name == browser || $name == other ]]; then   # the lanes of the journal and the resume
+    export DRILL_LANE="console-$name"; [[ -f "$LOGS/resume-console-$name.jsonl" ]] && export DRILL_RESUME_FILE="$LOGS/resume-console-$name.jsonl"
+  fi
   DRISHTI_SNAPSHOT_REPORT="$LOGS/snapshots.jsonl" DRISHTI_SNAPSHOT_DIFFS="$LOGS/snapshot-diffs" DRISHTI_PAGELOAD_LOG="$LOGS/pageloads.jsonl" DRISHTI_SWEEP_OUT="$LOGS/sweep" DRILL_MIN_FREE_GB="${DRILL_MIN_FREE_GB:-6}" DRILL_TIMINGS_OUT="$LOGS/timings-$name.json" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
     timeout --kill-after=60 "$LANE_LIMIT" "$PY" -m pytest -q -rfE -p drill_timings -n "$workers" --dist "$dist" --no-loadscope-reorder "$@" \
     > "$out" 2>&1 || rc=$?
   tail -n 5 "$out"
+  (( rc == 5 && RESUME )) && rc=0   # exit 5: nothing left to run, everything passed before
   (( rc == 0 )) && return 0
   if (( rc != 1 )); then echo "drill: console $name stopped with exit $rc (124: the time limit; 2: interrupted; 3: internal error; 4: usage)" >&2; return 1; fi
   # the re-run's snapshot differences are kept beside the first run's (rerun/), never in a temporary folder the clean-up empties
@@ -361,12 +396,15 @@ run_tool_tests() {   # files and folders: each in its own pytest process; return
   command -v uv >/dev/null || { echo "drill: the tools' tests need uv (it provides deltalake, pyarrow, PyYAML, pytest and moto)" >&2; return 1; }
   # the lane's own bound: every file has its 900 s; the whole lane 7200 s (the files add up to ~3600 s beside the other lanes, and a
   # run under load took all of it: the old 3600 s bound killed the lane, unfinished, with every file shown passed)
+  export DRILL_LANE="$TOOLS_LANE"; [[ -f "$LOGS/resume-$TOOLS_LANE.jsonl" ]] && export DRILL_RESUME_FILE="$LOGS/resume-$TOOLS_LANE.jsonl"
+  export PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}"
   timeout --kill-after=60 7200 uv run -q --with deltalake --with pyarrow --with pyyaml --with pytest --with polars==2.1.0 --with numpy --with "moto[server]==5.2.3" bash -c '
     rc=0
     for f in "$@"; do
       t=$SECONDS
-      timeout --kill-after=30 900 python -m pytest -q -p no:cacheprovider "$f" 2>&1 | grep -v "^{\"at\""
+      timeout --kill-after=30 900 python -m pytest -q -p no:cacheprovider -p drill_timings "$f" 2>&1 | grep -v "^{\"at\""
       r=${PIPESTATUS[0]}
+      (( r == 5 )) && [[ -n "${DRILL_RESUME_FILE:-}" ]] && r=0   # nothing left to run in the file: it passed before
       echo "drill: tools $f: $(( SECONDS - t ))s$( (( r == 0 )) || echo " FAILED (exit $r)")"
       (( r == 0 )) || rc=1
     done
@@ -376,7 +414,7 @@ run_tool_tests() {   # files and folders: each in its own pytest process; return
   return $rc
 }
 tools_lane_a() {
-  set -e
+  set -e; TOOLS_LANE=tools-a
   local files=()
   mapfile -t files < <(tool_test_files a)
   (( ${#files[@]} > 40 )) || { echo "drill: only ${#files[@]} tools test files found for lane a" >&2; return 1; }
@@ -389,7 +427,7 @@ tools_lane_a() {
   return $rc
 }
 tools_lane_b() {
-  set -e
+  set -e; TOOLS_LANE=tools-b
   local files=()
   mapfile -t files < <(tool_test_files b)
   (( ${#files[@]} > 30 )) || { echo "drill: only ${#files[@]} tools test files found for lane b" >&2; return 1; }
@@ -397,8 +435,11 @@ tools_lane_b() {
   run_tool_tests "${files[@]}" || rc=1
   # outside tools/: the compute worker SDK and its engines (pure Python), and the AWS connectors' tool scripts (botocore's Stubber and
   # an in-memory S3, no AWS account)
-  timeout --kill-after=30 600 uv run -q --with pytest python -m pytest -q -p no:cacheprovider compute/drishti-compute/src/test/python || rc=1
-  timeout --kill-after=30 600 uv run -q --with pytest --with boto3 --with pyarrow --with deltalake python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3 || rc=1
+  local ex=0   # a resumed lane whose tests all passed before exits 5
+  timeout --kill-after=30 600 uv run -q --with pytest python -m pytest -q -p no:cacheprovider -p drill_timings compute/drishti-compute/src/test/python || ex=$?
+  (( ex == 5 )) && [[ -n "${DRILL_RESUME_FILE:-}" ]] && ex=0; (( ex == 0 )) || rc=1; ex=0
+  timeout --kill-after=30 600 uv run -q --with pytest --with boto3 --with pyarrow --with deltalake python -m pytest -q -p no:cacheprovider -p drill_timings deploy/aws/s3-tables deploy/aws/delta-s3 || ex=$?
+  (( ex == 5 )) && [[ -n "${DRILL_RESUME_FILE:-}" ]] && ex=0; (( ex == 0 )) || rc=1
   return $rc
 }
 
@@ -468,7 +509,12 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
     JAVA_HOME="$jdk" ./mvnw -q -o clean package -DskipTests ${DRILL_MVN_ARGS:-} || return $?
     after 7200 "$COPY_THEN_WAIT"; echo "drill: $name tests start at $(date +%T)"; goals=(verify)
   fi
+  # each finished test class reaches the journal as Surefire writes its report (a watcher; the last scan after Maven ends)
+  local wpid=""
+  python3 "$REPO/$JOURNAL_PY" java-watch --root "$copy" --lane "$name" & wpid=$!
   DRISHTI_NET_IT_PORTS="$ports" JAVA_HOME="$jdk" ./mvnw -q -o "${goals[@]}" -Dsurefire.rerunFailingTestsCount=1 "$@" ${DRILL_MVN_ARGS:-} || rc=$?
+  kill "$wpid" 2>/dev/null || true; wait "$wpid" 2>/dev/null || true
+  python3 "$REPO/$JOURNAL_PY" java-scan --root "$copy" --lane "$name" >/dev/null || true
   local flaky
   flaky=$(grep -l -E '<flaky(Failure|Error)' $(find . -path '*/target/surefire-reports/TEST-*.xml' 2>/dev/null) /dev/null 2>/dev/null \
           | sed -E 's|.*/TEST-(.*)\.xml|\1|' | sort -u || true)
@@ -493,7 +539,8 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
 # the diff needs them and only once the browser lane has finished (TEST_HARNESS.md rule 8).
 java21_verify() {
   export DOCKER_HOST=unix:///nonexistent/drill-java21 TESTCONTAINERS_RYUK_DISABLED=true
-  copy_verify java21 "$JAVA21_HOME" 20783,20784,20785 check -P api-docs
+  resume_java java21
+  copy_verify java21 "$JAVA21_HOME" 20783,20784,20785 check -P api-docs "${JAVA_RESUME_ARGS[@]}"
 }
 docker_test_classes() {   # every test class that uses Testcontainers, as Maven's -Dtest list
   grep -rl --include='*Test.java' -e 'org.testcontainers' "$REPO" --exclude-dir=.claude --exclude-dir=target 2>/dev/null \
@@ -503,6 +550,8 @@ java21_docker() {   # every Testcontainers test: the copy is built at once, its 
   local classes; classes=$(docker_test_classes)
   [[ -n "$classes" ]] || { echo "drill: java21-docker: no container tests found" >&2; return 1; }
   local wait=/dev/null; [[ -n ${RUN_LANE[browser]:-} ]] && wait="$LOGS/console-browser.secs"   # no browser lane in this drill: no wait
+  JAVA_LIST_LEFT=$classes; resume_java java21-docker "$classes"; classes=$JAVA_LIST_LEFT
+  [[ -n "$classes" ]] || { echo "drill: java21-docker: every class passed before"; return 0; }
   COPY_THEN_WAIT="$wait" copy_verify java21-docker "$JAVA21_HOME" 21783,21784,21785 none -Dtest="$classes" -Dsurefire.failIfNoSpecifiedTests=false
 }
 # The anywhere lane (TEST_HARNESS.md, "The release from another folder"): a release blocker. The gate's server jar and a git archive of HEAD
@@ -511,7 +560,10 @@ java21_docker() {   # every Testcontainers test: the copy is built at once, its 
 # missing required root stops the start at once with its message. About 5 minutes (the lake: cached per hash of its sources).
 ANYWHERE_TEST=drishti-console/tests/test_release_from_other_folder.py
 release_anywhere() {
-  timeout --kill-after=60 2400 "$PY" -m pytest -q -rfE -p no:cacheprovider "$ANYWHERE_TEST"   # three server starts of 100-140 s each beside the other lanes, the checks and a lake load
+  local rc=0
+  DRILL_LANE=anywhere DRILL_RESUME_FILE="$LOGS/resume-anywhere.jsonl" PYTHONPATH="$PWD/tools/drillkit${PYTHONPATH:+:$PYTHONPATH}" \
+    timeout --kill-after=60 2400 "$PY" -m pytest -q -rfE -p no:cacheprovider -p drill_timings "$ANYWHERE_TEST" || rc=$?
+  (( rc == 5 && RESUME )) && rc=0; return $rc   # three server starts of 100-140 s each beside the other lanes, the checks and a lake load
 }
 
 # The containers lane (TEST_HARNESS.md, "The container smoke test"): the images as shipped, built and booted on the host's network beside
@@ -553,6 +605,8 @@ java25_verify() {
   echo "drill: java25 starts at $(date +%T)"
   local tests; tests=$(java25_tests)
   export DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true
+  JAVA_LIST_LEFT=$tests; resume_java java25 "$tests"; tests=$JAVA_LIST_LEFT
+  [[ -n "$tests" ]] || { echo "drill: java25: every class passed before"; return 0; }
   copy_verify java25 "$JAVA25_HOME" 19783,19784,19785 none -Ddrishti.test.forks=2 -Dtest="$tests" -Dsurefire.failIfNoSpecifiedTests=false
 }
 
@@ -694,6 +748,7 @@ else
     for lane in browser other tools-a tools-b java21 java25 containers anywhere; do RUN_LANE[$lane]=1; done
   fi
   stage2=()
+  for lane in console-browser console-other tools-a tools-b anywhere; do resume_list "$lane"; done
   # the test servers' class-data archive, built once from the gate's jar (about 20 s; each server start then about a quarter faster);
   # without it the servers start from the jar as before (tools/drillkit/server_cds.py)
   if [[ -n ${RUN_LANE[browser]:-} ]]; then
@@ -716,6 +771,7 @@ else
     else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi
   fi
   rc=0; (( ${#stage2[@]} == 0 )) || watch_jobs "${stage2[@]}" || rc=1
+  python3 "$JOURNAL_PY" summary
   # what passed, for the next fix drill: a lane that ran whole and passed, or a console lane that ran whole and failed in some files
   for n in "${stage2[@]}"; do
     lane=${n#console-}
