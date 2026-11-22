@@ -16,7 +16,7 @@
 # The daily run: CSV extracts to VaR and exposure inputs
 
 One command a day turns the day's CSV extracts into checked files of each kind and hands them to the data inbox, in the order the engines
-need them. This page is the operator's; each kind's columns and rules are on its own page ([the kinds](README.md)).
+need them. This page is the operator's; each kind's columns and rules are on its own page ([the kinds](README.md)). The PVF files alone (scenario PVs, load several days, remove old dates) are step by step in [PVF_LOADING.md](../../../docs/guides/PVF_LOADING.md).
 
 ## Prepare your environment
 
