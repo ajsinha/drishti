@@ -87,7 +87,7 @@ connector each. Every input of every computed measure lives under the domain `ri
 (market-risk, counterparty-risk, and later the balance-sheet packs) reads it through one connector, `risk-store`:
 
 ```
-${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
+${DRISHTI_DELTA_ROOT}                         default ${lake.data.dir}/delta
 └── risk/                                     the common risk lake (domain: risk)
     ├── position/                             one Delta table per kind
     ├── pnl-vector/

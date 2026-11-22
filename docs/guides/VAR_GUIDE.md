@@ -2589,7 +2589,7 @@ Every dataset below, whether it is required and the links to its data contract a
 ### 15.1 Where they live
 
 All VaR inputs are tables in the **common risk lake**, domain `risk`, one table per kind, served by the market-risk pack's
-connector `risk-store` (`plugin: delta`, `root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}`, `domain: risk`). Delta is the
+connector `risk-store` (`plugin: delta`, `root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:./data}/delta/demo}`, `domain: risk`). Delta is the
 default; the same tables may be Iceberg tables, read by the same connector switched to `plugin: iceberg`
 (`build_demo_lakes.py --store risk=iceberg` writes both the tables and the file; [section 29.3](#293-how-the-lake-tools-and-the-delta-plugin-carry-a-vector)),
 with the same VaR to the cent. The engine reads the kinds named by `drishti.var.kinds` (defaults below), whichever connector the kind
