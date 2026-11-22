@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
-/** Banking's settings are described by its manifest and read as {@code drishti.module.banking.*}; the old keys are refused when a site sets them. */
+/** Banking's settings are described by its manifest and read as {@code drishti.module.banking.*}; the old keys are read for one release. */
 class ModuleSettingsTest {
 
     private static final Path BANKING = Path.of(TestRoots.repo(), "modules", "banking", "module.yaml");
@@ -46,7 +46,7 @@ class ModuleSettingsTest {
     }
 
     @Test
-    void theModulesKeyWinsOverTheOldKeyTheCodeReads() throws Exception {
+    void theModulesKeyWinsAndTheOldKeyIsStillRead() throws Exception {
         ModuleSettingsSchema s = ModuleSettingsSchema.of("banking", manifest());
         Map<String, String> env = Map.of("drishti.module.banking.var.confidence", "0.95", "drishti.var.es-confidence", "0.9", "drishti.var.confidence", "0.99");
         assertThat(s.asOldKeys(env::get)).containsEntry("drishti.var.confidence", "0.95").doesNotContainKey("drishti.var.es-confidence");
@@ -58,20 +58,18 @@ class ModuleSettingsTest {
     }
 
     @Test
-    void theEnvironmentGivesTheModulesKeyToTheOldKeyAndAnOldKeyASiteSetsStopsTheStart(@org.junit.jupiter.api.io.TempDir Path work) {
+    void theEnvironmentGivesTheModulesKeyToTheOldKeyAndHealthNamesTheOldKeysASiteSets(@org.junit.jupiter.api.io.TempDir Path work) {
         StandardEnvironment env = new StandardEnvironment();
         env.getPropertySources().addFirst(new MapPropertySource("Config resource 'file [application.local.yaml]' via location 'x'",
-                Map.of("drishti.module.banking.var.window", "500")));
+                Map.of("drishti.module.banking.var.window", "500", "drishti.var.hot-dates", "3")));
         // the banking package booted as the launch boots it, and its result put first as the launch puts it (LaunchRoots runs before this post-processor)
         env.getPropertySources().addFirst(new MapPropertySource("launch roots", new java.util.LinkedHashMap<>(com.ash.drishti.it.BootedPackages.boot(work, "market-data", "banking"))));
         new ModuleSettingsEnvironmentPostProcessor().postProcessEnvironment(env, null);
         assertThat(env.getProperty("drishti.var.scenario-window")).as("the module's key reaches the code that reads the old key").isEqualTo("500");
+        assertThat(env.getProperty(ModuleSettingsEnvironmentPostProcessor.INFO + ".deprecated"))
+                .contains("drishti.var.hot-dates is read for one release: set drishti.module.banking.var.hot-dates")
+                .doesNotContain("scenario-window");
         assertThat(env.getProperty(ModuleSettingsEnvironmentPostProcessor.INFO + ".modules")).contains("banking");
-        // a site that sets the old key itself is refused, naming the module's key (the one refusal, RetiredNames)
-        env.getPropertySources().addFirst(new MapPropertySource("Config resource 'file [application.local.yaml]' via location 'y'", Map.of("drishti.var.hot-dates", "3")));
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new ModuleSettingsEnvironmentPostProcessor().postProcessEnvironment(env, null))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("drishti.var.hot-dates is retired: use drishti.module.banking.var.hot-dates");
     }
 
     @Test

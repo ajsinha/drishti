@@ -70,10 +70,16 @@ public class ModuleSettingsController {
             m.put("value", r.value());
             return m;
         }).toList());
+        out.put("deprecated", deprecated(env));
         return out;
     }
 
-    /** The figure Health shows: the modules that declare settings. */
+    /** The old keys a site still sets, one note each (read for one release). */
+    static List<String> deprecated(Environment env) {
+        return Arrays.stream(env.getProperty(ModuleSettingsEnvironmentPostProcessor.INFO + ".deprecated", "").split("\n")).filter(x -> !x.isBlank()).toList();
+    }
+
+    /** The figure Health shows: the old module settings a site still sets. */
     @org.springframework.context.annotation.Configuration(proxyBeanMethods = false)
     public static class Health {
         @Bean
@@ -87,7 +93,7 @@ public class ModuleSettingsController {
                 @Override
                 public Object value() {
                     return Map.of("modules", Arrays.stream(env.getProperty(ModuleSettingsEnvironmentPostProcessor.INFO + ".modules", "").split(","))
-                            .filter(x -> !x.isBlank()).toList());
+                            .filter(x -> !x.isBlank()).toList(), "deprecated", deprecated(env));
                 }
             };
         }
