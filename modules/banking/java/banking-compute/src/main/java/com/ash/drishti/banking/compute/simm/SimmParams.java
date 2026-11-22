@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.IOException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HexFormat;
@@ -190,8 +189,6 @@ public final class SimmParams {
             return new SimmParams(root, Hashes.sha256Hex(yaml), overrides, lenient);
         } catch (IOException e) {
             throw new IllegalArgumentException("DRS-5333 the SIMM parameter file is not YAML: " + e.getMessage(), e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
         }
     }
 

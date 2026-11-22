@@ -62,8 +62,6 @@ public final class JavaPlugins {
             return HexFormat.of().formatHex(md.digest());
         } catch (IOException e) {
             throw new DrishtiException(ErrorCode.PIVOT_FUNCTION_INVALID, "the plug-in jar " + jar + " cannot be read in " + dir + ": " + e.getMessage());
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
         }
     }
 

@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -184,7 +183,7 @@ public interface BridgeFormat {
             mac.init(new SecretKeySpec(secret, "HmacSHA256"));
             mac.update(prefix.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(mac.doFinal(body));
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (InvalidKeyException e) {
             throw new IllegalStateException("HMAC-SHA256 is not available", e);
         }
     }

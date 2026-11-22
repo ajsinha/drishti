@@ -34,7 +34,6 @@ import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -83,12 +82,8 @@ final class ReactiveHostImpl implements ReactiveHost {
     }
 
     static String signature(Principal p) {
-        try {
-            byte[] h = Hashes.of(Hashes.SHA_256, p.securitySignature());
-            return "vs-" + HexFormat.of().formatHex(h).substring(0, 16);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        byte[] h = Hashes.of(Hashes.SHA_256, p.securitySignature());
+        return "vs-" + HexFormat.of().formatHex(h).substring(0, 16);
     }
 
     private static Principal principal(Viewer v) {

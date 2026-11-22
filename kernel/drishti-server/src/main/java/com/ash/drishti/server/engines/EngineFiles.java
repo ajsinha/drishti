@@ -28,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
@@ -281,10 +280,6 @@ public final class EngineFiles {
     }
 
     static String sha(byte[] b) {
-        try {
-            return HexFormat.of().formatHex(Hashes.digest("SHA-256").digest(b), 0, 12);
-        } catch (NoSuchAlgorithmException x) {
-            throw new IllegalStateException(x);
-        }
+        return HexFormat.of().formatHex(Hashes.digest("SHA-256").digest(b), 0, 12);
     }
 }

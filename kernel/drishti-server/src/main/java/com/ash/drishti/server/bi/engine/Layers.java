@@ -156,11 +156,7 @@ public final class Layers {
     static String signature(Dataset.Table t) {
         StringBuilder sb = new StringBuilder(t.connector()).append('|').append(t.kind()).append('|').append(t.each()).append('|');
         t.physical().forEach(c -> sb.append(c.name()).append(':').append(c.path()).append(':').append(c.type()).append(';'));
-        try {
-            return Hashes.sha256Hex(sb.toString()).substring(0, 16);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(sb.toString()).substring(0, 16);
     }
 
     Path tableDir(String key, String table) {

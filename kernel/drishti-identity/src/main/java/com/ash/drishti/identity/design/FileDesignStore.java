@@ -30,7 +30,6 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
@@ -187,11 +186,7 @@ public final class FileDesignStore implements DesignStore {
 
     /** A sample's file name: a hash of its name, so a name never becomes part of a path. */
     static String fileOf(String name) {
-        try {
-            return HexFormat.of().formatHex(Hashes.of(Hashes.SHA_256, name), 0, 16) + ".json";
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return HexFormat.of().formatHex(Hashes.of(Hashes.SHA_256, name), 0, 16) + ".json";
     }
 
     /** Letters, digits, {@code -} and a non-leading {@code .} stay; every other character is {@code _} plus its hex. */

@@ -232,11 +232,7 @@ public final class CustomFunctions {
     }
 
     static String sha(String s) {
-        try {
-            return Hashes.sha256Hex(s);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(s);
     }
 
     // ---- the harness and saving -----------------------------------------------------------------------------------------------------

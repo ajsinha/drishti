@@ -545,11 +545,7 @@ public final class BiFoundationCases {
     }
 
     static String sha(String text) {
-        try {
-            return Hashes.sha256Hex(text);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(text);
     }
 
     // ---- fixtures ---------------------------------------------------------------------------------------------------------------------

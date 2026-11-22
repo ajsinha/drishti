@@ -90,11 +90,7 @@ public final class ShardOwners {
 
     /** A member's weight for a key: the first 60 bits of SHA-256 of {@code node|key}. */
     public static long weight(String node, String key) {
-        try {
-            byte[] h = Hashes.of(Hashes.SHA_256, (node + "|" + key));
-            return Long.parseUnsignedLong(HexFormat.of().formatHex(h, 0, 8).substring(0, 15), 16);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        byte[] h = Hashes.of(Hashes.SHA_256, (node + "|" + key));
+        return Long.parseUnsignedLong(HexFormat.of().formatHex(h, 0, 8).substring(0, 15), 16);
     }
 }

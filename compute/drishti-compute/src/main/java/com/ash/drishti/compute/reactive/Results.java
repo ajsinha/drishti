@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HexFormat;
@@ -151,11 +150,7 @@ public final class Results {
     }
 
     static String sha(String s) {
-        try {
-            return Hashes.sha256Hex(s);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(s);
     }
 
     /** The result back from a document (for an incremental update of a cached result). */

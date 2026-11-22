@@ -468,27 +468,23 @@ public final class FrtbService {
 
     /** The SHA-256 of the engine's input (every element, in order): equal digests, equal figures. */
     static String digest(FrtbInput in) {
-        try {
-            MessageDigest md = Hashes.digest("SHA-256");
-            StringBuilder b = new StringBuilder(in.reporting()).append('\n');
-            for (FrtbInput.Position p : in.positions()) {
-                b.append(p.id()).append('|').append(p.productType()).append('\n');
-            }
-            for (FrtbInput.Element e : in.elements()) {
-                b.append(e.position()).append('|').append(e.factor() == null ? "?" : e.factor().name()).append('|').append(e.measure()).append('|')
-                        .append(Double.doubleToLongBits(e.value())).append('|').append(Double.doubleToLongBits(e.shockSize())).append('|')
-                        .append(Double.doubleToLongBits(e.impliedVol())).append('\n');
-                if (b.length() > 1 << 16) {
-                    md.update(b.toString().getBytes(StandardCharsets.UTF_8));
-                    b.setLength(0);
-                }
-            }
-            b.append(in.drc() == null ? "nodrc" : in.drc().toString()).append(in.rrao() == null ? "norrao" : in.rrao().toString());
-            md.update(b.toString().getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(md.digest());
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
+        MessageDigest md = Hashes.digest("SHA-256");
+        StringBuilder b = new StringBuilder(in.reporting()).append('\n');
+        for (FrtbInput.Position p : in.positions()) {
+            b.append(p.id()).append('|').append(p.productType()).append('\n');
         }
+        for (FrtbInput.Element e : in.elements()) {
+            b.append(e.position()).append('|').append(e.factor() == null ? "?" : e.factor().name()).append('|').append(e.measure()).append('|')
+                    .append(Double.doubleToLongBits(e.value())).append('|').append(Double.doubleToLongBits(e.shockSize())).append('|')
+                    .append(Double.doubleToLongBits(e.impliedVol())).append('\n');
+            if (b.length() > 1 << 16) {
+                md.update(b.toString().getBytes(StandardCharsets.UTF_8));
+                b.setLength(0);
+            }
+        }
+        b.append(in.drc() == null ? "nodrc" : in.drc().toString()).append(in.rrao() == null ? "norrao" : in.rrao().toString());
+        md.update(b.toString().getBytes(StandardCharsets.UTF_8));
+        return HexFormat.of().formatHex(md.digest());
     }
 
     /**

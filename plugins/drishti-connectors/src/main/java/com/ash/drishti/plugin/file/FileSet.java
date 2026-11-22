@@ -19,7 +19,6 @@ import com.ash.tools.codec.Hashes;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Map;
@@ -99,11 +98,7 @@ final class FileSet {
 
     private static String fingerprint(TreeMap<String, String> files) {
         MessageDigest sha;
-        try {
-            sha = Hashes.digest("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        sha = Hashes.digest("SHA-256");
         files.forEach((path, stamp) -> {
             sha.update(path.getBytes(StandardCharsets.UTF_8));
             sha.update((byte) 0);

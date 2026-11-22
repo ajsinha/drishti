@@ -320,11 +320,7 @@ public final class PlacementService {
         nodes.get().stream().sorted(java.util.Comparator.comparing(NodeView::id))
                 .forEach(n -> s.append('|').append(n.id()).append(n.tags().stream().sorted().toList()));
         modules().forEach(m -> s.append('|').append(m.module()).append('@').append(m.version()));
-        try {
-            return Hashes.sha256Hex(s.toString()).substring(0, 16);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(s.toString()).substring(0, 16);
     }
 
     /**

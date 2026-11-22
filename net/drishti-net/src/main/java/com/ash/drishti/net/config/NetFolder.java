@@ -249,12 +249,8 @@ public final class NetFolder {
 
     /** The version of a text: stable for equal text. */
     public static String etag(String text) {
-        try {
-            byte[] h = Hashes.of(Hashes.SHA_256, text);
-            return HexFormat.of().formatHex(h, 0, 8);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        byte[] h = Hashes.of(Hashes.SHA_256, text);
+        return HexFormat.of().formatHex(h, 0, 8);
     }
 
     /**

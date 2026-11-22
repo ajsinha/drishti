@@ -138,10 +138,6 @@ class AdminModulesRecordTest {
 
     /** A stable example hash: the SHA-256 of the words. */
     static String sha(String words) {
-        try {
-            return Hashes.sha256Hex(words);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(words);
     }
 }

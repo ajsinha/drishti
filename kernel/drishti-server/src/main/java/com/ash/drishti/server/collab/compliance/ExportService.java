@@ -54,7 +54,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -651,11 +650,7 @@ public final class ExportService implements AutoCloseable {
     }
 
     private static MessageDigest digest() {
-        try {
-            return Hashes.digest("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.digest("SHA-256");
     }
 
     private void manifest(ZipOutputStream out, Job job, Filter f, Map<String, Object> counts, List<Map<String, Object>> files) throws IOException {

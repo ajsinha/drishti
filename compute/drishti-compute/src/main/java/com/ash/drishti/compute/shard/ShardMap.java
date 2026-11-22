@@ -246,10 +246,6 @@ public record ShardMap(LocalDate date, String version, List<String> key, List<Sh
         for (Shard s : shards) {
             b.append('|').append(s.index()).append(':').append(s.first()).append("..").append(s.last());
         }
-        try {
-            return Hashes.sha256Hex(b.toString());
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(b.toString());
     }
 }

@@ -531,11 +531,7 @@ final class ExposureService implements AutoCloseable {
      */
     static String pathsKey(LocalDate date, String version, List<String> sorted) {
         java.security.MessageDigest md;
-        try {
-            md = Hashes.digest("SHA-256");
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        md = Hashes.digest("SHA-256");
         for (String id : sorted) {
             md.update(id.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             md.update((byte) 0);                                         // no id holds NUL: "A","BC" never digests as "AB","C"

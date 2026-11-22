@@ -269,11 +269,7 @@ public class FormResults {
     static String name(SearchFilter f, AsOf at, String condition, String audience) {
         String basis = f.kind() + "\u001f" + String.join(",", f.columns()) + "\u001f" + (at.isLatest() ? "live" : at.businessDate() + "@" + at.knownAt())
                 + "\u001f" + (condition == null ? "" : condition) + "\u001f" + audience;
-        try {
-            byte[] h = Hashes.of(Hashes.SHA_256, basis);
-            return "q-" + HexFormat.of().formatHex(h, 0, 12);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        byte[] h = Hashes.of(Hashes.SHA_256, basis);
+        return "q-" + HexFormat.of().formatHex(h, 0, 12);
     }
 }

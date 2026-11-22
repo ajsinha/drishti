@@ -864,7 +864,7 @@ public final class PackReloader implements AutoCloseable {
                 });
             }
             return HexFormat.of().formatHex(md.digest());
-        } catch (IOException | java.security.NoSuchAlgorithmException e) {
+        } catch (IOException e) {
             return "unreadable";
         }
     }

@@ -462,7 +462,7 @@ public final class DigestService implements AutoCloseable {
                     md.update(Files.readAllBytes(f));
                 }
                 return HexFormat.of().formatHex(md.digest(), 0, 8);
-            } catch (IOException | java.security.NoSuchAlgorithmException | RuntimeException e) {
+            } catch (IOException | RuntimeException e) {
                 return "";
             }
         });

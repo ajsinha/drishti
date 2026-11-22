@@ -25,7 +25,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HexFormat;
@@ -282,8 +281,6 @@ public final class FrtbParams {
             return new FrtbParams(s, d, HexFormat.of().formatHex(md.digest()), applied);
         } catch (IOException e) {
             throw new IllegalArgumentException("the FRTB-SA parameter files are not YAML: " + e.getMessage(), e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
         }
     }
 

@@ -23,7 +23,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,11 +56,7 @@ public final class Sdk {
     public static Path install(Path sdkRoot) {
         Map<String, byte[]> files = new LinkedHashMap<>();
         MessageDigest md;
-        try {
-            md = Hashes.digest("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        md = Hashes.digest("SHA-256");
         for (String f : FILES) {
             try (InputStream in = Sdk.class.getClassLoader().getResourceAsStream(RESOURCES + f)) {
                 if (in == null) {

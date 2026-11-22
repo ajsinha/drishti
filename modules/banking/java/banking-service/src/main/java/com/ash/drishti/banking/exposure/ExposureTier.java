@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HexFormat;
@@ -251,11 +250,7 @@ final class ExposureTier implements AutoCloseable {
     static String digest(LocalDate date, Map<String, String> versions, String runId, String collateral, String im) {
         String key = "format=" + ExposureHotFile.VERSION + "|date=" + date + "|run=" + runId + "|collateral=" + collateral + "|im=" + im + "|"
                 + new java.util.TreeMap<>(versions);
-        try {
-            return Hashes.sha256Hex(key);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(key);
     }
 
     Path folder(LocalDate date) {

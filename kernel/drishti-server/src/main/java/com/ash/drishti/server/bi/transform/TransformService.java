@@ -303,11 +303,7 @@ public final class TransformService implements AutoCloseable {
     }
 
     private static String hash(String text) {
-        try {
-            return Hashes.sha256Hex(text).substring(0, 24);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(text).substring(0, 24);
     }
 
     @Override

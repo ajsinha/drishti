@@ -22,7 +22,6 @@ import com.ash.drishti.identity.db.ApiTokenEntity;
 import com.ash.drishti.identity.db.IdentityRepositories;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
@@ -268,10 +267,6 @@ public final class ApiTokenStore {
     }
 
     private static String sha256(String s) {
-        try {
-            return Hashes.sha256Hex(s);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(s);
     }
 }

@@ -24,7 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
@@ -226,16 +225,12 @@ public final class Dmod {
 
     /** The SHA-256 of a stream, in lower-case hex (the stream is read to its end, not closed). */
     public static String sha256(InputStream in) throws IOException {
-        try {
-            MessageDigest md = Hashes.digest("SHA-256");
-            byte[] buf = new byte[65536];
-            for (int n; (n = in.read(buf)) > 0; ) {
-                md.update(buf, 0, n);
-            }
-            return HexFormat.of().formatHex(md.digest());
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
+        MessageDigest md = Hashes.digest("SHA-256");
+        byte[] buf = new byte[65536];
+        for (int n; (n = in.read(buf)) > 0; ) {
+            md.update(buf, 0, n);
         }
+        return HexFormat.of().formatHex(md.digest());
     }
 
     /** Writes a file, making its folder (a convenience for builders and tests). */

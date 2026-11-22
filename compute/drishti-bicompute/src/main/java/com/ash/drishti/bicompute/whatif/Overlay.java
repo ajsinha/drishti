@@ -133,11 +133,7 @@ public record Overlay(Map<String, List<String>> exclude, List<Change> changes, L
     /** A short digest of the overlay (part of the cache key: a what-if never shares states with the data as it is). */
     public String signature() {
         String text = new java.util.TreeMap<>(exclude) + "|" + changes + "|" + add;
-        try {
-            return Hashes.sha256Hex(text).substring(0, 16);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(text).substring(0, 16);
     }
 
     /** As saved with a view. */

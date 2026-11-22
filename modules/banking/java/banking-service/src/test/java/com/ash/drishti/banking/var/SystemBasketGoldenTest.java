@@ -230,11 +230,7 @@ class SystemBasketGoldenTest {
     }
 
     private static String sha(byte[] bytes) {
-        try {
-            return Hashes.sha256Hex(bytes);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(bytes);
     }
 
     /**

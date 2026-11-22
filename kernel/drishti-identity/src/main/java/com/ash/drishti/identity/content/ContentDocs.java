@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
@@ -155,11 +154,7 @@ public final class ContentDocs {
 
     /** A free-text value (a user name, an entity id) as one short key segment: its SHA-1, hex. */
     public static String hash(String s) {
-        try {
-            return HexFormat.of().formatHex(Hashes.digest("SHA-1").digest(s.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return HexFormat.of().formatHex(Hashes.digest("SHA-1").digest(s.getBytes(StandardCharsets.UTF_8)));
     }
 
     /** A short name (a kind, a pack) as a readable key segment: anything outside {@code A-Za-z0-9._-} becomes {@code _}. */

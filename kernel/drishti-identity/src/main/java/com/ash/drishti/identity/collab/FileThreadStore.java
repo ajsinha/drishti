@@ -31,7 +31,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -165,11 +164,7 @@ public final class FileThreadStore implements ThreadStore {
     }
 
     private static String sha1(String s) {
-        try {
-            return HexFormat.of().formatHex(Hashes.digest("SHA-1").digest(s.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return HexFormat.of().formatHex(Hashes.digest("SHA-1").digest(s.getBytes(StandardCharsets.UTF_8)));
     }
 
     // ---- ThreadStore -------------------------------------------------------------------------------------------------

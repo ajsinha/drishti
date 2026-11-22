@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HexFormat;
@@ -89,12 +88,8 @@ public final class BiDocs {
             return "_";
         }
         if (b.length() > 100) {
-            try {
-                byte[] h = Hashes.of(Hashes.SHA_256, raw);
-                return b.substring(0, 60) + "~" + HexFormat.of().formatHex(h, 0, 16);
-            } catch (NoSuchAlgorithmException e) {
-                throw new IllegalStateException(e);
-            }
+            byte[] h = Hashes.of(Hashes.SHA_256, raw);
+            return b.substring(0, 60) + "~" + HexFormat.of().formatHex(h, 0, 16);
         }
         return b.toString();
     }

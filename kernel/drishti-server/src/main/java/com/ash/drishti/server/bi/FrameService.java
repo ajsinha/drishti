@@ -128,10 +128,6 @@ public final class FrameService implements DatasetRefresher.FramedHooks {
     }
 
     private static String hash(String text) {
-        try {
-            return Hashes.sha256Hex(String.valueOf(text)).substring(0, 12);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return Hashes.sha256Hex(String.valueOf(text)).substring(0, 12);
     }
 }
