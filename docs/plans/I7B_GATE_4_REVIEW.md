@@ -671,3 +671,213 @@ The folder `~/.cache/drishti-lanes/fable-g4p2/` (five clones and a copy, the scr
 the install with the demo lake, the logs) is deleted, and so are the `/tmp` folders my runs left. No repository other than this plan
 branch was written; `~/.m2`, the owner's stack, `/home/ashutosh/IdeaProjects/drishti`, `main` and every tag were not touched. The probe
 servers ran on port 28480 and were stopped; nothing of mine is running.
+
+---
+
+# Part 2b and pre-drill review
+
+Read on 2026-11-22, 06:23 to 06:50. **Nothing heavy was run** (owner rule: no duplicated testing): no Maven, no pytest, no browser. I read
+the diffs, the code at its lines and the logs of `~/.cache/drishti-lanes/g4-int/`, ran `tools/drillkit/drill_readiness.py`, `git`, `grep`,
+one `git merge-tree` (no tree touched) and one 12-line hash check of the vendored Elements manifest. The products were read in fresh
+clones from `github.com/drishti-platform/<repo>` in my scratch folder (deleted). No sub-agent. Nothing was written but this file.
+
+| Repository | Read at | Since part 2 |
+|---|---|---|
+| `drishti` | `wip/g4-rehearsal-rx` `4abfa33f3fb2936a72a8f56c314d62202700cbff` | 15 commits, 115 files (`10753f4db..4abfa33f3`) |
+| `drishti-rachana` | `develop` `bfb6799b62246ef5486be12345d179f21d14d248` | F25 (`7bf00794`, merged `55723dcf`), then the organisation URL in two CLIs (`bfb6799b`) |
+| `drishti-lake` | `develop` `2d22533c0580f9c25712f3b4630b6e2454b83bc6` | F20, F21 and three related faults (5 commits after `336524b`) |
+| `drishti-elements` | tag `v3.3.1` = `20661f098a10d664d592dd8384442157436aba36` | tagged; `develop` has one later commit (URLs), not in the tag |
+| `drishti-tools` | tag `v1.1.0` = commit `4d3567a` (the tag object is `b6fc22c`, the name RESULTS.md prints) | none |
+
+## Verdict
+
+**Products: GOLDEN. Tag Rachana and Lake now. Drishti at `4abfa33f3`: NOT YET, and the DRILL IS NO-GO on that commit.** Every blocker
+of part 2 (F20 to F25) is closed at its cause; nothing new needs design. But the head cannot be the commit the drill runs, for reasons
+that are certain by reading, not by opinion: it still builds version **2.9.11.i7a**; one test of it is red (shown by a hash); it cannot
+fast-forward `develop`; and the drill tooling has never met the Lake wheel, so the Java lanes would skip or fail the tests that prove
+the lake. All of it is one small pre-drill commit and four edits of the drill scripts: section 4.
+
+| Tag | Commit | Why this one |
+|---|---|---|
+| `drishti-rachana` **`v1.0.0`** | **`bfb6799b62246ef5486be12345d179f21d14d248`** | `55723dcf` (what Drishti's integration ran) plus two text lines, the SARIF `informationUri` of the Node and Python `lint` (no Java file, no case, no test reads it). `55723dcf` is as good; `bfb6799b` ships the right address |
+| `drishti-lake` **`v0.9.1`** | **`2d22533c0580f9c25712f3b4630b6e2454b83bc6`** | exactly this: `lib/lake-wheel.pin` names it and the wheel's SHA-256 (`23d2bd3f…e869`) is of its tree. No commit after it before the tag, or the pin moves |
+| `drishti-elements` `v3.3.1` | `20661f098a10d664d592dd8384442157436aba36` | already tagged, at the commit part 2 called golden. Right |
+| `drishti-tools` `v1.1.0` | `4d3567a` | unchanged |
+| `drishti`, the head the drill runs | **`4abfa33f3` + the pre-drill commit of section 4** (no hash yet) | see D1 to D6 |
+
+One condition on the two tags, because no log of their own suites at these commits is on disk (the lanes' folders are gone): the drill's
+`prepare` builds each product from its tag with its tests (`clean install`), and for Lake runs `tools/ci/check.py` once (the kit is where
+F20 and F21 are held; Maven alone does not run it). That is the single run of them, not a second one. A red product suite un-tags nothing
+by itself but stops the drill.
+
+## 1. Part 2's findings, at their lines
+
+| # | State | Evidence |
+|---|---|---|
+| F20 blocker (Lake) | **CLOSED, with one gap left (L1 below)** | `drishti-lake` `java/lake-io/.../rows/LoadOrder.java:99-113` (the commit, then a file of older copies first, then the run's time); `lake-delta/.../table/DeltaTable.java:350-365` (`newestLast` reads the tag `lake.copies: older`, `:367-382`); `lake-delta/.../write/TableUpkeep.java` (`ranked`, `generations`: every rewrite ranks in the readers' own order); `LakeWriter.olderCopies`; Iceberg by `-older-` in the file name and always by sequence number; undo skips rewrite commits. Kit cases `maintain/compact-commit-order` (my part 2 recipe, four loads, compaction twice, undo, compaction again) and `retention/ttl-keeps-commit-order`. The three related faults (undo writing one file, undo taking a compaction for a replace, Iceberg undo keeping one copy by file name) are real finds of the lane |
+| F21 blocker (Lake) | **CLOSED** | `LakeWriter.withColumns` (one metadata commit, nullable, at the end; a column-mapped or in-commit-timestamp table is refused naming the column), used by the loader (`DeltaTarget.java:157`), the manifest writer and the in-memory lake; `FilesWriter.java:92-104`; the Python path (`python/drishti_lake/delta.py:112-117`, delta-rs add-columns); `LOADER.md` "New columns"; kit case `load/new-promoted-column` |
+| F22 blocker | **CLOSED** | `kernel/drishti-packs/.../module/RetiredNames.java:79-82` (`shipped`: only class-path resources and a module's shipped copy; a site's `config/engines/*.yaml` is checked), one rule for the start, the engine switches and a module loaded later; a manifest that cannot be read stops the start. Held by a real start: `ModuleSettingsTest.aRetiredNameInTheSitesEngineFileStopsARealStart`, and the new keys by a figure: `VarSiteEngineFileTest` |
+| F23 blocker | **CLOSED by reading; proved only by the drill** | no `was:` under `kernel/drishti-server/src/test/resources/bi`, none in `MqEngineTest`, `DerivationTest`; `VarExplainApiTest` asks for 404; the two embed settings are out of `CONFIGURATION.md`. The head was again **not run whole** (scope cut by the owner): the drill is the proof, and D2 below is one red test already |
+| F24 blocker | **CLOSED in the tree; open in the drill (D4)** | `testing/drishti-modules-it/.../it/DeltaAfterMaintenanceTest.java` (after the assembly, `LAKE_CLASSPATH` from the test class path, `@TempDir`). But `:44-48` **skips** when `lib/wheels` has no wheel, and the drill's Java lanes run in a copy that has none |
+| F25 blocker (Rachana) | **CLOSED** | `java/rachana-core/.../el/Parser.java:160` (the one parse; every entry comes here), `:1126` (a token after a complete expression is `RCH-2101`); `MeasureFunctions.java:44`, `:180`; `CheckedMode.java:42-55`, `FormRules.java:127`; `ElSource` removed and logged in `api-removals.txt`; the 1.0 lexer and parser branches gone; 15 cases `el/measure-functions` (my four inputs among them). The reused-id case is `verified: true` with its `VERIFIED.md` row: no case below `conformance/1/` is unverified |
+| F26 | **OPEN** | `DrishtiApplication.java:104-108` rethrows; no failure analyzer: the refusal is still a stack trace around its two lines. Not gating |
+| F27 | **CLOSED** | `lake/drishti-lake-host/.../WherePushdown.java`, `SourcePlugin.columns(.., where)`, `TextEqualities`; `WherePushdownTest` counts the files read (1 of 3) and compares the answer with the whole read; PostgreSQL and DuckDB by `WHERE`; a real fault found by the proof (DuckDB bound the values in the wrong order) |
+| F28 | **m, n, p, q, r, s, t, u (REPORTING_CCY) CLOSED; o and l parked** | o (`SutraCli.java:767`) and l are parked "by name" in `G4_REHEARSAL.md` only: **not in `I8_CARRY_IN.md`** (F39 again). `AiProperties.java:24` (Ask's deprecated endpoint) stays unnamed |
+| F29 | **OPEN** | the "parked to i6" skips are still in `drishti-console/tests` (`var_stack.PARKED_I6`); no owner word, no carry-in row. The drill's rule is zero skips but those in `tools/drill-known.txt`: decide before the drill |
+| F30 | **OPEN but the links** | the organisation exists and every product resolves (row 1 closed). Still there: the index repository's `platform.yaml` and `COMPATIBILITY.md` (`lake: v0.9.0`, `elements: v3.3.0`); ADR 021 (embed v1, 3 places); `DATA_ARCHITECTURE.md` (`filedate.py`); QUICKSTART section 4 (`lake-io`, `lake-delta`, `lake-iceberg`, `lake-load`, `drishti-banking`, `drishti-elements` as modules here); `BENCHMARK.md` (`--engine drishti`, twice); `OPERATIONS_GUIDE.md` ("older builds"); the six relative defaults; `pom.xml:109` (names `7649778`, the pin is `2d22533`). The docs wave the owner put before this drill has not been done: D6 |
+| F31 | **half** | `LakeFileWritesTest.java:84` is `${lake.data.dir:/srv/drishti}` (right: a lake file may not name a host setting). `IdentityProperties.java:66` still defaults to `jdbc:sqlite:./data/identity/drishti.db` |
+| F32 | **OPEN** | `AbandonedReadsTest`: the bound is now `before + 4 + cores` (still far from a thread a read; not bent). `VarInputsApiTest.java:135` keeps `Thread.sleep(1500)`; `ReactiveApiTest` was not looked at; and the new end-to-end test adds `time.sleep(3)` (`tools/test_lake_tools_e2e.py:444`) |
+| F33 | **CLOSED by reading** | `drishti_app.js:169` (the count aborted on `pagehide`); the tray's own text awaited. The proof is the drill and the WebKit step |
+| F34 | **CLOSED** | `tools/tmpguard.py` (one folder a session under `tempfile.gettempdir()`, so under the drill's `TMPDIR`), in both conftests. `drill.sh` does not set `DRISHTI_TMP_STRICT=1`: nice |
+| F35 to F38 | **OPEN** (nice) | unchanged; of F36 the javadoc of `Facade.java:102` still lists `"1.0"` |
+| F39 | **CLOSED for F4** | `I8_CARRY_IN.md` row 1. Add o, l, F29 and L1 there |
+
+**The check asked for, `VarInputsApiTest`:** the change (`26fca5943`) is two fixture lines, `VECTOR_ID` and `SCENARIO_PV_ID` of the matured
+copies; **no assertion moved**. It also corrects me: the two red tests of part 2 were not F21 but the fixture writing two records under one
+id, which F20's rule (one id, one record) now shows. F21 itself was real (the probe). **But no log shows the 10 of 10**: `targeted.log`
+(05:49) holds 8 of 10, `targeted2.log` (05:55) ran only `ModuleHostServerTest` and `PackagedVarGoldenTest`. The same for the end-to-end
+module: the last log, `e2e6.log` (06:21), ends **1 failed, 27 passed** (the inbox test: `data get` answered 502 "no such folder" after the
+table's only date was deleted), the head was committed a minute later, and the "1 passed after" has no log. Both are claims until the
+drill; I count them as watch items, not as red.
+
+## 2. The three judgements asked for
+
+**L1. The gap the Lake lane left. MUST-FIX in Lake 0.9.2; does not block the `v0.9.1` tag; must be written down first.**
+- What the code does: `DeltaTable.java:356` asks the log for the commits only when a date's files come from two runs
+  (`LoadOrder.needsCommits`), and `addedAt` (`:402-441`) gives a file whose commit the log no longer holds version 0. Then the order is the
+  run id's time, the load id, the file's modification time, the path.
+- When that is wrong: (a) two appends of a date whose commit order and run-id order disagree (F20's own condition), not rewritten since,
+  **after the log has dropped their commits** (Delta's default is 30 days, at a checkpoint): the answer changes on that day, with no
+  word and no maintenance run. And compaction does not settle it: a date of exactly two files is left as it is
+  (`DeltaUpkeep.java:120-122`, "already as few files"), so its files never get the older-copies mark; nor is a date whose files are over
+  `--target-file-mb` (`:96-103`). (b) two commits of one date under **one** run id (`--run-id` used again): the commits are never read;
+  the modification time decides, then the path, which is random.
+- Why not a blocker: it is narrower than F20 (it needs F20's condition and a month), it is no regression (0.9.0 and `main` ordered by
+  run id always), nothing can reach it before 0.9.2, and the tag commit may not move (the pin). Why not nice: it is the same class,
+  a number that changes with no word, and `LOADER.md:112-114` says "a run id is a name, never an order" without the exception.
+- Before the tag is announced: the limit in the `v0.9.1` release text (and the correction of the `v0.9.0` note) and a row in
+  `I8_CARRY_IN.md`. Fix in 0.9.2, first Lake item of i8: the order written where it survives the log (the mark set when a date gets its
+  second commit, or maintenance settling every date of two commits before the log may drop them: an add of the same path with a tag is
+  a legal Delta commit, no file rewritten), the reader **refusing to guess** (a read problem naming the date) when two unmarked files
+  share an id and neither commit is known, `needsCommits` no longer trusting equal run ids, and a kit case with the log cut.
+  Until then a site that appends keeps `lake.retention-hours` long.
+
+**L2. Retention parity. MUST-FIX before the drill (small), or parked by the owner by name. It is a Drishti fault, and Lake keeps two rules.**
+- `tools/lake/maintain.py:110,121-122` runs `LakeMaintain --keep-days` (the calendar rule, `LakeMaintain.java:278-292`: `--as-of` and
+  the N business days before it; one behaviour on Delta, Iceberg and files, kit case `maintain/keep-days-and-drop-guard`).
+  `tools/lake/maintain_iceberg.py:36,143-144` runs the older `IcebergMaintenance --keep-days`, which is
+  `guard.keepFromNewest(days, keep)` (`IcebergMaintenance.java:418-419`): the newest N dates the table holds.
+- So `keep-business-days: 250` leaves 251 dates on Delta and 250 on Iceberg, and after a week without loads they differ by more. A
+  date is deleted on one store that the other keeps. It is as on `main`, so no regression, but the owner's rule (11-14) is one
+  behaviour with a parity test, and here the new test **asserts the difference** (`tools/test_lake_tools_e2e.py:258`:
+  `2 if fmt == "delta" else 1`).
+- Fix: `maintain_iceberg.py` sends retention through `LakeMaintain --format iceberg` (Lake 0.9.1 has it; no Lake change, no new tag);
+  the test asks 2 on both; `test_maintain_iceberg.py:111,174` follow. Lake 0.9.2: `IcebergMaintenance`'s own keep-days leaves (one way
+  per job): carry-in row.
+
+**L3. Elements `v3.3.1` already tagged at `20661f0`: right**, it is the commit part 2 called golden and the tree Drishti vendors. One
+consequence, D2: the copy in Drishti must be that tree, byte for byte, and at the head it is not.
+
+**Engines:** `--engine auto|deltalake|java` (`tools/lake/demo.py:919`, `build.py`) is as the owner settled. `BENCHMARK.md` still names
+`--engine drishti` (F30).
+
+## 3. New findings
+
+### Blockers of the drill (each certain by reading)
+
+**D1. The head builds 2.9.11.i7a.** `.mvn/maven.config:1` is `-Drevision=2.9.11.i7a` (the integration log: "Building drishti-modules-it
+2.9.11.i7a") while `README.md:15` and `RELEASE_NOTES.md:16` say i7b. The plan's step 0 is "version bumped". The drill proves the jar it
+ships: the version first.
+
+**D2. One test is red at the head: the URL sweep edited the vendored Elements copy.** `3628e3744` changed
+`drishti-console/web/static/vendor/drishti-elements/3.3.1/README.md`; its SHA-384 no longer equals `drishti-elements.json` (checked: 599
+files, 1 mismatch, `README.md`), and `test_elements_vendored.py:44-50` (`test_nobody_edits_the_copy`) fails on exactly that. Restore the
+file from `41134d494`; the sweep leaves vendored trees alone. (Rachana's own sweep touched no vendored file.)
+
+**D3. `develop` cannot fast-forward to the head.** `origin/develop` holds `12cd36f08` (its own URL sweep) that the head lacks, and the
+merge conflicts in 10 files (`BENCHMARK.md`, `ELEMENTS_IN_DRISHTI.md`, `CLI_REFERENCE.md`, `DEVELOPER_GUIDE.md`, `EMBED_GUIDE.md`,
+`LIVE_RESULTS_GUIDE.md`, `NOTEBOOK_AND_PYTHON.md`, `PIVOT.md`, `VENDOR.md`, `ELEMENTS_SPLIT_RUNBOOK.md`; `IMPLEMENTATION_PLAN.md`
+deleted here, changed there). Released as it is, `main` would be a merge nobody drilled. Merge `origin/develop` into the head now (the
+head's side; then D2's file again), so that `develop` and `main` move to the drilled commit itself.
+
+**D4. The drill has never met the Lake wheel.** Nothing in `tools/drill.sh`, `i7b-drill.sh` or the readiness check knows `lib/wheels`.
+- `i7b-drill.sh` step 4 runs `pip install -r drishti-console/requirements.txt` before any wheel exists: `drishti-lake==0.9.1` is on no
+  index (`requirements.txt:19-20`), so `prepare` dies at "venv".
+- The Java lanes run in `git archive HEAD` copies (`drill.sh:441-449`) that get the exec jar and the modules, **not `lib/wheels`** (git
+  ignores it). There `DeltaAfterMaintenanceTest` skips (F24's own test, and a skip the pass criteria forbid), and every Java test that
+  starts a Python lake tool with the machine's `python3` (`PackagedServer.java:90`; `tools/lake/build.py:68` imports `lakewheel`) has no
+  `drishti_lake`: the packaged goldens of the java21 lane. The integration lane itself needed `LAKE_PYTHON` for `PackagedVarGoldenTest`
+  (`targeted2.log:1`).
+- Fix: `prepare` builds the wheel from the Lake **tag** clone into `<clone>/lib/wheels` (`uv build --wheel`), runs
+  `tools/lake/lakewheel.py` (exit 1 unless it is the pinned SHA: this is also the proof that the tag gives the pinned bytes), then the
+  venv; `copy_verify` copies `lib/wheels` beside the jar (one line, in the pre-drill commit, before the freeze); readiness checks it.
+
+**D5. The drill script and its plan are of 2026-11-21.** `i7b-drill.sh`: `RACHANA_TAG` v0.12.0 and `LAKE_TAG` v0.9.0 as defaults,
+`SRC=https://github.com/ajsinha`; `drill_readiness.py:37-38,144` the same; `I7B_DRILL_PLAN.md` says Elements 2.4.0. Readiness asks
+Playwright 1.64.x, `requirements-test.txt:18` says `>=1.45`, and a fresh venv installs what is newest (the G4 lane's has 1.65.2): the
+second readiness of `prepare` then dies, or the browsers and the snapshots are of a version nobody chose. Pin one version in the file
+and ask for that one. And `prepare` step 5 runs the upstream modules' tests (`verify -pl testing/drishti-modules-it -am`) and both tools
+lanes, which the drill then runs again: against the owner's rule of today. `prepare` = build all, the gate; then the smoke; then the
+lanes, once.
+
+### Must fix
+
+**D6. The documents the drill follows do not match the code** (the docs wave, before the drill, in the pre-drill commit):
+- `QUICKSTART_DEVELOPERS.md:100-103` installs the console's requirements in section 1.3; the wheel they need is built in section 2
+  (`:141-150`). The first command of a new developer fails. The wheel first.
+- `:86-90` and `:122-124`: `python3 clone_all.py` and `python3 build_all.py` with no argument exit 2 ("give --release <name>"). And
+  `clone_all.py` clones into the folder **above** the index repository: cloned into `~/IdeaProjects` as written, the repositories land
+  in `~/IdeaProjects/drishti`, not in the `~/IdeaProjects/drishti-platform/` of the picture (`:76-79`). **On this machine that is the
+  owner's checkout: nobody runs `clone_all.py` here without `--parent <scratch>`.**
+- `:127`, `:144`: `build_all.py` "skips what is already there", "builds the Elements bundles", builds the wheel. It does none
+  (`build_all.py`: one `mvnw clean install` a product, then **`mvnw clean verify` of all of Drishti**, the whole suite, not
+  `drishti.py build all`). Make the script do what the page says (index repository only) or the page say what the script does.
+- `drishti-stack/` is in the layout (QUICKSTART `:78`, IDE_GUIDE `:604,706`) and is no repository of the organisation.
+- `DEPLOYMENT_AND_QA_GUIDE.md:377`: "the release bundle carries" the wheel. `make_bundle.py` archives the tags; `lib/wheels` is ignored
+  by git: the bundle has no wheel. Carry it, or say build it.
+- F30's rows above.
+The commands of `tools/drishti.py` named in the three guides all exist (43 groups), the organisation URLs are right, the install order
+(tools, Rachana, Lake, Drishti; `java/mvnw` in each product) is right.
+
+**D7. After the tags, before the bundle (index repository):** `platform.yaml` and `COMPATIBILITY.md` to `lake: v0.9.1`,
+`elements: v3.3.1`; `build_all.py` as D6; then `make_bundle.py --release i7b` (it needs `v2.9.11.i_7b`, so after the release).
+
+### Nice
+
+**D8.** `drill.sh` could set `DRISHTI_TMP_STRICT=1` (the guard was built for it). **D9.** Three stale folders in
+`~/IdeaProjects/drishti-drill-copies` (readiness WARN): delete before the start. **D10.** `lib/lake-wheel.pin` says the ref "moves to
+the tag" once tagged: leave the commit for this release (the same bytes; a change after the drill is a change nobody drilled) and move it
+in i8.
+
+## 4. DRILL: NO-GO on `4abfa33f3`. GO on the commit that holds this list
+
+**One pre-drill commit on `wip/g4-rehearsal-rx`** (docs and small code; each verified by its own files, not a suite):
+1. D1: the version, `.mvn/maven.config`, and what `test_one_version.py` holds.
+2. D2: the vendored `README.md` back to the tag's bytes (the manifest check says 0 mismatches).
+3. D3: `origin/develop` merged in (`git merge-base --is-ancestor origin/develop HEAD` and the same for `origin/main` both true).
+4. D4: `copy_verify` copies `lib/wheels`.
+5. L2: Iceberg retention through `LakeMaintain` (or the owner's park by name, and the test says why it differs).
+6. D5: Playwright pinned to one version.
+7. D6: the documents. F29: the owner's word on the parked skips (run, or named in `tools/drill-known.txt`).
+8. `I8_CARRY_IN.md` (plan branch): L1, L2's Lake half, F28 o and l, F29.
+
+**Drill scripts (plan branch and `~/drishti-bench-scratch`, not the drilled commit):** tags `v1.0.0` and `v0.9.1`, the organisation URL,
+the wheel step and `lakewheel.py`, Lake's `tools/ci/check.py` once, `prepare` without the repeated lanes (D5), the readiness defaults and
+its Playwright and wheel checks; the plan's stale names; D9.
+
+**Then, in this order:** tag Rachana `v1.0.0` at `bfb6799b` and Lake `v0.9.1` at `2d22533` (with L1 in the release text); readiness
+must say READY but for the venv (today: 29 PASS, 1 WARN, 4 FAIL: the venv of a fresh clone, Playwright 1.63.0 against 1.64.x, and the
+two tags that do not exist yet; the machine itself is ready: 385 GB, 50 GB free memory, load 0.2, every port free, WebKit starts);
+fresh clone at the pre-drill commit; `prepare`; the smoke (VaR 167,372,692, ES 210,131,972); the lanes once; the WebKit step
+(`DRISHTI_BROWSER=webkit`, read by `browser_engine.py`; `test_page_walk_browser.py`, `test_layouts.py`, the four
+`test_snapshots_*_browser.py` exist). The freeze starts at the pre-drill commit. I need to read only that commit's diff to turn this
+into GO; nothing here asks for a second review of the rest.
+
+**What to watch in the drill, because no log holds it:** `VarInputsApiTest` (10), `tools/test_lake_tools_e2e.py` (18, the inbox test
+with its `sleep(3)`), `test_elements_vendored.py`, `DeltaAfterMaintenanceTest` (run, not skipped), the whole console suite and
+`drishti-server` (last run whole at `10753f4db`: 121 and 3 red, fixed since by reading only).
+
+## 5. State left behind
+
+Nothing running, nothing built. My five scratch clones are deleted. `/home/ashutosh/IdeaProjects/drishti`, the owner's stack, `~/.m2`,
+`main`, every tag and every repository but this plan branch were not written.
