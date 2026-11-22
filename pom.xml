@@ -176,8 +176,8 @@
   <dependencyManagement>
     <dependencies>
       <dependency><groupId>com.ash.tools</groupId><artifactId>tools-bom</artifactId><version>${drishti.tools.version}</version><type>pom</type><scope>import</scope></dependency>
-      <dependency><groupId>com.ash.engine</groupId><artifactId>engine-api</artifactId><version>${drishti.engine.version}</version><scope>provided</scope></dependency>
-      <dependency><groupId>com.ash.engine</groupId><artifactId>engine-host</artifactId><version>${drishti.engine.version}</version><scope>provided</scope></dependency>
+      <dependency><groupId>com.ash.engine</groupId><artifactId>engine-api</artifactId><version>${drishti.engine.version}</version></dependency>
+      <dependency><groupId>com.ash.engine</groupId><artifactId>engine-host</artifactId><version>${drishti.engine.version}</version></dependency>
       <!-- one Parquet version everywhere: Delta Kernel brings parquet-hadoop 1.16, Iceberg parquet-column 1.18; mixed, the page index fails -->
       <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-hadoop</artifactId><version>${parquet.version}</version></dependency>
       <dependency><groupId>org.apache.parquet</groupId><artifactId>parquet-column</artifactId><version>${parquet.version}</version></dependency>

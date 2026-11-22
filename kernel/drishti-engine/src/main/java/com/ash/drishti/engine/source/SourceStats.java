@@ -53,12 +53,12 @@ public final class SourceStats {
 
     private final Map<String, Stats> bySource = new ConcurrentHashMap<>();
 
-    private Stats of(String source) {
+    private Stats cells(String source) {
         return bySource.computeIfAbsent(source, s -> new Stats());
     }
 
     public void found(String source, long nanos) {
-        Stats s = of(source);
+        Stats s = cells(source);
         s.hits.increment();
         s.latency(nanos);
         s.recent.request(nanos, false, 1, 0);
@@ -66,7 +66,7 @@ public final class SourceStats {
     }
 
     public void notHeld(String source, long nanos) {
-        Stats s = of(source);
+        Stats s = cells(source);
         s.misses.increment();
         s.latency(nanos);
         s.recent.request(nanos, false, 0, 0);
@@ -74,7 +74,7 @@ public final class SourceStats {
     }
 
     public void failed(String source, long nanos, Throwable e) {
-        Stats s = of(source);
+        Stats s = cells(source);
         s.errors.increment();
         s.latency(nanos);
         s.recent.request(nanos, true, 0, 0);

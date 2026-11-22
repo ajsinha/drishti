@@ -75,7 +75,7 @@ class KafkaSuspendResumeTest {
             assertThat(plugin.appliedRecords()).as("every message exactly once: none lost, none read twice").isEqualTo(150);
             for (int i : new int[] {0, 49, 50, 119, 120, 149}) {
                 assertThat(plugin.fetch(EntityRef.of("tick", "T-" + i))).as("T-" + i).isPresent()
-                        .hasValueSatisfying(d -> assertThat(d.data().get("n").asInt()).isEqualTo(i));
+                        .hasValueSatisfying(d -> assertThat((int) d.data().get("n").asDouble()).isEqualTo(i));
             }
             assertThat(plugin.fetch(EntityRef.of("tick", "T-7")).orElseThrow().data().toString()).as("kept state served unchanged").isEqualTo(before);
         } finally {

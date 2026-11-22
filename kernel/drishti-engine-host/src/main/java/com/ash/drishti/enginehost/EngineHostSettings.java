@@ -45,7 +45,7 @@ public record EngineHostSettings(Path libPath, StartChecks.Trust trust, Path lic
         String kitMajor, Duration poll) {
 
     /** The platform library versions of this build (drishti-engine-host.properties, filled from the pins of the root pom). */
-    public static Provided provided() {
+    public static Provided builtProvided() {
         Properties p = new Properties();
         try (InputStream in = EngineHostSettings.class.getResourceAsStream("/drishti-engine-host.properties")) {
             if (in != null) {
@@ -72,7 +72,7 @@ public record EngineHostSettings(Path libPath, StartChecks.Trust trust, Path lic
         return new EngineHostSettings(anchored(home, value(settings, "drishti.engine-lib.path", "lib/engines")), t,
                 anchored(home, value(settings, "drishti.engine-lib.licence", configDir.resolve("licence.yaml").toString())),
                 anchored(home, value(settings, "drishti.engines.dir", configDir.resolve("engines").toString())),
-                dataDir.resolve("engines").resolve("work").toAbsolutePath().normalize(), provided(), "1",
+                dataDir.resolve("engines").resolve("work").toAbsolutePath().normalize(), builtProvided(), "1",
                 Duration.ofSeconds(Long.parseLong(value(settings, "drishti.engine-lib.poll-seconds", "10"))));
     }
 
