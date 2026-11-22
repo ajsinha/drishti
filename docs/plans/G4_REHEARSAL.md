@@ -493,3 +493,27 @@ Each failing test was run on Drishti `main` `9ce7c3170` (a scratch worktree) and
 VaR/ES goldens on the branch with the fixes: `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyEquivalenceTest`, `PackagedVarGoldenTest`
 pass. `VarShardClusterTest.anOwnerDownChangesNothingBothDownIsAClearErrorThenTheShardMovesAndAnswersAgain` fails identically on `main`
 (503 expected, 200 with `answeredHere: 2`): pre-existing, not G4.
+
+### Pass 3 triage: the full Java suite (`clean verify`, once, after the PNL fix), every failure classified against `main`
+
+`main` was run on the same failing classes (one build). With the fixes below re-run, these are the results:
+
+| Failure on the branch | `main` | Class | Now |
+|---|---|---|---|
+| `ReportApiTest`, `RegistryApiTest`, `DerivedKindTest`, `SimmApiTest`, `FrtbApiTest` (initializer: connector set `exposure-format-equality` not there) | pass | G4 (shims 4 named a set that does not exist) | **fixed**: set `finance-lake-off` (the finance lake connector off, what they had as a property) |
+| `LicenseHeaderTest` (the `bi/folders` fixtures) | pass | G4 (shims part 2's fixtures) | **fixed** (`tools/license_headers.py --fix`) |
+| `CachesWeighedInBytesTest` (caches of moved or removed classes still listed) | pass | G4 | **fixed** (`count-only-caches.txt`) |
+| `OneTablePerSystemTest`, `SourceModuleEndToEndTest` (`lake.home` not set) | pass | G4 | **fixed**: Lake's loader run on `DrishtiLake.runtime()` (also `SourceShapeParityTest`) |
+| `ReadyApiTest` (5, `LK-1002` as a 500) | pass | G4 | **fixed**: Lake's `LK-1001..1005` answer as Drishti's codes at the API edge |
+| `SutraNextEventsTest.badClicksAreRefused` (`RCH-5001` as a 500) | pass | G4 (P9) | **fixed**: a `RachanaException` answers as the `DRS-` code of the same number |
+| `MetricPanelTest` (`RCH-` codes) | pass | G4 | **fixed**, as `MapPanelTest` |
+| `ModuleHostServerTest` (3, unknown function `greeter_greet`) | pass | G4 | **fixed**: the test evaluates with the instance's compiler (`DrishtiRachana.compiler()`) |
+| `BankingModuleOnTest.theOldPathIsTheNewOneForThisRelease`, `VarExplainApiTest.theOldExplainPaths...` (404) | pass | G4 (shims S5 removed the API aliases) | **fixed**: the old-prefix case removed with its shim; the explain test asks the module's own deprecated paths |
+| `ConnectorLayersFixtureTest` (the "older lake form" case) | pass | G4 (shims part 3 removed that form) | **fixed**: the case removed with the form |
+| `AbandonedReadsTest` (28 reads, at most 20) | pass | timing under load (load 30-45) | passes on the re-run; not changed |
+| `SutraRegistryTest.anyFailureLoadingOneFileIsThatFilesProblem`, `PathologicalExpressionsTest$LiftedLimits.anOverflow...` | pass | G4 (Rachana): a 100,000-deep expression with the limits lifted no longer overflows on Rachana's compiler, so the tests' "overflow" never happens | **open**: the tests need an input that does fail on Rachana, or Rachana's stack guard (P15) to refuse it; Rachana's call |
+| `ViewModelSchemaTest` (every `PanelData` record belongs to a kind) | pass | G4 (Rachana's `PanelData` has records the schema does not name: Pivot, Candles, DataChart, Graph, Tree, FormPanel, Timeline, Grid, Scatter, Bullet, Treemap) | **open**: the schema of Rachana's ViewModel, the renderer lane |
+| `DrishtiProfileConformanceTest` (`rank(x, 'sideways')`) | pass | G4, known (Part 3: kept at language level 1.0 on purpose) | **open**, by decision |
+| `LiveVisualsTest` (`bi/samples/tables/bi/model:live-trading@1.model.yaml` missing) | pass | G4 (shims part 2's fixtures) | **open** |
+| `IcebergMovedConnectorFileTest` (health text: `cannot read sa-ccr log: File does not exist` instead of the moved-lake words) | pass | G4 (Lake's read problems word a moved Iceberg table differently) | **open** (Lake's reason words for a moved table) |
+| `BankingPacksTest` (183 vs 186), `ConsoleAnswersRecordTest` (recorded answers older than the code), `DomainPacksTest` (no source holds `dms-score/...`), `EditionTwoLensesServerTest`, `NetForwardTest.withAGoneBAndCSaySoClearly`, `VarShardClusterTest.anOwnerDown...` | **fail on `main` too** | pre-existing | not changed |
