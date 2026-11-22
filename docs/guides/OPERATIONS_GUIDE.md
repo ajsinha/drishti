@@ -2692,7 +2692,7 @@ Throughput, memory and the 2.3M-position sizing of the loader are measured in [B
 - **Partitions**: each date times each classifier value is a folder; keep classifiers to a few dozen values (`lake scan` shows the counts) and compact.
 - **The console's Lakes page** streams an upload to its temporary folder (room for the file) and runs the same builder; `lakes.jobs` (2) bounds the
   builds at once, so plan memory for two batches.
-- **Millions of documents**: the parallel lake loader (Java, the default) parses and writes on every core with
+- **Millions of documents**: the parallel lake loader (`--engine java`) parses and writes on every core with
   memory set by `memory.budget-mb` ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 
 **Loading a file from the browser**: Admin → Data loads (`/admin/loads`, what each pack expects and what landed) → **Load a file into a lake** opens the

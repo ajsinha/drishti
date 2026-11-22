@@ -1854,15 +1854,21 @@ python3 tools/drishti.py lake build --from data/testdata/market-risk/pnl-vector/
     --kind pnl-vector --lake data/iceberg --format iceberg
 ```
 
-### 7.6 The two ways: Java (the default) and Python
+### 7.6 The lake writers: `--engine`
 
-A Delta table is created and filled by **Drishti Lake's loader**, which has two forms on one configuration: the parallel **Java** loader
-(the default: readers, parsers and writers on every core, one commit per business date, memory bounded; section 7.13) and Lake's **Python**
-loader (`drishti_lake`), the one Python path, for a small input on a machine without Java. `--engine auto` (the default) uses Java when the server's exec jar
-is found and says which ran and why in the first line of the output; `--engine java` insists on Java. Both write the same
-table, and both obey the same rules and guards (the business date of a file, replace and append, the future-date, zone and drop guards, one
-archive rule): they are written once, in Lake's [LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md) and [PYTHON.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/PYTHON.md). The Delta protocol itself is
-Lake's ([DATA_LAKE_GUIDE.md section 14](DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
+`lake build` and `lake demo` take `--engine` with the choices `auto` (the default), `drishti`, `deltalake` and `java`; the first line of the
+output says which ran and why.
+
+| Value | What writes the table |
+|---|---|
+| `java` | the parallel lake loader, Drishti Lake's Java loader started from the server's exec jar: every stage multi-threaded, memory bounded, one commit per business date, Delta or Iceberg, from a folder or `s3://` (section 7.13) |
+| `drishti` | Drishti's Java writer in the exec jar (needs the jar) |
+| `deltalake` | the Python path (Drishti Lake's `drishti_lake` and the `deltalake` package), for a machine without the jar |
+| `auto` | `lake demo`: the parallel Java loader when the exec jar is found, else `drishti`, else `deltalake`. `lake build`: `drishti` when the jar is found, else `deltalake`; the parallel loader only with `--engine java` or `--java-above-mb N` (every JSON Lines input of at least N MB, mode `overwrite-dates`) |
+
+All of them write the same table and obey the same rules and guards (the business date of a file, replace and append, the future-date, zone and drop
+guards, one archive rule): they are written once, in Lake's [LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md) and [PYTHON.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/PYTHON.md). The Delta protocol itself
+is Lake's ([DATA_LAKE_GUIDE.md section 14](DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
 
 ### 7.7 Exit codes, the lock, the log and the summary
 
@@ -1958,7 +1964,7 @@ last run: ok (exit 0), summary lake/_drishti-lake/last-run.json
 With `--pack DIR` the builder takes from the pack's `pack.yaml` what it declares: the domain and the promoted columns of its Delta
 connector (`settings.domain`, `settings.layout.<kind>.columns`), and the key, date and flattened fields of its `ingest:` block
 (written by `pack make` and `pack new`; the trading pack has `ingest.trade.key: TRADE_ID`, so `--key` may be left out, and
-`ingest.trade.flatten` adds `NOTIONAL` and `INDEX_NAME` from the first leg, [7.6](#76-the-two-ways-java-the-default-and-python)). Options on the command line win.
+`ingest.trade.flatten` adds `NOTIONAL` and `INDEX_NAME` from the first leg, [7.6](#76-the-lake-writers---engine)). Options on the command line win.
 
 ```yaml
 # modules/banking/packs/trading/pack.yaml (the parts lake build reads; one Delta connector per source system)
@@ -2140,7 +2146,7 @@ verify, the Python one with uv).
 
 ### 7.13 The parallel lake loader
 
-The Java loader is the default; it is made for loads the Python path cannot carry (the bank's scenario PVs: 2.3 million positions of 510 scenarios, 20+ GB of JSON Lines), the
+The parallel loader (`--engine java`; the default writer of `lake demo`) is made for loads the Python path cannot carry (the bank's scenario PVs: 2.3 million positions of 510 scenarios, 20+ GB of JSON Lines), the
 **parallel lake loader** (module `lake-load`, in the server's exec jar) does the whole build in Java: readers, parsers and writers
 on every core, memory bounded by `memory.budget-mb` whatever the input's size (rows that do not fit are sorted and spilled to disk), Delta
 or Iceberg, from a folder or `s3://`, **one commit per business date**. It writes exactly the tables `lake build` writes (the same
@@ -2148,7 +2154,6 @@ documents byte for byte, columns and vectors; the connectors and the VaR loader 
 the 2.3M sizing: [PARALLEL_LOADER.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load). `tools/lake/javaload.py` is `lake build`'s side of it.
 
 The Python tools read a Delta table's rows through Drishti Lake's read API ([READ.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/READ.md)), whatever the table's features.
-([DATA_LAKE_GUIDE.md section 14](DATA_LAKE_GUIDE.md#14-delta-protocol-compliance)).
 
 **Through lake build** (the lock, the run log, the summary, the signal as always):
 
