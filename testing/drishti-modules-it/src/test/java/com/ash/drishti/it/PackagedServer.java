@@ -129,6 +129,11 @@ final class PackagedServer implements AutoCloseable {
 
     /** Starts the server over {@code lake} (a folder buildLake made) in {@code work}; returns when its readiness is UP and its VaR engine answers. */
     static PackagedServer start(Path work, Path lake, String today) throws IOException, InterruptedException {
+        return start(work, lake, today, Map.of());
+    }
+
+    /** As {@link #start(Path, Path, String)}, with the environment changed by {@code overrides} (an empty value removes the variable). */
+    static PackagedServer start(Path work, Path lake, String today, Map<String, String> overrides) throws IOException, InterruptedException {
         Files.createDirectories(work);
         Path config = Files.createDirectories(work.resolve("config"));
         try (Stream<Path> s = Files.list(REPO.resolve("config"))) {
@@ -171,6 +176,13 @@ final class PackagedServer implements AutoCloseable {
         env.put("DRISHTI_VAR_HOT_DIR", work.resolve("var-hot").toString());
         env.put("DRISHTI_VAR_OFFICIAL_ROOT", work.resolve("var-official").toString());
         env.put("DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT", work.resolve("ccr-official").toString());
+        overrides.forEach((k, v) -> {
+            if (v == null || v.isEmpty()) {
+                env.remove(k);
+            } else {
+                env.put(k, v);
+            }
+        });
         PackagedServer server = new PackagedServer(work, pb.start(), port);
         try {
             server.awaitReady(Duration.ofMinutes(10));
@@ -212,6 +224,22 @@ final class PackagedServer implements AutoCloseable {
         }
         return JSON.readTree(r.body());
     }
+
+    /** Any request: the status and the body as JSON (an empty object when the body is not JSON). */
+    Answer send(String method, String pathAndQuery) throws IOException, InterruptedException {
+        HttpResponse<String> r = http.send(HttpRequest.newBuilder(URI.create(base + pathAndQuery)).timeout(Duration.ofMinutes(5))
+                .method(method, HttpRequest.BodyPublishers.noBody()).build(), HttpResponse.BodyHandlers.ofString());
+        JsonNode body;
+        try {
+            body = JSON.readTree(r.body().isBlank() ? "{}" : r.body());
+        } catch (IOException e) {
+            body = JSON.createObjectNode();
+        }
+        return new Answer(r.statusCode(), body, r.body());
+    }
+
+    /** A status, the body as JSON and as text. */
+    record Answer(int status, JsonNode json, String text) {}
 
     @Override
     public void close() {
