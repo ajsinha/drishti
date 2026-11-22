@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/CLY-3000163"
     - "TRD CLY-3000163"
+  category: "Fixed income"
+  tags: ["trade", "fixed-income"]
+  use-when: "You have one corporate bond (its id, or a link from another screen) and want to read it in full: fixed-coupon bond of a corporate issuer."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One corporate bond record (kind trade, SOURCE_SYSTEM = CALYPSO, PRODUCT_TYPE = CORP_BOND); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "CALYPSO", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2024-12-06", "INPUT_DATE": "2024-12-06", "TRADE_ID": "CLY-3000163", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD CLY-3000163"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "corporate bond", "fixed income"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'CORP_BOND'", priority: 10 }
 title: { pill: "Fixed income · Corporate bond", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/1000007"
     - "TRD 1000007"
+  category: "Commodity"
+  tags: ["trade", "commodity", "record"]
+  use-when: "You have one cash payment (its id, or a link from another screen) and want to read it in full: an Endur cash deal: a payment or a fee in one currency, on one date."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One cash payment record (kind trade, SOURCE_SYSTEM = ENDUR, PRODUCT_TYPE = Cash); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "ENDUR", "TRADE_DATE": "2026-01-06", "TRADE_ID": "1000007", "TRADE_STATUS": "MATURED", "TRANSACTION_ID": "700000130", "QUANTITY": 666163.97, "BUY_SELL_CODE": "S", "PRODUCT_TYPE": "Cash"}
+  example: "TRD 1000007"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "cash payment", "commodity"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'ENDUR' && $.PRODUCT_TYPE == 'Cash'", priority: 10 }
 title: { pill: "Commodity · Cash payment", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

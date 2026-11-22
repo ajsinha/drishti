@@ -28,6 +28,16 @@ doc:
   expects: []
   examples:
     - "FILING <accession number>"
+  category: "US equities"
+  tags: ["filing", "us-equities", "table"]
+  use-when: "You have one filing (its id, or a link from another screen) and want to read it in full: one SEC filing: company, form, dates, 8-K items and links to the document and its EDGAR index."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One filing record (kind filing); the page reads ACCESSION, COMPANY, COMPANY_NAME, FORM, FORM_NAME, FILED, REPORT_DATE, ITEMS."
+    sample-row: {"ACCESSION": "0001104659-26-117587", "COMPANY": "ABT", "COMPANY_NAME": "Abbott Laboratories", "FORM": "8-K", "FORM_NAME": "Current report", "FILED": "2026-10-21", "REPORT_DATE": "2026-10-21", "PRIMARY_DOCUMENT": "tm2627971d1_8k.htm"}
+  example: "FILING <accession number>"
+  see-also: ["us-company"]
+  keywords: ["filing", "us equities"]
   since: "2.7.0"
 match: { kind: filing, priority: 10 }
 title: { pill: US equities · Filing, id: $.ACCESSION, with: "link($.COMPANY, 'us-company', $.COMPANY_NAME)" }

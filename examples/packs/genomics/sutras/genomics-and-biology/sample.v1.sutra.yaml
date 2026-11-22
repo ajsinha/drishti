@@ -17,6 +17,30 @@ rachana: 1.2
 sutra: sample
 version: 1
 description: "A sequenced specimen: tissue, diagnosis, variants called with allele fraction and depth, and QC."
+doc:
+  summary: "A sequenced specimen: tissue, diagnosis, variants called with allele fraction and depth, and QC."
+  description: >-
+    A sequenced specimen: tissue, diagnosis, variants called with allele fraction and depth, and QC. One page per sample, its
+    panels: variant calls; quality control; how the view was built; the entities it links to. The strip gives Tissue, Diagnosis,
+    Tumour purity, Variants called, Mean coverage and Collected. Linked entities: sequencing run (sequencing-run) and trial
+    (clinical-trial).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/sample/SMPL-104120"
+    - "SMPL SMPL-104120"
+  category: "Genomics and biology"
+  tags: ["sample", "genomics-and-biology", "table"]
+  use-when: "You have one sample (its id, or a link from another screen) and want to read it in full: A sequenced specimen: tissue, diagnosis, variants called with allele fraction and depth, and QC."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One sample record (kind sample); the page reads sampleId, tissue, diagnosis, purity, variantCount, meanCoverage, collected, calls, qc, sequencingRun."
+    sample-row: {"sampleId": "SMPL-104120", "tissue": "Skin", "diagnosis": "Melanoma", "purity": 0.78, "variantCount": 2, "meanCoverage": 816, "collected": "2026-07-30", "sequencingRun": "SEQ-2026-0903-A"}
+  example: "SMPL SMPL-104120"
+  see-also: ["sequencing-run"]
+  keywords: ["sample", "genomics and biology"]
+  since: "2.7.0"
 match: { kind: sample, priority: 10 }
 title: { pill: Genomics and biology · Sample, id: $.sampleId }
 strip:
@@ -38,12 +62,7 @@ panels:
       - { label: VAF, bind: "@.vaf", fmt: pct2, total: true }
       - { label: Depth, bind: "@.depth", fmt: amount0 }
       - { label: Filter, bind: "@.filter", tone: status }
-  - id: qc
-    kind: kv
-    title: Quality control
-    key: F3
-    area: right
-    rows: $.qc
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: field-list@1, with: { id: qc, title: Quality control, key: F3, area: right, rows: $.qc } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.sequencingRun, 'sequencing-run')", F8: impact, F9: raw }

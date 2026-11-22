@@ -28,6 +28,16 @@ doc:
   examples:
     - "/v/development-series/WDIS-IND-NY_GDP_MKTP_KD_ZG"
     - "WDIS WDIS-IND-NY_GDP_MKTP_KD_ZG"
+  category: "Public sector"
+  tags: ["development-series", "public-sector", "record"]
+  use-when: "You have one development indicator (its id, or a link from another screen) and want to read it in full: one World Bank indicator of one country: its history by year, the latest value, the change, the definition."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One development indicator record (kind development-series); the page reads SERIES_ID, NAME, INDICATOR, LATEST, UNIT, LATEST_YEAR, PREVIOUS, CHANGE, HISTORY, WDI_PROFILE, COUNTRY_NAME, INDICATOR_CODE."
+    sample-row: {"CHANGE": 0.0, "COUNTRY_NAME": "Canada", "INDICATOR": "Access to electricity (% of population)", "INDICATOR_CODE": "EG.ELC.ACCS.ZS", "ISO3": "CAN", "LATEST": 100.0, "LATEST_YEAR": "2024", "PREVIOUS": 100.0}
+  example: "WDIS WDIS-IND-NY_GDP_MKTP_KD_ZG"
+  see-also: ["development-profile"]
+  keywords: ["development series", "development indicator", "public sector"]
   since: "2.9.11"
 match: { kind: development-series, priority: 10 }
 title: { pill: Public sector · Development indicator, id: $.SERIES_ID, with: $.NAME }

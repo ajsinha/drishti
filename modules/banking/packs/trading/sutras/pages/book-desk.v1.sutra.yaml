@@ -31,6 +31,15 @@ doc:
   expects: []
   examples:
     - "/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk"
+  category: "Book desk"
+  tags: ["portfolio-trades", "book-desk", "record"]
+  use-when: "You have one portfolio trades (its id, or a link from another screen) and want to read it in full: A book's trades; a click opens a trade's cash flows under its row, its counterparty and credit limit beside."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One portfolio trades record (kind portfolio-trades); the page reads PORTFOLIO, TRADE_COUNT, NOTIONAL, PRODUCT_TYPES, LAST_MATURITY, TRADES."
+  example: "/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk"
+  see-also: ["book"]
+  keywords: ["portfolio trades", "book desk"]
   since: "2.7.0"
 match: { kind: portfolio-trades, priority: 1 }
 title: { pill: "Book desk", id: $.PORTFOLIO, with: "link($.PORTFOLIO, 'book')" }

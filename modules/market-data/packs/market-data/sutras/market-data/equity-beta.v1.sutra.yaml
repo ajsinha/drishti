@@ -33,6 +33,14 @@ doc:
   examples:
     - "/v/equity-beta/EQ-NVTK"
     - "EQB EQ-NVTK"
+  category: "Market data"
+  tags: ["equity-beta", "market-data", "record"]
+  use-when: "You have one equity beta (computed) (its id, or a link from another screen) and want to read it in full: an equity's beta against its index, computed from both price histories when the page opens."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One equity beta (computed) record (kind equity-beta); the page reads EQUITY, BETA, INDEX, CORRELATION, R_SQUARED, AVAILABLE, ALPHA, VOLATILITY, INDEX_VOLATILITY, WINDOW, FROM, TO."
+  example: "EQB EQ-NVTK"
+  keywords: ["equity beta", "equity beta (computed)", "market data"]
   since: "2.9.2"
 match: { kind: equity-beta, priority: 10 }
 title: { pill: Market data · Equity beta (computed), id: $.EQUITY }

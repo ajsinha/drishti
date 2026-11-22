@@ -32,6 +32,16 @@ doc:
   examples:
     - "/v/region-economy/REGE-AU-NSW"
     - "REGE REGE-AU-NSW"
+  category: "Economics"
+  tags: ["region-economy", "economics"]
+  use-when: "You have one region economy (its id, or a link from another screen) and want to read it in full: A state or territory (ISO 3166-2): its population, GDP and GDP per head, an illustrative sample."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One region economy record (kind region-economy); the page reads REGION_ID, NAME, REGION_CODE, COUNTRY_NAME, POPULATION_M, GDP_USD_BN, GDP_PER_CAPITA, FACTS, ECONOMY."
+    sample-row: {"REGION_ID": "REGE-AU-ACT", "NAME": "Australian Capital Territory", "REGION_CODE": "AU-ACT", "ISO3": "AUS", "COUNTRY_NAME": "Australia", "YEAR": "2023", "POPULATION_M": 0.46, "POPULATION": 460000}
+  example: "REGE REGE-AU-NSW"
+  see-also: ["economy"]
+  keywords: ["region economy", "economics"]
   since: "2.7.0"
 match: { kind: region-economy, priority: 10 }
 title: { pill: Economics · Region economy, id: $.REGION_ID }

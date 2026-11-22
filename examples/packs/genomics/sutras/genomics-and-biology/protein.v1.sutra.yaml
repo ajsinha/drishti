@@ -17,6 +17,29 @@ rachana: 1.2
 sutra: protein
 version: 1
 description: "A protein (UniProt): length, mass, domains and where it acts."
+doc:
+  summary: "A protein (UniProt): length, mass, domains and where it acts."
+  description: >-
+    A protein (UniProt): length, mass, domains and where it acts. One page per protein, its panels: domains and regions;
+    function; how the view was built; the entities it links to. The strip gives Protein, Accession, Length (aa), Mass (kDa) and
+    Location. Linked entities: gene (gene).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/protein/PROT-P00533"
+    - "PROT PROT-P00533"
+  category: "Genomics and biology"
+  tags: ["protein", "genomics-and-biology", "table"]
+  use-when: "You have one protein (its id, or a link from another screen) and want to read it in full: A protein (UniProt): length, mass, domains and where it acts."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One protein record (kind protein); the page reads proteinId, name, accession, length, massKda, subcellular, domains, function, gene."
+    sample-row: {"proteinId": "PROT-P00533", "name": "Epidermal growth factor receptor", "accession": "P00533", "length": 1210, "massKda": 133.1, "subcellular": "Cell membrane", "gene": "GENE-EGFR"}
+  example: "PROT PROT-P00533"
+  see-also: ["gene"]
+  keywords: ["protein", "genomics and biology"]
+  since: "2.7.0"
 match: { kind: protein, priority: 10 }
 title: { pill: Genomics and biology · Protein, id: $.proteinId }
 strip:
@@ -35,11 +58,7 @@ panels:
       - { label: Region, bind: "@.name" }
       - { label: Start, bind: "@.start", fmt: amount0 }
       - { label: End, bind: "@.end", fmt: amount0 }
-  - id: function
-    kind: kv
-    title: Function
-    area: right
-    rows: $.function
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: field-list@1, with: { id: function, title: Function, area: right, rows: $.function } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.gene, 'gene')", F8: impact, F9: raw }

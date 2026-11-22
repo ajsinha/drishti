@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/release-source/PRESS-FED"
     - "PRESS PRESS-FED"
+  category: "Public sector"
+  tags: ["release-source", "public-sector", "record", "table"]
+  use-when: "You have one official press releases (its id, or a link from another screen) and want to read it in full: A publisher's latest press releases, newest first, each a link to the original; the count by category; its terms of reuse."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One official press releases record (kind release-source); the page reads SOURCE_ID, NAME, PUBLISHER_TYPE, COUNTRY, RELEASES, LAST_PUBLISHED, LAST_PULL, INTERNAL_ONLY, WHY_INTERNAL, LATEST, BY_CATEGORY, LICENCE."
+    sample-row: {"COUNTRY": "CAN", "LAST_PUBLISHED": "2026-11-05T16:00:19Z", "LAST_PULL": "ok", "NAME": "Bank of Canada", "PUBLISHER_TYPE": "central bank", "RELEASES": 5, "SOURCE_ID": "PRESS-BOC", "TERMS_URL": "https://www.bankofcanada.ca/terms/"}
+  example: "PRESS PRESS-FED"
+  see-also: ["press-release"]
+  keywords: ["release source", "official press releases", "public sector"]
   since: "2.9.11"
 match: { kind: release-source, priority: 10 }
 title: { pill: Public sector · Official press releases, id: $.SOURCE_ID, with: $.NAME }

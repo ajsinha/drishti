@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/inflation-index/INF-HICPX"
     - "INF INF-HICPX"
+  category: "Market data"
+  tags: ["inflation-index", "market-data", "schedule"]
+  use-when: "You have one inflation index (its id, or a link from another screen) and want to read it in full: published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…)."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One inflation index record (kind inflation-index); the page reads INDEX_ID, NAME, LATEST, YOY, LAG, FIXINGS, INFLATION_CURVE."
+    sample-row: {"INDEX_ID": "INF-HICPX", "NAME": "Euro HICP ex-tobacco", "LATEST": 128.4, "YOY": 0.021, "LAG": "3 months", "CURRENCY": "EUR", "INFLATION_CURVE": "INFC-HICPX"}
+  example: "INF INF-HICPX"
+  see-also: ["inflation-curve"]
+  keywords: ["inflation index", "market data"]
   since: "2.7.0"
 match: { kind: inflation-index, priority: 10 }
 title: { pill: Market data · Inflation index, id: $.INDEX_ID }

@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/inflation-curve/INFC-HICPX"
     - "INFC INFC-HICPX"
+  category: "Market data"
+  tags: ["inflation-curve", "market-data"]
+  use-when: "You have one inflation curve (its id, or a link from another screen) and want to read it in full: zero-coupon breakevens by tenor, with monthly seasonality."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One inflation curve record (kind inflation-curve); the page reads CURVE_ID, INDEX, BE_5Y, BE_10Y, SEASONALITY, INFLATION_INDEX."
+    sample-row: {"CURVE_ID": "INFC-HICPX", "INDEX": "INF-HICPX", "BE_5Y": 0.021588, "BE_10Y": 0.022497, "INFLATION_INDEX": "INF-HICPX"}
+  example: "INFC INFC-HICPX"
+  see-also: ["inflation-index"]
+  keywords: ["inflation curve", "market data"]
   since: "2.7.0"
 match: { kind: inflation-curve, priority: 10 }
 title: { pill: Market data · Inflation curve, id: $.CURVE_ID }

@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/office-holder/OFFC-ABW-COS"
     - "OFFC OFFC-ABW-COS"
+  category: "Politics and society"
+  tags: ["office-holder", "politics-and-society"]
+  use-when: "You have one office holder (its id, or a link from another screen) and want to read it in full: the chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is…."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One office holder record (kind office-holder); the page reads OFFICE_ID, COUNTRY_NAME, ROLE, HOLDER, SINCE, GOVERNMENT_TYPE, MANDATE, JURISDICTION."
+    sample-row: {"OFFICE_ID": "OFFC-ABW-COS", "COUNTRY_NAME": "Aruba", "ROLE": "Chief of state", "SINCE": "30 April 2013", "ELECTION_HELD": "6 December 2024", "NEXT_ELECTION": "by December 2028", "JURISDICTION": "JUR-ABW"}
+  example: "OFFC OFFC-ABW-COS"
+  see-also: ["jurisdiction"]
+  keywords: ["office holder", "politics and society"]
   since: "2.7.0"
 match: { kind: office-holder, priority: 10 }
 title: { pill: Politics and society · Office holder, id: $.OFFICE_ID }

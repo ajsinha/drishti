@@ -32,6 +32,16 @@ doc:
   examples:
     - "/v/fiscal-position/FISC-USA"
     - "FISC FISC-USA"
+  category: "Economics"
+  tags: ["fiscal-position", "economics"]
+  use-when: "You have one fiscal position (its id, or a link from another screen) and want to read it in full: an economy's public finances: debt, net lending, revenue, expense and military spending as shares of GDP."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One fiscal position record (kind fiscal-position); the page reads FISCAL_ID, ECONOMY_NAME, DEBT, BALANCE, REVENUE, SPENDING, MILITARY, RATIOS, DEBT_PATH, BALANCE_PATH, ECONOMY."
+    sample-row: {"FISCAL_ID": "FISC-ABW", "ECONOMY_NAME": "Aruba", "YEAR": "2025", "DEBT": 63.6, "BALANCE": 1.9, "ECONOMY": "ECON-ABW"}
+  example: "FISC FISC-USA"
+  see-also: ["economy"]
+  keywords: ["fiscal position", "economics"]
   since: "2.7.0"
 match: { kind: fiscal-position, priority: 10 }
 title: { pill: Economics · Fiscal position, id: $.FISCAL_ID }

@@ -32,6 +32,15 @@ doc:
   expects: []
   examples:
     - "CTRD"
+  category: "Counterparty trades"
+  tags: ["counterparty-trades", "chart", "schedule"]
+  use-when: "You have one counterparty trades (its id, or a link from another screen) and want to read it in full: every trade with a counterparty, from every source system: trades, payments, notional and maturities."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One counterparty trades record (kind counterparty-trades); the page reads COUNTERPARTY, TRADE_COUNT, NOTIONAL, SOURCE_SYSTEMS, PRODUCT_TYPES, CURRENCIES, LAST_MATURITY, TRADES."
+  example: "CTRD"
+  see-also: ["counterparty", "trade"]
+  keywords: ["counterparty trades"]
   since: "2.7.0"
 match: { kind: counterparty-trades, priority: 10 }
 title: { pill: "Counterparty trades", id: $.COUNTERPARTY, with: "link($.COUNTERPARTY, 'counterparty')" }

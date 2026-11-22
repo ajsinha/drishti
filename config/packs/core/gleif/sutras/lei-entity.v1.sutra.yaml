@@ -35,6 +35,16 @@ doc:
   examples:
     - "/v/lei-entity/8I5DZWZKVSZI1NUHU748"
     - "LEI HWUPKR0MPOU8FGXBT394"
+  category: "GLEIF"
+  tags: ["lei-entity", "gleif", "record", "status", "table"]
+  use-when: "You have one legal entity (its id, or a link from another screen) and want to read it in full: A legal entity's LEI record: facts, renewal (late flagged), its parents chain and its children (a click opens one beside)."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One legal entity record (kind lei-entity); the page reads LEI, NAME, LEI_COUNTRY, COUNTRY_NAME, LEGAL_FORM, ENTITY_STATUS, REGISTRATION_STATUS, RENEWAL_LATE, NEXT_RENEWAL, RENEWAL, CHILD_COUNT, LEI_GROUP."
+    sample-row: {"LEI": "HWUPKR0MPOU8FGXBT394", "NAME": "Apple Inc.", "LEGAL_FORM": "For-Profit Corporation General Stock", "JURISDICTION": "US-CA", "LEI_COUNTRY": "US", "COUNTRY_NAME": "United States of America (the)", "LEGAL_CITY": "Glendale", "REGISTERED_AS": "806592"}
+  example: "LEI HWUPKR0MPOU8FGXBT394"
+  see-also: ["lei-group", "lei-country", "us-company"]
+  keywords: ["lei entity", "legal entity", "gleif"]
   since: "2.7.0"
 match: { kind: lei-entity, priority: 10 }
 title: { pill: GLEIF · Legal entity, id: $.LEI, with: $.NAME }

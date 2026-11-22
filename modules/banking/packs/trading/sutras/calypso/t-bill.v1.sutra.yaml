@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/CLY-3000235"
     - "TRD CLY-3000235"
+  category: "Money market"
+  tags: ["trade", "money-market"]
+  use-when: "You have one treasury bill (its id, or a link from another screen) and want to read it in full: short-term discount sovereign paper."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One treasury bill record (kind trade, SOURCE_SYSTEM = CALYPSO, PRODUCT_TYPE = T_BILL); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "CALYPSO", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2026-08-12", "INPUT_DATE": "2026-08-12", "TRADE_ID": "CLY-3000235", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD CLY-3000235"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "treasury bill", "money market"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'T_BILL'", priority: 10 }
 title: { pill: "Money market · Treasury bill", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

@@ -29,6 +29,16 @@ doc:
   examples:
   - /v/cnv-segment/CNV-00001
   - CNV CNV-00001
+  category: "Genomics"
+  tags: ["cnv-segment", "genomics", "record"]
+  use-when: "You have one copy-number segment (its id, or a link from another screen) and want to read it in full: one copy-number segment, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One copy-number segment record (kind cnv-segment); the page reads SEGMENT_ID, SAMPLE_ID, CHROM, COPY_NUMBER, CALL, START, END, GENE."
+    sample-row: {"SEGMENT_ID": "CNV-00001", "SAMPLE_ID": "S0002", "CHROM": "14", "START": 44226374, "END": 79520595, "COPY_NUMBER": 1, "CALL": "loss"}
+  example: "CNV CNV-00001"
+  see-also: ["study-sample", "study-gene"]
+  keywords: ["cnv segment", "copy-number segment", "genomics"]
   since: 2.9.11
 match:
   kind: cnv-segment

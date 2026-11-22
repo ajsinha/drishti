@@ -17,6 +17,29 @@ rachana: 1.2
 sutra: gene
 version: 1
 description: "A human gene: location on GRCh38, transcripts, expression by tissue and its known variants."
+doc:
+  summary: "A human gene: location on GRCh38, transcripts, expression by tissue and its known variants."
+  description: >-
+    A human gene: location on GRCh38, transcripts, expression by tissue and its known variants. One page per gene, its panels:
+    expression by tissue (TPM); known variants; identifiers; how the view was built; the entities it links to. The strip gives
+    Symbol, Name, Location, Length (bp), Strand and Transcripts. Linked entities: protein (protein) and pathway (pathway).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/gene/GENE-APOE"
+    - "GENE GENE-APOE"
+  category: "Genomics and biology"
+  tags: ["gene", "genomics-and-biology", "table"]
+  use-when: "You have one gene (its id, or a link from another screen) and want to read it in full: A human gene: location on GRCh38, transcripts, expression by tissue and its known variants."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One gene record (kind gene); the page reads geneId, symbol, name, location, length, strand, transcripts, expression, variants, identifiers, protein."
+    sample-row: {"geneId": "GENE-APOE", "symbol": "APOE", "name": "apolipoprotein E", "location": "chr19:44,905,796-44,909,393", "chromosome": "19", "start": 44905796, "end": 44909393, "length": 3598}
+  example: "GENE GENE-APOE"
+  see-also: ["protein"]
+  keywords: ["gene", "genomics and biology"]
+  since: "2.7.0"
 match: { kind: gene, priority: 10 }
 title: { pill: Genomics and biology · Gene, id: $.geneId }
 strip:
@@ -27,14 +50,7 @@ strip:
   - { label: Strand, bind: $.strand }
   - { label: Transcripts, bind: $.transcripts, fmt: amount0 }
 panels:
-  - id: expression
-    kind: hbar
-    title: Expression by tissue (TPM)
-    key: F2
-    rows: $.expression
-    label: tissue
-    value: tpm
-    fmt: price2
+  - { use: ranked-bars@1, with: { id: expression, title: Expression by tissue (TPM), key: F2, rows: $.expression, label: tissue, value: tpm, fmt: price2 } }
   - id: variants
     kind: table
     title: Known variants
@@ -44,11 +60,7 @@ panels:
       - { label: Variant, bind: "@.id" }
       - { label: Protein change, bind: "@.protein" }
       - { label: Significance, bind: "@.significance" }
-  - id: identifiers
-    kind: kv
-    title: Identifiers
-    area: right
-    rows: $.identifiers
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: field-list@1, with: { id: identifiers, title: Identifiers, area: right, rows: $.identifiers } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.protein, 'protein')", F8: impact, F9: raw }

@@ -29,6 +29,16 @@ doc:
   expects: []
   examples:
     - "LEIR LEIREL-0292001381F1R1IB5B85-DIRECT"
+  category: "GLEIF"
+  tags: ["lei-relationship", "gleif", "record", "status", "table"]
+  use-when: "You have one relationship (its id, or a link from another screen) and want to read it in full: A child and its direct or ultimate accounting consolidation parent: status, periods, accounting standard, registration."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One relationship record (kind lei-relationship); the page reads RELATIONSHIP_ID, LEVEL, RELATIONSHIP_STATUS, START, ACCOUNTING_STANDARD, REGISTRATION_STATUS, CHILD_ENTITY, PARENT_ENTITY, END, LEI_GROUP, PERIODS, INITIAL_REGISTRATION."
+    sample-row: {"RELATIONSHIP_ID": "LEIREL-010PWNH4K3BLIC3I7R03-DIRECT", "LEVEL": "Direct", "CHILD_ENTITY": "010PWNH4K3BLIC3I7R03", "PARENT_ENTITY": "549300COKYB5EGSU1838", "RELATIONSHIP_STATUS": "ACTIVE", "START": "2017-12-06", "REGISTRATION_STATUS": "LAPSED", "INITIAL_REGISTRATION": "2023-08-08"}
+  example: "LEIR LEIREL-0292001381F1R1IB5B85-DIRECT"
+  see-also: ["lei-entity", "lei-group"]
+  keywords: ["lei relationship", "relationship", "gleif"]
   since: "2.7.0"
 match: { kind: lei-relationship, priority: 10 }
 title: { pill: GLEIF · Relationship, id: $.RELATIONSHIP_ID, with: "$.LEVEL + ' parent'" }

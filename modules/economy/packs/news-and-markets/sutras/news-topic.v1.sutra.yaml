@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/news-topic/TOPIC-FED"
     - "TOPIC TOPIC-ECB"
+  category: "News"
+  tags: ["news-topic", "news", "chart", "table"]
+  use-when: "You have one topic (its id, or a link from another screen) and want to read it in full: A news topic: its headlines newest first, a count by source, how they were chosen and everything the feed returned."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One topic record (kind news-topic); the page reads TOPIC_ID, NAME, CATEGORY, ALIAS_TEXT, EDITION, NEWS_ID, ITEMS, BY_SOURCE, PIPELINE, NEWS_ALL_ID."
+    sample-row: {"TOPIC_ID": "TOPIC-FED", "NAME": "Federal Reserve", "CATEGORY": "Central bank", "ALIAS_TEXT": "Fed, FOMC, Powell", "EDITION": "default", "NEWS_ID": "NEWS-Federal_Reserve", "NEWS_ALL_ID": "NEWS-Federal_Reserve~all"}
+  example: "TOPIC TOPIC-ECB"
+  see-also: ["news"]
+  keywords: ["news topic", "topic", "news"]
   since: "2.7.0"
 match: { kind: news-topic, priority: 10 }
 title: { pill: "News · Topic", id: $.TOPIC_ID }

@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/MX-20000025"
     - "TRD MX-20000025"
+  category: "Rates"
+  tags: ["trade", "rates"]
+  use-when: "You have one cross-currency swap (MtM resetting) (its id, or a link from another screen) and want to read it in full: notional on one leg resets to the prevailing FX rate each period."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One cross-currency swap (MtM resetting) record (kind trade, SOURCE_SYSTEM = MUREX, PRODUCT_TYPE = XCCY_SWAP_MTM); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2026-07-13", "INPUT_DATE": "2026-07-13", "TRADE_ID": "MX-20000025", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD MX-20000025"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "cross-currency swap (mtm resetting)", "rates"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'XCCY_SWAP_MTM'", priority: 10 }
 title: { pill: "Rates · Cross-currency swap (MtM resetting)", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

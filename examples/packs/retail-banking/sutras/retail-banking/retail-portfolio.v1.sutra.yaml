@@ -17,6 +17,29 @@ rachana: 1.2
 sutra: retail-portfolio
 version: 1
 description: "A retail portfolio segment: exposure and expected credit loss by IFRS 9 stage, and delinquency."
+doc:
+  summary: "A retail portfolio segment: exposure and expected credit loss by IFRS 9 stage, and delinquency."
+  description: >-
+    A retail portfolio segment: exposure and expected credit loss by IFRS 9 stage, and delinquency. One page per retail
+    portfolio (IFRS 9), its panels: by IFRS 9 stage; 30+ days past due rate; how the view was built; the entities it links to.
+    The strip gives Portfolio, Exposure, ECL, Coverage and 30+ DPD rate. Linked entities: legal entity (legal-entity).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/retail-portfolio/RPF-UK-MORT"
+    - "RPF RPF-UK-MORT"
+  category: "Retail banking"
+  tags: ["retail-portfolio", "retail-banking", "table"]
+  use-when: "You have one retail portfolio (IFRS 9) (its id, or a link from another screen) and want to read it in full: A retail portfolio segment: exposure and expected credit loss by IFRS 9 stage, and delinquency."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One retail portfolio (IFRS 9) record (kind retail-portfolio); the page reads portfolioId, name, exposure, ecl, coverage, dpd30, stages, delinquency, legalEntity."
+    sample-row: {"portfolioId": "RPF-UK-MORT", "name": "UK residential mortgages", "exposure": 33435400000.0, "ecl": 163229000.0, "coverage": 0.0049, "dpd30": 0.0037, "legalEntity": "LE-LDN"}
+  example: "RPF RPF-UK-MORT"
+  see-also: ["legal-entity"]
+  keywords: ["retail portfolio", "retail portfolio (ifrs 9)", "retail banking"]
+  since: "2.7.0"
 match: { kind: retail-portfolio, priority: 10 }
 title: { pill: Retail banking · Retail portfolio (IFRS 9), id: $.portfolioId }
 strip:
@@ -37,14 +60,7 @@ panels:
       - { label: PD (12m), bind: "@.pd", fmt: pct2 }
       - { label: LGD, bind: "@.lgd", fmt: pct0 }
       - { label: ECL, bind: "@.ecl", fmt: compact, total: true }
-  - id: delinquency
-    kind: line
-    title: "30+ days past due rate"
-    area: right
-    rows: $.delinquency
-    x: month
-    y: rate
-    fmt: pct2
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: series-line@1, with: { id: delinquency, title: "30+ days past due rate", area: right, rows: $.delinquency, x: month, y: rate, fmt: pct2 } }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.legalEntity, 'legal-entity')", F8: impact, F9: raw }

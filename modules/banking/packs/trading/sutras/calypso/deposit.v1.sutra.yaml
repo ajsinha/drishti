@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/CLY-3000253"
     - "TRD CLY-3000253"
+  category: "Money market"
+  tags: ["trade", "money-market"]
+  use-when: "You have one term deposit / placement (its id, or a link from another screen) and want to read it in full: interbank deposit or placement."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One term deposit / placement record (kind trade, SOURCE_SYSTEM = CALYPSO, PRODUCT_TYPE = DEPOSIT); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "CALYPSO", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2026-07-31", "INPUT_DATE": "2026-07-31", "TRADE_ID": "CLY-3000253", "TRADE_STATUS": "AMENDED", "TRADE_ACTION": "AMEND", "TRADE_VERSION": "2"}
+  example: "TRD CLY-3000253"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "term deposit / placement", "money market"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'DEPOSIT'", priority: 10 }
 title: { pill: "Money market · Term deposit / placement", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

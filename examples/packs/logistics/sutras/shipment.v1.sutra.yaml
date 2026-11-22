@@ -16,6 +16,26 @@ rachana: 1.2
 sutra: shipment
 version: 1
 description: An ocean shipment in transit, with its route, milestones and the reefer container's temperature.
+doc:
+  summary: "An ocean shipment in transit, with its route, milestones and the reefer container's temperature."
+  description: >-
+    An ocean shipment in transit, with its route, milestones and the reefer container's temperature. A tutorial screen of the example pack: one page per shipment, its strip, panels and linked entities as the Sutra lists them.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/shipment/SHP-10042"
+  category: "Shipment"
+  tags: ["shipment", "chart", "record", "schedule", "table"]
+  use-when: "You have one ocean shipment (its id, or a link from another screen) and want to read it in full: an ocean shipment in transit, with its route, milestones and the reefer container's temperature."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One ocean shipment record (kind shipment, status = In transit); the page reads shipmentId, customer, status, origin, destination, eta, etaDelayHours, weightKg, currency, declaredValue, incoterm, route."
+    sample-row: {"shipmentId": "SHP-10042", "status": "In transit", "origin": "PORT-SGSIN", "destination": "PORT-NLRTM", "vessel": "VSL-9811000", "container": "CTR-MSKU1234567", "departed": "2026-09-12", "eta": "2026-10-09"}
+  example: "/v/shipment/SHP-10042"
+  see-also: ["vessel", "container", "port"]
+  keywords: ["shipment", "ocean"]
+  since: "2.7.0"
 match: { kind: shipment, where: "$.status == 'In transit'", priority: 10 }
 title: { pill: "Shipment · ocean", id: $.shipmentId, with: $.customer.name }
 strip:

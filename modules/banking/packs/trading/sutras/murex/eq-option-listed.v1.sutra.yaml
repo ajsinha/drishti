@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/MX-20000181"
     - "TRD MX-20000181"
+  category: "Equity"
+  tags: ["trade", "equity"]
+  use-when: "You have one listed equity option (its id, or a link from another screen) and want to read it in full: exchange-traded option on a stock."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One listed equity option record (kind trade, SOURCE_SYSTEM = MUREX, PRODUCT_TYPE = EQ_OPTION_LISTED); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2025-11-21", "INPUT_DATE": "2025-11-21", "TRADE_ID": "MX-20000181", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD MX-20000181"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "listed equity option", "equity"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'EQ_OPTION_LISTED'", priority: 10 }
 title: { pill: "Equity · Listed equity option", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

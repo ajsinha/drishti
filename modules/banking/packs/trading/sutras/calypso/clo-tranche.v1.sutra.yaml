@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/CLY-3000229"
     - "TRD CLY-3000229"
+  category: "Fixed income"
+  tags: ["trade", "fixed-income"]
+  use-when: "You have one CLO tranche (its id, or a link from another screen) and want to read it in full: tranche of a collateralised loan obligation."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One CLO tranche record (kind trade, SOURCE_SYSTEM = CALYPSO, PRODUCT_TYPE = CLO_TRANCHE); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "CALYPSO", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2024-07-12", "INPUT_DATE": "2024-07-12", "TRADE_ID": "CLY-3000229", "TRADE_STATUS": "AMENDED", "TRADE_ACTION": "AMEND", "TRADE_VERSION": "2"}
+  example: "TRD CLY-3000229"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "clo tranche", "fixed income"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'CLO_TRANCHE'", priority: 10 }
 title: { pill: "Fixed income · CLO tranche", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

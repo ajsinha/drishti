@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/credit-curve/CDS-BUND"
     - "CDS CDS-BUND"
+  category: "Market data"
+  tags: ["credit-curve", "market-data", "table"]
+  use-when: "You have one credit curve (its id, or a link from another screen) and want to read it in full: CDS par spreads by tenor, recovery and implied default probabilities."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One credit curve record (kind credit-curve); the page reads CURVE_ID, ISSUER_NAME, SPREAD_5Y, RECOVERY, SENIORITY, DOC_CLAUSE, PD_1Y, POINTS, ISSUER."
+    sample-row: {"CURVE_ID": "CDS-BUND", "ISSUER_NAME": "Federal Republic of Germany", "SPREAD_5Y": 9, "RECOVERY": 0.25, "SENIORITY": "Senior unsecured", "DOC_CLAUSE": "MM14", "PD_1Y": 0.000666, "ISSUER": "ISS-BUND"}
+  example: "CDS CDS-BUND"
+  see-also: ["issuer"]
+  keywords: ["credit curve", "market data"]
   since: "2.7.0"
 match: { kind: credit-curve, priority: 10 }
 title: { pill: Market data · Credit curve, id: $.CURVE_ID }

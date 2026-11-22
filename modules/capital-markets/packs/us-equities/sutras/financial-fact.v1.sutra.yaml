@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/financial-fact/AAPL-REVENUE"
     - "FACT MSFT-NET-INCOME"
+  category: "US equities"
+  tags: ["financial-fact", "us-equities", "record", "table"]
+  use-when: "You have one financial fact (its id, or a link from another screen) and want to read it in full: one financial concept of a company over up to ten fiscal years, with the change and the filing each value came from."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One financial fact record (kind financial-fact); the page reads FACT_ID, COMPANY, COMPANY_NAME, LABEL, LATEST, LATEST_YEAR, HISTORY, UNIT, CONCEPT, XBRL_TAG, YEARS."
+    sample-row: {"FACT_ID": "ABT-REVENUE", "COMPANY": "ABT", "COMPANY_NAME": "Abbott Laboratories", "CIK": "0000001800", "CONCEPT": "REVENUE", "LABEL": "Revenue", "UNIT": "USD", "LATEST": 44328000000}
+  example: "FACT MSFT-NET-INCOME"
+  see-also: ["us-company"]
+  keywords: ["financial fact", "us equities"]
   since: "2.7.0"
 match: { kind: financial-fact, priority: 10 }
 title: { pill: US equities · Financial fact, id: $.FACT_ID, with: "link($.COMPANY, 'us-company', $.COMPANY_NAME)" }

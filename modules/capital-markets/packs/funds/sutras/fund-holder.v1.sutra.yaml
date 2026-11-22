@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/fund-holder/AAPL"
     - "HELD NVDA"
+  category: "Funds"
+  tags: ["fund-holder", "funds"]
+  use-when: "You have one held by funds (its id, or a link from another screen) and want to read it in full: the funds holding one company, by value; how many, what they hold together and the share of the company it is."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One held by funds record (kind fund-holder); the page reads TICKER, NAME, COMPANY, FUNDS, ETFS, TOTAL_VALUE, PCT_OF_SHARES, AVG_WEIGHT, MAX_WEIGHT, TOP_WEIGHTS."
+    sample-row: {"TICKER": "AAPL", "NAME": "Apple Inc.", "COMPANY": "AAPL", "SECTOR": "Manufacturing", "FUNDS": 85, "ETFS": 26, "TOTAL_VALUE": 831040821744.0, "TOTAL_SHARES": 2809918580.0}
+  example: "HELD NVDA"
+  see-also: ["us-company"]
+  keywords: ["fund holder", "held by funds", "funds"]
   since: "2.9.2"
 match: { kind: fund-holder, priority: 10 }
 title: { pill: Funds · Held by funds, id: $.TICKER, with: $.NAME }

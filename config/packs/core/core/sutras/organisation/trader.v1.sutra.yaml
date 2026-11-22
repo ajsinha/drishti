@@ -28,6 +28,16 @@ doc:
   examples:
     - "/v/trader/TRDR-ASHAH"
     - "TRDR TRDR-ASHAH"
+  category: "Organisation"
+  tags: ["trader", "organisation", "table"]
+  use-when: "You have one trader (its id, or a link from another screen) and want to read it in full: A trader and their books."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One trader record (kind trader); the page reads TRADER_ID, NAME, DESK_NAME, TRADE_COUNT, BOOKS, DESK."
+    sample-row: {"TRADER_ID": "TRDR-ASHAH", "NAME": "A. Shah", "DESK_NAME": "Rates · Swaps and options", "TRADE_COUNT": 76, "DESK": "DESK-RATES"}
+  example: "TRDR TRDR-ASHAH"
+  see-also: ["desk"]
+  keywords: ["trader", "organisation"]
   since: "2.7.0"
 match: { kind: trader, priority: 10 }
 title: { pill: Organisation · Trader, id: $.TRADER_ID }

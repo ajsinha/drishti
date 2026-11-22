@@ -30,6 +30,14 @@ doc:
   examples:
     - "/v/news/NEWS-Bitcoin"
     - "NEWS NEWS-Bitcoin"
+  category: "News"
+  tags: ["news"]
+  use-when: "You have one headlines (its id, or a link from another screen) and want to read it in full: the headlines for one name: newest first, a count by source, how they were chosen, and a snapshot note."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One headlines record (kind news); the page reads NEWS_ID, ENTITY, EDITION, RELEVANCE_FILTER, COUNT, FETCHED_AT, BY_SOURCE, PROVENANCE."
+  example: "NEWS NEWS-Bitcoin"
+  keywords: ["news", "headlines"]
   since: "2.7.0"
 match: { kind: news, priority: 10 }
 title: { pill: "News · Headlines", id: $.NEWS_ID }

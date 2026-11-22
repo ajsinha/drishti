@@ -35,6 +35,16 @@ doc:
   examples:
     - "/v/fund/QQQ"
     - "FUND VTI"
+  category: "Funds"
+  tags: ["fund", "funds", "chart", "figures", "record", "table", "tabs"]
+  use-when: "You have one fund or ETF (its id, or a link from another screen) and want to read it in full: A fund's fact sheet; tabs: the look-through holdings (derivatives, counterparties, who else holds its largest company) and the fund against its index."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One fund or ETF record (kind fund); the page reads TICKER, NAME, TYPE, VS_INDEX, IS_INDEX, REPORT_DATE, SERIES_ID, CIK, NET_ASSETS, EXPENSE_RATIO, PROSPECTUS_FILED, HOLDING_COUNT."
+    sample-row: {"TICKER": "QQQ", "NAME": "Invesco QQQ Trust, Series 1", "TYPE": "ETF", "FUND_KEY": "S000101292", "SERIES_ID": "S000101292", "CIK": "0001067839", "REGISTRANT": "Invesco QQQ Trust, Series 1", "LEI": "549300VY6FEJBCIMET58"}
+  example: "FUND VTI"
+  see-also: ["fund-holder", "index-funds", "lei-entity", "index-membership", "us-company"]
+  keywords: ["fund", "fund or etf", "funds"]
   since: "2.9.2"
 match: { kind: fund, priority: 10 }
 title: { pill: Funds · Fund or ETF, id: $.TICKER, with: $.NAME }

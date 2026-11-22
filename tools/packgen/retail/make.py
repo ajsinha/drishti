@@ -256,7 +256,7 @@ def spec(bank: dict) -> PB.PackSpec:
     return PB.PackSpec(
         code="RTL",
         columns={'customer': ['name', 'segment', 'totalDeposits', 'totalLending', 'kycRisk'], 'deposit-account': ['holderName', 'type', 'balance', 'currency', 'rate', 'status'], 'mortgage': ['borrowerName', 'balance', 'rate', 'ltv', 'remainingYears', 'daysPastDue'], 'card-account': ['holderName', 'product', 'balance', 'limit', 'utilisation', 'status'], 'personal-loan': ['borrowerName', 'purpose', 'balance', 'rate', 'daysPastDue'], 'collections-case': ['customerName', 'arrears', 'daysPastDue', 'stage', 'status'], 'branch': ['name', 'city', 'customers', 'deposits', 'lending']},  # key fields shown beside each entity in pick lists
-        name="retail-banking", retired=True, title="Retail banking", requires=["core"], generator="tools/packgen/retail/make.py",
+        name="retail-banking", retired=True, fragments=True, title="Retail banking", requires=["core"], generator="tools/packgen/retail/make.py",
         description="Customers, deposit accounts, mortgages, cards, personal loans, branches, collections and IFRS 9 portfolio segments.",
         domains={"retail": KINDS},
         examples=[("CUST CUST-100231", "Customer · products held and profile"), ("ACCT ACCT-100231-CUR", "Current account · transactions (live)"),

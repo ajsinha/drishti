@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/party/PARTY-ARG-01"
     - "PARTY PARTY-ARG-01"
+  category: "Politics and society"
+  tags: ["party", "politics-and-society"]
+  use-when: "You have one party (its id, or a link from another screen) and want to read it in full: A political party that won seats in the lower chamber at the most recent election, with the chamber's full result."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One party record (kind party); the page reads PARTY_ID, NAME, COUNTRY_NAME, SEATS, SEAT_SHARE, CHAMBER, ELECTION_DATE, RESULTS, ELECTION."
+    sample-row: {"PARTY_ID": "PARTY-ARG-01", "NAME": "Union for the Homeland (UP)", "COUNTRY_NAME": "Argentina", "SEATS": 48, "SEAT_SHARE": 37.5, "RANK": 1, "TOTAL_SEATS": 128, "ELECTION_DATE": "10/22/2023"}
+  example: "PARTY PARTY-ARG-01"
+  see-also: ["election"]
+  keywords: ["party", "politics and society"]
   since: "2.7.0"
 match: { kind: party, priority: 10 }
 title: { pill: Politics and society · Party, id: $.PARTY_ID }

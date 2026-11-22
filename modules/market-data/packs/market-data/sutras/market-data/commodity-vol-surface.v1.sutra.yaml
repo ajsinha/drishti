@@ -28,6 +28,15 @@ doc:
   examples:
     - "/v/commodity-vol-surface/CMDV-BRENT"
     - "CMDV CMDV-BRENT"
+  category: "Market data"
+  tags: ["commodity-vol-surface", "market-data", "chart", "table"]
+  use-when: "You have one commodity volatility surface (its id, or a link from another screen) and want to read it in full: implied vols by delivery month and moneyness."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One commodity volatility surface record (kind commodity-vol-surface); the page reads SURFACE_ID, COMMODITY, ATM_FRONT, GRID."
+    sample-row: {"SURFACE_ID": "CMDV-BRENT", "COMMODITY": "Brent crude oil", "ATM_FRONT": 31.32}
+  example: "CMDV CMDV-BRENT"
+  keywords: ["commodity vol surface", "commodity volatility surface", "market data"]
   since: "2.7.0"
 match: { kind: commodity-vol-surface, priority: 10 }
 title: { pill: Market data · Commodity volatility surface, id: $.SURFACE_ID }

@@ -34,6 +34,15 @@ doc:
   examples:
     - "/v/correlation-matrix/CORR-EU-EQ"
     - "CORR CORR-G10FX"
+  category: "Market data"
+  tags: ["correlation-matrix", "market-data", "figures", "record", "table"]
+  use-when: "You have one correlation matrix (computed) (its id, or a link from another screen) and want to read it in full: A correlation set: its factors and their correlations computed from price history, with the window and the estimator to pick."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One correlation matrix (computed) record (kind correlation-matrix); the page reads MATRIX_ID, NAME, FACTORS."
+    sample-row: {"MATRIX_ID": "CORR-EU-EQ", "NAME": "European equities"}
+  example: "CORR CORR-G10FX"
+  keywords: ["correlation matrix", "correlation matrix (computed)", "market data"]
   since: "2.7.0"
 match: { kind: correlation-matrix, priority: 10 }
 title: { pill: Market data · Correlation matrix (computed), id: $.MATRIX_ID, with: $.NAME }

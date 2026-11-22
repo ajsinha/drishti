@@ -17,6 +17,29 @@ rachana: 1.2
 sutra: card-account
 version: 1
 description: "A credit card: limit, utilisation, spend by category and statements."
+doc:
+  summary: "A credit card: limit, utilisation, spend by category and statements."
+  description: >-
+    A credit card: limit, utilisation, spend by category and statements. One page per card account, its panels: spend by
+    category (this cycle); statements; how the view was built; the entities it links to. The strip gives Holder, Product,
+    Balance, Limit, Utilisation, APR and Status. Linked entities: holder (customer).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/card-account/CARD-100231"
+    - "CARD CARD-100231"
+  category: "Retail banking"
+  tags: ["card-account", "retail-banking", "table"]
+  use-when: "You have one card account (its id, or a link from another screen) and want to read it in full: A credit card: limit, utilisation, spend by category and statements."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One card account record (kind card-account); the page reads cardId, holderName, product, balance, limit, utilisation, apr, status, spend, statements, customer."
+    sample-row: {"cardId": "CARD-100231", "holderName": "Priya Sharma", "product": "Cashback Mastercard", "balance": 8823.89, "limit": 15000, "utilisation": 0.588, "apr": 0.1892, "status": "Delinquent"}
+  example: "CARD CARD-100231"
+  see-also: ["customer"]
+  keywords: ["card account", "retail banking"]
+  since: "2.7.0"
 match: { kind: card-account, priority: 10 }
 title: { pill: Retail banking · Card account, id: $.cardId }
 strip:
@@ -28,14 +51,7 @@ strip:
   - { label: APR, bind: $.apr, fmt: pct2 }
   - { label: Status, bind: $.status, tone: status }
 panels:
-  - id: spend
-    kind: hbar
-    title: Spend by category (this cycle)
-    key: F2
-    rows: $.spend
-    label: category
-    value: amount
-    fmt: amount2
+  - { use: ranked-bars@1, with: { id: spend, title: Spend by category (this cycle), key: F2, rows: $.spend, label: category, value: amount, fmt: amount2 } }
   - id: statements
     kind: table
     title: Statements
@@ -46,6 +62,6 @@ panels:
       - { label: Balance, bind: "@.balance", fmt: amount2 }
       - { label: Minimum, bind: "@.minimum", fmt: amount2 }
       - { label: Paid, bind: "@.paid", fmt: amount2 }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.customer, 'customer')", F8: impact, F9: raw }

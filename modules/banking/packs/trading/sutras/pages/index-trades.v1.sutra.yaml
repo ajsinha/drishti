@@ -32,6 +32,15 @@ doc:
   expects: []
   examples:
     - "ITRD"
+  category: "Index trades"
+  tags: ["index-trades", "chart", "schedule"]
+  use-when: "You have one index trades (its id, or a link from another screen) and want to read it in full: every trade with a leg on an index (the first leg that names one): trades, payments, notional and maturities."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One index trades record (kind index-trades); the page reads INDEX_NAME, TRADE_COUNT, NOTIONAL, SOURCE_SYSTEMS, PRODUCT_TYPES, CURRENCIES, LAST_MATURITY, TRADES."
+  example: "ITRD"
+  see-also: ["trade"]
+  keywords: ["index trades"]
   since: "2.7.0"
 match: { kind: index-trades, priority: 10 }
 title: { pill: "Index trades", id: $.INDEX_NAME }

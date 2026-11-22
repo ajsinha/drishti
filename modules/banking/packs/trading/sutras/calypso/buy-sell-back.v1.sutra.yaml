@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/CLY-3000283"
     - "TRD CLY-3000283"
+  category: "Securities financing"
+  tags: ["trade", "securities-financing"]
+  use-when: "You have one buy / sell-back (its id, or a link from another screen) and want to read it in full: economically a repo, documented as two cash trades."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One buy / sell-back record (kind trade, SOURCE_SYSTEM = CALYPSO, PRODUCT_TYPE = BUY_SELL_BACK); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "CALYPSO", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2026-07-31", "INPUT_DATE": "2026-07-31", "TRADE_ID": "CLY-3000283", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD CLY-3000283"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "buy / sell-back", "securities financing"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'BUY_SELL_BACK'", priority: 10 }
 title: { pill: "Securities financing · Buy / sell-back", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

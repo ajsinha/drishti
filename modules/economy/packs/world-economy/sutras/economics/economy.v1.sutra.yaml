@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/economy/ECON-IND"
     - "ECON ECON-USA"
+  category: "Economics"
+  tags: ["economy", "economics"]
+  use-when: "You have one economy (its id, or a link from another screen) and want to read it in full: an economy: output, growth, prices, jobs and debt, where it is on the map, and its output by sector."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One economy record (kind economy); the page reads ECONOMY_ID, NAME, REGION_NAME, GDP_USD_BN, GDP_PER_CAPITA, GROWTH, INFLATION, UNEMPLOYMENT, DEBT_TO_GDP, ISO3, GROWTH_PATH, SECTORS."
+    sample-row: {"ECONOMY_ID": "ECON-ABW", "NAME": "Aruba", "ISO3": "ABW", "REGION_NAME": "Latin America & Caribbean", "INCOME_NAME": "High income", "CAPITAL": "Oranjestad", "YEAR": "2024", "GDP_USD_BN": 4.16759}
+  example: "ECON ECON-USA"
+  see-also: ["country-group"]
+  keywords: ["economy", "economics"]
   since: "2.7.0"
 match: { kind: economy, priority: 10 }
 title: { pill: Economics · Economy, id: $.ECONOMY_ID }

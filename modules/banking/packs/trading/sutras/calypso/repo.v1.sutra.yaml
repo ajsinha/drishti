@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/CLY-3000265"
     - "TRD CLY-3000265"
+  category: "Securities financing"
+  tags: ["trade", "securities-financing"]
+  use-when: "You have one repurchase agreement (its id, or a link from another screen) and want to read it in full: cash borrowed against collateral, repurchased at a later date."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One repurchase agreement record (kind trade, SOURCE_SYSTEM = CALYPSO, PRODUCT_TYPE = REPO); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "CALYPSO", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2026-08-18", "INPUT_DATE": "2026-08-18", "TRADE_ID": "CLY-3000265", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD CLY-3000265"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "repurchase agreement", "securities financing"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'REPO'", priority: 10 }
 title: { pill: "Securities financing · Repurchase agreement", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

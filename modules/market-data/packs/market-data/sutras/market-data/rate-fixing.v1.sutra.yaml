@@ -28,6 +28,15 @@ doc:
   examples:
     - "/v/rate-fixing/FIX-AONIA"
     - "FIX FIX-AONIA"
+  category: "Market data"
+  tags: ["rate-fixing", "market-data", "schedule"]
+  use-when: "You have one rate index fixings (its id, or a link from another screen) and want to read it in full: published overnight and term rate fixings (SOFR, €STR, SONIA…)."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One rate index fixings record (kind rate-fixing); the page reads INDEX_ID, NAME, LATEST, ADMINISTRATOR, TENOR, FIXINGS."
+    sample-row: {"INDEX_ID": "FIX-AONIA", "NAME": "AUD Overnight Index Average", "LATEST": 0.03806, "ADMINISTRATOR": "RBA", "TENOR": "Overnight", "CURRENCY": "AUD"}
+  example: "FIX FIX-AONIA"
+  keywords: ["rate fixing", "rate index fixings", "market data"]
   since: "2.7.0"
 match: { kind: rate-fixing, priority: 10 }
 title: { pill: Market data · Rate index fixings, id: $.INDEX_ID }

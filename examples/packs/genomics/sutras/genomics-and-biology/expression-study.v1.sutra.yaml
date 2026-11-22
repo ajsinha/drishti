@@ -17,6 +17,27 @@ rachana: 1.2
 sutra: expression-study
 version: 1
 description: "A differential-expression (RNA-seq) comparison: fold changes and adjusted p-values."
+doc:
+  summary: "A differential-expression (RNA-seq) comparison: fold changes and adjusted p-values."
+  description: >-
+    A differential-expression (RNA-seq) comparison: fold changes and adjusted p-values. One page per expression study, its
+    panels: log2 fold change; results; how the view was built. The strip gives Study, Comparison, Samples and Significant genes.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/expression-study/EXPR-001"
+    - "EXPR EXPR-001"
+  category: "Genomics and biology"
+  tags: ["expression-study", "genomics-and-biology", "table"]
+  use-when: "You have one expression study (its id, or a link from another screen) and want to read it in full: A differential-expression (RNA-seq) comparison: fold changes and adjusted p-values."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One expression study record (kind expression-study); the page reads studyId, title, comparison, sampleCount, significant, results."
+    sample-row: {"studyId": "EXPR-001", "comparison": "KRAS G12D vs WT", "sampleCount": 12, "significant": 1968}
+  example: "EXPR EXPR-001"
+  keywords: ["expression study", "genomics and biology"]
+  since: "2.7.0"
 match: { kind: expression-study, priority: 10 }
 title: { pill: Genomics and biology · Expression study, id: $.studyId }
 strip:
@@ -25,15 +46,7 @@ strip:
   - { label: Samples, bind: $.sampleCount, fmt: amount0 }
   - { label: Significant genes, bind: $.significant, fmt: amount0, emphasis: true }
 panels:
-  - id: foldChange
-    kind: hbar
-    title: log2 fold change
-    key: F2
-    rows: $.results
-    label: gene
-    value: log2fc
-    fmt: price2
-    tone: sign
+  - { use: ranked-bars@1, with: { id: foldChange, title: log2 fold change, key: F2, rows: $.results, label: gene, value: log2fc, fmt: price2, tone: sign } }
   - id: results
     kind: table
     title: Results
@@ -44,5 +57,5 @@ panels:
       - { label: log2 FC, bind: "@.log2fc", fmt: signed2, tone: sign, total: true }
       - { label: Mean expression, bind: "@.baseMean", fmt: amount0 }
       - { label: Adjusted p, bind: "@.padj" }
-  - { id: built, kind: provenance, title: How this view was built }
+  - { use: data-provenance@1 }
 keys: { F8: impact, F9: raw }

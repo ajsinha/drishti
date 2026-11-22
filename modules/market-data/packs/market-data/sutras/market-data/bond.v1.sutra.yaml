@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/bond/BND-BRVERD054608"
     - "BND BND-BRVERD054608"
+  category: "Market data"
+  tags: ["bond", "market-data", "table"]
+  use-when: "You have one bond (security master) (its id, or a link from another screen) and want to read it in full: A listed bond: terms, price, yield, spreads and analytics."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One bond (security master) record (kind bond); the page reads ISIN, ISSUER_NAME, COUPON, MATURITY, PRICE, YIELD, Z_SPREAD, MOD_DURATION, RATING, TERMS, COUPONS, HISTORY."
+    sample-row: {"ISIN": "BND-BRVERD054608", "ISIN_CODE": "BRVERD054608", "ISSUER_NAME": "Verdant Agri Holdings", "COUPON": 0.0579, "MATURITY": "2031-09-15", "PRICE": 94.302, "YIELD": 0.071, "Z_SPREAD": 323.0}
+  example: "BND BND-BRVERD054608"
+  see-also: ["issuer"]
+  keywords: ["bond", "bond (security master)", "market data"]
   since: "2.7.0"
 match: { kind: bond, priority: 10 }
 title: { pill: Market data · Bond (security master), id: $.ISIN }

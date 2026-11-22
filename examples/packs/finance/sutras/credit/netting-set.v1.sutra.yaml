@@ -16,6 +16,26 @@ rachana: 1.2
 sutra: netting-set
 version: 1
 description: Netting set with exposure profile, member trades, CSA and collateral (mockup drishti-netting-set.png).
+doc:
+  summary: "Netting set with exposure profile, member trades, CSA and collateral."
+  description: >-
+    Netting set with exposure profile, member trades, CSA and collateral. A tutorial screen of the example pack: one page per netting set, its strip, panels and linked entities as the Sutra lists them.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/netting-set/NS-NORTH-01"
+  category: "Netting set"
+  tags: ["netting-set", "chart", "record", "table"]
+  use-when: "You have one netting set (its id, or a link from another screen) and want to read it in full: netting set with exposure profile, member trades, CSA and collateral."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One netting set record (kind netting-set); the page reads nettingSetId, counterparty, trades, netMtm, collateralPosted, eePeak, pfe95Peak, limit, utilisation, asOf, exposure, memberTrades."
+    sample-row: {"nettingSetId": "NS-NORTH-01", "agreement": "ISDA-2002-0417", "csa": "CSA-VM-0417", "creditLimit": "LIM-NORTH", "trades": 14, "netMtm": -1259900, "collateralPosted": 1300000, "eePeak": 4100000}
+  example: "/v/netting-set/NS-NORTH-01"
+  see-also: ["counterparty"]
+  keywords: ["netting set"]
+  since: "2.7.0"
 match: { kind: netting-set, priority: 10 }
 title: { pill: Netting set, id: $.nettingSetId, with: "link($.counterparty.id, 'counterparty', $.counterparty.name)" }
 strip:

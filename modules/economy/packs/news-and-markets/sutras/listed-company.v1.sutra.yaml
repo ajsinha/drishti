@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/listed-company/CO-AAPL"
     - "CO CO-MSFT"
+  category: "Market watch"
+  tags: ["listed-company", "market-watch", "chart", "record", "table"]
+  use-when: "You have one company (its id, or a link from another screen) and want to read it in full: A listed company: its live quote, closing price history and news headlines, each computed on demand."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One company record (kind listed-company); the page reads COMPANY_ID, NAME, TICKER, EXCHANGE, SECTOR, COUNTRY, ALIAS_TEXT, QUOTE_ID, PRICE, CURRENCY, CHANGE, CHANGE_PCT."
+    sample-row: {"COMPANY_ID": "CO-AAPL", "TICKER": "AAPL", "NAME": "Apple Inc.", "ALIAS_TEXT": "Apple Inc, AAPL, iPhone", "EXCHANGE": "Nasdaq", "SECTOR": "Technology", "COUNTRY": "US", "ECONOMY": "ECON-USA"}
+  example: "CO CO-MSFT"
+  see-also: ["quote", "news"]
+  keywords: ["listed company", "company", "market watch"]
   since: "2.7.0"
 match: { kind: listed-company, priority: 10 }
 title: { pill: "Market watch · Company", id: $.COMPANY_ID, with: $.NAME }

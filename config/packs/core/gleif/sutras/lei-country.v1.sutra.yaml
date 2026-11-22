@@ -31,6 +31,15 @@ doc:
   examples:
     - "/v/lei-country/GB"
     - "LEIC US"
+  category: "GLEIF"
+  tags: ["lei-country", "gleif", "record", "table"]
+  use-when: "You have one country (computed) (its id, or a link from another screen) and want to read it in full: the pack's entities with a legal address in one country (a click opens one beside), the groups present, legal forms, cities."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One country (computed) record (kind lei-country); the page reads COUNTRY, NAME, ENTITIES, GROUPS_PRESENT, GROUPS_HEADQUARTERED, LAPSED, LATE_RENEWALS, ROWS, GROUP_ROWS, BY_LEGAL_FORM, BY_CITY, PROVENANCE."
+  example: "LEIC US"
+  see-also: ["lei-group"]
+  keywords: ["lei country", "country (computed)", "gleif"]
   since: "2.7.0"
 match: { kind: lei-country, where: "$.COUNTRY != 'ALL'", priority: 10 }
 title: { pill: GLEIF · Country (computed), id: $.COUNTRY, with: $.NAME }

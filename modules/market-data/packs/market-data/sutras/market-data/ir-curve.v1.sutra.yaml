@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/ir-curve/CRV-USD-OIS"
     - "CRV CRV-AUD-OIS"
+  category: "Market data"
+  tags: ["ir-curve", "market-data"]
+  use-when: "You have one interest rate curve (its id, or a link from another screen) and want to read it in full: an interest rate curve: its zero rates, its pillars and its 1Y forwards, with the 10Y level and the 2s10s slope."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One interest rate curve record (kind ir-curve); the page reads CURVE_ID, CURRENCY, CURVE_TYPE, INDEX, TEN_Y, SLOPE_2S_10S, POINTS, AS_OF, FORWARDS, CALENDAR."
+    sample-row: {"CURVE_ID": "CRV-AUD-BASIS", "CURRENCY": "AUD", "CURVE_TYPE": "Cross-currency basis", "INDEX": "AONIA", "TEN_Y": 0.042199999999999994, "SLOPE_2S_10S": 51.2, "AS_OF": "2026-09-30", "INTERPOLATION": "Log-linear on discount factors"}
+  example: "CRV CRV-AUD-OIS"
+  see-also: ["calendar"]
+  keywords: ["ir curve", "interest rate curve", "market data"]
   since: "2.7.0"
 match: { kind: ir-curve, priority: 10 }
 title: { pill: Market data · Interest rate curve, id: $.CURVE_ID }

@@ -29,6 +29,15 @@ doc:
   examples:
     - "/v/ir-vol-cube/IRV-AUD"
     - "IRV IRV-AUD"
+  category: "Market data"
+  tags: ["ir-vol-cube", "market-data", "chart", "table"]
+  use-when: "You have one swaption volatility cube (its id, or a link from another screen) and want to read it in full: normal (bp) swaption vols by expiry × tenor."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One swaption volatility cube record (kind ir-vol-cube); the page reads CUBE_ID, CURRENCY, MODEL, V_1Y_10Y, V_5Y_5Y, GRID."
+    sample-row: {"CUBE_ID": "IRV-AUD", "CURRENCY": "AUD", "MODEL": "Normal (Bachelier), SABR smile", "V_1Y_10Y": 137.22, "V_5Y_5Y": 132.72}
+  example: "IRV IRV-AUD"
+  keywords: ["ir vol cube", "swaption volatility cube", "market data"]
   since: "2.7.0"
 match: { kind: ir-vol-cube, priority: 10 }
 title: { pill: Market data · Swaption volatility cube, id: $.CUBE_ID }

@@ -16,6 +16,26 @@ rachana: 1.2
 sutra: listed-future
 version: 1
 description: Exchange-traded future with daily settlement and variation margin (mockup drishti-commodity-future.png).
+doc:
+  summary: "Exchange-traded future with daily settlement and variation margin."
+  description: >-
+    Exchange-traded future with daily settlement and variation margin. A tutorial screen of the example pack: one page per commodity future, its strip, panels and linked entities as the Sutra lists them.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/trade/CFT-77120"
+  category: "Trade"
+  tags: ["trade", "chart", "record", "schedule"]
+  use-when: "You have one commodity future (its id, or a link from another screen) and want to read it in full: exchange-traded future with daily settlement and variation margin."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One commodity future record (kind trade, productType = FUT); the page reads tradeId, counterparty, contract, direction, lots, tradePrice, lastPrice, mtm, lastTrade, book, contractTerms, settlements."
+    sample-row: {"tradeId": "CFT-77120", "productType": "FUT", "product": "Commodity future", "contract": "NYMEX CL Z6", "contractSpec": "CL-Z6", "direction": "Long", "lots": 150, "tradePrice": 68.42}
+  example: "/v/trade/CFT-77120"
+  see-also: ["clearing-account", "curve", "book", "counterparty"]
+  keywords: ["trade", "commodity future"]
+  since: "2.7.0"
 match: { kind: trade, where: "$.productType == 'FUT'", priority: 10 }
 title: { pill: "Trade · Commodity future", id: $.tradeId, with: "link($.counterparty.id, 'counterparty', $.counterparty.name)" }
 strip:

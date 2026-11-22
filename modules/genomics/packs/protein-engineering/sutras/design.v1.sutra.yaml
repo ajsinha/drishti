@@ -30,6 +30,16 @@ doc:
   examples:
   - /v/design/DSG-HLXK7-R8-0901
   - DESIGN DSG-HLXK7-R8-0901
+  category: "Protein engineering"
+  tags: ["design", "protein-engineering", "record"]
+  use-when: "You have one protein design (its id, or a link from another screen) and want to read it in full: one protein design, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One protein design record (kind design); the page reads DESIGN_ID, ROUND, N_CHANGES, ACTIVITY, STATUS, PROTEIN, PARENT, CHANGES, DELTA_TM, MODEL_SCORE, EMB_X, EMB_Y."
+    sample-row: {"DESIGN_ID": "DSG-HLXK7-R8-0901", "PROTEIN": "HLXK7", "ROUND": 8, "PARENT": "DSG-HLXK7-R7-0911", "N_CHANGES": 3, "CHANGES": "T41Y H141Y L229S", "ACTIVITY": 16.07, "DELTA_TM": 6.75}
+  example: "DESIGN DSG-HLXK7-R8-0901"
+  see-also: ["protein"]
+  keywords: ["design", "protein design", "protein engineering"]
   since: 2.9.11
 match:
   kind: design

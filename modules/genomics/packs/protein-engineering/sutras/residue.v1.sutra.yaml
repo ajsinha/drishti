@@ -30,6 +30,16 @@ doc:
   examples:
   - /v/residue/HLXK7:177
   - RESIDUE HLXK7:177
+  category: "Protein engineering"
+  tags: ["residue", "protein-engineering", "record"]
+  use-when: "You have one residue (its id, or a link from another screen) and want to read it in full: one residue, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One residue record (kind residue); the page reads RESIDUE_ID, AA, SECONDARY, DOMAIN, BURIAL, PROTEIN, POS, ACTIVE_SITE, X, Y, Z, MEAN_ACTIVITY."
+    sample-row: {"RESIDUE_ID": "HLXK7:177", "PROTEIN": "HLXK7", "POS": 177, "AA": "H", "SECONDARY": "helix", "DOMAIN": "C-lobe", "BURIAL": 0.961, "X": 0.39}
+  example: "RESIDUE HLXK7:177"
+  see-also: ["protein"]
+  keywords: ["residue", "protein engineering"]
   since: 2.9.11
 match:
   kind: residue

@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/labour-market/LABR-NGA"
     - "LABR LABR-NGA"
+  category: "Economics"
+  tags: ["labour-market", "economics"]
+  use-when: "You have one labour market (its id, or a link from another screen) and want to read it in full: an economy's labour market: unemployment, participation, youth and female labour, jobs and output by sector."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One labour market record (kind labour-market); the page reads LABOUR_ID, ECONOMY_NAME, UNEMPLOYMENT, PARTICIPATION, YOUTH_UNEMPLOYMENT, EMPLOYMENT_RATIO, FEMALE_PARTICIPATION, UNEMPLOYMENT_PATH, BY_SECTOR, ECONOMY."
+    sample-row: {"LABOUR_ID": "LABR-AFG", "ECONOMY_NAME": "Afghanistan", "YEAR": "2025", "UNEMPLOYMENT": 13.351, "PARTICIPATION": 37.457, "YOUTH_UNEMPLOYMENT": 16.785, "EMPLOYMENT_RATIO": 32.457, "FEMALE_PARTICIPATION": 5.086}
+  example: "LABR LABR-NGA"
+  see-also: ["economy"]
+  keywords: ["labour market", "economics"]
   since: "2.7.0"
 match: { kind: labour-market, priority: 10 }
 title: { pill: Economics · Labour market, id: $.LABOUR_ID }

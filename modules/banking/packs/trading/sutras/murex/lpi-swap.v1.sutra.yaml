@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/MX-20000409"
     - "TRD MX-20000409"
+  category: "Inflation"
+  tags: ["trade", "inflation"]
+  use-when: "You have one limited price index swap (its id, or a link from another screen) and want to read it in full: inflation capped and floored each year (UK LPI 0–5%)."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One limited price index swap record (kind trade, SOURCE_SYSTEM = MUREX, PRODUCT_TYPE = LPI_SWAP); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2026-09-08", "INPUT_DATE": "2026-09-08", "TRADE_ID": "MX-20000409", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD MX-20000409"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "limited price index swap", "inflation"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'MUREX' && $.PRODUCT_TYPE == 'LPI_SWAP'", priority: 10 }
 title: { pill: "Inflation · Limited price index swap", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }

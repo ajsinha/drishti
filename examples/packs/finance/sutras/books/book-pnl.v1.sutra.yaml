@@ -16,6 +16,25 @@ rachana: 1.2
 sutra: book-pnl
 version: 1
 description: A book's P&L, derived from its trades by the book-totals connector (a derived kind; see BUILD_GUIDE.md).
+doc:
+  summary: "A book's P&L, derived from its trades by the book-totals connector (a derived kind; see BUILD_GUIDE.md)."
+  description: >-
+    A book's P&L, derived from its trades by the book-totals connector (a derived kind; see BUILD_GUIDE.md). A tutorial screen of the example pack: one page per book p&l, its strip, panels and linked entities as the Sutra lists them.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/book-pnl/RATES-NY-3"
+  category: "Book P&L"
+  tags: ["book-pnl", "book-p-l", "table"]
+  use-when: "You have one book pnl (its id, or a link from another screen) and want to read it in full: A book's P&L, derived from its trades by the book-totals connector (a derived kind; see BUILD_GUIDE.md)."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One book pnl record (kind book-pnl); the page reads book, tradeCount, mtm, dv01, worstMtm, largestNotional, currencies, rows."
+  see-also: ["book"]
+  example: "/v/book-pnl/RATES-NY-3"
+  keywords: ["book pnl", "book p&l"]
+  since: "2.7.0"
 match: { kind: book-pnl, priority: 10 }
 title: { pill: Book P&L, id: $.book }
 strip:

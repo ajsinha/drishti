@@ -31,6 +31,15 @@ doc:
   examples:
     - "/v/event-country/GDELT-USA"
     - "GDELT GDELT-USA"
+  category: "Public sector"
+  tags: ["event-country", "public-sector", "table"]
+  use-when: "You have one world events (its id, or a link from another screen) and want to read it in full: A country's day in the news: events, mentions, average tone and Goldstein scale, conflict share, by CAMEO category, the history, the top stories."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One world events record (kind event-country); the page reads EVENT_COUNTRY_ID, COUNTRY_NAME, DATE, EVENTS, MENTIONS, AVG_TONE, TONE_CHANGE, AVG_GOLDSTEIN, CONFLICT_SHARE, HISTORY, BY_CATEGORY, ISO3."
+    sample-row: {"AVG_GOLDSTEIN": 1.0946, "AVG_TONE": -2.8054, "AVG_TONE_WINDOW": -2.2956, "CONFLICT_SHARE": 25.0, "COOPERATION_SHARE": 75.0, "COUNTRY_NAME": "Australia", "DATE": "2026-11-05", "EVENTS": 92}
+  example: "GDELT GDELT-USA"
+  keywords: ["event country", "world events", "public sector"]
   since: "2.9.11"
 match: { kind: event-country, priority: 10 }
 title: { pill: Public sector · World events, id: $.EVENT_COUNTRY_ID, with: $.COUNTRY_NAME }

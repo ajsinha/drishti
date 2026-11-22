@@ -29,6 +29,15 @@ doc:
   examples:
     - "/v/lei-country/ALL"
     - "LEIC ALL"
+  category: "GLEIF"
+  tags: ["lei-country", "gleif", "table"]
+  use-when: "You have one countries (its id, or a link from another screen) and want to read it in full: every country of the entities' legal addresses with its entity count, groups headquartered and lapsed registrations."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One countries record (kind lei-country, COUNTRY = ALL); the page reads COUNTRY, NAME, COUNTRIES, ENTITIES, GROUPS_HEADQUARTERED, LAPSED, COUNTRY_ROWS, BY_COUNTRY, PROVENANCE."
+  example: "LEIC ALL"
+  see-also: ["lei-group"]
+  keywords: ["lei country", "countries", "gleif"]
   since: "2.7.0"
 match: { kind: lei-country, where: "$.COUNTRY == 'ALL'", priority: 20 }
 title: { pill: GLEIF · Countries, id: $.COUNTRY, with: $.NAME }

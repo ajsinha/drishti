@@ -36,6 +36,7 @@ sys.path.insert(0, str(ROOT / "tools" / "testdata"))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "common"))
 import spec as S  # noqa: E402
 import packsamples as PSAMP  # noqa: E402
+import sutradoc as SD  # noqa: E402  (the structured doc fields of a Sutra)
 
 
 def _load(name: str, path: Path):
@@ -380,7 +381,8 @@ def pack_files(pack: str, docs: dict, story: dict, guide_sections: bool = True) 
     for k in S.kinds_of(pack):
         out[d / "contracts" / f"{k.kind}.contract.yaml"] = contract(k)
         ex = next(iter(reference(pack, docs, story)[k.kind]))
-        out[d / "sutras" / f"{k.kind}.v1.sutra.yaml"] = sutra(k, ex)
+        f = d / "sutras" / f"{k.kind}.v1.sutra.yaml"
+        out[f] = SD.enrich(sutra(k, ex), f)
     out[d / "config" / "about.yaml"] = about(pack)
     out[d / "config" / "help.yaml"] = help_yaml(pack)
     ref = reference(pack, docs, story)

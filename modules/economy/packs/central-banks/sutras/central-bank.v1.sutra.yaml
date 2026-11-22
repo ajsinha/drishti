@@ -30,6 +30,16 @@ doc:
   examples:
     - "/v/central-bank/CBANK-FED"
     - "CBANK CBANK-FED"
+  category: "Public sector"
+  tags: ["central-bank", "public-sector", "record", "table"]
+  use-when: "You have one central bank (its id, or a link from another screen) and want to read it in full: A central bank's page: the policy rate and its last move, two years of the policy rate, and the bank's series."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One central bank record (kind central-bank); the page reads BANK_ID, NAME, POLICY_RATE, POLICY_RATE_DATE, LAST_MOVE_DATE, LAST_MOVE_BP, CURRENCY, POLICY_HISTORY, SERIES, COUNTRY_NAME, WEBSITE, PRESS."
+    sample-row: {"BANK_ID": "CBANK-BOC", "COUNTRY": "CAN", "COUNTRY_NAME": "Canada", "CURRENCY": "CAD", "LAST_MOVE_BP": 25.0, "LAST_MOVE_DATE": "2026-10-29", "NAME": "Bank of Canada", "POLICY_RATE": 2.5}
+  example: "CBANK CBANK-FED"
+  see-also: ["release-source", "rate-series"]
+  keywords: ["central bank", "public sector"]
   since: "2.9.11"
 match: { kind: central-bank, priority: 10 }
 title: { pill: Public sector · Central bank, id: $.BANK_ID, with: $.NAME }

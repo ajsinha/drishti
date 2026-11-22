@@ -29,6 +29,16 @@ doc:
   examples:
     - "/v/commodity-curve/CMDC-BRENT"
     - "CMDC CMDC-BRENT"
+  category: "Market data"
+  tags: ["commodity-curve", "market-data", "table"]
+  use-when: "You have one commodity forward curve (its id, or a link from another screen) and want to read it in full: futures settlement prices by delivery month."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One commodity forward curve record (kind commodity-curve); the page reads CURVE_ID, COMMODITY, FRONT, SHAPE, ROLL, POINTS, COMMODITY_REF."
+    sample-row: {"CURVE_ID": "CMDC-BRENT", "COMMODITY": "Brent crude oil", "FRONT": 74.6, "SHAPE": "backwardation", "ROLL": -0.4, "COMMODITY_REF": "CMD-BRENT", "UNIT": "USD/bbl"}
+  example: "CMDC CMDC-BRENT"
+  see-also: ["commodity"]
+  keywords: ["commodity curve", "commodity forward curve", "market data"]
   since: "2.7.0"
 match: { kind: commodity-curve, priority: 10 }
 title: { pill: Market data · Commodity forward curve, id: $.CURVE_ID }

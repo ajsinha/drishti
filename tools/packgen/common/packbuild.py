@@ -36,6 +36,7 @@ EXAMPLES = ROOT / "examples" / "packs"              # the retired example packs 
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import sutradoc as SD  # noqa: E402  (the structured doc fields of a Sutra)
 import packlake  # noqa: E402  (tools/packlake.py: the templates' tables as the pack's lake: entries, docs/guides/DATA_LAKE_GUIDE.md)
 
 
@@ -174,6 +175,11 @@ def sutra(spec: PackSpec, k: Kind, sample: str | None = None) -> str:
     return MS.kind_doc(k, spec.fragments, sample).replace(MS.GENERATED, "# " + _generated(spec, "file"))
 
 
+def written(spec: PackSpec, k: Kind, sample: str | None, path: Path) -> str:
+    """A kind's Sutra as written to `path`: with the structured doc fields (tools/packgen/common/sutradoc.py) when it has a doc:."""
+    return SD.enrich(sutra(spec, k, sample), path)
+
+
 def overview(spec: PackSpec, docs: dict) -> str:
     t = MS.md_table
     lines = [DOC_HEADER, "<!-- " + _generated(spec, "file") + " -->", f"# {spec.title} pack", "", spec.description, ""]
@@ -230,7 +236,8 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
                                + yaml.safe_dump(_lake_form(manifest(spec, known_fields)), sort_keys=False, allow_unicode=True, width=140))
     for k in spec.kinds:
         if k.kind not in spec.hand_written:
-            out[base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"] = sutra(spec, k, min(docs.get(k.kind) or [None], key=lambda x: x or ""))
+            f = base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"
+            out[f] = written(spec, k, min(docs.get(k.kind) or [None], key=lambda x: x or ""), f)
     catalog = []
     for k in spec.kinds:
         for id_, d in sorted(docs.get(k.kind, {}).items()):

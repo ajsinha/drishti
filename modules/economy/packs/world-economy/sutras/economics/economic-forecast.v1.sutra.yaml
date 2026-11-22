@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/economic-forecast/FCST-JPN-WEO"
     - "FCST FCST-JPN-WEO"
+  category: "Economics"
+  tags: ["economic-forecast", "economics", "table"]
+  use-when: "You have one economic forecast (its id, or a link from another screen) and want to read it in full: an economy's IMF World Economic Outlook: growth, prices, jobs, external balance and debt, outturn and projections."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One economic forecast record (kind economic-forecast); the page reads FORECAST_ID, ECONOMY_NAME, VINTAGE, GROWTH_2027, INFLATION_2027, DEBT_2030, PROJECTIONS, PATH, ECONOMY."
+    sample-row: {"FORECAST_ID": "FCST-ABW-WEO", "ECONOMY_NAME": "Aruba", "GROWTH_2027": 2, "INFLATION_2027": 2, "DEBT_2030": 50.3, "ECONOMY": "ECON-ABW"}
+  example: "FCST FCST-JPN-WEO"
+  see-also: ["economy"]
+  keywords: ["economic forecast", "economics"]
   since: "2.7.0"
 match: { kind: economic-forecast, priority: 10 }
 title: { pill: Economics · Economic forecast, id: $.FORECAST_ID }

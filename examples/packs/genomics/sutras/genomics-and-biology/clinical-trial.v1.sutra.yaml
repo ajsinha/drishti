@@ -17,6 +17,29 @@ rachana: 1.2
 sutra: clinical-trial
 version: 1
 description: "A targeted-therapy trial: phase, biomarker, arms and enrolment against target."
+doc:
+  summary: "A targeted-therapy trial: phase, biomarker, arms and enrolment against target."
+  description: >-
+    A targeted-therapy trial: phase, biomarker, arms and enrolment against target. One page per clinical trial, its panels:
+    cumulative enrolment; arms; how the view was built; the entities it links to. The strip gives Trial, Phase, Status,
+    Enrolled, Target and Biomarker. Linked entities: target gene (gene) and biomarker (variant).
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/clinical-trial/TRIAL-GEN-045"
+    - "TRIAL TRIAL-GEN-045"
+  category: "Genomics and biology"
+  tags: ["clinical-trial", "genomics-and-biology", "table"]
+  use-when: "You have one clinical trial (its id, or a link from another screen) and want to read it in full: A targeted-therapy trial: phase, biomarker, arms and enrolment against target."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One clinical trial record (kind clinical-trial); the page reads trialId, title, phase, status, enrolled, target, biomarkerName, enrolment, arms, gene."
+    sample-row: {"trialId": "TRIAL-GEN-045", "phase": "Phase II", "status": "Recruiting", "enrolled": 46, "target": 60, "biomarkerName": "HBB p.Glu7Val", "gene": "GENE-HBB", "biomarker": "VRNT-HBB-E6V"}
+  example: "TRIAL TRIAL-GEN-045"
+  see-also: ["gene"]
+  keywords: ["clinical trial", "genomics and biology"]
+  since: "2.7.0"
 match: { kind: clinical-trial, priority: 10 }
 title: { pill: Genomics and biology · Clinical trial, id: $.trialId }
 strip:
@@ -27,14 +50,7 @@ strip:
   - { label: Target, bind: $.target, fmt: amount0 }
   - { label: Biomarker, bind: $.biomarkerName }
 panels:
-  - id: enrolment
-    kind: line
-    title: Cumulative enrolment
-    key: F2
-    rows: $.enrolment
-    x: month
-    y: patients
-    fmt: amount0
+  - { use: series-line@1, with: { id: enrolment, title: Cumulative enrolment, key: F2, rows: $.enrolment, x: month, y: patients, fmt: amount0 } }
   - id: arms
     kind: table
     title: Arms
@@ -45,6 +61,6 @@ panels:
       - { label: Intervention, bind: "@.intervention" }
       - { label: Patients, bind: "@.patients", fmt: amount0 }
       - { label: Response rate, bind: "@.orr", fmt: pct0 }
-  - { id: built, kind: provenance, title: How this view was built }
-  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+  - { use: data-provenance@1 }
+  - { use: linked-entities@1 }
 keys: { F7: "link($.gene, 'gene')", F8: impact, F9: raw }

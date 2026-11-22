@@ -29,6 +29,16 @@ doc:
   examples:
   - /v/study-variant/HX-004928
   - SVARIANT HX-004928
+  category: "Genomics"
+  tags: ["study-variant", "genomics", "record"]
+  use-when: "You have one study variant (its id, or a link from another screen) and want to read it in full: one study variant, as a record."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One study variant record (kind study-variant); the page reads VARIANT_ID, GENE, CONSEQUENCE, IMPACT, CARRIERS, CHROM, POS, REF, ALT, PROTEIN_POS, AA_REF, AA_ALT."
+    sample-row: {"VARIANT_ID": "HX-004928", "CHROM": "7", "POS": 92703082, "REF": "G", "ALT": "A", "GENE": "HLXK7", "CONSEQUENCE": "missense_variant", "IMPACT": "MODERATE"}
+  example: "SVARIANT HX-004928"
+  see-also: ["study-gene"]
+  keywords: ["study variant", "genomics"]
   since: 2.9.11
 match:
   kind: study-variant

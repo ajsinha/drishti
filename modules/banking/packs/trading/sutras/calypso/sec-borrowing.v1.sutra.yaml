@@ -33,6 +33,16 @@ doc:
   examples:
     - "/v/trade/CLY-3000295"
     - "TRD CLY-3000295"
+  category: "Securities financing"
+  tags: ["trade", "securities-financing"]
+  use-when: "You have one securities borrowing (its id, or a link from another screen) and want to read it in full: borrow securities (e.g. to cover shorts) against collateral."
+  avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
+  data:
+    in-words: "One securities borrowing record (kind trade, SOURCE_SYSTEM = CALYPSO, PRODUCT_TYPE = SEC_BORROWING); the page reads TRADE_ID, COUNTERPARTY, RISK_LINKS, CURRENCY, BUY_SELL_CODE, LEGS, QUANTITY, TRADE_DATE, MATURITY_DATE, TRADE_STATUS, TRADE_VERSION, PORTFOLIO."
+    sample-row: {"SOURCE_SYSTEM": "CALYPSO", "SOURCE_UPDATE_TIME": "2026-09-30T18:30:00Z", "TRADE_DATE": "2026-09-01", "INPUT_DATE": "2026-09-01", "TRADE_ID": "CLY-3000295", "TRADE_STATUS": "VALIDATED", "TRADE_ACTION": "NEW", "TRADE_VERSION": "1"}
+  example: "TRD CLY-3000295"
+  see-also: ["counterparty-trades", "book", "counterparty"]
+  keywords: ["trade", "securities borrowing", "securities financing"]
   since: "2.7.0"
 match: { kind: trade, where: "$.SOURCE_SYSTEM == 'CALYPSO' && $.PRODUCT_TYPE == 'SEC_BORROWING'", priority: 10 }
 title: { pill: "Securities financing · Securities borrowing", id: $.TRADE_ID, with: "link($.COUNTERPARTY, 'counterparty')" }
