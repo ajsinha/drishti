@@ -1,0 +1,32 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# What the credit-officer Home follows (ROLE_HOME_SUTRAS 4). Same layout as risk-manager.measures.yaml; measure codes are answered by the engines' own
+# views (VAR, ES, LIM_USE, PNL_DAY, BREACHES: var; PFE, EXPOSURE: exposure); a code with no view yet answers nothing and its figure is left out.
+home: credit-officer
+reference: { cut-off: "17:00", zone: site, day: previous-business-day }
+kpis:
+  - { label: Exposure (PFE), engine: exposure, measure: PFE, args: { scope: firm, quantile: 0.95 }, fmt: compact, history: 30 }
+follow:
+  - { measure: EXPOSURE, engine: exposure, subjects: counterparty, min-abs: 500000, min-rel: 0.05, drivers: [new-trades, amended-trades, market-data] }
+events: [ new-trade, amended-trade, load ]
+exceptions:
+  - { when: "EXPOSURE >= 1000000000", severity: high, text: "{subject} {measure} at {value}", open: "EXP {subject}" }
+  - { when: load-failed,       severity: medium, text: "{subject} failed the load check",         open: "LOADS" }
+  - { when: feed-late,         severity: low,    text: "{subject} is {minutes} minutes late",     open: "FEEDS" }
+mnemonics:
+  - { mnemonic: "EXP", about: "Exposure of a counterparty" }
+  - { mnemonic: "COLL", about: "Collateral and margin" }
+  - { mnemonic: "NSET", about: "Netting sets" }
+  - { mnemonic: "CSA", about: "Agreements in force" }

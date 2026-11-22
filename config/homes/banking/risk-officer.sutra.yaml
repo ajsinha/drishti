@@ -1,0 +1,113 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The Risk officer Home (milestone H1): KPI strip and exceptions first, what changed since the cut-off, the role's working area, a right rail.
+# Built only from library fragments (core, finance of drishti-rachana); every table is a home table served for the person
+# (ROLE_HOME_SUTRAS.md 2). Not yet run.
+rachana: 1.2
+sutra: home-risk-officer
+version: 1
+libraries: [core@1, finance@1]
+title: { id: "'Risk officer'" }
+data:
+  meta:      { table: home_meta }
+  kpis:      { table: home_kpis,      key: [LABEL] }
+  kpi_hist:  { table: home_kpi_history }
+  exc:       { table: home_exceptions }
+  chg:       { table: home_changes }
+  desks:     { table: home_desk_limits, key: [DESK] }
+  cpty:      { table: home_exposure,    key: [CPTY] }
+  stress:    { table: home_stress }
+  bt:        { table: home_backtest }
+  mnem:      { table: home_mnemonics }
+  cal:       { table: home_calendar }
+  news:      { table: home_news }
+layout:
+  user-can-arrange: true                     # "arrange my Home": the person's own order and sizes, kept per person (ROLE_HOME_SUTRAS 3)
+  areas:
+    - "kpis kpis kpis"
+    - "exc chg rail"
+    - "desks cpty rail"
+    - "bt stress rail"
+  columns: [4, 5, 3]
+  phone: [kpis, exc, chg, work, rail]
+panels:
+  - use: core/kpi-strip@1
+    as: kpi
+    area: kpis
+    with:
+      items: "map($.kpis, {label: @.LABEL, value: @.VALUE, delta: @.DELTA, caption: @.CAPTION})"
+      history: { from: $.kpi_hist, columns: { label: LABEL, date: DATE, value: VALUE } }
+      fmt: compact
+  - use: core/exceptions-list@1
+    as: exc
+    area: exc
+    with:
+      title: Exceptions first
+      rows: { from: $.exc, columns: { severity: SEVERITY, message: MESSAGE, key: SUBJECT, open: COMMAND } }
+  - use: core/change-feed@1
+    as: chg
+    area: chg
+    with:
+      title: Since
+      since: "first($.meta).SINCE"
+      rows: { from: $.chg, columns: { key: SUBJECT, measure: MEASURE, before: THEN, after: NOW, change: CHANGE, why: WHY, kind: KIND, open: COMMAND } }
+  - use: core/use-bar-table@1
+    as: desks
+    area: desks
+    requires: mnemonic.VAR
+    with:
+      title: Desk VaR and limits
+      name-label: Desk
+      rows: { from: $.desks, columns: { name: DESK, value: VAR, limit: LIMIT, change: CHANGE } }
+  - use: core/use-bar-table@1
+    as: cpty
+    area: cpty
+    requires: mnemonic.EXP
+    with:
+      title: Large exposures
+      name-label: Counterparty
+      rows: { from: $.cpty, columns: { name: CPTY, value: EXPOSURE, limit: LIMIT, change: CHANGE } }
+  - use: finance/backtest-traffic-light@1
+    as: bt
+    area: bt
+    requires: mnemonic.VAR
+    with:
+      title: Backtest
+      rows: { from: $.bt, columns: { date: DATE, pnl: PNL, var: VAR } }
+  - use: finance/stress-tiles@1
+    as: stress
+    area: stress
+    requires: mnemonic.STRESS
+    with:
+      rows: { from: $.stress, columns: { scenario: SCENARIO, pnl: PNL, limit: LIMIT } }
+  - use: core/data-table@1
+    as: mnem
+    area: rail
+    with:
+      title: Quick mnemonics
+      search: false
+      limit: 12
+      rows: $.mnem
+      columns: [ { label: Mnemonic, bind: "@.MNEMONIC" }, { label: About, bind: "@.ABOUT" } ]
+  - use: core/calendar-list@1
+    as: cal
+    area: rail
+    with:
+      rows: { from: $.cal, columns: { date: DATE, time: TIME, title: TITLE, kind: KIND, open: COMMAND } }
+  - use: core/headline-rail@1
+    as: news
+    area: rail
+    with:
+      rows: { from: $.news, columns: { date: AT, headline: HEADLINE, source: SOURCE, link: LINK } }

@@ -59,7 +59,8 @@ public final class HomeTables {
     /** Every table a Home may read. */
     public Set<String> names() {
         Set<String> out = new java.util.TreeSet<>(List.of("home_meta", "home_kpis", "home_kpi_history", "home_exceptions", "home_changes", "home_desk_limits",
-                "home_exposure", "home_stress", "home_mnemonics", "home_calendar", "home_news"));
+                "home_exposure", "home_stress", "home_mnemonics", "home_calendar", "home_news", "home_loads", "home_held_changes", "home_model_runs",
+                "home_margin_calls", "home_backtest", "home_indicators", "home_indicator_history", "home_positions", "home_pnl_days", "home_market_tiles"));
         out.addAll(extra.keySet());
         return out;
     }
@@ -79,7 +80,14 @@ public final class HomeTables {
             case "home_exposure" -> Optional.of(limits(c, "exposure", "EXPOSURE", "counterparty", "CPTY", "EXPOSURE"));
             case "home_stress" -> Optional.of(List.of());      // TODO(R2): computed stress results (computed-risk-measures rule), no engine view yet
             case "home_mnemonics" -> Optional.of(mnemonics(c));
+            case "home_loads" -> Optional.of(loads());
             case "home_calendar", "home_news" -> Optional.of(List.of());   // TODO(R2): the economy module's calendar and headline feeds
+            // TODO(R2): each is served by the module that owns the data (a HomeTable bean): the edit module's held changes, the model-run ledger,
+            // the banking module's margin calls (the collateral engine) and backtest (the VaR history: banking VarHomeBacktest, done), the economy
+            // module's indicators; until then the panel shows its own empty words
+            case "home_held_changes", "home_model_runs", "home_margin_calls", "home_backtest", "home_indicators", "home_indicator_history", "home_positions",
+                "home_pnl_days", "home_market_tiles" ->
+                Optional.of(List.of());
             default -> Optional.empty();
         };
     }
@@ -210,6 +218,16 @@ public final class HomeTables {
     private static String compact(double v) {
         double a = Math.abs(v);
         return a >= 1e9 ? String.format("%.1fB", v / 1e9) : a >= 1e6 ? String.format("%.1fM", v / 1e6) : a >= 1e3 ? String.format("%.0fK", v / 1e3) : String.format("%.0f", v);
+    }
+
+    /** The loads that need a look (late, missing, failed), as the loader's expectations state them. */
+    private List<Map<String, Object>> loads() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (ExpectationService.State s : loadStates.get()) {
+            out.add(row("PACK", s.pack(), "KIND", s.kind(), "BUSINESS_DATE", String.valueOf(s.businessDate()), "STATE", s.state(), "DEADLINE",
+                    s.deadline() == null ? "" : s.deadline().toString()));
+        }
+        return out;
     }
 
     // ----------------------------------------------------------------------------------------------------------- changes

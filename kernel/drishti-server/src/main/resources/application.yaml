@@ -971,6 +971,22 @@ drishti:
       parse-cache: 10000             # parsed expressions kept (0: off)
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
     enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
+  homes:                             # role Homes (docs/architecture/ROLE_HOME_SUTRAS.md): one Home per role, the person may arrange their own unless the Home is locked
+    enabled: ${DRISHTI_HOMES_ENABLED:true}
+    dir: ${DRISHTI_HOMES_DIR:${drishti.config.dir}/homes}   # <module>/<home>.home.yaml with its .sutra.yaml and .measures.yaml (absolute)
+    data-dir: ${DRISHTI_HOMES_DATA_DIR:${drishti.data.dir}}   # the cut-off snapshots, change events and drivers are kept under <data-dir>/homes (absolute)
+    cutoff: "17:00"                  # the reference cut-off of "what changed since", in the site's time zone (a Home's measures file may name its own)
+    keep-days: 30                    # days of snapshots kept (the KPI sparklines' history)
+    roles:                           # role -> the Homes it opens, first is the default; an administrator opens every Home (Admin, Roles edits this)
+      risk-manager: [risk-manager]
+      trader: [trader]
+      risk-officer: [risk-officer]
+      cro: [risk-officer]
+      credit-officer: [credit-officer]
+      operations: [operations]
+      quant: [quant]
+      analyst: [quant]
+      economist: [economist]
   trading:                           # the Trading landings' figures (the trading module's server part, /api/v1/trading/landing; LENSES.md › The design)
     people: {}                       # user: {trader: TRDR-…} or {desk: DESK-…, role: desk-head}: "my" scope, over the lens's trading.people (a name in both: this)
   explain:                           # About this page (docs/guides/RACHANA_REFERENCE.md): GET /api/v1/views/{kind}/{id}/explain
