@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!-- Not a module of the Drishti reactor (engines are built outside it, ENGINE_INTEGRATION_DESIGN 13 and the guard A7). It stands here only
+     until the repository drishti-engines exists (EN-52); then the folder moves there unchanged. Built like engine-sample. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.engine</groupId>
+    <artifactId>engine-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath/>
+  </parent>
+  <artifactId>engine-changes</artifactId>
+  <name>Drishti engine: changes (what changed since a cut-off, and why)</name>
+  <description>Compares the measure values of a reference cut-off with now, by subject and measure, flags the moves above a threshold, lists the events beside them and names the drivers of each move from attribution rows the host supplies.</description>
+  <properties>
+    <automatic.module.name>com.ash.drishti.engines.changes</automatic.module.name>
+    <engine.api.built>0.1</engine.api.built>
+  </properties>
+  <dependencies>
+    <dependency><groupId>com.ash.engine</groupId><artifactId>engine-api</artifactId><scope>provided</scope></dependency>
+    <dependency><groupId>com.ash.engine</groupId><artifactId>engine-tck</artifactId><scope>test</scope></dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration><archive><manifestEntries><Engine-Api>${engine.api.built}</Engine-Api></manifestEntries></archive></configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
