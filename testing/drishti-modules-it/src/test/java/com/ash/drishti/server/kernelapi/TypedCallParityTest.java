@@ -420,7 +420,8 @@ class TypedCallParityTest {
                 });
                 case "settings" -> both(out, () -> kernel.settings().of(p), () -> c.get("/me/settings", Map.of()));
                 case "live" -> both(out, () -> kernel.live().query(p, q.get("q"), Integer.parseInt(q.get("limit"))),
-                        () -> c.get("/live/query", Map.of("q", q.get("q"), "again", "true", "limit", q.get("limit"))));
+                        () -> com.ash.drishti.server.kernelapi.KernelLiveQueries.page(c.get("/rdp/searches", Map.of("q", q.get("q"))),
+                                Integer.parseInt(q.get("limit"))));
                 case "pivot" -> both(out, () -> kernel.pivots().inline(p, request()).answer(),
                         () -> c.post("/pivot/inline", InlinePivotFigures.body(FIELDS, ROWS, VALUES, "CCY", null, null), Map.of()));
                 case "figures" -> both(out, () -> figures(kernel.pivots().figures(p, FIELDS, ROWS, VALUES, "CCY", null, null)),

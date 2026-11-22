@@ -41,10 +41,17 @@ public class KernelLiveQueries implements LiveQueries {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public LivePage query(Person person, String query, int limit) {
         RequestPerson p = RequestPerson.of(person);
-        Map<String, Object> a = doors.call(p, "GET", "/api/v1/rdp/searches", () -> forms.answer(query, p.asOf(), p.principal()));
+        return page(doors.call(p, "GET", "/api/v1/rdp/searches", () -> forms.answer(query, p.asOf(), p.principal())), limit);
+    }
+
+    /**
+     * What {@code GET /api/v1/rdp/searches} answered ({@code {table, query, live, page, search}}) as the typed answer: its first {@code limit}
+     * rows as {@code {id, doc}}. The one reading of that answer, in process and over REST alike.
+     */
+    @SuppressWarnings("unchecked")
+    public static LivePage page(Map<String, Object> a, int limit) {
         Map<String, Object> page = (Map<String, Object>) a.get("page");
         List<String> columns = ((List<Object>) page.getOrDefault("columns", List.of())).stream()
                 .map(c -> c instanceof Map<?, ?> m ? String.valueOf(m.get("name")) : String.valueOf(c)).toList();
