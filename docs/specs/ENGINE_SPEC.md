@@ -15,16 +15,18 @@
 -->
 # The Drishti engine specification, `engine: 1`
 
-**Status: draft 2 (2026-11-22). Nothing in it is built.** Draft 2 puts the owner's acceptance test into the text: an engine is
+**Status: draft 3 (2026-11-22). Nothing in it is built.** Draft 2 put the owner's acceptance test into the text: an engine is
 built and proven with no host, delivered as one JAR, found by `ServiceLoader`, checked for compatibility and refused in words
-(section 17). Keys of draft 1 that it supersedes are marked DELETED where they stood. Normative once the owner approves it and the first kit is cut. The
+(section 17). Draft 3 widens the scope to every computation (the owner's direction of the same day): query, live, what-if and
+explain run on the same two interfaces, with the declarations and host methods of sections 2.1, 3.2, 5 and 8.8 added and no
+engine interface added. Keys of draft 1 that are superseded are marked DELETED where they stood. Normative once the owner approves it and the first kit is cut. The
 design it is made from is [../plans/ENGINE_INTEGRATION_DESIGN.md](../plans/ENGINE_INTEGRATION_DESIGN.md); where the two differ,
 this text wins. It moves to the `drishti-engine` repository (`spec/1/`) when that repository exists, with the machine-readable
 files beside it.
 
 | File | Normative for | State |
 |---|---|---|
-| this text | meaning: the model, obligations, errors, versions, delivery | draft 2 |
+| this text | meaning: the model, obligations, errors, versions, delivery | draft 3 |
 | `descriptor.schema.json` (section 6.3) | the descriptor's structure | draft, printed here |
 | `config.schema.json` (section 9.2) | a host's engine file | draft, printed here |
 | `case.schema.json` (section 12.2) | kit cases | draft, summarised here |
@@ -58,11 +60,13 @@ files beside it.
 1. This specification defines how a **compute engine** is described, implemented, run and proven. It does not define any
    measure, contract, screen or domain. No word of any domain (scope, desk, currency, cohort) appears in the API.
 2. A component is an engine only if it is **pure** (its answer depends on declared inputs, parameters and options, and it
-   writes nothing but its answer), **deterministic** (section 8.1), **closed** (section 8.4) and **explained** (section 8.3).
-   A loader, a feed, a write-back, an approval flow and a general query language are not engines and MUST NOT be offered
-   through this API.
-3. One model serves every way of running. An engine MUST NOT behave differently because a request came from a person, a
-   schedule, a data change or a stream; only the host knows, through `Request.requestClass` for admission (section 3.4).
+   writes nothing but its answer), **deterministic** (section 8.1), **closed** (section 8.4) and **its answer is data**: tables
+   of figures, every measure of which is explained (section 8.3). A loader, a feed, a write-back and an approval flow are not
+   engines and MUST NOT be offered through this API. A general query engine **is** an engine: its question is a parameter
+   and its tables are open inputs (2.1). DELETED (draft 3): "a general query language is not an engine".
+3. One model serves every way of running and every way of interacting (2.1). An engine MUST NOT behave differently because a
+   request came from a person, a schedule, a data change or a stream; only the host knows, through `Request.requestClass` for
+   admission (section 3.4). This specification defines **no kinds of engine** and no interface per kind.
 4. A host MUST be able to run a conforming engine from its descriptor and one configuration file, with no code written for
    that engine.
 5. An engine MUST be buildable, unit-testable and provable by the kit with no host present, and is delivered as one JAR that a
@@ -94,6 +98,19 @@ changes ───────────────▶ │     apply(changes) 
 | **option** | a deployment setting, fixed for an engine instance |
 | **parameter** | a setting of one request |
 
+### 2.1 Ways of interacting
+
+An engine MAY serve any of these, in any combination. Each is carried by the two required interfaces of section 4 and by what
+the descriptor declares; none has an interface of its own.
+
+| Way | A caller | Declared by | Carried by |
+|---|---|---|---|
+| **Run** | asks declared outputs over a scope of a snapshot: on demand, on a schedule, after a load | `inputs`, `snapshot`, `outputs`; `inputs` MAY be empty (a calculator over parameters) | `Engine`, `Session`; capability `partition` for shards |
+| **Query** | sends the question itself (a view, a model query) over tables it names | a `document` parameter (3.2); an input with `open: true` (6.2.1) | `Engine`, `Session`; the host's open lookup and grouped scan (5.2) |
+| **Live** | wants answers kept current as rows change | `changes: rows` on an input | capability `incremental` |
+| **What-if** | supplies rows or vectors that stand over an input for one request | a `table` parameter with `overlays` (3.2, 8.8) | `Engine`, `Session` |
+| **Explain** | asks why a figure is what it is, or what moved it between two snapshots | `measure: true`; an ordinary output for an attribution | capability `explain`; `EngineContext.peer` (5.1) |
+
 ## 3. Types and values
 
 ### 3.1 Column types
@@ -114,8 +131,15 @@ An engine MUST NOT put `NaN` or an infinity in a non-null `number` cell of an ou
 
 ### 3.2 Parameter and option types
 
-`text`, `int`, `number`, `decimal`, `bool`, `date`, `enum` (with `options`), `list` (of one of the former, with `items`), and
-`records` (a small table: a list of mappings whose `fields` are declared). Each MAY declare `default`, `required`, `min`,
+`text`, `int`, `number`, `decimal`, `bool`, `date`, `enum` (with `options`), `list` (of one of the former, with `items`),
+`records` (a small table: a list of mappings whose `fields` are declared), and two parameter-only types:
+
+| Type | Value | Declares | The host |
+|---|---|---|---|
+| `document` | one structured value (mappings, lists, scalars), such as a pivot view or a model query. Any expression inside it MUST be Rachana-EL text; it MUST NOT hold code of another language | `schema`: a JSON Schema (draft 2020-12) in the descriptor | validates it against `schema` (`ENG-3002`), puts it in canonical form (keys sorted), hashes it into the stamp |
+| `table` | rows the caller supplies, column types of 3.1 including vectors; the engine receives a `Table` | `contract`, `max-rows`; optionally `overlays: <input>` (8.8) | checks the rows against the contract and the bound (`ENG-3002`, `ENG-5004`), hashes them into the stamp, never stores them, audits the hash and the row count |
+
+An option MUST NOT be a `document` or a `table`. Each MAY declare `default`, `required`, `min`,
 `max`, `allowed`, `label`, `help`, `unit`. The host normalises a request's parameters before the engine sees them: defaults
 filled, types converted, unknown names refused (`ENG-3001`), values outside what is allowed refused (`ENG-3002`). An engine
 therefore receives only declared names with values of the declared types, sorted by name. An engine MUST NOT read a parameter
@@ -152,7 +176,7 @@ public enum RequestClass { INTERACTIVE, EVENT, BATCH }
 public record Request(String id, List<String> outputs, SortedMap<String, Object> params, Visibility visibility,
         String actor, long seed, RequestClass requestClass) {}
 
-public enum Status { COMPLETE, PARTIAL, NOT_FOUND }
+public enum Status { COMPLETE, PARTIAL, NOT_FOUND, INTERIM }   // INTERIM: only through Control.interim (8.8)
 
 /** An input, or columns of it, that were not there; outputs: the outputs that could not be answered for it. */
 public record Missing(String input, String contract, Snapshot snapshot, List<String> columns, List<String> outputs) {
@@ -226,7 +250,8 @@ rows in the declared `order`. [K] A host MAY read the arrays without copying; an
 ## 4. Interfaces an engine implements
 
 Package `com.ash.engine`, artifact `com.ash.engine:engine-api`, which depends on the JDK only. An engine with no capability
-implements two interfaces and eight methods.
+implements two interfaces and eight methods. These two serve every way of interacting of 2.1; the three capability interfaces
+of 4.3 are the only others an engine ever implements.
 
 ### 4.1 `Engine` (required)
 
@@ -313,7 +338,8 @@ public interface Assembling {
 ```
 
 The capability `process` needs no interface (section 14). The capability `supplier` needs none either: it states that the
-engine's outputs may be bound to another engine's `uses` port.
+engine's outputs may be bound to another engine's `uses` port. The capability `progressive` needs none: it states that `ask`
+MAY call `Control.interim` (5.3, 8.8).
 
 ## 5. Interfaces a host provides
 
@@ -329,6 +355,12 @@ public interface EngineContext {
     Audit audit();                              // audit.note(requestId, words): beside the host's own line per request
     Log log();                                  // debug, info, warn; never row values at info or above
     Optional<Supplier> supplier(String port);   // a `uses` port; empty when the site bound none
+
+    /**
+     * This engine at another snapshot, asked under the request's own visibility (Supplier.ask's onBehalfOf): for an output
+     * that compares two snapshots. The host finds or opens that session within the same limits. Empty: no rows there.
+     */
+    Optional<Supplier> peer(Snapshot other);
 }
 
 public interface MemoryBudget {
@@ -349,6 +381,9 @@ public interface Supplier {
 public interface Inputs {
     Set<String> names();                        // exactly the descriptor's inputs
     InputTable table(String name);              // an undeclared name: IllegalArgumentException
+
+    /** A table of an open input (6.2.1), by the name the request's document gives it. Not there for this caller: present() is false. */
+    InputTable table(String input, String table);
 }
 
 public interface InputTable {
@@ -363,10 +398,21 @@ public interface InputTable {
 
     /** One vector column with some text columns, a row at a time, in a stable order. */
     void vectors(VectorScan scan, VectorSink sink) throws EngineException;
+
+    /** Push-down. true: the source can answer this grouped scan exactly; then groups(..) MAY be called. Cheap. */
+    boolean offers(GroupScan scan);
+
+    /** One batch stream per grouping set: the set's columns, then one column per aggregate, in order. Row rules are applied first. */
+    void groups(GroupScan scan, BatchSink sink) throws EngineException;
 }
 
 public record Scan(List<String> columns, Filter where, int batchRows) {}
 public record VectorScan(String column, List<String> texts, Filter where) {}
+
+/** sets: grouping sets over columns. where: Rachana-EL over a row, or null. An aggregate's state is mergeable by its function. */
+public record GroupScan(List<List<String>> sets, List<Aggregate> aggregates, String where, int batchRows) {}
+/** fn: SUM, COUNT, MIN, MAX. of: Rachana-EL over a row (null for COUNT of rows). where: a condition of this aggregate, or null. */
+public record Aggregate(String name, Fn fn, String of, String where) { public enum Fn { SUM, COUNT, MIN, MAX } }
 
 /** The arrays belong to the host and are reused for the next batch: copy what is kept. */
 public interface Batch {
@@ -389,6 +435,14 @@ public interface Batch {
    NOT depend on either (section 8.1). [K]
 4. In `request` mode the host has already applied the viewer's row rules and masks; `Visibility.rows` for that input is
    `Filter.ALL`.
+5. **Open inputs.** `table(input, table)` MUST resolve the name in the host's catalogue as the caller: a table the caller may
+   not read is not present, and its columns are those the caller may read. The table's stamp joins the answer's stamp under
+   `<input>:<table>`. A name the request's `document` does not hold MUST be refused (`ENG-2001`). [K]
+6. **Push-down.** A host MAY offer a grouped scan when its source can group and aggregate exactly; it MUST apply the same row
+   rules, masks, column map and row filter as for `scan`, before grouping. An engine MUST give the same answer whether the
+   scan is offered or not, under each column's `exact` class (8.1 rule 6), and MUST NOT depend on a host offering it. [K] The
+   list of functions is closed; anything else an engine computes from `scan`.
+7. A host MUST stop a scan or a grouped scan at its source when the request's `Control` is cancelled.
 
 ### 5.3 `Control`
 
@@ -398,6 +452,9 @@ public interface Control {
     void check() throws EngineException;        // throws ENG-5010 (cancelled) or ENG-5011 (deadline passed)
     Instant deadline();
     void progress(double fraction, String words);
+
+    /** Capability `progressive`: a first answer the host may show before ask returns. Its status MUST be INTERIM (8.8). */
+    void interim(Answer answer);
 }
 ```
 
@@ -425,11 +482,11 @@ not name the engine's class: the JAR's `META-INF/services/com.ash.engine.Engine`
 | `codes` | | the prefix of its own error codes (`RSK`); section 11.3 |
 | `licence` | | `{ feature }`: a host's licence feature name |
 | `snapshot` | | `dimensions: [ { name, type, label } ]`; absent: none |
-| `inputs` | yes | map of name to input (6.2.1); MAY be empty only for an engine with supplier ports |
+| `inputs` | yes | map of name to input (6.2.1); MAY be empty (an engine over parameters, supplier ports or both) |
 | `options` | | map of name to a typed declaration (3.2) |
 | `params` | | map of name to a typed declaration (3.2), shared by outputs |
 | `outputs` | yes | map of name to output (6.2.2); at least one |
-| `capabilities` | | list of `explain`, `workbook`, `incremental`, `partition`, `process`, `supplier` |
+| `capabilities` | | list of `explain`, `workbook`, `incremental`, `partition`, `process`, `supplier`, `progressive` |
 | `partition` | with the capability | `{ input, unit }`: the column whose values a shard is made of |
 | `uses` | | map of port name to `{ contract, about }`: an output of another engine it may ask |
 | `limits` | | `{ memory: { fixed-bytes, per-row-bytes: { <input>: n } }, cancel-latency: 1s }` |
@@ -440,12 +497,13 @@ not name the engine's class: the JAR's `META-INF/services/com.ash.engine.Engine`
 
 | Key | Required | Meaning |
 |---|---|---|
-| `contract` | yes | `<owner>/<name>@<major>` |
+| `contract` | yes, unless `open` | `<owner>/<name>@<major>` |
+| `open` | | `true`: the input is a family of tables the request names (5.2 rule 5). Then `mode` MUST be `request`, and `contract`, `columns`, `key`, `vector`, `scope-columns`, `changes` and `per` MUST be absent: the schema comes from the host's catalogue |
 | `about` | yes | words |
 | `required` | | default `true` |
 | `mode` | | `session` (default) or `request` (5.2 rule 4) |
 | `key` | | the contract's key columns the engine relies on |
-| `columns` | yes | the columns read. **Only these are delivered** |
+| `columns` | yes, unless `open` | the columns read. **Only these are delivered** |
 | `vector` | | the vector column, if any |
 | `scope-columns` | | the columns a visibility filter may name; MUST be within `columns` |
 | `changes` | | `none` (default) or `rows`: `apply` accepts changes of this input |
@@ -508,7 +566,7 @@ handed through unchanged (a host masks it for a viewer who has that input column
     "outputs": { "type": "object", "minProperties": 1, "propertyNames": { "$ref": "#/$defs/name" },
                  "additionalProperties": { "$ref": "#/$defs/output" } },
     "capabilities": { "type": "array", "uniqueItems": true,
-                      "items": { "enum": ["explain", "workbook", "incremental", "partition", "process", "supplier"] } },
+                      "items": { "enum": ["explain", "workbook", "incremental", "partition", "process", "supplier", "progressive"] } },
     "partition": { "type": "object", "additionalProperties": false, "required": ["input", "unit"],
                    "properties": { "input": { "$ref": "#/$defs/name" }, "unit": { "type": "string" } } },
     "uses": { "type": "object", "additionalProperties": { "type": "object", "additionalProperties": false,
@@ -527,7 +585,9 @@ handed through unchanged (a host masks it for a viewer who has that input column
     "built": { "type": "string", "pattern": "^\\d+\\.\\d+$" },
     "contract": { "type": "string", "pattern": "^[a-z][a-z0-9-]*/[a-z][a-z0-9-]*@\\d+$" },
     "typed": { "type": "object", "additionalProperties": false, "required": ["type"], "properties": {
-      "type": { "enum": ["text", "int", "number", "decimal", "bool", "date", "enum", "list", "records"] },
+      "type": { "enum": ["text", "int", "number", "decimal", "bool", "date", "enum", "list", "records", "document", "table"] },
+      "schema": { "type": "object" }, "contract": { "$ref": "#/$defs/contract" },
+      "max-rows": { "type": "integer", "minimum": 1 }, "overlays": { "$ref": "#/$defs/name" },
       "label": { "type": "string" }, "help": { "type": "string" }, "unit": { "type": "string" },
       "default": {}, "required": { "type": "boolean" }, "min": { "type": "number" }, "max": { "type": "number" },
       "allowed": { "type": "array" }, "options": { "type": "array", "items": { "type": "string" } },
@@ -536,9 +596,17 @@ handed through unchanged (a host masks it for a viewer who has that input column
       "allOf": [
         { "if": { "properties": { "type": { "const": "enum" } } }, "then": { "required": ["options"] } },
         { "if": { "properties": { "type": { "const": "list" } } }, "then": { "required": ["items"] } },
-        { "if": { "properties": { "type": { "const": "records" } } }, "then": { "required": ["fields"] } } ] },
-    "input": { "type": "object", "additionalProperties": false, "required": ["contract", "about", "columns"], "properties": {
-      "contract": { "$ref": "#/$defs/contract" }, "about": { "type": "string" },
+        { "if": { "properties": { "type": { "const": "records" } } }, "then": { "required": ["fields"] } },
+        { "if": { "properties": { "type": { "const": "document" } } }, "then": { "required": ["schema"] } },
+        { "if": { "properties": { "type": { "const": "table" } } }, "then": { "required": ["contract", "max-rows"] } } ] },
+    "input": { "type": "object", "additionalProperties": false, "required": ["about"],
+      "if": { "properties": { "open": { "const": true } }, "required": ["open"] },
+      "then": { "required": ["mode"], "properties": { "mode": { "const": "request" } },
+                "not": { "anyOf": [ { "required": ["contract"] }, { "required": ["columns"] }, { "required": ["scope-columns"] },
+                                    { "required": ["key"] }, { "required": ["vector"] }, { "required": ["changes"] }, { "required": ["per"] } ] } },
+      "else": { "required": ["contract", "columns"] },
+      "properties": {
+      "contract": { "$ref": "#/$defs/contract" }, "about": { "type": "string" }, "open": { "type": "boolean" },
       "required": { "type": "boolean" }, "mode": { "enum": ["session", "request"] },
       "key": { "type": "array", "items": { "type": "string" } },
       "columns": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
@@ -577,6 +645,9 @@ handed through unchanged (a host masks it for a viewer who has that input column
 4. `key` columns MUST be non-nullable and MUST NOT be measures. [K]
 5. `Engine.descriptor()` MUST equal the file. [K]
 6. The JAR's registered classes and its descriptors without `worker` MUST correspond one to one (17.2). [K]
+7. A `table` parameter's `overlays` MUST name an input, and its `contract` MUST be that input's. A `document` or `table` type
+   MUST NOT appear under `options`. [K]
+8. `progressive` MUST be listed when, and only when, some output's answer may be preceded by an interim one. [K]
 
 ## 7. Lifecycle
 
@@ -604,7 +675,11 @@ A host MUST call `open` exactly once, MUST close every session before `close`, a
    the engine's declared `cancel-latency`.
 2. A host MAY open sessions of several snapshots at once and MAY close any of them at any time between calls (eviction).
    An engine MUST NOT assume a session lives beyond a call.
-3. At most one session per engine instance and snapshot is open at a time.
+3. At most one session per engine instance and **session key** is open at a time. The key is the snapshot; and, when every
+   input of the engine is read as the caller (all `request` mode, or the host's per-viewer isolation, 8.6 rule 7), the
+   snapshot together with `Visibility.signature`. A host MAY keep such a session open for later requests of that signature;
+   an engine reads the stamp of each `request`-mode table when it uses it, and MUST NOT serve from state built on another
+   stamp.
 
 ### 7.3 Request
 
@@ -633,6 +708,9 @@ A host MUST call `open` exactly once, MUST close every session before `close`, a
    option that forces the pure-Java path, under which the column is `bits`. [K]
 5. `Answer.stamp` MUST be built with `Stamps.of(context, session, request)` (a helper in the API), so every engine's stamps
    have one form.
+6. A `number` measure made from floating-point states of a grouped scan (5.2 rule 6) MAY declare `exact: relative:<x>`, as
+   rule 4 allows for a native library, and the engine MUST then offer an option that forces its own fixed-order path over
+   `scan`, under which the column is `bits`. Integer and `decimal` aggregates are exact on both paths. [K]
 
 ### 8.2 Missing inputs
 
@@ -694,7 +772,18 @@ carries or is given.
 3. Any state derived from one request (a cache of a view, a bitset) MUST be keyed by `Visibility.signature` and MUST NOT be
    reachable by a request with another signature. [K, by interleaving]
 4. An engine MUST NOT keep `actor`, and MUST NOT vary an answer by it.
-5. Two engine instances in one JVM MUST share nothing mutable. [K]
+5. Two engine instances in one JVM MUST share nothing mutable. [K] An `Engine` object MUST hold no state derived from a
+   request; a `Session` MAY, under rule 3.
+6. **The host enforces, on both sides.** A host MUST compute every `Visibility` itself from its own access rules. On inputs:
+   it applies row rules, masks, the column map and the row filter before delivery (5.2). On outputs: it masks every column
+   that `passes` a masked input column, and for an output that carries a scope column through `passes` it MUST check every
+   returned row against the request's visibility; a row outside it fails the request (`ENG-4005`), is never served, and the
+   host SHOULD block the engine.
+7. **Isolation is the host's choice.** A host MAY run any engine **per viewer**: it reads every input as the caller
+   (`Visibility.rows` is `Filter.ALL` for all of them) and keeps a session per signature (7.2 rule 3). The engine then never
+   holds a row its caller may not see. By rule 2 this gives the same answers as a shared session, so an engine MUST NOT
+   assume either. A host SHOULD run an engine shared only when it has evidence of rules 2 and 3 for that JAR (Drishti: 9.1).
+   Open inputs are always read as the caller.
 
 ### 8.7 Incremental and partition
 
@@ -704,6 +793,20 @@ carries or is given.
    `ask` on the whole. [K] A `Partial` MUST NOT hold more than aggregates: its size MUST NOT grow with the number of input
    rows of a shard beyond the size of the answer's own grain (a host MAY bound it).
 3. `assemble` MUST refuse partials whose stamps differ in engine version, options, request or seed (`ENG-5021`).
+
+### 8.8 What-if tables and interim answers
+
+1. **Overlay equivalence.** A `table` parameter with `overlays: <input>` stands over that input for the one request: its rows
+   replace the input's rows of the same key and add the others. The answer MUST equal that of a fresh session whose input
+   physically holds the overlaid rows, under the same visibility. [K] An engine MUST NOT keep the rows, or anything derived
+   from them, beyond the request, except in state keyed by the request's stamp and `Visibility.signature`.
+2. A `table` parameter without `overlays` is plain data of the request (a set of hypothetical trades with their vectors).
+   It is the caller's own: no visibility applies to it, and the host has checked it against its contract.
+3. **Interim answers.** An engine with capability `progressive` MAY call `Control.interim` at most once per output of a
+   request, before it returns. The interim tables MUST have the output's schema, status `INTERIM`, and a note that says how the
+   figures were estimated; an estimate drawn from a sample MUST use `Request.seed`. The answer `ask` returns MUST equal the
+   answer of the same request made with a `Control` that ignores `interim`. [K] A host MUST NOT store, cache across callers
+   or audit as final an interim answer.
 
 ## 9. The host's engine file
 
@@ -729,7 +832,7 @@ Normative for Drishti; another host MAY use the same schema.
 | `asks.<name>` | | a named request for triggers: `{ outputs, params, snapshot, as }` |
 | `outputs.<name>` | | `enabled`, `serve: [protocol, flight]`, `live: true`, `store: { lake, table, mode }`, `access` |
 | `uses.<port>` | | `{ engine, output }` |
-| `access` | yes | `opens: [..]`, `visibility: <host rule>` |
+| `access` | yes | `opens: [..]`, `visibility: <host rule>`, `isolation`: `per-viewer` or `shared` (8.6 rule 7). Default: `shared` when a certificate beside the JAR lists the `filter-equivalence` and `interleaving` laws, else `per-viewer`; `shared` without that certificate refuses the start |
 | `limits` | | `memory-mb`, `threads`, `request-seconds`, `concurrent: { interactive, event, batch }`, `disk-gb`, `refusal-ttl-seconds` |
 | `placement` | | `roles`, `nodes`, `shards: { count }` |
 
@@ -776,7 +879,8 @@ Normative for Drishti; another host MAY use the same schema.
     "uses": { "type": "object", "additionalProperties": { "type": "object", "additionalProperties": false,
       "required": ["engine", "output"], "properties": { "engine": { "type": "string" }, "output": { "type": "string" } } } },
     "access": { "type": "object", "additionalProperties": false, "required": ["visibility"], "properties": {
-      "opens": { "type": "array", "items": { "type": "string" } }, "visibility": { "type": "string" } } },
+      "opens": { "type": "array", "items": { "type": "string" } }, "visibility": { "type": "string" },
+      "isolation": { "enum": ["per-viewer", "shared"] } } },
     "limits": { "type": "object", "additionalProperties": false, "properties": {
       "memory-mb": { "type": "integer", "minimum": 0 }, "threads": { "type": "integer", "minimum": 0 },
       "request-seconds": { "type": "integer", "minimum": 1 }, "disk-gb": { "type": "integer", "minimum": 0 },
@@ -808,7 +912,8 @@ Normative for Drishti; another host MAY use the same schema.
 A host MUST refuse to start an engine (state `blocked`, with the words and the key) when: a check of 17.2 or 17.5 fails (the
 JAR's form, the versions it was built against, two JARs for one id); the descriptor is invalid; the engine file's pin differs
 from the JAR; trust is `pinned` and the pin or the certificate is absent or does not match (17.6); an option is unknown or
-invalid; a required input is unbound or ambiguous (10.2); `access.visibility` names no rule. None of these stops the host or
+invalid; a required input is unbound or ambiguous (10.2); `access.visibility` names no rule; `access.isolation` is `shared`
+and no certificate beside the JAR lists the two laws (9.1). None of these stops the host or
 any other engine. An engine whose JAR is absent is `not installed`, and one without an engine file `not configured` (17.4).
 
 ## 10. Packs and binding
@@ -926,6 +1031,7 @@ public final class EngineException extends Exception {
 | `ENG-4002` | NOT_PERMITTED | the visibility has no filter for an input with scope columns |
 | `ENG-4003` | NOT_PERMITTED | the caller has a mask on an input column the output is computed from |
 | `ENG-4004` | NOT_PERMITTED | the caller may not ask this output |
+| `ENG-4005` | FAILED | the engine returned a row outside the request's visibility; nothing was served (8.6 rule 6) |
 | `ENG-5001` | LIMIT | too many requests of this class now |
 | `ENG-5002` | LIMIT | the memory budget cannot give what the session or request needs (how much, of how much) |
 | `ENG-5003` | LIMIT | the work folder's disk bound |
@@ -978,10 +1084,12 @@ given:                            # shared by the cases; a case's own `given` is
   options: { <option>: <value> }
   inputs:
     <input>: { rows: [ { <COLUMN>: <value>, … }, … ] }      # or  { file: <name>.jsonl }  or  absent
+    <open input>: { tables: { <table>: { columns: { <COLUMN>: <type> }, rows: [ … ] } } }    # an open input (6.2.1)
   suppliers: { <port>: { answers: [ { params: {…}, tables: {…} } ] } }
 cases:
   - id: <kebab-case>
     source: <where the expected values come from>            # required: a hand calculation, a reference, a recorder
+    reference: true | false                                  # true: also one of the engine's reference asks (12.7)
     given: { … }                                             # optional overrides
     request:
       outputs: [ <output>, … ]
@@ -1037,6 +1145,10 @@ is exact: all rows, in order, all listed columns; an unlisted column of the outp
 | `absence` | each optional input removed in turn | outputs that do not `need` it unchanged; the others missing |
 | `seed` | another seed | unchanged for outputs not `stochastic` |
 | `explain` | every measure cell | 8.3 rules 1, 2, 6, 7 |
+| `overlay` | for each `table` parameter with `overlays`: the input physically changed by the case's rows, asked without the parameter | yes (8.8 rule 1) |
+| `pushdown` | every grouped scan offered by the kit's own exact executor; and every one refused | yes, under each column's `exact`; and `bits` with the forcing option (8.1 rule 6) |
+| `interim` | a `Control` that ignores `interim` | the final answer unchanged (capability `progressive`) |
+| `isolation` | the case run per viewer: inputs read as the case's visibility, a session per signature | yes (8.6 rule 7) |
 
 ### 12.5 Gates
 
@@ -1054,6 +1166,7 @@ is exact: all rows, in order, all listed columns; an unlisted column of the outp
 ```json
 { "engine": "wmean", "version": "1.0.0", "jar-sha384": "…", "descriptor-sha384": "…",
   "api": "1.0.0", "tck": "1.0.0", "bindings": ["in-process"], "cases": 6, "laws": 58,
+  "laws-passed": ["repeat", "threads", "batching", "order", "filter-equivalence", "interleaving", "absence", "seed", "explain", "isolation"],
   "opaque-steps": 0, "results-sha384": "…", "at": "2026-11-21T20:00:00Z" }
 ```
 
@@ -1061,6 +1174,19 @@ It is written beside the jar as `<jar name>.certificate.json`. It is evidence, n
 its absence, for every JAR, and requires it only where its own trust rule says so (Drishti: 17.6). A host that uses it MUST
 verify `jar-sha384` and that `tck`'s major is one it accepts. A certificate is a statement by whoever ran the kit; a host that needs more than that signs or re-runs (the kit
 runs inside Drishti against the configured engine with `drishti.py engine tck <id>`).
+
+### 12.7 The benchmark run
+
+```
+engine tck bench --engine <jar> [--id <engine id>] --cases <dir> --out <file> [--baseline <file> --gate <file>]
+```
+
+1. It runs the cases marked `reference: true` (an engine's **reference asks**) and writes one line per ask: session open in
+   milliseconds, cold and from the engine's work folder; ask p50 and p99 over a stated number of runs, alone and with 16
+   callers; bytes allocated per ask; the session's peak `memoryBytes()`.
+2. With `--baseline` it compares two such files under the thresholds of `--gate` and exits non-zero on a breach. The kit
+   sets no threshold: a host does (Drishti: ENGINE_INTEGRATION_DESIGN 2.5).
+3. Figures are of the machine that ran it. They are never part of a certificate.
 
 ## 13. Versioning
 

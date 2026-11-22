@@ -86,7 +86,7 @@ conformance kit (`risk-tck`); Drishti's gate is its goldens unchanged (`VarGolde
 
 ## 0a. Delivery: one engine JAR in the server's lib folder
 
-The reasoning, the class loading, the compatibility rule and the open decisions (EN-29 to EN-44) are in
+The reasoning, the class loading, the compatibility rule and the decisions (EN-29 to EN-44, accepted by the owner on 2026-11-22) are in
 [ENGINE_INTEGRATION_DESIGN](ENGINE_INTEGRATION_DESIGN.md) sections 0 and 9; the normative text is ENGINE_SPEC section 17. For this product:
 
 | | What it is |

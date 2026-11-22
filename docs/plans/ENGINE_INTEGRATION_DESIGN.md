@@ -15,8 +15,9 @@
 -->
 # Engine integration: engines by contract, run by configuration
 
-**Status: design for the owner, written 2026-11-21, refreshed 2026-11-22 around the owner's acceptance test (section 0).
-Nothing built, nothing run. EN-1 to EN-28 are accepted; EN-29 to EN-44 are open, each with a recommendation (section 16).**
+**Status: design for the owner, written 2026-11-21, refreshed 2026-11-22 around the owner's acceptance test (section 0) and
+extended the same day to every computation in Drishti (section 2). Nothing built, nothing run. EN-1 to EN-44 are accepted;
+EN-45 to EN-55 are open, each with a recommendation (section 16).**
 For the refresh also read: `kernel/drishti-common/.../SharedLib`, `kernel/drishti-module-runtime` (`ModuleClassLoader`,
 `ModuleVerifier`, `FirstParty`, `KernelLibraries`), `lib/README.md`. Read from git only: Drishti
 `main` at `9ce7c3170` (`kernel/drishti-api/.../api/compute`, `kernel/drishti-kernel-api/.../kernel/api/engines`,
@@ -39,17 +40,22 @@ compatibility, and binds it from `config/engines/<name>.yaml`. No engine is comp
 needs no Drishti build. Drishti Risk is engine #1 delivered this way. **This is the acceptance test of the design, and
 section 0 is built on it.** Text of the first design that it supersedes is marked DELETED where it stood; git keeps it.
 
+**The owner's direction (2026-11-22, second).** "We will expand the engine concept to literally everything where computations
+are done: design it well." Section 2 is that design: the inventory of every place Drishti computes, five ways of interacting
+on the same two interfaces, the rules every engine keeps, the handover that keeps an engine as fast as in-tree code, and the
+order in which today's code moves. It reads the code at `origin/wip/g4-rehearsal-rx` (`8f8a2ebb0`) from git only.
+
 ## Contents
 
 0. [The acceptance test, and the answer in one page](#0-the-acceptance-test-and-the-answer-in-one-page) · 1. [What exists today](#1-what-exists-today) ·
-2. [Drishti-wide view](#2-drishti-wide-view) · 3. [The engine model](#3-the-engine-model) ·
+2. [Everything that computes is an engine](#2-everything-that-computes-is-an-engine) · 3. [The engine model](#3-the-engine-model) ·
 4. [Packs and engines](#4-packs-and-engines) · 5. [Drishti's configuration surface](#5-drishtis-configuration-surface) ·
 6. [The engine kit (TCK)](#6-the-engine-kit-tck) · 7. [The generation ladder](#7-the-generation-ladder) ·
 8. [In process or a separate process](#8-in-process-or-a-separate-process) · 9. [Drishti Risk as engine #1](#9-drishti-risk-as-engine-1) ·
 10. [Two paper tests](#10-two-paper-tests) · 11. [What stays in Drishti](#11-what-stays-in-drishti) ·
 12. [Migration of today's engines](#12-migration-of-todays-engines) · 13. [Repository and coordinates](#13-repository-and-coordinates) ·
 14. [Estimate and the combined i8 plan](#14-estimate-and-the-combined-i8-plan) · 15. [Risks](#15-risks) ·
-16. [Decisions EN-1 to EN-44](#16-decisions-en-1-to-en-44)
+16. [Decisions EN-1 to EN-55](#16-decisions-en-1-to-en-55)
 
 ## 0. The acceptance test, and the answer in one page
 
@@ -331,77 +337,284 @@ Compiled expressions (about 12 bd) and the Flight transport (about 6 bd) are lat
 | Implementations of the reactive SPI | `VarResultEngine`, `ExposureResultEngine`, `CorrelationEngine`, `BetaEngine`, `VectorSumEngine` (sample), Python `path-sum` | adapters and small analytics | section 12 |
 | `module.yaml` `compute.engines:`, `provides.kinds:` | every `.dmod` | which engines and kinds a module brings | `provides.kinds` **kept**, with the conformance and use declarations of section 4. `compute.engines` **goes** at R2: a module brings no engine (0.8) |
 
-Three of the eleven switch files are not engines in this document's sense (`dataload`, `flight`, `memory-lake`), one is a
-library (`openblas`) and one is the kernel's query engine (`pivot`). They keep their switches (section 2.2).
+Three of the eleven switch files are services, not engines (`dataload`, `flight`, `memory-lake`), and keep their switches. One
+is a library (`openblas`), which becomes an option of the engines that use it. One is the pivot engine (`pivot`), which is an
+engine and becomes `query` at step M3 (section 2.6). The full inventory of what computes today is section 2.2.
 
-## 2. Drishti-wide view
+## 2. Everything that computes is an engine
 
-### 2.1 The test: is it an engine?
+**The owner's direction (2026-11-22): "we will expand the engine concept to literally everything where computations are done:
+design it well."** This section is that design. It replaces the first design's Drishti-wide view, whose test and map kept the
+pivot and BI engines, derived kinds and people's Python outside the model (git keeps that text). EN-1 and EN-23 are amended by
+EN-45. Nothing is built. The inventory was read from `origin/wip/g4-rehearsal-rx` at `8f8a2ebb0`: class headers, pack
+declarations and line counts; no code was run, and where a statement needs a measurement it says so.
 
-A piece of Drishti is an engine, and should adopt the contract, when all four hold:
+### 2.1 The rule, and where it stops
+
+**A figure that a person reads, stores or decides on is computed by an engine, and by nothing else.** The kernel moves, guards
+and shows data; it does no arithmetic on figures. A piece of code is an engine when all four hold:
 
 | # | Test | Why it is the line |
 |---|---|---|
-| T1 | **Pure**: its answer is a function of declared contract inputs, parameters and options. It writes nothing but its answer | the host can cache, replay, shard, move to another process and prove it |
-| T2 | **Deterministic**: the same inputs give the same bits | the kit's laws and the accuracy rule depend on it |
+| T1 | **Pure**: its answer is a function of declared inputs, parameters and options. It writes nothing but its answer | the host can cache, replay, shard, move it to another process and prove it |
+| T2 | **Deterministic**: the same inputs give the same bits (or the declared exactness class) | the kit's laws and the accuracy rule depend on it |
 | T3 | **Closed**: no network, no clock, no file outside its work folder, no user | isolation, offline sites, the Windows machine |
-| T4 | **It has figures worth explaining**: someone will ask "why this number" | otherwise it is a query, and the pivot engine or Rachana-EL already does it |
+| T4 | **Its answer is data**: a table of figures (an aggregate, a statistic, a derived value) | DELETED: "figures worth explaining", which shut out the query engine. Explanation is now an obligation on every measure (2.4), not an entry test |
 
-This is a different question from the four product tests of the parked-products note (own compute, outside buyers, standard
-contracts, worth a product's cost). Those decide whether an engine deserves its own repository. T1 to T4 decide whether a piece
-of code is an engine at all. Many engines will live inside a module's jar and never be a product.
+The model stops where one of T1 to T4 fails. This short list is the whole of what is **not** an engine, and it is kept short
+on purpose: forcing these in would be the over-abstraction, and each has one owner already.
 
-### 2.2 The map
+| Not an engine | Fails | Whose it is |
+|---|---|---|
+| Loaders, feeds, write-back, approvals, sign-off, the official record, report delivery, alert state (armed, fired, cooldown) | T1 (side effects), T3 (clock, outside I/O) | host workflow. They **trigger** engines and **store** engine outputs |
+| Rows as they are: search, a document, a list, a page of a table | T4 (nothing is computed) | the kernel's read path, with the same row rules |
+| Screens: Sutra compile and bind, layout inference, shape sampling, formats, conditional styles, row-level display expressions | T4 (a screen, not a figure) | Rachana and the kernel |
+| List aggregates of Rachana Core over rows the page already holds (`sum(list)`, `group(...)`) | none: they are computation | the language's one aggregate kernel (`com.ash.rachana.agg`). The rule that keeps it honest is in 2.2 row 25 |
+| The host's figures about itself: scan and run estimates, cache and heap meters, the data map's counts | T2, T3 (measured, timed) | operations; never shown as business figures |
+| Calc: Python in the person's own browser | T3; not the server's | the person's scratch pad. Its results carry no stamp and are labelled as not Drishti's figures (EN-45) |
+| LLM calls (Ask, the BI copilot) | T2, T3 | the AI gateway. A model proposes a question or words; any figure it shows is an engine's answer, asked as the user |
+| Libraries: linear algebra (`compute/linalg`), vector stores (`compute/vector`), Arrow helpers | not a unit of asking | an engine's private dependencies, or drishti-tools |
 
-| Area of Drishti | Engine? | Relation to the engine model | Consequence |
+### 2.2 Inventory: every place Drishti computes today
+
+Kinds (2.3): **R** run, **Q** query, **L** live, **W** what-if, **X** explain. Lines are Java under `src/main` at the commit
+above, for the whole home named (not only its arithmetic).
+
+| # | What it computes | Inputs | Outputs | Interaction today | Home today | Kind | Becomes |
+|---|---|---|---|---|---|---|---|
+| 1 | VaR, ES, lenses (1-day, 10-day), contributions, by currency, hierarchies, baskets | positions, scenario P&L or PV vectors, scenario FX, limits | scope figures, contributions, the P&L path | on demand over a date held open; nightly official capture; sharded over the cluster | `banking-compute/var` (25 classes: `VarBook`, `VarCalc`, `VarMath`, `VarLens`, `ScopeResolver`, `ShardAssembly`), `banking-service/var` (103 classes), `compute/vector` | R + partition | `market-risk` (Risk JAR) |
+| 2 | Parametric VaR | the same vectors | figure and its parts | on demand | `ParametricVar`, `VarParametric` | R | `market-risk` |
+| 3 | Stress windows, stressed VaR | vectors over history, the approved window | figures per window, proposals | on demand; proposals approved by people | `StressWindows`, `VarStressWindow` | R | `market-risk`; the approval stays host workflow |
+| 4 | Backtesting | VaR history, actual desk P&L | exceptions, period statistics | on demand | `Backtest`, `VarBacktesting` | R | `market-risk` |
+| 5 | Intraday VaR | PV rows arriving (files, Kafka) | the date's figures kept current | incremental overlay on the open date | `VarIntraday`, `OverlayVectors`, `VarPvStream` | L | `market-risk`, `Incremental` |
+| 6 | VaR what-if and pre-deal | a booked trade's vector scaled, supplied by the asker | before and after; standalone, incremental, component | on demand; nothing stored | `VarWhatIfMath`, `VarWhatIf` | W | `market-risk`, a `table` parameter |
+| 7 | Why VaR moved; explain of a number | two dates' vectors | steps that add up to the difference | on demand | `VarExplainMath`, `VarNumberExplainer`, why panels | X | `market-risk`: `Explaining`, and an output `why-moved` |
+| 8 | Sensitivities, the MR cube | sensitivities, positions | grids; pivot measures | on demand; offered to the pivot as a provider | `MrSensitivities`, `MrCubeExtras`, `VarPivotProvider` (835), `VarPivotLens` | R, supplier to Q | `market-risk` outputs; the provider classes go (row 16) |
+| 9 | FRTB-SA | sensitivities, default and residual inputs | SBM, DRC, RRAO, total, comparisons | on demand | `banking-compute/frtb` (12), `banking-service/frtb` (8) | R | `market-risk` |
+| 10 | SIMM | sensitivities by netting set | margin by class, comparisons | on demand | `banking-compute/simm` (7), `banking-service/simm` (8) | R | `ccr` |
+| 11 | Exposure: EE, PFE, EPE | supplied exposure paths, netting sets, CSA terms | profiles by counterparty and tenor | on demand over a date held open; official capture | `banking-compute/ccr` (8: `ExposureCalc`, `ExposureGrid`, `ExposureBook`), `banking-service/exposure` (27) | R | `ccr` (Risk JAR) |
+| 12 | Exposure what-if, pre-deal check | a template trade's paths scaled, or an add-on proxy; the credit limit | profile with the trade, fits or not, by bucket | on demand | `ExposureWhatIfMath`, `ExposurePreDeal` | W | `ccr`, a `table` parameter |
+| 13 | Limit use and status (within, near, breach) | a figure and its limit | share and status | with every figure | `RiskLimits` | R | columns of the engines' outputs |
+| 14 | Correlations, betas | price histories | matrix; beta, alpha, R² | reactive kinds, on demand | `CorrelationEngine`, `BetaEngine` (old reactive SPI) | R | `market-risk` outputs (EN-24) |
+| 15 | Playground workbooks | a measure's inputs for a scope | a formula workbook that recomputes the figure | on demand download | `PlaygroundWorkbook`, `VarPlaygroundBook`, `FrtbPlaygroundBook` (1,323), `SimmPlaygroundBook`, `PlaygroundSheets` | X | each engine's `workbook`; generated from steps where they translate (7.2) |
+| 16 | The pivot engine: cells, subtotals, totals, top N, show-as, formulas, sketches, custom functions | any table; a view (dimensions, measures, filters); measure providers | cell sets with provenance | interactive; grouping pushed to DuckDB (`GROUP BY GROUPING SETS`); partial states cached and merged in fixed order | `drishti-bicompute` (16,322), `server/pivot` (6,327), `kernel.api.pivot` | Q + partition | `query` |
+| 17 | Pivot at scale: rollups of partial states, progressive answers, cluster gather | the same | the same; a first approximate answer with intervals | rollups refreshed incrementally per data version; two-step answers | `bicompute/rollup`, `scale`, `cluster` | Q, L | `query` |
+| 18 | Pivot what-if | a view and an overlay of rows | the view with and without, cell by cell | interactive; nothing written | `bicompute/whatif` | W | `query`, a `table` parameter |
+| 19 | Explain of a pivot cell | a cell on two dates | the difference split by a dimension's members | on demand | `PivotCellExplainer`, `bi/plan/Explain` | X | `query`: `Explaining` |
+| 20 | The BI query engine: model queries, joins, measures, `calc`, `share_of`, time windows, calculation groups | datasets and models; a visual's query | rows and totals | interactive; a planner and a second in-process DuckDB; row rules written into the plan (`SecurityRewriter`) | `server/bi/engine` (40), `bi/plan` (14), `bi/sql` (11), `bi/layer` (18) within `server/bi` (62,768 in all) | Q | `query` (EN-51) |
+| 21 | BI live answers | a live table's changed rows | grouped answers kept current | incremental by difference, or touched groups asked again | `LiveAggregate`, `Incremental`, `LiveTables` | L | `query`, `Incremental` |
+| 22 | Tables, models, measures | sources; a table's definition (paths, filter, calculated columns) | the table's rows; "adds up?" facts | per read; materialised on load or live | `drishti-tables` (6,196), `server/tables` | Q | rows by `query`; definitions and stores stay the host's data plane (section 11) |
+| 23 | Derived kinds | members of other kinds | grouped entities per date (a book's P&L from its trades) | computed once per date and refresh; shares gathered across nodes | `engine/source/derived` (2,435); packs `trading`, `market-risk`, `counterparty-risk`, `world-economy`, `us-equities`, `gleif` | R | declarations answered by `query` (EN-51) |
+| 24 | BI runs | a question as its runner | a stored result under a key with the security signature | bounded jobs, queues, schedules | `server/bi/runs` (33) | host | the host's request classes, queue and answer cache: one, for every engine |
+| 25 | Rachana figures in Drishti | a Sutra's `measure(...)`, `cell(...)`, `_once` aggregates, a pivot panel | one figure | at bind, answered by the pivot engine as the person | `bicompute/rachana`, `RachanaFigures`, `DrishtiBinder` | Q | asks of `query`. Rule: a figure over rows the page does not hold in full comes from `query`; Core's list aggregates are for rows it holds |
+| 26 | Reactive compute | declared kinds, parameters, reads | computed kinds | triggers, coalescing, cache; Java or Python | `compute.reactive` (21); `VectorSumEngine`, Python `path-sum`; `market-data` reactive kinds | host | `engine-host` (section 12) |
+| 27 | People's Python | frames read as the person; approved code | a frame, a visual, a custom aggregate's state | three worker pools: `python` (items, tables, transforms, notebooks), `pivot-fn` (custom functions), reactive | `server/bi/python`, `bi/transform`, `pivot/functions`, `compute/worker` | R, Q; process | `python`: one engine, one pool (EN-54) |
+| 28 | Capacity sizing | counts typed by an administrator, coefficients | heap, memory, disk, CPU, settings, warnings | expressions of `capacity/planner.yaml` evaluated three times: in the browser, in `tools/sizing_planner.py`, in the workbook | `server/capacity`, `drishti_capacity.js`, the Python tool | R, X; no inputs | `capacity`: one evaluator, workbook generated (EN-55) |
+| 29 | Genomics showcase | variant calls, samples, the protein scan | board figures, association plot, cohort matrix, scan tracks, design quantiles, leaderboard, their Explain | per call over a cached snapshot | `GenomicsBoard`, `ProteinBench`, `ShowcaseData` (2,472) | R, X | `cohort-stats` (E11) and a second descriptor for the workbench |
+| 30 | Economy and public sector | loaded series | groupings (row 23). **No derived series is computed today** | | `world-economy` | R | `indicators` when built: born as an engine |
+| 31 | AI what-if | | **none found**: the AI layers compute no figure | | `drishti-ai`, `server/bi/ai`, `server/explain` | | AI tools ask engine outputs (4.4) |
+
+What the inventory shows: (1) **two query stacks**, the pivot core and the BI query engine, each with its own in-process DuckDB
+(`DuckDbExecutor`, `DuckDbEngine`), its own cache and its own live path; (2) **three Python pools**; (3) **three evaluators of
+one capacity file**; (4) **four explain mechanisms** (`Explainer` beans, the pivot's, the genomics `Explained`, the playground
+books); (5) per-engine copies of the same host work: hot dates, memory budgets, caches keyed by a security signature, shard
+gathering. The engine model is how each becomes one.
+
+### 2.3 Five ways of interacting, one SPI
+
+There is **no engine kind in the API**. A kind is a way a caller interacts with an engine; one engine usually has several
+(market risk has four of the five). Every kind runs through the same two interfaces, `Engine` and `Session` (0.10). What differs is
+declared in the descriptor and answered by capabilities that already exist.
+
+| Kind | The interaction | Who calls `ask`, and when | What carries it | New |
+|---|---|---|---|---|
+| **R Run** | declared outputs over a scope of a snapshot: on demand, on a schedule, after a load | triggers `request`, `schedule`, `data-version`, `after` | `Engine`, `Session`; `Partitioned` and `Assembling` for shards | nothing. An engine may declare **no inputs** (a calculator over parameters: capacity) |
+| **Q Query** | the request carries the question (a view, a model query) over tables it names; interactive; grouping pushed down to the source | `request`, per person | `Engine`, `Session`; a `document` parameter; **open inputs**, always read as the person; the host's **grouped scan** | two declarations; the host's `Inputs` gains two methods (below) |
+| **L Live** | answers kept current as rows change | trigger `changes`: `apply`, then the host re-asks the affected keys and feeds the differences | `Incremental` | nothing |
+| **W What-if** | the caller supplies rows or vectors that overlay an input for one request; nothing is stored | `request` | a **`table` parameter** that `overlays` an input | one parameter type, one law |
+| **X Explain** | why this number; what moved it between two snapshots; the workbook | `request` | `Explaining`; attribution is an ordinary output that asks the same engine at the other snapshot | one host method (`peer`) |
+
+**The answer to "new SPI per kind?" is no.** `Engine` and `Session` are unchanged. The three capability interfaces are the ones
+the specification already has (`Explaining`; `Incremental`; `Partitioned` with `Assembling`), and no kind needs a fourth. What
+the wider scope adds is small, additive and on the declaring or the host side:
+
+| Addition | Where | Why it is needed | Specification |
 |---|---|---|---|
-| **VaR, ES, parametric VaR, backtesting, stressed windows, sensitivities, MR cube, FRTB-SA** | yes | outputs of the `market-risk` engine (Drishti Risk) | engine #1 (section 9) |
-| **Exposure (EE, PFE, EPE), pre-deal, SIMM, SA-CCR** | yes | outputs of the `ccr` engine (Drishti Risk) | engine #1, second descriptor |
-| **Liquidity, climate, non-financial risk** (designed in Risk K15) | yes | each a descriptor over the risk kernel; liquidity is paper-tested in 10.1 | K15 designs are written as descriptors first: contracts, parameters, outputs, measures |
-| **Regulatory and management reports** | no, an **output** | a report is a table whose cells trace to measures: an output of the engine that owns the measures | no report machinery per engine; the explain rule covers each cell |
-| **Official record, sign-off, approvals** | no | a host workflow over stored outputs. The engine offers the output; freezing, four eyes and audit are Drishti's (controls, i10) | stays in Drishti |
-| **Python what-if workers, reactive connectors** | **yes, in disguise** | already declared computations with typed parameters, triggers and a worker process | become the process binding of the same contract (section 8, 12) |
-| **A pricing supplier (QLRisk) for what-if and stress** | yes, **outside** | an engine that is a *supplier* to another engine through a named port. Drishti still never prices: the supplier is someone's engine, switched on by a site | "not supplied" when absent (optional externals) |
-| **Pivot and BI engine, its computed measures** | **no** | the kernel's general query engine: any table, any user-written measure, interactive. It fails T4 by design: its measures are the user's EL | it **reads** engine outputs as tables; engines with the partition capability are offered to it as measure providers through one generic adapter (replacing the bespoke `VarPivotProvider`, `VarPivotLens`, `MrCubeExtras` over time) |
-| **Rachana-EL, Sutra compile and bind** | no | the language. Engines use it in three places only: configuration expressions, explanation steps, generated screens | no engine evaluates EL on a hot path of its own |
-| **Live tables, blotters, FORM results** (Rachana live) | no | the one live result-set engine. An engine never pushes rows: the host re-asks what changed and feeds the differences by key and version | no second live mechanism |
-| **Lake: storage, contracts, inbox loading, in-memory lake** | no | loaders have side effects (they fail T1). The lake is where inputs come from and where stored outputs go, by contract | loaders are not engines; they **emit the data-version event** engines react to |
-| **Source-system modules** (Endur, Calypso, Murex, WSS, SwapOne, ICI) | no | mappings into one trade kind: loader mappings | untouched. Their kinds are what an engine's inputs bind to |
-| **Feeds** (World Bank, FRED, BoC, StatCan, OECD, GDELT, market data, news) | no | outside I/O, not deterministic (fails T1, T3) | untouched. **Derived indicators** over what they load (rebasing, year-on-year, seasonal adjustment) are an engine candidate for the economy module |
-| **Kafka and live streams** | no | a stream reaches the lake or a live table; the host turns it into `Changes` for an engine that declares it can apply them | an engine never names a broker; a broker absent means no incremental updates, calmly |
-| **Capital markets, US equities, market data** | candidates | returns, betas, correlations (today `CorrelationEngine`, `BetaEngine`) are a small analytics engine | they move with the risk product as RK-5 says, or become the first module-local engine (EN-24) |
-| **Genomics** | candidate | the `association` kind and the `GWAS` word are a stored result today; computed on demand it is an engine (10.2) | the non-risk proof of the abstraction |
-| **Packs** | no | data, contracts, screens. They **use** engines (section 4) | packs lose compute code and reactive-connector declarations |
-| **`.dmod` modules, the kernel** | user | a module's packs **use** engines by name; the kernel runs them. An engine always arrives as a JAR in `lib/engines` with a config file, never inside a module (0.8) | `module.yaml` `compute.engines` goes at R2 |
-| **Distributions, editions, licensing** | n/a | a distribution lists engines like modules; a descriptor names its licence feature | "Drishti Risk" edition = the distribution with those engines on |
-| **Drishti\*net cluster** | host | placement per engine, session affinity, shards from the partition capability | section 5.5 |
-| **Compute pools, admission, capacity** | host | the limits of a config file are enforced by what exists (`Pool`, admission, the capacity planner) | one accounting: an engine's sessions reserve from the node's budget |
-| **RBAC and controls (i10)** | host | the engine receives a visibility, never a principal (RK-9, generalised) | access rules are written once, per output, in config |
-| **GenAI and MCP (i9)** | consumer | every output is a tool: its parameters are the tool's input schema, its answer a table, its explanation a second tool. Called as the user, in the `interactive` class | the `ai-tools: []` lists of today's catalogue are generated, not written |
-| **Arrow Flight** | transport | serves output tables; later carries the process binding | no engine names Flight |
-| **Mnemonics and their switches** | host | a pack gives an output a mnemonic; engine off means the mnemonic is "not active" with the reason | one rule for both switches |
-| **Homes, Studio, Help, playgrounds** | consumers | Help shows the generated page of each running engine; Studio's palette lists outputs as tables and the generated fragments; a playground page exists for every measure because the explain rule guarantees its parts | no hand-written playground page per measure |
-| **Elements** | none | generated screens are fragments only (no bespoke UI) | a guard, as today |
-| **Native maths (OpenBLAS)** | library | an engine's own dependency behind its own guard; the switch and health card stay the host's | not an engine |
-| **Windows and offline sites** | constraint | no native launcher: a process engine is started as `java` or `python`; engine JARs come from `lib/engines`; nothing is fetched at run time | in the specification |
+| `inputs` may be empty | descriptor | a calculator has parameters only | 6.2 |
+| Parameter type `document`, with a JSON Schema | descriptor | a view or a model query is a structured value, not five scalars. Formulas inside it are Rachana-EL, so it stays hermetic | 3.2 |
+| Parameter type `table`, with `contract`, `max-rows` and optional `overlays: <input>` | descriptor | what-if rows and vectors are data. They enter the stamp by hash and are never stored | 3.2, 8.8 |
+| Open input: `open: true`, `mode: request` | descriptor | a query engine reads tables its descriptor cannot list. The host resolves each name as the person, row rules and masks applied | 6.2.1, 5.2 |
+| `Inputs.table(input, table)`; `InputTable.offers(GroupScan)` and `groups(GroupScan, sink)` | host | open lookup; **push-down**: the source groups and aggregates (a closed list: sum, count, min, max over a Rachana-EL row expression, by grouping sets) and returns partial states. Not offered: the engine scans and aggregates itself | 5.2 |
+| `Control.interim(Answer)` | host | a first, approximate answer before the exact one (today's progressive pivot). Capability word `progressive`; no interface | 5.3, 8.8 |
+| `EngineContext.peer(Snapshot)` | host | the same engine at another snapshot, under the same visibility: attribution between two dates without a second mechanism | 5.1 |
+| Session key | host | a session whose inputs are all read as the person is kept per visibility signature (2.4) | 7.2 |
+| Laws `overlay`, `pushdown`, `interim`, `isolation` | kit | each new declaration, and the per-viewer setting, is proven for any engine | 12.4 |
 
-### 2.3 Consequences that shape the specification
+Three points of design that keep this small:
 
-1. **One model for four ways of running.** On demand, batch, reactive and streaming differ only in *who calls `ask` and when*
-   (the trigger), never in the engine's code. The specification has no "batch engine" type.
-2. **Inputs and outputs are contracts, in the Lake contract schema.** There is one definition of a contract in the family
-   (`lake-contracts`); the engine API does not invent a schema language. Output tables use the Data Protocol's types, so a
-   table an engine returns is served to a Sutra without conversion.
-3. **The engine owns arithmetic; the host owns everything a deployment differs in.** Access, placement, schedules, storage,
-   names, screens, words, licences.
-4. **Nothing in the engine API is about risk.** No scope grammar, no hierarchy, no limit, no currency. Those are the risk
-   kernel's (RK-6) and reach the host as parameters and outputs like any other engine's.
-5. **Where the model must not apply:** anything with a side effect (loaders, feeds, write-back, approvals), anything that is a
-   general language over the user's own definitions (pivot, EL), platform services (Flight, memory lake, cluster), and screens.
-   Forcing them in would be the over-abstraction the lead's note warns of.
-6. **Fragments are functions; engines are functions too, one level down.** A fragment is a typed function from tables to a
+1. **Push-down belongs to `Inputs`, not to the engine.** The pivot's tabular provider already asks a source for grouped
+   partial states, and row rules are applied "inside the base relation before any filter or grouping". Moving that seam into
+   `Inputs` means the SQL executor (DuckDB, a connector's SQL target) is the **host's**, so access rules hold by construction
+   and the query engine never holds a connection. The engine keeps what is arithmetic: planning cell sets, merging states in a
+   fixed order, finishing figures, formulas, top N, sketches, what-if, explain.
+2. **A measure provider is a supplier.** Today a compute engine reaches the pivot through `PivotProvider`,
+   `PivotSourceProvider` and `FigureSource`. In the model the query engine declares a `uses` port and the site binds it to any
+   engine's output that has the partition capability. Those three kernel interfaces, `VarPivotProvider`, `VarPivotLens` and
+   `MrCubeExtras` go; the "generic partition-to-pivot adapter" of the first design is this port.
+3. **Code people write is an input, not configuration.** The `python` engine reads approved code as rows of a contract
+   (`platform/code-item@1`: name, version, hash, text) bound to the host's approval store. Only approved code reaches it, its
+   hash is in every stamp, and "configuration never holds code" stays true. Its measures are explained by one `opaque` step
+   naming the code and its hash: honest, and counted.
+
+### 2.4 The rules every engine keeps
+
+None is new in kind; the wider scope makes each of them hold for the query, live and Python engines too. "Proof" names what
+fails a release.
+
+| Rule | The engine's part | The host's part | Proof |
+|---|---|---|---|
+| **Determinism** | same version, options, inputs, request and seed give the same bits, over runs, threads, batch sizes, bindings | the stamp is the cache key and the provenance; a pushed-down aggregate is in a declared exactness class (below) | laws `repeat`, `threads`, `batching`, `order`, `binding`, `pushdown` |
+| **Explain and workbook** | every measure column: steps with formulas, and a formula workbook. A query's measure is explained from its own formula (already Rachana-EL) over its aggregates and member counts | serves `…/explain` and `…/workbook` for every engine; one "why" drawer | law `explain`; the workbook recalculated by an outside spreadsheet engine; opaque steps counted and bounded |
+| **Bit-exact goldens** | kit cases compared by raw bits | existing goldens keep their expected values and ask through the generic host (9.3) | the migration gate of 2.6: goldens unedited, and the recorded parity corpus |
+| **Cancellation** | `Control.check()` once a batch and once a declared latency | cancels a pushed-down statement at its source; closes after the declared latency | kit lifecycle group |
+| **Resource limits** | reserves before allocating; reports `memoryBytes()`; uses only the host's executor | one budget per node for every engine; sessions evicted least recently used; an answer over its size bound is refused with the count, never cut short | kit: a 1 MB budget gives words, not an out-of-memory error |
+| **Class-loader isolation** | names nothing but its JAR, the platform packages and the JDK | one loader per engine JAR (0.5) | kit delivery group; the drop-in test |
+| **Session isolation** | the `Engine` object holds nothing derived from a request; a `Session` holds only viewer-independent state, or state keyed by the visibility signature; no mutable statics | never hands one person's session, cache entry or interim answer to another signature | laws `interleaving`, `filter-equivalence`, `isolation`; two instances apart. A leak is a release blocker |
+| **Access on inputs** | reads only through `Inputs` and `Supplier` | decides the visibility; applies row rules and masks before delivery; binds open tables as the person | recording `Inputs`; `ENG-2003` |
+| **Access on outputs** | declares which output columns pass an input column through (`passes`) | masks those columns; re-checks rows of an output that carry a scope column against the visibility and fails the request on a breach (`ENG-4005`, the engine is blocked); applies the small-cell rule of aggregate-only roles | host tests; the kit's filter-equivalence |
+| **Audit** | `Audit.note` for what only it knows | one line per ask, explain and workbook: actor, output, normalised parameters (a `table` parameter by hash and row count), stamp, outcome | host tests |
+
+**"Engines never see more than the caller may": how it holds, precisely.**
+
+| Isolation (`access.isolation`) | What the engine's session holds | Holds by | Cost |
+|---|---|---|---|
+| `per-viewer` | only rows the caller may see: every input is read as the person, and the session is kept per visibility signature | **construction** | a session per signature: memory and open time multiply |
+| `shared` | the snapshot, unmasked; each request carries the host's visibility as a filter and the engine computes within it | **proof**: the filter-equivalence and interleaving laws, and the host's check of outputs | one session for all (a date that takes 25 s to open and 3 ms to ask) |
+
+The two are interchangeable for any engine, because filter equivalence is exactly the statement that they give the same bits.
+So it is a site setting, not an engine property: `per-viewer` is always available, open inputs are always `per-viewer`, and
+`shared` is allowed only where the proof exists (recommended, EN-47: a kit certificate beside the JAR that lists both laws;
+otherwise the host runs the engine `per-viewer` and says so on its card). The host may also run a sample of `shared` requests a
+second time `per-viewer` and compare bits (the shadow idea of 7.2 applied to access).
+
+**Exactness of pushed-down aggregates.** Integer and decimal aggregates are exact wherever they run. A floating-point sum
+computed by a source in parallel may differ in its last bits from run to run. **Not measured here:** whether today's pivot
+figures are bit-stable across thread counts. The rule for the `query` engine: a measure over pushed-down floating-point states
+declares `exact: relative:1e-12`, and the engine offers the option the specification already requires of native maths, a
+forced path (plain scan, summation in a fixed order in Java) under which the column is `bits`. The kit's `pushdown` law runs
+every case both ways.
+
+### 2.5 Performance: an engine in the lib folder is not slower than the code it replaces
+
+**The handover, cheapest first.** An engine's data crosses the seam in one of five ways, and the binder picks the first that
+applies.
+
+| # | Handover | Copies | Replaces today's |
+|---|---|---|---|
+| 1 | **Not crossing at all**: projection, the visibility filter and (when offered) grouping run at the source | none | the pivot's `GROUPING SETS` statements; column pruning |
+| 2 | **Column arrays by reference**: the `Batch` an engine receives wraps the arrays Lake's read API filled (`double[]`, `long[]`, `String[]`); one interface call per batch, none per row | none | `VarLoader`, `ExposureLoader` reading lake columns |
+| 3 | **The vector sink**, in Lake's exact shape (id, reused `double[]`, length, texts) | none | the vector intake of `VarIntake` |
+| 4 | **The engine's own mapped file** under its work folder (today's `VarHotFile`, `ExposureHotFile`, `MappedMatrix`), built once per input stamp and mapped on later opens | none after the first open | the hot files, unchanged in form |
+| 5 | **Arrow IPC** over a pipe or a mapped file | one, or a mapping | the process binding's wire only (section 8) |
+
+- **In process, zero copy means the same heap arrays, not Arrow buffers.** On Java 21 an off-heap Arrow buffer cannot be read
+  as a `double[]` without a copy, so Arrow stays what EN-3 made it: the format between processes and for Flight, not a type of
+  the API. If a benchmark gate ever shows a copy on a hot path that arrays cannot remove (a mapped lake file handed straight
+  through), the additive answer is a read-only `java.nio` buffer view on `Batch`: JDK-only, a minor API version. It is
+  reserved, not built (EN-48).
+- **Nothing per row crosses the seam**: no object, no map, no boxed value, no reflective call. Accessors are bound once per
+  session through method handles (G2). The kit's contract group counts interface calls per batch.
+- **Answers are handed back the same way**: `Tables.columns(...)` takes the engine's arrays, and the host serves them to the
+  Data Protocol, Flight and the lake writer without a copy.
+
+**The benchmark gate, per migrated engine.** In-tree code is deleted only when the engine that replaces it passes, on the
+migration branch, on one machine, over the same data and the same requests (the engine's **reference asks**, part of its kit
+cases):
+
+| Measure | Gate against the in-tree path |
+|---|---|
+| Session open, cold and warm (from the mapped file) | within 5% |
+| Ask, p50, per reference ask | within 5% |
+| Ask, p99, 16 callers at once | within 10% |
+| Bytes allocated per ask | within 10% |
+| Peak memory of the session | within 5% |
+| Bits | identical to the recorded answers (2.6) |
+
+`engine tck bench` runs the reference asks and writes these figures as a file, the same command for every engine, so the gate
+is a comparison of two files. Results go to the one benchmark document (`docs/admin/BENCHMARK.md`). The 5% figure is Risk's
+existing gate (Risk section 7), made general. Production-size runs are one at a time on the benchmark machine; a developer's
+machine runs the same command at 10,000 trades to catch a regression early, not to pass the gate.
+
+### 2.6 Migration order, and the proof each step owes
+
+**Two proofs for every migration, both before the in-tree code is deleted.**
+
+1. **Parity.** A recorder runs the in-tree code over a parity corpus (the reference asks, each under several visibilities)
+   and writes its answers as kit cases, doubles as raw bits. The engine must return them unchanged. The in-tree code is the
+   oracle that writes the engine's first cases; from then on the additive-only gate keeps them (6.1).
+2. **Speed.** The benchmark gate of 2.5.
+
+Old and new live together on the migration branch only. A release holds one of them (one way per job); the single exception
+already decided is the old reactive form read for one release (section 12).
+
+| Step | Release | What moves | Why here | Its golden and parity proof |
+|---|---|---|---|---|
+| **M1 Risk** | combined i8 (R1, H2, R2; section 14) | the engine platform; `market-risk` and `ccr` from one JAR (rows 1 to 15: VaR, ES, parametric, stress, backtest, intraday, what-if, pre-deal, FRTB-SA, SIMM, exposure, limits, correlations, betas, playgrounds); `engine-sample`; `cohort-stats` (row 29) | decided. It exercises four of the five kinds (R, L, W, X) and shards on the engines whose numbers matter most | `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyGolden`, `PackagedVarGoldenTest` with expected values unedited; raw bits against the recorder (RK-18); the what-if parity files (`var/whatif-parity.json`, `ccr/whatif-parity.json`); the drop-in test |
+| **M2 Calculators** | the same release if R2 is green with time left, else the next | `capacity` (row 28); the genomics workbench descriptor (row 29); `indicators` when the economy module asks for derived series (row 30) | small and pure. They prove a module's own engine is cheap to add, use the generated workbook, and delete three evaluators of one file | the planner's shared test vectors, unedited, become kit cases; the committed sizing workbook recalculates to the same figures; the genomics API tests' expected answers |
+| **M3 Query** | its own release, with two drills (a performance release) | `query` (rows 16 to 23, 25): pivot and BI query as **one** engine; rollups; live answers; pivot what-if; pivot explain; tables' rows; derived kinds; the measure-provider port | the largest step (homes of about 94,000 lines, a good part of which is not arithmetic and stays) and every screen depends on it, so it waits until the host has run Risk in production. It needs the grouped scan, which M1 does not | a parity corpus recorded first: every pivot view and BI visual of the packs' Sutras and reports, the pivot and BI test suites' expected values, the reports' expected-value checks (`ExpectedValueRunner`), each under three visibilities; the `pushdown` law; the pivot figures of `BENCHMARK.md` |
+| **M4 Python** | the release after M3 | `python` (row 27): items, Python tables and models, transforms, notebooks, custom aggregate functions; the three pools become the one process binding | it needs the process binding proven by M1's sample twin, and custom functions are reached from `query` through a supplier port, so it follows M3 | recorded outputs of the compute demo and the BI Python tests; the `binding` law; the isolation tests of the pools, unedited |
+| **M5 New domains** | as each is scheduled | liquidity, climate, CVA, collateral, a funds engine | never in-tree: each is born as a descriptor with cases | its own kit cases; no parity (nothing to replace) |
+
+- **The API freeze.** EN-27 freezes `engine-api` 1.0 at R2 after three engines. The query kind is the one that stretches the
+  API, and it arrives after the freeze. So its descriptor (`query.engine.yaml`) and the grouped-scan signature are written and
+  reviewed on paper at E0, beside the three (EN-53). Everything 2.3 adds is additive, so a miss costs a minor version, not a
+  major one.
+- **Where first-party engines are built.** Not in Drishti's reactor (A7) and not in a product's repository. Recommended (EN-52):
+  one repository `drishti-engines`, one Maven module and one JAR per engine (`query`, `python`, `capacity`, `indicators`), each
+  with its descriptor and cases. Drishti Risk stays its own product repository. A default distribution copies `query` into
+  `lib/engines`; a kernel with an empty folder still starts, serves documents, search and screens, and says in words which
+  figures need which engine.
+- **First paper sizes, to be redone at each step's design:** M2 about 8 bd; M3 about 50 to 60 bd; M4 about 15 bd. Nothing was
+  measured.
+- **The guard that keeps it moving.** A list of the in-tree compute homes of 2.2 is checked in and is shrink-only: a build
+  fails when a class that computes a figure appears outside an engine, or when a home on the list grows. After M4 the list is
+  empty and the guard is the plain rule of 0.11 (no engine class in the reactor) plus "the engine computes it" (4.5).
+
+### 2.7 Consequences for the specification
+
+1. **One model for every way of running and every kind.** They differ in *who calls `ask` and when* and in what the
+   descriptor declares, never in a second interface. The specification has no "batch engine" and no "query engine" type.
+2. **Inputs and outputs are contracts, in the Lake contract schema**; an open input is the one place where the table's schema
+   comes from the host's catalogue at request time. Output tables use the Data Protocol's types, so a table an engine returns
+   is served to a Sutra without conversion.
+3. **The engine owns arithmetic; the host owns everything a deployment differs in**: access, placement, schedules, storage,
+   names, screens, words, licences, and the executor that runs a pushed-down statement.
+4. **Nothing in the engine API is about a domain.** No scope grammar, no hierarchy, no limit, no currency, no pivot axis. A
+   view is a `document` parameter of the `query` engine, as a scope is a parameter of the risk engines.
+5. **Fragments are functions; engines are functions too, one level down.** A fragment is a typed function from tables to a
    screen. An engine is a typed function from tables to tables. Both declare table parameters as contracts, both are versioned
    by major, both are proven by cases as data. The same words are used on purpose (`with:`, contract, major, cases).
+
+### 2.8 How the rest of Drishti relates
+
+Rows of the first map that the wider scope does not change, kept in one place.
+
+| Area | Relation to the engine model |
+|---|---|
+| Regulatory and management reports | an **output**: a table whose cells trace to measures, so the explain rule covers each cell. No report machinery per engine |
+| A pricing supplier (QLRisk) for what-if and stress | an engine **outside**, bound to a `uses` port by a site. Drishti still never prices; "not supplied" when absent |
+| Lake, loaders, source-system modules, feeds | where inputs come from and stored outputs go. Loaders **emit the data-version event** engines react to; their kinds are what inputs bind to |
+| Kafka and live streams | a stream reaches the lake or a live table; the host turns it into `Changes`. An engine never names a broker; a broker absent means no incremental updates, calmly |
+| Live tables, blotters, FORM results | the one live result-set engine of the host. An engine never pushes rows: the host re-asks what changed and feeds the differences by key and version |
+| Packs, `.dmod` modules | **use** engines by name (section 4); never carry one (0.8) |
+| Distributions, editions, licensing | a distribution lists engines like modules; a descriptor names its licence feature |
+| Drishti\*net | placement per engine, session affinity, shards from the partition capability (5.5) |
+| Mnemonics and their switches | a pack gives an output a mnemonic; engine off means the mnemonic is "not active" with the reason |
+| GenAI and MCP (i9) | every output is a tool, its explanation a second tool, called as the user in the `interactive` class |
+| Homes, Studio, Help, playgrounds | consumers: generated pages and fragments per output (section 7) |
+| Native maths (OpenBLAS) | an engine's own dependency behind its own guard; not an engine |
+| Windows and offline sites | no native launcher: a process engine is started as `java` or `python`; nothing is fetched at run time |
+| `kernel/drishti-engine` (search, shape, view pipeline) | **not an engine in this sense**, despite its name: it reads and shows. A rename is for the kernel's own housekeeping |
 
 ## 3. The engine model
 
@@ -421,7 +634,7 @@ generators, the Admin card, Help and the AI tool list. The engine's class is not
 | `options` | deployment settings with types, defaults, bounds | config validation, `CONFIGURATION.md` |
 | `params` | request parameters with types, defaults, allowed values | forms, endpoints, tools, the kit |
 | `outputs` | per output: `shape` (`table`, `row`, `series`), columns with types, key, order, which are **measures**, their exactness class, parameters accepted | Data Protocol schema, stores, screens |
-| `capabilities` | `explain`, `workbook`, `incremental`, `partition`, `process`, `supplier` | binder, cluster, kit |
+| `capabilities` | `explain`, `workbook`, `incremental`, `partition`, `process`, `supplier`, `progressive` | binder, cluster, kit |
 | `uses` | named supplier ports (another engine's output it may ask for) | wiring, "not supplied" |
 | `limits` | declared memory per input row, cancel latency | admission, the kit |
 
@@ -437,9 +650,10 @@ generators, the Admin card, Help and the AI tool list. The engine's class is not
   compile against should not move with it (the same reasoning as Lake LK-13).
 - **Missing input is an answer.** An absent table or column gives `NOT_FOUND` with the names, never an error and never a
   substitute (Risk section 3, made general).
-- **Two input modes.** `session`: the engine loads the snapshot once, unmasked, and applies each request's visibility itself
-  (Risk). `request`: the host reads the inputs for each request as the viewer, masks applied, and the session lives for that
-  request (today's reactive connectors). The descriptor chooses per input.
+- **Two input modes.** `session`: the engine loads the snapshot once and computes each request within the visibility the host
+  gives it (Risk). `request`: the host reads the input as the viewer, row rules and masks applied (today's reactive connectors,
+  and every open input of a query engine). The descriptor chooses per input; a site may force every input to be read as the
+  viewer (`access.isolation: per-viewer`), and the host then keeps a session per visibility signature (2.4).
 
 ### 3.3 Lifecycle
 
@@ -522,6 +736,8 @@ folder's disk. This is today's `hot-dates`, `open-heap-mb`, `memory-budget-mb`, 
   without a visibility is refused, never read as "all".
 - In `session` mode the engine may hold only viewer-independent state; any cache it keeps of a viewer's view is keyed by the
   visibility's signature. The kit proves it with two interleaved viewers and with the filter-equivalence law (6.2).
+- The `Engine` object itself holds nothing derived from a request. The host decides every visibility, enforces it on inputs
+  and re-checks it on outputs; the two isolation settings and what each guarantees are in 2.4.
 - A viewer's mask on a column the engine computes from is a refusal by the host before the engine is called, unless the
   descriptor marks the column as passed through unchanged (then the host masks the output column).
 - No mutable statics: two instances of one engine in one JVM (two tenants, two tests) are proven apart.
@@ -609,7 +825,7 @@ An output is published once by the host and then is an ordinary table everywhere
 | Kinds and mnemonics | the pack's `as:` gives an output a kind and a mnemonic in its own vocabulary (`var-result`, `VRES`): a **virtual kind**, computed, never stored. This is what the reactive connector declaration does today, in four lines instead of forty |
 | Live tables | an output with a key and a `changes` trigger is declared as a live table; the host feeds it differences by key and version; grids update in place |
 | The lake | an output with a `store:` is written as a contract table (the official record, a nightly ladder); then it is a kind like any loaded one, with history |
-| Pivot and BI | a stored output is a table; an output with the partition capability is offered as a measure over any grouping |
+| Pivot and BI (the `query` engine from M3) | a stored output is a table; an output with the partition capability is bound to the query engine's measure-provider port and offered as a measure over any grouping (2.3) |
 | Studio | the palette lists the outputs as tables (with the sample from the kit's cases) and the engine's generated fragments |
 | AI tools | one tool per output, one for its explanation |
 | Access | section 5.4: who may ask is the host's rule per output; what rows they see is the visibility |
@@ -700,6 +916,7 @@ drishti:
       access:
         opens: [ role:market-risk, pack:market-risk ]
         visibility: banking.var-access                 # a named host rule that turns a principal into a visibility
+        isolation: shared                              # or per-viewer: a session per visibility signature (2.4)
       limits: { memory-mb: 0, threads: 0, request-seconds: 30, concurrent: { interactive: 16, batch: 2 } }
       placement: { roles: [ risk ], shards: { count: 3 } }      # the shard unit is the descriptor's
 ```
@@ -732,15 +949,17 @@ host stores them. (Risk's `ResultSink` port goes; section 9.)
 | Who may open the engine's pages, words and tools | `access.opens` (roles, packs), as the catalogue's `opens` today |
 | Who may ask a given output | per output `access` (default: as `opens`); i10 adds control rules here, not in engines |
 | Which rows a caller's answer covers | `access.visibility`: a named host rule turns the principal into a `Visibility` (`VarAccess`, `ExposureAccess` today). No rule named: the engine is refused at start, never "all" |
-| What is recorded | the host's audit line per request: actor, output, normalised parameters, stamp, outcome |
+| Whether the engine's session may hold rows beyond one caller's | `access.isolation`: `per-viewer` (never, by construction) or `shared` (the snapshot once, proven by the kit's laws); `shared` needs a kit certificate that lists the filter-equivalence and interleaving laws (2.4, EN-47) |
+| What is recorded | the host's audit line per ask, explain and workbook: actor, output, normalised parameters (a `table` parameter by hash and row count), stamp, outcome |
 
 ### 5.5 Switches, Admin and the cluster
 
 - **Switch.** Unchanged for the operator: Admin → Engines, `drishti.py`, the file. The card is drawn from the descriptor:
   title, version, certificate, bound inputs with their tables and stamps, sessions open with their memory, triggers and their
   last firing, outputs and who uses them (which packs). "Off" removes everything derived (4.3).
-- **Services.** `dataload`, `flight`, `memory-lake`, `openblas`, `pivot` stay on the same page under the heading Services: one
-  registry, two kinds of entry (EN-23). They have no descriptor.
+- **Services.** `dataload`, `flight` and `memory-lake` stay on the same page under the heading Services: one registry, two
+  kinds of entry (EN-23 as amended by EN-45). They have no descriptor. `pivot` is listed there until M3 makes it the `query`
+  engine; `openblas` becomes an engine option at R2.
 - **Placement.** Per engine, as module parts are placed (no default "all"). A snapshot's session lives on the nodes placed;
   requests carry session affinity; a node without the engine routes.
 - **Shards.** An engine with the partition capability names its shard unit; the host splits a snapshot over the shard owners,
@@ -775,7 +994,7 @@ against the engine as configured (the host only adapts).
 ### 6.2 The laws
 
 Each law takes a case the author wrote and checks a property that must hold for **any** engine. An author who writes twenty
-cases gets about two hundred checks.
+cases gets about two hundred checks. The first twelve are EN-18's; the last four come with the wider scope (2.3, 2.4).
 
 | Law | Statement |
 |---|---|
@@ -791,6 +1010,10 @@ cases gets about two hundred checks.
 | Absence | removing an optional input changes only the outputs declared to need it; removing a required one gives `NOT_FOUND` |
 | Seed | another seed changes only outputs declared stochastic |
 | Explain | for every measure cell of the case, the explanation's last step equals the cell |
+| **Overlay** | a what-if with a `table` parameter that overlays an input equals a fresh session over inputs physically changed by those rows |
+| **Push-down** | the answer with the grouped scan offered equals the answer with it refused, under each column's exactness class |
+| Interim | the final answer equals the answer of an ask that sent no interim one (capability `progressive`) |
+| Isolation | the case run per viewer (inputs read as the case's visibility, a session per signature) equals the case |
 
 ### 6.3 How an outside engine passes
 
@@ -947,7 +1170,7 @@ requests, visibilities) and output names:
 | Access rules (`VarAccess`, `ExposureAccess`) | they produce a `Visibility`: data of the engine API |
 | Routes that are a plain ask | the generic endpoints; the old paths are aliases in the module's route table |
 | Sign-off, approvals, saved views, basket edits | host workflow over stored outputs and inputs; they ask through the generic host by output name |
-| Pivot (`VarPivotProvider`, `VarPivotLens`, `MrCubeExtras`) | `partial` and `ask` by output name; tables only. Still banking's own code in i8; the generic partition-to-pivot adapter is later (section 12) |
+| Pivot (`VarPivotProvider`, `VarPivotLens`, `MrCubeExtras`) | `partial` and `ask` by output name; tables only. Still banking's own code in i8; at M3 they go, replaced by the query engine's measure-provider port (2.3) |
 | Flight form, the intraday stream | outputs served by the host; the `changes` trigger |
 | Explain and why panels | the generic `…/explain` and `…/workbook` |
 | The goldens (`VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyGolden`, `PackagedVarGoldenTest`) | **expected values unedited**; the calling code asks through the generic host with the Risk JAR copied into a temporary lib folder |
@@ -995,15 +1218,28 @@ Session over a snapshot; inputs by contract as column batches; a visibility as a
 typed in the descriptor; tables out with keyed, ordered, typed columns; measures with steps; partials that add. That is the
 API. Everything any one of them needed alone (scope grammar, time buckets, genotype encoding) stayed in that engine.
 
-## 11. What stays in Drishti
+## 11. What stays in the kernel: the minimal host
 
-The generic engine host (promoted from the reactive package) and its Spring wiring; the reading of `lib/engines` at start; the switch registry, files, history, Admin
-page; binding by contract and its Admin view; triggers, coalescing, the result cache; access rules and the visibility rules of
-each module; storing outputs to lakes; live-table feeding; the generic endpoints, Flight and Data Protocol serving; cluster
-placement, shards, routing; capacity and admission; mnemonics, menus, Help, Homes, Studio; the official record and approvals;
-the pivot engine; packs, loaders, feeds, source-system modules. No engine arithmetic.
+After M4 (section 2.6) the kernel computes no figure. It is the host, and it is this list and nothing more:
+
+| Part | What it does | Why it cannot be an engine |
+|---|---|---|
+| **Engine host** (`engine-host` and its Spring wiring) | reads `lib/engines` at start; registry, switches, files, history, Admin; binding by contract; sessions, budgets, admission, request classes; triggers, coalescing, the answer cache; the process pool | it is what runs engines |
+| **Data plane** | the Lake read API, connectors and routing; the table catalogue and definitions; materialisation and live stores; the **push-down executor** (DuckDB, a connector's SQL target) behind `Inputs` | it holds connections and files, and it is where row rules are applied before anything is grouped |
+| **Access and audit** | principals, roles, row rules, masks, the visibility rules of each module, the security signature, the audit log | an engine never sees a principal |
+| **Publication** | generic endpoints, Data Protocol tables, live-table feeding by key and version, storing outputs to lakes, Flight | side effects |
+| **Cluster** | placement, shard owners, routing, gathering partials (the transport; `assemble` is the engine's) | topology |
+| **Screens and language** | Rachana compile and bind, Elements, mnemonics, menus, Help, Homes, Studio, generated pages | a screen, not a figure |
+| **Data in** | packs, loaders, feeds, source-system modules, the in-memory lake | side effects, outside I/O |
+| **Workflow** | approvals, sign-off, the official record, alert state, schedules, report delivery | state over time, about people |
+| **AI gateway** | providers, policy, tools that ask engines as the user | outside I/O |
+
+One sentence for the guard: **the kernel may count rows to page them and nothing else; every sum, average, rank, ratio and
+statistic a person sees is an engine's.** Until M4 the shrink-only list of 2.6 says which in-tree homes still compute.
 
 ## 12. Migration of today's engines
+
+This section is step M1 (combined i8) in detail. The order of the later steps, and the proof each owes, is section 2.6.
 
 | Today | Becomes | When |
 |---|---|---|
@@ -1018,11 +1254,13 @@ the pivot engine; packs, loaders, feeds, source-system modules. No engine arithm
 | Python `path-sum` and the reactive `python` runner | stay one release behind the old reactive form (the row above it), for the compute demo only; a non-Java engine as a JAR is the process binding's later step (section 8, EN-44) | deleted with that step |
 | `var.yaml`, `exposure.yaml`, `frtb-sa.yaml`, `simm.yaml`, `sensitivities.yaml`, `mr-cube.yaml`, `openblas.yaml` | `market-risk.yaml`, `ccr.yaml` with `options`; each old file's switch becomes an output switch inside its engine, so "FRTB off" still works; `openblas` becomes the engines' option `linear-algebra`; old keys are aliases | R2 |
 | `module.yaml` `compute.engines:` (banking lists six) and `java.jars: drishti-compute-banking.jar` | gone: the module carries no engine and no compute jar; its packs' `uses.engines` say what it needs | R2 |
-| `VarPivotProvider`, `VarPivotLens`, `MrCubeExtras` | a generic partition-to-pivot adapter | after i8 (not in scope) |
+| `VarPivotProvider`, `VarPivotLens`, `MrCubeExtras`; `PivotProvider`, `PivotSourceProvider`, `FigureSource` | the query engine's measure-provider port, bound in configuration (2.3) | M3 |
 
 **The rule after R2, kept by a guard (0.11):** no main class in Drishti's reactor implements `com.ash.engine.Engine`; no pom
 depends on an engine artifact; a test that needs an engine copies its JAR into a temporary lib folder. Services (`dataload`,
-`flight`, `memory-lake`, `pivot`) are not engines and stay in-tree (EN-23).
+`flight`, `memory-lake`) are not engines and stay in-tree (EN-23). The pivot and BI query code, derived kinds, people's Python
+and the capacity planner stay in-tree **until their step** of 2.6, on the shrink-only list; they are not exceptions to the rule,
+only later.
 
 The freeze of RK-20 covers the banking paths; the reactive package joins the freeze list from the day `engine-host` is cut
 from it.
@@ -1038,6 +1276,7 @@ from it.
 | Java level | 21 | |
 | Versions | `0.1.0` when Risk's K4 needs it; `1.0.0` after three engines pass | |
 | Guards | names no host; public surface dump; `engine-api` has no dependency; no statics; cases additive-only; file cap; header | as the sibling repositories |
+| First-party engines that are not products (`query`, `python`, `capacity`, `indicators`) | a second repository **`drishti-engines`**: one Maven module and one JAR per engine, each with its descriptor and kit cases; created at M2 (EN-52) | inside `drishti-engine` (ties the API's release to every engine's); a repository per engine (five more release trains for small code); in Drishti's reactor (fails A7) |
 
 ## 14. Estimate and the combined i8 plan
 
@@ -1073,7 +1312,7 @@ nothing was measured.
 |---|---|
 | G3 compiled expressions (kernels, template specialisation, shadow oracle) | about 12 (O) |
 | Flight transport of the process binding | about 6 (O 4, S 2) |
-| Generic partition-to-pivot adapter | about 5 |
+| Steps M2 to M4 of section 2.6 (calculators, the query engine, Python) | M2 about 8, M3 about 50 to 60, M4 about 15: first paper sizes |
 | GenAI drafting of descriptors and config (i9) | in i9's plan |
 
 **Folded into the milestones.**
@@ -1110,14 +1349,20 @@ ship with the sample engine and the analytics engines.
 | The shared platform libraries tie an engine to a server after all | an engine needs tools 1.3 and a site's server has 1.2 | additive-only libraries, the built-against rule, the refusal sentence; an engine that wants independence uses only the API and merges what else it needs under its own package names |
 | The folder is taken for a security boundary | an untrusted JAR runs with the server's rights | stated in 0.7, in the deployment guide and on the Admin page; `pinned` for production; the process binding for a JAR a site will not trust |
 | Token cost | the owner's budget | Fable for 2.5 bd; grade on every lane |
+| "Everything is an engine" becomes a framework that every small sum must pass through | slow work, a heavy API | no kind in the API, no new engine interface (2.3); the stated list of what is not an engine (2.1); a module's calculator is a descriptor, one class and cases |
+| The query engine is slower through `Inputs` than with its own DuckDB connection | every screen | grouping is pushed down to the same executor, now the host's (2.3); the benchmark gate of 2.5 before any deletion; two drills |
+| Pushed-down floating-point sums are not bit-stable | the determinism law fails for `query` | measured first at M3's design; the declared class `relative:1e-12` with a forced fixed-order path under which the column is `bits` (2.4) |
+| Folding the pivot and BI query stacks changes a figure | a wrong number on a screen | the parity corpus is recorded from both stacks before any code moves; a difference between the two stacks today is found by that recording and is decided, never averaged |
+| `engine-api` 1.0 is frozen before the query kind has been built | a 2.0 soon after | the query descriptor and the grouped scan are reviewed on paper at E0 (EN-53); all of 2.3 is additive |
+| `shared` isolation is trusted without its proof | one person's rows in another's answer | `shared` only with a certificate that lists both laws; the host's output re-check; the shadow comparison (2.4) |
 
-## 16. Decisions EN-1 to EN-44
+## 16. Decisions EN-1 to EN-55
 
 ### EN-1 to EN-28: accepted (owner, 2026-11-21)
 
 | # | Decision | Recommendation |
 |---|---|---|
-| EN-1 | What an engine is | **A pure, deterministic, explained function from contract tables to tables**, tests T1 to T4; loaders, feeds, pivot, live tables and services are not engines |
+| EN-1 | What an engine is | **A pure, deterministic, explained function from contract tables to tables**, tests T1 to T4; loaders, feeds, live tables and services are not engines. Amended 2026-11-22 (EN-45): T4 is "its answer is data", and the pivot and BI query engine **is** an engine |
 | EN-2 | Home of the API | **New repository `drishti-engine`, `com.ash.engine`**, pinned from `~/.m2`; not in Risk, not in the kernel, not in tools |
 | EN-3 | API dependencies | **`engine-api` is JDK-only**; Arrow is an adapter and a wire format, not a public type |
 | EN-4 | Lifecycle | **engine → session over a snapshot → ask**; no separate batch type |
@@ -1139,7 +1384,7 @@ ship with the sample engine and the analytics engines.
 | EN-20 | Process model | **In process first; the process binding is today's worker pool re-faced; Flight when remote is needed**; triggers (a) to (f) |
 | EN-21 | Generation | **G0 interpret and G2 bind now; G1 generate documents, screens, stubs, typed records, tools now; G3 compiled expressions later on a measured trigger; G4 with GenAI** |
 | EN-22 | What is never generated or compiled | **No Java in configuration, no run-time `javac`, no generated engine logic, no per-engine controllers** |
-| EN-23 | Services | **Keep `dataload`, `flight`, `memory-lake`, `openblas`, `pivot` as switched services** in the same registry and page, without descriptors |
+| EN-23 | Services | **Keep `dataload`, `flight`, `memory-lake` as switched services** in the same registry and page, without descriptors. Amended 2026-11-22 (EN-45): `pivot` becomes the `query` engine at M3; `openblas` is an engine option |
 | EN-24 | Small analytics (`CorrelationEngine`, `BetaEngine`) | **Follow RK-5 into the market-risk engine** as outputs; a module-local engine only if RK-5's file-by-file review keeps them in Drishti |
 | EN-25 | Today's two `ComputeEngine` interfaces and the reactive package | **Fold into one**: the reactive SPI is replaced by `com.ash.engine`; the lifecycle one is renamed `EngineLifecycle`; the reactive runtime becomes `engine-host` |
 | EN-26 | Risk design | **Amend as section 9.2 before K4**: ports are the engine API's; `ResultSink` and `PartitionTransport` go; `risk-tck` is the engine kit plus cases |
@@ -1147,9 +1392,9 @@ ship with the sample engine and the analytics engines.
 | EN-28 | Scope in combined i8 | **E0 to E12** with the cut lines E10, E11, E7 in that order; G3 and Flight later. The size is restated by EN-44 |
 
 
-### EN-29 to EN-44: open, for the owner (2026-11-22, the acceptance test)
+### EN-29 to EN-44: accepted (owner, 2026-11-22, the acceptance test)
 
-| # | Decision | Recommendation | The alternative |
+| # | Decision | Decided | The alternative not taken |
 |---|---|---|---|
 | EN-29 | The acceptance test as a gate | **A1 to A8 of section 0 are release gates**: the kit's delivery group at R1, the drop-in test from H2 and in the drill, Risk through the dropped JAR at R2 | a statement in the design only |
 | EN-30 | The deliverable and its folder | **One self-contained JAR per product** (private libraries merged in, no platform class inside) **in `<home>/lib/engines`** (`drishti.engine-lib.path`), kept on an upgrade | engine JARs in `lib/ext` beside drivers (one shared loader, no isolation) |
@@ -1171,8 +1416,26 @@ ship with the sample engine and the analytics engines.
 EN-29 to EN-44 change three accepted decisions in the parts shown: EN-15 (the pinned artifact and hash are now an optional pin,
 EN-35), EN-18 (the certificate is evidence, EN-39) and EN-19 (in process means the site put the JAR in its folder, EN-35).
 
-## Decisions taken (owner, 2026-11-21)
+### EN-45 to EN-55: open, for the owner (2026-11-22, everything that computes)
 
-EN-1 to EN-28 are **accepted as recommended** (owner). The two Drishti interfaces named `ComputeEngine` are folded into one in i7b G4 (owner: fix known duplicates now); the full engine model (drishti-engine repository, engine-api, kit, ladder) is built in the combined i8 as planned.
+| # | Decision | Recommendation | The alternative |
+|---|---|---|---|
+| EN-45 | The scope of the engine model | **Every figure a person reads, stores or decides on is computed by an engine** (2.1). The whole list of what is not an engine: side effects and workflow, rows as they are, screens, Rachana Core's list aggregates over rows the page holds, the host's figures about itself, Calc in the person's browser (labelled as not Drishti's figures), LLM calls, libraries. Amends EN-1 and EN-23 | keep the pivot and BI engine as a kernel service (the first design) |
+| EN-46 | Kinds | **Five ways of interacting (run, query, live, what-if, explain), no kind in the API, no new engine interface.** Additions: empty `inputs`, the `document` and `table` parameter types, open inputs, and on the host side `Inputs.table(input, table)`, the grouped scan, `Control.interim`, `EngineContext.peer` (2.3) | an SPI per kind (`QueryEngine`, `StreamEngine`): five contracts, five kits |
+| EN-47 | Who enforces access | **The host decides and enforces, on inputs and on outputs.** `access.isolation`: `per-viewer` holds by construction and is always available; `shared` holds by the kit's laws and is allowed only with a certificate that lists them; open inputs are always `per-viewer` | `shared` for every engine on trust; or `per-viewer` only (a risk date per signature does not fit memory) |
+| EN-48 | The handover | **Column arrays by reference, the vector sink, the engine's own mapped file, push-down; Arrow only between processes** (EN-3 stands). A `java.nio` buffer view on `Batch` is reserved for the day a gate shows a copy | Arrow types in the API now |
+| EN-49 | The migration gate | **Parity (recorded answers of the in-tree code as kit cases, raw bits) and speed (open and p50 within 5%, p99 and allocation within 10%, memory within 5%) before any in-tree code is deleted**; `engine tck bench`; results in `BENCHMARK.md` | goldens only; or a looser speed gate for the first release of each engine |
+| EN-50 | The order | **M1 Risk in combined i8; M2 calculators (capacity, genomics workbench, indicators); M3 the query engine in its own release with two drills; M4 Python; M5 new domains born as engines** (2.6). The release names of M2 to M4 are the owner's | query first (the largest duplicate, but before the host is proven) |
+| EN-51 | One query engine | **Fold the pivot core and the BI query engine into one `query` engine at M3**, with one push-down executor in the host; derived kinds become its declarations | migrate the two stacks as two engines and fold later (two parity corpora, two caches kept) |
+| EN-52 | Home of first-party engines | **A repository `drishti-engines`, one module and one JAR per engine**; Risk stays its own product | inside `drishti-engine`; a repository each |
+| EN-53 | The API freeze | **EN-27 stands (1.0 at R2), on one more condition: the `query` descriptor and the grouped scan pass the E0 paper review** | hold 1.0 until M3 has shipped (Risk ships on a 0.x API) |
+| EN-54 | People's Python | **One `python` engine on the one process pool; approved code is an input under a contract; its measures carry one counted opaque step** | keep the three pools as host services outside the model |
+| EN-55 | Capacity sizing | **A `capacity` engine with no inputs: one evaluator, the workbook generated from its steps; the browser and Python evaluators and the workbook template are deleted** | leave it, as the host's figures about itself |
 
-EN-29 to EN-44 (2026-11-22) are **not yet taken**: they wait for the owner.
+## Decisions taken (owner)
+
+**2026-11-21.** EN-1 to EN-28 are **accepted as recommended** (owner). The two Drishti interfaces named `ComputeEngine` are folded into one in i7b G4 (owner: fix known duplicates now); the full engine model (drishti-engine repository, engine-api, kit, ladder) is built in the combined i8 as planned.
+
+**2026-11-22.** EN-29 to EN-44 are **accepted as recommended** (owner): the acceptance test A1 to A8 as release gates, one JAR per product in `lib/engines`, a loader per JAR with the four platform libraries shared, `ServiceLoader` discovery, the built-against compatibility rule, trust `folder` and `pinned`, an engine never a `.dmod`, at start only, the two-interface minimum, the kit's delivery group and harness, data only through `Inputs`, packs by name and contract, no engine class in the reactor after R2, Drishti Risk as one JAR, and the i8 scope.
+
+**2026-11-22, direction.** "Expand the engine concept to literally everything where computations are done." Designed in section 2. EN-45 to EN-55 are **not yet taken**: they wait for the owner.
