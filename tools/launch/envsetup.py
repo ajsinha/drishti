@@ -91,7 +91,7 @@ def have_yaml() -> bool:
     return importlib.util.find_spec("yaml") is not None
 
 
-def bootstrap(a, home: Path, env: dict, argv: list | None = None, run=subprocess.run, yaml_here=have_yaml) -> int | None:
+def bootstrap(a, home: Path, env: dict, argv: list | None = None, run=subprocess.run, yaml_here=have_yaml, wheels: Path | None = None) -> int | None:
     """Setup on a Python that has only the standard library: installs what is missing first, then runs the same command again in a fresh
     process that sees it (a user-site folder pip made is not on this process's path). None: nothing to do, setup goes on in this process.
     ``--system``: the Lake wheel and requirements.txt into this Python; the default (venv) path: drishti-console/.venv first, then setup
@@ -106,11 +106,11 @@ def bootstrap(a, home: Path, env: dict, argv: list | None = None, run=subprocess
     if system:
         target = a.python or sys.executable
         say(f"installing the Lake wheel and drishti-console/requirements.txt into {target} with pip: setup reads PyYAML (and the console needs the rest) and this Python has not got them")
-        pylibs.install(target, home, run=run)
+        pylibs.install(target, home, run=run, wheels=wheels)
     elif part is None and not a.skip_venv:
         import consolestart
         say("making drishti-console/.venv and installing the libraries into it: setup reads PyYAML and this Python has not got it")
-        target = str(consolestart.make_venv(home, a.python or sys.executable, a.reinstall, run=run))
+        target = str(consolestart.make_venv(home, a.python or sys.executable, a.reinstall, run=run, wheels=wheels))
     else:
         raise LaunchError("this part of setup reads PyYAML, which this Python has not got: run  python tools/drishti.py setup --system  (the libraries into this Python) or  setup  (a .venv) first")
     argv = list(sys.argv if argv is None else argv)
@@ -119,7 +119,16 @@ def bootstrap(a, home: Path, env: dict, argv: list | None = None, run=subprocess
 
 
 def setup(a, env: dict | None = None, argv: list | None = None, run=subprocess.run) -> int:
+    """setup; ``--wheels <folder or .zip>`` (else DRISHTI_WHEELS) installs the libraries only from that folder, offline."""
     env = dict(os.environ if env is None else env)
+    spec = (getattr(a, "wheels", None) or env.get("DRISHTI_WHEELS") or "").strip() or None
+    if spec and getattr(a, "check", False):
+        spec = None                                  # --check changes nothing and installs nothing
+    with pylibs.wheel_folder(spec) as wheels:
+        return _setup(a, env, argv, run, wheels)
+
+
+def _setup(a, env: dict, argv: list | None, run, wheels: Path | None) -> int:
     check = a.check
     part = getattr(a, "part", None)
     system = getattr(a, "system", False)
@@ -149,7 +158,7 @@ def setup(a, env: dict | None = None, argv: list | None = None, run=subprocess.r
     ini = edir / "dev.ini"
     jar = roots["jar"][0]
     j = {"ok": False, "java": "", "problem": ""}
-    rc = bootstrap(a, home, env, argv, run)
+    rc = bootstrap(a, home, env, argv, run, wheels=wheels)
     if rc is not None:
         return rc
     yaml_ok = have_yaml()
@@ -235,6 +244,13 @@ def setup(a, env: dict | None = None, argv: list | None = None, run=subprocess.r
         py = procs.venv_python(home)
         if py.exists() and not a.reinstall:
             bad = pylibs.verify(str(py), home)
+            if bad and not check:                   # only what is missing or wrong is installed, into the venv that is there
+                try:
+                    pylibs.install(str(py), home, run=run, wheels=wheels)
+                except LaunchError as e:
+                    line("FAIL", "console .venv", str(e))
+                    problems.append(str(e))
+                bad = pylibs.verify(str(py), home)
             line("ok" if not bad else "FAIL", "console .venv", f"{py}" + ("" if not bad else ": " + "; ".join(bad)))
             if bad:
                 problems.append("python tools/drishti.py setup venv --reinstall (remakes drishti-console/.venv); missing or wrong: " + "; ".join(bad))
@@ -246,7 +262,7 @@ def setup(a, env: dict | None = None, argv: list | None = None, run=subprocess.r
         else:
             import consolestart
             try:
-                consolestart.make_venv(home, a.python or sys.executable, a.reinstall)
+                consolestart.make_venv(home, a.python or sys.executable, a.reinstall, run=run, wheels=wheels)
                 line("made", "console .venv", str(py))
                 py_used = str(py)
             except LaunchError as e:
@@ -259,10 +275,10 @@ def setup(a, env: dict | None = None, argv: list | None = None, run=subprocess.r
         try:
             bad = pylibs.verify(target, home)
             if bad and not check:
-                pylibs.install(target, home)
+                pylibs.install(target, home, run=run, wheels=wheels)
                 bad = pylibs.verify(target, home)
                 if not bad:
-                    line("made", "libraries", f"{target}: the Lake wheel, then drishti-console/requirements.txt installed")
+                    line("made", "libraries", f"{target}: what was missing installed" + (f" from {wheels}" if wheels else "") + " (the Lake wheel first)")
             elif bad:
                 line("todo", "libraries", f"{target}: " + "; ".join(bad))
                 todo.append(f"python tools/drishti.py setup libs  (installs the Lake wheel, then drishti-console/requirements.txt, into {target})")

@@ -401,6 +401,7 @@
         <artifactId>spotless-maven-plugin</artifactId>
         <version>${spotless.version}</version>
         <configuration>
+          <lineEndings>UNIX</lineEndings>
           <java>
             <includes><include>src/**/*.java</include></includes>
             <removeUnusedImports/>

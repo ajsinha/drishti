@@ -29,7 +29,7 @@ import serverstart
 import settingsfile  # noqa: E402 - tools/ is on the path through procs
 
 
-def make_venv(home: Path, base_python: str, reinstall: bool = False, install: bool = True, run=subprocess.run) -> Path:
+def make_venv(home: Path, base_python: str, reinstall: bool = False, install: bool = True, run=subprocess.run, wheels: Path | None = None) -> Path:
     """drishti-console/.venv with the libraries installed (the Lake wheel first, then drishti-console/requirements.txt; uv when it is
     installed, else venv and pip); its Python. An existing environment is kept (``reinstall`` removes it first)."""
     import pylibs
@@ -40,14 +40,14 @@ def make_venv(home: Path, base_python: str, reinstall: bool = False, install: bo
     if py.exists():
         return py
     say(f"making the console's Python environment in {venv} ...")
-    uv = shutil.which("uv")
+    uv = None if wheels else shutil.which("uv")
     try:
         r = run([uv, "venv", str(venv)] if uv else [base_python, "-m", "venv", str(venv)])
     except OSError as e:
         raise LaunchError(f"{base_python}: {e.strerror}: install Python 3.11 or newer (or pass --python)") from None
     if r.returncode:
         raise LaunchError("the venv could not be made: install Python 3.11 or newer (or pass --python), then try again")
-    if install and uv:
+    if install and uv and not wheels:       # offline wheels go through pip (--no-index --find-links)
         wheel = pylibs.lake_wheel(home)
         if wheel is None:
             raise LaunchError(f"the pinned Lake wheel is not in {home / 'lib' / 'wheels'}: see lib/lake-wheel.pin")
@@ -56,7 +56,7 @@ def make_venv(home: Path, base_python: str, reinstall: bool = False, install: bo
             if run([uv, "pip", "install", *tls, "--python", str(py), *tail]).returncode:
                 raise LaunchError(f"uv pip install {tail[-1]} failed: read uv's message above")
     elif install:
-        pylibs.install(str(py), home, run=run)
+        pylibs.install(str(py), home, run=run, wheels=wheels)
     return py
 
 

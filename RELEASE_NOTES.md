@@ -13,6 +13,29 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7d: release notes
+
+*A point release on i7c: setup no longer needs the package index.* Everything else is as in i7c.
+
+## What changes for administrators
+
+- **Setup installs only what is missing** and never runs pip when every library is already installed (the Lake wheel included, at its pin).
+- **When pip fails, setup says why in one sentence** (the index rejected the login, 401/403, naming its host; the index could not be reached
+  or its certificate is not trusted; the index lacks `name==ver`), then prints the missing libraries as one copy-ready `py -m pip install ...`
+  line. pip's own output is always shown.
+- **Setup installs and `--check` verifies both** `drishti-console/requirements.txt` and `config/compute/locks/python.lock` (the compute pool's environment: numpy, pandas, pyarrow, scipy, ...), the Lake wheel first; a missing pin names its file, and two files that disagree on a pin stop setup in words naming both.
+- **`--wheels <folder or wheel-pack .zip>`** for `setup`, `setup venv`, `setup libs` and `setup --system` (and `DRISHTI_WHEELS`): installs only
+  from that folder (`pip --no-index --find-links`), the Lake wheel first; a wheel the folder lacks is named and nothing is installed.
+
+## What changes for developers
+
+- PyCharm launcher **Drishti: setup (system Python, offline wheels)** (`--wheels $USER_HOME$/drishti-wheels`); VS Code workspace regenerated.
+- Spotless uses `lineEndings` UNIX: `spotless:check` accepts the repository's LF files on Windows without git.
+
+## Known limits
+
+Carried from i7c unchanged (below).
+
 # Drishti 2.9.11.i7c: release notes
 
 *A point release on i7b: the Python set-up is split, and the server's Python work finds the interpreter from one setting.* Everything else is

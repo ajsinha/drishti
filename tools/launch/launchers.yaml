@@ -86,6 +86,12 @@ pycharm:
     command: setup --system
     what: "the same with no `.venv`: the libraries go into the project interpreter (the Python that runs this launcher)"
     when: the machine forbids virtual environments
+  - name: "Drishti: setup (system Python, offline wheels)"
+    kind: tool
+    settings: false
+    command: setup --system --wheels $USER_HOME$/drishti-wheels
+    what: "the same, installing only from `~/drishti-wheels` (unzip the wheel pack there, or pass the .zip itself): no package index is asked"
+    when: the company package index rejects pip (401/403), is unreachable, or lacks a library
   - name: "Drishti: build demo lakes"
     kind: tool
     command: lake demo --engine java

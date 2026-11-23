@@ -183,6 +183,18 @@
         "problemMatcher": []
       },
       {
+        "label": "Drishti: setup (system Python, offline wheels)",
+        "type": "shell",
+        "command": "python3 tools/drishti.py setup --system --wheels $USER_HOME$/drishti-wheels",
+        "windows": {
+          "command": "python tools/drishti.py setup --system --wheels $USER_HOME$/drishti-wheels"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
         "label": "Drishti: build demo lakes",
         "type": "shell",
         "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java",
@@ -315,6 +327,20 @@
         "args": [
           "setup",
           "--system"
+        ]
+      },
+      {
+        "name": "Drishti: setup (system Python, offline wheels)",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "setup",
+          "--system",
+          "--wheels",
+          "$USER_HOME$/drishti-wheels"
         ]
       },
       {

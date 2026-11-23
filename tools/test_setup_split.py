@@ -292,3 +292,194 @@ def test_bootstrap_is_skipped_with_yaml_or_check_and_never_loops(tmp_path):
     assert envsetup.bootstrap(_args(part="libs"), home, {}, ["x"], yaml_here=lambda: False) is None
     with pytest.raises(LaunchError):
         envsetup.bootstrap(_args(system=True), home, {envsetup.REEXEC_ENV: "1"}, ["x"], yaml_here=lambda: False)
+
+
+# ---- i7d: no pip for what is satisfied, a plain sentence when pip fails, --wheels (offline) ------------------------------------------
+
+def pip_run(versions: dict, pip_out: str = "", rc: int = 0):
+    """asked(), but a pip install answers ``rc`` with ``pip_out`` on stderr; the probe still answers ``versions``."""
+    base = asked(versions)
+
+    def run(cmd, **kw):
+        if cmd[1:4] == ["-m", "pip", "install"]:
+            base.calls.append(cmd)
+            return subprocess.CompletedProcess(cmd, rc, "", pip_out)
+        return base(cmd, **kw)
+    run.calls = base.calls
+    return run
+
+
+def pips(run):
+    return [c for c in run.calls if c[1:4] == ["-m", "pip", "install"]]
+
+
+def test_install_never_calls_pip_when_everything_is_satisfied(tmp_path, capsys):
+    home = fake_home(tmp_path)
+    run = pip_run({"alpha": "1.3", "beta": "2.0.1", "drishti-lake": "0.9.1"})
+    pylibs.install("py", home, windows=False, run=run)
+    assert pips(run) == [] and "pip is not run" in capsys.readouterr().out
+
+
+def test_install_skips_the_lake_wheel_when_it_is_at_its_pin_and_installs_the_rest(tmp_path):
+    home = fake_home(tmp_path)
+    run = pip_run({"alpha": None, "beta": "2.0.1", "drishti-lake": "0.9.1"})
+    pylibs.install("py", home, windows=False, run=run)
+    assert len(pips(run)) == 1 and pips(run)[0][-2] == "-r"
+    run = pip_run({"alpha": "1.3", "beta": "2.0.1", "drishti-lake": "0.9.0"})   # only the Lake wheel is wrong
+    pylibs.install("py", home, windows=False, run=run)
+    assert len(pips(run)) == 1 and pips(run)[0][-1].endswith(".whl")
+
+
+def test_a_401_gives_one_sentence_and_one_line_to_copy_and_pips_output_is_shown(tmp_path, capsys):
+    home = fake_home(tmp_path)
+    err = "WARNING: Looking in indexes: https://mirror.corp.example/simple\nERROR: 401 Client Error: Credentials not correct for url: https://mirror.corp.example/simple/alpha/\n"
+    run = pip_run({"alpha": None, "beta": None, "drishti-lake": "0.9.1"}, err, 1)
+    with pytest.raises(LaunchError) as e:
+        pylibs.install("py", home, windows=False, run=run)
+    lines = str(e.value).splitlines()
+    assert lines[0].startswith("your package index (mirror.corp.example) rejected the login: fix its credentials in pip.ini, or install offline with --wheels <folder>")
+    assert lines[-1].endswith('-m pip install "alpha>=1.2" beta==2.0.1') and len(lines) == 2
+    assert "401 Client Error" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("err,words", [("SSLError(SSLCertVerificationError CERTIFICATE_VERIFY_FAILED) host='pypi.corp.example'", "certificate was not trusted"),
+                                       ("Max retries exceeded with url: /simple/alpha/ HTTPSConnectionPool(host='pypi.corp.example', port=443)", "could not be reached"),
+                                       ("ERROR: No matching distribution found for beta==2.0.1", "lacks beta==2.0.1")])
+def test_other_pip_failures_get_their_sentence(tmp_path, err, words):
+    run = pip_run({"alpha": None, "beta": None, "drishti-lake": "0.9.1"}, err, 1)
+    with pytest.raises(LaunchError, match=words):
+        pylibs.install("py", fake_home(tmp_path), windows=False, run=run)
+
+
+def make_wheels(folder: Path, names=("alpha", "beta")) -> Path:
+    folder.mkdir(parents=True, exist_ok=True)
+    for n in names:
+        (folder / f"{n}-1.0-py3-none-any.whl").write_bytes(b"w")
+    return folder
+
+
+def test_wheels_folder_installs_only_from_it_lake_first(tmp_path):
+    home = fake_home(tmp_path / "h")
+    wheels = make_wheels(tmp_path / "w")
+    run = pip_run({})
+    pylibs.install("py", home, windows=True, run=run, wheels=wheels)
+    a, b = pips(run)
+    assert a[-1].endswith("drishti_lake-0.9.1-py3-none-any.whl") and b[-2] == "-r"
+    for c in (a, b):
+        assert "--no-index" in c and c[c.index("--find-links") + 1] == str(wheels) and "--use-feature=truststore" not in c
+
+
+def test_wheels_zip_is_unzipped_and_removed_afterwards(tmp_path):
+    import zipfile
+    z = tmp_path / "pack.zip"
+    with zipfile.ZipFile(z, "w") as f:
+        f.writestr("pack/alpha-1.0-py3-none-any.whl", b"w")
+    with pylibs.wheel_folder(str(z)) as folder:
+        assert "alpha" in pylibs.wheel_names(folder)
+        kept = folder
+    assert not kept.exists()
+    with pytest.raises(LaunchError, match="no such folder"):
+        with pylibs.wheel_folder(str(tmp_path / "nope")):
+            pass
+    assert pylibs.wheel_folder(None).__enter__() is None
+
+
+def test_a_wheel_folder_that_lacks_a_wheel_is_refused_in_words_and_pip_never_runs(tmp_path):
+    home = fake_home(tmp_path / "h")
+    run = pip_run({})
+    with pytest.raises(LaunchError, match="no wheel for beta"):
+        pylibs.install("py", home, windows=False, run=run, wheels=make_wheels(tmp_path / "w", ("alpha",)))
+    assert pips(run) == []
+    with pytest.raises(LaunchError, match="pinned Lake wheel is not in"):
+        pylibs.install("py", fake_home(tmp_path / "g", wheel=False), windows=False, run=run, wheels=make_wheels(tmp_path / "w2"))
+
+
+def test_setup_libs_wheels_and_the_env_variable_reach_install(tmp_path, capsys):
+    wheels = make_wheels(tmp_path / "w")
+    seen = []
+    with mock.patch.object(pylibs, "verify", return_value=["alpha is not installed"]), mock.patch.object(pylibs, "install", lambda *a, **k: seen.append(k.get("wheels"))):
+        envsetup.setup(ns(tmp_path, "libs", wheels=str(wheels)), quiet())
+        envsetup.setup(ns(tmp_path, "libs"), {**quiet(), "DRISHTI_WHEELS": str(wheels)})
+        envsetup.setup(ns(tmp_path, "libs", check=True, wheels=str(wheels)), quiet())
+    assert seen == [wheels, wheels]
+
+
+def test_setup_libs_satisfied_never_installs(tmp_path, libs, capsys):
+    libs["bad"] = []
+    envsetup.setup(ns(tmp_path, "libs"), quiet())
+    assert libs["installed"] == [] and "every requirement" in capsys.readouterr().out
+
+
+def test_stdlib_only_python_with_wheels_names_the_missing_wheel(tmp_path):
+    w = tmp_path / "w"
+    w.mkdir()
+    r = subprocess.run([sys.executable, "-S", "-B", str(TOOLS / "drishti.py"), "setup", "libs", "--wheels", str(w)], capture_output=True, text=True)
+    assert "ModuleNotFoundError" not in r.stderr and "wheel" in (r.stdout + r.stderr)
+
+
+# ---- python.lock: the compute pool's environment is installed and checked with requirements.txt ------------------------------------
+
+LOCK_TEXT = "# lock\nnumpy==2.5.3 \\\n    --hash=sha256:aa \\\n    --hash=sha256:bb\nsix==1.17.0 \\\n    --hash=sha256:cc\n"
+
+
+def with_lock(home: Path, text: str = LOCK_TEXT) -> Path:
+    f = home / "config" / "compute" / "locks" / "python.lock"
+    f.parent.mkdir(parents=True)
+    f.write_text(text, encoding="utf-8")
+    return home
+
+
+ALL_OK = {"alpha": "1.3", "beta": "2.0.1", "drishti-lake": "0.9.1", "numpy": "2.5.3", "six": "1.17.0"}
+
+
+def test_the_lock_is_parsed_without_its_hash_lines(tmp_path):
+    home = with_lock(fake_home(tmp_path))
+    assert pylibs.lock_requirements(home) == [("numpy", "==2.5.3"), ("six", "==1.17.0")]
+    assert [n for n, _, _ in pylibs.all_requirements(home)] == ["alpha", "beta", "drishti-lake", "numpy", "six"]
+
+
+def test_check_names_the_file_a_missing_pin_comes_from(tmp_path):
+    home = with_lock(fake_home(tmp_path))
+    bad = pylibs.verify("py", home, asked({**ALL_OK, "numpy": None, "alpha": None, "six": "1.16.0"}))
+    assert any("numpy==2.5.3 is not installed" in b and "config/compute/locks/python.lock" in b for b in bad)
+    assert any(b.startswith("six 1.16.0") and "python.lock" in b for b in bad)
+    assert any(b.startswith("alpha>=1.2") and "drishti-console/requirements.txt" in b for b in bad)
+    assert pylibs.verify("py", home, asked(ALL_OK)) == []
+
+
+def test_install_adds_the_lock_after_requirements_and_skips_what_is_satisfied(tmp_path):
+    home = with_lock(fake_home(tmp_path))
+    run = pip_run({**ALL_OK, "numpy": None, "alpha": None})
+    pylibs.install("py", home, windows=False, run=run)
+    a, b = pips(run)
+    assert a[-1] == str(home / "drishti-console" / "requirements.txt") and b[-1] == str(home / "config" / "compute" / "locks" / "python.lock")
+    run = pip_run({**ALL_OK, "six": None})                  # only the lock is short: one pip, the lock alone
+    pylibs.install("py", home, windows=False, run=run)
+    assert [c[-1] for c in pips(run)] == [str(home / "config" / "compute" / "locks" / "python.lock")]
+    run = pip_run(ALL_OK)
+    pylibs.install("py", home, windows=False, run=run)
+    assert pips(run) == []
+
+
+def test_wheels_cover_the_lock_and_a_missing_one_is_named(tmp_path):
+    home = with_lock(fake_home(tmp_path / "h"))
+    run = pip_run({})
+    with pytest.raises(LaunchError, match="no wheel for numpy"):
+        pylibs.install("py", home, windows=False, run=run, wheels=make_wheels(tmp_path / "w", ("alpha", "beta", "six")))
+    assert pips(run) == []
+    wheels = make_wheels(tmp_path / "w2", ("alpha", "beta", "numpy", "six"))
+    pylibs.install("py", home, windows=False, run=run, wheels=wheels)
+    assert len(pips(run)) == 3 and all("--no-index" in c for c in pips(run)) and pips(run)[-1][-1].endswith("python.lock")
+
+
+def test_files_that_disagree_on_a_pin_fail_naming_both(tmp_path):
+    home = with_lock(fake_home(tmp_path, reqs="alpha>=1.2\nnumpy==2.4.0\n--find-links ../lib/wheels\ndrishti-lake==0.9.1\n"))
+    with pytest.raises(LaunchError, match=r"requirements.txt and config/compute/locks/python.lock disagree on numpy"):
+        pylibs.verify("py", home, asked({}))
+    with pytest.raises(LaunchError, match="disagree"):
+        pylibs.install("py", home, windows=False, run=pip_run({}))
+
+
+def test_the_real_lock_and_requirements_agree():
+    home = TOOLS.parent
+    assert pylibs.lock_requirements(home) and pylibs.all_requirements(home)

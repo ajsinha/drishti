@@ -261,6 +261,8 @@ def register(groups, add) -> None:
     s.add_argument("--python", metavar="FILE", help="venv: the Python to make drishti-console/.venv with; libs, --system: the Python to install into (default this one)")
     s.add_argument("--skip-venv", action="store_true", help="the same as setup drishti: leave drishti-console/.venv alone")
     s.add_argument("--reinstall", action="store_true", help="remake drishti-console/.venv and install the libraries again")
+    s.add_argument("--wheels", metavar="FOLDER", help="install the libraries ONLY from this folder (or the wheel-pack .zip itself), offline: pip --no-index --find-links; "
+                                                      "default DRISHTI_WHEELS")
     s.set_defaults(func=cmd_setup, cmd=None)
 
     b = groups.add_parser("build", help="build jar|modules|all|sdk: the server jar (copied into <home>/lib) and the modules (packages in <home>/modules), with Maven, never install")

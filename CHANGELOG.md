@@ -16,6 +16,18 @@
 # Changelog
 
 
+## 2.9.11.i7d (2026-11-23)
+
+- **Setup works without the package index.** `drishti.py setup` (venv, libs, `--system`) installs only the libraries that are missing or at
+  the wrong version and never calls pip when all are in order (the Lake wheel too, when `drishti_lake` is at its pin). When pip fails it
+  says why in one sentence (the index rejected the login 401/403 and names the host, could not be reached or its certificate is not
+  trusted, or lacks `name==ver`) and prints the missing list as one `py -m pip install ...` line; pip's own output is always shown.
+  **`--wheels <folder or wheel-pack .zip>`** (also `DRISHTI_WHEELS`) installs only from that folder (`--no-index --find-links`), the Lake wheel
+  first, and names a wheel the folder lacks. PyCharm launcher **Drishti: setup (system Python, offline wheels)** (`~/drishti-wheels`).
+  Setup installs and `--check` verifies **both** `drishti-console/requirements.txt` and `config/compute/locks/python.lock` (the compute pool's environment: numpy, pandas, pyarrow, scipy, ...), the Lake wheel first; a missing pin names its file, and two files that disagree on a pin stop setup in words naming both.
+  Spotless: `lineEndings` UNIX, so `spotless:check` accepts the LF files on Windows without git. IDE_GUIDE 2.2, DEPLOYMENT_AND_QA_GUIDE 1.2a,
+  CLI_REFERENCE.
+
 ## 2.9.11.i7c (2026-11-23)
 
 - **`drishti.py setup` split in two parts; one Python setting.** `setup drishti` (settings folder, `dev.ini`, data folder, JVM files,

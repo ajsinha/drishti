@@ -20,11 +20,13 @@ No network is needed to *check*; pip is the only thing that touches one, and on 
 (pip's truststore), so a company proxy that re-signs TLS works as it does for Maven."""
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 import shutil
 import subprocess
 import tempfile
+import zipfile
 from pathlib import Path
 
 import procs
@@ -53,6 +55,42 @@ def requirements(home: Path) -> list[tuple[str, str]]:
         if m:
             out.append((m.group(1), m.group(3).strip()))
     return out
+
+
+LOCK = Path("config") / "compute" / "locks" / "python.lock"
+REQ_FILE = Path("drishti-console") / "requirements.txt"
+
+
+def lock_requirements(home: Path) -> list[tuple[str, str]]:
+    """(name, ==version) of every pin of config/compute/locks/python.lock (the compute pool's environment); its --hash lines are not requirements."""
+    f = home / LOCK
+    out = []
+    if f.is_file():
+        for raw in f.read_text(encoding="utf-8").splitlines():
+            line = raw.strip().rstrip("\\").strip()
+            if not line or line.startswith(("#", "-")):
+                continue
+            m = _REQ.match(line)
+            if m:
+                out.append((m.group(1), m.group(3).strip()))
+    return out
+
+
+def all_requirements(home: Path) -> list[tuple[str, str, str]]:
+    """(name, spec, file) of drishti-console/requirements.txt, then python.lock. The two must agree: a lock pin that breaks the requirement of
+    the same library (or a second, different pin) stops setup in words naming both files."""
+    reqs = [(n, sp, REQ_FILE.as_posix()) for n, sp in requirements(home)]
+    seen = {norm(n): (sp, f) for n, sp, f in reqs}
+    for n, sp in lock_requirements(home):
+        k = norm(n)
+        if k in seen:
+            osp, of = seen[k]
+            v = sp.lstrip("=").strip()
+            if osp and not satisfies(v, osp):
+                raise LaunchError(f"{REQ_FILE.as_posix()} and {LOCK.as_posix()} disagree on {n}: {n}{osp} against {n}{sp}; make the two files name one version")
+        seen.setdefault(k, (sp, LOCK.as_posix()))
+        reqs.append((n, sp, LOCK.as_posix()))
+    return reqs
 
 
 def lake_pin(home: Path) -> dict[str, str]:
@@ -128,16 +166,17 @@ def installed(py: str, names: list[str], run=subprocess.run) -> dict[str, str | 
 
 def verify(py: str, home: Path, run=subprocess.run) -> list[str]:
     """What is missing or wrong in the interpreter ``py`` against drishti-console/requirements.txt and the Lake pin; empty: all is in order."""
-    reqs = requirements(home)
-    have = installed(py, [n for n, _ in reqs], run)
+    reqs = all_requirements(home)
+    have = installed(py, [n for n, _, _ in reqs], run)
     pin = lake_pin(home).get("version", "")
     bad = []
-    for name, spec in reqs:
+    for name, spec, src in reqs:
         v = have.get(name)
+        at = f"  [{src}]"
         if v is None:
-            bad.append(f"{name}{spec} is not installed")
+            bad.append(f"{name}{spec} is not installed{at}")
         elif not satisfies(v, spec):
-            bad.append(f"{name} {v} is installed, the requirement is {name}{spec}")
+            bad.append(f"{name} {v} is installed, the requirement is {name}{spec}{at}")
         if norm(name) == "drishti-lake" and pin and v is not None and v != pin:
             bad.append(f"{name} {v} is installed, lib/lake-wheel.pin pins {pin}")
     return bad
@@ -160,19 +199,114 @@ def pip_extra(py: str, windows: bool | None = None, run=subprocess.run) -> list[
     return ["--use-feature=truststore"] if v and v < TRUSTSTORE_DEFAULT else []
 
 
-def install(py: str, home: Path, windows: bool | None = None, run=subprocess.run) -> None:
-    """The Lake wheel first (the requirements name it and no index has it), then drishti-console/requirements.txt, into the interpreter ``py``."""
+def missing(py: str, home: Path, run=subprocess.run) -> list[tuple[str, str, str]]:
+    """(name, spec, file) of every requirement ``py`` lacks or has at the wrong version (the Lake wheel's pin counts); empty: nothing to install."""
+    reqs = all_requirements(home)
+    have = installed(py, [n for n, _, _ in reqs], run)
+    pin = lake_pin(home).get("version", "")
+    out = []
+    for name, spec, src in reqs:
+        v = have.get(name)
+        lake = norm(name) == "drishti-lake"
+        if v is None or not satisfies(v, spec) or (lake and pin and v != pin):
+            out.append((name, f"=={pin}" if lake and pin else spec, src))
+    return list({norm(n): (n, sp, f) for n, sp, f in out}.values())     # one entry a library (the lock's exact pin wins)
+
+
+def _q(t: str) -> str:
+    return f'"{t}"' if re.search(r"[<>|&\s]", t) else t
+
+
+def pip_line(py: str, items: list[str]) -> str:
+    """One ready-to-copy ``<python> -m pip install name==ver ...`` line (a spec with < or > is quoted; Windows: ``py``)."""
+    return f"{'py' if procs.windows() else _q(py)} -m pip install " + " ".join(_q(i) for i in items)
+
+
+def explain_pip_failure(output: str) -> str:
+    """One plain sentence for the commonest pip failures (the index refused the login, could not be reached, lacks a package); '' when unknown."""
+    lines = output.splitlines()
+    hot = [l for l in lines if re.search(r"\b(401|403)\b|Max retries|HTTPSConnectionPool|host=", l)] or lines
+    m = re.search(r"https?://(?:[^/@\s]*@)?([^/\s:'\"]+)", "\n".join(hot))
+    host = m.group(1) if m else "the configured package index"
+    if re.search(r"\b(401|403)\b", output):
+        return f"your package index ({host}) rejected the login: fix its credentials in pip.ini, or install offline with --wheels <folder>"
+    if re.search(r"CERTIFICATE_VERIFY_FAILED|SSLError|certificate verify", output, re.I):
+        return f"your package index ({host}) could not be reached: its certificate was not trusted; fix the certificate in pip.ini, or install offline with --wheels <folder>"
+    if re.search(r"Max retries exceeded|Failed to establish|Name or service not known|getaddrinfo|ConnectionError|ProxyError|Connection (?:timed out|refused|reset)|Temporary failure|ReadTimeout|ConnectTimeout", output, re.I):
+        return f"your package index ({host}) could not be reached: check the network, proxy and pip.ini, or install offline with --wheels <folder>"
+    m = re.search(r"No matching distribution found for (\S+)|Could not find a version that satisfies the requirement (\S+)", output)
+    if m:
+        return f"your package index lacks {(m.group(1) or m.group(2)).strip()}: use an index that has it, or install offline with --wheels <folder>"
+    return ""
+
+
+@contextlib.contextmanager
+def wheel_folder(spec: str | None):
+    """The folder ``--wheels`` names (a folder, or the wheel-pack .zip itself, unzipped to a temporary folder that is removed afterwards); None stays None."""
+    if not spec:
+        yield None
+        return
+    path = Path(spec).expanduser()
+    if path.is_dir():
+        yield path
+    elif path.is_file() and path.suffix.lower() == ".zip":
+        tmp = tempfile.mkdtemp(prefix="drishti-wheels-")
+        try:
+            try:
+                with zipfile.ZipFile(path) as z:
+                    z.extractall(tmp)
+            except zipfile.BadZipFile:
+                raise LaunchError(f"--wheels {path} is not a readable .zip file") from None
+            yield Path(tmp)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+    else:
+        raise LaunchError(f"--wheels {path}: no such folder or .zip file (unzip the wheel pack into a folder, e.g. ~/drishti-wheels, and name it)")
+
+
+def wheel_names(folder: Path) -> dict[str, Path]:
+    """normalised distribution name -> wheel, for every .whl under ``folder``."""
+    return {norm(w.name.split("-")[0]): w for w in sorted(folder.rglob("*.whl"))}
+
+
+def install(py: str, home: Path, windows: bool | None = None, run=subprocess.run, wheels: Path | None = None) -> None:
+    """Installs only what ``py`` is missing: the Lake wheel first (the requirements name it and no index has it), then
+    drishti-console/requirements.txt. Everything satisfied: says so and never calls pip. ``wheels`` (a folder): only from there
+    (``--no-index --find-links``), the Lake wheel from it or from lib/wheels; a wheel the folder lacks is named and nothing is run."""
     win = procs.windows() if windows is None else windows
-    wheel = lake_wheel(home)
-    if wheel is None:
-        raise LaunchError(f"the pinned Lake wheel is not in {home / 'lib' / 'wheels'}: build it as lib/lake-wheel.pin says (version {lake_pin(home).get('version', '?')}), then run setup again")
-    extra = pip_extra(py, win, run)
+    need = missing(py, home, run)
+    if not need:
+        say(f"  every requirement is already installed in {py}: pip is not run")
+        return
+    others = [(n, sp) for n, sp, _ in need if norm(n) != "drishti-lake"]
+    from_lock = [(n, sp) for n, sp, f in need if f == LOCK.as_posix() and norm(n) != "drishti-lake"]
+    from_req = [x for x in others if x not in from_lock]
+    wheel = None
+    if len(others) != len(need):
+        found = wheel_names(wheels) if wheels else {}
+        wheel = found.get("drishti-lake") or lake_wheel(home)
+        if wheel is None:
+            raise LaunchError(f"the pinned Lake wheel is not in {wheels if wheels else home / 'lib' / 'wheels'}: build it as lib/lake-wheel.pin says (version {lake_pin(home).get('version', '?')}), then run setup again")
+    if wheels:
+        found = wheel_names(wheels)
+        lacking = [n for n, _ in others if norm(n) not in found]
+        if lacking:
+            raise LaunchError(f"the wheel folder {wheels} has no wheel for {', '.join(lacking)}: add it (on a machine with a working index: pip download {' '.join(n + sp for n, sp in others)} -d <folder>) and run setup again")
+    extra = [] if wheels else pip_extra(py, win, run)
+    off = ["--no-index", "--find-links", str(wheels)] if wheels else []
     req = home / "drishti-console" / "requirements.txt"
-    for args in (["install", "-q", *extra, str(wheel)], ["install", "-q", *extra, "-r", str(req)]):
+    steps = ([["install", "-q", *extra, *off, str(wheel)]] if wheel else []) + ([["install", "-q", *extra, *off, "-r", str(req)]] if from_req else []) \
+        + ([["install", "-q", *extra, *off, "-r", str(home / LOCK)]] if from_lock else [])
+    for args in steps:
         say(f"  pip {' '.join(args[:2] + args[-1:])} ...")
-        r = run([py, "-m", "pip", *args])
+        r = run([py, "-m", "pip", *args], capture_output=True, text=True)
+        out = (r.stdout or "") + (r.stderr or "")
+        if out.strip():
+            say(out.rstrip())                      # pip's own output is always shown
         if r.returncode:
-            raise LaunchError(f"pip {' '.join(args[:3])} ... failed in {py}: read pip's message above (behind a proxy: set pip's index and certificate, or use Python's Windows store)")
+            why = explain_pip_failure(out) or f"pip failed in {py}: read its message above"
+            by_hand = ([str(wheel)] if wheel else []) + [n + sp for n, sp in others]
+            raise LaunchError(why + ("" if wheels else "\nthen install what is missing by hand:  " + pip_line(py, by_hand)))
 
 
 def ensure_setting(ini: Path, py: str, check: bool = False) -> tuple[str, str]:

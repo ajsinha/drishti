@@ -113,6 +113,7 @@ sizing planner (`tools/sizing_planner.py`, and **Admin → Capacity** in the con
 | `Drishti needs Java 21 or newer`, or Maven names Java 8 | `JAVA_HOME` points at an older Java | `setx DRISHTI_JAVA_HOME "C:\jdk-21"` (the tools' own lookup, before `JAVA_HOME`) and set `JAVA_HOME` to the same folder for Maven |
 | the browser tests say Chromium is missing | Playwright's browsers are installed once per user | `drishti-console\.venv\Scripts\python.exe -m playwright install chromium` (into your profile, no administrator rights) |
 | the company forbids virtual environments, or pip fails with a certificate error | everything must go to the system Python; the company proxy re-signs HTTPS | `py tools\drishti.py setup --system` installs the Lake wheel and `requirements.txt` into that Python and writes it as `drishti.python` in `dev.ini`; on Windows pip uses the Windows certificate store itself ([CLI_REFERENCE.md › setup](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)); `py tools\drishti.py setup libs --check` names what is missing |
+| setup fails with `401 Credentials not correct` (or 403, "could not be reached", "No matching distribution"): the company package index in `pip.ini` refuses pip | setup installs only what is missing from `requirements.txt` and `config/compute/locks/python.lock` (nothing, when all is installed) and says in one sentence which index refused and what to do, with the missing libraries as one `py -m pip install name==ver ...` line | **offline, no index**: unzip the wheel pack into `C:\Users\you\drishti-wheels` and run `py tools\drishti.py setup --system --wheels %USERPROFILE%\drishti-wheels` (the folder or the pack's `.zip`; `setup venv` and `setup libs` take `--wheels` too; PyCharm: **Drishti: setup (system Python, offline wheels)**); only that folder is used, a missing wheel is named |
 | the company will not allow an `.exe` | nothing here needs one | Java (the Temurin ZIP), Python and Maven's wrapper only; every Drishti command is `py tools\drishti.py ...`; the products install from their release tags with `mvnw.cmd` |
 
 The platform's source is in `C:\Users\<you>\IdeaProjects\drishti-platform\` (one folder per repository,
@@ -278,8 +279,8 @@ one have every option.
 **1 · Get the release.** Unpack the release ZIP (it carries the server jar in `lib/`), or get the platform's source and build it (JDK 21
 only; every repository carries Maven as `mvnw`). The source is five repositories (and the index repository) under one folder, `~/IdeaProjects/drishti-platform/`
 (Windows `C:\Users\you\IdeaProjects\drishti-platform\`): download the source bundle from the index repository's release, or
-`git clone https://github.com/drishti-platform/drishti-platform.git` into that folder and run `clone_all.py --release i7c`; then
-`build_all.py --release i7c` installs the products from their tags in order (tools, Rachana, Lake) and runs the whole Drishti build and its tests (to build only the jar, `build all` below). The steps have one home,
+`git clone https://github.com/drishti-platform/drishti-platform.git` into that folder and run `clone_all.py --release i7d`; then
+`build_all.py --release i7d` installs the products from their tags in order (tools, Rachana, Lake) and runs the whole Drishti build and its tests (to build only the jar, `build all` below). The steps have one home,
 [QUICKSTART_DEVELOPERS.md sections 1 and 2](QUICKSTART_DEVELOPERS.md#1-get-the-code-and-set-up-the-machine); the versions that go together are in the index
 repository's [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md). Then, in the `drishti` folder:
 

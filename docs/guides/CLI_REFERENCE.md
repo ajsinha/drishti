@@ -2718,6 +2718,11 @@ folder `tools/drishti.py` lives in; a named one must be an absolute path (a rela
 | `setup venv` | the Python part in `drishti-console/.venv`: makes or checks it, installing the pinned Lake wheel from `lib/wheels` first, then `drishti-console/requirements.txt` |
 | `setup libs` | the same libraries into the **current** Python (the system Python; no venv) |
 | `setup --system` | `setup drishti` + `setup libs`: where no `.venv` is allowed |
+| `--wheels <folder or .zip>` (any of the above; `DRISHTI_WHEELS`) | installs the libraries **only** from that folder (`pip --no-index --find-links`, the Lake wheel first); names a wheel the folder lacks and installs nothing |
+
+Setup installs and `--check` verifies both `drishti-console/requirements.txt` and `config/compute/locks/python.lock` (the server's compute pool checks its interpreter against the lock; a missing pin names its file; the two files must agree on every pin). Setup installs only the libraries that are missing or at the wrong version and never calls pip when all are in order. When pip fails it
+says why in one sentence (index login rejected 401/403, index not reachable or certificate not trusted, index lacks `name==ver`), shows
+pip's own output, and prints the missing list as one `py -m pip install name==ver ...` line.
 
 `--check` changes nothing; with `venv` or `libs` it verifies the libraries name by name (every requirement's installed version against its
 spec, the Lake wheel against `lib/lake-wheel.pin`) and names what is missing or wrong (exit 1). The interpreter that was set up or used

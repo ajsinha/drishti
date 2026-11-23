@@ -201,6 +201,15 @@ one your team already uses. Drishti needs only its packages installed in it.
    feeds' Run now, the compute pool, the pivot Python functions) runs in the same Python; `DRISHTI_PYTHON` overrides it. On Windows pip uses
    the Windows certificate store, so it works behind a company proxy (a company package index goes in `%APPDATA%\pip\pip.ini`, Linux
    `~/.config/pip/pip.conf`). No administrator rights: add `--user` to a plain `pip`, or use a Python of your own.
+
+   **Setup installs only what is missing** from `requirements.txt` and from `config/compute/locks/python.lock` (the server's compute pool needs the lock's numpy, pandas, pyarrow, scipy ...; the wheel pack carries both), and never runs pip when every library is already there. When pip fails, setup says why in one
+   sentence (the package index rejected the login, 401/403: fix its credentials in `pip.ini`; the index could not be reached; the index lacks
+   a library) and prints the exact missing list as one `py -m pip install name==ver ...` line to copy; pip's own output is always shown.
+   **Offline, with no index at all** (the company mirror refuses pip): unzip the wheel pack into `~/drishti-wheels` (Windows
+   `C:\Users\you\drishti-wheels`), then run `py tools\drishti.py setup --system --wheels %USERPROFILE%\drishti-wheels` (`setup`, `setup venv` and
+   `setup libs` take it too; the folder may also be the pack's `.zip` itself; `DRISHTI_WHEELS` is the same setting for scripts). Only that folder
+   is used (`pip --no-index --find-links`), the Lake wheel first; a wheel the folder lacks is named and nothing is installed. In PyCharm: the
+   launcher **Drishti: setup (system Python, offline wheels)**, which reads `$USER_HOME$/drishti-wheels`.
 3. Choose it in PyCharm (section 2.3, step 2). Every Python launcher then uses it: they store no interpreter path of their own.
 
 The command-line tools in `tools/mrloader/` use Polars; the console's environment may not carry it: either
@@ -398,6 +407,7 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 | IntelliJ | **Drishti: build modules** | Maven `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` | the module packages only, stamped for the jar already in `lib/` | you changed only module code |
 | PyCharm | **Drishti: setup** | `drishti.py setup`, `dev.ini` only | prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then `drishti-console/.venv` with the Lake wheel and the requirements (it makes `dev.ini`, so it names none) | after a clone, or after a pull that changed `requirements.txt` |
 | PyCharm | **Drishti: setup (system Python)** | `drishti.py setup --system`, `dev.ini` only | the same with no `.venv`: the libraries go into the project interpreter (the Python that runs this launcher) | the machine forbids virtual environments |
+| PyCharm | **Drishti: setup (system Python, offline wheels)** | `drishti.py setup --system --wheels $USER_HOME$/drishti-wheels`, `dev.ini` only | the same, installing only from `~/drishti-wheels` (unzip the wheel pack there, or pass the .zip itself): no package index is asked | the company package index rejects pip (401/403), is unreachable, or lacks a library |
 | PyCharm | **Drishti: build demo lakes** | `drishti.py lake demo --engine java`, `dev.ini` only | the demo lakes with the Java loader of the jar in `lib/` | after a build, with the server stopped |
 | PyCharm | **Drishti: run loader (file into the lake)** | `drishti.py lake build`, `dev.ini` only | one file of yours into the demo lake, by its kind (a template; copy it and name your file) | you hold a file of your own (never committed) |
 | PyCharm | **Drishti: check environment** | `drishti.py doctor`, profile `demo.ini` | this machine and the server on 18480 (without a token it says how to make one) | something does not start or answer |
