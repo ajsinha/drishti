@@ -4475,7 +4475,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.pivot.functions.harness.seeds` | integer | `5` |  | server (each node its own) | seeds of the random splits into 2, 3 and 16 parts | restart |  | admin |
 | `drishti.pivot.functions.harness.max-ns-per-row` | integer | `2000` |  | server (each node its own) | the cost limit a row (judged on samples of 1,000 rows or more) | restart |  | admin |
 | `drishti.pivot.functions.python.enabled` | boolean | `false` |  | server (each node its own) | Python custom functions on this node (the pivot-fn pool); off as shipped | restart |  | admin |
-| `drishti.pivot.functions.python.interpreter` | string | `""` |  | server (each node its own) | the Python to run (blank: python3, python on Windows) | restart |  | admin |
+| `drishti.pivot.functions.python.interpreter` | string | `""` |  | server (each node its own) | the Python to run (blank: drishti.python of the settings file, else python3, python on Windows) | restart |  | admin |
 | `drishti.pivot.functions.python.workers` | integer | `2` |  | server (each node its own) | sandboxed worker processes in the pivot-fn pool | restart |  | expert |
 | `drishti.pivot.functions.python.timeout-seconds` | integer | `30` |  | server (each node its own) | the longest one call (a batch, a merge) may take; its worker is stopped past it | restart |  | expert |
 | `drishti.pivot.functions.python.memory-mb` | integer | `1024` |  | server (each node its own) | memory a worker may use | restart |  | expert |

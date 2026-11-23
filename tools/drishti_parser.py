@@ -55,6 +55,21 @@ SUTRA_EXAMPLES = ("examples:\n  drishti.py sutra lint modules/banking/packs/mark
                   "Unknown options are passed to the Java tool. Exit codes as the Java tool: 0 ok, 1 problems, 2 usage.")
 
 
+def build_setup_parser(h) -> argparse.ArgumentParser:
+    """Only the launch groups (``setup``, ``build``, ``start``, ``stop``, ``status``): built from the standard library alone, so
+    ``drishti.py setup`` runs on a Python that has not got PyYAML yet (the full parser loads tools that import it)."""
+    ap = argparse.ArgumentParser(prog="drishti.py", formatter_class=argparse.RawDescriptionHelpFormatter)
+    groups = ap.add_subparsers(dest="group", metavar="GROUP", required=True)
+
+    def add(sub, name, func, help_, parents=(), epilog=None):
+        p = sub.add_parser(name, help=help_, description=help_, parents=list(parents), epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+        p.set_defaults(func=func)
+        return p
+
+    h.load_module("launchcli", "launch/launchcli.py").register(groups, add)
+    return ap
+
+
 def build_parser(h) -> argparse.ArgumentParser:
     """The whole command line: every group, command and option (``drishti.py --help``); ``h`` is drishti.py's module (its commands,
     its Api, its errors and helpers)."""

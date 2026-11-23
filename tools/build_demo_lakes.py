@@ -301,8 +301,8 @@ def main(argv: list[str] | None = None) -> int:
         import deltalake  # noqa: F401
         import pyarrow  # noqa: F401
     except ImportError as e:
-        ap.error(f"this Python ({py}) lacks {e.name}: run the script with the console's environment, "
-                 "drishti-console/.venv/bin/python (Windows: drishti-console\\.venv\\Scripts\\python.exe), as the Windows QA guide shows")
+        ap.error(f"this Python ({py}) lacks {e.name}: run the script with a Python that has the libraries "
+                 "(python tools/drishti.py setup --system installs them into this one; drishti-console/.venv/bin/python, Windows drishti-console\\.venv\\Scripts\\python.exe, when there is one), as the Windows QA guide shows")
     files: list[tuple[str, Path]] = []
     if a.endur_dir and a.source_dir:
         ap.error("give --endur-dir or --source-dir, not both")

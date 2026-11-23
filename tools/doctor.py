@@ -98,7 +98,7 @@ def layout_check(root: pathlib.Path) -> list[dict]:
                 "" if (root / "config" / "packs").is_dir() else "run from a Drishti checkout (config/packs/ holds the shipped packs)")]
     venv = root / "drishti-console" / ".venv"
     out.append(item("ok" if venv.is_dir() else "warn", "console venv", str(venv),
-                    "" if venv.is_dir() else "cd drishti-console && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"))
+                    "" if venv.is_dir() else "none needed when drishti.python names a Python with the libraries (python tools/drishti.py setup --system); else python tools/drishti.py setup venv"))
     return out
 
 

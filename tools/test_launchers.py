@@ -302,3 +302,16 @@ def test_g10_no_shipped_launcher_or_config_holds_an_os_specific_path():
         code = "\n".join(line for line in f.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith(("#", "<!--")))
         assert not bad.search(code), f"{f.relative_to(ROOT)}: an OS-specific absolute path"
     assert "java" not in (yaml.safe_load((ROOT / "deploy" / "stack" / "stack.yaml").read_text(encoding="utf-8")) or {}), "stack.yaml: no java: (the one JDK lookup)"
+
+
+def test_workspace_setup_tasks_name_no_settings_file():
+    """The VS Code tasks honour `settings: false` as the run configurations do: setup makes dev.ini, so --settings would refuse it."""
+    import json
+    text = (ROOT / "drishti.code-workspace").read_text(encoding="utf-8")
+    body = json.loads("".join(l for l in text.splitlines(True) if not l.lstrip().startswith("//")))
+    tasks = {t["label"]: t for t in body["tasks"]["tasks"]}
+    setups = [t for t in tasks.values() if t["command"].split()[2:3] == ["setup"] or " setup" in t["command"]]
+    assert len(setups) >= 2
+    for t in setups:
+        assert "--settings" not in t["command"] and "--settings" not in t["windows"]["command"], t["label"]
+    assert any("--settings" in t["command"] for n, t in tasks.items() if t not in setups and t["command"].startswith("python3 tools/drishti.py"))

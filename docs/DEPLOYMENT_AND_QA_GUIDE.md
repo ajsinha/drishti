@@ -216,7 +216,7 @@ the data folder's layout, makes `~/drishti-envs` with a copy of `config/settings
 `drishti-console/requirements.txt`, lists the environment variables it sees (a secret only as *set*), and prints the next steps.
 `--check` changes nothing and only reports (exit 1 when something needs doing). The two parts also run alone: `setup drishti` (everything
 but the Python libraries) and `setup venv` (the `.venv`); and where no `.venv` is allowed, **`setup --system`** puts the libraries into the
-Python that runs it (`setup libs` is that half alone). All of it, with `--check`'s library verification and the `drishti.python` line, is in
+Python that runs it (`setup libs` is that half alone); that Python needs nothing installed beforehand, not even PyYAML. On such a machine run `start console` / `start all` with `--settings <your dev.ini>`: without it no `drishti.python` is seen, a `.venv` is made and the server starts `python` by name. All of it, with `--check`'s library verification and the `drishti.python` line, is in
 [CLI_REFERENCE.md › setup](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti).
 
 ```bash

@@ -161,9 +161,9 @@
       {
         "label": "Drishti: setup",
         "type": "shell",
-        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini setup",
+        "command": "python3 tools/drishti.py setup",
         "windows": {
-          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini setup"
+          "command": "python tools/drishti.py setup"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -173,9 +173,9 @@
       {
         "label": "Drishti: setup (system Python)",
         "type": "shell",
-        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini setup --system",
+        "command": "python3 tools/drishti.py setup --system",
         "windows": {
-          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini setup --system"
+          "command": "python tools/drishti.py setup --system"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -302,8 +302,6 @@
         "console": "integratedTerminal",
         "program": "${workspaceFolder}/tools/drishti.py",
         "args": [
-          "--settings",
-          "~/drishti-envs/dev.ini",
           "setup"
         ]
       },
@@ -315,8 +313,6 @@
         "console": "integratedTerminal",
         "program": "${workspaceFolder}/tools/drishti.py",
         "args": [
-          "--settings",
-          "~/drishti-envs/dev.ini",
           "setup",
           "--system"
         ]

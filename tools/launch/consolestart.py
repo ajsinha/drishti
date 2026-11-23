@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """``drishti.py start console`` and ``stop console``: the Drishti console (the web front end), pointed at a server or at the entry nodes of
-a cluster. Its Python is DRISHTI_PYTHON, else drishti-console/.venv (made on first use: ``drishti.py setup`` makes it too)."""
+a cluster. Its Python is DRISHTI_PYTHON, else ``drishti.python`` of --settings, else drishti-console/.venv (made on first use: ``drishti.py setup`` makes it too)."""
 from __future__ import annotations
 
 import os

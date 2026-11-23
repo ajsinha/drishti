@@ -51,13 +51,19 @@ import org.springframework.context.annotation.Configuration;
 public class PivotFunctionsConfiguration {
 
     @Bean(destroyMethod = "close")
-    public PythonPool pivotPythonPool(PivotFunctionProperties props, @Value("${drishti.data.dir}") String dataDir) {
+    public PythonPool pivotPythonPool(PivotFunctionProperties props, @Value("${drishti.data.dir}") String dataDir,
+            org.springframework.core.env.Environment env) {
         if (!props.python().enabled()) {
             return new PythonPool(null);
         }
         Path sdk = Sdk.install(Path.of(dataDir).resolve("compute").resolve("sdk"));
         PivotFunctionProperties.Python p = props.python();
-        return new PythonPool(new ProcessPythonClient(p.interpreter(), sdk, p.workers(), p.timeoutSeconds(), p.memoryMb()));
+        return new PythonPool(new ProcessPythonClient(interpreter(p.interpreter(), env::getProperty, System::getenv), sdk, p.workers(), p.timeoutSeconds(), p.memoryMb()));
+    }
+
+    /** The interpreter: DRISHTI_PYTHON, the setting above, then the shared {@code drishti.python}; blank when none (the client's own last resort). */
+    static String interpreter(String own, java.util.function.UnaryOperator<String> property, java.util.function.UnaryOperator<String> env) {
+        return com.ash.drishti.api.PythonSetting.resolve(own, property, env);
     }
 
     /** The Python pool, or none when Python functions are off. */

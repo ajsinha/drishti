@@ -35,7 +35,7 @@ as in i7b.
 ## What changes for developers
 
 - Two PyCharm launchers, **Drishti: setup** and **Drishti: setup (system Python)**.
-- IDE_GUIDE 2.3 (no `.venv` allowed: `setup --skip-venv`, the libraries into the system Python, System Interpreter) and 9.5 (from the release
+- IDE_GUIDE 2.3 (no `.venv` allowed: `setup --system`, the libraries into the system Python, System Interpreter) and 9.5 (from the release
   zip: the platform's IDE_GUIDE.md and the clean-install launcher, then this guide's launchers).
 
 ## Known limits

@@ -1132,6 +1132,14 @@ def build_parser() -> argparse.ArgumentParser:
     return drishti_parser.build_parser(sys.modules[__name__])
 
 
+def is_setup(argv: list[str]) -> bool:
+    """True when the command is ``setup``: it must run on the standard library alone (the full parser needs PyYAML)."""
+    i = 0
+    while i < len(argv) and argv[i].startswith("-"):
+        i += 2 if argv[i] in ("--settings", "--profile") else 1
+    return i < len(argv) and argv[i] == "setup"
+
+
 def use_tmp_dir() -> None:
     """``DRISHTI_TMP_DIR``, when set, is this command's temp folder too: Python's own temporary files and every program it starts
     (``TMPDIR``), so a site whose system temp folder is small or in memory points all of Drishti at one folder of its choosing."""
@@ -1159,7 +1167,7 @@ def main(argv: list[str] | None = None) -> int:
         entries = settingsfile.read_all(settings) if settings else {}
         settingsfile.apply_roots(entries)       # the Python side reads the roots the files name, as the JVMs do
         javacmd.set_settings(settings, entries)
-        ap = build_parser()
+        ap = drishti_parser.build_setup_parser(sys.modules[__name__]) if is_setup(argv) else build_parser()
         a, extra = ap.parse_known_args(argv)
         a._argv = list(argv)
         passthrough = (a.group == "sutra" and a.cmd != "gen") or (a.group == "data" and a.cmd == "load") or (a.group == "lake" and a.cmd == "maintain") or (a.group == "feed" and a.cmd == "run") or (a.group == "start" and a.cmd == "server")
@@ -1180,7 +1188,7 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         return e.code or 0
     except ModuleNotFoundError as e:
-        print(f"drishti: {e.name} is not installed; run  uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...", file=sys.stderr)
+        print(f"drishti: {e.name} is not installed; run  uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...  (or install the libraries into this Python: python tools/drishti.py setup --system)", file=sys.stderr)
         return 2
     except FileNotFoundError as e:
         print(f"drishti: {e.filename or e}: no such file", file=sys.stderr)

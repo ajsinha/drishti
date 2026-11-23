@@ -52,7 +52,7 @@ drishti:
         max-ns-per-row: 2000         # the cost limit a row (judged on samples of 1,000 rows or more)
       python:
         enabled: false               # Python custom functions on this node (the pivot-fn pool); off as shipped
-        interpreter: ""              # the Python to run (blank: python3, python on Windows)
+        interpreter: ""              # the Python to run (blank: drishti.python of the settings file, else python3, python on Windows)
         workers: 2                   # sandboxed worker processes in the pivot-fn pool
         timeout-seconds: 30          # the longest one call (a batch, a merge) may take; its worker is stopped past it
         memory-mb: 1024              # memory a worker may use

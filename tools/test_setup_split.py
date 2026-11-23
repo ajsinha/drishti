@@ -239,3 +239,56 @@ def test_the_console_runs_the_python_setup_named_and_makes_no_venv_then(tmp_path
     assert cs.console_python({}, {}, tmp_path, venv=venv) == str(tmp_path / "venv-python") and made     # no setting: the .venv
     made.clear()
     assert cs.console_python({}, keys, tmp_path, reinstall=True, venv=venv) == str(tmp_path / "venv-python") and made   # asked for the .venv
+
+
+# ---- a Python with only the standard library (the company Python of a machine that allows no venv) ---------------------------------
+
+def test_setup_libs_check_runs_without_pyyaml():
+    """python -S has no site packages: the library report, exit 0 or 1, never the 'yaml is not installed' exit 2."""
+    r = subprocess.run([sys.executable, "-S", "-B", str(TOOLS / "drishti.py"), "setup", "libs", "--check"], capture_output=True, text=True)
+    assert r.returncode in (0, 1), r.stderr
+    assert "yaml is not installed" not in r.stderr and "libraries" in r.stdout
+
+
+def test_setup_system_check_runs_without_pyyaml_and_says_what_it_needs():
+    r = subprocess.run([sys.executable, "-S", "-B", str(TOOLS / "drishti.py"), "setup", "--check", "--system"], capture_output=True, text=True)
+    assert r.returncode == 1 and "ModuleNotFoundError" not in r.stderr and "yaml is not installed" not in r.stderr
+    assert "needs PyYAML" in r.stdout
+
+
+def _args(**kw):
+    d = dict(check=False, part=None, system=False, skip_venv=False, python=None, reinstall=False)
+    d.update(kw)
+    return argparse.Namespace(**d)
+
+
+def test_bootstrap_system_installs_with_pip_then_runs_the_same_command_again(tmp_path):
+    home = fake_home(tmp_path)
+    calls = []
+
+    def run(cmd, **kw):
+        calls.append((list(cmd), kw))
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+    with mock.patch.object(pylibs, "install") as inst:
+        rc = envsetup.bootstrap(_args(system=True), home, {}, ["/x/tools/drishti.py", "--settings", "a.ini", "setup", "--system"], run, lambda: False)
+    assert rc == 0 and inst.call_args[0][0] == sys.executable
+    cmd, kw = calls[-1]
+    assert cmd[0] == sys.executable and cmd[2:] == ["--settings", "a.ini", "setup", "--system"]
+    assert kw["env"][envsetup.REEXEC_ENV] == "1"
+
+
+def test_bootstrap_default_makes_the_venv_and_reruns_under_it(tmp_path):
+    home = fake_home(tmp_path)
+    calls = []
+    with mock.patch("consolestart.make_venv", return_value=tmp_path / "v" / "python") as mv:
+        rc = envsetup.bootstrap(_args(), home, {}, ["/x/drishti.py", "setup"], lambda cmd, **kw: calls.append(cmd) or subprocess.CompletedProcess(cmd, 0), lambda: False)
+    assert rc == 0 and mv.called and calls[-1][0] == str(tmp_path / "v" / "python") and calls[-1][-1] == "setup"
+
+
+def test_bootstrap_is_skipped_with_yaml_or_check_and_never_loops(tmp_path):
+    home = fake_home(tmp_path)
+    assert envsetup.bootstrap(_args(system=True), home, {}, ["x"], yaml_here=lambda: True) is None
+    assert envsetup.bootstrap(_args(system=True, check=True), home, {}, ["x"], yaml_here=lambda: False) is None
+    assert envsetup.bootstrap(_args(part="libs"), home, {}, ["x"], yaml_here=lambda: False) is None
+    with pytest.raises(LaunchError):
+        envsetup.bootstrap(_args(system=True), home, {envsetup.REEXEC_ENV: "1"}, ["x"], yaml_here=lambda: False)

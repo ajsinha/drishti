@@ -37,7 +37,6 @@ import sys
 from collections import Counter, OrderedDict
 from pathlib import Path
 
-import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKS = ROOT / "config" / "packs"
@@ -73,12 +72,20 @@ NUMBER = {"integer", "amount", "rate"}
 
 # -- the packs ----------------------------------------------------------------------------------------------------------------
 
-_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+def _yaml():
+    """PyYAML, imported when a contract is read or written (``drishti.py setup`` runs on a Python that has not got it yet)."""
+    import yaml
+    return yaml
+
+
+def _loader():
+    y = _yaml()
+    return getattr(y, "CSafeLoader", y.SafeLoader)
 
 
 @functools.lru_cache(maxsize=256)
 def _parsed(path: str, mtime: int):
-    return yaml.load(Path(path).read_text(encoding="utf-8"), Loader=_LOADER)
+    return _yaml().load(Path(path).read_text(encoding="utf-8"), Loader=_loader())
 
 
 def _yaml(path: Path):
@@ -852,17 +859,19 @@ def header() -> str:
     return "".join(f"# {line}".rstrip() + "\n" for line in text) + "\n"
 
 
-class _Dumper(yaml.SafeDumper):
-    pass
+@functools.lru_cache(maxsize=1)
+def _dumper():
+    class _Dumper(_yaml().SafeDumper):
+        pass
 
-
-_Dumper.add_representer(OrderedDict, lambda d, data: d.represent_dict(data.items()))
-_Dumper.ignore_aliases = lambda self, data: True          # a list used twice (the key) is written twice, not as an anchor
+    _Dumper.add_representer(OrderedDict, lambda d, data: d.represent_dict(data.items()))
+    _Dumper.ignore_aliases = lambda self, data: True      # a list used twice (the key) is written twice, not as an anchor
+    return _Dumper
 
 
 def dump(contract: dict) -> str:
     """A contract as its YAML file: the licence, a line on what the file is, the contract."""
-    body = yaml.dump(contract, Dumper=_Dumper, sort_keys=False, allow_unicode=True, width=140, default_flow_style=False)
+    body = _yaml().dump(contract, Dumper=_dumper(), sort_keys=False, allow_unicode=True, width=140, default_flow_style=False)
     return (header() + f"# Data contract of the {contract['kind']} kind (command {contract['mnemonic']}): docs/contracts/README.md section 16.\n"
             f"# Drafted by `drishti.py contract bootstrap {contract['kind']}`; owned by people from then on: confirm the review points, then remove them.\n"
             + body)

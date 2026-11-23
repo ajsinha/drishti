@@ -82,7 +82,43 @@ def dev_ini_text(home: Path, data: Path, modules: Path, java: Path | None = None
     return text
 
 
-def setup(a, env: dict | None = None) -> int:
+REEXEC_ENV = "DRISHTI_SETUP_REEXEC"
+
+
+def have_yaml() -> bool:
+    """PyYAML importable in this interpreter (the parts of setup that read the modules and the launcher files need it)."""
+    import importlib.util
+    return importlib.util.find_spec("yaml") is not None
+
+
+def bootstrap(a, home: Path, env: dict, argv: list | None = None, run=subprocess.run, yaml_here=have_yaml) -> int | None:
+    """Setup on a Python that has only the standard library: installs what is missing first, then runs the same command again in a fresh
+    process that sees it (a user-site folder pip made is not on this process's path). None: nothing to do, setup goes on in this process.
+    ``--system``: the Lake wheel and requirements.txt into this Python; the default (venv) path: drishti-console/.venv first, then setup
+    under the venv's Python. Never with ``--check`` (it changes nothing; the missing parts are reported)."""
+    part = getattr(a, "part", None)
+    system = getattr(a, "system", False)
+    needs_yaml = (part in (None, "drishti") or system) and not a.check
+    if not needs_yaml or yaml_here():
+        return None
+    if env.get(REEXEC_ENV):
+        raise LaunchError("PyYAML is still not importable after the libraries were installed: run  python tools/drishti.py setup libs --check")
+    if system:
+        target = a.python or sys.executable
+        say(f"installing the Lake wheel and drishti-console/requirements.txt into {target} with pip: setup reads PyYAML (and the console needs the rest) and this Python has not got them")
+        pylibs.install(target, home, run=run)
+    elif part is None and not a.skip_venv:
+        import consolestart
+        say("making drishti-console/.venv and installing the libraries into it: setup reads PyYAML and this Python has not got it")
+        target = str(consolestart.make_venv(home, a.python or sys.executable, a.reinstall, run=run))
+    else:
+        raise LaunchError("this part of setup reads PyYAML, which this Python has not got: run  python tools/drishti.py setup --system  (the libraries into this Python) or  setup  (a .venv) first")
+    argv = list(sys.argv if argv is None else argv)
+    say(f"running setup again with {target} ...")
+    return run([target, str(Path(argv[0]).resolve()), *argv[1:]], env={**env, REEXEC_ENV: "1"}).returncode
+
+
+def setup(a, env: dict | None = None, argv: list | None = None, run=subprocess.run) -> int:
     env = dict(os.environ if env is None else env)
     check = a.check
     part = getattr(a, "part", None)
@@ -113,6 +149,10 @@ def setup(a, env: dict | None = None) -> int:
     ini = edir / "dev.ini"
     jar = roots["jar"][0]
     j = {"ok": False, "java": "", "problem": ""}
+    rc = bootstrap(a, home, env, argv, run)
+    if rc is not None:
+        return rc
+    yaml_ok = have_yaml()
     if do_drishti:
         # Java: the one lookup
         j = javacmd.describe_java(None, a.java_home, env)
@@ -141,8 +181,7 @@ def setup(a, env: dict | None = None) -> int:
             if (data / "modules" / old).exists():
                 line("todo", "old modules leftover", f"{data / 'modules' / old}: not read any more, safe to delete")
         # leftovers of an older checkout under the modules folder (old build folders a `git pull` keeps): reported, never deleted
-        import module_layout
-        for note in module_layout.leftovers(modules):
+        for note in (__import__("module_layout").leftovers(modules) if yaml_ok else []):
             line("todo", "modules leftover", note)
             todo.append(f"delete {note.split(':')[0]} (git clean -fdX modules/ removes every ignored file under modules/)")
         # every jar under the home: Drishti's own in <home>/lib, the site's in <home>/lib/ext (drishti.lib.path)
@@ -169,9 +208,16 @@ def setup(a, env: dict | None = None) -> int:
                 line("todo", "drishti.java.home", f"no Java 21+ found ({j['problem'] or 'none'}): in {ini} uncomment drishti.java.home and set it to a JDK 21 folder")
                 todo.append(f"set drishti.java.home in {ini} to a JDK 21 folder")
         # the JVM arguments files of the IDE's server launchers (generated: rewritten every time, from the function start server runs)
-        import launchers
-        args_files = [edir / f"jvm-{p}.args" for p in launchers.profiles_of_servers(home)]
-        if check:
+        if not yaml_ok:
+            line("todo", "JVM options", "needs PyYAML, which this Python has not got: python tools/drishti.py setup --system")
+            todo.append("python tools/drishti.py setup --system  (installs the libraries into this Python, then the JVM options and the rest)")
+            args_files = []
+        else:
+            import launchers
+            args_files = [edir / f"jvm-{p}.args" for p in launchers.profiles_of_servers(home)]
+        if not yaml_ok:
+            pass
+        elif check:
             missing = [f.name for f in args_files if not f.is_file()]
             line("todo" if missing else "ok", "JVM options", f"{edir}: " + (f"missing {', '.join(missing)}" if missing else ", ".join(f.name for f in args_files)))
             if missing:

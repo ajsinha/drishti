@@ -141,7 +141,7 @@ launchers --machine` (or `setup` again) to rewrite them.
 2. `python3 tools/drishti.py setup` makes it from `config/settings.examples/dev.ini` with this machine's paths filled in, makes the data
    folder and `drishti-console/.venv`, and writes the JVM arguments files. It is two parts that also run alone: `setup drishti` (the
    settings, data folder and JVM files; no Python libraries; the same as `--skip-venv`) and `setup venv` (the `.venv`). **No `.venv`
-   allowed:** `setup --system` ([2.2](#22-python-for-the-console-and-the-tools-pycharm)). `--check` works for all of them. In PyCharm, no
+   allowed:** `setup --system` ([2.2](#22-python-for-the-console-and-the-tools-pycharm)). `--check` works for all of them. Without `--settings`, `start console` / `start all` make a `.venv` and the server uses `python` by name: on a no-venv machine always run with the settings file. In PyCharm, no
    terminal is needed: **Drishti: setup** and **Drishti: setup (system Python)** (section 4.3) run them. You should see `[made] settings file …/drishti-envs/dev.ini`,
    `[made] JVM options … jvm-demo.args, jvm-qa.args, jvm-samples.args` and `[made] console .venv …`; a `dev.ini` already there is never
    overwritten (the arguments files are rewritten every time: they are generated).
@@ -195,7 +195,8 @@ one your team already uses. Drishti needs only its packages installed in it.
    <that python> -m pip install -r drishti-console/requirements-polars.txt    # only for tools/mrloader
    ```
 
-   `setup --system` is `setup drishti` + `setup libs` in one command (the settings file and data folder too). Setup writes the Python
+   `setup --system` is `setup drishti` + `setup libs` in one command (the settings file and data folder too). The Python needs nothing installed
+   beforehand, not even PyYAML: setup installs the libraries first with pip, then runs itself again in that Python. Setup writes the Python
    it used as `drishti.python` in `dev.ini` (only when the line is absent; yours is never changed), so the server's Python work (the data
    feeds' Run now, the compute pool, the pivot Python functions) runs in the same Python; `DRISHTI_PYTHON` overrides it. On Windows pip uses
    the Windows certificate store, so it works behind a company proxy (a company package index goes in `%APPDATA%\pip\pip.ini`, Linux
@@ -214,7 +215,9 @@ or later with Polars, NumPy and PyYAML) in their own run configuration. The deta
    **No `.venv` allowed on the machine** (everything goes to the system Python): run **Drishti: setup (system Python)** (or `py tools\drishti.py
    setup --system`), which makes the settings and installs the libraries (the Lake wheel first) into the interpreter that runs it, then
    choose **System Interpreter** here for the same Python. The launchers use the project's interpreter; the server uses `drishti.python` of
-   `dev.ini` (written by setup), else `python` (Windows) or `python3`, or the one `DRISHTI_PYTHON` names.
+   `dev.ini` (written by setup), else `python` (Windows) or `python3`, or the one `DRISHTI_PYTHON` names. On such a machine run `start console` and
+   `start all` with the settings file (`--settings ~/drishti-envs/dev.ini`; the launchers do): without it no `drishti.python` is seen, `start
+   console/all` makes a `.venv` and the server starts `python` by name.
 3. **Project Structure → + Add Content Root**: `drishti-console/` and `tools/`, marked **Sources** (for reading and completion; the run configurations work without it).
 4. Right-click `tests/` → **Mark Directory as → Test Sources Root**.
 5. The drop-down lists the Python configurations of `run-configs/` under the folder **Drishti**: the consoles (the

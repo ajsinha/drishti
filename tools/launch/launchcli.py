@@ -163,7 +163,7 @@ def cmd_cluster(a, extra) -> int:
         py = procs.venv_python()
         if py.exists() and Path(sys.executable).resolve() != py.resolve():
             return subprocess.run([str(py), str(HERE.parent / "drishti.py"), *a._argv]).returncode
-        raise SystemExit("drishti: the cluster file needs PyYAML: run  python tools/drishti.py setup  (it makes drishti-console/.venv), "
+        raise SystemExit("drishti: the cluster file needs PyYAML: run  python tools/drishti.py setup  (it makes drishti-console/.venv) or  setup --system  (the libraries into this Python), "
                          "then run this with that Python") from None
     import clusterctl
     verb = getattr(a, "verb", "status")

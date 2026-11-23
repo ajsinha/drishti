@@ -176,7 +176,7 @@ def workspace(doc: dict) -> str:
             elif kind == "console":
                 args = ["drishti-console/run_drishti_web.py", "--settings", "~/drishti-envs/dev.ini"] + (["--profile", r["profile"]] if r.get("profile") else []) + list(r.get("args") or [])
             else:
-                args = ["tools/drishti.py", "--settings", "~/drishti-envs/dev.ini"] + (["--profile", r["profile"]] if r.get("profile") else []) + r["command"].split()
+                args = ["tools/drishti.py"] + (["--settings", "~/drishti-envs/dev.ini"] if r.get("settings", True) else []) + (["--profile", r["profile"]] if r.get("profile") else []) + r["command"].split()
             tasks.append({"label": name, "type": "shell", "command": "python3 " + " ".join(args), "windows": {"command": "python " + " ".join(args)},
                           "options": {"cwd": "${workspaceFolder}"}, "problemMatcher": []})
             if kind != "server":
