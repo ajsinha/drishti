@@ -1159,3 +1159,128 @@ the assets and their SHA256SUMS. One verify by the lane; no second gate if the c
 | Plugin zip carries `libraries/` | **Accept.** The wheel has no libraries and the kit is useless without them; the copy is identical to the repository's (compared), and INSTALL sets `RACHANA_LIBS` to it. Better later: the kit finds `libraries/` beside itself so the variable is optional |
 
 SHA256SUMS: all four assets OK. State left behind: nothing running; the scratch environment removed; only this file written.
+
+---
+
+# Release gate 2.9.11.i7c
+
+*2026-11-23 11:56 EST. `release/i7c` at `bfbe8c6f2` against `v2.9.11.i_7b` (5 commits, 33 files). Read only: the code, the diff and small
+Python checks; no Maven build (the lane's proofs stand: package, the three Java tests, tools 79 + 99, docs gate 136, the 28480/27480 smoke).*
+
+## Verdict: NOT YET
+
+The design is right and the split is clean: one `drishti.python`, written once, read by `start console`, the feeds and the compute pool; the
+`.venv` path is unchanged. Three defects stand between this and "no human intervention" on a machine with only the company Python, and one
+line of the notes is stale. All four are small.
+
+## Must fix (the whole list)
+
+| # | What | Where | Evidence |
+|---|---|---|---|
+| M1 | **No `drishti.py` command runs on a Python without PyYAML, `setup --system` and `setup libs` included.** The command that installs the libraries needs one of them first. A clean company Python stops with `drishti: yaml is not installed; run uv run --with pyyaml ...` and installs nothing; the PyCharm launcher **Drishti: setup (system Python)** stops the same way | `tools/contracts.py:40` (top-level `import yaml`, loaded by `build_parser` for every command); then inside setup `tools/module_layout.py:23` (from `tools/launch/envsetup.py:144`) and `tools/launch/launchers.py:63` (from `envsetup.py:173`); the message `tools/drishti.py:1183` | reproduced: `python3 -S -B tools/drishti.py setup libs --check` and `... setup --check --system` both exit 2 with that message; `envsetup.setup` called directly with `--system` prints five lines and raises at line 144. The same hole was in i7b's `setup`; i7c is the release that promises this path |
+| M2 | **The pivot Python functions do not read `drishti.python`**, though CHANGELOG, RELEASE_NOTES and IDE_GUIDE 2.2 say they do. Blank `drishti.pivot.functions.python.interpreter` still starts `python` by name on Windows (the Store stub) | `kernel/drishti-server/.../pivot/functions/PivotFunctionsConfiguration.java:60` passes `p.interpreter()` unresolved; `ProcessPythonClient.java:87-88` falls to `python` / `python3`; `docs/admin/CONFIGURATION.md:4478` (truthfully) says "blank: python3, python on Windows" | grep of every `new ProcessBuilder` in main code: feeds and compute (workers, environments) go through `PythonSetting`; this one does not. Off as shipped, so the demo is not hit |
+| M3 | **The two new VS Code tasks fail on a fresh machine**: they pass `--settings ~/drishti-envs/dev.ini` to `setup`, the file setup is there to make. The PyCharm rows got `settings: false`; the VS Code writer ignores it | `tools/launch/launchers.py:179`; `drishti.code-workspace:164,166,176,178` | `drishti.py --settings /nonexistent/dev.ini setup --check --system`: "drishti.settings.file names ..., which is not a file" |
+| M4 | RELEASE_NOTES i7c, "What changes for developers": IDE_GUIDE 2.3 is described as "`setup --skip-venv`, the libraries into the system Python". The guide now says `setup --system` | `RELEASE_NOTES.md` (i7c section, second developer bullet) | read |
+
+The fixes, shortest form:
+
+- **M1**: setup must run on the standard library alone. Dispatch `setup` before the other command groups load (or make `contracts.py`'s
+  import lazy); with `libs` / `--system` install the libraries **first**, then do the two PyYAML steps (module leftovers, JVM files). After
+  the install the running process may not see the new packages: a `C:\Program Files` Python is not writable, pip falls back to a user
+  install, and a user site folder made during the run is not on `sys.path`; so add it (`site.addsitedir(site.getusersitepackages())`,
+  `importlib.invalidate_caches()`) or run the second half in a fresh process. One test: `setup libs --check` under `python -S` reports the
+  libraries and exits 1, never 2. Change the `uv run` hint at `drishti.py:1183` to name `setup libs` / `setup --system`.
+- **M2**: `PythonSetting.resolve(p.interpreter(), env::getProperty, System::getenv)` in `PivotFunctionsConfiguration`, the property's
+  comment, CONFIGURATION.md regenerated, one targeted test. (Or take the claim out of the three documents; wiring is the better half
+  because the owner's rule is "no `python` by name".)
+- **M3**: `launchers.py:179` honours `settings: false`; regenerate the workspace; `test_launchers` asserts it for the workspace as it does
+  for the run configurations.
+- **M4**: one line.
+
+Proof after the fixes: the changed tools tests, `PythonSettingTest` plus the pivot one, the docs gate; no drill, no second smoke.
+
+## 1. The Windows path with no `.venv`, step by step
+
+| Step | Creates `.venv`? | Needs `DRISHTI_PYTHON`? | `python` by name? | Network |
+|---|---|---|---|---|
+| `py tools\drishti.py setup --system` | no (`envsetup.py:93`: `do_venv` is off with `--system`) | no | no (`sys.executable`, which under `py` is the real `python.exe`) | pip only, the Windows store (`pylibs.py:152-160`: default from pip 24.2, the flag from 23.1, a note below that). **Stops at M1 where PyYAML is absent** |
+| the Lake wheel | - | - | - | none: `lib/wheels`, installed before `requirements.txt` (`pylibs.py:163-175`); the source zip carries it. From a bare clone it is not there (not in git) and setup says so, naming `lib/lake-wheel.pin` |
+| `drishti.python` in `dev.ini` | - | - | - | written as an absolute forward-slash path, once, over the commented example line or before the first section (`pylibs.py:178-197`); a path with a space (`C:/Program Files/Python313/python.exe`) writes and reads back whole (checked on a copy of the example file) |
+| `setup --check --system` | no | no | no | none; each requirement by name and version, the wheel against its pin |
+| PyCharm **Drishti: setup (system Python)** | no | no | no (project interpreter, no path stored) | as the first row; M1 applies |
+| PyCharm **Drishti console** | no (runs `run_drishti_web.py` itself) | no | no | none |
+| IntelliJ **Drishti: run server (demo)** | no | no | no for feeds and compute (they read `drishti.python` from the `dev.ini` the launcher names); **yes for pivot functions when switched on (M2)** | none |
+| `start server` / `start console` / `start all` **with `--settings dev.ini`** | no (`consolestart.py:63-71`) | no | no (`procs.py:453-459` falls to this interpreter) | none |
+
+Still able to make a `.venv` or call Python by name, each by design or minor, none a blocker:
+
+- `start console` / `start all` **without `--settings`**: the settings file is never discovered, so `drishti.python` is not seen and
+  `consolestart.py:71` → `:45` runs `-m venv`. Setup's "Next steps" print the command with `--settings`; the guides should say that on a
+  no-venv machine it is not optional. The server started without it falls to `python`: `DataFeeds.java:313`, `ComputeSettings.java:73`.
+- `start console --python X` or `--reinstall`: asks for the `.venv` (documented). Plain `setup` and `setup venv`: make it (their job).
+- Stale words that still send the reader to a `.venv`: `tools/launch/launchcli.py:165` (cluster without PyYAML: "setup ... makes
+  drishti-console/.venv"), `tools/doctor.py:99-101` (warns "console venv" missing, fix `python3 -m venv`; **Drishti: check environment**
+  shows it on a no-venv machine), `tools/build_demo_lakes.py:304-305`, the docstring `tools/launch/consolestart.py:16`.
+- VS Code on Windows runs `python tools/drishti.py ...` by name in every task (`drishti.code-workspace`, older than this release), and
+  `python.defaultInterpreterPath` is `python3` (`launchers.py:192`): on a `py`-only machine the VS Code tasks need `py`. For the i8 list.
+- A user install (no administrator rights) is invisible to the pivot workers, which start Python with `-I`
+  (`ProcessPythonClient.java:90`). Only with M2's feature on; note it in the guide when M2 is wired.
+
+## 2. Precedence (`DRISHTI_PYTHON` > the work's own setting > `drishti.python`)
+
+| Starts Python | Through `PythonSetting`? |
+|---|---|
+| Feeds, Run now (`DataFeedsConfiguration.java:41`) | yes; last resort the console's `.venv`, then `python3` / `python` |
+| Compute pool: workers and environment builds (`ComputeConfiguration.java:62` → `ComputeSettings.interpreter()`, used at `ComputeService.java:251`, `Environments.java:144`) | yes. `compute.python` is itself `${DRISHTI_PYTHON:}`, so the order holds |
+| Pivot Python functions | **no (M2)** |
+| Console (`consolestart.py:63-71`) | `DRISHTI_PYTHON`, then `drishti.python`, then the `.venv` |
+| Tools' helpers (`procs.py:453`, `clusterctl.py:150`) | `DRISHTI_PYTHON`, the `.venv` if there, else the running Python: right without `drishti.python` |
+
+No other main-code `ProcessBuilder` starts Python (the fifth is the test kit's MinIO).
+
+## 3. The `.venv` path (Linux, the owner's stack)
+
+No regression found. `setup` alone is still drishti then venv; `--skip-venv` still works; an existing `dev.ini` and `.venv` are kept; the
+launchers other than the two new ones are byte-for-byte the same; `start all` on a stack whose `dev.ini` has no `drishti.python` takes the
+old branch. Three intended changes to know before the stack is upgraded:
+
+- `setup` now **verifies** an existing `.venv` and fails (exit 1, "setup venv --reinstall") if a requirement or the Lake pin is not met.
+  i7b printed "ok" for any `.venv` that existed.
+- The next `setup` writes `drishti.python=<the .venv's python>` into `dev.ini`. From then on the compute pool, when on, runs on the
+  `.venv`'s Python where it used `python3`; and `start console` no longer remakes a deleted `.venv` by itself (it says "no Python at ...";
+  `--reinstall` or `setup venv` remakes it).
+- Without uv the `.venv` gets the wheel then the requirements in two pip calls (one before); a missing wheel is now said plainly, where
+  pip failed on `drishti-lake==0.9.1` before.
+
+## 4. Test impact
+
+- `test_launchers` relaxed assertion: **justified**. `--settings` refuses a file that is not there (shown under M3), and setup is what makes
+  `dev.ini`; the test now asserts the opposite for `setup` rows (`--settings` absent) and the old rule for every other row. It should
+  grow the workspace half (M3).
+- New: `tools/test_setup_split.py` (17 tests), `PythonSettingTest`. Every one of them runs on a Python that has PyYAML, which is why M1
+  got through: add the `-S` test.
+- No pivot test for the shared setting (M2). Nothing stale names i7b in tests or code; version 2.9.11.i7c, tag `v2.9.11.i_7c`
+  (`tools/version.py --tag`).
+- Counts as the lane gave them (tools 79 + 99, docs gate 136); not rerun.
+
+## 5. Document impact
+
+- IDE_GUIDE 2.1-2.3 and 9.5, DEPLOYMENT_AND_QA_GUIDE 1.2a/1.6, CLI_REFERENCE setup, CONFIGURATION.md (`drishti.python`, `compute.python`,
+  `drishti.feeds.python`, `DRISHTI_PYTHON`) agree with each other and with the code, current design only, **except**: the pivot claim
+  (M2: IDE_GUIDE 2.2, CHANGELOG, RELEASE_NOTES against CONFIGURATION.md:4478) and the notes' `--skip-venv` line (M4).
+- Missing sentence, wherever `setup --system` is introduced (IDE_GUIDE 2.2/2.3, DEPLOYMENT 1.2a): what the Python must already have.
+  After M1 the answer is "nothing"; say so.
+- Small: IDE_GUIDE 4.3 shows "`dev.ini` only" for the two setup launchers, which name no settings file (`launchers.py` `guide_section`);
+  QUICKSTART_DEVELOPERS 1.3 still gives only the hand-made `.venv` on Windows (one line to `setup --system`). The PDFs were regenerated in
+  `bfbe8c6f2`; regenerate again after M2/M4 touch their sources.
+- **The platform IDE guide** (`drishti-platform/IDE_GUIDE.md`, "No virtual environment: the system Python") is wrong for i7c as it
+  stands: five steps with `setup --skip-venv`, two pip lines and `DRISHTI_PYTHON`. After i7c it should be:
+  1. `py tools\drishti.py setup --system` (or PyCharm **Drishti: setup (system Python)**): the settings file, the JVM files, the Lake
+     wheel then the requirements into that Python (pip on the Windows certificate store), and `drishti.python` in `dev.ini`.
+  2. PyCharm: **System Interpreter**, the same `python.exe`.
+  3. Nothing to set for the server: it reads `drishti.python`; `DRISHTI_PYTHON` only to override.
+  4. Check: `py tools\drishti.py setup --check --system` lists nothing to do.
+  Step 1 of the normal path there is unchanged. The index also needs the i7c row (`platform.yaml`, COMPATIBILITY.md: tools 1.1.0,
+  Rachana 1.0.1, Lake 0.9.1, Elements 3.3.2, `v2.9.11.i_7c`): Drishti's guides already say `clone_all.py --release i7c`.
+
+State left behind: nothing running, nothing built, no file changed but this one; the scratch copies removed.
