@@ -35,6 +35,8 @@
   function kindOf(s, value) {
     s = s || {};
     if (s['enum']) { return 'enum'; }
+    var alts = s.anyOf || s.oneOf;
+    if (alts && alts.length === 2 && alts.some(function (o) { return o.type === 'integer'; }) && alts.some(function (o) { return o.type === 'string' && /ctl/.test(o.pattern || ''); })) { return 'number-or-ctl'; }
     if (s.oneOf) {
       var consts = s.oneOf.filter(function (o) { return o['const'] !== undefined; });
       var types = s.oneOf.map(function (o) { return o.type; });
@@ -71,6 +73,20 @@
           if (v === undefined || v === null) { return null; }
           if (typeof v !== 'number' || !Number.isInteger(v) || (s.minimum != null && v < s.minimum) || (s.maximum != null && v > s.maximum)) { return SKIP; }
           return v;
+        } };
+    }
+    if (kind === 'number-or-ctl') {                      // a whole number, or an expression over a control (ctl.top): a number box, and a switch that turns it into the expression's text box
+      var num = (s.anyOf || s.oneOf).filter(function (o) { return o.type === 'integer'; })[0], min1 = num.minimum != null ? num.minimum : 1;
+      return { field: { type: 'object', properties: {
+          n: { type: 'integer', title: leaf, hook: { 'aria-label': name }, minimum: min1, maximum: num.maximum, lazy: true, when: { field: 'ref', falsy: true } },
+          ref: { type: 'boolean', title: 'ctl. reference', hook: { 'aria-label': name + ': a ctl. reference' } },
+          expr: { type: 'string', title: leaf + ' (ctl. expression)', hook: { 'aria-label': name + ' (ctl. expression)' }, lazy: true, when: { field: 'ref', truthy: true } } } },
+        into: function (v) { return typeof v === 'string' ? { ref: true, expr: v } : { ref: false, n: typeof v === 'number' ? v : undefined }; },
+        out: function (v) {
+          v = v || {};
+          if (v.ref) { return typeof v.expr === 'string' && v.expr.trim() ? (/ctl\./.test(v.expr) ? v.expr.trim() : SKIP) : null; }
+          if (v.n === undefined || v.n === null || (typeof v.n === 'number' && isNaN(v.n))) { return null; }
+          return typeof v.n !== 'number' || !Number.isInteger(v.n) || v.n < min1 || (num.maximum != null && v.n > num.maximum) ? SKIP : v.n;
         } };
     }
     if (kind === 'count-or-const') {

@@ -81,6 +81,15 @@ def test_numeric_options_take_numbers_and_enumerated_options_are_selects(live_co
     limit.blur()
     settle(page, rev)
     assert option_value(page, "versions", "limit") == 5                   # a number, not the text "5" (DRS-5023)
+    rev = state(page, "rev")
+    page.get_by_label("limit: a ctl. reference", exact=True).check()      # Rachana: limit is a whole number from 1 or a ctl. expression (a top-n control)
+    settle(page, rev)                                                      # an empty expression clears the option
+    rev = state(page, "rev")
+    expr = page.get_by_label("limit (ctl. expression)", exact=True)
+    expr.fill("ctl.top")
+    expr.blur()
+    settle(page, rev)
+    assert option_value(page, "versions", "limit") == "ctl.top"
     pick(page, "tree")
     rev = state(page, "rev")
     page.get_by_label("expand", exact=True).fill("2")
