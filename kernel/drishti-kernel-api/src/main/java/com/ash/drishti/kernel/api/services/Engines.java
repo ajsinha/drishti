@@ -29,8 +29,8 @@ public interface Engines {
     boolean running(String engine);
 
     /**
-     * An answer as plain data: {@code status}, {@code tables} (each {@code name}, {@code columns}, {@code key}, {@code rows}: maps by
-     * column), {@code missing} (words), {@code stamp}, {@code notes}. Doubles are the engine's, unrounded.
+     * An answer as plain data: {@code status}, {@code tables} (each {@code name}, {@code columns}: {@code [{name, type, ...}]}, {@code key},
+     * {@code rows}: each row's cells in the columns' order), {@code missing} (words), {@code stamp}, {@code notes}. Doubles are the engine's, unrounded.
      *
      * @throws Kernel.Refused the engine is not installed, not running, refuses the ask, or the person may not open it
      */

@@ -129,9 +129,18 @@ public class VarEnginePath {
         for (Object t : (List<Object>) answer.getOrDefault("tables", List.of())) {
             Map<String, Object> tm = (Map<String, Object>) t;
             if (table.equals(tm.get("name"))) {
+                List<String> names = new java.util.ArrayList<>();               // rows are positional, in the columns' order
+                for (Object c : (List<Object>) tm.getOrDefault("columns", List.of())) {
+                    names.add(String.valueOf(((Map<String, Object>) c).get("name")));
+                }
+                int k = names.indexOf(keyColumn);
                 for (Object r : (List<Object>) tm.getOrDefault("rows", List.of())) {
-                    Map<String, Object> rm = (Map<String, Object>) r;
-                    if (key.equals(String.valueOf(rm.get(keyColumn)))) {
+                    Object[] cells = r instanceof Object[] a ? a : ((List<Object>) r).toArray();
+                    if (k >= 0 && key.equals(String.valueOf(cells[k]))) {
+                        Map<String, Object> rm = new LinkedHashMap<>();
+                        for (int i = 0; i < names.size() && i < cells.length; i++) {
+                            rm.put(names.get(i), cells[i]);
+                        }
                         return rm;
                     }
                 }

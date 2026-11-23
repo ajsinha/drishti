@@ -396,7 +396,10 @@ final class LakeInputs implements Inputs {
                 check();
                 RowRule rule = rule(kind);
                 List<String> texts = new ArrayList<>();
-                asked.forEach(c -> texts.add(bound.column(c)));
+                Set<String> held = data.columnar(kind);
+                // a text the source does not keep as a column is not asked (the vectors then come by column, the text reads as null;
+                // a key column the source keeps as the entity's id is the row's id)
+                asked.forEach(c -> texts.add(held.isEmpty() || held.contains(bound.column(c)) ? bound.column(c) : "\u0000absent:" + c));
                 Set<String> extra = new LinkedHashSet<>(rule.fields());
                 extra.addAll(where.fields());
                 scan.where().columns().forEach(c -> extra.add(bound.column(c)));
@@ -411,8 +414,17 @@ final class LakeInputs implements Inputs {
                 for (int i = 0; i < asked.size(); i++) {
                     masked[i] = viewer != null && (viewer.masked(bound.column(asked.get(i))) || viewer.masked(asked.get(i)));
                 }
+                List<String> readable = texts.stream().filter(t -> !t.startsWith("\u0000absent:")).toList();
+                int[] slot = new int[texts.size()];
+                for (int i = 0, r = 0; i < texts.size(); i++) {
+                    slot[i] = texts.get(i).startsWith("\u0000absent:") ? -1 : r++;
+                }
                 try {
-                    data.vectors(kind, bound.column(scan.column()), texts, date, (id, values, length, row) -> {
+                    data.vectors(kind, bound.column(scan.column()), readable, date, (id, values, length, got) -> {
+                        String[] row = new String[texts.size()];
+                        for (int i = 0; i < row.length; i++) {
+                            row[i] = slot[i] < 0 ? null : got[slot[i]];
+                        }
                         Function<String, Object> value = p -> {
                             Integer i = at.get(p);
                             return i == null ? null : row[i];

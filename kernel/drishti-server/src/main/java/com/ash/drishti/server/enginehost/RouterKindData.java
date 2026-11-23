@@ -173,8 +173,8 @@ final class RouterKindData implements KindData {
         boolean any = false;
         for (com.ash.drishti.api.EntityDocument d : docs) {
             com.ash.drishti.api.DataNode v = d.data().get(column);
-            if (v.isMissing() || v.isNull() || v.size() == 0) {
-                continue;
+            if (!(v instanceof com.ash.drishti.api.DataNode.Arr) || v.size() == 0) {
+                continue;                                              // only a list of numbers is a vector (a marker object is not)
             }
             double[] values = new double[v.size()];
             for (int j = 0; j < values.length; j++) {
