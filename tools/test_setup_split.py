@@ -224,3 +224,18 @@ def test_the_parser_takes_the_subcommands():
         assert a.part == part and a.system is system
     with pytest.raises(SystemExit):
         top.parse_args(["setup", "bogus"])
+
+
+def test_the_console_runs_the_python_setup_named_and_makes_no_venv_then(tmp_path):
+    """start console on a machine with no .venv: drishti.python from the settings is used and no venv is made."""
+    import importlib, sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parent))
+    cs = importlib.import_module("launch.consolestart")
+    made = []
+    venv = lambda home, base, reinstall: made.append(base) or tmp_path / "venv-python"
+    keys = {"drishti.python": "C:/Program Files/Python313/python.exe"}
+    assert cs.console_python({}, keys, tmp_path, venv=venv) == "C:/Program Files/Python313/python.exe" and not made
+    assert cs.console_python({"DRISHTI_PYTHON": "/opt/py"}, keys, tmp_path, venv=venv) == "/opt/py" and not made
+    assert cs.console_python({}, {}, tmp_path, venv=venv) == str(tmp_path / "venv-python") and made     # no setting: the .venv
+    made.clear()
+    assert cs.console_python({}, keys, tmp_path, reinstall=True, venv=venv) == str(tmp_path / "venv-python") and made   # asked for the .venv

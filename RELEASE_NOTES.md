@@ -28,6 +28,8 @@ as in i7b.
 - **`drishti.python` is written once** into `dev.ini` by setup (never over an existing value). The server uses it for the feeds' Run now, the
   compute pool and the pivot Python functions when their own setting is blank. Precedence (`PythonSetting`): `DRISHTI_PYTHON`, then the work's
   own setting, then `drishti.python`.
+  `drishti.py start console` (and `start all`) runs the console on it too, so a machine with no `.venv` starts the console with no
+  environment variable to set (`--python` or `--reinstall` still ask for the `.venv`).
 - **pip on Windows uses the Windows certificate store** (`--use-feature=truststore` before pip 24.2), so machines behind a TLS-inspecting proxy install.
 
 ## What changes for developers

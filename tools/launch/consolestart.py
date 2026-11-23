@@ -60,6 +60,17 @@ def make_venv(home: Path, base_python: str, reinstall: bool = False, install: bo
     return py
 
 
+def console_python(env: dict, keys: dict, home: Path, python: str | None = None, reinstall: bool = False, venv=None) -> str:
+    """The console's Python: DRISHTI_PYTHON, else the settings' drishti.python (setup --system writes it where no .venv is allowed),
+    else drishti-console/.venv, made or checked here (--python and --reinstall ask for the .venv)."""
+    chosen = (env.get("DRISHTI_PYTHON") or "").strip()
+    if not chosen and not (python or reinstall):
+        chosen = (keys.get("drishti.python") or "").strip()
+    if chosen:
+        return chosen
+    return str((venv or make_venv)(home, python or sys.executable, reinstall))
+
+
 def start(a, env: dict | None = None) -> int:
     """Starts the console from the options of ``drishti.py start console``; the exit code."""
     env = dict(os.environ if env is None else env)
@@ -90,10 +101,7 @@ def start(a, env: dict | None = None) -> int:
     if procs.port_in_use(port):
         raise LaunchError(f"port {port} is in use by another process: stop it, or pick another with --port", 3)
 
-    if (env.get("DRISHTI_PYTHON") or "").strip():
-        py = env["DRISHTI_PYTHON"].strip()
-    else:
-        py = str(make_venv(home, a.python or sys.executable, a.reinstall))
+    py = console_python(env, keys, home, a.python, a.reinstall)
     if not (Path(py).exists() or shutil.which(py)):
         raise LaunchError(f"no Python at {py}")
 
