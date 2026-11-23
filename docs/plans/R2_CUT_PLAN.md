@@ -40,7 +40,9 @@ in the step-5 commit that makes it compile without the engine half (MC-5). Nothi
    The descriptors, the drishti-risk README, `FileLicence`'s example and the drop-in licence file use these two spellings. The empty
    liquidity and climate modules produce no JAR and register nothing. A test loads both JARs together and states what
    `linear-algebra: native` does in each loader (a JVM binds a native library in one loader): either both native, or the second falls
-   back to Java in words, and the speed step runs that way.
+   back to Java in words, and the speed step runs that way. **Decided (owner, 2026-11-22, EN-75):** OpenBLAS and javacpp are a shared platform library the server provides
+   parent-first; the per-line JARs carry neither (provided, unshaded, the version in `platform:`, a mismatch refused in words), so both
+   engines bind the one native copy. Built before step 4a, which measures load and memory with it.
 2. Drishti has no Maven dependency on either JAR. Packaging copies them (versions and SHA-384 listed in the distribution) into
    `<home>/lib/engines`. A test copies them into a `@TempDir` lib folder; the banking test harness (`BankingTestHarness`,
    `BankingTestServer` and the fixtures, about 80 API tests) does the same and writes the engine files, expected values unedited.

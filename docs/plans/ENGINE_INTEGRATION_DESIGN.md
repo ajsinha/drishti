@@ -1469,6 +1469,12 @@ EN-35), EN-18 (the certificate is evidence, EN-39) and EN-19 (in process means t
 | EN-73 | Query and OLAP | **The same contract**: cells are group ids, aggregate states merge by their function, measures are functions of states; sums of doubles follow the canonical order or carry their exactness class when pushed to a source (18.6) | a second aggregation model for the query engine |
 | EN-74 | Proof | **Kit laws from every case: scope-kind blindness, grouping, merge order, split anywhere, incremental at unit grain** (18.7); the R2 coverage table (cut plan 4b) is filled by declaring measures, not by new outputs | parity by goldens per output |
 
+### EN-75: one OpenBLAS per JVM: ACCEPTED by the owner 2026-11-22
+
+| # | Decision | Decided | The alternative |
+|---|---|---|---|
+| EN-75 | Native linear algebra shared by engines | **bytedeco `openblas` and `javacpp` are a fifth shared platform library**, provided parent-first by the server (`NativeLibraries` binds it once per JVM, as it does today); an engine JAR declares them `provided`, never shades them, and names the version it was built against in its descriptor's `platform:`; the host refuses, in words naming both versions, an engine whose platform version does not match. One copy on disk (the server's `lib`), one native binding per JVM, every engine native | each engine JAR carries its own OpenBLAS (51 MB each in R2's two per-line JARs; a JVM binds a native library in one class loader only, so the second engine falls back to Java) |
+
 ## 17. Zero-copy data access (EN-56 to EN-65)
 
 **The owner's principle (2026-11-22): "Engines should be built using zero copy as design and architecture."** The
