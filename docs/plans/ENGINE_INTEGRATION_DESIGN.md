@@ -1712,6 +1712,9 @@ public double tailConcentration(FloatVectors pnl, RowSet rows, double level) { .
 | Mergeable | `mergeable = true`: the function is called per shard and returns a partial, and a method marked `@EngineFunction.Merge(name, version)` merges them, under 18.4's order and laws. Otherwise it runs on one node that holds the whole version; where no node does, the answer says so in words |
 | Shown | Admin → Engines lists each function (name, version, description, parameters, state, mappings); the generated API documents and the engine's tool list carry the same, so the GenUI agent can call it by description |
 | The kit | each declared function: types within the list above, description and version present, the author's cases for it (raw bits), the zero-copy group (17.9) on every call, the merge laws (18.7) when mergeable, and a version change whenever its signature or recorded answers change (the additive gate of 6.1) |
+| Scan (owner, 2026-11-22) | at JAR load the host **scans the engine's registered classes for `@EngineFunction`**; nothing is named in configuration to be found |
+| Index (owner, 2026-11-22) | an **annotation processor in `engine-api`** writes the JAR's function index (`META-INF/drishti-engine/functions.idx`: engine, name, version, signature, description, mergeable) at the engine's build; the host reads the index first and **verifies it against the real annotations**: a mismatch turns that one function off, in words naming the difference |
+| Listed, off by default (owner, 2026-11-22) | every discovered function is **listed automatically** in Admin → Engines, the generated API documents and the GenUI tool list, and is **OFF until an administrator or the engine file enables and maps it** |
 
 ## Decisions taken (owner)
 
