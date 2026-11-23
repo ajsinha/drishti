@@ -24,7 +24,7 @@ lakes). The repository carries the run configurations of both as files (the one 
 server launchers, PyCharm the Python ones), so nothing is installed and no `.exe` is added. Every configuration uses only `$PROJECT_DIR$` and `$USER_HOME$` paths, so the
 same files work on Linux and Windows.
 
-**In one minute.** IntelliJ: open the root `pom.xml`, run **Drishti: build all**. Once: make `~/drishti-envs/dev.ini` (section 2.1) and,
+**In one minute.** From the release zip with nothing to edit: [9.5](#95-from-the-release-zip-build-and-run-with-no-hand-editing). From a clone: IntelliJ: open the root `pom.xml`, run **Drishti: build all**. Once: make `~/drishti-envs/dev.ini` (section 2.1) and,
 in PyCharm (opened on `drishti-console/`), run **Drishti: build demo lakes**. Then IntelliJ: **Drishti: run server (demo)**; PyCharm: **Drishti
 console**. Open `http://localhost:17480` and sign in as `drishti-dev-admin` / `drishti-dev-admin123`. Starting from scratch, or something
 does not work: [8. A fresh start, step by step](#8-a-fresh-start-step-by-step-and-how-to-check-each-step) checks every step.
@@ -638,6 +638,13 @@ Root**: `drishti-rachana/python`, `drishti-lake/python`), mark each `src` or pac
 Paths are the Windows form of the layout above; no `.exe` is needed for any of it. `JAVA_HOME` is `C:\jdk-21`, and behind a company network
 the Maven runner needs `-Djavax.net.ssl.trustStoreType=Windows-ROOT` (section 1.4). Playwright's browsers for the browser tests install into the
 user's profile with `drishti-console\.venv\Scripts\python.exe -m playwright install chromium`.
+
+### 9.5 From the release zip: build and run with no hand editing
+
+The platform's own IDE guide, `IDE_GUIDE.md` at the top of the release zip (and of the index repository,
+`https://github.com/drishti-platform/drishti-platform/blob/main/IDE_GUIDE.md`), takes a fresh machine from the zip to a running server and
+console: one launcher, **`platform-clean-install`**, builds everything without tests (on Windows trusting the Windows certificate store), then
+this guide's server and console launchers run Drishti (sections 2.1, 3.1, 2.4, 3.2).
 
 ## 10. Visual Studio Code
 
