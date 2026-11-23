@@ -45,6 +45,16 @@ public interface KindData {
     Optional<ColumnSet> columns(String kind, Collection<String> paths, LocalDate date);
 
     /**
+     * As {@link #columns(String, Collection, LocalDate)}, read as the engine file binds the input (ENGINE SPEC, {@code inputs.<name>}):
+     * {@code onOrBefore}, each record's latest version on or before the date (a reference kind loaded once, not every day: the read an
+     * in-tree loader makes of documents as of a date); {@code field}, the rows are the items of each record's list-of-records field, the
+     * record's own fields beside them (a parent's columns a child row lacks). Empty when the source cannot read so.
+     */
+    default Optional<ColumnSet> columns(String kind, Collection<String> paths, LocalDate date, boolean onOrBefore, String field) {
+        return !onOrBefore && field == null ? columns(kind, paths, date) : Optional.empty();
+    }
+
+    /**
      * The columns the kind's source keeps as columns (its promoted columns): a read asks only these, a contract column outside them reads
      * as absent. Empty: the source cannot say, and every asked column is tried.
      */

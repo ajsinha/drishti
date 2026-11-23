@@ -37,7 +37,14 @@ public final class InputBinder {
      * One input as bound. {@code kinds}: the kinds (or lake tables) whose union is the input, in order; {@code rule}: 1 to 5 (0 for an open
      * input); {@code how}: the rule in words; {@code columns}: contract column to the table's column; {@code where}: the site's row filter.
      */
-    public record Bound(String input, String contract, List<String> kinds, int rule, String how, Map<String, String> columns, String where) {
+    public record Bound(String input, String contract, List<String> kinds, int rule, String how, Map<String, String> columns, String where,
+            boolean onOrBefore, String field) {
+
+        /** Read on the snapshot's date, each record whole. */
+        public Bound(String input, String contract, List<String> kinds, int rule, String how, Map<String, String> columns, String where) {
+            this(input, contract, kinds, rule, how, columns, where, false, null);
+        }
+
 
         /** False when the input is bound to "absent" (rule 5) or is open. */
         public boolean present() {
@@ -79,7 +86,9 @@ public final class InputBinder {
             if (site != null && (!site.kinds().isEmpty() || site.table() != null)) {
                 List<String> kinds = site.table() != null ? List.of(site.table()) : site.kinds();
                 String what = site.table() != null ? "the lake table " + site.table() : "the kinds " + String.join(", ", kinds);
-                out.put(name, new Bound(name, in.contract(), List.copyOf(kinds), 1, what + ", named in config/engines/" + file.id() + ".yaml", cols, where));
+                out.put(name, new Bound(name, in.contract(), List.copyOf(kinds), 1, what + ", named in config/engines/" + file.id() + ".yaml"
+                        + (site.onOrBefore() ? ", each record's latest version on or before the date" : "")
+                        + (site.field() != null ? ", the items of its field " + site.field() : ""), cols, where, site.onOrBefore(), site.field()));
                 return;
             }
             Map<String, String> candidates = new LinkedHashMap<>();

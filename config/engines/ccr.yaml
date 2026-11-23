@@ -25,7 +25,7 @@ drishti:
         simulation-run: { kinds: [ simulation-run ] }
         exposure-path: { kinds: [ exposure-path ] }
         netting-set: { kinds: [ netting-set ] }
-        csa: { kinds: [ csa ] }
+        csa: { kinds: [ csa ], as-of: on-or-before }   # a reference kind: each CSA as last loaded on or before the date (in-tree reads it so)
         collateral-balance: { kinds: [ collateral-balance ] }
         trade-valuation: { kinds: [ trade-valuation ] }
         credit-limit: { kinds: [ credit-limit ] }
