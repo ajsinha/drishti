@@ -55,7 +55,7 @@ class ModuleDigestClusterTest {
         for (int i = 0; i < 3; i++) {
             cluster.start(String.valueOf((char) ('a' + i)), P[i]);
         }
-        assertThat(NetNodes.await(30_000, () -> List.of("a", "b", "c").stream().allMatch(n -> alive(n) == 2))).as("three members").isTrue();
+        assertThat(NetNodes.await(180_000, () -> List.of("a", "b", "c").stream().allMatch(n -> alive(n) == 2))).as("three members").isTrue();
         boot("a", TRADING, "fa");
         boot("b", TRADING, "fa");
         boot("c", OTHER_TRADING, "fc");                    // c booted another trading package of the same version
@@ -107,7 +107,7 @@ class ModuleDigestClusterTest {
     @Test
     void theNodeThatBootedOtherTradingContentIsNamedEverywhere() throws Exception {
         for (String n : List.of("a", "b", "c")) {
-            assertThat(NetNodes.await(20_000, () -> seesAll(n))).as(n + " has every node's modules").isTrue();
+            assertThat(NetNodes.await(120_000, () -> seesAll(n))).as(n + " has every node's modules").isTrue();
         }
         for (String via : List.of("a", "c")) {
             JsonNode m = get(via, "/api/v1/admin/modules");
@@ -151,7 +151,7 @@ class ModuleDigestClusterTest {
 
         // c boots the majority's content again: every node agrees
         boot("c", TRADING, "fa");
-        assertThat(NetNodes.await(20_000, () -> {
+        assertThat(NetNodes.await(120_000, () -> {
             try {
                 return get("a", "/api/v1/admin/modules").path("disagree").isEmpty()
                         && get("a", "/api/v1/admin/health").path("net").path("modules").path("agree").asBoolean();

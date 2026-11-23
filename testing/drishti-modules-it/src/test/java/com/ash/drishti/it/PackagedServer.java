@@ -78,16 +78,51 @@ final class PackagedServer implements AutoCloseable {
     }
 
     /**
+     * The Python that builds the tests' lakes, found the way the drill finds its own: {@code -Ddrishti.python=<python>} when given, else the console
+     * environment {@code drishti-console/.venv} of this checkout. It must import {@code drishti_lake} (installed there, or the pinned wheel in
+     * {@code lib/wheels}, tools/lake/lakewheel.py); when it cannot, the test fails saying what to put where.
+     */
+    static String lakePython() throws IOException, InterruptedException {
+        String given = System.getProperty("drishti.python", "").trim();
+        Path venv = REPO.resolve("drishti-console/.venv");
+        String py = !given.isEmpty() ? given : venv.resolve(System.getProperty("os.name").toLowerCase().contains("win") ? "Scripts/python.exe" : "bin/python").toString();
+        if (given.isEmpty() && !Files.isRegularFile(Path.of(py))) {
+            throw new IllegalStateException("the lake tests need a Python with drishti_lake: " + py + " does not exist. Create the console environment "
+                    + "(python3 -m venv drishti-console/.venv; drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt; the pinned wheel goes in lib/wheels, see lib/lake-wheel.pin) "
+                    + "or pass -Ddrishti.python=<a python that has it>");
+        }
+        Process p = new ProcessBuilder(py, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import lakewheel", REPO.resolve("tools/lake").toString())
+                .redirectErrorStream(true).start();
+        String out = new String(p.getInputStream().readAllBytes());
+        if (p.waitFor() != 0) {
+            throw new IllegalStateException("the lake tests need a Python with drishti_lake, and " + py + " has none: " + out.strip()
+                    + "\nInstall drishti-console/requirements.txt into it, or put the pinned wheel in " + REPO.resolve("lib/wheels") + ", or pass -Ddrishti.python=<a python that has it>");
+        }
+        return py;
+    }
+
+    /**
      * Builds the lake of the committed test data (the dates the golden holds) by the one loader, the server's exec jar, into {@code lake},
      * with the connector files beside it; a lake already built there is kept (a stamp file says it is whole).
      */
     static void buildLake(Path folder, String only) throws IOException, InterruptedException {
-        Path stamp = folder.resolve("BUILT");
-        if (Files.exists(stamp)) {
+        if (Files.exists(folder.resolve("BUILT"))) {
             return;
         }
+        // test classes run in parallel JVMs on one lake folder: one builds, the others wait for its stamp
+        Files.createDirectories(folder.toAbsolutePath().getParent());
+        try (java.nio.channels.FileChannel ch = java.nio.channels.FileChannel.open(folder.resolveSibling(folder.getFileName() + ".build.lock"),
+                java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.WRITE); java.nio.channels.FileLock lock = ch.lock()) {
+            if (!Files.exists(folder.resolve("BUILT"))) {
+                buildLockedLake(folder, only);
+            }
+        }
+    }
+
+    private static void buildLockedLake(Path folder, String only) throws IOException, InterruptedException {
+        Path stamp = folder.resolve("BUILT");
         Files.createDirectories(folder);
-        List<String> cmd = new ArrayList<>(List.of(System.getProperty("drishti.python", "python3"), REPO.resolve("tools/drishti.py").toString(), "lake", "demo",
+        List<String> cmd = new ArrayList<>(List.of(lakePython(), REPO.resolve("tools/drishti.py").toString(), "lake", "demo",
                 "--lake", folder.resolve("delta").toString(), "--data-dir", folder.resolve("data").toString(), "--connectors-dir", folder.resolve("connectors").toString(),
                 "--as-of", "data", "--only", only, "--jar", execJar().toString(), "--no-signal", "-q"));
         Path log = folder.resolve("lake.log");
