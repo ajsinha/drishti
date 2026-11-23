@@ -70,7 +70,7 @@ public class RiskOperations {
 
     @Operation(value = "var.scope", rest = "GET /api/v1/risk/var/scope")
     public Figures varScope(Person p, Scope r) {
-        return new Figures(var.headline(r.scope(), r.ccy(), null, null, null, null, null, null, null, asOf(p), null, false, principal(p)));
+        return new Figures(var.headline(r.scope(), r.ccy(), null, null, null, null, null, null, null, asOf(p), null, false, null, principal(p)));
     }
 
     @Operation(value = "var.contributions", rest = "GET /api/v1/risk/var/scope/contributions")

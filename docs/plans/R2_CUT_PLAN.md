@@ -104,6 +104,38 @@ Each step is small commits, each green on its targeted tests; tests and document
 | 6 | **Deletion** (only when 4b has no empty cell and 5, 5a are green): tag `pre-r2-cut` first; one commit per package group in dependency order, each green on its targeted tests: `banking-compute` engine packages, the engine half of `banking-service`, `compute.vector`, `compute.linalg`, `server.playground`, `OpenBlasEngine`, `VarResultEngine`, `ExposureResultEngine`, the old engine files (keys kept as aliases), `module.yaml compute.engines`, the reactive blocks; the 85 moved tests | full verify; a guard over the **reactor modules** (F9: `engines/changes` is outside the reactor): no source imports `com.ash.risk`, no class implements `com.ash.engine.Engine`, no pom names an engine artifact | 6.4 "deleted at step 6" and the guards' allow-lists; 6.5 documents | the tag `pre-r2-cut` |
 | 7 | Upgrade proof, **before the drill**: Risk 1.0.0 replaced by 1.0.1 in `lib/engines`, the server jar's hash unchanged, the goldens pass | the drop-in lane | DEPLOYMENT_AND_QA_GUIDE (upgrade) | put the old JAR back |
 
+## 4c. Switching a route (the template; lanes D and E follow it)
+
+The seam is owned by lane A and does not change under the other lanes (ask lane A through the lead): the kernel's
+`com.ash.drishti.kernel.api.services.Engines` (`Kernel.engines()`, or the bean injected), `KernelEngines` in the server, `engine-api`'s
+view types. The first route switched end to end is the VaR headline (`GET /api/v1/risk/var/scope`, one node); copy it.
+
+1. **One family switch.** A module setting per route family, `drishti.module.<module>.<family>.path`: `in-tree` (the default until the
+   family is green) or `engine`, declared in the module's `module.yaml` `settings:` and in its engine file (`engines/var.yaml`:
+   `var.path`). A request may name its own path (`path=engine` or `path=in-tree`), so both answers come from one server.
+2. **The engine path class.** One class per family beside the controller (`banking/var/VarEnginePath`): it asks
+   `Engines.ask(principal, engine, outputs, params, snapshot)` by output name and reads plain values back (tables of rows by column). It
+   names no Risk type (step 6's guard). It returns the route's own JSON shape: the same keys, the in-tree rounding (whole units by
+   `VarViews.round`), plus the engine's exact figures (`varExact`, `esExact`) for the bit check. What the engine path does not answer yet
+   is refused in one sentence naming `path=in-tree`, never answered half.
+3. **The controller.** `if (enginePath.engine(path)) return enginePath.<route>(...)` at the top of the handler; the in-tree code below
+   is untouched until step 6. In-process callers (`RiskOperations`) pass `null` for `path` (the family switch decides).
+4. **The side by side.** In `testing/drishti-modules-it`: `SideBySide` (`both(server, what, route, fields...)` asks both paths and
+   compares the named fields; `bits(what, reference, engine)` compares the engine's exact figure with a raw-bit reference: the golden's
+   doubles, which `VarGoldenMatrixTest` holds exactly, or the recorder's). `RiskSideBySideTest` is the pattern: one packaged server
+   with the Risk JARs dropped into `lib/engines` (`SideBySide.dropJars`, `-Ddrishti.risk.jars=<folder>`), its own lake, every golden
+   scope of every case; differences and raw-bit differences must both be empty. Run:
+   `./mvnw -o verify -pl testing/drishti-modules-it -Dtest=RiskSideBySideTest -Ddrishti.risk.jars=<folder> -Ddrishti.python=<python with drishti_lake>`.
+5. **Switch.** When the family's side by side is green, its default becomes `engine` in the module's engine file, in the same
+   commit as the guide's line, and the coverage row below is ticked with the commit.
+
+### Appendix A: coverage (a row per route and kept class; filled as routes switch)
+
+| Route or class | Engine output | Side by side | Switched |
+|---|---|---|---|
+| `GET /api/v1/risk/var/scope` (one node, offered lens) | `market-risk` `node-var` | `RiskSideBySideTest.theVarHeadlineOfEveryGoldenNodeIsTheSameOnBothPaths` | path available; default stays `in-tree` until the whole headline (lens, diversification, backtest, provenance) is covered |
+| the rest of 6.3 | | | |
+
 ## 5. Risks
 
 - Inputs arrive through the engine API's `Inputs` (columns) instead of `DataNode` documents, through new intake code (F2): step 3 compares

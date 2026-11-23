@@ -43,6 +43,8 @@
     <dependency><groupId>org.springframework.kafka</groupId><artifactId>spring-kafka-test</artifactId><scope>test</scope></dependency>
   </dependencies>
   <properties>
+    <drishti.risk.jars></drishti.risk.jars>
+    <drishti.python>python3</drishti.python>
     <drishti.repo>${project.basedir}/../..</drishti.repo>
     <drishti.modules.home>${project.build.directory}/modules-home</drishti.modules.home>
   </properties>
@@ -110,6 +112,10 @@
             <!-- the helpers of drishti-server's test jar find their resources (sutra-next-data, bi/samples) under the module root: drishti-server's -->
             <lake.module.root>${project.basedir}/../../kernel/drishti-server</lake.module.root>
             <drishti.g14.dir>${project.build.directory}/g14</drishti.g14.dir>
+            <!-- R2 side by side (RiskSideBySideTest): a folder holding Drishti Risk's engine JARs, copied into the test server's lib/engines; empty skips it -->
+            <drishti.risk.jars>${drishti.risk.jars}</drishti.risk.jars>
+            <!-- the Python that builds the tests' lakes (it needs the drishti_lake wheel): -Ddrishti.python=/abs/venv/bin/python -->
+            <drishti.python>${drishti.python}</drishti.python>
             <drishti.module.jars>${project.basedir}/../../packaging/dist/target/module-jars</drishti.module.jars>
             <drishti.exec.jar>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${project.version}-exec.jar</drishti.exec.jar>
           </systemPropertyVariables>

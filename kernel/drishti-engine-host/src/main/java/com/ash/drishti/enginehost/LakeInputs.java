@@ -213,7 +213,11 @@ final class LakeInputs implements Inputs {
                 check();
                 RowRule rule = rule(kind);
                 Set<String> paths = new LinkedHashSet<>();
-                contractColumns.forEach(c -> paths.add(bound.column(c)));
+                for (String c : contractColumns) {
+                    if (!c.equals(input.vector())) {                   // the vector column is read with vectors(), never as a column
+                        paths.add(bound.column(c));
+                    }
+                }
                 paths.addAll(rule.fields());
                 paths.addAll(where.fields());
                 Optional<ColumnSet> set = data.columns(kind, paths, date);
@@ -287,7 +291,14 @@ final class LakeInputs implements Inputs {
                     return Set.of();
                 }
                 Loaded l = load();
-                return l.present() ? java.util.Collections.unmodifiableSet(new LinkedHashSet<>(l.columns().keySet())) : Set.of();
+                if (!l.present()) {
+                    return Set.of();
+                }
+                LinkedHashSet<String> cols = new LinkedHashSet<>(l.columns().keySet());
+                if (input.vector() != null) {
+                    cols.add(input.vector());                          // read with vectors(); there when the table is
+                }
+                return java.util.Collections.unmodifiableSet(cols);
             } catch (EngineException e) {
                 return Set.of();
             }

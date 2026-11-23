@@ -1,0 +1,49 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/engines/market-risk.yaml: Drishti Risk's market-risk engine (docs/architecture/ENGINES_IN_DRISHTI.md; docs/plans/R2_CUT_PLAN.md).
+# The engine comes from drishti-risk-<version>.jar in <home>/lib/engines; without the JAR this file reads "not installed" and nothing
+# else is affected. Inputs are bound to the market-risk pack's kinds; the options carry the pack's hierarchies and position rules
+# (modules/banking/packs/market-risk/pack.yaml, the same values the in-tree VaR engine reads).
+drishti:
+  engines:
+    market-risk:
+      enabled: true
+      changed: { by: "", at: "", reason: "" }
+      inputs:
+        scenario-pv: { kinds: [ scenario-pv ] }
+        pnl-vector: { kinds: [ pnl-vector ] }
+        scenario-set: { kinds: [ scenario-set ] }
+        fx-scenario: { kinds: [ fx-scenario ] }
+        var-limit: { kinds: [ var-limit ] }
+        var-history: { kinds: [ var-official ] }
+        desk-pnl: { kinds: [ desk-pnl ] }
+        pnl-history: { kinds: [ pnl-history ] }
+        risk-factor: { kinds: [ risk-factor ] }
+      options:
+        hierarchies:
+          - { id: MGMT, title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
+              root-id: BANK, root-name: Drishti Bank }
+          - { id: LEGAL, title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path,
+              root-id: BANK, root-name: Drishti Bank }
+          - { id: LL, title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL }
+        live-statuses: [ NEW, VALIDATED, AMENDED ]
+        position-rules:
+          - { name: securities, groups: [ Fixed income ], types: [ EQ_CASH, WARRANT, CONVERTIBLE_BOND, INFL_LINKED_BOND, T_BILL, COMMERCIAL_PAPER, CERT_DEPOSIT ],
+              key: [ SECURITY_ID, ISIN, TICKER ] }
+          - { name: listed, types: [ BOND_FUTURE, STIR_FUTURE, STIR_FUT_OPT, EQ_FUTURE_SINGLE, EQ_INDEX_FUTURE, EQ_OPTION_LISTED, EQ_INDEX_OPTION, CMD_FUTURE,
+              CMD_FUT_OPTION, ComFut, EMISSIONS_FUTURE ], key: [ SECURITY_ID, CONTRACT ] }
+          - { name: otc }
+      access:
+        visibility: row-rules

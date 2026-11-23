@@ -44,6 +44,14 @@ public interface KindData {
      */
     Optional<ColumnSet> columns(String kind, Collection<String> paths, LocalDate date);
 
+    /**
+     * The columns the kind's source keeps as columns (its promoted columns): a read asks only these, a contract column outside them reads
+     * as absent. Empty: the source cannot say, and every asked column is tried.
+     */
+    default java.util.Set<String> columnar(String kind) {
+        return java.util.Set.of();
+    }
+
     /** One vector column with some text columns, row by row in a stable order; false when the kind keeps no such vector column. */
     boolean vectors(String kind, String column, List<String> texts, LocalDate date, VectorSink sink) throws Exception;
 }

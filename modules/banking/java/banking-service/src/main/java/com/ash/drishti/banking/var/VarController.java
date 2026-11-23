@@ -84,8 +84,9 @@ public class VarController {
     private final Entitlements entitlements;
     private final VarBasketDelete baskets;
     private final VarBasketEdit edits;
+    private final VarEnginePath enginePath;
 
-    VarController(VarService svc, VarViews views, VarOfficial official, Entitlements entitlements,
+    VarController(VarService svc, VarViews views, VarOfficial official, Entitlements entitlements, VarEnginePath enginePath,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.collab.InboxService> inbox,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.collab.InboxHub> hub) {
         this.svc = svc;
@@ -96,6 +97,7 @@ public class VarController {
         this.entitlements = entitlements;
         this.baskets = new VarBasketDelete(svc, entitlements, inbox::getIfAvailable, hub::getIfAvailable);
         this.edits = new VarBasketEdit(svc, entitlements, inbox::getIfAvailable, hub::getIfAvailable);
+        this.enginePath = enginePath;
     }
 
     private static LocalDate date(AsOf asOf) {
@@ -153,7 +155,15 @@ public class VarController {
             @RequestParam(name = "es-confidence", required = false) Double esConfidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matured,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String path, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the market-risk engine through the host (VarEnginePath)
+            if (confidence != null || esConfidence != null || horizon != null || method != null || esq != null || set != null
+                    || parametric != null || matured) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the headline on the offered lens for now; "
+                        + "a lens, parametric or matured items are answered in-tree (path=in-tree)");
+            }
+            return enginePath.headline(p, scope(scope), date(asOf), ccy, window);
+        }
         Map<String, Object> h = headline(scope, ccy, window, confidence, esConfidence, horizon, method, esq, set, asOf, p);
         if (matured) {                                                  // the matured-items switch (VAR_GUIDE.md, "Matured items"): this answer only
             if (window != null || esConfidence != null) {
