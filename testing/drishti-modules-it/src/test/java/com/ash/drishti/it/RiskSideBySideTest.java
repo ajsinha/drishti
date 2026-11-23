@@ -95,7 +95,7 @@ class RiskSideBySideTest {
         assertThat(sbs.bitDifferences).as("engine figures whose raw bits differ from the in-tree golden").isEmpty();
     }
 
-    private static void deleteTree(Path p) throws IOException {
+    static void deleteTree(Path p) throws IOException {
         if (Files.isDirectory(p)) {
             try (var s = Files.walk(p)) {
                 for (Path x : s.sorted(java.util.Comparator.reverseOrder()).toList()) {

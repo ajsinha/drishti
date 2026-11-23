@@ -24,6 +24,8 @@ drishti:
         ten-day-method: ${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}   # 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days)
         window: ${DRISHTI_VAR_SCENARIO_WINDOW:250}  # the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo)
         path: ${DRISHTI_VAR_PATH:in-tree}   # R2 (docs/plans/R2_CUT_PLAN.md): in-tree, or engine (the VaR routes asked of Drishti Risk's market-risk engine through the host); a request may name its own (path=)
+        consumers:
+          path: ${DRISHTI_VAR_CONSUMERS_PATH:in-tree}   # R2: in-tree, or engine, for what reads VaR figures inside Drishti (the role Homes now): asked of the market-risk engine through the host by output name; no per-request path
         rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
         threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)
         hot-dates: ${DRISHTI_VAR_HOT_DATES:10}             # business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay

@@ -46,10 +46,12 @@ final class VarHomeMeasures implements MeasureSource {
 
     private final VarService svc;
     private final VarViews views;
+    private final VarEnginePath engine;
 
-    VarHomeMeasures(VarService svc, VarViews views) {
+    VarHomeMeasures(VarService svc, VarViews views, VarEnginePath engine) {
         this.svc = svc;
         this.views = views;
+        this.engine = engine;
     }
 
     @Override
@@ -59,7 +61,7 @@ final class VarHomeMeasures implements MeasureSource {
 
     @Override
     public boolean on() {
-        return svc.running();
+        return engine.consumers() ? engine.running() : svc.running();     // R2: the family switch var.consumers.path
     }
 
     /** The firm's scope word; a KPI's {@code scope} arg names another ({@code own-desk} and {@code own-books} are the person's rows: the firm scope as they see it). */
@@ -72,6 +74,9 @@ final class VarHomeMeasures implements MeasureSource {
     public OptionalDouble kpi(Principal p, String measure, Map<String, Object> args, LocalDate date) {
         try {
             String scope = scope(args);
+            if (engine.consumers()) {
+                return engineKpi(p, measure, scope, date);
+            }
             return switch (measure) {
                 case "VAR" -> number(views.headline(p, scope, date).get("var"));
                 case "ES" -> number(views.headline(p, scope, date).get("es"));
@@ -83,6 +88,29 @@ final class VarHomeMeasures implements MeasureSource {
         } catch (RuntimeException e) {
             return OptionalDouble.empty();                          // no data for the date, or the person may see none: said by the Home
         }
+    }
+
+    /** The engine path: the firm (or a node by {@code NODE:id}) from node-var, the days from backtest-days; nothing for another scope word. */
+    private OptionalDouble engineKpi(Principal p, String measure, String scope, LocalDate date) {
+        String node = scope.regionMatches(true, 0, "NODE:", 0, 5) ? scope.substring(5) : scope;
+        if (node.contains(":") || node.contains(" ")) {
+            return OptionalDouble.empty();                          // a scope expression: the engine path answers nodes only (R2 step 4b)
+        }
+        return switch (measure) {
+            case "VAR", "ES", "LIM_USE" -> {
+                Map<String, Object> n = engine.node(p, date, node);
+                yield n == null ? OptionalDouble.empty() : number(n.get(measure.equals("VAR") ? "var" : measure.equals("ES") ? "es" : "limitUse"));
+            }
+            case "PNL_DAY" -> {
+                List<Map<String, Object>> r = engine.history(p, date, node);
+                yield r.isEmpty() ? OptionalDouble.empty() : number(r.get(r.size() - 1).get("pnl"));
+            }
+            case "BREACHES" -> {
+                List<Map<String, Object>> r = engine.history(p, date, node);
+                yield r.isEmpty() ? OptionalDouble.empty() : OptionalDouble.of(r.stream().filter(x -> Boolean.TRUE.equals(x.get("exception"))).count());
+            }
+            default -> OptionalDouble.empty();
+        };
     }
 
     @Override
@@ -122,6 +150,9 @@ final class VarHomeMeasures implements MeasureSource {
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> nodes(Principal p, LocalDate date) {
         try {
+            if (engine.consumers()) {
+                return engine.nodes(p, date);
+            }
             Object rows = views.tree(p, null, date).get("nodes");
             return rows instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
         } catch (RuntimeException e) {

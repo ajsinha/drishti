@@ -31,10 +31,12 @@ final class VarHomeBacktest implements HomeTable {
 
     private final VarService svc;
     private final VarViews views;
+    private final VarEnginePath engine;
 
-    VarHomeBacktest(VarService svc, VarViews views) {
+    VarHomeBacktest(VarService svc, VarViews views, VarEnginePath engine) {
         this.svc = svc;
         this.views = views;
+        this.engine = engine;
     }
 
     @Override
@@ -46,10 +48,21 @@ final class VarHomeBacktest implements HomeTable {
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> rows(Context c) {
         List<Map<String, Object>> out = new ArrayList<>();
-        if (!svc.running()) {
+        boolean viaEngine = engine.consumers();                  // R2: the family switch var.consumers.path
+        if (viaEngine ? !engine.running() : !svc.running()) {
             return out;
         }
         try {
+            if (viaEngine) {
+                for (Map<String, Object> m : engine.history(c.person(), c.today(), "BANK")) {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("DATE", m.get("date"));
+                    row.put("PNL", m.get("pnl"));
+                    row.put("VAR", m.get("var"));
+                    out.add(row);
+                }
+                return out;
+            }
             for (Object r : views.history(c.person(), "BANK", c.today()).get("rows") instanceof List<?> l ? l : List.of()) {
                 Map<String, Object> m = (Map<String, Object>) r;
                 Map<String, Object> row = new LinkedHashMap<>();

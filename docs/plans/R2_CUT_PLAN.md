@@ -134,6 +134,7 @@ view types. The first route switched end to end is the VaR headline (`GET /api/v
 | Route or class | Engine output | Side by side | Switched |
 |---|---|---|---|
 | `GET /api/v1/risk/var/scope` (one node, offered lens) | `market-risk` `node-var` | `RiskSideBySideTest.theVarHeadlineOfEveryGoldenNodeIsTheSameOnBothPaths`: 1,572 node answers (3 dates x 509/250 x USD/EUR), trades, VaR, ES and limit equal, **every VaR and ES equal to the in-tree raw bits (3,144 of 3,144)**; limit use equal on USD/509. Open: limit use in another currency or window (the in-tree route divides by another VaR than the one asked; align in the engine or the route before the switch) | path available (`path=engine`); default stays `in-tree` until the whole headline (lens, diversification, backtest, provenance) is covered |
+| Role Home measures `VarHomeMeasures` (VAR, ES, LIM_USE, PNL_DAY, BREACHES, desk VaR and limit rows), `VarHomeBacktest` | `market-risk` `node-var`, `backtest-days` | engine path behind `var.consumers.path` (`VarEnginePath.nodes/node/history`); `HomesSideBySideTest` (two servers, one lake) skips: the module's `MeasureSource` and `HomeTable` beans are not handed to the kernel's `HomeTables` (`ModuleBridge`), so the Homes' VaR panels are empty in a packaged server on both paths | path available; default `in-tree` until the bridge is wired and the test compares rows |
 | the rest of 6.3 | | | |
 
 ## 5. Risks

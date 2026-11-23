@@ -61,6 +61,89 @@ public class VarEnginePath {
         };
     }
 
+    static final String CONSUMERS_SETTING = "drishti.module.banking.var.consumers.path";   // engines/var.yaml
+
+    /** True when what reads VaR figures inside Drishti (the role Homes) asks the engine: the consumers' family switch. */
+    public boolean consumers() {
+        String p = env.getProperty(CONSUMERS_SETTING, "in-tree");
+        return switch (p.trim().toLowerCase(Locale.ROOT)) {
+            case "engine" -> true;
+            case "in-tree" -> false;
+            default -> throw new DrishtiException(ErrorCode.BAD_REQUEST, CONSUMERS_SETTING + " is engine or in-tree, not " + p);
+        };
+    }
+
+    /** Whether the engine runs here (what a consumer's {@code on()} says on the engine path). */
+    public boolean running() {
+        Engines e = engines.getIfAvailable();
+        return e != null && e.running(ENGINE);
+    }
+
+    /**
+     * The nodes of the first hierarchy ({@code MGMT} when present) as the tree view's rows are shaped for a consumer: {@code id},
+     * {@code level}, {@code var}, {@code es} (whole units), {@code limit} (whole units or null), {@code limitUse}. The window is the
+     * configured {@code var.window}, the currency USD, as the in-tree tree. Read as the person: a node they may not see is not a row.
+     */
+    public List<Map<String, Object>> nodes(Principal p, LocalDate date) {
+        Map<String, Object> a = ask(p, List.of("node-var"), windowParams(), Map.of("date", date.toString()));
+        List<Map<String, Object>> all = rows(a, "node-var");
+        String h = all.stream().anyMatch(r -> "MGMT".equals(r.get("HIERARCHY"))) ? "MGMT"
+                : all.isEmpty() ? "" : String.valueOf(all.get(0).get("HIERARCHY"));
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        for (Map<String, Object> r : all) {
+            if (!h.equals(String.valueOf(r.get("HIERARCHY")))) {
+                continue;
+            }
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", r.get("NODE_ID"));
+            m.put("level", r.get("LEVEL"));
+            m.put("var", VarViews.round(((Number) r.get("VAR")).doubleValue()));
+            m.put("es", VarViews.round(((Number) r.get("ES")).doubleValue()));
+            m.put("limit", r.get("LIMIT") == null ? null : VarViews.round(((Number) r.get("LIMIT")).doubleValue()));
+            m.put("limitUse", r.get("LIMIT_USE"));
+            out.add(m);
+        }
+        return out;
+    }
+
+    /** One node's row of {@link #nodes}: the firm ({@code BANK}) or a node by its id; null when the person sees none. */
+    public Map<String, Object> node(Principal p, LocalDate date, String id) {
+        return nodes(p, date).stream().filter(n -> id.equals(String.valueOf(n.get("id")))).findFirst().orElse(null);
+    }
+
+    /**
+     * A node's tested days at the configured confidence (backtest-days), oldest first, shaped for a consumer: {@code date}, {@code var}
+     * (the official VaR the day is held to), {@code pnl} (the hypothetical P&amp;L), {@code exception}.
+     */
+    public List<Map<String, Object>> history(Principal p, LocalDate date, String node) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("node", node);
+        Map<String, Object> a = ask(p, List.of("backtest-days"), params, Map.of("date", date.toString()));
+        double conf = Double.parseDouble(env.getProperty("drishti.module.banking.var.confidence", "0.99"));
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        for (Map<String, Object> rm : rows(a, "backtest-days")) {
+            if (Math.abs(((Number) rm.get("CONFIDENCE")).doubleValue() - conf) > 1e-9) {
+                continue;
+            }
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("date", String.valueOf(rm.get("DATE")));
+            m.put("var", VarViews.round(((Number) rm.get("VAR")).doubleValue()));
+            m.put("pnl", VarViews.round(((Number) rm.get("HYPOTHETICAL")).doubleValue()));
+            m.put("exception", Boolean.TRUE.equals(rm.get("EXCEPTION")));
+            out.add(m);
+        }
+        out.sort(java.util.Comparator.comparing(m -> String.valueOf(m.get("date"))));
+        return out;
+    }
+
+    private Map<String, Object> windowParams() {
+        String w = env.getProperty("drishti.module.banking.var.window", "250").trim();
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("window", w.equalsIgnoreCase("all") ? 0 : Integer.parseInt(w));
+        params.put("currency", "USD");
+        return params;
+    }
+
     /**
      * A node's headline through the engine: {@code scope}, {@code asOf}, {@code currency}, {@code window}, {@code var}, {@code es} (whole
      * units), {@code varExact}, {@code esExact} (the engine's doubles), {@code trades} (the positions beneath the node), {@code limit},
@@ -124,26 +207,34 @@ public class VarEnginePath {
         }
     }
 
+    /** A table's rows by column name (the answer's rows are positional, in the columns' order). */
     @SuppressWarnings("unchecked")
-    static Map<String, Object> row(Map<String, Object> answer, String table, String keyColumn, String key) {
+    static List<Map<String, Object>> rows(Map<String, Object> answer, String table) {
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
         for (Object t : (List<Object>) answer.getOrDefault("tables", List.of())) {
             Map<String, Object> tm = (Map<String, Object>) t;
             if (table.equals(tm.get("name"))) {
-                List<String> names = new java.util.ArrayList<>();               // rows are positional, in the columns' order
+                List<String> names = new java.util.ArrayList<>();
                 for (Object c : (List<Object>) tm.getOrDefault("columns", List.of())) {
                     names.add(String.valueOf(((Map<String, Object>) c).get("name")));
                 }
-                int k = names.indexOf(keyColumn);
                 for (Object r : (List<Object>) tm.getOrDefault("rows", List.of())) {
                     Object[] cells = r instanceof Object[] a ? a : ((List<Object>) r).toArray();
-                    if (k >= 0 && key.equals(String.valueOf(cells[k]))) {
-                        Map<String, Object> rm = new LinkedHashMap<>();
-                        for (int i = 0; i < names.size() && i < cells.length; i++) {
-                            rm.put(names.get(i), cells[i]);
-                        }
-                        return rm;
+                    Map<String, Object> rm = new LinkedHashMap<>();
+                    for (int i = 0; i < names.size() && i < cells.length; i++) {
+                        rm.put(names.get(i), cells[i]);
                     }
+                    out.add(rm);
                 }
+            }
+        }
+        return out;
+    }
+
+    static Map<String, Object> row(Map<String, Object> answer, String table, String keyColumn, String key) {
+        for (Map<String, Object> r : rows(answer, table)) {
+            if (key.equals(String.valueOf(r.get(keyColumn)))) {
+                return r;
             }
         }
         return null;
