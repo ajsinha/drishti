@@ -1284,3 +1284,83 @@ old branch. Three intended changes to know before the stack is upgraded:
   Rachana 1.0.1, Lake 0.9.1, Elements 3.3.2, `v2.9.11.i_7c`): Drishti's guides already say `clone_all.py --release i7c`.
 
 State left behind: nothing running, nothing built, no file changed but this one; the scratch copies removed.
+
+---
+
+# Release gate 2.9.11.i7d
+
+*2026-11-23 14:50 EST. Drishti `release/i7d` at `6d8893875` against `v2.9.11.i_7c` (2 commits, 22 files); the index repository at
+`5d80b2a` (pushed) plus the local `7888ae1` (START_HERE_WINDOWS, the IDE guide's offline step, the pending i7d row). Read only: the code,
+the diffs and small Python checks; no Maven build, no pip run. The lane's proofs stand (tools 104, docs gate 136, package and
+spotless:check, the Linux end to end with a dead index: BANK VaR 167,372,692 / ES 210,131,972). Nothing here was run on Windows.*
+
+## Verdict: NOT YET
+
+The mechanism is right: only what is missing is installed, pip is never called when all is in order, the offline path asks no index, the
+lock and the requirements are checked together, and every launcher, path, asset name, sign-in and figure START_HERE_WINDOWS names exists
+as written. What stands between this and "a non-technical person, one page, no workarounds" is one wrong sentence in the offline path
+and a handful of lines of the page. All small; none needs a rebuild of the design.
+
+## Must fix (the whole list)
+
+| # | What | Where | Evidence |
+|---|---|---|---|
+| M1 | **The offline path blames the package index.** With `--wheels`, when pip finds no wheel it can use, setup says "your package index lacks numpy==2.5.3: use an index that has it, or install offline with --wheels <folder>". The reader is already offline. Two ordinary Windows mistakes end there: (a) `py` starts the newest Python on the PC (3.14 or 3.15), and the pack holds cp313 wheels only; (b) the pack is unzipped one folder deep (Explorer's "Extract All" makes a folder named after the zip): the missing-wheel check looks in sub-folders (`wheel_names` uses `rglob`) and passes, pip's `--find-links` does not look in sub-folders and fails. | `tools/launch/pylibs.py` `install`, `explain_pip_failure`, `wheel_names` | `explain_pip_failure("ERROR: No matching distribution found for numpy==2.4.0")` returns the index sentence (run here). Fix: give pip the folder that holds the `.whl` files; before pip, compare the interpreter with the pack's `cpNN` tags and say "this wheel pack is for Python 3.13, this Python is 3.14: run `py -3.13 ...`"; an offline sentence that never mentions an index. Two tests (nested folder, wrong Python). |
+| M2 | **START_HERE step 4 and 5 name a Python that may not be the one used.** Step 4 runs `py` (the newest installed Python); step 5 tells the reader to choose `C:\Program Files\Python313\python.exe`. The python.org installer's default is `C:\Users\<you>\AppData\Local\Programs\Python\Python313`; the Program Files path exists only for an all-users install. | `START_HERE_WINDOWS.md` steps 4, 5 (index, unpushed) | Step 4: `py -3.13 tools\drishti.py setup ...`. Step 5: "choose the `python.exe` shown on the `python` line of step 4" (setup prints it; it is also what `drishti.python` holds). |
+| M3 | **What a first-time reader meets and the page does not say.** (1) "Trust Project" in IntelliJ and in PyCharm. (2) The launchers appear in the list only when indexing ends (the bar at the bottom). (3) PyCharm offers to create a virtual environment on opening the folder: decline it. (4) Opening the second project asks "This Window / New Window": New Window. (5) Windows Firewall asks about Java and Python on the first start: Allow. (6) Step 3 downloads Maven and the Java libraries, so it needs the company network; "nothing is fetched from the internet" is true of the Python libraries only. (7) Java must be findable: `JAVA_HOME` set or `java` on the PATH (ask IT), else step 4 prints `[FAIL] java` and step 5 cannot build the lakes. | `START_HERE_WINDOWS.md` (+ the PDF) | The launchers are `*.run.xml` files outside `.run/`, found by the index; `locate_java` reads only the settings, `DRISHTI_JAVA_HOME`, `JAVA_HOME` and the PATH; the platform pom's product builds start `mvnw.cmd`, which needs a Java it can find too. |
+| M4 | **Say where the libraries go when Python is in Program Files.** A user without administrator rights cannot write there; pip then installs into the user's own folder (`%APPDATA%\Python\Python313\site-packages`) by itself. Setup's second run, `--check`, PyCharm, the console and the demo lake all see it. The server's pivot Python function workers do not: they start Python with `-I`, which leaves the user folder out. | `ProcessPythonClient.java:90`; RELEASE_NOTES "Known limits"; START_HERE "What you need first" | One line in the known limits, and in START_HERE ask for a Python the user can write to (the installer's default "Install Now", for this user) or for IT to run step 4 once as administrator. No code change in this release. |
+
+M1 is Drishti code (tools only: the tools tests are the proof, no Maven). M2 to M4 are the unpushed index commit, one line of
+RELEASE_NOTES, and the PDF again. No further gate is needed once these are in: the lead confirms the four rows and tags.
+
+## 1. START_HERE_WINDOWS against the real release
+
+- Correct as written: the two asset names (`make_bundle.py`, `make_wheels.py`: `drishti-platform-<release>-wheels-windows-x64-py313.zip`);
+  both zips are flat, so the folders the page names are what the reader sees (the wheels zip also holds `requirements.txt`, `python.lock`,
+  `SHA256SUMS`); `run-configs\platform-clean-install.run.xml` is in the source zip beside the pom; **Drishti: build demo lakes**,
+  **Drishti: run server (demo)**, **Drishti: run console** are the launchers' names; the demo lakes come before the server; `Demo lake ready`,
+  `Started DrishtiApplication`, the sign-in and `VAR BANK` are real; the figures are the lane's.
+- `platform-clean-install` with only the downloads: tests skipped (the launcher and `-DskipTests=${skipTests}`), the Windows certificate
+  store in IntelliJ's Maven (the launcher's VM option) and in the four product builds (the Windows profile), `-Dpython3=py`,
+  `-Dspotless.check.skip=true`, the project JDK. Nothing to set by hand. It still reaches a Maven repository (M3.6).
+- Language: plain, each step says what to see. Two words to soften: "run configurations" (say "the list at the top right"), "wheels"
+  is fine as the zip's name only.
+- The server launcher is a JAR Application on `lib\drishti-server-exec.jar` with `~/drishti-envs/jvm-demo.args`, which step 4 writes:
+  the order of the steps is right. The args file and the launchers quote their paths: a user name with a space works.
+
+## 2. The Windows code paths of setup
+
+- **pip and the certificate store**: off with `--wheels` (no index is asked), on otherwise (`--use-feature=truststore` before pip 24.2).
+  Right.
+- **Paths with spaces**: every process is started from a list; `drishti.python` is written with forward slashes and read back whole;
+  the copy-ready pip line uses `py`. Right.
+- **`--wheels` with a .zip**: unzipped to a temporary folder, removed afterwards; the second run of setup (after the bootstrap) unzips it
+  again, which is correct, only slower. A bad zip and a missing path are said in words.
+- **Program Files not writable**: pip falls back to the user folder on its own; `--user` is not needed. The second run, the checks and
+  PyCharm are fresh processes and see it. The one reader that does not is M4. pip then also warns that the `Scripts` folder is not on the
+  PATH, once per script: add `--no-warn-script-location` to the three pip lines (small, not a must).
+- **Which Python**: M1 and M2.
+- Small: `explain_pip_failure` names the host only from a URL; pip's `HTTPSConnectionPool(host='...')` line gives "the configured package
+  index". The sentence is still right.
+
+## 3. Test impact
+
+- `tools/test_setup_split.py` covers: nothing to install means no pip, the three sentences, the pip line, the folder and the zip, the
+  missing wheel named, the lock and the requirements disagreeing, `--find-links` stripped, the environment variable, `--check` ignoring
+  `--wheels`, a standard-library-only Python with `--wheels`.
+- Missing: the two cases of M1. Nothing else in the diff lacks a test; the Java side is untouched (the capacity test vectors are the
+  version only).
+- No test runs on Windows; the owner's Windows QA is the first real proof of the Windows pack (the lock is installed in pip's hash mode:
+  the pack's wheels must be the files the lock lists, which `make_wheels.py` resolving them together gives).
+
+## 4. Document impact
+
+- IDE_GUIDE 2.2 and 4.3, DEPLOYMENT_AND_QA_GUIDE 1.2a, CLI_REFERENCE, RELEASE_NOTES and CHANGELOG agree with each other and with the
+  code. QUICKSTART and DEPLOYMENT name i7d. No client name in either diff or in START_HERE.
+- The platform IDE guide: "Python 3.10 or later" stands beside a pack that is for Python 3.13 only (say so in the offline step; Drishti
+  itself asks for 3.11); its step 3.3 says **Drishti console**, the launcher is **Drishti: run console**. The index README line 140 still
+  gives `i7c` in the pack's name. The PDF of START_HERE prints `docs/START_HERE_WINDOWS.md` in its header; the file is at the top of the zip.
+- After M1 the sentence in IDE_GUIDE 2.2 / DEPLOYMENT 1.2a ("a wheel the folder lacks is named") gains "and a pack made for another
+  Python is said so".
+
+State left behind: nothing running, nothing built, no file changed but this one.
