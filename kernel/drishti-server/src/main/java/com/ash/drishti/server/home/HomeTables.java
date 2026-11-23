@@ -70,13 +70,18 @@ public final class HomeTables {
     public Set<String> names() {
         Set<String> out = new java.util.TreeSet<>(BUILT_IN);
         out.addAll(extra.keySet());
+        com.ash.drishti.common.Extensions.of(HomeTable.class).forEach(t -> out.add(t.name()));
         return out;
     }
 
     public Optional<List<Map<String, Object>>> rows(String table, Principal p, HomeDefinition h) {
         HomeTable.Context c = new HomeTable.Context(p, h, clock.today(), clock.previous());
-        if (extra.containsKey(table)) {
-            return Optional.of(extra.get(table).rows(c));
+        HomeTable own = extra.get(table);
+        if (own == null) {
+            own = com.ash.drishti.common.Extensions.of(HomeTable.class).stream().filter(t -> t.name().equals(table)).findFirst().orElse(null);   // a loaded module's
+        }
+        if (own != null) {
+            return Optional.of(own.rows(c));
         }
         return switch (table) {
             case "home_meta" -> Optional.of(meta(c));
@@ -120,7 +125,7 @@ public final class HomeTables {
         Map<String, Double> was = byLabel(store.kpis(c.previous()));
         List<Map<String, Object>> out = new ArrayList<>();
         for (HomeDefinition.Kpi k : c.home().measures().kpis()) {
-            MeasureSource s = sources.get(k.engine());
+            MeasureSource s = source(k.engine());
             if (s == null || !s.on()) {
                 continue;                                       // an engine that is off drops its figures (engine switch)
             }
@@ -150,7 +155,7 @@ public final class HomeTables {
     }
 
     private List<Map<String, Object>> limits(HomeTable.Context c, String engine, String measure, String kind, String nameCol, String valueCol) {
-        MeasureSource s = sources.get(engine);
+        MeasureSource s = source(engine);
         if (s == null || !s.on()) {
             return List.of();
         }
@@ -189,7 +194,7 @@ public final class HomeTables {
 
     private void measureRule(HomeTable.Context c, HomeDefinition.Rule r, String measure, double threshold, List<Map<String, Object>> out) {
         for (HomeDefinition.Follow f : c.home().measures().follow()) {
-            MeasureSource s = sources.get(f.engine());
+            MeasureSource s = source(f.engine());
             if (!f.measure().equals(measure) || s == null || !s.on()) {
                 continue;
             }
@@ -248,7 +253,7 @@ public final class HomeTables {
         Set<String> visible = new HashSet<>();
         List<HomeData.MeasureValue> now = new ArrayList<>();
         for (HomeDefinition.Follow f : c.home().measures().follow()) {
-            MeasureSource s = sources.get(f.engine());
+            MeasureSource s = source(f.engine());
             if (s != null && s.on()) {
                 List<HomeData.MeasureValue> v = s.values(c.person(), f.measure(), f.subjects(), c.today());
                 now.addAll(v);
@@ -288,5 +293,18 @@ public final class HomeTables {
         Map<String, Double> m = new LinkedHashMap<>();
         points.forEach(p -> m.put(p.label(), p.value()));
         return m;
+    }
+    /** The engine's source: the kernel's own, else a loaded module's (collected live: modules come and go). */
+    private MeasureSource source(String engine) {
+        MeasureSource s = sources.get(engine);
+        if (s != null) {
+            return s;
+        }
+        for (MeasureSource x : com.ash.drishti.common.Extensions.of(MeasureSource.class)) {
+            if (x.engine().equals(engine)) {
+                return x;
+            }
+        }
+        return null;
     }
 }

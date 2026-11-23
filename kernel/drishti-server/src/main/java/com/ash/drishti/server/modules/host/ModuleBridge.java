@@ -94,6 +94,8 @@ final class ModuleBridge {
         live(DomainVocabulary.class, Contributions.Surface.GLOSSARY);
         live(OfficialResults.class, Contributions.Surface.SPI);
         live(AiToolProvider.class, Contributions.Surface.AI_TOOL);
+        live(com.ash.drishti.kernel.api.home.MeasureSource.class, Contributions.Surface.SPI);   // the role Homes read a module's engine figures and tables live
+        live(com.ash.drishti.kernel.api.home.HomeTable.class, Contributions.Surface.SPI);
     }
 
     /** The module's own catalogue entry of an engine ({@code META-INF/drishti/engines.yaml} in its jars), or null. */

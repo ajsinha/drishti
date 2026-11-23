@@ -361,6 +361,7 @@ the kernel API (`com.ash.drishti.kernel.api`) and the entity types its signature
 | `module.DrishtiModule` (the manifest's `java.entry`) | started with the kernel's `ModuleContext` (kinds as rows, settings `drishti.module.<id>.*`, its data folder, audit, the business date); stopped before its context closes |
 | `approvals.ApprovalSource`, `explain.Explainer`, `view.ViewAugmenter`, `pivot.PivotSourceProvider` | the Approvals queue, Explain this number, the views, the pivot's sources |
 | `health.HealthFigures`, `capacity.CapacityFigures` | Health and the capacity page |
+| `home.MeasureSource`, `home.HomeTable` | the role Homes: a module's engine figures (KPIs, followed measures, limits) and its home tables, read live while the module is loaded |
 | `vocabulary.DomainVocabulary`, `official.OfficialResults` | the domain words, the readers of official results |
 | `ai.AiToolProvider` | held for the AI layer |
 
