@@ -55,7 +55,7 @@ sys.path.insert(0, str(ROOT / "tools" / "lake"))
 import lakeconfig  # noqa: E402  (the demo lake root's variable)
 
 WORK = ROOT / "data" / "tmp" / "cssvis"
-MAIN = Path("/home/ashutosh/IdeaProjects/drishti")
+MAIN = Path(os.environ.get("CSSVIS_MAIN", str(ROOT)))   # the checkout whose venv and jar it uses: this one, or CSSVIS_MAIN
 VENV_PY = Path(os.environ.get("CSSVIS_PYTHON", str(MAIN / "drishti-console" / ".venv" / "bin" / "python")))
 _JARS = sorted((MAIN / "lib").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime)
 JAR = Path(os.environ.get("CSSVIS_JAR", str(_JARS[-1] if _JARS else MAIN / "lib" / "drishti-server-exec.jar")))   # the main checkout's <home>/lib

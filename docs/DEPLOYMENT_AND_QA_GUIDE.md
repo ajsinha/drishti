@@ -27,7 +27,7 @@ This guide is the one place for the deployment and QA steps; the details behind 
 [QUICKSTART_DEVELOPERS.md](QUICKSTART_DEVELOPERS.md).
 
 **Conventions.** `<drishti>` is the install folder (a clone, or the unpacked release), `DRISHTI_HOME`, always written out in full: for
-example `C:\Users\you\IdeaProjects\drishti` on Windows and `/home/you/drishti` on Linux. `<data>` is the data folder,
+example `C:\Users\you\IdeaProjects\drishti-platform\drishti` on Windows and `/home/you/IdeaProjects/drishti-platform/drishti` on Linux. `<data>` is the data folder,
 `DRISHTI_DATA_DIR` (`<drishti>/data` unless you name another). **Every command is a Python command**, `tools/drishti.py`, the same on
 every operating system: Linux and macOS write `python3 tools/drishti.py …` with `/` paths, Windows `py tools\drishti.py …` (or
 `python`) with `\` paths. Where only the slashes differ, one line is shown. `setup`, `build`, `start`, `stop` and `status` run on any
@@ -126,8 +126,8 @@ Three folders, each with one job:
 
 | | Linux and macOS | Windows | What it is |
 |---|---|---|---|
-| **The install folder**, `DRISHTI_HOME` | `/home/you/drishti` (a clone) or `/opt/drishti` (a release) | `C:\Users\you\IdeaProjects\drishti` or `C:\drishti` | the release: the server jar in `lib/`, `config/`, `modules/`, `tools/`, `drishti-console/`. **Read only** while Drishti runs; an upgrade replaces it |
-| **The data folder**, `DRISHTI_DATA_DIR` | `/home/you/drishti/data` (the default, `<drishti>/data`) or `/srv/drishti-data` | `C:\Users\you\IdeaProjects\drishti\data` or `D:\drishti-data` | everything Drishti writes: lakes, users, caches, logs, pid files. **Writable**; kept across upgrades |
+| **The install folder**, `DRISHTI_HOME` | `/home/you/IdeaProjects/drishti-platform/drishti` (a clone) or `/opt/drishti` (a release) | `C:\Users\you\IdeaProjects\drishti-platform\drishti` or `C:\drishti` | the release: the server jar in `lib/`, `config/`, `modules/`, `tools/`, `drishti-console/`. **Read only** while Drishti runs; an upgrade replaces it |
+| **The data folder**, `DRISHTI_DATA_DIR` | `/home/you/IdeaProjects/drishti-platform/drishti/data` (the default, `<drishti>/data`) or `/srv/drishti-data` | `C:\Users\you\IdeaProjects\drishti-platform\drishti\data` or `D:\drishti-data` | everything Drishti writes: lakes, users, caches, logs, pid files. **Writable**; kept across upgrades |
 | **The settings folder** | `~/drishti-envs` (`/home/you/drishti-envs`) | `%USERPROFILE%\drishti-envs` (`C:\Users\you\drishti-envs`) | your settings files (`dev.ini`), outside the install so an upgrade never touches them |
 
 `setup` makes the data folder's layout; the server adds its own folders under it at the first start:
@@ -194,8 +194,8 @@ user, `KEY=value` lines in `/etc/environment`; for a service, the unit's `Enviro
 
 ```bash
 # ~/.bashrc
-export DRISHTI_HOME=/home/you/drishti
-export DRISHTI_DATA_DIR=/home/you/drishti/data
+export DRISHTI_HOME=/home/you/IdeaProjects/drishti-platform/drishti
+export DRISHTI_DATA_DIR=/home/you/IdeaProjects/drishti-platform/drishti/data
 export DRISHTI_JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ```
 
@@ -203,8 +203,8 @@ Windows: `setx` writes your user's environment (seen by every window opened afte
 in an administrator's window, or **System Properties → Advanced → Environment Variables** (`Win+R`, `sysdm.cpl`), sets it for the machine.
 
 ```powershell
-setx DRISHTI_HOME "C:\Users\you\IdeaProjects\drishti"
-setx DRISHTI_DATA_DIR "C:\Users\you\IdeaProjects\drishti\data"
+setx DRISHTI_HOME "C:\Users\you\IdeaProjects\drishti-platform\drishti"
+setx DRISHTI_DATA_DIR "C:\Users\you\IdeaProjects\drishti-platform\drishti\data"
 setx DRISHTI_JAVA_HOME "C:\jdk-21"
 ```
 
@@ -221,13 +221,13 @@ Python that runs it (`setup libs` is that half alone); that Python needs nothing
 [CLI_REFERENCE.md › setup](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti).
 
 ```bash
-cd /home/you/drishti
+cd /home/you/IdeaProjects/drishti-platform/drishti
 python3 tools/drishti.py setup --check            # what is missing; changes nothing
 python3 tools/drishti.py setup                    # make it
 ```
 
 ```powershell
-cd C:\Users\you\IdeaProjects\drishti
+cd C:\Users\you\IdeaProjects\drishti-platform\drishti
 py tools\drishti.py setup
 ```
 
@@ -239,13 +239,13 @@ Python to make the console's environment with, or to install into with `libs` / 
 Drishti setup on linux
   [  ok] python                 /usr/bin/python3 3.13.1
   [  ok] java                   /usr/lib/jvm/java-21-openjdk-amd64/bin/java  Java 21  (from JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64)
-  [  ok] home (DRISHTI_HOME)    /home/you/drishti  (the folder holding tools/drishti.py; the install, read only)
-  [made] data (DRISHTI_DATA_DIR) /home/you/drishti/data  (<home>/data): made run, logs, tmp, dumps, delta
-  [todo] modules (packages)     /home/you/drishti/modules  (<home>/modules): 0 .dmod file(s); python tools/drishti.py build modules
+  [  ok] home (DRISHTI_HOME)    /home/you/IdeaProjects/drishti-platform/drishti  (the folder holding tools/drishti.py; the install, read only)
+  [made] data (DRISHTI_DATA_DIR) /home/you/IdeaProjects/drishti-platform/drishti/data  (<home>/data): made run, logs, tmp, dumps, delta
+  [todo] modules (packages)     /home/you/IdeaProjects/drishti-platform/drishti/modules  (<home>/modules): 0 .dmod file(s); python tools/drishti.py build modules
   [todo] server jar (<home>/lib) none in <home>/lib yet: python tools/drishti.py build jar
-  [  ok] your jars (lib/ext)    /home/you/drishti/lib/ext  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)
+  [  ok] your jars (lib/ext)    /home/you/IdeaProjects/drishti-platform/drishti/lib/ext  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)
   [made] settings file          /home/you/drishti-envs/dev.ini  (from config/settings.examples/dev.ini, its paths filled in)
-  [made] console .venv          /home/you/drishti/drishti-console/.venv/bin/python
+  [made] console .venv          /home/you/IdeaProjects/drishti-platform/drishti/drishti-console/.venv/bin/python
 
 Environment variables seen:
   DRISHTI_HOME             -
@@ -463,7 +463,7 @@ Copy-Item lib\drishti-server-<version>-exec.jar C:\Users\you\drishti-release\dri
 Compress-Archive C:\Users\you\drishti-release\drishti C:\Users\you\drishti-release\drishti-<version>.zip
 ```
 
-Unpack it anywhere (`C:\drishti`, `/opt/drishti`, `/home/you/drishti`) and run `python3 tools/drishti.py setup` there
+Unpack it anywhere (`C:\drishti`, `/opt/drishti`, `/home/you/IdeaProjects/drishti-platform/drishti`) and run `python3 tools/drishti.py setup` there
 ([1.6](#16-the-settings-file-and-drishtipy-setup)): it makes the console's environment (`drishti-console/.venv`) with Python's own `venv`
 and `pip`, or `uv` when installed. Every command finds the install folder from its own place (`tools/..`), not from where it is started.
 **You should see** `drishti-console/.venv/bin/python tools/drishti.py doctor` (Windows
@@ -489,7 +489,7 @@ machine that ran an older one, **stop both processes and move these aside** (mov
 
 ```bash
 # Linux and macOS (both stopped: python3 tools/drishti.py stop all)
-cd /home/you/drishti
+cd /home/you/IdeaProjects/drishti-platform/drishti
 aside=/home/you/drishti-aside-$(date +%Y%m%d-%H%M); mkdir -p "$aside"
 for d in data/modules/installed data/identity data/net data/compute data/fstore data/cache data/connectors config/connectors config/bindings.yaml data/delta/demo; do
   [ -e "$d" ] && mkdir -p "$aside/$(dirname "$d")" && mv "$d" "$aside/$d"
@@ -498,7 +498,7 @@ done
 
 ```powershell
 # Windows (both stopped: py tools\drishti.py stop all, or the red square in IntelliJ)
-cd C:\Users\you\IdeaProjects\drishti
+cd C:\Users\you\IdeaProjects\drishti-platform\drishti
 $aside = "C:\Users\you\drishti-aside-$(Get-Date -Format yyyyMMdd-HHmm)"
 foreach ($d in 'data\modules\installed','data\identity','data\net','data\compute','data\fstore','data\cache','data\connectors','config\connectors','config\bindings.yaml','data\delta\demo') {
   if (Test-Path $d) { $to = Join-Path $aside $d; New-Item -ItemType Directory -Force (Split-Path $to) | Out-Null; Move-Item $d $to }
@@ -557,9 +557,9 @@ What a QA or developer machine needs, and nothing more:
 ```ini
 # C:\Users\you\drishti-envs\dev.ini (Linux: /home/you/drishti-envs/dev.ini)
 [roots]
-drishti.home=C:/Users/you/IdeaProjects/drishti               # Linux: /home/you/drishti
-drishti.data.dir=C:/Users/you/IdeaProjects/drishti/data      # Linux: /home/you/drishti/data
-drishti.modules.home=C:/Users/you/IdeaProjects/drishti/modules
+drishti.home=C:/Users/you/IdeaProjects/drishti-platform/drishti               # Linux: /home/you/IdeaProjects/drishti-platform/drishti
+drishti.data.dir=C:/Users/you/IdeaProjects/drishti-platform/drishti/data      # Linux: /home/you/IdeaProjects/drishti-platform/drishti/data
+drishti.modules.home=C:/Users/you/IdeaProjects/drishti-platform/drishti/modules
 
 [console.backend]
 url=http://127.0.0.1:18480
@@ -610,7 +610,7 @@ prints each table's folder under your `drishti.data.dir`:
 
 ```text
 $ drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake check
-  note  demo/reference.legal-entity: no table yet at /home/you/drishti/data/delta/demo/reference/legal-entity (a writer creates it as the lake file says)
+  note  demo/reference.legal-entity: no table yet at /home/you/IdeaProjects/drishti-platform/drishti/data/delta/demo/reference/legal-entity (a writer creates it as the lake file says)
   …
 lake check: 9 lakes, 0 errors
 ```
@@ -648,12 +648,12 @@ a release already carries it.
 **2 · The lake.** Stop the server first, then, with the settings file of [5.1](#51-the-settings-file):
 
 ```bash
-cd /home/you/drishti
+cd /home/you/IdeaProjects/drishti-platform/drishti
 drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java
 ```
 
 ```powershell
-cd C:\Users\you\IdeaProjects\drishti
+cd C:\Users\you\IdeaProjects\drishti-platform\drishti
 drishti-console\.venv\Scripts\python.exe tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
 ```
 
@@ -687,10 +687,10 @@ line per table as it is written, then:
   lake writer: java (asked for); 4 datasets at a time
   reference/legal-entity: 240 rows over 60 days
   …
-Demo lake ready: /home/you/drishti/data/delta/demo: 103 tables, 60 business days 2026-08-19 to 2026-11-13 (the test data's 2026-07-08 to 2026-09-30, moved to end on 2026-11-13), built in <s> s
-Feeds: /home/you/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
+Demo lake ready: /home/you/IdeaProjects/drishti-platform/drishti/data/delta/demo: 103 tables, 60 business days 2026-08-19 to 2026-11-13 (the test data's 2026-07-08 to 2026-09-30, moved to end on 2026-11-13), built in <s> s
+Feeds: /home/you/IdeaProjects/drishti-platform/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
 Connector files:
-  reference-store: already reads /home/you/drishti/data/delta/demo (its template)
+  reference-store: already reads /home/you/IdeaProjects/drishti-platform/drishti/data/delta/demo (its template)
   …
 Next:
   1. Start the server and the console on the lakes …
@@ -830,12 +830,12 @@ The quickest start, on one machine, with the demo's settings and its development
 env-file, 7.4):
 
 ```bash
-cd /home/you/drishti
+cd /home/you/IdeaProjects/drishti-platform/drishti
 python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini start all --demo     # the server, then the console, both in the background
 ```
 
 ```powershell
-cd C:\Users\you\IdeaProjects\drishti
+cd C:\Users\you\IdeaProjects\drishti-platform\drishti
 py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start all --demo
 ```
 
@@ -890,9 +890,9 @@ On Windows the same with `py tools\drishti.py` and the env-file `C:\drishti-secr
 from the stops:
 
 ```text
-home     /home/you/drishti  (the folder holding tools/drishti.py)
-data     /home/you/drishti/data  (<home>/data)
-modules  /home/you/drishti/modules  (<home>/modules)
+home     /home/you/IdeaProjects/drishti-platform/drishti  (the folder holding tools/drishti.py)
+data     /home/you/IdeaProjects/drishti-platform/drishti/data  (<home>/data)
+modules  /home/you/IdeaProjects/drishti-platform/drishti/modules  (<home>/modules)
 java     /usr/lib/jvm/java-21-openjdk-amd64/bin/java  (JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64)
 
 process                     pid  state      port   health     distribution     address
@@ -1432,7 +1432,7 @@ deleted risk/scenario-pv 2026-11-13: 15,000 rows
 risk/scenario-pv keeps 59 business dates (newest 2026-11-12)
 one commit, version 61 (the files stay for time travel until the table's vacuum)
   signal 2026-11-13: sent: the server dropped the date
-run 20261113T180210.441-5120 logged in /home/you/drishti/data/delta/demo/_drishti-lake/runs.log
+run 20261113T180210.441-5120 logged in /home/you/IdeaProjects/drishti-platform/drishti/data/delta/demo/_drishti-lake/runs.log
 ```
 
 **3 · How the running server reacts.** The signal (status `deleted`) drops the date from the VaR engine at once; nothing is captured
@@ -1649,10 +1649,10 @@ A console may be given several entry nodes, `--server http://<host-a>:18480,http
 one are refused), while the pid files, logs and temporary folders stay in the one data folder, named after the node:
 
 ```bash
-cd /home/you/drishti
-python3 tools/drishti.py start server --node drishti-a --port 18480 --node-data /home/you/drishti/data/nodes/drishti-a/data --env-file /home/you/drishti-envs/cluster.env --background
-python3 tools/drishti.py start server --node drishti-b --port 18481 --node-data /home/you/drishti/data/nodes/drishti-b/data --seed <host>:18480 --env-file /home/you/drishti-envs/cluster.env --background
-python3 tools/drishti.py start server --node drishti-c --port 18482 --node-data /home/you/drishti/data/nodes/drishti-c/data --seed <host>:18480 --env-file /home/you/drishti-envs/cluster.env --background
+cd /home/you/IdeaProjects/drishti-platform/drishti
+python3 tools/drishti.py start server --node drishti-a --port 18480 --node-data /home/you/IdeaProjects/drishti-platform/drishti/data/nodes/drishti-a/data --env-file /home/you/drishti-envs/cluster.env --background
+python3 tools/drishti.py start server --node drishti-b --port 18481 --node-data /home/you/IdeaProjects/drishti-platform/drishti/data/nodes/drishti-b/data --seed <host>:18480 --env-file /home/you/drishti-envs/cluster.env --background
+python3 tools/drishti.py start server --node drishti-c --port 18482 --node-data /home/you/IdeaProjects/drishti-platform/drishti/data/nodes/drishti-c/data --seed <host>:18480 --env-file /home/you/drishti-envs/cluster.env --background
 python3 tools/drishti.py start console --server http://<host>:18480 --env-file /home/you/drishti-envs/cluster.env --background
 python3 tools/drishti.py status
 ```

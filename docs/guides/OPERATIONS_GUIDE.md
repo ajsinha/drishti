@@ -128,7 +128,7 @@ the repository has its own (`./mvnw`, Maven 3.9.12).
 
 ```bash
 git clone https://github.com/drishti-platform/drishti.git /home/you/drishti
-cd /home/you/drishti
+cd /home/you/IdeaProjects/drishti-platform/drishti
 python tools/drishti.py setup            # checks Python and Java 21+, makes the data folder, ~/drishti-envs/dev.ini and drishti-console/.venv
 python tools/drishti.py build jar        # Maven clean package of the server; the exec jar is copied into lib/
 ls lib/*-exec.jar
@@ -209,7 +209,7 @@ today, and a past date says *No data held for <date>*.
 configuration **Drishti: run server (demo)** names the same file, so both start the same server:
 
 ```bash
-cd /home/you/drishti
+cd /home/you/IdeaProjects/drishti-platform/drishti
 python tools/drishti.py --settings /home/you/drishti-envs/dev.ini start server --demo        # Windows: py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start server --demo
 ```
 

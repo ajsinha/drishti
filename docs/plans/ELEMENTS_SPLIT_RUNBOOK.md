@@ -51,7 +51,7 @@ the gallery as its docs site (step 6A).
 | # | Decision |
 |---|---|
 | O1 | The split happens right after i6 ships and before i7 starts. |
-| O2 | The target is the GitHub repository `ajsinha/drishti-elements` (today: one README, no licence), cloned to `/home/ashutosh/IdeaProjects/drishti-elements`. |
+| O2 | The target is the GitHub repository `ajsinha/drishti-elements` (today: one README, no licence), cloned to `~/IdeaProjects/drishti-platform/drishti-elements`. |
 | O3 | **Separation only (2026-11-16).** Elements stays proprietary: the same proprietary header and `LICENSE` as Drishti. No Apache-2.0, no `NOTICE`, no DCO, no npm publish, no CDN in this step. |
 | O4 | **Repository visibility: confirmed public by the owner on 2026-11-16**, with proprietary code in it. The confidentiality scan with zero hits before any push stays mandatory. |
 | O5 | The owner reviews a local preview before anything is pushed. |
@@ -86,14 +86,14 @@ the gallery as its docs site (step 6A).
 ## Before you start
 
 Every command below is run in a shell with these variables set. Nothing in this runbook runs inside
-`/home/ashutosh/IdeaProjects/drishti` except `git fetch`, and nothing ever rewrites that repository's history.
+`~/IdeaProjects/drishti-platform/drishti` except `git fetch`, and nothing ever rewrites that repository's history.
 
 ```bash
-export DRISHTI=/home/ashutosh/IdeaProjects/drishti
-export WORK=/home/ashutosh/drishti-elements-split          # scratch, outside every repository; removed in step 10
+export DRISHTI=~/IdeaProjects/drishti-platform/drishti
+export WORK=~/drishti-elements-split          # scratch, outside every repository; removed in step 10
 export SRC=$WORK/src                                       # a read-only clone of Drishti at the i6 release
 export EXTRACT=$WORK/extract                               # the filtered clone that becomes Elements
-export TARGET=/home/ashutosh/IdeaProjects/drishti-elements # created in step 8 only
+export TARGET=~/IdeaProjects/drishti-platform/drishti-elements # created in step 8 only
 export S=drishti-console/web/static
 export V=2.4.0
 export LIBS="core inputs grid chart data tree graph designer"

@@ -151,12 +151,12 @@ launchers --machine` (or `setup` again) to rewrite them.
 **The folders in `dev.ini`, explained.** The example file has `/path/to/drishti` as a placeholder; each line names a folder on
 *your* machine. On a normal developer machine all three are your clone of the repository, and two folders inside it:
 
-| Key | What it is | Normally | Windows example (clone in `C:\Users\you\IdeaProjects\drishti`) |
+| Key | What it is | Normally | Windows example (clone in `C:\Users\you\IdeaProjects\drishti-platform\drishti`) |
 |---|---|---|---|
-| `drishti.home` | **The install folder**: the folder Drishti runs from. It holds `lib/` (the server jar the build puts there), `config/`, `modules/` and `data/`. For a developer it is the clone itself; on a server it is the folder the release was unpacked into. The server refuses to start without it. | the clone | `drishti.home=C:/Users/you/IdeaProjects/drishti` |
-| `drishti.data.dir` | **The data folder**: everything Drishti writes while it runs: the demo lakes (`delta/demo`), the user and audit databases, logs, the data inbox (`dataload/inbox`), caches. It is git-ignored. Point it elsewhere (a bigger disk, a folder per test set) and the clone stays clean. | `<home>/data` | `drishti.data.dir=C:/Users/you/IdeaProjects/drishti/data` |
+| `drishti.home` | **The install folder**: the folder Drishti runs from. It holds `lib/` (the server jar the build puts there), `config/`, `modules/` and `data/`. For a developer it is the clone itself; on a server it is the folder the release was unpacked into. The server refuses to start without it. | the clone | `drishti.home=C:/Users/you/IdeaProjects/drishti-platform/drishti` |
+| `drishti.data.dir` | **The data folder**: everything Drishti writes while it runs: the demo lakes (`delta/demo`), the user and audit databases, logs, the data inbox (`dataload/inbox`), caches. It is git-ignored. Point it elsewhere (a bigger disk, a folder per test set) and the clone stays clean. | `<home>/data` | `drishti.data.dir=C:/Users/you/IdeaProjects/drishti-platform/drishti/data` |
 | `drishti.java.home` | **The JDK the Python tools run** (**Drishti: build demo lakes**, `lake build --engine java`, `start`): the folder that holds `bin/java`, Java 21 or newer. It beats `DRISHTI_JAVA_HOME` and `JAVA_HOME`, so a machine whose `JAVA_HOME` is Java 8 needs nothing else. The server in IntelliJ does not read it: it runs on the project's JDK. `drishti.py setup` writes it when it finds a Java 21+; otherwise the line is commented in the file. | (commented) | `drishti.java.home=C:/jdk-21` |
-| `drishti.modules.home` | **The modules folder**: where the module packages (`banking-….dmod`, `trading-….dmod` …) are. **Drishti: build all** writes them there, and the server loads every package it finds there at start. | `<home>/modules` | `drishti.modules.home=C:/Users/you/IdeaProjects/drishti/modules` |
+| `drishti.modules.home` | **The modules folder**: where the module packages (`banking-….dmod`, `trading-….dmod` …) are. **Drishti: build all** writes them there, and the server loads every package it finds there at start. | `<home>/modules` | `drishti.modules.home=C:/Users/you/IdeaProjects/drishti-platform/drishti/modules` |
 
 Rules: absolute paths only; forward slashes, also on Windows (or doubled backslashes, `C:\\Users\\…`); no quotes; no trailing
 slash. So for a clone at `C:\Users\<you>\IdeaProjects\drishti-platform\drishti` the lines are:
@@ -220,7 +220,7 @@ or later with Polars, NumPy and PyYAML) in their own run configuration. The deta
 
 1. **File → Open**, choose the repository folder (the same project IntelliJ opens; the launchers are in its `run-configs/`).
 2. **Settings → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → Existing** (or **System Interpreter** for a local
-   Python): Linux `…/drishti/drishti-console/.venv/bin/python`, Windows `C:\Users\you\IdeaProjects\drishti\drishti-console\.venv\Scripts\python.exe`.
+   Python): Linux `…/drishti/drishti-console/.venv/bin/python`, Windows `C:\Users\you\IdeaProjects\drishti-platform\drishti\drishti-console\.venv\Scripts\python.exe`.
    **No `.venv` allowed on the machine** (everything goes to the system Python): run **Drishti: setup (system Python)** (or `py tools\drishti.py
    setup --system`), which makes the settings and installs the libraries (the Lake wheel first) into the interpreter that runs it, then
    choose **System Interpreter** here for the same Python. The launchers use the project's interpreter; the server uses `drishti.python` of
@@ -480,8 +480,8 @@ survives it names a build no package is stamped for: Admin → Modules shows the
 3. Start one of the shipped server launchers (**Drishti: run server (demo)**, **Drishti: run server (built-in samples)** …): each is a JAR Application on that jar.
    A copy you made of an older **Application** configuration keeps the old shape: delete it and copy a shipped one again.
 4. **By hand**, if you need your own: **Run → Edit Configurations → + → JAR Application**; *Path to JAR*
-   `C:\Users\you\IdeaProjects\drishti\lib\drishti-server-exec.jar` (or `…\lib\drishti-server-<version>-exec.jar`); *VM options* copied
-   from **Drishti: run server (demo)** (open it, select the whole field, copy); *Working directory* the clone (`C:\Users\you\IdeaProjects\drishti`);
+   `C:\Users\you\IdeaProjects\drishti-platform\drishti\lib\drishti-server-exec.jar` (or `…\lib\drishti-server-<version>-exec.jar`); *VM options* copied
+   from **Drishti: run server (demo)** (open it, select the whole field, copy); *Working directory* the clone (`C:\Users\you\IdeaProjects\drishti-platform\drishti`);
    *Environment variables* copied from the same launcher; *JRE* 21; under *Before launch* remove **Build** if it is there; **OK**, **Run**.
 5. Check: the start-up log names the modules it loaded; **Admin → Modules** shows banking *ok* and the kernel with its build (the
    version, not *dev*); in the console `VAR BANK <GO>` computes.
@@ -594,7 +594,7 @@ Or **JAR Application** with `$PROJECT_DIR$/lib/drishti-server-exec.jar` as *Path
 The one place to start from scratch on Windows (Linux and macOS: the same steps, `/` paths and `python3`), and to find which step went
 wrong. Each step says what you should see; if you do not, the row of section 6 it names says why and what to do.
 
-1. **Get the code.** `git pull` in the clone (for example `C:\Users\you\IdeaProjects\drishti`). For a clean start also delete `lib\` and
+1. **Get the code.** `git pull` in the clone (for example `C:\Users\you\IdeaProjects\drishti-platform\drishti`). For a clean start also delete `lib\` and
    `modules\*.dmod` (and `modules\first-party.yaml`): the next build makes them again. Keep the module folders (`modules\banking\` …).
 2. **IntelliJ: Drishti: build all** (section 1.3). *You should see* `BUILD SUCCESS`; `lib\` holds `drishti-server-<version>-exec.jar`
    and `drishti-server-exec.jar` (the same jar); `modules\` holds twelve `.dmod` packages and `first-party.yaml`. *If not:*
