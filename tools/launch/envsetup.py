@@ -85,6 +85,33 @@ def dev_ini_text(home: Path, data: Path, modules: Path, java: Path | None = None
 REEXEC_ENV = "DRISHTI_SETUP_REEXEC"
 
 
+def other_home(ini: Path, home: Path) -> str | None:
+    """The folder an existing dev.ini's drishti.home names when it is not this checkout (else None: no such line, or the same folder)."""
+    try:
+        text = ini.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    m = re.search(r"^\s*drishti\.home\s*[=:]\s*(.+?)\s*$", text, re.M)
+    if not m or not m.group(1):
+        return None
+    named = m.group(1).strip().strip("\"'")
+
+    def norm(x) -> str:
+        return os.path.normcase(os.path.normpath(str(x).replace("\\", "/"))).replace("\\", "/").rstrip("/")
+    try:
+        same = norm(named) == norm(home) or norm(Path(named).expanduser().resolve()) == norm(Path(home).resolve())
+    except (OSError, RuntimeError):
+        same = False
+    return None if same else named
+
+
+def rename_command(ini: Path) -> str:
+    """The command that moves an old settings file aside: ren on Windows, mv elsewhere."""
+    if procs.windows():
+        return f"ren {ini} {ini.stem}-old{ini.suffix}"
+    return f"mv {ini} {ini.with_name(ini.stem + '-old' + ini.suffix)}"
+
+
 def have_yaml() -> bool:
     """PyYAML importable in this interpreter (the parts of setup that read the modules and the launcher files need it)."""
     import importlib.util
@@ -203,7 +230,13 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None) -> int:
             line("ok" if ext.is_dir() else "todo", "your jars (lib/ext)", f"{ext}  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)")
         # the settings folder and dev.ini
         if ini.is_file():
-            line("ok", "settings file", f"{ini}  (kept as it is)")
+            other = other_home(ini, home)
+            if other:
+                fix = f"your settings file {ini} points at {other}, not this one ({home}): rename it ({rename_command(ini)}) and run setup again"
+                line("FAIL" if check else "WARN", "settings file", fix + "  (it is never overwritten)")
+                (problems if check else todo).append(fix)
+            else:
+                line("ok", "settings file", f"{ini}  (kept as it is)")
         elif check:
             line("todo", "settings file", f"{ini} is missing")
             todo.append(f"copy config/settings.examples/dev.ini to {ini}")

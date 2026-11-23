@@ -16,9 +16,18 @@
 # Changelog
 
 
-## Unreleased
+## 2.9.11.i7e (2026-11-23)
 
 - The console's runtime requirements no longer list pytest (it stays in requirements-test.txt): setup and the offline wheel packs install one library less.
+- **IDE launchers grouped by folder.** One `run-configs/` folder, read by both IDEs: Maven and JAR Application launchers have `folderName="Drishti-java"`
+  (IntelliJ), Python ones `folderName="Drishti-python"` (PyCharm); each IDE shows the other's folder as not runnable, which is expected. The
+  generator (`tools/launch/launchers.py`, `launchers.yaml`), its tests and docstrings say so.
+- **Drishti: run loader (file into the lake)** asks for the file (`$Prompt$`) instead of naming a file only one person has.
+- **VS Code workspace** portable: `${userHome}`, `py -3.13` on Windows with per-OS commands, no Linux-only interpreter or JDK path.
+- **`setup` checks an existing `dev.ini`**: a `drishti.home` naming another folder than this checkout is `[FAIL]` in `--check` and a `[WARN]`
+  in setup, with the rename command; the file is never overwritten.
+- Docs: IDE_GUIDE (folders, loader prompt, old `dev.ini`, VS Code), CLI_REFERENCE, DEVELOPER_GUIDE, OPERATIONS_GUIDE; the launcher guards
+  (`test_run_configs`) cover the setup launchers.
 
 ## 2.9.11.i7d (2026-11-23)
 

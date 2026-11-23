@@ -2714,7 +2714,7 @@ folder `tools/drishti.py` lives in; a named one must be an absolute path (a rela
 | Command | What it does |
 |---|---|
 | `setup` | `setup drishti`, then `setup venv` |
-| `setup drishti` (also `setup --skip-venv`) | the Drishti part only: checks Python 3.11+ and Java 21+, makes the data folder's layout (`run/ logs/ tmp/ dumps/ delta/ dataload/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths filled in (an existing file is never overwritten), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`, rewritten every time: `launchers --machine`), checks the server jar and the modules |
+| `setup drishti` (also `setup --skip-venv`) | the Drishti part only: checks Python 3.11+ and Java 21+, makes the data folder's layout (`run/ logs/ tmp/ dumps/ delta/ dataload/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths filled in (an existing file is never overwritten; when its `drishti.home` names another folder than this checkout, `--check` fails and `setup` warns: rename it and run setup again), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`, rewritten every time: `launchers --machine`), checks the server jar and the modules |
 | `setup venv` | the Python part in `drishti-console/.venv`: makes or checks it, installing the pinned Lake wheel from `lib/wheels` first, then `drishti-console/requirements.txt` |
 | `setup libs` | the same libraries into the **current** Python (the system Python; no venv) |
 | `setup --system` | `setup drishti` + `setup libs`: where no `.venv` is allowed |
@@ -2792,7 +2792,7 @@ command line, its port from the settings files it names; `--cluster FILE` adds t
 `--env-file`, `--cluster`. Exit 0 when every process found runs and answers (or none was started), 1 when one is not running or not
 answering.
 
-**`drishti.py launchers`** writes the IDE launchers (`run-configs/`, `drishti-console/run-configs/`) and the tables of IDE_GUIDE section 4
+**`drishti.py launchers`** writes the IDE launchers (the one folder `run-configs/`, read by both IDEs: Maven and JAR Application launchers grouped `Drishti-java`, Python ones `Drishti-python`) and the tables of IDE_GUIDE section 4
 from one table, `tools/launch/launchers.yaml`; the files are committed. `launchers --check` changes nothing and exits 1 naming each file
 that differs (the drill's gate runs it). `launchers --machine` writes this machine's `~/drishti-envs/jvm-<profile>.args`, the JVM options
 of the server launchers: `serverstart.jvm_flags`, the function `start server` runs, with the data folder of `dev.ini` and the profile.

@@ -530,3 +530,20 @@ def test_pip_reads_the_requirements_without_their_find_links_line(tmp_path):
     text = pylibs.plain_requirements(req).read_text(encoding="utf-8")
     assert "find-links" not in text and "-f " not in text
     assert "fastapi>=0.110" in text and "drishti-lake==0.9.1" in text and "# comment" in text
+
+
+def test_an_old_dev_ini_naming_another_checkout_is_reported_and_never_overwritten(tmp_path, libs, capsys):
+    envs = tmp_path / "envs"
+    envs.mkdir()
+    old = "drishti.home=/somewhere/else/drishti\n"
+    (envs / "dev.ini").write_text(old, encoding="utf-8")
+    assert envsetup.setup(ns(tmp_path, "drishti", check=True), quiet()) == 1
+    out = capsys.readouterr().out
+    assert "[FAIL] settings file" in out and "points at /somewhere/else/drishti, not this one" in out and "dev-old.ini" in out and "run setup again" in out
+    assert envsetup.setup(ns(tmp_path, "drishti"), quiet()) in (0, 1)
+    out = capsys.readouterr().out
+    assert "[WARN] settings file" in out and "points at /somewhere/else/drishti, not this one" in out
+    assert (envs / "dev.ini").read_text(encoding="utf-8") == old
+    (envs / "dev.ini").write_text(f"drishti.home={TOOLS.parent.as_posix()}\n", encoding="utf-8")
+    envsetup.setup(ns(tmp_path, "drishti"), quiet())
+    assert "points at" not in capsys.readouterr().out

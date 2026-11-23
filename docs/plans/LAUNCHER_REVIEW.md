@@ -63,7 +63,7 @@ Verdicts: **keep**, **change** (keep the job, fix what it carries), **remove**.
 | Drishti server (debug-friendly) | QA profile, sign-in off, DEBUG log, 1 GB, builds the modules first | the same; before-launch Maven step | **remove**: every launcher debugs with Shift+F9; the differences are two settings |
 | Drishti server (dev switch) | QA profile and `DRISHTI_MODULES_DEV=true` | the same | **remove** (section 6) |
 
-### 2.2 PyCharm (`drishti-console/run-configs/`, 18 files)
+### 2.2 PyCharm (the Python ones of `run-configs/`, 18 files)
 
 | Launcher | What it does | Settings it carries by hand | Verdict |
 |---|---|---|---|

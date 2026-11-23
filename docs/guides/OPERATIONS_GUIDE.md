@@ -345,7 +345,7 @@ Nothing Drishti writes is hidden (no dot-folders of its own), and everything it 
 
 The repository itself holds code and configuration: `modules/` (each module's packs, connector templates, Sutras, help), `config/` (the
 kernel's packs, lakes, module switches, lenses, engines, BI files, the example settings files; `config/connectors/` only for a site's own
-overrides), `bin/`, `run-configs/` and `drishti-console/run-configs/` (the IDE run configurations), `docs/`, `tools/`, `external_lib/`.
+overrides), `bin/`, `run-configs/` (the IDE run configurations), `docs/`, `tools/`, `external_lib/`.
 
 ## 3. Other ways to build and run: Maven, IntelliJ IDEA and PyCharm
 

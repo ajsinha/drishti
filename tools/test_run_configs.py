@@ -14,15 +14,14 @@
 
 """Guard: the committed IDE run configurations work on Windows, macOS and Linux without editing.
 
-Two projects, so IntelliJ and PyCharm never share one .idea folder: IntelliJ opens the repository root and reads the Java ones in
-run-configs/ (the Maven builds and the server launchers: no Python configuration at all, so IntelliJ needs neither Python nor its Python
-plugin); PyCharm opens drishti-console/ and reads the Python ones in drishti-console/run-configs/ (the consoles, the distributions'
-consoles Drishti: run console (Risk) and (Finance) included, and the tools). The server launchers are JAR Applications on lib/drishti-server-exec.jar, the jar Drishti: build all
-installed (the one the modules are stamped for). A Python run configuration uses
-the project interpreter (SDK_HOME empty, IS_MODULE_SDK false: PyCharm's "Project Default"), never a path such as
-drishti-console/.venv/bin/python, which does not exist on Windows (there it is .venv\\Scripts\\python.exe). Every configuration runs
-from the repository root ($PROJECT_DIR$ for IntelliJ, $PROJECT_DIR$/.. for PyCharm) and parses as XML. docs/architecture/TEST_HARNESS.md and
-docs/guides/IDE_GUIDE.md rely on this.
+One folder, run-configs/, at the repository root, read by both IDEs (one project at the root): IntelliJ runs the Java launchers (the Maven
+builds and the JAR Application servers) and PyCharm the Python ones (the consoles, the distributions' consoles, the tools); each IDE shows
+the other's as not runnable (a red cross), which is expected. The IDE groups them by kind: every Maven and JAR Application launcher has
+folderName="Drishti-java", every Python one folderName="Drishti-python". The server launchers are JAR Applications on lib/drishti-server-exec.jar,
+the jar Drishti: build all installed (the one the modules are stamped for). A Python run configuration uses the project interpreter
+(SDK_HOME empty, IS_MODULE_SDK false: PyCharm's "Project Default"), never a path such as drishti-console/.venv/bin/python, which does not
+exist on Windows (there it is .venv\\Scripts\\python.exe). Every configuration runs from the repository root ($PROJECT_DIR$) and parses as XML.
+docs/architecture/TEST_HARNESS.md and docs/guides/IDE_GUIDE.md rely on this.
 """
 import pathlib
 import unittest
@@ -49,7 +48,8 @@ PYTHON = [f for f in CONFIGS if _type(f) == "PythonConfigurationType"]
 INTELLIJ = ("Drishti: build all", "Drishti: test", "Drishti: build modules", "Drishti: run server (demo)", "Drishti: run server (built-in samples)",
             "Drishti: run server (QA, port 18580)")
 PYCHARM = ("Drishti: run console", "Drishti: run console (QA, port 17580)", "Drishti: run console (Risk)", "Drishti: run console (Finance)", "Drishti: build demo lakes",
-           "Drishti: run loader (file into the lake)", "Drishti: check environment", "Drishti: check environment (QA)")
+           "Drishti: run loader (file into the lake)", "Drishti: check environment", "Drishti: check environment (QA)",
+           "Drishti: setup", "Drishti: setup (system Python)", "Drishti: setup (system Python, offline wheels)")
 
 
 def options(conf: ET.Element) -> dict:
@@ -61,6 +61,20 @@ class RunConfigs(unittest.TestCase):
         """One launcher per real job (LAUNCHER_REVIEW.md 4.3, G11): a new launcher is a row of tools/launch/launchers.yaml, never a copy."""
         self.assertEqual(sorted(_name(f) for f in JAVA), sorted(INTELLIJ))
         self.assertEqual(sorted(_name(f) for f in PYTHON), sorted(PYCHARM))
+
+    def test_launchers_are_grouped_by_folder(self):
+        """Every Maven and JAR Application launcher is in the folder Drishti-java, every Python one in Drishti-python."""
+        for f in CONFIGS:
+            conf = ET.parse(f).getroot().find("configuration")
+            want = "Drishti-python" if conf.get("type") == "PythonConfigurationType" else "Drishti-java"
+            self.assertEqual(conf.get("folderName"), want, f.name)
+
+    def test_the_loader_asks_for_its_file(self):
+        """No file only one person has: the loader launcher takes its file from PyCharm's prompt macro."""
+        f = ROOT / "run-configs" / "Drishti run loader (file into the lake).run.xml"
+        params = options(ET.parse(f).getroot().find("configuration")).get("PARAMETERS", "")
+        self.assertIn('--from "$Prompt$"', params)
+        self.assertNotIn("drishti-private", params)
 
     def test_intellij_holds_no_python_configuration(self):
         """IntelliJ builds and runs the server with Java only: run-configs/ holds Maven builds and Java launchers, never a Python one."""
@@ -140,6 +154,10 @@ class RunConfigs(unittest.TestCase):
             if conf.get("type") == "JarApplication":
                 self.assertIn('"-Ddrishti.settings.file=' + ini + ",$PROJECT_DIR$/config/profiles/", o.get("VM_PARAMETERS", ""), f.name)
             elif conf.get("type") == "PythonConfigurationType":
+                if o.get("PARAMETERS", "").startswith("setup"):          # setup makes dev.ini: it names none
+                    self.assertNotIn("--settings", o.get("PARAMETERS", ""), f.name)
+                    checked += 1
+                    continue
                 self.assertTrue(o.get("PARAMETERS", "").startswith(f'--settings "{ini}" '), f"{f.name}: --settings {ini} first, quoted")
             else:
                 self.assertEqual(conf.get("type"), "MavenRunConfiguration", f.name)

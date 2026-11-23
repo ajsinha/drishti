@@ -12,12 +12,15 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The IDE launchers, one row each (docs/plans/LAUNCHER_REVIEW.md 4.2): `python tools/drishti.py launchers` writes run-configs/ (IntelliJ),
-# drishti-console/run-configs/ (PyCharm) and the tables of docs/guides/IDE_GUIDE.md section 4 from this table, and `launchers --check`
-# (a quick file check of the drill's gate) fails when a committed file differs. A launcher carries what to run and which profile
+# The IDE launchers, one row each (docs/plans/LAUNCHER_REVIEW.md 4.2): `python tools/drishti.py launchers` writes the one folder run-configs/
+# (read by both IDEs: IntelliJ runs the Java launchers, PyCharm the Python ones; each IDE shows the other's as not runnable, a red cross,
+# which is expected), the VS Code workspace drishti.code-workspace and the tables of docs/guides/IDE_GUIDE.md section 4 from this table, and
+# `launchers --check` (a quick file check of the drill's gate) fails when a committed file differs. The IDE groups them by kind: every Maven
+# and JAR Application launcher is in the folder Drishti-java, every Python one in Drishti-python (the generator's rule). The sections
+# `intellij` and `pycharm` below say which IDE a row is for. A launcher carries what to run and which profile
 # (config/profiles/<profile>.ini) only: every setting with a config home is in the profile, the server's JVM options are the one function
 # drishti.py start server runs (serverstart.jvm_flags), written per machine into ~/drishti-envs/jvm-<profile>.args by setup.
-# kind: maven (goals), server (profile), console (profile, args), tool (command, profile optional; template: a file the reader names).
+# kind: maven (goals), server (profile), console (profile, args), tool (command, profile optional; prompt: true asks for the file when the launcher runs).
 
 intellij:
   - name: "Drishti: build all"
@@ -99,10 +102,10 @@ pycharm:
     when: after a build, with the server stopped
   - name: "Drishti: run loader (file into the lake)"
     kind: tool
-    template: true
-    command: lake build --from $USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl --kind trade --mode overwrite-dates --lake demo
-    what: one file of yours into the demo lake, by its kind (a template; copy it and name your file)
-    when: you hold a file of your own (never committed)
+    prompt: true
+    command: lake build --from $Prompt$ --kind trade --mode overwrite-dates --lake demo
+    what: one file of yours into the demo lake, by its kind (it asks for the file when it runs)
+    when: you hold a file of your own (never committed; the launcher asks for its path)
   - name: "Drishti: check environment"
     kind: tool
     profile: demo

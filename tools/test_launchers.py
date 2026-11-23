@@ -280,7 +280,7 @@ def test_g8_the_docs_name_launchers_that_exist_and_no_retired_script():
             assert r not in text, f"{f.relative_to(ROOT)}: names the retired {r}"
 
 
-def test_g9_a_file_a_launcher_names_exists_unless_it_is_a_template():
+def test_g9_a_file_a_launcher_names_exists_unless_it_asks_for_it():
     import yaml
     doc = yaml.safe_load((ROOT / "tools" / "launch" / "launchers.yaml").read_text(encoding="utf-8"))
     for row in doc["pycharm"]:
@@ -288,9 +288,9 @@ def test_g9_a_file_a_launcher_names_exists_unless_it_is_a_template():
         for i, w in enumerate(words):
             if w == "--from":
                 path = words[i + 1]
-                if row.get("template"):
+                if row.get("prompt"):
                     continue
-                assert (ROOT / path).exists() and path.startswith("data/testdata/"), f"{row['name']}: {path} (a sample under data/testdata/, or template: true)"
+                assert (ROOT / path).exists() and path.startswith("data/testdata/"), f"{row['name']}: {path} (a sample under data/testdata/, or prompt: true)"
 
 
 def test_g10_no_shipped_launcher_or_config_holds_an_os_specific_path():
@@ -315,3 +315,17 @@ def test_workspace_setup_tasks_name_no_settings_file():
     for t in setups:
         assert "--settings" not in t["command"] and "--settings" not in t["windows"]["command"], t["label"]
     assert any("--settings" in t["command"] for n, t in tasks.items() if t not in setups and t["command"].startswith("python3 tools/drishti.py"))
+
+
+def test_workspace_is_portable():
+    """VS Code: ${userHome} (never $USER_HOME$ or ~), py -3.13 on Windows with a per-OS override, no Linux-only interpreter or JDK path."""
+    import json
+    text = (ROOT / "drishti.code-workspace").read_text(encoding="utf-8")
+    body = json.loads("".join(l for l in text.splitlines(True) if not l.lstrip().startswith("//")))
+    raw = json.dumps(body)
+    assert "$USER_HOME$" not in raw and "~/" not in raw and "/usr/lib/jvm" not in raw and "java.configuration.runtimes" not in raw
+    assert "python.defaultInterpreterPath" not in raw
+    for t in body["tasks"]["tasks"]:
+        if t["command"].startswith("python3"):
+            assert t["windows"]["command"].startswith("py -3.13 tools/") or t["windows"]["command"].startswith("py -3.13 drishti-console/"), t["label"]
+            assert "linux" in t and "osx" in t, t["label"]

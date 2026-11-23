@@ -13,13 +13,13 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Drishti: run loader (file into the lake): one file of yours into the demo lake, by its kind (a template; copy it and name your file).
-  Use it when: you hold a file of your own (never committed).
-  A template: copy it (Ctrl+D) and name your own file in Parameters; the copy lives in the git-ignored .idea/.
+  Drishti: run loader (file into the lake): one file of yours into the demo lake, by its kind (it asks for the file when it runs).
+  Use it when: you hold a file of your own (never committed; the launcher asks for its path).
+  It asks for the file when it runs (the $Prompt$ macro of PyCharm): nothing to edit, no file of yours is named here.
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti: run loader (file into the lake)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
+  <configuration default="false" name="Drishti: run loader (file into the lake)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti-python">
     <module name="drishti" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
@@ -33,7 +33,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
-    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; lake build --from &quot;$USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl&quot; --kind trade --mode overwrite-dates --lake demo" />
+    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; lake build --from &quot;$Prompt$&quot; --kind trade --mode overwrite-dates --lake demo" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

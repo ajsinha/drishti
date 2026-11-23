@@ -89,7 +89,7 @@ tags (it puts the repositories in the folder *above* the index repository, so th
 mkdir -p ~/IdeaProjects/drishti-platform && cd ~/IdeaProjects/drishti-platform
 git clone https://github.com/drishti-platform/drishti-platform.git
 cd drishti-platform
-python3 clone_all.py --release i7d         # Windows: py clone_all.py --release i7d; --parent <folder> puts them elsewhere
+python3 clone_all.py --release i7e         # Windows: py clone_all.py --release i7e; --parent <folder> puts them elsewhere
 ```
 
 `--release` is required (a release name from `platform.yaml`; `--develop` clones every repository at `develop` instead). `make_bundle.py` (the
@@ -111,7 +111,7 @@ drishti-console/.venv/bin/python tools/drishti.py doctor
 ```
 
 The Lake wheel comes first because `requirements.txt` installs `drishti-lake==<version>` from `lib/wheels`, and no package index has it; `../drishti-lake`
-must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release i7d` leaves it there). On Windows the environment's Python is `drishti-console\.venv\Scripts\python.exe` (`py -3.13 -m venv drishti-console\.venv`, then
+must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release i7e` leaves it there). On Windows the environment's Python is `drishti-console\.venv\Scripts\python.exe` (`py -3.13 -m venv drishti-console\.venv`, then
 `drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements-test.txt`); Playwright's browsers go into the
 user's profile, no administrator rights needed.
 
@@ -127,10 +127,10 @@ The products install into `~/.m2` at the versions the root `pom.xml` pins (`dris
 
 ```bash
 cd ~/IdeaProjects/drishti-platform/drishti-platform
-python3 build_all.py --release i7d [--skip-tests] [--repo-local]       # Windows: py build_all.py --release i7d
+python3 build_all.py --release i7e [--skip-tests] [--repo-local]       # Windows: py build_all.py --release i7e
 ```
 
-`build_all.py` checks that each repository is at the release's tag (it stops and says so if not: `clone_all.py --release i7d` puts them there), then runs
+`build_all.py` checks that each repository is at the release's tag (it stops and says so if not: `clone_all.py --release i7e` puts them there), then runs
 `mvnw -B clean install` in `drishti-tools/java`, `drishti-rachana/java` and `drishti-lake/java` in that order (their tests included unless `--skip-tests`),
 and then `mvnw -B clean verify` in `drishti`: the whole Drishti suite, not `build all`. It repeats what is already built (nothing is skipped), builds neither the
 Elements bundles (Drishti vendors them, [ELEMENTS_IN_DRISHTI.md](architecture/ELEMENTS_IN_DRISHTI.md)) nor the Lake wheel, and does not start Drishti.

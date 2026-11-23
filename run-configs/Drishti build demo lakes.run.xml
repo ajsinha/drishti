@@ -18,7 +18,7 @@
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti: build demo lakes" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">
+  <configuration default="false" name="Drishti: build demo lakes" type="PythonConfigurationType" factoryName="Python" folderName="Drishti-python">
     <module name="drishti" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />

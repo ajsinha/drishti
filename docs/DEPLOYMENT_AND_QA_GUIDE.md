@@ -279,8 +279,8 @@ one have every option.
 **1 · Get the release.** Unpack the release ZIP (it carries the server jar in `lib/`), or get the platform's source and build it (JDK 21
 only; every repository carries Maven as `mvnw`). The source is five repositories (and the index repository) under one folder, `~/IdeaProjects/drishti-platform/`
 (Windows `C:\Users\you\IdeaProjects\drishti-platform\`): download the source bundle from the index repository's release, or
-`git clone https://github.com/drishti-platform/drishti-platform.git` into that folder and run `clone_all.py --release i7d`; then
-`build_all.py --release i7d` installs the products from their tags in order (tools, Rachana, Lake) and runs the whole Drishti build and its tests (to build only the jar, `build all` below). The steps have one home,
+`git clone https://github.com/drishti-platform/drishti-platform.git` into that folder and run `clone_all.py --release i7e`; then
+`build_all.py --release i7e` installs the products from their tags in order (tools, Rachana, Lake) and runs the whole Drishti build and its tests (to build only the jar, `build all` below). The steps have one home,
 [QUICKSTART_DEVELOPERS.md sections 1 and 2](QUICKSTART_DEVELOPERS.md#1-get-the-code-and-set-up-the-machine); the versions that go together are in the index
 repository's [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md). Then, in the `drishti` folder:
 

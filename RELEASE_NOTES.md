@@ -13,6 +13,36 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7e: release notes
+
+*A point release on i7d: the IDE launchers are grouped by language, the loader asks for its file, and setup checks an old settings file.*
+Everything else is as in i7d.
+
+## What changes for administrators
+
+- **`setup` checks an existing `dev.ini`.** When its `drishti.home` names another folder than this checkout, `setup --check` shows
+  `[FAIL] settings file` and `setup` a `[WARN]`, both saying: your settings file `…\dev.ini` points at `<other folder>`, not this one: rename
+  it (`ren …\dev.ini dev-old.ini`) and run setup again. The file is never overwritten.
+- **pytest is no longer a runtime requirement** of the console (it stays in `requirements-test.txt`): setup and the offline wheel packs
+  install one library less.
+
+## What changes for developers
+
+- **Launchers are grouped by folder.** One `run-configs/` folder is read by both IDEs: every Maven and JAR Application launcher is in the
+  folder **Drishti-java** (IntelliJ), every Python one in **Drishti-python** (PyCharm). Each IDE shows the other's folder as not runnable
+  (a red cross): that is expected. `tools/launch/launchers.py` and `launchers.yaml` generate this; their tests and docstrings are current.
+- **Drishti: run loader (file into the lake)** asks for the file when it runs (`$Prompt$`); it no longer names a file of one person.
+- **VS Code workspace**: `${userHome}` for the home folder, `py -3.13` on Windows (per-OS commands), no Linux-only interpreter or JDK path
+  (the JDK is `JAVA_HOME`); the loader task asks for the file.
+- The guides' examples carry no personal or old-layout paths (the platform layout, `IdeaProjects/drishti-platform/drishti`).
+- IDE_GUIDE, CLI_REFERENCE, DEVELOPER_GUIDE and OPERATIONS_GUIDE describe the one `run-configs/` folder.
+
+## Known limits
+
+Carried from i7d (below): where Program Files is not writable, pip falls back to the user's own folder; setup, PyCharm and the
+console see it, but the server's pivot Python workers start Python isolated (`-I`) and do not. Use a Python the user can write to, or have
+IT run step 4 as administrator.
+
 # Drishti 2.9.11.i7d: release notes
 
 *A point release on i7c: setup no longer needs the package index.* Everything else is as in i7c.

@@ -22,6 +22,11 @@
   names (``@…/jvm-demo.args``): the one function ``drishti.py start server`` runs (``serverstart.jvm_flags``), with this machine's data
   folder (from ``dev.ini`` and the profile), so the temp folder, heap dumps and GC log follow a moved data folder. ``setup`` runs it.
 
+One folder, ``run-configs/``, is read by both IDEs: IntelliJ runs the Java ones (Maven, JAR Application) and PyCharm the Python ones; each
+IDE shows the other's as not runnable (a red cross), which is expected. The IDE groups them: ``FOLDER_JAVA`` ("Drishti-java") for every
+Maven and JAR Application launcher, ``FOLDER_PYTHON`` ("Drishti-python") for every Python one. The VS Code workspace uses ``${userHome}``
+and ``py -3.13`` on Windows, no machine-specific path.
+
 A launcher carries what to run and its profile only (``config/profiles/<profile>.ini``); the development secrets are the one exception,
 taken from ``serverstart.DEV`` (kept as they are, LAUNCHER_REVIEW.md D6)."""
 from __future__ import annotations
@@ -42,6 +47,7 @@ import javacmd  # noqa: E402
 TABLE = HERE / "launchers.yaml"
 GUIDE = "docs/guides/IDE_GUIDE.md"   # under the install folder (home / GUIDE)
 BEGIN, END = "<!-- generated: launchers begin (python tools/drishti.py launchers) -->", "<!-- generated: launchers end -->"
+FOLDER_JAVA, FOLDER_PYTHON = "Drishti-java", "Drishti-python"   # folderName of the launchers: Java ones for IntelliJ, Python ones for PyCharm
 FOLDERS = {"intellij": "run-configs", "pycharm": "run-configs"}   # under the install folder: the one folder of the launcher standard (docs/plans/LAUNCHER_STANDARD.md)
 WORKSPACE = "drishti.code-workspace"                                     # VS Code: a task or launch of every launcher's name
 DEV_INI = "$USER_HOME$/drishti-envs/dev.ini"
@@ -119,13 +125,13 @@ def render(home: Path, ide: str, row: dict) -> str:
                 "The server jar Drishti build all installed (lib/drishti-server-exec.jar): the jar the modules are stamped for; nothing is built before launch."]
     elif kind in ("console", "tool") and row.get("profile"):
         why += [f"The profile config/profiles/{row['profile']}.ini (after your dev.ini) holds its settings."]
-    if row.get("template"):
-        why += ["A template: copy it (Ctrl+D) and name your own file in Parameters; the copy lives in the git-ignored .idea/."]
+    if row.get("prompt"):
+        why += ["It asks for the file when it runs (the $Prompt$ macro of PyCharm): nothing to edit, no file of yours is named here."]
     why += ["Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table."]
     out = [header(home, why), '<component name="ProjectRunConfigurationManager">\n']
     if kind == "maven":
         goals = "".join(f'              <option value="{esc(g)}" />\n' for g in row["goals"].split())
-        out.append(f'  <configuration default="false" name="{esc(name)}" type="MavenRunConfiguration" factoryName="Maven" folderName="Drishti">\n'
+        out.append(f'  <configuration default="false" name="{esc(name)}" type="MavenRunConfiguration" factoryName="Maven" folderName="{FOLDER_JAVA}">\n'
                    "    <MavenSettings>\n      <option name=\"myGeneralSettings\" />\n      <option name=\"myRunnerSettings\" />\n"
                    "      <option name=\"myRunnerParameters\">\n        <MavenRunnerParameters>\n          <option name=\"profiles\">\n"
                    "            <set />\n          </option>\n          <option name=\"goals\">\n            <list>\n" + goals +
@@ -134,7 +140,7 @@ def render(home: Path, ide: str, row: dict) -> str:
                    "          <option name=\"workingDirPath\" value=\"$PROJECT_DIR$\" />\n        </MavenRunnerParameters>\n      </option>\n"
                    "    </MavenSettings>\n    <method v=\"2\" />\n  </configuration>\n")
     elif kind == "server":
-        out.append(f'  <configuration default="false" name="{esc(name)}" type="JarApplication" folderName="Drishti">\n'
+        out.append(f'  <configuration default="false" name="{esc(name)}" type="JarApplication" folderName="{FOLDER_JAVA}">\n'
                    f'    <option name="JAR_PATH" value="{JAR}" />\n'
                    f'    <option name="VM_PARAMETERS" value="{esc(server_vm(row["profile"]))}" />\n'
                    '    <option name="PROGRAM_PARAMETERS" value="" />\n'
@@ -142,7 +148,7 @@ def render(home: Path, ide: str, row: dict) -> str:
                    '    <option name="ALTERNATIVE_JRE_PATH" />\n' + envs(SERVER_ENV) + '    <method v="2" />\n  </configuration>\n')
     else:
         script = "$PROJECT_DIR$/drishti-console/run_drishti_web.py" if kind == "console" else "$PROJECT_DIR$/tools/drishti.py"
-        out.append(f'  <configuration default="false" name="{esc(name)}" type="PythonConfigurationType" factoryName="Python" folderName="Drishti">\n'
+        out.append(f'  <configuration default="false" name="{esc(name)}" type="PythonConfigurationType" factoryName="Python" folderName="{FOLDER_PYTHON}">\n'
                    '    <module name="drishti" />\n    <option name="ENV_FILES" value="" />\n'
                    '    <option name="INTERPRETER_OPTIONS" value="" />\n    <option name="PARENT_ENVS" value="true" />\n'
                    + envs(CONSOLE_ENV if kind == "console" else TOOL_ENV) +
@@ -163,6 +169,7 @@ def workspace(doc: dict) -> str:
     drishti.py start server) and a debugpy launch of the same name for every Python one; JDK 21 (LAUNCHER_STANDARD.md section 4)."""
     import json
     tasks, launches = [], []
+    ini = "${userHome}/drishti-envs/dev.ini"
     for ide in FOLDERS:
         for r in doc.get(ide) or []:
             name, kind = r["name"], r["kind"]
@@ -174,10 +181,15 @@ def workspace(doc: dict) -> str:
             if kind == "server":
                 args = ["tools/drishti.py", "start", "server", "--profile", r["profile"]]
             elif kind == "console":
-                args = ["drishti-console/run_drishti_web.py", "--settings", "~/drishti-envs/dev.ini"] + (["--profile", r["profile"]] if r.get("profile") else []) + list(r.get("args") or [])
+                args = ["drishti-console/run_drishti_web.py", "--settings", ini] + (["--profile", r["profile"]] if r.get("profile") else []) + list(r.get("args") or [])
             else:
-                args = ["tools/drishti.py"] + (["--settings", "~/drishti-envs/dev.ini"] if r.get("settings", True) else []) + (["--profile", r["profile"]] if r.get("profile") else []) + r["command"].split()
-            tasks.append({"label": name, "type": "shell", "command": "python3 " + " ".join(args), "windows": {"command": "python " + " ".join(args)},
+                words = [w.replace("$USER_HOME$", "${userHome}") for w in r["command"].split()]
+                if r.get("prompt"):
+                    words = [("${input:file}" if w == "$Prompt$" else w) for w in words]
+                args = ["tools/drishti.py"] + (["--settings", ini] if r.get("settings", True) else []) + (["--profile", r["profile"]] if r.get("profile") else []) + words
+            line = " ".join(f'"{a}"' if "${userHome}" in a or "${input" in a else a for a in args)
+            tasks.append({"label": name, "type": "shell", "command": "python3 " + line, "windows": {"command": "py -3.13 " + line},
+                          "linux": {"command": "python3 " + line}, "osx": {"command": "python3 " + line},
                           "options": {"cwd": "${workspaceFolder}"}, "problemMatcher": []})
             if kind != "server":
                 launches.append({"name": name, "type": "debugpy", "request": "launch", "cwd": "${workspaceFolder}", "console": "integratedTerminal",
@@ -185,13 +197,15 @@ def workspace(doc: dict) -> str:
     head = ("// Project Drishti. Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Proprietary: see LICENSE.\n"
             "//\n// Drishti in VS Code: File, Open Workspace from File. The tasks and launch configurations carry the SAME names as the JetBrains run\n"
             "// configurations in run-configs/ (the launcher standard: docs/plans/LAUNCHER_STANDARD.md). Generated from tools/launch/launchers.yaml by\n"
-            "// python tools/drishti.py launchers: never edit this file, edit the table. JDK 21: change the Java path below.\n"
+            "// python tools/drishti.py launchers: never edit this file, edit the table. Paths use ${userHome}; Python is py -3.13 on Windows and\n"
+            "// python3 elsewhere; Java is the JDK 21 of JAVA_HOME (no machine path here).\n"
             "// Build and run in the IDE: README.md#build-and-run-in-the-ide.\n")
     body = {"folders": [{"name": "drishti", "path": "."}],
             "extensions": {"recommendations": ["ms-python.python", "ms-python.debugpy", "vscjava.vscode-java-pack", "redhat.vscode-yaml"]},
-            "settings": {"python.defaultInterpreterPath": "python3", "java.configuration.runtimes": [{"name": "JavaSE-21", "path": "/usr/lib/jvm/java-21-openjdk-amd64", "default": True}],
-                         "files.exclude": {"**/__pycache__": True}},
-            "tasks": {"version": "2.0.0", "tasks": tasks}, "launch": {"version": "0.2.0", "configurations": launches}}
+            "settings": {"files.exclude": {"**/__pycache__": True}},
+            "tasks": {"version": "2.0.0", "tasks": tasks,
+                      "inputs": [{"id": "file", "type": "promptString", "description": "The file of yours to load into the demo lake"}]},
+            "launch": {"version": "0.2.0", "configurations": launches}}
     return head + json.dumps(body, indent=2) + "\n"
 
 
