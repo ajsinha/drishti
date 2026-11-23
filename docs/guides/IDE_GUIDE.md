@@ -203,6 +203,10 @@ or later with Polars, NumPy and PyYAML) in their own run configuration. The deta
 1. **File → Open**, choose the repository folder (the same project IntelliJ opens; the launchers are in its `run-configs/`).
 2. **Settings → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → Existing** (or **System Interpreter** for a local
    Python): Linux `…/drishti/drishti-console/.venv/bin/python`, Windows `C:\Users\you\IdeaProjects\drishti\drishti-console\.venv\Scripts\python.exe`.
+   **No `.venv` allowed on the machine** (everything goes to the system Python): run `setup --skip-venv`, install the libraries into that
+   Python (the Lake wheel first: `py -m pip install lib\wheels\drishti_lake-<version>-py3-none-any.whl`, then
+   `py -m pip install -r drishti-console\requirements.txt`) and choose **System Interpreter** here. The launchers use the project's
+   interpreter; with no `.venv` the server runs `python` (Windows) or `python3` for its Python work, or the one `DRISHTI_PYTHON` names.
 3. **Project Structure → + Add Content Root**: `drishti-console/` and `tools/`, marked **Sources** (for reading and completion; the run configurations work without it).
 4. Right-click `tests/` → **Mark Directory as → Test Sources Root**.
 5. The drop-down lists the Python configurations of `run-configs/` under the folder **Drishti**: the consoles (the
