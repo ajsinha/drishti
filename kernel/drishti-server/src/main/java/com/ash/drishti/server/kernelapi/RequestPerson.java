@@ -54,7 +54,7 @@ public final class RequestPerson implements Person {
      *
      * @throws IllegalArgumentException a person the kernel did not make
      */
-    static RequestPerson of(Person p) {
+    public static RequestPerson of(Person p) {
         if (p instanceof RequestPerson r) {
             return r;
         }

@@ -60,11 +60,12 @@ public class KernelServices implements Kernel {
     private final KernelLenses lenses;
     private final KernelAccess access;
     private final KernelOperations operations;
+    private final ObjectProvider<com.ash.drishti.kernel.api.services.Engines> engines;
 
     public KernelServices(com.ash.drishti.engine.time.BusinessDates calendar, Entitlements entitlements,
             ObjectProvider<com.ash.drishti.identity.UserService> users, KernelRecords records, KernelHistory history, KernelDates dates,
             KernelSettings settings, KernelLiveQueries live, KernelPivots pivots, KernelLenses lenses, KernelAccess access,
-            KernelOperations operations) {
+            KernelOperations operations, ObjectProvider<com.ash.drishti.kernel.api.services.Engines> engines) {
         this.calendar = calendar;
         this.entitlements = entitlements;
         this.users = users;
@@ -77,6 +78,16 @@ public class KernelServices implements Kernel {
         this.lenses = lenses;
         this.access = access;
         this.operations = operations;
+        this.engines = engines;
+    }
+
+    @Override
+    public com.ash.drishti.kernel.api.services.Engines engines() {
+        com.ash.drishti.kernel.api.services.Engines e = engines.getIfAvailable();
+        if (e == null) {
+            throw new Refused(503, "ENG-5030", "this server hosts no engines");
+        }
+        return e;
     }
 
     @Override

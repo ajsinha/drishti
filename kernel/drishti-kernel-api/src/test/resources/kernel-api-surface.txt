@@ -603,6 +603,9 @@
   services.CellSet public java.util.List<java.lang.Object> com.ash.drishti.kernel.api.services.CellSet.rows()
   services.CellSet public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.CellSet.answer()
   services.CellSet public java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.CellSet.cells()
+  services.Engines public abstract boolean com.ash.drishti.kernel.api.services.Engines.running(java.lang.String)
+  services.Engines public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.Engines.ask(com.ash.drishti.kernel.api.security.Principal,java.lang.String,java.util.List<java.lang.String>,java.util.Map<java.lang.String, java.lang.Object>,java.util.Map<java.lang.String, java.lang.String>)
+  services.Engines public abstract java.util.Map<java.lang.String, java.lang.Object> com.ash.drishti.kernel.api.services.Engines.ask(com.ash.drishti.kernel.api.services.Person,java.lang.String,java.util.List<java.lang.String>,java.util.Map<java.lang.String, java.lang.Object>,java.util.Map<java.lang.String, java.lang.String>)
   services.History public abstract com.ash.drishti.kernel.api.services.Series com.ash.drishti.kernel.api.services.History.series(com.ash.drishti.kernel.api.services.Person,com.ash.drishti.api.EntityRef,java.lang.String,int,java.time.LocalDate)
   services.InlineRequest public final boolean com.ash.drishti.kernel.api.services.InlineRequest.equals(java.lang.Object)
   services.InlineRequest public final int com.ash.drishti.kernel.api.services.InlineRequest.hashCode()
@@ -627,6 +630,7 @@
   services.Kernel public abstract com.ash.drishti.kernel.api.services.PersonSettings com.ash.drishti.kernel.api.services.Kernel.settings()
   services.Kernel public abstract com.ash.drishti.kernel.api.services.Pivots com.ash.drishti.kernel.api.services.Kernel.pivots()
   services.Kernel public abstract com.ash.drishti.kernel.api.services.Records com.ash.drishti.kernel.api.services.Kernel.records()
+  services.Kernel public default com.ash.drishti.kernel.api.services.Engines com.ash.drishti.kernel.api.services.Kernel.engines()
   services.Kernel$Refused public int com.ash.drishti.kernel.api.services.Kernel$Refused.status()
   services.Kernel$Refused public java.lang.String com.ash.drishti.kernel.api.services.Kernel$Refused.code()
   services.Kernel$Refused public java.lang.String com.ash.drishti.kernel.api.services.Kernel$Refused.say()
@@ -816,6 +820,7 @@ security.Principal
 services.Access
 services.BusinessDates
 services.CellSet
+services.Engines
 services.History
 services.InlineRequest
 services.InlineRequest$Field

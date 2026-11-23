@@ -60,6 +60,11 @@ public interface Kernel {
     /** One module asking another: operations, by the consumer's own interface. */
     Operations operations();
 
+    /** The hosted engines, asked as the person (R2: the banking module's risk figures come from the risk engines this way). */
+    default Engines engines() {
+        throw new Refused(503, "ENG-5030", "this server hosts no engines");
+    }
+
     /**
      * A new {@link PersonCache} for what the module works out per person: at most {@code size} answers, each kept {@code ttlMillis}.
      * Every key holds the person's {@link Person#key()}.

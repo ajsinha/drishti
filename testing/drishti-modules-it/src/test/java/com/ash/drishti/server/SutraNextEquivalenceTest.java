@@ -143,18 +143,23 @@ class SutraNextEquivalenceTest {
     @Test
     void theLibraryApiListsTheFragmentsWithTheirDocstrings() throws Exception {
         JsonNode lib = read("/api/v1/sutras/library", "full");
-        assertThat(lib.path("count").asInt()).isBetween(8, 30);
         JsonNode line = null;
+        int kit = 0;
         for (JsonNode f : lib.path("fragments")) {
             assertThat(f.path("fragment").asBoolean()).isTrue();
             assertThat(f.path("doc").path("summary").asText()).isNotBlank();
-            assertThat(f.path("doc").path("examples")).isNotEmpty();
             assertThat(f.path("source").asText()).doesNotStartWith("/");
-            assertThat(f.path("origin").asText()).as("a Drishti UI kit fragment").isEqualTo("kit");
+            // the Drishti UI kit's own fragments, and since i8 (C6) Rachana's bundled libraries' (origin library:core, library:finance)
+            assertThat(f.path("origin").asText()).as("a UI kit or Rachana library fragment").matches("kit|library:[a-z]+");
+            if (f.path("origin").asText().equals("kit")) {
+                kit++;
+                assertThat(f.path("doc").path("examples")).isNotEmpty();
+            }
             if (f.path("ref").asText().equals("series-line@1")) {
                 line = f;
             }
         }
+        assertThat(kit).as("the UI kit's fragments").isBetween(8, 30);
         assertThat(line).isNotNull();
         assertThat(line.path("doc").path("params").path("rows").path("type").asText()).isEqualTo("expression");
         assertThat(line.path("params").path("fmt").asText()).isEqualTo("price2");
