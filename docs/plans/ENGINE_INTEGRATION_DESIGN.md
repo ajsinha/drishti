@@ -18,7 +18,8 @@
 **Status: design for the owner, written 2026-11-21, refreshed 2026-11-22 around the owner's acceptance test (section 0) and
 extended the same day to every computation in Drishti (section 2). Nothing built, nothing run. EN-1 to EN-44 are accepted;
 EN-45 to EN-55 are accepted as recommended (owner, 2026-11-22; section 16). Zero copy (section 17, EN-56 to EN-65): the
-principle is the owner's (2026-11-22); EN-57 to EN-65 are recommended, for the owner.**
+principle is the owner's (2026-11-22); EN-57 to EN-65 are recommended, for the owner. The computation contract (section 18,
+EN-66 to EN-73): recommended, for the owner.**
 For the refresh also read: `kernel/drishti-common/.../SharedLib`, `kernel/drishti-module-runtime` (`ModuleClassLoader`,
 `ModuleVerifier`, `FirstParty`, `KernelLibraries`), `lib/README.md`. Read from git only: Drishti
 `main` at `9ce7c3170` (`kernel/drishti-api/.../api/compute`, `kernel/drishti-kernel-api/.../kernel/api/engines`,
@@ -56,8 +57,9 @@ order in which today's code moves. It reads the code at `origin/wip/g4-rehearsal
 10. [Two paper tests](#10-two-paper-tests) · 11. [What stays in Drishti](#11-what-stays-in-drishti) ·
 12. [Migration of today's engines](#12-migration-of-todays-engines) · 13. [Repository and coordinates](#13-repository-and-coordinates) ·
 14. [Estimate and the combined i8 plan](#14-estimate-and-the-combined-i8-plan) · 15. [Risks](#15-risks) ·
-16. [Decisions EN-1 to EN-65](#16-decisions-en-1-to-en-65) ·
-17. [Zero-copy data access](#17-zero-copy-data-access-en-56-to-en-65)
+16. [Decisions EN-1 to EN-73](#16-decisions-en-1-to-en-73) ·
+17. [Zero-copy data access](#17-zero-copy-data-access-en-56-to-en-65) ·
+18. [The engine computation contract](#18-the-engine-computation-contract-en-66-to-en-73)
 
 ## 0. The acceptance test, and the answer in one page
 
@@ -1357,7 +1359,7 @@ ship with the sample engine and the analytics engines.
 | `engine-api` 1.0 is frozen before the query kind has been built | a 2.0 soon after | the query descriptor and the grouped scan are reviewed on paper at E0 (EN-53); all of 2.3 is additive |
 | `shared` isolation is trusted without its proof | one person's rows in another's answer | `shared` only with a certificate that lists both laws; the host's output re-check; the shadow comparison (2.4) |
 
-## 16. Decisions EN-1 to EN-65
+## 16. Decisions EN-1 to EN-73
 
 ### EN-1 to EN-28: accepted (owner, 2026-11-21)
 
@@ -1447,6 +1449,19 @@ EN-35), EN-18 (the certificate is evidence, EN-39) and EN-19 (in process means t
 | EN-63 | Access | **The host chooses the `RowSet`**: row rules and scope are resolved by the host to row ordinals over the one shared set of bytes; masked columns are absent from the view; `per-viewer` gives no whole-segment access. An engine cannot widen what it is given (17.8). Sharpens EN-47 | the engine applies the visibility filter itself; or a physical copy per visibility |
 | EN-64 | The kit | **A zero-copy group in `engine-tck`: an engine that copies bulk data fails** (allocation per ask independent of input size, backing identity, the poison law, the heap ceiling at 1,000,000 positions, scan additions) (17.9) | trust the benchmark gate alone (finds a slow engine, not a copying one) |
 | EN-65 | Scope and order | **Every engine: market risk, CCR, query, python, indicators, capacity, genomics and each later one** (17.10). The views enter `engine-api` 0.x and the host's `Inputs` before the market-risk intake is rewritten (R2 cut plan MC-12) and are part of the 1.0 freeze (EN-27, EN-53) | risk only, the others when they migrate (a second handover to retire later) |
+
+### EN-66 to EN-73: the computation contract (owner's concern, 2026-11-22; recommended, for the owner)
+
+| # | Decision | Recommendation | The alternative |
+|---|---|---|---|
+| EN-66 | The shape of an engine's computation | **Three primitives: the host's scope, a mergeable aggregate, measures as functions of an aggregate** (section 18). An output is declared as a measure over an aggregate, never coded as a route of its own: scope expressions, ad-hoc and personal baskets, the P&L path, tree, matrix, compare, what-if, sharding and intraday need no engine code of their own | one bespoke engine output per screen (most of R2 step 4b as first counted) |
+| EN-67 | Scope | **The host resolves every scope kind** (hierarchy node, system basket, scope expression, ad-hoc or personal basket) with the caller's row rules **to a `RowSet`**; the engine never learns the kind (18.1). The resolver, the expression grammar and the baskets stay in Drishti | the engine parses scopes (each engine its own grammar and its own access check) |
+| EN-68 | The aggregate | **`aggregate(view, rows, groups)` gives a partial; `merge(partials)` gives the aggregate** (18.2), carried by the API's `Partial`, `Partitioned`, `Assembling` and `Incremental`. One pass with group ids serves tree, matrix and many scopes at once; shards and intraday are merges | separate code paths for single scope, cube, shard and intraday |
+| EN-69 | Measures | **A measure is a pure function of one or more aggregates** (VaR, ES, parametric, stressed, 10-day, component, marginal, incremental, correlation, beta; exposure the same over time buckets), declared in the descriptor with its explanation (18.3) | measures that read rows themselves |
+| EN-70 | Bits | **One canonical reduction order, fixed by the snapshot and the row set, never by threads, shards or arrival; a partial is keyed by its place in that order and merge is exact only between whole units** (18.4). A unit split between parties is chained or re-summed from rows; a folded vector is never patched | exact (order-free) summation: other bits than every recorded answer; or "close enough" merges |
+| EN-71 | What is not the engine's | **Captures and history are host sinks of answers (EN-12); compare is the same ask on two versions; the MR cube is the `query` engine grouping the risk engine's measures** (18.5) | capture, compare and cube routes inside each engine |
+| EN-72 | Query and OLAP | **The same contract**: cells are group ids, aggregate states merge by their function, measures are functions of states; sums of doubles follow the canonical order or carry their exactness class when pushed to a source (18.6) | a second aggregation model for the query engine |
+| EN-73 | Proof | **Kit laws from every case: scope-kind blindness, grouping, merge order, split anywhere, incremental at unit grain** (18.7); the R2 coverage table (cut plan 4b) is filled by declaring measures, not by new outputs | parity by goldens per output |
 
 ## 17. Zero-copy data access (EN-56 to EN-65)
 
@@ -1570,6 +1585,102 @@ with the speed gate of 2.5, and its figures go to `BENCHMARK.md`.
 | `capacity` | no inputs and a small result: nothing bulk exists; the allocation check still applies |
 | `genomics` | sample-by-feature matrices as `FloatVectors` or `DoubleVectors`; a cohort is a `RowSet`; cohort statistics accumulate in place |
 | every later engine | the same types; an engine that needs another shape of bulk data asks for a view type in the API, never a private copy |
+
+## 18. The engine computation contract (EN-66 to EN-73)
+
+**The owner's concern (2026-11-22):** the outputs still missing from the Risk engine (scope expressions, ad-hoc and personal
+baskets, the P&L path, tree, matrix, compare, captures, the MR cube, the exposure tree and what-if, correlation and beta,
+cluster sharding, intraday) must not become one bespoke engine output each. They are three primitives, combined by the host.
+
+### 18.1 Scope is the host's
+
+Every scope kind (a hierarchy node, a system basket, a scope expression, an ad-hoc or personal basket, a single position) is
+resolved by Drishti, with the caller's row rules applied, to a **`RowSet`** over the shared vectors of the snapshot version
+(17.3, 17.8). The engine receives row ordinals and never the kind, the expression or the basket's name. A new scope kind is
+host work only; an engine that passes for one row set passes for all.
+
+### 18.2 The mergeable aggregate
+
+| Operation | Meaning |
+|---|---|
+| `aggregate(view, rows, groups)` | one pass over the rows of `rows` in the vector view; `groups` gives each row a group id (none: one group); the result is a **partial** per group: the group's summed vector in float64, keyed by its place in the canonical order (18.4) |
+| `merge(partials)` | partials of the same version, request and order give the **aggregate**; refuses partials that do not belong together |
+
+The API's types carry it: `Partitioned.partial` is `aggregate` over a shard's rows, `Assembling.assemble` is `merge` then the
+measures, `Incremental.apply` merges changed units into the kept aggregate, `Partial` is the wire form. Everything else is
+a use of the two:
+
+| Need | How |
+|---|---|
+| P&L path of a scope | the aggregate itself |
+| Tree, matrix, many scopes at once | one pass with group ids (a row may belong to several groups: one pass, each group's partial as if summed alone) |
+| Compare | the same ask on two snapshot versions; the host subtracts or sets side by side |
+| What-if | the `RowSet` plus an overlay view of the hypothetical positions (17.7); the same aggregate over it |
+| Cluster sharding | each node aggregates its shard's rows; the coordinator merges |
+| Intraday | the changed and added rows as a new version's overlay; the units they touch are aggregated again and merged with the untouched ones |
+| Stored node aggregates | partials kept by the host per version (17.2), reused by any ask whose row set covers the node whole |
+
+### 18.3 Measures are functions of an aggregate
+
+VaR and ES (a quantile and a tail mean of the aggregate), parametric VaR (its mean and variance), stressed and 10-day (the
+same functions over the stress window's or the 10-day vectors' aggregate), component, marginal and incremental (a function of
+a part's aggregate and the whole's), correlation and beta (a function of two aggregates). A measure reads no row and no scope;
+it is declared in the descriptor with its explanation (EN-11), so a new measure is a function and a declaration.
+
+**Exposure** is the same with time buckets: the aggregate is a netting set's summed value per scenario and bucket (the
+netting set is the group id, because netting is linear only inside it); positive part, collateral, EE and PFE are measures on
+it; totals over counterparties are sums of those measures, mergeable in turn.
+
+### 18.4 Bits: one reduction order
+
+The in-tree order, read on `i8/develop` (`ParallelSums`, `MultiSums`, `VarBook`, `ShardAssembly`), is the contract's:
+
+1. **Rows.** float32 rows are widened to float64 and added in ascending ordinal from zero inside a block; blocks lie on the
+   absolute ordinal grid, their size chosen from the row set's size alone (a set under 1,024 rows is one block); block
+   partials are added in block order.
+2. **The hierarchy.** A book's aggregate is its rows in row order; a parent's is its children's in id order, bottom-up.
+3. **A plan.** A scope covered by whole stored aggregates takes them and adds the remaining runs' sums in the plan's order;
+   the plan is a function of the row set and the version only.
+
+A partial is therefore keyed (block index or node id) and `merge` places partials by key and folds in key order. The result
+is the single-pass bits **whenever each unit was summed whole by one party**: any number of threads, many groups in one pass,
+and shards cut on unit boundaries (shards are desk ranges and a desk is never split, so node figures are the unsharded bits).
+The coordinator sends the block size with the ask, so every shard cuts the same grid.
+
+Where that is impossible, and what is done:
+
+| Case | Why | Handling |
+|---|---|---|
+| A unit split between parties: an ad-hoc set's block across a shard cut; intraday rows inside a summed block | float64 addition is not associative: a folded vector cannot be extended or split to the same bits | the lower party returns the open block's accumulator and the next continues from it (one chained block per cut), or the touched units are summed again from rows. `aggregate + delta` on a folded vector is never used |
+| OpenBLAS kernels (`dgemm` tiles) | another association inside the library | the declared tolerance class (relative 1e-12, EN-10), fixed tile order, recorded apart |
+| Sums pushed to a source (SQL, a remote lake) | the source's order is its own | the column's exactness class; the push-down law (6.2) |
+
+R2's side by side (cut plan step 3) compares raw bits for node scopes, ad-hoc sets, sharded and intraday dates and so proves
+the order as written here against the in-tree code before anything is deleted.
+
+### 18.5 What the host and other engines do
+
+- **Captures and history** are host sinks: an answer stored as declared outputs (EN-12) and asked again per version.
+- **The MR cube** is the `query` engine: its cells are row sets, the risk engine's measures are its measures
+  (`EngineContext.peer`), one grouped aggregate per page of cells.
+- **Alerts, limits, approvals, live tables** are the host re-asking (EN-14).
+
+### 18.6 The same contract for query and OLAP
+
+A pivot or BI query is `aggregate` with the cells as group ids and `merge` across pieces, shards and the grouped scan's
+streams: the states (`SUM`, `COUNT`, `MIN`, `MAX`, and later sketches) merge by their function, and averages, ratios and
+shares are measures on states. Integer and decimal states are exact in any order; a double `SUM` follows 18.4, or carries its
+exactness class when the source computed it. One aggregation model, one set of laws, for a VaR vector and a pivot cell.
+
+### 18.7 What the kit proves
+
+| Law | Statement |
+|---|---|
+| Scope-kind blindness | the same row set reached as a node, a basket, an expression and an id list gives the same bits |
+| Grouping | each group of a grouped pass equals that group aggregated alone |
+| Merge order | partials merged in any arrival order give the same bits |
+| Split anywhere | partials over any split on unit boundaries, merged, equal the whole to the bit; a split inside a unit equals it through the chain (this sharpens the additivity law of 6.2) |
+| Incremental at unit grain | touched units re-aggregated and merged equal a fresh session (the incremental law of 6.2) |
 
 ## Decisions taken (owner)
 
