@@ -93,7 +93,7 @@ def test_the_lake_wheel_goes_in_first_then_the_requirements(tmp_path):
     run = asked({})
     pylibs.install("py", home, windows=False, run=run)
     pips = [c for c in run.calls if c[1:4] == ["-m", "pip", "install"]]
-    assert len(pips) == 2 and pips[0][-1].endswith("drishti_lake-0.9.1-py3-none-any.whl") and pips[1][-2:] == ["-r", str(home / "drishti-console" / "requirements.txt")]
+    assert len(pips) == 2 and pips[0][-1].endswith("drishti_lake-0.9.1-py3-none-any.whl") and pips[1][-2] == "-r" and pips[1][-1].endswith("requirements.txt") and "find-links" not in Path(pips[1][-1]).read_text(encoding="utf-8")
     assert not any("--use-feature=truststore" in c for c in run.calls)
 
 
@@ -452,7 +452,7 @@ def test_install_adds_the_lock_after_requirements_and_skips_what_is_satisfied(tm
     run = pip_run({**ALL_OK, "numpy": None, "alpha": None})
     pylibs.install("py", home, windows=False, run=run)
     a, b = pips(run)
-    assert a[-1] == str(home / "drishti-console" / "requirements.txt") and b[-1] == str(home / "config" / "compute" / "locks" / "python.lock")
+    assert a[-1].endswith("requirements.txt") and b[-1] == str(home / "config" / "compute" / "locks" / "python.lock")
     run = pip_run({**ALL_OK, "six": None})                  # only the lock is short: one pip, the lock alone
     pylibs.install("py", home, windows=False, run=run)
     assert [c[-1] for c in pips(run)] == [str(home / "config" / "compute" / "locks" / "python.lock")]
@@ -483,3 +483,15 @@ def test_files_that_disagree_on_a_pin_fail_naming_both(tmp_path):
 def test_the_real_lock_and_requirements_agree():
     home = TOOLS.parent
     assert pylibs.lock_requirements(home) and pylibs.all_requirements(home)
+
+
+def test_pip_reads_the_requirements_without_their_find_links_line(tmp_path):
+    """The requirements' --find-links ../lib/wheels is relative to drishti-console/: pip would warn once per package; setup drops it."""
+    import importlib, sys as _sys
+    _sys.path.insert(0, str(Path(__file__).resolve().parent / "launch"))
+    pylibs = importlib.import_module("pylibs")
+    req = tmp_path / "requirements.txt"
+    req.write_text("# comment\n--find-links ../lib/wheels\n-f ../other\nfastapi>=0.110\ndrishti-lake==0.9.1\n", encoding="utf-8")
+    text = pylibs.plain_requirements(req).read_text(encoding="utf-8")
+    assert "find-links" not in text and "-f " not in text
+    assert "fastapi>=0.110" in text and "drishti-lake==0.9.1" in text and "# comment" in text

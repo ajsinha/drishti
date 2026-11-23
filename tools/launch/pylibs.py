@@ -269,6 +269,18 @@ def wheel_names(folder: Path) -> dict[str, Path]:
     return {norm(w.name.split("-")[0]): w for w in sorted(folder.rglob("*.whl"))}
 
 
+def plain_requirements(req: Path) -> Path:
+    """requirements.txt without its ``--find-links``/``-f`` lines: they name ``../lib/wheels`` relative to drishti-console/, which pip
+    resolves against the current folder and warns about once per package; setup installs the Lake wheel itself, first, so the line
+    adds nothing here. The copy lives in the temporary folder and is what pip reads."""
+    import tempfile
+    lines = [l for l in req.read_text(encoding="utf-8").splitlines()
+             if not l.strip().startswith(("--find-links", "-f ", "-f\t"))]
+    out = Path(tempfile.mkdtemp(prefix="drishti-setup-")) / "requirements.txt"
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return out
+
+
 def install(py: str, home: Path, windows: bool | None = None, run=subprocess.run, wheels: Path | None = None) -> None:
     """Installs only what ``py`` is missing: the Lake wheel first (the requirements name it and no index has it), then
     drishti-console/requirements.txt. Everything satisfied: says so and never calls pip. ``wheels`` (a folder): only from there
@@ -294,7 +306,7 @@ def install(py: str, home: Path, windows: bool | None = None, run=subprocess.run
             raise LaunchError(f"the wheel folder {wheels} has no wheel for {', '.join(lacking)}: add it (on a machine with a working index: pip download {' '.join(n + sp for n, sp in others)} -d <folder>) and run setup again")
     extra = [] if wheels else pip_extra(py, win, run)
     off = ["--no-index", "--find-links", str(wheels)] if wheels else []
-    req = home / "drishti-console" / "requirements.txt"
+    req = plain_requirements(home / "drishti-console" / "requirements.txt")
     steps = ([["install", "-q", *extra, *off, str(wheel)]] if wheel else []) + ([["install", "-q", *extra, *off, "-r", str(req)]] if from_req else []) \
         + ([["install", "-q", *extra, *off, "-r", str(home / LOCK)]] if from_lock else [])
     for args in steps:

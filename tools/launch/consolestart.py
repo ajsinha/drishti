@@ -52,7 +52,7 @@ def make_venv(home: Path, base_python: str, reinstall: bool = False, install: bo
         if wheel is None:
             raise LaunchError(f"the pinned Lake wheel is not in {home / 'lib' / 'wheels'}: see lib/lake-wheel.pin")
         tls = ["--native-tls"] if procs.windows() else []
-        for tail in ([str(wheel)], ["-r", str(home / "drishti-console" / "requirements.txt")]):
+        for tail in ([str(wheel)], ["-r", str(pylibs.plain_requirements(home / "drishti-console" / "requirements.txt"))]):
             if run([uv, "pip", "install", *tls, "--python", str(py), *tail]).returncode:
                 raise LaunchError(f"uv pip install {tail[-1]} failed: read uv's message above")
     elif install:
