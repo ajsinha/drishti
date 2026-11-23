@@ -17,14 +17,18 @@ package com.ash.drishti.banking.var;
 
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
+import com.ash.drishti.banking.compute.var.ScopeExpr;
+import com.ash.drishti.banking.compute.var.ScopeResolver;
 import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.kernel.api.services.Engines;
 import com.ash.drishti.kernel.api.services.Kernel;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -45,10 +49,13 @@ public class VarEnginePath {
 
     private final ObjectProvider<Engines> engines;
     private final Environment env;
+    /** The saved and system baskets and captures (Drishti's, kept); the in-tree engine half is not asked for a figure. */
+    private final ObjectProvider<VarService> service;
 
-    VarEnginePath(ObjectProvider<Engines> engines, Environment env) {
+    VarEnginePath(ObjectProvider<Engines> engines, Environment env, ObjectProvider<VarService> service) {
         this.engines = engines;
         this.env = env;
+        this.service = service;
     }
 
     /** True when this request is answered by the engine: its own {@code path}, else the family's switch. */
@@ -62,53 +69,212 @@ public class VarEnginePath {
     }
 
     /**
-     * A node's headline through the engine: {@code scope}, {@code asOf}, {@code currency}, {@code window}, {@code var}, {@code es} (whole
-     * units), {@code varExact}, {@code esExact} (the engine's doubles), {@code trades} (the positions beneath the node), {@code limit},
-     * {@code limitUse}, {@code path: engine}. A scope that is not one node is refused in words until the computation contract's row sets
-     * reach this route (R2 step 4b).
+     * A scope's headline through the engine (R2_CUT_PLAN 4c; ENGINE_INTEGRATION_DESIGN 18.1): {@code scope}, {@code asOf}, {@code currency},
+     * {@code window}, {@code var}, {@code es} (whole units), {@code varExact}, {@code esExact} (the engine's doubles), {@code trades} (the
+     * rows of the scope the caller sees), {@code limit}, {@code limitUse}, {@code path: engine}. Every scope kind (a node, a system or saved
+     * basket, a capture, a scope expression, an ad-hoc list) is resolved here, by Drishti's resolver over the engine's index of the date,
+     * to a row set; the engine sums the rows and never learns the kind. A node whole is the engine's node figure.
+     *
+     * <p>The window is the in-tree route's: the date's VaR is on the configured window ({@code drishti.module.banking.var.window}); a
+     * {@code window} asked recomputes VaR and ES on the newest N of those scenarios (more than the date's: all of them, with a warning),
+     * and the rest of the answer, limit use included, stays the date's (VAR_GUIDE.md section 18.5: a limit is set against the configured
+     * VaR, never against a figure asked for comparison).
      */
     public Map<String, Object> headline(Principal p, String scope, LocalDate date, String ccy, String window) {
-        String node = node(scope);
         if (date == null) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path needs the business date: give asOf");
         }
         String currency = ccy == null || ccy.isBlank() ? "USD" : ccy.trim().toUpperCase(Locale.ROOT);
-        int w = window == null || window.isBlank() || window.equalsIgnoreCase("all") ? 0 : Integer.parseInt(window.trim());
-        Map<String, Object> params = new LinkedHashMap<>();
-        params.put("window", w);
-        params.put("currency", currency);
-        Map<String, Object> a = ask(p, List.of("node-var"), params, Map.of("date", date.toString()));
-        Map<String, Object> row = row(a, "node-var", "NODE_ID", node);
-        if (row == null) {
-            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no node " + node + " on " + date
-                    + missing(a));
+        int dateWindow = dateWindow();
+        int asked = window == null || window.isBlank() || window.equalsIgnoreCase("all") ? 0 : Integer.parseInt(window.trim());
+        int w = dateWindow == 0 ? asked : asked == 0 || asked > dateWindow ? dateWindow : asked;
+        String warning = dateWindow > 0 && asked > dateWindow ? "window " + asked + " is more than the " + dateWindow
+                + " scenarios of the date: all of them used" : null;
+        String s = scope == null ? "" : scope.trim();
+        Figures f;
+        Figures official;
+        String resolvedNode = null;
+        if (s.regionMatches(true, 0, "NODE:", 0, 5) && s.indexOf(' ') < 0) {
+            String node = s.substring(5);
+            resolvedNode = node;
+            f = nodeFigures(p, node, date, currency, w);
+            official = w == dateWindow ? f : nodeFigures(p, node, date, currency, dateWindow);
+        } else {
+            EngineScopeBook book = index(p, date);
+            ScopeResolver.Resolution res = resolve(p, book, s, date);
+            if (res.node() != null) {
+                resolvedNode = res.node();
+                f = nodeFigures(p, res.node(), date, currency, w);
+                official = w == dateWindow ? f : nodeFigures(p, res.node(), date, currency, dateWindow);
+            } else {
+                double limit = res.canonical().startsWith("PORT:") ? book.basketLimits.getOrDefault(res.canonical().substring(5), Double.NaN)
+                        : Double.NaN;
+                f = rowFigures(p, res, date, currency, w, limit);
+                official = w == dateWindow ? f : rowFigures(p, res, date, currency, dateWindow, limit);
+            }
         }
-        double var = ((Number) row.get("VAR")).doubleValue();
-        double es = ((Number) row.get("ES")).doubleValue();
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("scope", scope);
         out.put("asOf", date.toString());
         out.put("currency", currency);
-        out.put("window", w == 0 ? "all" : Integer.toString(w));
-        out.put("var", VarViews.round(var));
-        out.put("es", VarViews.round(es));
-        out.put("varExact", var);
-        out.put("esExact", es);
-        out.put("trades", ((Number) row.get("MEMBERS")).longValue());
-        out.put("limit", row.get("LIMIT") == null ? null : VarViews.round(((Number) row.get("LIMIT")).doubleValue()));
-        out.put("limitUse", row.get("LIMIT_USE"));
+        out.put("window", asked == 0 ? "all" : Integer.toString(asked));
+        out.put("node", resolvedNode);                                  // the node the scope is whole (its figures are the node's)
+        out.put("var", VarViews.round(f.var()));
+        out.put("es", VarViews.round(f.es()));
+        out.put("varExact", f.var());
+        out.put("esExact", f.es());
+        out.put("trades", f.members());
+        out.put("limit", Double.isNaN(official.limit()) ? null : VarViews.round(official.limit()));
+        out.put("limitUse", Double.isNaN(official.limit()) || official.limit() == 0 ? null : official.var() / official.limit());
+        if (warning != null) {
+            out.put("warning", warning);
+        }
         out.put("path", "engine");
         return out;
     }
 
-    /** {@code NODE:<id>} (the node's id as the tree names it, {@code MGMT~DESK-RATES}) or {@code BANK} (the first hierarchy's root). */
-    static String node(String scope) {
-        String s = scope == null ? "" : scope.trim();
-        if (s.regionMatches(true, 0, "NODE:", 0, 5) && s.indexOf(' ') < 0) {
-            return s.substring(5);
+    /** One scope's figures on one window: VaR, ES, the rows counted and the limit (NaN when none) in the answer's currency. */
+    record Figures(double var, double es, long members, double limit) {}
+
+    private Figures nodeFigures(Principal p, String node, LocalDate date, String currency, int window) {
+        Map<String, Object> a = ask(p, List.of("node-var"), params(window, currency), Map.of("date", date.toString()));
+        Map<String, Object> row = row(a, "node-var", "NODE_ID", node);
+        if (row == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no node " + node + " on " + date + missing(a));
         }
-        throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers one node (NODE:<id>) for now; " + s
-                + " is answered in-tree (path=in-tree) until row-set scopes reach the engine path (R2 step 4b)");
+        return new Figures(((Number) row.get("VAR")).doubleValue(), ((Number) row.get("ES")).doubleValue(), ((Number) row.get("MEMBERS")).longValue(),
+                row.get("LIMIT") == null ? Double.NaN : ((Number) row.get("LIMIT")).doubleValue());
+    }
+
+    private Figures rowFigures(Principal p, ScopeResolver.Resolution res, LocalDate date, String currency, int window, double limit) {
+        Map<String, Object> params = params(window, currency);
+        List<Integer> rows = new ArrayList<>(res.set().size());
+        res.set().forEach(rows::add);
+        params.put("rows", rows);
+        params.put("node", "");
+        Map<String, Object> a = ask(p, List.of("scope-var"), params, Map.of("date", date.toString()));
+        List<Map<String, Object>> r = rows(a, "scope-var");
+        if (r.isEmpty()) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " answered no VaR for " + res.canonical() + " on " + date
+                    + missing(a));
+        }
+        Map<String, Object> x = r.get(0);
+        return new Figures(((Number) x.get("VAR")).doubleValue(), ((Number) x.get("ES")).doubleValue(), ((Number) x.get("MEMBERS")).longValue(),
+                limit);
+    }
+
+    private static Map<String, Object> params(int window, String currency) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("window", window);
+        params.put("currency", currency);
+        return params;
+    }
+
+    /** The date's configured window ({@code drishti.module.banking.var.window}: a number, or {@code all}, 0). */
+    int dateWindow() {
+        String v = env.getProperty("drishti.module.banking.var.window", "250").trim();
+        return v.equalsIgnoreCase("all") ? 0 : Integer.parseInt(v);
+    }
+
+    // ------------------------------------------------------------------------------------------------------------- scopes (EN-68)
+
+    /** The engine's index of a date, kept while its inputs' stamp is the same (one date's index is a few rows per position). */
+    private final Map<String, Object[]> indexes = new java.util.concurrent.ConcurrentHashMap<>();
+
+    EngineScopeBook index(Principal p, LocalDate date) {
+        Map<String, Object> words = ask(p, List.of("scope-words"), Map.of(), Map.of("date", date.toString()));
+        Object stamp = stamp(words);
+        Object[] have = indexes.get(date.toString());
+        if (have != null && java.util.Objects.equals(have[0], stamp)) {
+            return (EngineScopeBook) have[1];
+        }
+        Map<String, Object> a = ask(p, List.of("scope-index", "scope-positions", "scope-position-values", "scope-nodes", "scope-words",
+                "scope-limits"), params(dateWindow(), "USD"), Map.of("date", date.toString()));
+        if (rows(a, "scope-index").isEmpty() && !missing(a).isEmpty()) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no rows on " + date + missing(a));
+        }
+        EngineScopeBook b = new EngineScopeBook(a);
+        if (indexes.size() > 4) {
+            indexes.clear();                                            // a few dates kept, as the engine keeps one hot
+        }
+        indexes.put(date.toString(), new Object[] {stamp, b});
+        return b;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Object stamp(Map<String, Object> a) {
+        return a.get("stamp") instanceof Map<?, ?> m ? ((Map<String, Object>) m).get("inputs") : null;
+    }
+
+    /** The scope as the in-tree route resolves it: the grammar, the system and saved baskets and captures are Drishti's. */
+    ScopeResolver.Resolution resolve(Principal p, EngineScopeBook book, String scope, LocalDate date) {
+        VarService svc = service.getIfAvailable();
+        ScopeExpr parsed;
+        ScopeResolver.Resolution res;
+        try {
+            parsed = ScopeExpr.parse(scope, book.words.keySet());
+            res = new ScopeResolver(book, definitions(svc, p, date, book), book.words).resolve(scope);
+        } catch (IllegalArgumentException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
+        }
+        if (parsed instanceof ScopeExpr.Ref one && one.word().equals("PORT") && res.unknown().contains(one.toString())) {
+            throw new DrishtiException(ErrorCode.VAR_SYSTEM_BASKET_UNKNOWN, "no system basket " + one.arg() + " on " + date
+                    + ": PORT <GO> lists the system baskets (VAR_GUIDE.md section 5.7)");
+        }
+        if (svc != null && parsed.refs().stream().anyMatch(r -> r.word().equals("CPTY")) && svc.access().masked(p, "COUNTERPARTY")) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "the counterparty is masked for your role: a scope may not select trades by it");
+        }
+        return res;
+    }
+
+    private static ScopeResolver.Definitions definitions(VarService svc, Principal p, LocalDate date, EngineScopeBook book) {
+        return new ScopeResolver.Definitions() {
+            @Override
+            public Optional<String> portfolio(String id) {
+                if (svc == null) {
+                    return Optional.empty();
+                }
+                VarDate.Portfolio pf = svc.saved().system().portfolios(date, book.basketLimits).get(id);
+                return pf == null ? Optional.empty() : Optional.of(pf.scope());
+            }
+
+            @Override
+            public Optional<String> basket(String name) {
+                return p == null || svc == null ? Optional.empty() : svc.saved().basket(p, name).map(b -> String.valueOf(b.get("scope")));
+            }
+
+            @Override
+            public Optional<String> capture(String id) {
+                return p == null || svc == null ? Optional.empty() : svc.saved().capture(p, id).map(c -> {
+                    List<String> members = svc.members(c);
+                    return members.isEmpty() ? "TRD:NONE" : "TRD:" + String.join(",", members);
+                });
+            }
+        };
+    }
+
+    /** Every row of an answer's table, each a map by column name (rows are positional, in the columns' order). */
+    @SuppressWarnings("unchecked")
+    static List<Map<String, Object>> rows(Map<String, Object> answer, String table) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Object t : (List<Object>) answer.getOrDefault("tables", List.of())) {
+            Map<String, Object> tm = (Map<String, Object>) t;
+            if (table.equals(tm.get("name"))) {
+                List<String> names = new ArrayList<>();
+                for (Object c : (List<Object>) tm.getOrDefault("columns", List.of())) {
+                    names.add(String.valueOf(((Map<String, Object>) c).get("name")));
+                }
+                for (Object r : (List<Object>) tm.getOrDefault("rows", List.of())) {
+                    Object[] cells = r instanceof Object[] a ? a : ((List<Object>) r).toArray();
+                    Map<String, Object> rm = new java.util.HashMap<>();
+                    for (int i = 0; i < names.size() && i < cells.length; i++) {
+                        rm.put(names.get(i), cells[i]);
+                    }
+                    out.add(rm);
+                }
+            }
+        }
+        return out;
     }
 
     private Map<String, Object> ask(Principal p, List<String> outputs, Map<String, Object> params, Map<String, String> snapshot) {

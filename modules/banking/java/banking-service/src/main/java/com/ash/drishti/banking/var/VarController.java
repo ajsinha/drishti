@@ -155,7 +155,20 @@ public class VarController {
             @RequestParam(name = "es-confidence", required = false) Double esConfidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matured,
-            @RequestParam(required = false) String path, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String path, @RequestParam(defaultValue = "false") boolean exact,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        Map<String, Object> answer = headlineAnswer(scope, ccy, window, confidence, esConfidence, horizon, method, esq, set, asOf, parametric, matured,
+                path, p);
+        if (!exact && (answer.containsKey("varExact") || answer.containsKey("esExact"))) {
+            answer = new LinkedHashMap<>(answer);                       // the raw doubles on exact=true only (R2's side by side reads them)
+            answer.remove("varExact");
+            answer.remove("esExact");
+        }
+        return answer;
+    }
+
+    private Map<String, Object> headlineAnswer(String scope, String ccy, String window, Double confidence, Double esConfidence, String horizon,
+            String method, Double esq, String set, AsOf asOf, Boolean parametric, boolean matured, String path, Principal p) {
         if (enginePath.engine(path)) {                                 // R2: the market-risk engine through the host (VarEnginePath)
             if (confidence != null || esConfidence != null || horizon != null || method != null || esq != null || set != null
                     || parametric != null || matured) {
