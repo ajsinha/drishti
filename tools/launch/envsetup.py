@@ -108,8 +108,8 @@ def other_home(ini: Path, home: Path) -> str | None:
 def rename_command(ini: Path) -> str:
     """The command that moves an old settings file aside: ren on Windows, mv elsewhere."""
     if procs.windows():
-        return f"ren {ini} {ini.stem}-old{ini.suffix}"
-    return f"mv {ini} {ini.with_name(ini.stem + '-old' + ini.suffix)}"
+        return f'ren "{ini}" "{ini.stem}-old{ini.suffix}"'                                      # quoted: a user name may hold a space
+    return f'mv "{ini}" "{ini.with_name(ini.stem + "-old" + ini.suffix)}"'
 
 
 def have_yaml() -> bool:

@@ -71,7 +71,33 @@ def log_config() -> dict:
     return cfg
 
 
+def warn_other_home(argv: list[str]) -> str | None:
+    """A WARNING when the --settings file names a drishti.home other than this checkout (an old settings file from an earlier copy)."""
+    from core import settings_ini
+    named = next((argv[i + 1] for i, a in enumerate(argv[:-1]) if a == "--settings"), None) \
+        or next((a.split("=", 1)[1] for a in argv if a.startswith("--settings=")), None)
+    if not named:
+        return None
+    home = (settings_ini.read_all(named).get("drishti.home") or "").strip()
+    here = HERE.parent
+    if not home:
+        return None
+    norm = lambda p: os.path.normcase(os.path.normpath(str(Path(p).expanduser().absolute()))).rstrip("\\/")
+    try:
+        if Path(home).exists() and os.path.samefile(home, here):
+            return None
+    except OSError:
+        pass
+    if norm(home) == norm(here):
+        return None
+    return (f"WARNING: your settings file names drishti.home={home}, but this console is in {here}: its data comes from {home}."
+            f" If that is not what you want, rename the settings file (dev.ini) and run python tools/drishti.py setup again.")
+
+
 def main() -> None:
+    warning = warn_other_home(sys.argv[1:])
+    if warning:
+        print(warning, file=sys.stderr)
     settings = load_settings(HERE / "config", sys.argv[1:])
     from core.launcher_stop import MAIN_PID_ENV
     os.environ[MAIN_PID_ENV] = str(os.getpid())   # the launcher's stop signals this process, whichever worker takes the request (core/launcher_stop.py)

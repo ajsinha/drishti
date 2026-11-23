@@ -212,6 +212,47 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             }
         }
         log.info(r.report() + (anchored.isEmpty() ? "" : anchoredReport(anchored)));
+        otherHome(homePath, installedJar(System.getProperty("java.class.path"))).ifPresent(log::warn);
+    }
+
+    /** The server jar this JVM runs ({@code java -jar <home>/lib/drishti-server-*.jar}: the class path is that one jar), or null. */
+    static Path installedJar(String classPath) {
+        if (classPath == null || classPath.isBlank() || classPath.contains(java.io.File.pathSeparator)) {
+            return null;
+        }
+        return classPath.endsWith(".jar") ? Path.of(classPath) : null;
+    }
+
+    /**
+     * A WARNING when the settings name a drishti.home other than the folder this server is installed in ({@code <home>/lib/<jar>}): the
+     * data and the modules then come from that other folder (an old settings file from an earlier copy). Empty when they agree or when the
+     * server does not run from an installed jar.
+     */
+    static java.util.Optional<String> otherHome(Path home, Path jar) {
+        if (home == null || jar == null) {
+            return java.util.Optional.empty();
+        }
+        Path lib = jar.toAbsolutePath().normalize().getParent();
+        if (lib == null || lib.getFileName() == null || !lib.getFileName().toString().equals("lib") || lib.getParent() == null) {
+            return java.util.Optional.empty();
+        }
+        Path installed = lib.getParent();
+        if (sameFolder(installed, home)) {
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.of("WARNING: the settings name drishti.home=" + home + ", but this server is installed in " + installed
+                + ": its data and modules come from " + home + ". If that is not what you want, rename your settings file (dev.ini) and run"
+                + " python tools/drishti.py setup in " + installed + " again.");
+    }
+
+    private static boolean sameFolder(Path a, Path b) {
+        try {
+            return Files.isSameFile(a, b);
+        } catch (java.io.IOException | RuntimeException e) {
+            String x = a.toAbsolutePath().normalize().toString();
+            String y = b.toAbsolutePath().normalize().toString();
+            return java.io.File.separatorChar == '\\' ? x.equalsIgnoreCase(y) : x.equals(y);
+        }
     }
 
     private static final Map<ConfigurableEnvironment, com.ash.drishti.api.resolution.ModuleOverrides.Result> OVERRIDES = new java.util.WeakHashMap<>();

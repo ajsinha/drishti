@@ -79,3 +79,25 @@ def pop_option(argv: list[str]) -> tuple[list[str], str | None]:
     if path is not None:
         files(path)
     return rest, path
+
+
+def other_home(entries: dict[str, str], checkout: Path | None = None) -> str | None:
+    """A WARNING when the settings file names a drishti.home other than this checkout (an old settings file from an earlier copy): the
+    tools then read and write that other folder's data and modules. None when they agree or when the file names no drishti.home."""
+    import os
+    named = (entries.get("drishti.home") or "").strip()
+    if not named:
+        return None
+    here = (checkout or Path(__file__).resolve().parents[1])
+    a, b = Path(named).expanduser(), here
+    try:
+        if a.exists() and os.path.samefile(a, b):
+            return None
+    except OSError:
+        pass
+    norm = lambda p: os.path.normcase(os.path.normpath(str(p.expanduser().absolute()))).rstrip("\\/")
+    if norm(a) == norm(b):
+        return None
+    return (f"WARNING: your settings file names drishti.home={named}, but these tools are in {here}: their data and modules come from"
+            f" {named}. If that is not what you want, rename the settings file (dev.ini) and run python tools/drishti.py setup again.")
+

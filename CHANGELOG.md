@@ -18,6 +18,7 @@
 
 ## 2.9.11.i7e (2026-11-23)
 
+- The server, the console and the tools warn at start when the settings file names another folder's drishti.home; setup's rename command quotes its paths; VS Code launches get their file prompt.
 - The console's runtime requirements no longer list pytest (it stays in requirements-test.txt): setup and the offline wheel packs install one library less.
 - **IDE launchers grouped by folder.** One `run-configs/` folder, read by both IDEs: Maven and JAR Application launchers have `folderName="Drishti-java"`
   (IntelliJ), Python ones `folderName="Drishti-python"` (PyCharm); each IDE shows the other's folder as not runnable, which is expected. The

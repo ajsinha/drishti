@@ -1166,6 +1166,9 @@ def main(argv: list[str] | None = None) -> int:
         settings = settingsfile.with_profiles(settings, ROOT, profiles)
         entries = settingsfile.read_all(settings) if settings else {}
         settingsfile.apply_roots(entries)       # the Python side reads the roots the files name, as the JVMs do
+        warning = settingsfile.other_home(entries)
+        if warning and not is_setup(argv):          # setup says it itself, with the rename command
+            print(warning, file=sys.stderr)
         javacmd.set_settings(settings, entries)
         ap = drishti_parser.build_setup_parser(sys.modules[__name__]) if is_setup(argv) else build_parser()
         a, extra = ap.parse_known_args(argv)

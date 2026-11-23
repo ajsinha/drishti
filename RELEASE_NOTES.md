@@ -23,6 +23,9 @@ Everything else is as in i7d.
 - **`setup` checks an existing `dev.ini`.** When its `drishti.home` names another folder than this checkout, `setup --check` shows
   `[FAIL] settings file` and `setup` a `[WARN]`, both saying: your settings file `…\dev.ini` points at `<other folder>`, not this one: rename
   it (`ren …\dev.ini dev-old.ini`) and run setup again. The file is never overwritten.
+- **The server, the console and every tool print a WARNING** at start when the settings file names a `drishti.home` other than the
+  folder they are installed in (an old `dev.ini` from an earlier copy); they still start, using that folder, and the warning says how to
+  replace the file.
 - **pytest is no longer a runtime requirement** of the console (it stays in `requirements-test.txt`): setup and the offline wheel packs
   install one library less.
 

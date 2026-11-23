@@ -96,3 +96,26 @@ class SettingsFileTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_a_settings_file_naming_another_checkout_is_a_warning(tmp_path):
+    """An old dev.ini from an earlier copy: the tools and the console say so (WARNING), and the same folder says nothing."""
+    import importlib.util, sys as _sys
+    here = Path(__file__).resolve().parents[1]
+    other = tmp_path / "drishti-orig"
+    other.mkdir()
+    w = sf.other_home({"drishti.home": str(other)}, here)
+    assert w and w.startswith("WARNING: your settings file names drishti.home=") and "setup" in w
+    assert sf.other_home({"drishti.home": str(here)}, here) is None
+    assert sf.other_home({"drishti.home": str(here) + "/"}, here) is None
+    assert sf.other_home({}, here) is None
+    ini = tmp_path / "dev.ini"
+    ini.write_text(f"drishti.home={other}\n", encoding="utf-8")
+    _sys.path.insert(0, str(here / "drishti-console"))
+    spec = importlib.util.spec_from_file_location("run_drishti_web_t", here / "drishti-console" / "run_drishti_web.py")
+    web = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(web)
+    cw = web.warn_other_home(["--settings", str(ini), "--profile", "demo"])
+    assert cw and cw.startswith("WARNING:") and str(other) in cw
+    ini.write_text(f"drishti.home={here}\n", encoding="utf-8")
+    assert web.warn_other_home([f"--settings={ini}"]) is None

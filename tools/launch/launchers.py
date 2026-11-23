@@ -205,7 +205,8 @@ def workspace(doc: dict) -> str:
             "settings": {"files.exclude": {"**/__pycache__": True}},
             "tasks": {"version": "2.0.0", "tasks": tasks,
                       "inputs": [{"id": "file", "type": "promptString", "description": "The file of yours to load into the demo lake"}]},
-            "launch": {"version": "0.2.0", "configurations": launches}}
+            "launch": {"version": "0.2.0", "configurations": launches,
+                       "inputs": [{"id": "file", "type": "promptString", "description": "The file of yours to load into the demo lake"}]}}
     return head + json.dumps(body, indent=2) + "\n"
 
 
