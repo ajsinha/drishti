@@ -1364,3 +1364,88 @@ RELEASE_NOTES, and the PDF again. No further gate is needed once these are in: t
   Python is said so".
 
 State left behind: nothing running, nothing built, no file changed but this one.
+
+---
+
+# Release gate 2.9.11.i7e
+
+*2026-11-23 16:05 EST. Read-only review of Drishti `release/i7e` (head `543f90018`) against `v2.9.11.i_7d`, and of the one unpushed
+commit of the index repository (`1a03bc0`). No build; small checks only. The lead's proofs (lane gates, the Linux end to end) are taken
+as given and not repeated.*
+
+## Verdict: TAG
+
+Nothing in either diff blocks the tag. One release step is required for the platform side (R1); three small items (S1 to S3) are worth
+taking before the tag because each is a one-line change, but none stops a non-technical Windows user on the START_HERE path.
+
+**Required release step**
+
+- **R1. `platform.yaml` has no `i7e` yet.** `latest` is the first release marked `released`, so today every platform launcher and
+  `--release latest` resolve to **i7d** (`v2.9.11.i_7d`), checked. After the Drishti tag exists, add `i7e` as the FIRST entry of
+  `releases` (and its row in COMPATIBILITY.md) in the same index push, before the bundle and the wheels are made.
+
+**Small, recommended before the tag**
+
+- **S1. The rename command is not quoted** (`envsetup.rename_command`): `ren C:\Users\Jo Smith\drishti-envs\dev.ini dev-old.ini` fails
+  for a Windows user name with a space (the same for `mv`). Quote the path. The sentence around it ("rename it … and run setup again")
+  is still understandable, which is why this does not block.
+- **S2. VS Code: the loader's debug launch has no input.** `drishti.code-workspace` declares `inputs` under `tasks` only; the launch
+  configuration **Drishti: run loader (file into the lake)** also uses `${input:file}`, and VS Code resolves inputs per section, so that
+  launch stops with an undefined input (by reading; not run in VS Code). The task of the same name is right. Add the same `inputs` under
+  `launch` in `launchers.workspace` and regenerate.
+- **S3. No test of `resolve_release`** in the index repository (`latest`, a plain name, no released release). Three lines.
+
+## 1. The launchers
+
+- All 17 files of `run-configs/` parse as XML; the folder rule holds for every one: 3 Maven + 3 JAR Application in **Drishti-java**,
+  11 Python in **Drishti-python**; no other folder name is left. Names are unique and are the names of `launchers.yaml`.
+- `python tools/drishti.py launchers --check` (with `LAKE_PYTHON` naming the Lake product's `python` folder): "every launcher and
+  IDE_GUIDE section 4 is what tools/launch/launchers.yaml generates", rc 0. The generator and the check agree; the worktree stayed clean.
+- The loader: `PARAMETERS` is `… lake build --from "$Prompt$" --kind trade --mode overwrite-dates --lake demo`. `$Prompt$` is the
+  platform's prompt macro and PyCharm expands macros in a Python configuration's Parameters; the quotes keep a path with spaces as one
+  argument. Checked by reading, not by a click in PyCharm on Windows: the owner's Windows QA is the first real proof (it is not on the
+  START_HERE path). No personal file is named any more.
+- `drishti.code-workspace`: valid JSON after the comment lines; 17 tasks and 11 launches; `${userHome}` everywhere a home path stood,
+  `py -3.13` on Windows, `python3` on Linux and macOS; no machine path, no Java path. See S2.
+- The index repository: 5 Python launchers in **Platform-python**, the 2 parent Maven launchers in **Platform-java**; every one names
+  `--release latest`; the workspace is valid JSON.
+
+## 2. START_HERE_WINDOWS against the i7e launchers
+
+Consistent. The four launchers it names exist under exactly those names and in the folders it gives: **platform-clean-install**
+(Platform-java), **Drishti: build demo lakes** (Drishti-python), **Drishti: run server (demo)** (Drishti-java), **Drishti: run console**
+(Drishti-python). The "red mark is expected" paragraph matches IDE_GUIDE sections 1, 3 and the release notes. The PDF carries the same
+text. Carried from i7d, not new: step 4's `--wheels C:\Users\<you>\drishti-wheels` is unquoted, so a user name with a space needs quotes
+there (one sentence in the guide, with S1).
+
+## 3. The `dev.ini` check
+
+- The comparison folds case, both separators, a trailing slash and `.`/`..` (Windows rules simulated with `ntpath`: `C:/Users/Jo Smith/…`,
+  `c:\users\jo smith\…\`, a trailing `/` and `./x/../x` all equal the checkout; a sibling folder and `drishti2` differ). Symbolic links,
+  junctions, short names and `~` are covered by the second comparison (`expanduser().resolve()` on both sides). A file setup wrote itself
+  (`home.as_posix()`) is always equal. No false WARN on a correct file.
+- The file is never written in this branch (WARN in setup, rc unchanged; FAIL and rc 1 in `--check`); the test proves the bytes are kept.
+- Two edges, neither on a file setup writes: an empty `drishti.home=` takes the next line as the folder (the `\s*` after `=` crosses the
+  line end); a trailing `# comment` on the line becomes part of the folder. Both give a WARN with an odd folder name, never a silent pass.
+- On this Linux machine the owner's `~/drishti-envs/dev.ini` names the deprecated clone `~/IdeaProjects/drishti`: `setup` in
+  `drishti-platform/drishti` will WARN and `--check` will FAIL until it is renamed. That is the check working, not a false WARN.
+
+## 4. Test and document impact
+
+- **`lib/` restoration**: `lib/README.md`, `lib/ext/README.md` and `lib/lake-wheel.pin` have the same blob ids at `543f90018` as at
+  `v2.9.11.i_7d` (byte-identical). The pin is read by `lakewheel.py`, `pylibs.py`, `consolestart.py` and `drillkit/lake_cache.py`: its
+  absence would have failed setup and the console start. Against the tag the whole diff has no added and no deleted file, so
+  `8a8b7bed2` removed nothing else.
+- **`8a8b7bed2` otherwise**: the CSS check and the two QA browser tests now default to their own checkout (`parents[2]` is the
+  repository root; `os` is imported; `DRISHTI_MAIN_CHECKOUT` and `CSSVIS_MAIN` still override). Right.
+- **pytest**: gone from `requirements.txt`, present in `requirements-test.txt`; the lakes test's run line names the test file.
+- **Tests**: the new setup test covers FAIL in `--check`, WARN in setup, the file kept, and silence for the right folder. Missing: a
+  Windows-shaped case (case and separators) and S1's space; the launcher tests do not look at `launch.inputs` (S2); S3.
+- **Documents**: IDE_GUIDE, DEVELOPER_GUIDE, CLI_REFERENCE, RELEASE_NOTES and CHANGELOG agree with the code on the two folder names,
+  the prompt and the settings check; the version is `2.9.11.i7e`; QUICKSTART (and its PDF) name `--release i7e`; no `i7d` is left in the
+  guides. The release notes' `ren` example changes with S1.
+- **Personal paths**: none in the tracked tree of `release/i7e` (no personal home folder, no user name in a path, no old-layout
+  `IdeaProjects/drishti` example; `/home/you` and `C:/Users/<you>` only) nor in the two PDFs' text, nor in the index commit. The author's
+  name appears only in the copyright lines.
+
+State left behind: nothing running, nothing built, no file changed but this one.
