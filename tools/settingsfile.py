@@ -85,6 +85,39 @@ def foreign_vars(environ, home, flavour=None) -> list[tuple[str, str]]:
     return out
 
 
+def dated_folder(edir: Path, now=None) -> Path:
+    """A new folder ``replaced-YYYY-MM-DD-HHMM`` in the settings folder (``-2``, ``-3`` ... when it exists; made atomically, so two runs
+    in the same second never share one): where setup and ``launchers --machine`` move a file they would otherwise overwrite."""
+    import datetime
+    stamp = (now or datetime.datetime.now()).strftime("%Y-%m-%d-%H%M")
+    n = 1
+    while True:
+        folder = edir / (f"replaced-{stamp}" if n == 1 else f"replaced-{stamp}-{n}")
+        try:
+            folder.mkdir(parents=True)
+            return folder
+        except FileExistsError:
+            n += 1
+
+
+def move_to_dated(files, edir: Path, folder: Path | None = None) -> Path:
+    """Moves ``files`` into ``folder`` (a new :func:`dated_folder` of ``edir`` when None) and returns it; nothing is overwritten or
+    deleted. A file another program holds open (Windows) raises :class:`MovedError` naming it, the files before it already moved."""
+    import shutil
+    folder = folder or dated_folder(edir)
+    for f in files:
+        try:
+            shutil.move(str(f), str(folder / Path(f).name))
+        except OSError as e:
+            raise MovedError(f"{f} could not be moved to {folder} ({e.strerror or e}): close the program that holds it open and run the "
+                             f"command again") from None
+    return folder
+
+
+class MovedError(OSError):
+    """A settings-folder file could not be moved aside (open in another program): said in one line naming the file."""
+
+
 def apply_roots(entries: dict[str, str], environ=None) -> list[str]:
     """Puts the launch roots the files name into the environment the Python tools read, the Java order: the settings file beats the
     environment (as ``LaunchRoots`` does: -D, then the file, then the environment), so a stale ``DRISHTI_DATA_DIR`` from an old ``setx``

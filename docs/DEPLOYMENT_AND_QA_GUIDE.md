@@ -216,7 +216,7 @@ setx DRISHTI_JAVA_HOME "C:\jdk-21"
 **`python tools/drishti.py setup`**, from the install folder, does the rest, on every operating system, and can be run again at any time:
 it checks Python and Java (and says which `java` and why), shows the install, data and modules folders with where each came from, makes
 the data folder's layout, makes `~/drishti-envs` with a copy of `config/settings.examples/dev.ini` **with this machine's paths filled in**
-(a `dev.ini` already there that names this checkout is kept as it is; one that names another folder, and a JVM arguments file that
+(a `dev.ini` already there that names this checkout is kept as it is, also when its data folder is elsewhere; one that names another folder, and a JVM arguments file that
 differs, is **moved** into a dated folder there, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one is written, so nothing is
 lost and nothing is made in the other folder; `--check` says what it would move), makes `drishti-console/.venv` and installs the pinned Lake wheel, then
 `drishti-console/requirements.txt`, lists the environment variables it sees (a secret only as *set*), and prints the next steps.
@@ -376,8 +376,9 @@ mkdir -p /srv/drishti-data/{run,logs,tmp,dumps,modules,delta}
 foreach ($d in 'run','logs','tmp','dumps','modules','delta') { New-Item -ItemType Directory -Force "D:\drishti-data\$d" | Out-Null }
 ```
 
-**4 · The environment variables**: `DRISHTI_HOME`, `DRISHTI_DATA_DIR` and `DRISHTI_JAVA_HOME` at least, set permanently as in
-[1.5](#15-environment-variables) (a service: its unit's `Environment=` / `EnvironmentFile=`, or the scheduled task's env-file).
+**4 · The environment variables**: only `DRISHTI_JAVA_HOME` (or `JAVA_HOME`) on a developer or QA machine; the folders come from the
+settings file of step 5 ([1.5](#15-environment-variables)). A service sets its folders in its unit's `Environment=` / `EnvironmentFile=`,
+or the scheduled task's env-file.
 
 **5 · The settings file.** Copy `config/settings.examples/dev.ini` (a QA or developer machine) or `prod.ini` (a production server) into
 `~/drishti-envs/` (a service: `/etc/drishti/`, `C:\drishti-config\`) and replace every `/path/to/drishti` with your folders
@@ -555,7 +556,8 @@ a list narrows it, and a name that cannot be offered is left out with an ERROR i
 One file per machine (or per environment) holds the folders and named resources, given by its **absolute path** and never searched for.
 The IDE run configurations all pass `$USER_HOME$/drishti-envs/dev.ini`; `tools/drishti.py` takes `--settings` before its command and
 hands it to every Java program it starts. `python3 tools/drishti.py setup` makes it from `config/settings.examples/dev.ini` with this
-machine's paths filled in, and never overwrites one that is there ([1.6](#16-the-settings-file-and-drishtipy-setup)). By hand: copy the
+machine's paths filled in; one that names this checkout is kept as it is, one from another copy is moved into
+`~/drishti-envs/replaced-<date>` and a fresh one written ([1.6](#16-the-settings-file-and-drishtipy-setup)). By hand: copy the
 example to `~/drishti-envs/dev.ini` (`C:\Users\you\drishti-envs\dev.ini`) and replace every `/path/to/drishti`.
 
 What a QA or developer machine needs, and nothing more:
@@ -765,7 +767,7 @@ command) adds the install's `config/profiles/<NAME>.ini` after them ([1.6](#16-t
 | `--heap SIZE` | `drishti.launch.heap` of the settings files (`4g` in the demo profile), else `2g` | the heap limit (`-Xmx`): about 4 GB per 400,000 trades a day |
 | `--jar FILE` | the newest `drishti-server-*-exec.jar` in `<drishti>/lib` | a server jar for a one-off run |
 | `--java-home DIR` | `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the `PATH` | the JDK (21 or newer; refused when older) |
-| `--home DIR` | `DRISHTI_HOME`, `drishti.home` of the settings file, the folder `tools/drishti.py` is in | the install folder; another install's folder is refused |
+| `--home DIR` | `drishti.home` of the settings file, `DRISHTI_HOME`, the folder `tools/drishti.py` is in | the install folder; `--home` naming another install's folder is refused; a settings file or `DRISHTI_HOME` naming one is a WARNING and not used |
 | `--packs LIST` | `drishti.packs.enabled` of the settings files, else `DRISHTI_PACKS`, else the packs of the modules that are on | the packs to load (it beats a profile's list) |
 | `--data-dir DIR` | the settings files' `drishti.data.dir`, else `DRISHTI_DATA_DIR`, else `<drishti>/data` | the data folder; the pid, log and temporary files go under it, and the server is given it as `-Ddrishti.data.dir`, so the two always agree |
 | `--env-file FILE` | none | `KEY=VALUE` lines put into the server's environment: the secrets stay off the command line, and their values are never printed |

@@ -21,19 +21,25 @@ Everything else is as in i7e.
 ## What changes for administrators
 
 - **An old settings file is moved, never followed.** When `~/drishti-envs/dev.ini` (Windows `%USERPROFILE%\drishti-envs\dev.ini`) names
-  another folder (its `drishti.home`, `drishti.data.dir` or `drishti.modules.home`), `setup` moves it into a dated folder of the settings
+  another copy's `drishti.home` (or names none and a folder outside this checkout), `setup` moves it into a dated folder of the settings
   folder, `drishti-envs\replaced-YYYY-MM-DD-HHMM`, writes a fresh one for this checkout and says so in one line. The same for a JVM
   arguments file (`jvm-demo.args`, `jvm-qa.args`, `jvm-samples.args`) that differs from what setup writes now. Nothing is lost, nothing is
-  overwritten or edited in place, and identical files are left alone. A `dev.ini` that names this checkout is kept as it is, with your
-  own lines. `setup --check` says what it would move and moves nothing. The i7e rename-it-yourself step is gone.
+  overwritten, and identical files are left alone. A `dev.ini` that names this checkout is kept as it is, with your own lines and a data
+  folder you chose elsewhere (setup says so and makes nothing there unless you pass `--data-dir` again; it adds only `drishti.python`,
+  once). `setup --check` says what it would move and moves nothing; `--settings <old dev.ini> setup` works too. A file another program
+  holds open is a `[FAIL]` line naming it, never written over. The i7e rename-it-yourself step is gone.
+- **`launchers --machine` works the same way**: a JVM arguments file that differs is moved into a dated folder first, and an old
+  `dev.ini` is named in a WARNING.
 - **Setup makes no folder outside this checkout,** the settings folder and a `--data-dir` you pass (it is recorded in the new `dev.ini`).
   The JVM arguments files only name their folders; setup makes them under the data folder it resolved.
-- **The settings file beats the environment** in the Python tools, as it already did in the server: explicit option, then the settings
+- **The settings file beats the environment** in the Python tools and the console, as it already did in the server: explicit option, then the settings
   file, then the environment, then this checkout, for every folder. A `DRISHTI_HOME`, `DRISHTI_DATA_DIR`, `DRISHTI_MODULES_HOME`,
   `DRISHTI_LIB_PATH` or `DRISHTI_TMP_DIR` left by an old `setx` that names another folder is shown by setup as a WARNING (*ignored: your
   settings file wins; you may delete it in Environment Variables*) and never used.
-- At run time the server, the console and the tools still only WARN when a settings file names another folder's `drishti.home`; the
-  warning now says to run setup.
+- **Warn, never refuse, at run time.** The server, the console and the tools WARN when a settings file names another folder's
+  `drishti.home` (the warning says to run setup) and still run: the server and the console on that folder, the tools on their own
+  folder (they never drive another install; `--home` naming one is still refused). The same for a `DRISHTI_HOME` naming another
+  folder. A `DRISHTI_TMP_DIR` outside the checkout that does not exist is a WARNING and the default temp folder is used.
 - The deployment guide no longer tells you to `setx DRISHTI_HOME` or `DRISHTI_DATA_DIR`: the folders live in the settings file.
 
 ## What changes for developers

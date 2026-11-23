@@ -2703,9 +2703,11 @@ settings file goes **before** the command: `python tools/drishti.py --settings ~
 wins over them (`python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa start all`: the QA pair on 18580 and 17580;
 `--demo` is `--profile demo`). The tools' `--server` default follows the files too (`console.backend.url`, else a profile's `server.port`).
 
-**The roots.** The install folder (`DRISHTI_HOME`) is `--home`, else `DRISHTI_HOME`, else `drishti.home` of the settings file, else the
-folder `tools/drishti.py` lives in; a named one must be an absolute path (a relative one is refused as relative) and that same folder. The data folder is `--data-dir`, else `drishti.data.dir` of the settings file, else `DRISHTI_DATA_DIR`, else
-`<home>/data`; its `run/` (pid files), `logs/` and `tmp/` hold what a started process leaves. Drishti's own server jar (exactly one; `start` refuses two) is in
+**The roots.** One order for every root, as on the Java side: an explicit option, else the settings file, else the environment, else this
+checkout. The install folder (`DRISHTI_HOME`) is `--home`, else `drishti.home` of the settings file, else `DRISHTI_HOME`, else the
+folder `tools/drishti.py` lives in; a named one must be an absolute path (a relative one is refused as relative); `--home` naming another
+folder is refused, a settings file or `DRISHTI_HOME` naming one is a WARNING and the tools' own folder is used. The data folder is `--data-dir`, else `drishti.data.dir` of the settings file, else `DRISHTI_DATA_DIR`, else
+`<home>/data`; the modules folder is `drishti.modules.home` of the settings file, else `DRISHTI_MODULES_HOME`, else `<home>/modules`; its `run/` (pid files), `logs/` and `tmp/` hold what a started process leaves. Drishti's own server jar (exactly one; `start` refuses two) is in
 `<home>/lib`; the site's jars (JDBC drivers, connector plugins) are in `<home>/lib/ext` (`drishti.lib.path`, `DRISHTI_LIB_PATH`), kept on an upgrade. **Java** is found in one order:
 `--java FILE`, `--java-home`, `drishti.java.home` of the settings file, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the `PATH`; a Java older than 21 is refused.
 
@@ -2714,7 +2716,7 @@ folder `tools/drishti.py` lives in; a named one must be an absolute path (a rela
 | Command | What it does |
 |---|---|
 | `setup` | `setup drishti`, then `setup venv` |
-| `setup drishti` (also `setup --skip-venv`) | the Drishti part only: checks Python 3.11+ and Java 21+, makes the data folder's layout (`run/ logs/ tmp/ dumps/ delta/ dataload/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths filled in (one that names this checkout is kept as it is; one whose `drishti.home`, `drishti.data.dir` or `drishti.modules.home` names another folder is moved into a dated folder, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one written; `--check` says what it would move), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`; one that differs is moved into the same dated folder: setup never overwrites a file and makes no folder outside this checkout, the settings folder and an explicit `--data-dir`; a `DRISHTI_*` folder variable naming another folder is a WARNING and never used), checks the server jar and the modules |
+| `setup drishti` (also `setup --skip-venv`) | the Drishti part only: checks Python 3.11+ and Java 21+, makes the data folder's layout (`run/ logs/ tmp/ dumps/ delta/ dataload/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths filled in (one whose `drishti.home` names this checkout is kept as it is, also when its data folder is elsewhere: setup then makes nothing there unless `--data-dir` is passed; one whose `drishti.home` names another folder, or that names none and a folder outside this checkout, is moved into a dated folder, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one written; `--check` says what it would move), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`; one that differs is moved into the same dated folder: setup never overwrites a file (it adds only `drishti.python`, once, to a kept `dev.ini`) and makes no folder outside this checkout, the settings folder and an explicit `--data-dir`; a `DRISHTI_*` folder variable naming another folder is a WARNING and never used), checks the server jar and the modules |
 | `setup venv` | the Python part in `drishti-console/.venv`: makes or checks it, installing the pinned Lake wheel from `lib/wheels` first, then `drishti-console/requirements.txt` |
 | `setup libs` | the same libraries into the **current** Python (the system Python; no venv) |
 | `setup --system` | `setup drishti` + `setup libs`: where no `.venv` is allowed |

@@ -26,6 +26,12 @@
 - **One Python resolver, the Java order** (explicit > settings file > environment > this checkout): `find_home` and the modules folder
   now read the file before the environment; `settingsfile.apply_roots` lets the file win (and covers drishti.lib.path). Setup reports each
   `DRISHTI_*` folder variable naming another folder as a WARNING and never uses it (DRISHTI_TMP_DIR included, before any command).
+- Gate fixes: the console's settings file beats `DRISHTI_HOME`/`DRISHTI_DATA_DIR` (WARNING for the old value); a `dev.ini` naming this
+  checkout is kept even with its data folder elsewhere (nothing made there without `--data-dir`); `launchers --machine` moves a differing
+  file to a dated folder and warns of an old `dev.ini`; `--settings <old dev.ini> setup` goes ahead; a foreign `drishti.home` in the file
+  or `DRISHTI_HOME` is a WARNING for the tools (only `--home` is refused); a missing `DRISHTI_TMP_DIR` outside the checkout is never
+  made; a locked file is a `[FAIL]` line; `DRISHTI_WHEELS` in the settings catalogue; docs (DEPLOYMENT, CLI_REFERENCE, README,
+  QUICKSTART, DEVELOPER_GUIDE, IDE_GUIDE, CONFIGURATION).
 - Build: `drishti-module-parent` has no `${env.DRISHTI_HOME}` default; guard test: no pom reads `${env.DRISHTI_*}` or `${user.home}`.
 - Docs: DEPLOYMENT_AND_QA_GUIDE (no `setx DRISHTI_HOME/DATA_DIR`; the order table; setup moves old files), IDE_GUIDE 2.1/2.3, CLI_REFERENCE;
   the run-time WARNING (server, console, tools) says to run setup. Version 2.9.11.i7f.

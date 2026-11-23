@@ -323,13 +323,25 @@ ARGS_FOLDERS = ("tmp/server", "dumps/server", "logs", "run")
 
 
 def machine(home: Path, envs_dir: Path, dev_ini: Path | None) -> list[Path]:
-    """Writes :func:`machine_files` into the settings folder (the only folder made); the folders the files name are never made here
-    (setup makes them under the data folder it resolved; the server and start server make their own). The files written."""
+    """Writes :func:`machine_files` into the settings folder (the only folder made), as setup does: a file that is there and differs is
+    first MOVED into a dated folder there (``replaced-YYYY-MM-DD-HHMM``, never overwritten), an identical one is left alone. A dev.ini
+    naming another checkout's drishti.home is said in a WARNING first. The folders the files name are never made here (setup makes them
+    under the data folder it resolved; the server and start server make their own). The files written."""
+    if dev_ini and dev_ini.is_file():
+        warning = settingsfile.other_home(settingsfile.read_all(str(dev_ini)), home)
+        if warning:
+            print(warning, file=sys.stderr)
     envs_dir.mkdir(parents=True, exist_ok=True)
+    want = machine_files(home, envs_dir, dev_ini)
+    differ = [f for f, (text, _) in want.items() if f.is_file() and f.read_text(encoding="utf-8") != text]
+    if differ:
+        folder = settingsfile.move_to_dated(differ, envs_dir)
+        procs.say(f"moved {', '.join(f.name for f in differ)} to {folder}  (they differ from what is written now)")
     written = []
-    for f, (text, _data) in machine_files(home, envs_dir, dev_ini).items():
-        f.write_text(text, encoding="utf-8", newline="\n")
-        written.append(f)
+    for f, (text, _data) in want.items():
+        if not f.is_file():
+            f.write_text(text, encoding="utf-8", newline="\n")
+            written.append(f)
     return written
 
 
@@ -358,8 +370,12 @@ def main(a) -> int:
     try:
         if a.machine:
             envs_dir = Path(a.envs_dir).expanduser().resolve() if a.envs_dir else Path.home() / "drishti-envs"
-            for f in machine(home, envs_dir, envs_dir / "dev.ini"):
-                procs.say(f"written {f}")
+            try:
+                for f in machine(home, envs_dir, envs_dir / "dev.ini"):
+                    procs.say(f"written {f}")
+            except settingsfile.MovedError as e:
+                print(f"drishti: {e}", file=sys.stderr)
+                return 1
             return 0
         if a.check:
             problems = check(home)

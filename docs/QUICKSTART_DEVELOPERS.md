@@ -117,7 +117,7 @@ user's profile, no administrator rights needed.
 
 **You should see** `doctor` end with `doctor: all clear` (the Java, the Python and its libraries, the ports 18480 and 17480 free).
 
-**Your settings file**, once: `python tools/drishti.py setup` makes `~/drishti-envs/dev.ini` for you (it never overwrites one), and `tools/drishti.py` takes it with `--settings` ([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)); the IDE launchers need it too ([IDE_GUIDE.md](guides/IDE_GUIDE.md#21-the-settings-file-drishti-envsdevini)).
+**Your settings file**, once: `python tools/drishti.py setup` makes `~/drishti-envs/dev.ini` for you (one that names this checkout is kept; one from another copy is moved into `~/drishti-envs/replaced-<date>` and a fresh one written), and `tools/drishti.py` takes it with `--settings` ([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)); the IDE launchers need it too ([IDE_GUIDE.md](guides/IDE_GUIDE.md#21-the-settings-file-drishti-envsdevini)).
 `requirements-test.txt` is `requirements.txt` plus pytest, pytest-xdist and Playwright: a developer needs both. The IDE setup: [IDE_GUIDE.md](guides/IDE_GUIDE.md) (IntelliJ and PyCharm), [IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code) (VS Code).
 
 ## 2. Build

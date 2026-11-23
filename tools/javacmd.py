@@ -33,6 +33,7 @@ import contextlib
 import os
 import re
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 
@@ -200,8 +201,9 @@ def find_home(explicit=None, env=None, keys=None) -> tuple:
     """(the install folder, where it came from), the ONE install root of the Python commands, as the server's ``drishti.home``, in the Java
     order (``LaunchRoots``): ``--home``, else ``drishti.home`` in the settings file, else ``DRISHTI_HOME``, else the folder tools/drishti.py
     lives in (a stale ``DRISHTI_HOME`` never beats a correct settings file). The install is read only;
-    what Drishti writes goes to the data folder. A home named anywhere that is not the folder these tools come from is refused in words:
-    one release's tools never drive another release's install."""
+    what Drishti writes goes to the data folder. The install is always the folder these tools come from (one release's tools never drive
+    another release's install): an explicit ``--home`` naming another folder is refused in words; a settings file or ``DRISHTI_HOME``
+    naming one (an old dev.ini or setx of an earlier copy) is a WARNING (the owner's rule: warn, never refuse) and is not used."""
     env = os.environ if env is None else env
     keys = _SETTINGS_KEYS if keys is None else keys
     for name, value in (("--home", explicit), ("drishti.home in the settings file", (keys.get("drishti.home") or "").strip()),
@@ -212,10 +214,20 @@ def find_home(explicit=None, env=None, keys=None) -> tuple:
                                 f"{name.split(' ')[0]}; the default is the folder tools/drishti.py lives in)")
             home = Path(value).expanduser().resolve()
             if home != REPO.resolve():
-                raise HomeError(f"{name} is {home}, but these tools come from {REPO}: run {home / 'tools' / 'drishti.py'} for that install, "
-                                f"or unset {name.split(' ')[0]} (one release's tools never drive another release's install)")
+                if name == "--home":
+                    raise HomeError(f"--home is {home}, but these tools come from {REPO}: run {home / 'tools' / 'drishti.py'} for that "
+                                    "install (one release's tools never drive another release's install)")
+                if name == "DRISHTI_HOME" and str(home) not in _WARNED:   # the settings file's case is said once by drishti.py itself
+                    _WARNED.add(str(home))
+                    print(f"WARNING: DRISHTI_HOME={home} names another folder than these tools ({REPO}): ignored, the install is {REPO}; "
+                          "you may delete the variable (run python tools/drishti.py setup: it lists every such variable)", file=sys.stderr)
+                return REPO.resolve(), f"the folder holding tools/drishti.py ({name} names {home}: ignored)"
             return home, name
     return REPO.resolve(), "the folder holding tools/drishti.py"
+
+
+#: the foreign homes already warned about in this process (one line each)
+_WARNED: set = set()
 
 
 #: Every jar is under the install: Drishti's OWN jar(s) in <home>/lib (shipped, replaced on an upgrade) and the SITE's jars (JDBC drivers,

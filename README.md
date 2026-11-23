@@ -391,7 +391,7 @@ Open the console's address that `start all` prints, sign in as `drishti-dev-admi
 development account, never for a shared machine) and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`
 ([DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md) walks it on Windows, Linux and macOS, with what you should see).
 
-- **Install folder and jars**: the install root is `--home`, else `DRISHTI_HOME`, else the folder the tools are in; the server jar is in `<home>/lib`,
+- **Install folder and jars**: the install root is `--home`, else `drishti.home` of the settings file, else `DRISHTI_HOME`, else the folder the tools are in (a settings file or variable naming another folder: a WARNING, not used); the server jar is in `<home>/lib`,
   the site's jars in `<home>/lib/ext`, the modules' `.dmod` files in `<home>/modules`; one Java lookup (`--java`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; 21 or newer). The shell scripts of
   earlier releases are gone.
 

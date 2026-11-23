@@ -133,14 +133,17 @@ def test_every_java_finder_is_the_one_in_javacmd():
 
 
 # ---- the one home and the one jar place --------------------------------------------------------------------------------------------------
-def test_the_home_is_the_tools_own_folder_and_another_is_refused(tmp_path):
+def test_the_home_is_the_tools_own_folder_another_explicit_is_refused_and_an_old_file_or_variable_warned(tmp_path, capsys):
+    """--home naming another folder is refused; a settings file or DRISHTI_HOME naming one (an old copy) is a WARNING and not used."""
     assert javacmd.find_home(None, env_of(), {}) == (ROOT.resolve(), "the folder holding tools/drishti.py")
     assert javacmd.find_home(None, env_of(DRISHTI_HOME=ROOT), {})[1] == "DRISHTI_HOME"
-    for named in ({"DRISHTI_HOME": tmp_path}, {}):
-        with pytest.raises(javacmd.HomeError, match="one release's tools never drive another"):
-            javacmd.find_home(None if named else tmp_path, env_of(**named), {})
-    with pytest.raises(javacmd.HomeError, match="drishti.home in the settings file"):
-        javacmd.find_home(None, env_of(), {"drishti.home": str(tmp_path)})
+    with pytest.raises(javacmd.HomeError, match="one release's tools never drive another"):
+        javacmd.find_home(tmp_path, env_of(), {})
+    home, why = javacmd.find_home(None, env_of(DRISHTI_HOME=tmp_path), {})
+    assert home == ROOT.resolve() and "DRISHTI_HOME names" in why and "ignored" in why
+    assert f"WARNING: DRISHTI_HOME={tmp_path.resolve()}" in capsys.readouterr().err
+    home, why = javacmd.find_home(None, env_of(), {"drishti.home": str(tmp_path)})
+    assert home == ROOT.resolve() and "drishti.home in the settings file names" in why
 
 
 def test_a_relative_home_is_refused_as_relative_before_any_comparison():
@@ -354,7 +357,7 @@ def test_wrong_options_exit_2():
     assert run("start", "server", "--seed", "10.0.0.1:18480").returncode == 2
     assert run("stop", "server", "--node", "a", "--all-nodes").returncode == 2
     r = run("status", env=env_of(DRISHTI_HOME="/somewhere/else"))
-    assert r.returncode == 2 and "another release's install" in r.stderr
+    assert r.returncode != 2 and "WARNING: DRISHTI_HOME=/somewhere/else names another folder" in r.stderr, "warn, never refuse"
 
 
 def test_status_shows_the_roots_and_a_stale_pid(tmp_path):

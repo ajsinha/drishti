@@ -90,9 +90,10 @@ REEXEC_ENV = "DRISHTI_SETUP_REEXEC"
 
 
 def ini_collision(ini: Path, home, explicit_data=None, flavour=None) -> list[str]:
-    """Why an existing dev.ini is not this checkout's: each root it names outside ``home`` (``drishti.home`` another folder,
-    ``drishti.data.dir``, ``drishti.modules.home``, ``drishti.lib.path`` outside it), a ``drishti.data.dir`` other than an explicit
-    ``--data-dir``, or a file that cannot be read. Empty: the file names this checkout and is kept as it is (the user's own lines too)."""
+    """Why an existing dev.ini is not this checkout's, so setup moves it: its ``drishti.home`` names another folder; or it names no
+    ``drishti.home`` and a root outside ``home`` (``drishti.data.dir``, ``drishti.modules.home``, ``drishti.lib.path``); or its
+    ``drishti.data.dir`` is not the ``--data-dir`` of this run; or it cannot be read. A file whose ``drishti.home`` is this checkout is
+    this checkout's, whatever its other roots (a data folder elsewhere is the user's choice): empty, it is kept as it is."""
     try:
         e = settingsfile.read_all(str(ini))
     except (settingsfile.SettingsError, OSError) as x:
@@ -109,22 +110,23 @@ def ini_collision(ini: Path, home, explicit_data=None, flavour=None) -> list[str
         if key == "drishti.data.dir" and explicit_data is not None:
             if not same(v or f"{home}/data", explicit_data):
                 out.append(f"{key}={v or '<home>/data'}, not the --data-dir {explicit_data}")
-        elif v and not settingsfile.inside(v, home, flavour):
+        elif v and not named and not settingsfile.inside(v, home, flavour):
             out.append(f"{key}={v}")
     return out
 
 
-def dated_folder(edir: Path, now=None) -> Path:
-    """A new folder ``replaced-YYYY-MM-DD-HHMM`` in the settings folder (``-2``, ``-3`` ... when it exists): where setup moves the files
-    it would otherwise overwrite, so nothing is lost."""
-    import datetime
-    stamp = (now or datetime.datetime.now()).strftime("%Y-%m-%d-%H%M")
-    folder, n = edir / f"replaced-{stamp}", 1
-    while folder.exists():
-        n += 1
-        folder = edir / f"replaced-{stamp}-{n}"
-    folder.mkdir(parents=True)
-    return folder
+def ini_outside(ini: Path, home, flavour=None) -> list[str]:
+    """The roots a kept dev.ini (one naming this checkout) puts outside it, ``key=value`` each: reported, never made by setup."""
+    try:
+        e = settingsfile.read_all(str(ini))
+    except (settingsfile.SettingsError, OSError):
+        return []
+    out = []
+    for key in ("drishti.data.dir", "drishti.modules.home", "drishti.lib.path"):
+        v = settingsfile.home_value((e.get(key) or "").strip(), home) if (e.get(key) or "").strip() else ""
+        if v and not settingsfile.inside(v, home, flavour):
+            out.append(f"{key}={v}")
+    return out
 
 
 def have_yaml() -> bool:
@@ -224,13 +226,17 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None, real: bool
     jar = roots["jar"][0]
     moved: dict = {"to": None}
 
-    def move_aside(files: list, why: str) -> None:
-        """Moves ``files`` into this run's dated folder in the settings folder (one per run) and says so in one line."""
-        if moved["to"] is None:
-            moved["to"] = dated_folder(edir)
-        for f in files:
-            shutil.move(str(f), str(moved["to"] / f.name))
+    def move_aside(files: list, why: str) -> bool:
+        """Moves ``files`` into this run's dated folder in the settings folder (one per run) and says so in one line; False (a [FAIL]
+        line naming the file) when one cannot be moved (open in another program on Windows): nothing is then written over it."""
+        try:
+            moved["to"] = settingsfile.move_to_dated(files, edir, moved["to"])
+        except settingsfile.MovedError as e:
+            line("FAIL", "old settings", str(e))
+            problems.append(str(e))
+            return False
         line("move", "old settings", f"{', '.join(f.name for f in files)} moved to {moved['to']}  ({why})")
+        return True
     yaml_ok = have_yaml()
     if do_drishti:
         # Java: the one lookup
@@ -246,12 +252,14 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None, real: bool
             todo.append(f"python tools/drishti.py setup  (moves the old {ini.name} to a dated folder in {edir} and writes one for this checkout)")
         elif ini.is_file() and not stale:
             line("ok", "settings file", f"{ini}  (names this checkout: kept as it is)")
+            for o in ini_outside(ini, home):
+                line("ok", "outside this checkout", f"{o}  (from your dev.ini: kept; setup makes nothing there unless you pass --data-dir)")
         elif check:
             line("todo", "settings file", f"{ini} is missing")
             todo.append(f"copy config/settings.examples/dev.ini to {ini}")
+        elif stale and not move_aside([ini], f"it named {'; '.join(stale)}"):
+            pass                                     # the [FAIL] line says which file to close; nothing is written over it
         else:
-            if stale:
-                move_aside([ini], f"it named {'; '.join(stale)}")
             edir.mkdir(parents=True, exist_ok=True)
             jdk = Path(j["java"]).resolve().parent.parent if j["ok"] and j["java"] else None
             ini.write_text(dev_ini_text(home, data, modules, jdk), encoding="utf-8")
@@ -262,7 +270,11 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None, real: bool
                 todo.append(f"set drishti.java.home in {ini} to a JDK 21 folder")
         # the data folder and its layout
         missing = [d for d in DATA_LAYOUT if not (data / d).is_dir()]
-        if missing and not check:
+        ours = explicit is not None or settingsfile.inside(data, home)     # setup makes nothing outside this checkout unless --data-dir
+        if missing and not ours:
+            line("todo", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}; outside this checkout): {', '.join(missing)} missing")
+            todo.append(f"python tools/drishti.py setup --data-dir {data}  (makes the layout of your data folder outside this checkout)")
+        elif missing and not check:
             for d in DATA_LAYOUT:
                 (data / d).mkdir(parents=True, exist_ok=True)
             copy_readmes(home, data)
@@ -286,7 +298,7 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None, real: bool
         # every jar under the home: Drishti's own in <home>/lib, the site's in <home>/lib/ext (drishti.lib.path)
         line("ok" if jar else "todo", "server jar (<home>/lib)", str(jar) if jar else roots["jar"][1])
         ext = Path(settingsfile.home_value((ini_keys.get("drishti.lib.path") or "").strip(), home) or env.get("DRISHTI_LIB_PATH") or roots["ext"][0])
-        if not ext.is_dir() and not check:
+        if not ext.is_dir() and not check and settingsfile.inside(ext, home):
             ext.mkdir(parents=True, exist_ok=True)
             line("made", "your jars (lib/ext)", f"{ext}  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)")
         else:
@@ -313,14 +325,14 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None, real: bool
                     if detail:
                         todo.append("write the IDE server launchers' JVM options: python tools/drishti.py setup (or launchers --machine)")
                 else:
-                    if differ:
-                        move_aside(differ, "they differ from this checkout's")
+                    if differ and not move_aside(differ, "they differ from this checkout's"):
+                        want = {f: v for f, v in want.items() if f not in differ}      # a file that could not be moved is never written over
                     edir.mkdir(parents=True, exist_ok=True)
                     for f, (text, folder) in want.items():
                         if not f.is_file():
                             f.write_text(text, encoding="utf-8", newline="\n")
                         # the folders the file names, only under this checkout or the data folder resolved above (never elsewhere)
-                        if settingsfile.inside(folder, home) or folder == data:
+                        if settingsfile.inside(folder, home) or (explicit is not None and folder == data):
                             for d in launchers.ARGS_FOLDERS:
                                 (folder / d).mkdir(parents=True, exist_ok=True)
                     line("made" if (missing or differ) else "ok", "JVM options",

@@ -237,7 +237,7 @@ three ways:
 
 | Way | For | Commands |
 |---|---|---|
-| **Maven** | a Maven project (the archetype makes one) | `mvn verify`: the parent's executions run the server jar's `module verify --manifest-only`, `module pack`, `module verify --conformance` with the Java that runs Maven (set `DRISHTI_HOME` to your Drishti folder; no Python) |
+| **Maven** | a Maven project (the archetype makes one) | `mvn verify`: the parent's executions run the server jar's `module verify --manifest-only`, `module pack`, `module verify --conformance` with the Java that runs Maven (`mvn verify -Ddrishti.home=<Drishti folder>`; no Python) |
 | **Any build** | Gradle, Bazel, a script, or `javac` and a folder | `java -jar <Drishti folder>/lib/drishti-server-<version>-exec.jar module pack <folder> [--jar <jar>] [--out <dir>]`, then `module verify <.dmod> --conformance` and `module inspect <.dmod>` |
 | **The command line** | Linux, macOS and Windows | `python3 tools/drishti.py module pack <folder>`, `module verify <.dmod> --conformance`, `module inspect <.dmod>`: each runs the same `module` command of the server jar |
 
@@ -268,7 +268,7 @@ the install's Maven wrapper; it runs `package`, never `install`, so nothing reac
 | `settings.xml` | a Maven settings file naming `repo/` by its absolute path: `mvn -s <Drishti folder>/sdk/settings.xml ...` finds the parent and the kernel API in a project that names no path |
 | `drishti-module-parent/pom.xml` | the parent pom, for a project that names it by `relativePath` (the genomics sample does) |
 
-The parent's own `<repositories>` entry reads `${drishti.home}/sdk/repo` (`-Ddrishti.home=<Drishti folder>`, or the environment variable `DRISHTI_HOME`).
+The parent's own `<repositories>` entry reads `${drishti.home}/sdk/repo` (`-Ddrishti.home=<Drishti folder>` only: the parent never reads an environment variable, so a build never reads another install).
 The genomics sample is the proof: `tools/test_sdk_builds_genomics.py` copies it beside the SDK's parent into an empty folder and builds it there, once by
 `relativePath` and once as a partner's project does (the parent by version through `settings.xml`); the tests run, `module pack` makes the `.dmod` and the fourteen checks pass.
 

@@ -1146,8 +1146,14 @@ def use_tmp_dir() -> None:
     base = (os.environ.get("DRISHTI_TMP_DIR") or "").strip()
     if not base:
         return
-    if is_setup(sys.argv[1:]) and not settingsfile.inside(base, ROOT):
-        return                                  # setup makes nothing outside this checkout: it reports the variable and never uses it
+    if not settingsfile.inside(base, ROOT) and (is_setup(sys.argv[1:]) or not pathlib.Path(base).is_dir()):
+        # a folder outside this checkout is never made here (an old setx from an earlier copy): setup reports the variable itself; any
+        # other command says so once and uses the default temp folder
+        if not is_setup(sys.argv[1:]):
+            print(f"WARNING: DRISHTI_TMP_DIR={base} names a folder outside this checkout that does not exist: ignored (the default temp "
+                  "folder is used); create it, or delete the variable", file=sys.stderr)
+            os.environ.pop("DRISHTI_TMP_DIR", None)
+        return
     import tempfile
     pathlib.Path(base).mkdir(parents=True, exist_ok=True)
     os.environ["TMPDIR"] = base
@@ -1167,10 +1173,15 @@ def main(argv: list[str] | None = None) -> int:
         argv = head + argv[lead:]
         settings = settingsfile.with_profiles(settings, ROOT, profiles)
         entries = settingsfile.read_all(settings) if settings else {}
-        settingsfile.apply_roots(entries)       # the Python side reads the roots the files name, as the JVMs do
-        warning = settingsfile.other_home(entries)
-        if warning and not is_setup(argv):          # setup handles it itself: it moves the old file to a dated folder
-            print(warning, file=sys.stderr)
+        if is_setup(argv):
+            # setup decides the roots itself (an old dev.ini named here is the file it moves aside): the file's roots are neither put
+            # into the environment nor handed on, so `--settings <old dev.ini> setup` goes ahead instead of being refused
+            entries = {k: v for k, v in entries.items() if k not in settingsfile.ROOTS}
+        else:
+            settingsfile.apply_roots(entries)       # the Python side reads the roots the files name, as the JVMs do
+            warning = settingsfile.other_home(entries)
+            if warning:
+                print(warning, file=sys.stderr)
         javacmd.set_settings(settings, entries)
         ap = drishti_parser.build_setup_parser(sys.modules[__name__]) if is_setup(argv) else build_parser()
         a, extra = ap.parse_known_args(argv)

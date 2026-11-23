@@ -131,14 +131,18 @@ lakes, your own files, the QA folder). Each step says the IDE its launcher lives
 
 **Every run configuration passes `dev.ini`** (a Java one as `-Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini,…`, a Python one as
 `--settings $USER_HOME$/drishti-envs/dev.ini`), so it must exist before the first run (Windows `C:\Users\you\drishti-envs\dev.ini`). The
-file names this clone in `drishti.home`; a `DRISHTI_HOME` or `drishti.home` that names another clone is refused.
+file names this clone in `drishti.home`; a `drishti.home` or `DRISHTI_HOME` that names another clone is a WARNING at start (the server,
+the console and the tools still run, the tools on this clone), and `setup` moves such a `dev.ini` aside (below).
 
 **A launcher names a profile after it** (`config/profiles/demo.ini`, `samples.ini` or `qa.ini`, committed): what makes the demo, the
 built-in samples or the QA pair, the same file `drishti.py start server --demo` (or `--profile qa`) reads, so the IDE and the terminal start
 the same server. **A server launcher also names this machine's JVM options**, `~/drishti-envs/jvm-<profile>.args` (`@…` in its VM
 options): the options `drishti.py start server` uses, with your data folder in them (the temp folder, heap dumps and the GC log follow
-`drishti.data.dir`). `setup` writes them; after you change `drishti.data.dir`, run `python tools/drishti.py --settings ~/drishti-envs/dev.ini
-launchers --machine` (or `setup` again) to rewrite them.
+`drishti.data.dir`). `setup` writes them. To put the data folder elsewhere, run `python tools/drishti.py setup --data-dir <folder>`: it
+records the folder in `dev.ini` (the old file moved into `drishti-envs/replaced-<date>`), makes its layout and rewrites the JVM options.
+A later plain `setup` keeps that `dev.ini` (its `drishti.home` is this clone) and makes nothing outside the clone. After editing
+`drishti.data.dir` by hand, `python tools/drishti.py --settings ~/drishti-envs/dev.ini launchers --machine` rewrites the JVM options
+(a file that differs is moved into the same kind of dated folder first).
 
 1. From the clone: `python3 tools/drishti.py setup --check` (Windows `py tools\drishti.py setup --check`) lists what is missing and changes nothing.
 2. `python3 tools/drishti.py setup` makes it from `config/settings.examples/dev.ini` with this machine's paths filled in, makes the data
@@ -147,8 +151,8 @@ launchers --machine` (or `setup` again) to rewrite them.
    allowed:** `setup --system` ([2.2](#22-python-for-the-console-and-the-tools-pycharm)). `--check` works for all of them. Without `--settings`, `start console` / `start all` make a `.venv` and the server uses `python` by name: on a no-venv machine always run with the settings file. In PyCharm, no
    terminal is needed: **Drishti: setup** and **Drishti: setup (system Python)** (section 4.3) run them. You should see `[made] settings file …/drishti-envs/dev.ini`,
    `[made] JVM options … jvm-demo.args, jvm-qa.args, jvm-samples.args` and `[made] console .venv …`; a `dev.ini` already there that names
-   this checkout is kept as it is (your own lines too), and setup never overwrites or edits a file.
-   **An old `dev.ini` of another folder** (its `drishti.home`, `drishti.data.dir` or `drishti.modules.home` names another copy) and a
+   this checkout is kept as it is (your own lines too, and a data folder elsewhere), and setup never overwrites a file (it adds only
+   `drishti.python`, once). **An old `dev.ini` of another folder** (its `drishti.home` names another copy) and a
    JVM arguments file that differs: setup **moves** them into a dated folder of the settings folder and writes fresh ones for this
    checkout, in one line: *`[move] old settings  dev.ini moved to …\drishti-envs\replaced-2026-11-23-1630  (it named drishti.home=…)`*.
    Nothing is lost and nothing is made in the other folder; there is nothing to rename or delete by hand. `--check` says what it would

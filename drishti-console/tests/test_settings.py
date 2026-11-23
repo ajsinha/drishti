@@ -99,3 +99,23 @@ def test_the_settings_option_reads_the_file_below_the_environment_and_the_comman
         load_settings(cfg_dir, ["--settings", "drishti.ini"])
     with pytest.raises(SystemExit, match="not a file"):
         load_settings(cfg_dir, ["--settings=" + str(tmp_path / "nope.ini")])
+
+
+def test_the_settings_file_beats_a_stale_environment_for_the_roots(tmp_path, monkeypatch, capsys):
+    """The Java order (LaunchRoots), as the tools: the file's drishti.home / drishti.data.dir beat an old setx DRISHTI_HOME /
+    DRISHTI_DATA_DIR naming another folder (a WARNING says so); the distribution still fills only where unset."""
+    import os
+    from pathlib import Path
+    from core.config import load_settings
+    home = Path(__file__).resolve().parents[2]
+    ini = tmp_path / "dev.ini"
+    ini.write_text(f"drishti.home={home.as_posix()}\ndrishti.data.dir=${{drishti.home}}/data\ndrishti.distribution=finance\n", encoding="utf-8")
+    monkeypatch.setenv("DRISHTI_HOME", str(tmp_path / "drishti-orig"))
+    monkeypatch.setenv("DRISHTI_DATA_DIR", str(tmp_path / "drishti-orig" / "data"))
+    monkeypatch.setenv("DRISHTI_DISTRIBUTION", "risk")
+    load_settings(Path(__file__).resolve().parents[1] / "config", ["--settings", str(ini)])
+    assert os.environ["DRISHTI_HOME"] == home.as_posix() and os.environ["DRISHTI_DATA_DIR"] == f"{home.as_posix()}/data"
+    assert os.environ["DRISHTI_DISTRIBUTION"] == "risk"
+    err = capsys.readouterr().err
+    assert "DRISHTI_HOME=" in err and "DRISHTI_DATA_DIR=" in err and "is ignored: your settings file wins" in err
+    assert not (tmp_path / "drishti-orig").exists()

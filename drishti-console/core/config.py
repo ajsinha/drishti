@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import copy
 import os
+import sys
 import re
 from pathlib import Path
 from typing import Any
@@ -147,6 +148,9 @@ def _read_settings_file(named: str) -> dict[str, str]:
 #: the keys the console shares with the server in a settings file (a profile): each fills its environment variable when that is unset, so
 #: the console and the server started on the same files agree (the data folder, the install, the distribution)
 SHARED = {"drishti.home": "DRISHTI_HOME", "drishti.data.dir": "DRISHTI_DATA_DIR", "drishti.distribution": "DRISHTI_DISTRIBUTION"}
+#: the launch roots among them: the settings file BEATS the environment (the Java order, LaunchRoots; the tools' settingsfile.apply_roots),
+#: so a stale DRISHTI_HOME / DRISHTI_DATA_DIR of an old setx never sends the console to another folder; the old value is warned about
+ROOT_KEYS = ("drishti.home", "drishti.data.dir")
 
 
 def _shared(named: str) -> dict[str, Any]:
@@ -156,11 +160,20 @@ def _shared(named: str) -> dict[str, Any]:
         entries = settings_ini.read_all(named)
     except settings_ini.SettingsError as e:
         raise SystemExit(f"--settings: {e}") from None
-    home = os.environ.get("DRISHTI_HOME") or entries.get("drishti.home") or str(Path(__file__).resolve().parents[2])
+    home = (str(entries.get("drishti.home") or "").strip() or (os.environ.get("DRISHTI_HOME") or "").strip()
+            or str(Path(__file__).resolve().parents[2]))
     for key, var in SHARED.items():
         value = str(entries.get(key) or "").strip()
-        if value and not (os.environ.get(var) or "").strip():
-            os.environ[var] = settings_ini.home_value(value, home)
+        if not value:
+            continue
+        value = settings_ini.home_value(value, home)
+        old = (os.environ.get(var) or "").strip()
+        if key in ROOT_KEYS and old and old != value:
+            print(f"WARNING: {var}={old} is ignored: your settings file wins ({key}={value}); you may delete the variable",
+                  file=sys.stderr)
+            os.environ[var] = value
+        elif not old:
+            os.environ[var] = value
     url = settings_ini.server_url(entries)
     return {"backend": {"url": url}} if url and not (os.environ.get("DRISHTI_BACKEND_URL") or "").strip() else {}
 

@@ -178,11 +178,14 @@ def test_windows_shaped_paths(tmp_path):
     ini = tmp_path / "dev.ini"
     ini.write_text("drishti.home=C:/Users/First Last/IdeaProjects/drishti-orig\ndrishti.data.dir=C:/Users/First Last/IdeaProjects/drishti-orig/data\n",
                    encoding="utf-8")
-    assert envsetup.ini_collision(ini, home, None, ntpath) == ["drishti.home=C:/Users/First Last/IdeaProjects/drishti-orig",
-                                                               "drishti.data.dir=C:/Users/First Last/IdeaProjects/drishti-orig/data"]
+    assert envsetup.ini_collision(ini, home, None, ntpath) == ["drishti.home=C:/Users/First Last/IdeaProjects/drishti-orig"]
     ini.write_text("drishti.home=c:/users/first last/ideaprojects/drishti-platform/drishti\ndrishti.data.dir=D:/x\n", encoding="utf-8")
-    assert envsetup.ini_collision(ini, home, None, ntpath) == ["drishti.data.dir=D:/x"]
+    assert envsetup.ini_collision(ini, home, None, ntpath) == [], "this checkout's file with its data folder elsewhere is kept"
+    assert envsetup.ini_outside(ini, home, ntpath) == ["drishti.data.dir=D:/x"]
     assert envsetup.ini_collision(ini, home, "D:\\X", ntpath) == []
+    assert envsetup.ini_collision(ini, home, "E:\\y", ntpath) == ["drishti.data.dir=D:/x, not the --data-dir E:\\y"]
+    ini.write_text("drishti.data.dir=D:/x\n", encoding="utf-8")
+    assert envsetup.ini_collision(ini, home, None, ntpath) == ["drishti.data.dir=D:/x"], "no drishti.home and a root outside: moved"
     assert sf.foreign_vars({"DRISHTI_DATA_DIR": r"C:\Users\First Last\drishti-orig\data", "DRISHTI_HOME": home}, home, ntpath) == [
         ("DRISHTI_DATA_DIR", r"C:\Users\First Last\drishti-orig\data")]
 
@@ -204,3 +207,67 @@ def test_no_pom_reads_a_runtime_root():
     assert poms
     bad = [f"{p}: {m}" for p in poms for m in re.findall(r"\$\{(?:env\.DRISHTI_\w*|user\.home)\}", (ROOT / p).read_text(encoding="utf-8"))]
     assert not bad, bad
+
+
+def test_data_dir_then_plain_setup_keeps_the_file_and_makes_nothing_outside(tmp_path, capsys):
+    """setup --data-dir X records X; a later plain setup (the IDE's Drishti: setup) keeps that dev.ini (its drishti.home is this checkout),
+    says the data folder is outside, and makes nothing there: only a --data-dir in this run makes folders outside the checkout."""
+    import shutil
+    envs, target = tmp_path / "envs", tmp_path / "D" / "data"
+    envsetup.setup(ns(tmp_path, data_dir=str(target)), {})
+    capsys.readouterr()
+    kept = (envs / "dev.ini").read_text(encoding="utf-8") + "# my own line\n"
+    (envs / "dev.ini").write_text(kept, encoding="utf-8")
+    shutil.rmtree(target)
+    rc = envsetup.setup(ns(tmp_path, data_dir=None), {})
+    out = capsys.readouterr().out
+    assert (envs / "dev.ini").read_text(encoding="utf-8") == kept and not list(envs.glob("replaced-*"))
+    assert f"drishti.data.dir={target.as_posix()}  (from your dev.ini: kept" in out and not target.exists()
+    assert rc == 0 or f"setup --data-dir {target}" in out
+    assert f"python tools/drishti.py setup --data-dir {target}" in out
+
+
+def test_launchers_machine_moves_a_differing_file_and_warns_of_an_old_dev_ini(tmp_path, capsys):
+    envs, orig = tmp_path / "envs", tmp_path / "drishti-orig"
+    stale_ini(envs, orig)
+    launchers.machine(ROOT, envs, envs / "dev.ini")
+    assert "WARNING: your settings file names drishti.home=" in capsys.readouterr().err and not orig.exists()
+    before = (envs / "jvm-qa.args").read_text(encoding="utf-8")
+    assert launchers.machine(ROOT, envs, envs / "dev.ini") == [] and not list(envs.glob("replaced-*")), "identical: untouched"
+    (envs / "jvm-qa.args").write_text("# old\n", encoding="utf-8")
+    written = launchers.machine(ROOT, envs, envs / "dev.ini")
+    moved = list(envs.glob("replaced-*"))
+    assert written == [envs / "jvm-qa.args"] and len(moved) == 1 and (moved[0] / "jvm-qa.args").read_text(encoding="utf-8") == "# old\n"
+    assert (envs / "jvm-qa.args").read_text(encoding="utf-8") == before
+
+
+def test_a_file_that_cannot_be_moved_is_a_fail_line_and_is_never_written_over(tmp_path, capsys):
+    envs, orig = tmp_path / "envs", tmp_path / "drishti-orig"
+    old = stale_ini(envs, orig)
+
+    def locked(src, dst):
+        raise PermissionError(13, "The process cannot access the file because it is being used by another process")
+    with mock.patch("shutil.move", locked):
+        rc = envsetup.setup(ns(tmp_path), {})
+    out = capsys.readouterr().out
+    assert rc == 1 and "[FAIL] old settings" in out and f"{envs / 'dev.ini'} could not be moved" in out and "close the program" in out
+    assert (envs / "dev.ini").read_text(encoding="utf-8") == old and not orig.exists()
+
+
+def test_settings_naming_an_old_dev_ini_does_not_stop_setup(tmp_path):
+    """drishti.py --settings <old dev.ini> setup: setup goes ahead (and moves the file), never refused for the file's drishti.home."""
+    envs, orig = tmp_path / "envs", tmp_path / "drishti-orig"
+    stale_ini(envs, orig)
+    env = {k: v for k, v in __import__("os").environ.items() if not k.startswith("DRISHTI_")}
+    r = subprocess.run([sys.executable, str(TOOLS / "drishti.py"), "--settings", str(envs / "dev.ini"), "setup", "drishti", "--envs-dir",
+                        str(envs), "--data-dir", str(tmp_path / "data")], capture_output=True, text=True, env=env, timeout=300, cwd=str(ROOT))
+    assert r.returncode in (0, 1) and "these tools come from" not in r.stderr, r.stdout + r.stderr
+    assert "dev.ini moved to" in r.stdout and "[WARN] DRISHTI_" not in r.stdout and not orig.exists()
+
+
+def test_a_missing_tmp_dir_outside_the_checkout_is_never_made_by_any_command(tmp_path):
+    tmp = tmp_path / "drishti-orig" / "tmp"
+    env = {**{k: v for k, v in __import__("os").environ.items() if not k.startswith("DRISHTI_")}, "DRISHTI_TMP_DIR": str(tmp)}
+    r = subprocess.run([sys.executable, str(TOOLS / "drishti.py"), "launchers", "--check"], capture_output=True, text=True, env=env,
+                       timeout=120, cwd=str(ROOT))
+    assert r.returncode == 0 and not tmp.exists() and "DRISHTI_TMP_DIR" in r.stderr and "ignored" in r.stderr, r.stdout + r.stderr
