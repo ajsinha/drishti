@@ -18,6 +18,16 @@
 
 ## Unreleased
 
+- **`drishti.py setup` split in two parts; one Python setting.** `setup drishti` (settings folder, `dev.ini`, data folder, JVM files,
+  Java/jar/modules checks), `setup venv` (`drishti-console/.venv`: the pinned Lake wheel first, then `requirements.txt`), `setup libs`
+  (the same libraries into the current Python, no venv), `setup --system` (= drishti + libs, for machines that forbid a `.venv`); `setup`
+  alone is drishti then venv, `--skip-venv` is `setup drishti`. `--check` verifies the libraries name by name (version specs, the Lake
+  wheel's pin) and exits 1 naming what is missing. Setup writes `drishti.python=<interpreter>` into `dev.ini` once (never over a value);
+  the server uses it for the feeds' Run now, the compute pool and the pivot Python functions where their own setting is blank
+  (`PythonSetting`: `DRISHTI_PYTHON`, then the own setting, then `drishti.python`). On Windows pip uses the Windows certificate store
+  (`--use-feature=truststore` before pip 24.2). PyCharm launchers **Drishti: setup** and **Drishti: setup (system Python)**. IDE_GUIDE
+  2.1-2.3, DEPLOYMENT_AND_QA_GUIDE 1.2a/1.6, CLI_REFERENCE.
+
 - **Browser tests: one server per lane.** The browser lane's workers share one Drishti server and one console per set-up
   (`tools/lane_servers.py`: the first worker starts them under a file lock, the others attach; a watchdog stops them once the lane's
   processes are gone, so a killed run leaves no server behind); its heap is `DRILL_TEST_SERVER_HEAP` (default 12g). Tests that change

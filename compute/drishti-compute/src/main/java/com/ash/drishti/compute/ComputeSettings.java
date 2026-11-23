@@ -104,6 +104,12 @@ public record ComputeSettings(boolean enabled, String python, Path root, Path sc
                 queueBatch, chunkRows, fanOutPeers, maxResultBytes, indexes, shipped, javaRepository, p, origin);
     }
 
+    /** The same settings with this interpreter (the server resolves DRISHTI_PYTHON, the setting and drishti.python once: PythonSetting). */
+    public ComputeSettings withPython(String interpreter) {
+        return new ComputeSettings(enabled, interpreter, root, scratch, build, approvalRoles, maxInflightPerUser, queueInteractive, queueEvent,
+                queueBatch, chunkRows, fanOutPeers, maxResultBytes, indexes, shipped, javaRepository, pools, origin);
+    }
+
     public ComputeSettings withEnabled(boolean on) {
         return new ComputeSettings(on, python, root, scratch, build, approvalRoles, maxInflightPerUser, queueInteractive, queueEvent,
                 queueBatch, chunkRows, fanOutPeers, maxResultBytes, indexes, shipped, javaRepository, pools, origin);

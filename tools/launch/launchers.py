@@ -100,7 +100,8 @@ def server_vm(profile: str) -> str:
 
 
 def python_params(row: dict) -> str:
-    parts = [f"--settings {q(DEV_INI)}"] + ([f"--profile {row['profile']}"] if row.get("profile") else [])
+    # a row with settings: false names no settings file: setup is what makes it
+    parts = ([f"--settings {q(DEV_INI)}"] if row.get("settings", True) else []) + ([f"--profile {row['profile']}"] if row.get("profile") else [])
     if row["kind"] == "console":
         parts += list(row.get("args") or [])
     else:

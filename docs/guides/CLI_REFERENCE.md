@@ -2709,20 +2709,32 @@ folder `tools/drishti.py` lives in; a named one must be an absolute path (a rela
 `<home>/lib`; the site's jars (JDBC drivers, connector plugins) are in `<home>/lib/ext` (`drishti.lib.path`, `DRISHTI_LIB_PATH`), kept on an upgrade. **Java** is found in one order:
 `--java FILE`, `--java-home`, `drishti.java.home` of the settings file, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the `PATH`; a Java older than 21 is refused.
 
-**`drishti.py setup`** prepares the machine and is safe to repeat: it checks Python 3.11+ and Java 21+, makes the data folder's layout
-(`run/ logs/ tmp/ dumps/ modules/ delta/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths
-filled in (an existing file is never overwritten), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`,
-rewritten every time: `launchers --machine`), makes `drishti-console/.venv`, and prints the next steps.
+**`drishti.py setup`** prepares the machine and is safe to repeat. It has two parts and a command for each:
+
+| Command | What it does |
+|---|---|
+| `setup` | `setup drishti`, then `setup venv` |
+| `setup drishti` (also `setup --skip-venv`) | the Drishti part only: checks Python 3.11+ and Java 21+, makes the data folder's layout (`run/ logs/ tmp/ dumps/ delta/ dataload/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths filled in (an existing file is never overwritten), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`, rewritten every time: `launchers --machine`), checks the server jar and the modules |
+| `setup venv` | the Python part in `drishti-console/.venv`: makes or checks it, installing the pinned Lake wheel from `lib/wheels` first, then `drishti-console/requirements.txt` |
+| `setup libs` | the same libraries into the **current** Python (the system Python; no venv) |
+| `setup --system` | `setup drishti` + `setup libs`: where no `.venv` is allowed |
+
+`--check` changes nothing; with `venv` or `libs` it verifies the libraries name by name (every requirement's installed version against its
+spec, the Lake wheel against `lib/lake-wheel.pin`) and names what is missing or wrong (exit 1). The interpreter that was set up or used
+is written once into `dev.ini` as `drishti.python` (an existing value is never changed); the server uses it for its Python work wherever
+that work's own setting is blank ([CONFIGURATION.md](../admin/CONFIGURATION.md): `drishti.python`; `DRISHTI_PYTHON` overrides it). On
+Windows pip uses the Windows certificate store (pip's `truststore`), so it works behind a company proxy as Maven does.
 
 | Option | Meaning |
 |---|---|
 | `--check` | only report, change nothing; exit 1 when something needs doing |
+| `--system` | `drishti` + `libs` |
 | `--home HOME`, `--data-dir DIR` | the install and data folders to use |
 | `--envs-dir DIR` | the settings folder (default `~/drishti-envs`; Windows `%USERPROFILE%\drishti-envs`) |
 | `--java-home DIR` | the JDK to check |
-| `--python FILE` | the Python that makes `drishti-console/.venv` (default the one running) |
-| `--skip-venv` | leave `drishti-console/.venv` alone |
-| `--reinstall` | remake `drishti-console/.venv` and install `drishti-console/requirements.txt` |
+| `--python FILE` | `venv`: the Python that makes `drishti-console/.venv`; `libs`, `--system`: the Python installed into (default the one running) |
+| `--skip-venv` | the same as `setup drishti` |
+| `--reinstall` | remake `drishti-console/.venv` and install the libraries again |
 
 **`build jar|modules|all`** refuses in one line while a server of this install runs (from an IDE, a terminal or `start`): *stop the server
 first: pid N on port P runs the jar and the modules this build replaces* (Windows keeps a running jar locked). **`build jar`** runs one Maven command, `clean package -DskipTests -pl :drishti-app -am` (never `install`), with the install's Maven

@@ -14,11 +14,17 @@
 
 """``drishti.py setup`` (prepare this machine); the Maven every build runs (:func:`maven_command`; the builds: modulesbuild.py).
 
-setup, idempotent, on Linux, macOS and Windows alike: checks Python and Java 21+ (says which java and why), shows the install folder
-(DRISHTI_HOME, read only), the data folder (DRISHTI_DATA_DIR, writable) and the modules folder with where each came from, makes the data
-folder's layout and the settings folder (~/drishti-envs; Windows %USERPROFILE%\\drishti-envs) with a copy of the example dev.ini (its
-paths filled in; an existing file is never overwritten), makes or checks drishti-console/.venv, lists the environment variables it sees
-and prints the next steps. ``--check`` changes nothing and only reports (exit 1 when something needs doing)."""
+``setup drishti``: checks Python and Java 21+ (says which java and why), shows the install folder (DRISHTI_HOME, read only), the data folder
+(DRISHTI_DATA_DIR, writable) and the modules folder with where each came from, makes the data folder's layout and the settings folder
+(~/drishti-envs; Windows %USERPROFILE%\\drishti-envs) with a copy of the example dev.ini (its paths filled in; an existing file is never
+overwritten), writes the JVM arguments files and checks the server jar and the modules.
+``setup venv``: makes or checks drishti-console/.venv (the pinned Lake wheel first, then drishti-console/requirements.txt; --reinstall remakes it).
+``setup libs``: the same libraries into the CURRENT Python, no venv. ``setup --system`` = drishti + libs, where no .venv is allowed.
+``setup`` alone = drishti, then venv (``--skip-venv`` = drishti only). The Python that was set up or used is written once into dev.ini as
+drishti.python (an existing value is never changed): the server's Python where its own setting is blank; DRISHTI_PYTHON overrides.
+On Windows pip uses the Windows certificate store (a company proxy). Idempotent, on Linux, macOS and Windows alike; lists the environment
+variables it sees and prints the next steps. ``--check`` changes nothing and only reports, the libraries name by name (exit 1 when something
+needs doing)."""
 from __future__ import annotations
 
 import os
@@ -31,6 +37,7 @@ from pathlib import Path
 import procs
 from procs import LaunchError, say
 import javacmd  # noqa: E402 - tools/ is on the path through procs
+import pylibs
 
 #: the folders a data folder holds (docs/DEPLOYMENT_AND_QA_GUIDE.md, "Prepare your environment")
 DATA_LAYOUT = ("run", "logs", "tmp", "dumps", "delta", "dataload/inbox", "dataload/inprocess", "dataload/outbox", "dataload/failed", "dataload/ledger")
@@ -78,115 +85,156 @@ def dev_ini_text(home: Path, data: Path, modules: Path, java: Path | None = None
 def setup(a, env: dict | None = None) -> int:
     env = dict(os.environ if env is None else env)
     check = a.check
+    part = getattr(a, "part", None)
+    system = getattr(a, "system", False)
+    if system and part not in (None, "drishti", "libs"):
+        raise LaunchError("--system means setup drishti + setup libs: it does not go with " + part)
+    do_drishti = part in (None, "drishti") or system
+    do_venv = part in (None, "venv") and not system and not a.skip_venv
+    do_libs = part == "libs" or system
     todo: list[str] = []
     problems: list[str] = []
 
     def line(state: str, what: str, detail: str) -> None:
         say(f"  [{state:>4}] {what:<22} {detail}")
 
-    say("Drishti setup" + (" (--check: nothing is changed)" if check else "") + f" on {sys.platform}")
+    say("Drishti setup" + (f" {'--system' if system else part}" if (part or system) else "") + (" (--check: nothing is changed)" if check else "") + f" on {sys.platform}")
     # Python
     v = sys.version_info
     ok = (v.major, v.minor) >= MIN_PYTHON
     line("ok" if ok else "FAIL", "python", f"{sys.executable} {v.major}.{v.minor}.{v.micro}" + ("" if ok else f": Drishti needs Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]} or newer"))
     if not ok:
         problems.append(f"install Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]}+ (python.org; Windows: winget install Python.Python.3.13)")
-    # Java: the one lookup
-    j = javacmd.describe_java(None, a.java_home, env)
-    if j["ok"]:
-        line("ok", "java", f"{j['java']}  Java {j['version']}  (from {j['why']})")
-    else:
-        line("FAIL", "java", j["problem"] + (f"  ({j['java']}, from {j['why']})" if j["java"] else ""))
-        problems.append("install a JDK 21 (Temurin) and set drishti.java.home in your settings file (or DRISHTI_JAVA_HOME) to its folder, or pass --java-home")
     # the roots
     roots = javacmd.launch_roots(None, a.data_dir, env, javacmd.settings()[1])
     home, data, modules = roots["home"][0], roots["data"][0], roots["modules"][0]
     line("ok", "home (DRISHTI_HOME)", f"{home}  ({roots['home'][1]}; the install, read only)")
-    # the data folder and its layout
-    missing = [d for d in DATA_LAYOUT if not (data / d).is_dir()]
-    if missing and not check:
-        for d in DATA_LAYOUT:
-            (data / d).mkdir(parents=True, exist_ok=True)
-        copy_readmes(home, data)
-        line("made", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}): made {', '.join(missing)}")
-    elif missing:
-        line("todo", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}): {', '.join(missing)} missing")
-        todo.append(f"make the data folder's {', '.join(missing)}")
-    else:
-        line("ok", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}; writable)")
-    import modulesbuild
-    pk = modulesbuild.packages(modules)
-    line("ok" if pk else "todo", "modules (packages)", f"{modules}  ({roots['modules'][1]}): {len(pk)} .dmod file(s)" + ("" if pk else "; python tools/drishti.py build modules"))
-    # what an older release kept under the data folder: no longer read, safe to delete (never deleted here)
-    for old in ("installed", "store", "shipped", "staging", "tombstones", "registry.json"):
-        if (data / "modules" / old).exists():
-            line("todo", "old modules leftover", f"{data / 'modules' / old}: not read any more, safe to delete")
-    # leftovers of an older checkout under the modules folder (old build folders a `git pull` keeps): reported, never deleted
-    import module_layout
-    for note in module_layout.leftovers(modules):
-        line("todo", "modules leftover", note)
-        todo.append(f"delete {note.split(':')[0]} (git clean -fdX modules/ removes every ignored file under modules/)")
-    # every jar under the home: Drishti's own in <home>/lib, the site's in <home>/lib/ext (drishti.lib.path)
-    jar = roots["jar"][0]
-    line("ok" if jar else "todo", "server jar (<home>/lib)", str(jar) if jar else roots["jar"][1])
-    ext = Path(env.get("DRISHTI_LIB_PATH") or roots["ext"][0])
-    if not ext.is_dir() and not check:
-        ext.mkdir(parents=True, exist_ok=True)
-        line("made", "your jars (lib/ext)", f"{ext}  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)")
-    else:
-        line("ok" if ext.is_dir() else "todo", "your jars (lib/ext)", f"{ext}  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)")
-    # the settings folder and dev.ini
     edir = Path(a.envs_dir).expanduser() if a.envs_dir else envs_dir(env)
     ini = edir / "dev.ini"
-    if ini.is_file():
-        line("ok", "settings file", f"{ini}  (kept as it is)")
-    elif check:
-        line("todo", "settings file", f"{ini} is missing")
-        todo.append(f"copy config/settings.examples/dev.ini to {ini}")
-    else:
-        edir.mkdir(parents=True, exist_ok=True)
-        jdk = Path(j["java"]).resolve().parent.parent if j["ok"] and j["java"] else None
-        ini.write_text(dev_ini_text(home, data, modules, jdk), encoding="utf-8")
-        line("made", "settings file", f"{ini}  (from config/settings.examples/dev.ini, its paths filled in" +
-             (f"; drishti.java.home={jdk.as_posix()}" if jdk else "") + ")")
-        if jdk is None:
-            line("todo", "drishti.java.home", f"no Java 21+ found ({j['problem'] or 'none'}): in {ini} uncomment drishti.java.home and set it to a JDK 21 folder")
-            todo.append(f"set drishti.java.home in {ini} to a JDK 21 folder")
-    # the JVM arguments files of the IDE's server launchers (generated: rewritten every time, from the function start server runs)
-    import launchers
-    args_files = [edir / f"jvm-{p}.args" for p in launchers.profiles_of_servers(home)]
-    if check:
-        missing = [f.name for f in args_files if not f.is_file()]
-        line("todo" if missing else "ok", "JVM options", f"{edir}: " + (f"missing {', '.join(missing)}" if missing else ", ".join(f.name for f in args_files)))
-        if missing:
-            todo.append("write the IDE server launchers' JVM options: python tools/drishti.py setup (or launchers --machine)")
-    elif ini.is_file():
+    jar = roots["jar"][0]
+    j = {"ok": False, "java": "", "problem": ""}
+    if do_drishti:
+        # Java: the one lookup
+        j = javacmd.describe_java(None, a.java_home, env)
+        if j["ok"]:
+            line("ok", "java", f"{j['java']}  Java {j['version']}  (from {j['why']})")
+        else:
+            line("FAIL", "java", j["problem"] + (f"  ({j['java']}, from {j['why']})" if j["java"] else ""))
+            problems.append("install a JDK 21 (Temurin) and set drishti.java.home in your settings file (or DRISHTI_JAVA_HOME) to its folder, or pass --java-home")
+        # the data folder and its layout
+        missing = [d for d in DATA_LAYOUT if not (data / d).is_dir()]
+        if missing and not check:
+            for d in DATA_LAYOUT:
+                (data / d).mkdir(parents=True, exist_ok=True)
+            copy_readmes(home, data)
+            line("made", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}): made {', '.join(missing)}")
+        elif missing:
+            line("todo", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}): {', '.join(missing)} missing")
+            todo.append(f"make the data folder's {', '.join(missing)}")
+        else:
+            line("ok", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}; writable)")
+        import modulesbuild
+        pk = modulesbuild.packages(modules)
+        line("ok" if pk else "todo", "modules (packages)", f"{modules}  ({roots['modules'][1]}): {len(pk)} .dmod file(s)" + ("" if pk else "; python tools/drishti.py build modules"))
+        # what an older release kept under the data folder: no longer read, safe to delete (never deleted here)
+        for old in ("installed", "store", "shipped", "staging", "tombstones", "registry.json"):
+            if (data / "modules" / old).exists():
+                line("todo", "old modules leftover", f"{data / 'modules' / old}: not read any more, safe to delete")
+        # leftovers of an older checkout under the modules folder (old build folders a `git pull` keeps): reported, never deleted
+        import module_layout
+        for note in module_layout.leftovers(modules):
+            line("todo", "modules leftover", note)
+            todo.append(f"delete {note.split(':')[0]} (git clean -fdX modules/ removes every ignored file under modules/)")
+        # every jar under the home: Drishti's own in <home>/lib, the site's in <home>/lib/ext (drishti.lib.path)
+        line("ok" if jar else "todo", "server jar (<home>/lib)", str(jar) if jar else roots["jar"][1])
+        ext = Path(env.get("DRISHTI_LIB_PATH") or roots["ext"][0])
+        if not ext.is_dir() and not check:
+            ext.mkdir(parents=True, exist_ok=True)
+            line("made", "your jars (lib/ext)", f"{ext}  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)")
+        else:
+            line("ok" if ext.is_dir() else "todo", "your jars (lib/ext)", f"{ext}  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)")
+        # the settings folder and dev.ini
+        if ini.is_file():
+            line("ok", "settings file", f"{ini}  (kept as it is)")
+        elif check:
+            line("todo", "settings file", f"{ini} is missing")
+            todo.append(f"copy config/settings.examples/dev.ini to {ini}")
+        else:
+            edir.mkdir(parents=True, exist_ok=True)
+            jdk = Path(j["java"]).resolve().parent.parent if j["ok"] and j["java"] else None
+            ini.write_text(dev_ini_text(home, data, modules, jdk), encoding="utf-8")
+            line("made", "settings file", f"{ini}  (from config/settings.examples/dev.ini, its paths filled in" +
+                 (f"; drishti.java.home={jdk.as_posix()}" if jdk else "") + ")")
+            if jdk is None:
+                line("todo", "drishti.java.home", f"no Java 21+ found ({j['problem'] or 'none'}): in {ini} uncomment drishti.java.home and set it to a JDK 21 folder")
+                todo.append(f"set drishti.java.home in {ini} to a JDK 21 folder")
+        # the JVM arguments files of the IDE's server launchers (generated: rewritten every time, from the function start server runs)
+        import launchers
+        args_files = [edir / f"jvm-{p}.args" for p in launchers.profiles_of_servers(home)]
+        if check:
+            missing = [f.name for f in args_files if not f.is_file()]
+            line("todo" if missing else "ok", "JVM options", f"{edir}: " + (f"missing {', '.join(missing)}" if missing else ", ".join(f.name for f in args_files)))
+            if missing:
+                todo.append("write the IDE server launchers' JVM options: python tools/drishti.py setup (or launchers --machine)")
+        elif ini.is_file():
+            try:
+                written = launchers.machine(home, edir, ini)
+                line("made", "JVM options", f"{edir}: {', '.join(f.name for f in written)}  (the IDE server launchers' @files; data folder from {ini.name})")
+            except Exception as e:                                   # noqa: BLE001 - a setup step reports, never stops the others
+                line("FAIL", "JVM options", f"{e}")
+                problems.append("python tools/drishti.py --settings <dev.ini> launchers --machine")
+    # the Python libraries: the console's .venv, or the current interpreter (--system, setup libs)
+    py_used = None
+    if do_venv:
+        py = procs.venv_python(home)
+        if py.exists() and not a.reinstall:
+            bad = pylibs.verify(str(py), home)
+            line("ok" if not bad else "FAIL", "console .venv", f"{py}" + ("" if not bad else ": " + "; ".join(bad)))
+            if bad:
+                problems.append("python tools/drishti.py setup venv --reinstall (remakes drishti-console/.venv); missing or wrong: " + "; ".join(bad))
+            else:
+                py_used = str(py)
+        elif check:
+            line("todo", "console .venv", f"{py} is missing")
+            todo.append("make drishti-console/.venv: python tools/drishti.py setup venv")
+        else:
+            import consolestart
+            try:
+                consolestart.make_venv(home, a.python or sys.executable, a.reinstall)
+                line("made", "console .venv", str(py))
+                py_used = str(py)
+            except LaunchError as e:
+                line("FAIL", "console .venv", str(e))
+                problems.append(str(e))
+    elif not do_libs and part in (None, "venv"):
+        line("skip", "console .venv", f"{procs.venv_python(home).parent.parent}  (--skip-venv)")
+    if do_libs:
+        target = a.python or sys.executable
         try:
-            written = launchers.machine(home, edir, ini)
-            line("made", "JVM options", f"{edir}: {', '.join(f.name for f in written)}  (the IDE server launchers' @files; data folder from {ini.name})")
-        except Exception as e:                                   # noqa: BLE001 - a setup step reports, never stops the others
-            line("FAIL", "JVM options", f"{e}")
-            problems.append("python tools/drishti.py --settings <dev.ini> launchers --machine")
-    # the console's Python environment
-    py = procs.venv_python(home)
-    if a.skip_venv:
-        line("skip", "console .venv", f"{py.parent.parent}  (--skip-venv)")
-    elif py.exists() and not a.reinstall:
-        r = subprocess.run([str(py), "-c", "import yaml, fastapi, uvicorn"], capture_output=True, text=True)
-        line("ok" if r.returncode == 0 else "FAIL", "console .venv", f"{py}" + ("" if r.returncode == 0 else ": its packages are missing; run setup --reinstall"))
-        if r.returncode:
-            problems.append("python tools/drishti.py setup --reinstall (remakes drishti-console/.venv)")
-    elif check:
-        line("todo", "console .venv", f"{py} is missing")
-        todo.append("make drishti-console/.venv: python tools/drishti.py setup")
-    else:
-        import consolestart
-        try:
-            consolestart.make_venv(home, a.python or sys.executable, a.reinstall)
-            line("made", "console .venv", str(py))
+            bad = pylibs.verify(target, home)
+            if bad and not check:
+                pylibs.install(target, home)
+                bad = pylibs.verify(target, home)
+                if not bad:
+                    line("made", "libraries", f"{target}: the Lake wheel, then drishti-console/requirements.txt installed")
+            elif bad:
+                line("todo", "libraries", f"{target}: " + "; ".join(bad))
+                todo.append(f"python tools/drishti.py setup libs  (installs the Lake wheel, then drishti-console/requirements.txt, into {target})")
+            else:
+                line("ok", "libraries", f"{target}: every requirement of drishti-console/requirements.txt, the Lake wheel at its pin")
+            if bad and not check:
+                line("FAIL", "libraries", f"{target}: " + "; ".join(bad))
+                problems.append("fix the libraries of " + target + ": " + "; ".join(bad))
+            elif not bad:
+                py_used = target
         except LaunchError as e:
-            line("FAIL", "console .venv", str(e))
+            line("FAIL", "libraries", str(e))
             problems.append(str(e))
+    if py_used and (do_venv or do_libs):
+        state, detail = pylibs.ensure_setting(ini, py_used, check)
+        line(state, "drishti.python", detail)
+        if state == "todo":
+            todo.append(f"set {pylibs.SETTING} in {ini}: python tools/drishti.py setup" + (" libs" if do_libs else " venv"))
     # the environment
     say("\nEnvironment variables seen:")
     for n in ENV_VARS:

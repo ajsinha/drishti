@@ -204,8 +204,11 @@ def test_g3_every_pycharm_launcher_parses_with_the_real_command_line():
     console_keys = yaml.safe_load((ROOT / "drishti-console" / "config" / "application.yaml").read_text(encoding="utf-8"))
     for f in sorted(p for p in (ROOT / "run-configs").glob("*.run.xml") if "PythonConfigurationType" in p.read_text(encoding="utf-8")):
         words = shlex.split(_params(f))
-        assert words[:2] == ["--settings", "$USER_HOME$/drishti-envs/dev.ini"], f.name
-        words = words[2:]
+        if words[:1] == ["setup"]:      # setup makes dev.ini: it names none (--settings would refuse a file that is not there yet)
+            assert "--settings" not in words, f.name
+        else:
+            assert words[:2] == ["--settings", "$USER_HOME$/drishti-envs/dev.ini"], f.name
+            words = words[2:]
         if words[:1] == ["--profile"]:
             assert (ROOT / "config" / "profiles" / f"{words[1]}.ini").is_file(), f.name
             words = words[2:]

@@ -159,6 +159,30 @@
         "problemMatcher": []
       },
       {
+        "label": "Drishti: setup",
+        "type": "shell",
+        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini setup",
+        "windows": {
+          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini setup"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: setup (system Python)",
+        "type": "shell",
+        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini setup --system",
+        "windows": {
+          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini setup --system"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
         "label": "Drishti: build demo lakes",
         "type": "shell",
         "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java",
@@ -268,6 +292,33 @@
           "demo",
           "--distribution=finance",
           "--server.port=17481"
+        ]
+      },
+      {
+        "name": "Drishti: setup",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "--settings",
+          "~/drishti-envs/dev.ini",
+          "setup"
+        ]
+      },
+      {
+        "name": "Drishti: setup (system Python)",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "--settings",
+          "~/drishti-envs/dev.ini",
+          "setup",
+          "--system"
         ]
       },
       {

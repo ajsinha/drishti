@@ -105,13 +105,14 @@ python3 --version                   # Python 3.11 or newer  (Windows: py --versi
 sizing planner (`tools/sizing_planner.py`, and **Admin → Capacity** in the console) turns your volumes into memory, CPU and disk:
 [CLUSTER_GUIDE.md › Sizing](guides/CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk), [OPERATIONS_GUIDE.md › Admin → Capacity](guides/OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan).
 
-### 1.2a Windows notes: the four things that stop a first build
+### 1.2a Windows notes: the things that stop a first build
 
 | You see | Cause | Fix |
 |---|---|---|
 | Maven: `PKIX path building failed` on the first download | the company network re-signs HTTPS with its own root, which Windows trusts and the JDK does not | let Java trust the Windows store: `setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"`, open a new terminal; the same option goes into the IDE's Maven runner and importer ([IDE_GUIDE.md section 1.4](guides/IDE_GUIDE.md#14-maven-behind-a-company-network-pkix-path-building-failed)), and into the server's JVM options when it reaches public feeds on that network |
 | `Drishti needs Java 21 or newer`, or Maven names Java 8 | `JAVA_HOME` points at an older Java | `setx DRISHTI_JAVA_HOME "C:\jdk-21"` (the tools' own lookup, before `JAVA_HOME`) and set `JAVA_HOME` to the same folder for Maven |
 | the browser tests say Chromium is missing | Playwright's browsers are installed once per user | `drishti-console\.venv\Scripts\python.exe -m playwright install chromium` (into your profile, no administrator rights) |
+| the company forbids virtual environments, or pip fails with a certificate error | everything must go to the system Python; the company proxy re-signs HTTPS | `py tools\drishti.py setup --system` installs the Lake wheel and `requirements.txt` into that Python and writes it as `drishti.python` in `dev.ini`; on Windows pip uses the Windows certificate store itself ([CLI_REFERENCE.md › setup](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)); `py tools\drishti.py setup libs --check` names what is missing |
 | the company will not allow an `.exe` | nothing here needs one | Java (the Temurin ZIP), Python and Maven's wrapper only; every Drishti command is `py tools\drishti.py ...`; the products install from their release tags with `mvnw.cmd` |
 
 The platform's source is in `C:\Users\<you>\IdeaProjects\drishti-platform\` (one folder per repository,
@@ -211,9 +212,12 @@ setx DRISHTI_JAVA_HOME "C:\jdk-21"
 **`python tools/drishti.py setup`**, from the install folder, does the rest, on every operating system, and can be run again at any time:
 it checks Python and Java (and says which `java` and why), shows the install, data and modules folders with where each came from, makes
 the data folder's layout, makes `~/drishti-envs` with a copy of `config/settings.examples/dev.ini` **with this machine's paths filled in**
-(a file already there is never overwritten), makes `drishti-console/.venv` and installs `drishti-console/requirements.txt`, lists the
-environment variables it sees (a secret only as *set*), and prints the next steps. `--check` changes nothing and only reports (exit 1 when
-something needs doing).
+(a file already there is never overwritten), makes `drishti-console/.venv` and installs the pinned Lake wheel, then
+`drishti-console/requirements.txt`, lists the environment variables it sees (a secret only as *set*), and prints the next steps.
+`--check` changes nothing and only reports (exit 1 when something needs doing). The two parts also run alone: `setup drishti` (everything
+but the Python libraries) and `setup venv` (the `.venv`); and where no `.venv` is allowed, **`setup --system`** puts the libraries into the
+Python that runs it (`setup libs` is that half alone). All of it, with `--check`'s library verification and the `drishti.python` line, is in
+[CLI_REFERENCE.md › setup](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti).
 
 ```bash
 cd /home/you/drishti
@@ -227,7 +231,7 @@ py tools\drishti.py setup
 ```
 
 Its options: `--data-dir DIR` (another data folder), `--envs-dir DIR` (another settings folder), `--java-home DIR`, `--python FILE` (the
-Python to make the console's environment with), `--skip-venv`, `--reinstall` (remake `drishti-console/.venv`, after
+Python to make the console's environment with, or to install into with `libs` / `--system`), `--skip-venv` (= `setup drishti`), `--reinstall` (remake `drishti-console/.venv`, after
 `drishti-console/requirements.txt` changed). **You should see** (a first run on a clone; `ok` lines for what was already in place):
 
 ```text

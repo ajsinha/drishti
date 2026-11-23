@@ -139,7 +139,10 @@ launchers --machine` (or `setup` again) to rewrite them.
 
 1. From the clone: `python3 tools/drishti.py setup --check` (Windows `py tools\drishti.py setup --check`) lists what is missing and changes nothing.
 2. `python3 tools/drishti.py setup` makes it from `config/settings.examples/dev.ini` with this machine's paths filled in, makes the data
-   folder and `drishti-console/.venv`, and writes the JVM arguments files. You should see `[made] settings file …/drishti-envs/dev.ini`,
+   folder and `drishti-console/.venv`, and writes the JVM arguments files. It is two parts that also run alone: `setup drishti` (the
+   settings, data folder and JVM files; no Python libraries; the same as `--skip-venv`) and `setup venv` (the `.venv`). **No `.venv`
+   allowed:** `setup --system` ([2.2](#22-python-for-the-console-and-the-tools-pycharm)). `--check` works for all of them. In PyCharm, no
+   terminal is needed: **Drishti: setup** and **Drishti: setup (system Python)** (section 4.3) run them. You should see `[made] settings file …/drishti-envs/dev.ini`,
    `[made] JVM options … jvm-demo.args, jvm-qa.args, jvm-samples.args` and `[made] console .venv …`; a `dev.ini` already there is never
    overwritten (the arguments files are rewritten every time: they are generated).
 3. **With no Python on the machine** (a server-only machine): copy `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` and
@@ -184,14 +187,19 @@ one your team already uses. Drishti needs only its packages installed in it.
 
 1. Find its path. Windows: `py -0p` lists every installed Python with its path (for example
    `C:\Users\you\AppData\Local\Programs\Python\Python313\python.exe`); Linux and macOS: `which python3`.
-2. Put Drishti Lake's pinned Python wheel in `lib/wheels` **first** (the requirements below name it and no index has it; the commands are in `lib/lake-wheel.pin` and [QUICKSTART_DEVELOPERS.md section 1.3](../QUICKSTART_DEVELOPERS.md#13-the-consoles-environment); `python tools/lake/lakewheel.py` checks it). Then install Drishti's packages into the Python, once, from the clone (a company package index goes in `%APPDATA%\pip\pip.ini`, Linux `~/.config/pip/pip.conf`):
+2. Put Drishti Lake's pinned Python wheel in `lib/wheels` (the requirements name it and no index has it; the commands are in `lib/lake-wheel.pin` and [QUICKSTART_DEVELOPERS.md section 1.3](../QUICKSTART_DEVELOPERS.md#13-the-consoles-environment); `python tools/lake/lakewheel.py` checks it). Then, with that Python, once, from the clone:
 
    ```bash
-   <that python> -m pip install -r drishti-console/requirements.txt
+   <that python> tools/drishti.py setup libs         # the Lake wheel first, then drishti-console/requirements.txt, into THAT python
+   <that python> tools/drishti.py setup libs --check # names every library that is missing or has the wrong version (exit 1)
    <that python> -m pip install -r drishti-console/requirements-polars.txt    # only for tools/mrloader
    ```
 
-   No administrator rights: add `--user`.
+   `setup --system` is `setup drishti` + `setup libs` in one command (the settings file and data folder too). Setup writes the Python
+   it used as `drishti.python` in `dev.ini` (only when the line is absent; yours is never changed), so the server's Python work (the data
+   feeds' Run now, the compute pool, the pivot Python functions) runs in the same Python; `DRISHTI_PYTHON` overrides it. On Windows pip uses
+   the Windows certificate store, so it works behind a company proxy (a company package index goes in `%APPDATA%\pip\pip.ini`, Linux
+   `~/.config/pip/pip.conf`). No administrator rights: add `--user` to a plain `pip`, or use a Python of your own.
 3. Choose it in PyCharm (section 2.3, step 2). Every Python launcher then uses it: they store no interpreter path of their own.
 
 The command-line tools in `tools/mrloader/` use Polars; the console's environment may not carry it: either
@@ -203,10 +211,10 @@ or later with Polars, NumPy and PyYAML) in their own run configuration. The deta
 1. **File → Open**, choose the repository folder (the same project IntelliJ opens; the launchers are in its `run-configs/`).
 2. **Settings → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → Existing** (or **System Interpreter** for a local
    Python): Linux `…/drishti/drishti-console/.venv/bin/python`, Windows `C:\Users\you\IdeaProjects\drishti\drishti-console\.venv\Scripts\python.exe`.
-   **No `.venv` allowed on the machine** (everything goes to the system Python): run `setup --skip-venv`, install the libraries into that
-   Python (the Lake wheel first: `py -m pip install lib\wheels\drishti_lake-<version>-py3-none-any.whl`, then
-   `py -m pip install -r drishti-console\requirements.txt`) and choose **System Interpreter** here. The launchers use the project's
-   interpreter; with no `.venv` the server runs `python` (Windows) or `python3` for its Python work, or the one `DRISHTI_PYTHON` names.
+   **No `.venv` allowed on the machine** (everything goes to the system Python): run **Drishti: setup (system Python)** (or `py tools\drishti.py
+   setup --system`), which makes the settings and installs the libraries (the Lake wheel first) into the interpreter that runs it, then
+   choose **System Interpreter** here for the same Python. The launchers use the project's interpreter; the server uses `drishti.python` of
+   `dev.ini` (written by setup), else `python` (Windows) or `python3`, or the one `DRISHTI_PYTHON` names.
 3. **Project Structure → + Add Content Root**: `drishti-console/` and `tools/`, marked **Sources** (for reading and completion; the run configurations work without it).
 4. Right-click `tests/` → **Mark Directory as → Test Sources Root**.
 5. The drop-down lists the Python configurations of `run-configs/` under the folder **Drishti**: the consoles (the
@@ -385,6 +393,8 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 | IntelliJ | **Drishti: build all** | Maven `clean package -DskipTests -pl :drishti-app,:drishti-modules -am` | the server jar into `lib/` and every module's package with `first-party.yaml` into `modules/`, stamped for that jar | after a clone or a pull (the one to click) |
 | IntelliJ | **Drishti: test** | Maven `clean verify` | the whole Maven test run of the server, the engines and the modules (long, tens of minutes; each test class also has its own targeted run in the IDE) | before a release, or after a change that crosses modules |
 | IntelliJ | **Drishti: build modules** | Maven `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` | the module packages only, stamped for the jar already in `lib/` | you changed only module code |
+| PyCharm | **Drishti: setup** | `drishti.py setup`, `dev.ini` only | prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then `drishti-console/.venv` with the Lake wheel and the requirements (it makes `dev.ini`, so it names none) | after a clone, or after a pull that changed `requirements.txt` |
+| PyCharm | **Drishti: setup (system Python)** | `drishti.py setup --system`, `dev.ini` only | the same with no `.venv`: the libraries go into the project interpreter (the Python that runs this launcher) | the machine forbids virtual environments |
 | PyCharm | **Drishti: build demo lakes** | `drishti.py lake demo --engine java`, `dev.ini` only | the demo lakes with the Java loader of the jar in `lib/` | after a build, with the server stopped |
 | PyCharm | **Drishti: run loader (file into the lake)** | `drishti.py lake build`, `dev.ini` only | one file of yours into the demo lake, by its kind (a template; copy it and name your file) | you hold a file of your own (never committed) |
 | PyCharm | **Drishti: check environment** | `drishti.py doctor`, profile `demo.ini` | this machine and the server on 18480 (without a token it says how to make one) | something does not start or answer |

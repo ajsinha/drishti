@@ -245,17 +245,22 @@ def cmd_build(a, extra) -> int:
 
 def register(groups, add) -> None:
     """Adds setup, build, start, stop and status to drishti.py's command line."""
-    s = groups.add_parser("setup", help="setup: prepare this machine (Python, Java 21, the data folder, ~/drishti-envs/dev.ini, drishti-console/.venv)",
+    s = groups.add_parser("setup", help="setup [drishti|venv|libs]: prepare this machine (the Drishti part, the Python part in drishti-console/.venv, or the libraries in this Python)",
                           description=__import__("envsetup").__doc__, formatter_class=RAW,
-                          epilog=f"examples:\n  {P} setup\n  {P} setup --check\n  {P} setup --data-dir D:/drishti-data --skip-venv")
-    s.add_argument("--check", action="store_true", help="only report; change nothing (exit 1 when something needs doing)")
+                          epilog=f"examples:\n  {P} setup\n  {P} setup --check\n  {P} setup drishti --data-dir D:/drishti-data\n  {P} setup venv --reinstall\n"
+                                 f"  {P} setup --system     (no .venv allowed: setup drishti + setup libs)")
+    s.add_argument("part", nargs="?", choices=("drishti", "venv", "libs"),
+                   help="drishti: the settings folder, dev.ini, data folder, JVM argument files, Java, jar and modules checks; venv: drishti-console/.venv with the "
+                        "Lake wheel and requirements.txt; libs: the same libraries into the CURRENT Python (no venv); none: drishti, then venv")
+    s.add_argument("--system", action="store_true", help="setup drishti + setup libs: where no .venv is allowed (everything goes to this Python)")
+    s.add_argument("--check", action="store_true", help="only report; change nothing (exit 1 when something needs doing); also verifies the libraries name by name")
     s.add_argument("--home", help="the install folder (default DRISHTI_HOME, else the folder these tools are in)")
     s.add_argument("--data-dir", metavar="DIR", help="the data folder to prepare (default DRISHTI_DATA_DIR, else <home>/data)")
     s.add_argument("--envs-dir", metavar="DIR", help="the settings folder (default ~/drishti-envs; Windows %%USERPROFILE%%\\drishti-envs)")
     s.add_argument("--java-home", metavar="DIR", help="the JDK to check (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then the PATH)")
-    s.add_argument("--python", metavar="FILE", help="the Python to make drishti-console/.venv with (default this one)")
-    s.add_argument("--skip-venv", action="store_true", help="leave drishti-console/.venv alone")
-    s.add_argument("--reinstall", action="store_true", help="remake drishti-console/.venv and install drishti-console/requirements.txt")
+    s.add_argument("--python", metavar="FILE", help="venv: the Python to make drishti-console/.venv with; libs, --system: the Python to install into (default this one)")
+    s.add_argument("--skip-venv", action="store_true", help="the same as setup drishti: leave drishti-console/.venv alone")
+    s.add_argument("--reinstall", action="store_true", help="remake drishti-console/.venv and install the libraries again")
     s.set_defaults(func=cmd_setup, cmd=None)
 
     b = groups.add_parser("build", help="build jar|modules|all|sdk: the server jar (copied into <home>/lib) and the modules (packages in <home>/modules), with Maven, never install")

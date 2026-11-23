@@ -29,28 +29,34 @@ import serverstart
 import settingsfile  # noqa: E402 - tools/ is on the path through procs
 
 
-def make_venv(home: Path, base_python: str, reinstall: bool = False, install: bool = True) -> Path:
-    """drishti-console/.venv with drishti-console/requirements.txt installed (uv when it is installed, else venv and pip); its Python."""
+def make_venv(home: Path, base_python: str, reinstall: bool = False, install: bool = True, run=subprocess.run) -> Path:
+    """drishti-console/.venv with the libraries installed (the Lake wheel first, then drishti-console/requirements.txt; uv when it is
+    installed, else venv and pip); its Python. An existing environment is kept (``reinstall`` removes it first)."""
+    import pylibs
     venv = home / "drishti-console" / ".venv"
     py = procs.venv_python(home)
     if reinstall and venv.is_dir():
         shutil.rmtree(venv)
     if py.exists():
         return py
-    req = home / "drishti-console" / "requirements.txt"
     say(f"making the console's Python environment in {venv} ...")
     uv = shutil.which("uv")
-    if uv:
-        steps = [[uv, "venv", str(venv)]] + ([[uv, "pip", "install", "--python", str(py), "-r", str(req)]] if install else [])
-    else:
-        steps = [[base_python, "-m", "venv", str(venv)]] + ([[str(py), "-m", "pip", "install", "-q", "-r", str(req)]] if install else [])
-    for step in steps:
-        try:
-            r = subprocess.run(step)
-        except OSError as e:
-            raise LaunchError(f"{step[0]}: {e.strerror}: install Python 3.11 or newer (or pass --python)") from None
-        if r.returncode:
-            raise LaunchError(f"{' '.join(step[:3])} ... failed: install Python 3.11 or newer (or pass --python), then try again")
+    try:
+        r = run([uv, "venv", str(venv)] if uv else [base_python, "-m", "venv", str(venv)])
+    except OSError as e:
+        raise LaunchError(f"{base_python}: {e.strerror}: install Python 3.11 or newer (or pass --python)") from None
+    if r.returncode:
+        raise LaunchError("the venv could not be made: install Python 3.11 or newer (or pass --python), then try again")
+    if install and uv:
+        wheel = pylibs.lake_wheel(home)
+        if wheel is None:
+            raise LaunchError(f"the pinned Lake wheel is not in {home / 'lib' / 'wheels'}: see lib/lake-wheel.pin")
+        tls = ["--native-tls"] if procs.windows() else []
+        for tail in ([str(wheel)], ["-r", str(home / "drishti-console" / "requirements.txt")]):
+            if run([uv, "pip", "install", *tls, "--python", str(py), *tail]).returncode:
+                raise LaunchError(f"uv pip install {tail[-1]} failed: read uv's message above")
+    elif install:
+        pylibs.install(str(py), home, run=run)
     return py
 
 

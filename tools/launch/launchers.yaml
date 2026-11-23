@@ -74,6 +74,18 @@ pycharm:
     args: [--distribution=finance, --server.port=17481]
     what: the Finance distribution's console on 17481 (temp folder `<data>/tmp/console-finance`)
     when: Drishti Finance, beside the Risk console
+  - name: "Drishti: setup"
+    kind: tool
+    settings: false
+    command: setup
+    what: "prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then `drishti-console/.venv` with the Lake wheel and the requirements (it makes `dev.ini`, so it names none)"
+    when: after a clone, or after a pull that changed `requirements.txt`
+  - name: "Drishti: setup (system Python)"
+    kind: tool
+    settings: false
+    command: setup --system
+    what: "the same with no `.venv`: the libraries go into the project interpreter (the Python that runs this launcher)"
+    when: the machine forbids virtual environments
   - name: "Drishti: build demo lakes"
     kind: tool
     command: lake demo --engine java
