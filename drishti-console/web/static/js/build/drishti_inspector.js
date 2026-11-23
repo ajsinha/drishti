@@ -106,8 +106,8 @@
       if (p['enum'] || p.type === 'boolean') { return WB.Forms.toField(p, value, name, enums); }
       if (LISTS[name] && (p.type === 'array' || name === 'series' || name === 'fields')) { return listField(name, panelId); }
       if (name === 'body' && kind === 'tabs') { return bodyField(value, panelId); }
-      var structured = p.type === 'integer' || p.type === 'number' || p.oneOf || p.type === 'array' || (Array.isArray(p.type) && p.type.indexOf('object') >= 0) || (value && typeof value === 'object');
-      if (structured) { return WB.Forms.toField(p.type || p.oneOf ? p : {}, value, name, enums); }
+      var structured = p.type === 'integer' || p.type === 'number' || p.oneOf || p.anyOf || p.type === 'array' || (Array.isArray(p.type) && p.type.indexOf('object') >= 0) || (value && typeof value === 'object');
+      if (structured) { return WB.Forms.toField(p.type || p.oneOf || p.anyOf ? p : {}, value, name, enums); }
       if (/Rachana-EL/.test(desc) || EXPR.test(name)) { return plain(formula(name, panelId, { hook: tip })); }
       return plain({ type: 'string', title: name, hook: tip });
     }

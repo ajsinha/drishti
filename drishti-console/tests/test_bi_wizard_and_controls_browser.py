@@ -111,8 +111,11 @@ measures:
 """
 
 
-def test_a_table_and_its_model_are_published_in_a_workspace(stack, page):
-    """Tables and models are written in Build › Tables & models (the dataset wizard is gone); here they are seeded through the API."""
+def seed(*_):
+    """Tables and models are written in Build › Tables & models (the dataset wizard is gone); here they are seeded through the API, once for
+    the file's server: every test asks for it (a resumed or re-run test sees the same seed whichever tests ran before it)."""
+    if state.get("ws"):
+        return
     s, ws = api("POST", "/bi/workspaces", *WES, {"name": "Wizard Lab", "description": "where the tables and models live"})
     assert s in (200, 201), ws
     state["ws"] = ws["id"]
@@ -125,7 +128,21 @@ def test_a_table_and_its_model_are_published_in_a_workspace(stack, page):
     state["dataset"] = state["model"]
 
 
+def test_a_table_and_its_model_are_published_in_a_workspace(stack, page):
+    seed(stack, page)
+    assert item(state["model"])["kind"] == "model" and item(state["table"])["kind"] == "table"
+
+
+def ensure_report(stack, page):
+    """The "Wizard report" the designer test makes through the screen, made through the API when that test did not run first."""
+    seed(stack, page)
+    if not state.get("report"):
+        state["report"] = make_report("Wizard report", "")
+    return state["report"]
+
+
 def test_a_report_is_started_on_the_model_and_gets_a_relative_date_slicer_a_top_filter_and_a_bookmark(stack, page):
+    seed(stack, page)
     page.goto(f"{CONSOLE_URL}/bi/designer?dataset=mq:wiz-trades@1")
     page.wait_for_selector("[data-new-dataset]")
     try:
@@ -176,6 +193,7 @@ def test_a_report_is_started_on_the_model_and_gets_a_relative_date_slicer_a_top_
 
 
 def test_duplicate_and_delete_show_what_depends(stack, page):
+    ensure_report(stack, page)
     page.goto(f"{CONSOLE_URL}/bi/i/{state['report']}")
     page.get_by_role("button", name="Duplicate…").click()
     page.wait_for_function(has_option("[data-ask-target]"))
@@ -257,6 +275,7 @@ def test_a_member_is_found_by_typing_part_of_a_name(stack, page):
 # ---- saving safely: two tabs, a frozen draft, a refresh, add visual, one bad visual -------------------------------------------------------------
 
 def make_report(title, visuals, workspace=None):
+    seed()
     body = f"rachana: 1\nreport: {title.lower().replace(' ', '-')}\ntitle: {title}\nmodel: wiz-trades@1\npages:\n  - id: page1\n    title: Page 1\n    visuals:\n{visuals}"
     if not visuals:
         body = body.replace("    visuals:\n", "    visuals: []\n")

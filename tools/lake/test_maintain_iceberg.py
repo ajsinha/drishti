@@ -196,9 +196,11 @@ class RealTableTest(unittest.TestCase):
                 for d in ("2026-10-14", "2026-10-15", "2026-10-16"):
                     (src / f"trade.{d}.jsonl").write_text("\n".join(json.dumps({"TRADE_ID": f"T-{d}-{i}", "TRADE_DATE": d, "QUANTITY": i})
                                                                     for i in range(10)))
-                code = quiet(build.main, ["--from", str(src), "--lake", str(root), "--domain", "trading", "--kind", "trade", "--key", "TRADE_ID",
-                                          "--format", "iceberg", "--pack-name", "trading", "-q", "--no-stamp"])
-                self.assertEqual(code, 0)
+                out, err = io.StringIO(), io.StringIO()      # a failure under load names its cause (the loader's own words), never a bare exit code
+                with redirect_stdout(out), redirect_stderr(err):
+                    code = build.main(["--from", str(src), "--lake", str(root), "--domain", "trading", "--kind", "trade", "--key", "TRADE_ID",
+                                       "--format", "iceberg", "--pack-name", "trading", "-q", "--no-stamp"])
+                self.assertEqual(code, 0, (out.getvalue() + err.getvalue())[-2000:])
             finally:
                 os.environ.pop("DRISHTI_BI_STORE", None)
             dead = root / "trading" / "trade" / "data" / "dead.parquet"
