@@ -16,6 +16,10 @@
 # Changelog
 
 
+## Unreleased
+
+- The console's runtime requirements no longer list pytest (it stays in requirements-test.txt): setup and the offline wheel packs install one library less.
+
 ## 2.9.11.i7d (2026-11-23)
 
 - **Setup works without the package index.** `drishti.py setup` (venv, libs, `--system`) installs only the libraries that are missing or at

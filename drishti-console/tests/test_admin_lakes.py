@@ -15,7 +15,7 @@
 """Admin → Data loads → Lakes: upload (streamed to the temp folder), scan with suggestions, targets, a build through the CLI's
 engine (tools/lake/build.py, engine auto: the parallel Java loader of the exec jar, else deltalake) on a small synthetic file, then the connector bound and the load announced as the admin.
 
-    uv run --with deltalake --with pyarrow -r drishti-console/requirements.txt python -m pytest drishti-console/tests/test_admin_lakes.py -q
+    uv run --with deltalake --with pyarrow -r drishti-console/requirements-test.txt python -m pytest drishti-console/tests/test_admin_lakes.py -q
 """
 import importlib.util
 import json
