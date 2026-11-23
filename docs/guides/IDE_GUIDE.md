@@ -159,13 +159,13 @@ launchers --machine` (or `setup` again) to rewrite them.
 | `drishti.modules.home` | **The modules folder**: where the module packages (`banking-….dmod`, `trading-….dmod` …) are. **Drishti: build all** writes them there, and the server loads every package it finds there at start. | `<home>/modules` | `drishti.modules.home=C:/Users/you/IdeaProjects/drishti/modules` |
 
 Rules: absolute paths only; forward slashes, also on Windows (or doubled backslashes, `C:\\Users\\…`); no quotes; no trailing
-slash. So for a clone at `C:\Users\asinh09\IdeaProjects\drishti-orig` the lines are:
+slash. So for a clone at `C:\Users\<you>\IdeaProjects\drishti-platform\drishti` the lines are:
 
 ```ini
-drishti.home=C:/Users/asinh09/IdeaProjects/drishti-orig
-drishti.data.dir=C:/Users/asinh09/IdeaProjects/drishti-orig/data
-drishti.modules.home=C:/Users/asinh09/IdeaProjects/drishti-orig/modules
-drishti.java.home=C:/Users/asinh09/.jdks/temurin-21
+drishti.home=C:/Users/<you>/IdeaProjects/drishti-platform/drishti
+drishti.data.dir=C:/Users/<you>/IdeaProjects/drishti-platform/drishti/data
+drishti.modules.home=C:/Users/<you>/IdeaProjects/drishti-platform/drishti/modules
+drishti.java.home=C:/Users/<you>/.jdks/temurin-21
 ```
 
 Leave the rest of the file as it is: the other keys are optional and **commented out on purpose**, each with its default already in
@@ -173,7 +173,7 @@ force. For example `[lake.demo] root=…`: the demo lake is `<drishti.data.dir>/
 somewhere else (another disk, a shared folder); `[server] server.port=…` moves the server's port, the console's server address and the
 tools' `--server` default together. Uncomment a section (its
 `[name]` line and its keys) only when you want to change that default. A second clone on the same machine needs its own
-settings file (for example `~/drishti-envs/dev-orig.ini`, named in that clone's run configurations), because `drishti.home` names one clone.
+settings file (for example `~/drishti-envs/dev-second.ini`, named in that clone's run configurations), because `drishti.home` names one clone.
 
 What each key does and the other ways to make it: [DEPLOYMENT_AND_QA_GUIDE.md › The settings file](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup).
 
@@ -508,7 +508,7 @@ every Python launcher (the consoles, **Drishti: build demo lakes**, the tools) i
 **Recipe E: a PyCharm launcher finds Java 1.8 (from `JAVA_HOME`).**
 
 1. Find a JDK 21: IntelliJ's **Project Structure → SDKs** shows its folder (a downloaded one is under `C:\Users\you\.jdks\`).
-2. Add to `C:\Users\you\drishti-envs\dev.ini`: `drishti.java.home=C:/Users/you/.jdks/temurin-21` (forward slashes).
+2. Add to `C:\Users\you\drishti-envs\dev.ini`: `drishti.java.home=C:/Users/<you>/.jdks/temurin-21` (forward slashes).
 3. Run the launcher again: it now names that JDK. (Or `setx DRISHTI_JAVA_HOME "C:\jdk-21"` and restart PyCharm.) `JAVA_HOME` can stay 1.8.
 
 **Recipe F: `dev.ini` is missing, or names the wrong folders.**
