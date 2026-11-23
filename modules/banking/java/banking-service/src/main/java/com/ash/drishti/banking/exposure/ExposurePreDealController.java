@@ -44,13 +44,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class ExposurePreDealController {
 
     private final ExposurePreDeal preDeal;
+    private final ExposureEnginePath enginePath;
 
-    ExposurePreDealController(ExposureService svc, com.ash.drishti.banking.RiskLimits limits) {
+    ExposurePreDealController(ExposureService svc, com.ash.drishti.banking.RiskLimits limits, ExposureEnginePath enginePath) {
         this.preDeal = new ExposurePreDeal(svc, new ExposureWhatIf(svc), limits);
+        this.enginePath = enginePath;
     }
 
     @PostMapping
-    public Map<String, Object> check(@RequestBody Map<String, Object> body, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> check(@RequestBody Map<String, Object> body, AsOf asOf,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String path, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the ccr engine's pre-deal check through the host (ExposureEnginePath)
+            return enginePath.preDeal(p, body, asOf == null ? null : asOf.businessDate());
+        }
         return preDeal.check(p, body, asOf == null ? null : asOf.businessDate());
     }
 

@@ -67,14 +67,16 @@ public class ExposureController {
     private final ExposureWhatIf whatIf;
     private final ExposureOfficial official;
     private final Entitlements entitlements;
+    private final ExposureEnginePath enginePath;
 
-    ExposureController(ExposureService svc, ExposureViews views, ExposureOfficial official, Entitlements entitlements) {
+    ExposureController(ExposureService svc, ExposureViews views, ExposureOfficial official, Entitlements entitlements, ExposureEnginePath enginePath) {
         this.svc = svc;
         this.views = views;
         this.official = official;
         this.captures = new ExposureCaptures(svc, views);
         this.whatIf = new ExposureWhatIf(svc);
         this.entitlements = entitlements;
+        this.enginePath = enginePath;
     }
 
     private static LocalDate date(AsOf asOf) {
@@ -96,21 +98,36 @@ public class ExposureController {
     @GetMapping("/scope")
     public Map<String, Object> scope(@RequestParam String scope, @RequestParam(required = false) String q, @RequestParam(required = false) String collateral,
             @RequestParam(required = false) String run, @RequestParam(required = false) Boolean strict, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String path, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the ccr engine through the host (ExposureEnginePath)
+            ExposureEnginePath.offeredOnly(run, strict);
+            return enginePath.scope(p, scope(scope), date(asOf), new ExposureEnginePath.Measures(q, collateral));
+        }
         return views.scope(p, scope(scope), date(asOf), ask(q, collateral, run, strict));
     }
 
     /** The path form for a simple scope ({@code /exposure/scopes/NSET:NS-ALDERSHOT-FRA}). */
     @GetMapping("/scopes/{scope}")
     public Map<String, Object> scopePath(@PathVariable String scope, @RequestParam(required = false) String q, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String path, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {
+            return enginePath.scope(p, scope(scope), date(asOf), new ExposureEnginePath.Measures(q, null));
+        }
         return views.scope(p, scope(scope), date(asOf), ask(q, null, null, null));
     }
 
     @GetMapping("/scope/profile")
     public ResponseEntity<?> profile(@RequestParam String scope, @RequestParam(required = false) String q, @RequestParam(required = false) String collateral,
             @RequestParam(required = false) String run, @RequestParam(required = false) String dates, @RequestParam(required = false) String format,
-            AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            AsOf asOf, @RequestParam(required = false) String path, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {
+            ExposureEnginePath.offeredOnly(run, null);
+            if (format != null && !format.isBlank() || "all".equalsIgnoreCase(dates)) {
+                throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the engine path answers the profile at the primary dates as JSON "
+                        + "for now; the look-back dates and the CSV and JSON Lines files are answered in-tree (path=in-tree)");
+            }
+            return ResponseEntity.ok(enginePath.profile(p, scope(scope), date(asOf), new ExposureEnginePath.Measures(q, collateral)));
+        }
         ExposureService.Ask a = ask(q, collateral, run, null);
         if ("csv".equalsIgnoreCase(format)) {
             return ResponseEntity.ok().contentType(new MediaType("text", "csv"))
