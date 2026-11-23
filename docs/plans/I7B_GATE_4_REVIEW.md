@@ -1041,3 +1041,121 @@ controls to `paint()` and also runs that script, it needs the option.
 **Verdict: TAG `v3.3.2`** on `9d704c4` (or its child with the CHANGELOG line). Follow-up 3.3.3 as above.
 
 Nothing running, nothing built; only this file was written.
+
+---
+
+# Release gate 1.1.0 (2026-11-22 19:24)
+
+Rachana `release/1.1.0` `538e2e06` against `v1.0.1` (173 files, +6897 −127). No Maven, no Node build. Run here, each a few seconds: the
+checksums; the wheel in a fresh Python 3.11 environment with the two customer guides' samples as written (Flask server and a headless
+Chromium); the plugin zip unpacked and driven the way SAJHA's loader does (`sajha/core/plugins.py`, read only); the committed schema
+through `jsonschema` against the wheel's compiler. The lane's test counts (verify, conformance, 18 kit tests) are its own report.
+
+## Verdict: NOT YET. Four fixes, one of them code (a few lines of `DocSchema`), three text
+
+**M1. The schema refuses Sutras the compiler accepts: not additive, and the class of fault 1.0.1 was released to cure.** The Sutra's
+`doc` was `type: object` in 1.0.1; it is now `$defs/doc` with `required: [summary]`, `additionalProperties: false` and
+`summary maxLength 120`. Tried on the 1.1.0 wheel:
+
+| Sutra `doc:` | 1.1.0 compile | 1.0.1 schema | 1.1.0 schema |
+|---|---|---|---|
+| none; the earlier keys (`summary, params, emits, examples, since`); a panel `doc:` line | ok, no problem | valid | valid |
+| `{ description: ... }` (no summary) | ok, no problem | valid | **refused** |
+| `{ summary: ..., purpose: x }` (a key of the author's) | ok, no problem | valid | **refused** |
+| a summary over 120 characters | ok, no problem | valid | **refused** |
+
+An editor on the 1.1.0 schema marks a clean 1.0.1 Sutra as wrong. Fix: thinness belongs to `RCH-2093`, not to the schema of a Sutra.
+The Sutra's and a panel's `doc` take a loose form (the properties described, nothing required, other keys allowed, no length limit);
+the strict `$defs/doc` stays for the typed fragment file, where the compiler already refuses. Add the three rows to
+`schema_cases.py` as "compiles, so validates", regenerate `spec/1/sutra.schema.json` and the kit's `schemas/doc.schema.json`, rebuild
+the assets and their SHA256SUMS. One verify by the lane; no second gate if the commit holds only this and M2 to M4.
+
+**M2. `docs/RACHANA_IN_SPA.md` does not work as written** (the Flask guide does: see below).
+- The browser zip unpacks into `drishti-rachana-1.1.0-browser/`, so "unpack into `public/rachana/`" gives 404 for all three addresses
+  of step 1 (`/rachana/vendor/...css`, `...js`, `/rachana/src/rachana_view.js`). With the folder's contents moved up one level the
+  sample paints (`rachana-view:ready`, "Sales overview", 215,000). Say "move the contents of the folder", or zip without the folder.
+- Step 1 imports the element in an inline `<script type="module">`; step 3's own policy (`script-src 'self'`) refuses it (seen in
+  Chromium: "Executing inline script violates..."). Use `<script type="module" src="/rachana/src/rachana_view.js">` and an external
+  file for the page's own code, as the Flask guide does.
+- The npm package holds `dist/rachana.runtime.js` and no Drishti Elements; the guide says to "keep the two vendored Elements files and
+  `rachana.runtime.js` as static assets" without saying where they are. Name `node_modules/drishti-rachana/dist/` and say Elements
+  comes from the browser zip (or carry `vendor/` in the package). Its `package.json` says `"license": "SEE LICENSE IN ../../../LICENSE"`:
+  the file is beside it.
+
+**M3. Say who can open a board.** `boards.py` is its own HTTP server with no sign-in: whoever holds `/b/<id>` (128 random bits,
+`no-referrer`, `no-store`) or `/b/<id>/board.json` reads the rows that were fetched with the publisher's rights. That is acceptable for
+"lite" on `127.0.0.1`, but `GENUI_KIT.md` 6 says "behind SAJHA's proxy and sign-in", which nothing in the kit does, and section 4's
+"Data the user may not see" stops at the fetch. Add one Safety row and one INSTALL/README paragraph: a board link is the access; keep
+`RACHANA_GENUI_HOST` on loopback or put the port behind a proxy that signs readers in; the `view` audit event has no reader identity
+(the HTTP thread has no SAJHA caller). Also say that tokens and boards live in one process: more than one SAJHA worker needs
+`RACHANA_GENUI_SECRET` set and still does not share boards.
+
+**M4. Stale text.**
+- `CHANGELOG.md`: the `v1.1.0` entry sits below `v1.0.1` (newest first); it says "Written without a Maven build" (the build is green);
+  it leaves out the two customer guides and `Rachana.close()`; it must say that library gate LG3 now fails a library whose fragments
+  lack the new doc fields (intended, but it is the one thing a library author meets on upgrade).
+- `GENUI_KIT.md` 7: items 1 (Maven build "next") and 3 (browser check of `spa/`, Chromium part) are done; section 4 "to verify in
+  the browsers (open item)" likewise.
+- `README.md` and `libraries/README.md`: finance "50 fragments"; the folder holds 57 (33 + 57 = the 90 documented). Already stale at
+  1.0.1; the README is rewritten from the file system in every release.
+- Both guides and INSTALL say Python 3.11 or later; the wheel says `>=3.10` (see deviation 3). One statement.
+
+## 1. Additive against 1.0.1
+
+- API surface: 17 lines added, all `[experimental]` (`DocSchema`, `DocBlockLint`, its `Kind`); none removed or changed.
+- Compiler: three small changes, all accepting more: a panel takes `doc`; a parameter's, slot's and event's `doc` may be a block whose
+  `summary` is its line (`TypedFragment.docLine`); nothing else in parse, bind or compile moved. No conformance case changed.
+- **What `RCH-2093` is.** A separate lint (`DocBlockLint.check`), never raised by a compile: a Sutra with no `doc` compiles with no
+  problem at all on 1.1.0 (tried). The caller chooses the severity; the default is a warning. It is an error in one place, the library
+  gate LG3 (`LibraryGates`), and the kit's `check_sutra` lists it without failing the check (`ok: true`, token given). So old Sutras
+  are untouched; old **libraries** fail the gate until documented (M4).
+- Python: `Rachana.close()` and an `atexit` hook added; nothing removed.
+- The schema is the one place that is not additive: M1.
+
+## 2. Safety of the kit (read, and driven from the unpacked zip)
+
+| Claim | Found |
+|---|---|
+| Rows never pass through the model | holds: `publish_ui` returns counts only (the tool result searched for the rows: absent); tools take shapes; inline rows capped at 200 (the agent can still retype what it was shown elsewhere: bounded, not prevented) |
+| Only allow-listed data tools, as the user | holds: `RGK-162` for a tool off `RACHANA_GENUI_DATA_TOOLS` (empty by default); inside SAJHA the call goes through `inner_calls.entered` + `inner_calls.check` + `composition.execute_step` (all exist in SAJHA 8.15.1 with these signatures; policy applied per step) |
+| Origins allow-list | holds: `RGK-165`; the origin is compared whole (`scheme://netloc`, so `allowed@evil` fails); the same list is the page's `connect-src` |
+| Unchecked or altered Sutra | holds: `RGK-170` after one added comment; HMAC-SHA256 of the text's hash, constant-time compare; checked again against the fetched columns |
+| CSP | holds: `default-src 'none'; script-src 'self'`, no inline script in `spa/`, every asset from the wheel; `nosniff`, `no-referrer`, `no-store` |
+| Paths | hold: fixed table for `spa/`, `assets.find` refuses `..` and resolves inside its roots (four traversal attempts: 404) |
+| Audit | search, get, check, publish, view; counts and sources, never rows; hooks cannot break a call. The view event has no reader identity (M3) |
+| Who may read a board | **the link is the access**; not stated, and the design says otherwise (M3) |
+
+## 3. Test impact
+
+- Added: `DocBlockLintTest`, `LibraryDocBlocksTest` (the 90 fragments), the kit's `tests/` (doc blocks, layout, schemas, tools; 18) and
+  `browser_check.py`. Changed: the version asserted in `test_engine.py` and `Cases.VERSION`, `Facade.VERSION`. Nothing stale found in tests.
+- Missing: no schema case for a Sutra `doc` (why M1 passed the 1.0.1 guard: none of the 351 Sutras has a thin Sutra-level doc).
+- `rachana_genui/doclint.py` is a Python copy of the Java rule (the file says so, and that it goes when the bundle exports the rule).
+  Two homes for one rule: accept for this release because a guard runs both over the libraries; first item of the next one.
+- Drishti: not changed by this release. `origin/develop` pins `drishti.rachana.version` 1.0.1 exactly, so nothing moves until it
+  chooses to. Carry-in for that day: its libraries meet LG3, and its Sutras need doc blocks only where it turns the lint on.
+
+## 4. Document impact
+
+- Links: every relative link of README, CHANGELOG, the two guides, the three design documents, the kit's README, guide and TOOLS
+  resolves in the repository. In the **zip** four do not (`README.md`, `docs/GENUI_GUIDE.md` twice, `docs/TOOLS.md` point into the
+  checkout's `docs/design` and `spec/1`): reword or drop them when the zip is rebuilt.
+- No release number in `GENUI_KIT.md` or `GENUI_ARCHITECTURE.md`. Versions read 1.1.0 in the poms, the packages, the wheel, the facade.
+- `RACHANA_IN_FLASK.md` works as written: install, `check` ok, `lint` "0 failing", every address 200, `/sales` and `/rachana/page/sales`
+  paint (title, 215,000, both regions) with no CSP violation. Two blemishes: the console carries one painter warning (`the view: has
+  no "ref"`), and the tile shows "revenue" (the id) where the Sutra says `label: Revenue`; neither is the guide's fault, both worth a look.
+- `RACHANA_IN_SPA.md`: M2. `INSTALL.md` is complete and correct for SAJHA's loader (`plugin.json`, `tools/*.py` with one concrete tool
+  class each, `requirements.txt`, `min_sajha_version` 8.0.0 against 8.15.1): following it, the four tools load, search, check and
+  publish from the zip alone. It exists only inside the zip (no source or build script for the zip in the repository: add one), and
+  it should say the plugin is unsigned (SAJHA loads it with a notice unless `plugins.allow_unsigned` is false).
+
+## 5. The four deviations
+
+| Deviation | Judgement |
+|---|---|
+| Python package `drishti_rachana`, not `rachana` | **Accept.** It is the 1.0.x name; a rename now would be the break. Guides and plugin use it consistently |
+| Browser zip is ESM only (no UMD, no `.d.ts`) | **Accept.** The JavaScript facade is experimental at 1.x and both guides say so; say "ES modules only, no type declarations yet" in the SPA guide |
+| `requires-python >=3.10` | **Accept**, unchanged from 1.0.1; but only 3.11 and 3.13 were installed and run. Either say "3.10 allowed, 3.11 and 3.13 tested" or raise the floor to 3.11 in the next minor, not in this one |
+| Plugin zip carries `libraries/` | **Accept.** The wheel has no libraries and the kit is useless without them; the copy is identical to the repository's (compared), and INSTALL sets `RACHANA_LIBS` to it. Better later: the kit finds `libraries/` beside itself so the variable is optional |
+
+SHA256SUMS: all four assets OK. State left behind: nothing running; the scratch environment removed; only this file written.
