@@ -70,7 +70,8 @@ def test_typing_in_the_yaml_tab_is_an_operation_and_a_refused_edit_is_a_problem_
     settle(page, rev)
     assert "# a note typed in the YAML tab" in state(page, "yaml")
     assert page.evaluate("document.querySelector('.CodeMirror').CodeMirror.getValue()").count("# a note typed in the YAML tab") == 1
-    page.evaluate("document.querySelector('.CodeMirror').CodeMirror.replaceRange('  - id: broken\\n    kind: nonsense\\n', {line: 40, ch: 0})")
+    # a new panel at the end of the list (a fixed line number goes stale whenever the showcase grows)
+    page.evaluate("(() => { const cm = document.querySelector('.CodeMirror').CodeMirror; cm.replaceRange('  - id: broken\\n    kind: nonsense\\n', {line: cm.lineCount() - 1, ch: 0}); })()")
     page.get_by_role("tab", name="Problems").click()
     page.locator(".wb-problem-b", has_text="nonsense").first.wait_for(timeout=15000)
     assert "# a note typed in the YAML tab" in state(page, "yaml") and "nonsense" not in state(page, "yaml")      # the design kept its last good Sutra
