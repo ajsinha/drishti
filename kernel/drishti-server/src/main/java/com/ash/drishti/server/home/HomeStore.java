@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.server.home;
 
+import com.ash.drishti.kernel.api.home.HomeData;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -39,6 +41,9 @@ import java.util.stream.Stream;
  */
 public final class HomeStore {
 
+    /** Guards the blocking work below (a ReentrantLock: synchronized would pin a virtual thread). */
+    private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
+
     private final Path root;
     private final int keepDays;
     private final ObjectMapper json = new ObjectMapper().registerModule(new JavaTimeModule());
@@ -55,7 +60,7 @@ public final class HomeStore {
     private <T> void replace(String kind, LocalDate d, List<T> rows) {
         try {
             Files.createDirectories(root);
-            Path tmp = Files.createTempFile(root, kind + "-", ".part");
+            Path tmp = com.ash.drishti.common.TempFiles.createFile(root, kind + "-", ".part");   // beside the target: one atomic move
             try (var w = Files.newBufferedWriter(tmp, StandardCharsets.UTF_8)) {
                 for (T r : rows) {
                     w.write(json.writeValueAsString(r));
@@ -125,15 +130,21 @@ public final class HomeStore {
 
     // ----------------------------------------------------------------------------------------------------------- events
 
-    public synchronized void addEvent(LocalDate d, HomeData.Event e) {
+    public void addEvent(LocalDate d, HomeData.Event e) {
+        lock.lock();
         try {
-            Files.createDirectories(root);
-            ObjectNode n = json.createObjectNode().put("SUBJECT_KIND", e.subjectKind()).put("SUBJECT", e.subject()).put("KIND", e.kind())
-                    .put("AT", e.at().toString()).put("TEXT", e.text());
-            Files.writeString(file("event", d), json.writeValueAsString(n) + "\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE,
-                    StandardOpenOption.APPEND);
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
+            try {
+                Files.createDirectories(root);
+                ObjectNode n = json.createObjectNode().put("SUBJECT_KIND", e.subjectKind()).put("SUBJECT", e.subject()).put("KIND", e.kind())
+                        .put("AT", e.at().toString()).put("TEXT", e.text());
+                Files.writeString(file("event", d), json.writeValueAsString(n) + "\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE,
+                        StandardOpenOption.APPEND);
+            } catch (IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+
+        } finally {
+            lock.unlock();
         }
     }
 

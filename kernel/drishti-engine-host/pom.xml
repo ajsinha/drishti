@@ -42,7 +42,8 @@
     <dependency><groupId>com.ash.engine</groupId><artifactId>engine-host</artifactId><scope>provided</scope></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
-    <!-- the sample engine's workbook writer is a platform library the host provides (com.ash.tools.xlsx) -->
+    <dependency><groupId>com.ash.tools</groupId><artifactId>tools-codec</artifactId></dependency>
+        <!-- the sample engine's workbook writer is a platform library the host provides (com.ash.tools.xlsx) -->
     <dependency><groupId>com.ash.tools</groupId><artifactId>tools-xlsx</artifactId><scope>test</scope></dependency>
   </dependencies>
   <build>

@@ -15,6 +15,10 @@
  */
 package com.ash.drishti.server.home;
 
+import com.ash.drishti.kernel.api.home.HomeData;
+import com.ash.drishti.kernel.api.home.MeasureSource;
+import com.ash.drishti.kernel.api.home.HomeDefinition;
+
 import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalTime;

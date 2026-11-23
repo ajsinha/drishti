@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.banking.var;
 
-import com.ash.drishti.server.home.HomeTable;
+import com.ash.drishti.kernel.api.home.HomeTable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

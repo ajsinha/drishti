@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.server.home;
 
+import com.ash.drishti.kernel.api.home.HomeDefinition;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;

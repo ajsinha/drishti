@@ -57,6 +57,9 @@ import org.slf4j.LoggerFactory;
  */
 public final class EngineHost implements AutoCloseable {
 
+    /** Guards the blocking work below (a ReentrantLock: synchronized would pin a virtual thread). */
+    private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
+
     private static final Logger LOG = LoggerFactory.getLogger(EngineHost.class);
 
     /** The next time a {@code cron} schedule fires after {@code now}, in {@code zone}; null when it never does. The server: Spring's CronExpression. */
@@ -91,56 +94,62 @@ public final class EngineHost implements AutoCloseable {
     }
 
     /** Reads the folder and the files, puts every engine in its state, starts those switched on, and begins polling. Called once. */
-    public synchronized void start() throws IOException {
-        licence = FileLicence.read(settings.licenceFile());
-        if (licence.problem() != null) {
-            LOG.warn("engines: {}", licence.problem());
-        }
-        Map<String, EngineFile> files = new TreeMap<>();
-        Map<String, Boolean> switches = new TreeMap<>();
-        if (Files.isDirectory(settings.enginesDir())) {
-            try (Stream<Path> s = Files.list(settings.enginesDir())) {
-                for (Path f : s.filter(p -> p.getFileName().toString().endsWith(".yaml") && Files.isRegularFile(p)).sorted().toList()) {
-                    String id = f.getFileName().toString().replaceFirst("\\.yaml$", "");
-                    if (ports.inTreeEngine().test(id)) {
-                        continue;                                            // a switch file of an engine built into this server
+    public void start() throws IOException {
+        lock.lock();
+        try {
+            licence = FileLicence.read(settings.licenceFile());
+            if (licence.problem() != null) {
+                LOG.warn("engines: {}", licence.problem());
+            }
+            Map<String, EngineFile> files = new TreeMap<>();
+            Map<String, Boolean> switches = new TreeMap<>();
+            if (Files.isDirectory(settings.enginesDir())) {
+                try (Stream<Path> s = Files.list(settings.enginesDir())) {
+                    for (Path f : s.filter(p -> p.getFileName().toString().endsWith(".yaml") && Files.isRegularFile(p)).sorted().toList()) {
+                        String id = f.getFileName().toString().replaceFirst("\\.yaml$", "");
+                        if (ports.inTreeEngine().test(id)) {
+                            continue;                                            // a switch file of an engine built into this server
+                        }
+                        try {
+                            EngineFile ef = EngineFile.read(id, ports.placeholders().apply(Files.readString(f, StandardCharsets.UTF_8)));
+                            files.put(id, ef);
+                            switches.put(id, ef.enabled());
+                        } catch (EngineException e) {
+                            fileProblems.put(id, e.getMessage());
+                            switches.put(id, false);
+                        }
                     }
+                }
+            }
+            lib = EngineLib.scan(settings.libPath(), platform, settings.provided(), switches, licence);
+            for (EngineLib.Entry e : lib.entries()) {
+                HostedEngine h = new HostedEngine(e.id(), e, files.get(e.id()), fileProblems.get(e.id()), settings, ports.data(), ports.contracts(),
+                        ports.wheres(), ports.outputs(), ports.audit(), ports.visibilityRules());
+                engines.put(e.id(), h);
+            }
+            checkPackUses();
+            for (HostedEngine h : engines.values()) {
+                if (h.startable() && h.enabled()) {
                     try {
-                        EngineFile ef = EngineFile.read(id, ports.placeholders().apply(Files.readString(f, StandardCharsets.UTF_8)));
-                        files.put(id, ef);
-                        switches.put(id, ef.enabled());
-                    } catch (EngineException e) {
-                        fileProblems.put(id, e.getMessage());
-                        switches.put(id, false);
+                        h.start("");
+                        board.register(h.id(), h.instance());
+                    } catch (EngineException ex) {
+                        LOG.warn("engines: {} did not start: {} {}", h.id(), ex.code(), ex.getMessage());
                     }
                 }
             }
+            ports.uses().byPack().forEach(board::pack);
+            LOG.info("engines: {}; {} in {}: {}", settings.provided().line(), lib.jars().size() == 1 ? "1 JAR" : lib.jars().size() + " JARs", settings.libPath(),
+                    engines.values().stream().map(h -> h.id() + " " + h.state()).toList());
+            scheduler = Executors.newSingleThreadScheduledExecutor(Thread.ofPlatform().daemon(true).name("drishti-engine-host").factory());
+            long poll = Math.max(1, settings.poll().toSeconds());
+            timers.add(board.every(scheduler, poll, TimeUnit.SECONDS));
+            timers.add(scheduler.scheduleWithFixedDelay(this::lookAtDataVersions, poll, poll, TimeUnit.SECONDS));
+            engines.values().forEach(this::schedule);
+
+        } finally {
+            lock.unlock();
         }
-        lib = EngineLib.scan(settings.libPath(), platform, settings.provided(), switches, licence);
-        for (EngineLib.Entry e : lib.entries()) {
-            HostedEngine h = new HostedEngine(e.id(), e, files.get(e.id()), fileProblems.get(e.id()), settings, ports.data(), ports.contracts(),
-                    ports.wheres(), ports.outputs(), ports.audit(), ports.visibilityRules());
-            engines.put(e.id(), h);
-        }
-        checkPackUses();
-        for (HostedEngine h : engines.values()) {
-            if (h.startable() && h.enabled()) {
-                try {
-                    h.start("");
-                    board.register(h.id(), h.instance());
-                } catch (EngineException ex) {
-                    LOG.warn("engines: {} did not start: {} {}", h.id(), ex.code(), ex.getMessage());
-                }
-            }
-        }
-        ports.uses().byPack().forEach(board::pack);
-        LOG.info("engines: {}; {} in {}: {}", settings.provided().line(), lib.jars().size() == 1 ? "1 JAR" : lib.jars().size() + " JARs", settings.libPath(),
-                engines.values().stream().map(h -> h.id() + " " + h.state()).toList());
-        scheduler = Executors.newSingleThreadScheduledExecutor(Thread.ofPlatform().daemon(true).name("drishti-engine-host").factory());
-        long poll = Math.max(1, settings.poll().toSeconds());
-        timers.add(board.every(scheduler, poll, TimeUnit.SECONDS));
-        timers.add(scheduler.scheduleWithFixedDelay(this::lookAtDataVersions, poll, poll, TimeUnit.SECONDS));
-        engines.values().forEach(this::schedule);
     }
 
     /** A pack's use of an engine held against the installed descriptor (EN-41): the id is installed, the version within the range, the outputs exist. */
@@ -305,27 +314,33 @@ public final class EngineHost implements AutoCloseable {
      * One lifecycle transition asked by a person or the switch: {@code init}, {@code start}, {@code suspend}, {@code resume},
      * {@code shutdown}. The health board follows the instance.
      */
-    public synchronized void transition(String id, String action, String actor, String why) throws EngineException {
-        HostedEngine h = require(id);
-        switch (action) {
-            case "init" -> h.init(actor);
-            case "start" -> {
-                h.start(actor);
-                board.register(id, h.instance());
+    public void transition(String id, String action, String actor, String why) throws EngineException {
+        lock.lock();
+        try {
+            HostedEngine h = require(id);
+            switch (action) {
+                case "init" -> h.init(actor);
+                case "start" -> {
+                    h.start(actor);
+                    board.register(id, h.instance());
+                }
+                case "suspend" -> {
+                    h.suspend(actor, why);
+                    board.pollAll();
+                }
+                case "resume" -> {
+                    h.resume(actor);
+                    board.pollAll();
+                }
+                case "shutdown" -> {
+                    h.shutdown(actor);
+                    board.unregister(id);
+                }
+                default -> throw new EngineException("ENG-5020", Kind.REFUSED, action + " is not a transition; they are init, start, suspend, resume, shutdown");
             }
-            case "suspend" -> {
-                h.suspend(actor, why);
-                board.pollAll();
-            }
-            case "resume" -> {
-                h.resume(actor);
-                board.pollAll();
-            }
-            case "shutdown" -> {
-                h.shutdown(actor);
-                board.unregister(id);
-            }
-            default -> throw new EngineException("ENG-5020", Kind.REFUSED, action + " is not a transition; they are init, start, suspend, resume, shutdown");
+
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -353,15 +368,21 @@ public final class EngineHost implements AutoCloseable {
     }
 
     @Override
-    public synchronized void close() {
-        timers.forEach(t -> t.cancel(false));
-        if (scheduler != null) {
-            scheduler.shutdownNow();
-        }
-        engines.values().forEach(HostedEngine::close);
-        EngineLib l = lib;
-        if (l != null) {
-            l.close();
+    public void close() {
+        lock.lock();
+        try {
+            timers.forEach(t -> t.cancel(false));
+            if (scheduler != null) {
+                scheduler.shutdownNow();
+            }
+            engines.values().forEach(HostedEngine::close);
+            EngineLib l = lib;
+            if (l != null) {
+                l.close();
+            }
+
+        } finally {
+            lock.unlock();
         }
     }
 }

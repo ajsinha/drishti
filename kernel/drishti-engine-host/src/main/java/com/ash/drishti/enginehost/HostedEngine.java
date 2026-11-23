@@ -40,16 +40,13 @@ import com.ash.engine.host.Params;
 import com.ash.engine.host.Problem;
 import com.ash.engine.host.Sessions;
 import com.ash.engine.host.StartChecks;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.MessageDigest;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +67,9 @@ import java.util.concurrent.atomic.AtomicLong;
  * visibility, parameters, snapshot, session, control and the output gate are the host's, every time.
  */
 public final class HostedEngine implements AutoCloseable {
+
+    /** Guards the blocking work below (a ReentrantLock: synchronized would pin a virtual thread). */
+    private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
 
     /** A request as the host takes it: outputs, parameters, snapshot dimensions, the class, and whether its tables go to live and stored outputs. */
     public record Ask(List<String> outputs, Map<String, Object> params, Map<String, String> snapshot, RequestClass requestClass, boolean publish) {
@@ -295,51 +295,63 @@ public final class HostedEngine implements AutoCloseable {
     // ------------------------------------------------------------------------------------------------------------- the lifecycle
 
     /** A new instance, initialised (NEW to INITIALISED); refused when the engine may not run or an instance is live. */
-    public synchronized void init(String actor) throws EngineException {
-        if (!startable()) {
-            throw new EngineException(code() == null ? "ENG-5033" : code(), Kind.REFUSED, id + " cannot start: " + words());
-        }
-        EngineInstance now = instance;
-        if (now != null && now.state() != LifecycleState.SHUTDOWN) {
-            throw new EngineException("ENG-5020", Kind.REFUSED, id + " is " + now.state() + "; init needs no live instance (shut it down first)");
-        }
-        Descriptor d = descriptor();
-        EngineJar jar = entry.jar();
-        Engine engine;
+    public void init(String actor) throws EngineException {
+        lock.lock();
         try {
-            engine = jar.create(entry.engine());
-        } catch (ReflectiveOperationException | LinkageError e) {
-            throw new EngineException("ENG-1009", Kind.FAILED, id + " could not be made from " + jar.path().getFileName() + ": " + e, Map.of(), e);
+            if (!startable()) {
+                throw new EngineException(code() == null ? "ENG-5033" : code(), Kind.REFUSED, id + " cannot start: " + words());
+            }
+            EngineInstance now = instance;
+            if (now != null && now.state() != LifecycleState.SHUTDOWN) {
+                throw new EngineException("ENG-5020", Kind.REFUSED, id + " is " + now.state() + "; init needs no live instance (shut it down first)");
+            }
+            Descriptor d = descriptor();
+            EngineJar jar = entry.jar();
+            Engine engine;
+            try {
+                engine = jar.create(entry.engine());
+            } catch (ReflectiveOperationException | LinkageError e) {
+                throw new EngineException("ENG-1009", Kind.FAILED, id + " could not be made from " + jar.path().getFileName() + ": " + e, Map.of(), e);
+            }
+            SortedMap<String, Object> options = Params.options(d, file.options());
+            Path work = settings.workRoot().resolve(id);
+            try {
+                Files.createDirectories(work);
+            } catch (java.io.IOException e) {
+                throw new EngineException("ENG-1009", Kind.FAILED, id + ": its work folder " + work + " cannot be made: " + e.getMessage(), Map.of(), e);
+            }
+            int threads = file.limits().threads() > 0 ? file.limits().threads() : Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+            ExecutorService ex = Executors.newFixedThreadPool(threads, Thread.ofPlatform().daemon(true).name("drishti-engine-" + id + "-", 0).factory());
+            long budget = file.limits().memoryMb() > 0 ? file.limits().memoryMb() << 20 : Runtime.getRuntime().maxMemory() / 4;
+            HostContext ctx = new HostContext(d, options, work, Clock.systemUTC(), ex, new Budget(budget), Map.of(), null, this::inputStamps);
+            EngineInstance inst = new EngineInstance(id, engine, jar.loader());
+            executor = ex;
+            context = ctx;
+            admission = new Admission(file.limits().concurrent());
+            instance = inst;
+            sessions = new Sessions(inst, file.snapshot().hot(), this::inputsFor);
+            transition(actor, "init", () -> inst.init(ctx));
+
+        } finally {
+            lock.unlock();
         }
-        SortedMap<String, Object> options = Params.options(d, file.options());
-        Path work = settings.workRoot().resolve(id);
-        try {
-            Files.createDirectories(work);
-        } catch (java.io.IOException e) {
-            throw new EngineException("ENG-1009", Kind.FAILED, id + ": its work folder " + work + " cannot be made: " + e.getMessage(), Map.of(), e);
-        }
-        int threads = file.limits().threads() > 0 ? file.limits().threads() : Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
-        ExecutorService ex = Executors.newFixedThreadPool(threads, Thread.ofPlatform().daemon(true).name("drishti-engine-" + id + "-", 0).factory());
-        long budget = file.limits().memoryMb() > 0 ? file.limits().memoryMb() << 20 : Runtime.getRuntime().maxMemory() / 4;
-        HostContext ctx = new HostContext(d, options, work, Clock.systemUTC(), ex, new Budget(budget), Map.of(), null, this::inputStamps);
-        EngineInstance inst = new EngineInstance(id, engine, jar.loader());
-        executor = ex;
-        context = ctx;
-        admission = new Admission(file.limits().concurrent());
-        instance = inst;
-        sessions = new Sessions(inst, file.snapshot().hot(), this::inputsFor);
-        transition(actor, "init", () -> inst.init(ctx));
     }
 
     /** INITIALISED to RUNNING; from nothing (or after a shutdown) a new instance is made first. */
-    public synchronized void start(String actor) throws EngineException {
-        EngineInstance now = instance;
-        if (now == null || now.state() == LifecycleState.SHUTDOWN) {
-            init(actor);
-            now = instance;
+    public void start(String actor) throws EngineException {
+        lock.lock();
+        try {
+            EngineInstance now = instance;
+            if (now == null || now.state() == LifecycleState.SHUTDOWN) {
+                init(actor);
+                now = instance;
+            }
+            EngineInstance i = now;
+            transition(actor, "start", i::start);
+
+        } finally {
+            lock.unlock();
         }
-        EngineInstance i = now;
-        transition(actor, "start", i::start);
     }
 
     /** RUNNING to SUSPENDED: new requests refused at once (ENG-5023), those in flight drain within the cancel latency; state and sessions kept. */
@@ -357,27 +369,33 @@ public final class HostedEngine implements AutoCloseable {
     }
 
     /** Sessions closed, then the instance shut down and its threads released; harmless twice. The live outputs are forgotten. */
-    public synchronized void shutdown(String actor) {
-        EngineInstance i = instance;
-        if (i == null || i.state() == LifecycleState.SHUTDOWN) {
-            return;
-        }
-        Sessions s = sessions;
-        if (s != null) {
-            s.close();
-        }
-        inputsByKey.clear();
-        viewers.clear();
+    public void shutdown(String actor) {
+        lock.lock();
         try {
-            transition(actor, "shutdown", () -> i.shutdown());
-        } catch (EngineException e) {
-            // shutdown never throws; recorded by transition
+            EngineInstance i = instance;
+            if (i == null || i.state() == LifecycleState.SHUTDOWN) {
+                return;
+            }
+            Sessions s = sessions;
+            if (s != null) {
+                s.close();
+            }
+            inputsByKey.clear();
+            viewers.clear();
+            try {
+                transition(actor, "shutdown", () -> i.shutdown());
+            } catch (EngineException e) {
+                // shutdown never throws; recorded by transition
+            }
+            ExecutorService ex = executor;
+            if (ex != null) {
+                ex.shutdownNow();
+            }
+            outputs.forget(id);
+
+        } finally {
+            lock.unlock();
         }
-        ExecutorService ex = executor;
-        if (ex != null) {
-            ex.shutdownNow();
-        }
-        outputs.forget(id);
     }
 
     private EngineInstance require(String what) throws EngineException {
@@ -574,11 +592,7 @@ public final class HostedEngine implements AutoCloseable {
             }
             b.append('}');
         });
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b.toString().getBytes(StandardCharsets.UTF_8))).substring(0, 32);
-        } catch (java.security.NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+        return com.ash.tools.codec.Hashes.hex(com.ash.tools.codec.Hashes.of(com.ash.tools.codec.Hashes.SHA_256, b.toString())).substring(0, 32);
     }
 
     /**

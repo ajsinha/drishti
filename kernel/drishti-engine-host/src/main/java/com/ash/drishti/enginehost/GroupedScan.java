@@ -28,7 +28,7 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 /**
- * The grouped scan the host answers at the source (engine specification 5.2 rule 6; EN-46): the grouping sets and the closed list of
+ * The grouped scan the host answers at the source (engine specification 5.2 rule 6; EN-46): the grouping columns and the closed list of
  * aggregates (SUM, COUNT, MIN, MAX) computed over the rows the caller may read, after the row rules, masks, column map and the site's row
  * filter, in one pass over the column arrays (no row is made). Offered only when it is exact for what is asked: grouping by declared columns,
  * aggregates of a declared column or of rows, no expression. Whole numbers are summed as longs (exact); others with a compensated sum, so a

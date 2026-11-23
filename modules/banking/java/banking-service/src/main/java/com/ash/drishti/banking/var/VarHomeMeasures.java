@@ -16,8 +16,8 @@
 package com.ash.drishti.banking.var;
 
 import com.ash.drishti.kernel.api.security.Principal;
-import com.ash.drishti.server.home.HomeData;
-import com.ash.drishti.server.home.MeasureSource;
+import com.ash.drishti.kernel.api.home.HomeData;
+import com.ash.drishti.kernel.api.home.MeasureSource;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;

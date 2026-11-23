@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.server.home;
 
+import com.ash.drishti.kernel.api.home.HomeDefinition;
+
 import com.ash.drishti.kernel.api.security.Principal;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,6 +39,9 @@ import java.util.stream.Stream;
  */
 public final class HomeCatalogue {
 
+    /** Guards the blocking work below (a ReentrantLock: synchronized would pin a virtual thread). */
+    private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
+
     private final HomeProperties props;
     private volatile Map<String, HomeDefinition> homes = Map.of();
     private volatile Map<String, String> faults = Map.of();
@@ -47,27 +52,33 @@ public final class HomeCatalogue {
     }
 
     /** Reads every {@code *.home.yaml} under the Homes folder. */
-    public synchronized void reload() {
-        Map<String, HomeDefinition> next = new LinkedHashMap<>();
-        Map<String, String> bad = new LinkedHashMap<>();
-        if (props.enabled() && props.dir() != null && !props.dir().isBlank() && Files.isDirectory(Path.of(props.dir()))) {
-            try (Stream<Path> s = Files.walk(Path.of(props.dir()))) {
-                for (Path f : s.filter(p -> p.getFileName().toString().endsWith(".home.yaml")).sorted().toList()) {
-                    try {
-                        HomeDefinition d = HomeFiles.read(f);
-                        if (next.putIfAbsent(d.name(), d) != null) {
-                            bad.put(f.toString(), "the Home " + d.name() + " is already defined");
+    public void reload() {
+        lock.lock();
+        try {
+            Map<String, HomeDefinition> next = new LinkedHashMap<>();
+            Map<String, String> bad = new LinkedHashMap<>();
+            if (props.enabled() && props.dir() != null && !props.dir().isBlank() && Files.isDirectory(Path.of(props.dir()))) {
+                try (Stream<Path> s = Files.walk(Path.of(props.dir()))) {
+                    for (Path f : s.filter(p -> p.getFileName().toString().endsWith(".home.yaml")).sorted().toList()) {
+                        try {
+                            HomeDefinition d = HomeFiles.read(f);
+                            if (next.putIfAbsent(d.name(), d) != null) {
+                                bad.put(f.toString(), "the Home " + d.name() + " is already defined");
+                            }
+                        } catch (IOException | RuntimeException e) {
+                            bad.put(f.toString(), String.valueOf(e.getMessage()));
                         }
-                    } catch (IOException | RuntimeException e) {
-                        bad.put(f.toString(), String.valueOf(e.getMessage()));
                     }
+                } catch (IOException e) {
+                    bad.put(props.dir(), String.valueOf(e.getMessage()));
                 }
-            } catch (IOException e) {
-                bad.put(props.dir(), String.valueOf(e.getMessage()));
             }
+            homes = Map.copyOf(next);
+            faults = Map.copyOf(bad);
+
+        } finally {
+            lock.unlock();
         }
-        homes = Map.copyOf(next);
-        faults = Map.copyOf(bad);
     }
 
     public Map<String, String> faults() {

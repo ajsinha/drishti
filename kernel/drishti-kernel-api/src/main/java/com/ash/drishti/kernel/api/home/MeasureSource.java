@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.home;
+package com.ash.drishti.kernel.api.home;
 
 import com.ash.drishti.kernel.api.security.Principal;
 import java.time.LocalDate;

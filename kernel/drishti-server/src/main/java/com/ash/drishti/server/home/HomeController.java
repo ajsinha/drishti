@@ -15,6 +15,9 @@
  */
 package com.ash.drishti.server.home;
 
+import com.ash.drishti.kernel.api.home.HomeData;
+import com.ash.drishti.kernel.api.home.HomeDefinition;
+
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.PreferenceStore;

@@ -15,6 +15,10 @@
  */
 package com.ash.drishti.server.home;
 
+import com.ash.drishti.kernel.api.home.HomeData;
+import com.ash.drishti.kernel.api.home.MeasureSource;
+import com.ash.drishti.kernel.api.home.HomeDefinition;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
