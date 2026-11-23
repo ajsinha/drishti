@@ -17,9 +17,9 @@
 
 **Status: design for the owner, written 2026-11-21, refreshed 2026-11-22 around the owner's acceptance test (section 0) and
 extended the same day to every computation in Drishti (section 2). Nothing built, nothing run. EN-1 to EN-44 are accepted;
-EN-45 to EN-55 are accepted as recommended (owner, 2026-11-22; section 16). Zero copy (section 17, EN-56 to EN-65): the
-principle is the owner's (2026-11-22); EN-57 to EN-65 are recommended, for the owner. The computation contract (section 18,
-EN-66 to EN-73): recommended, for the owner.**
+EN-45 to EN-55 are accepted as recommended (owner, 2026-11-22; section 16). Zero copy (section 17, EN-56 to EN-65) and
+declared engine functions (18.8, EN-66) are accepted (owner, 2026-11-22); the computation contract (section 18, EN-67 to
+EN-74) is recommended, for the owner.**
 For the refresh also read: `kernel/drishti-common/.../SharedLib`, `kernel/drishti-module-runtime` (`ModuleClassLoader`,
 `ModuleVerifier`, `FirstParty`, `KernelLibraries`), `lib/README.md`. Read from git only: Drishti
 `main` at `9ce7c3170` (`kernel/drishti-api/.../api/compute`, `kernel/drishti-kernel-api/.../kernel/api/engines`,
@@ -57,9 +57,9 @@ order in which today's code moves. It reads the code at `origin/wip/g4-rehearsal
 10. [Two paper tests](#10-two-paper-tests) · 11. [What stays in Drishti](#11-what-stays-in-drishti) ·
 12. [Migration of today's engines](#12-migration-of-todays-engines) · 13. [Repository and coordinates](#13-repository-and-coordinates) ·
 14. [Estimate and the combined i8 plan](#14-estimate-and-the-combined-i8-plan) · 15. [Risks](#15-risks) ·
-16. [Decisions EN-1 to EN-73](#16-decisions-en-1-to-en-73) ·
+16. [Decisions EN-1 to EN-74](#16-decisions-en-1-to-en-74) ·
 17. [Zero-copy data access](#17-zero-copy-data-access-en-56-to-en-65) ·
-18. [The engine computation contract](#18-the-engine-computation-contract-en-66-to-en-73)
+18. [The engine computation contract](#18-the-engine-computation-contract-en-66-to-en-74)
 
 ## 0. The acceptance test, and the answer in one page
 
@@ -1359,7 +1359,7 @@ ship with the sample engine and the analytics engines.
 | `engine-api` 1.0 is frozen before the query kind has been built | a 2.0 soon after | the query descriptor and the grouped scan are reviewed on paper at E0 (EN-53); all of 2.3 is additive |
 | `shared` isolation is trusted without its proof | one person's rows in another's answer | `shared` only with a certificate that lists both laws; the host's output re-check; the shadow comparison (2.4) |
 
-## 16. Decisions EN-1 to EN-73
+## 16. Decisions EN-1 to EN-74
 
 ### EN-1 to EN-28: accepted (owner, 2026-11-21)
 
@@ -1435,9 +1435,9 @@ EN-35), EN-18 (the certificate is evidence, EN-39) and EN-19 (in process means t
 | EN-54 | People's Python | **One `python` engine on the one process pool; approved code is an input under a contract; its measures carry one counted opaque step** | keep the three pools as host services outside the model |
 | EN-55 | Capacity sizing | **A `capacity` engine with no inputs: one evaluator, the workbook generated from its steps; the browser and Python evaluators and the workbook template are deleted** | leave it, as the host's figures about itself |
 
-### EN-56 to EN-65: zero copy (the owner's principle, 2026-11-22; EN-57 to EN-65 recommended, for the owner)
+### EN-56 to EN-65: zero copy: ACCEPTED by the owner 2026-11-22 (EN-56 the owner's principle, EN-57 to EN-65 as written)
 
-| # | Decision | Recommendation | The alternative |
+| # | Decision | Decided | The alternative |
 |---|---|---|---|
 | EN-56 | The principle | **Engines are built zero copy, by design and architecture: bulk data exists once, in memory the host owns, and every engine reads it in place** (17.1). It holds for every engine and both bindings; it is a kit group, not a tuning step. Decoding a lake file, masking a column and a network hop each happen once per version, never per engine or per ask | zero copy as an optimisation applied where a benchmark shows a copy (EN-48 as first written) |
 | EN-57 | Ownership and lifetime | **The host owns bulk memory; an engine holds read-only views under a `Lease`** (the ask, or the session's snapshot version). No view outlives its lease; a session's book keeps row ordinals and view handles, never bytes. A view used after its lease answers "unloaded, ask again" (17.2) | the engine maps and owns its hot file (two owners of one lifetime; a copy per engine) |
@@ -1450,18 +1450,24 @@ EN-35), EN-18 (the certificate is evidence, EN-39) and EN-19 (in process means t
 | EN-64 | The kit | **A zero-copy group in `engine-tck`: an engine that copies bulk data fails** (allocation per ask independent of input size, backing identity, the poison law, the heap ceiling at 1,000,000 positions, scan additions) (17.9) | trust the benchmark gate alone (finds a slow engine, not a copying one) |
 | EN-65 | Scope and order | **Every engine: market risk, CCR, query, python, indicators, capacity, genomics and each later one** (17.10). The views enter `engine-api` 0.x and the host's `Inputs` before the market-risk intake is rewritten (R2 cut plan MC-12) and are part of the 1.0 freeze (EN-27, EN-53) | risk only, the others when they migrate (a second handover to retire later) |
 
-### EN-66 to EN-73: the computation contract (owner's concern, 2026-11-22; recommended, for the owner)
+### EN-66: declared engine functions: ACCEPTED by the owner 2026-11-22
+
+| # | Decision | Decided | The alternative |
+|---|---|---|---|
+| EN-66 | Custom and edge-case computations | **Declared engine functions: a method marked `@EngineFunction(name, version)` with typed parameters and result (the zero-copy views `RowSet`, `FloatVectors`, `DoubleVectors`, `Columns`, and plain values), found from the annotation at JAR load and bound once to a method handle.** Configuration only switches a function on and maps it (API route, BI measure, Sutra call); every call passes access rules, licence and audit; name and version are checked at start with a clear sentence on a mismatch; a function may declare itself mergeable (per shard, then merge), otherwise it runs on one node; functions are listed in Admin → Engines and the API documents with their description (also read by the GenUI agent); the kit checks them (types, zero copy, version). Two levels: the computation contract for the shared 90%, declared functions for edge cases, any number of them (18.8) | a bespoke output and route per edge case; or reflection over arbitrary methods named in configuration |
+
+### EN-67 to EN-74: the computation contract (owner's concern, 2026-11-22; recommended, for the owner)
 
 | # | Decision | Recommendation | The alternative |
 |---|---|---|---|
-| EN-66 | The shape of an engine's computation | **Three primitives: the host's scope, a mergeable aggregate, measures as functions of an aggregate** (section 18). An output is declared as a measure over an aggregate, never coded as a route of its own: scope expressions, ad-hoc and personal baskets, the P&L path, tree, matrix, compare, what-if, sharding and intraday need no engine code of their own | one bespoke engine output per screen (most of R2 step 4b as first counted) |
-| EN-67 | Scope | **The host resolves every scope kind** (hierarchy node, system basket, scope expression, ad-hoc or personal basket) with the caller's row rules **to a `RowSet`**; the engine never learns the kind (18.1). The resolver, the expression grammar and the baskets stay in Drishti | the engine parses scopes (each engine its own grammar and its own access check) |
-| EN-68 | The aggregate | **`aggregate(view, rows, groups)` gives a partial; `merge(partials)` gives the aggregate** (18.2), carried by the API's `Partial`, `Partitioned`, `Assembling` and `Incremental`. One pass with group ids serves tree, matrix and many scopes at once; shards and intraday are merges | separate code paths for single scope, cube, shard and intraday |
-| EN-69 | Measures | **A measure is a pure function of one or more aggregates** (VaR, ES, parametric, stressed, 10-day, component, marginal, incremental, correlation, beta; exposure the same over time buckets), declared in the descriptor with its explanation (18.3) | measures that read rows themselves |
-| EN-70 | Bits | **One canonical reduction order, fixed by the snapshot and the row set, never by threads, shards or arrival; a partial is keyed by its place in that order and merge is exact only between whole units** (18.4). A unit split between parties is chained or re-summed from rows; a folded vector is never patched | exact (order-free) summation: other bits than every recorded answer; or "close enough" merges |
-| EN-71 | What is not the engine's | **Captures and history are host sinks of answers (EN-12); compare is the same ask on two versions; the MR cube is the `query` engine grouping the risk engine's measures** (18.5) | capture, compare and cube routes inside each engine |
-| EN-72 | Query and OLAP | **The same contract**: cells are group ids, aggregate states merge by their function, measures are functions of states; sums of doubles follow the canonical order or carry their exactness class when pushed to a source (18.6) | a second aggregation model for the query engine |
-| EN-73 | Proof | **Kit laws from every case: scope-kind blindness, grouping, merge order, split anywhere, incremental at unit grain** (18.7); the R2 coverage table (cut plan 4b) is filled by declaring measures, not by new outputs | parity by goldens per output |
+| EN-67 | The shape of an engine's computation | **Three primitives: the host's scope, a mergeable aggregate, measures as functions of an aggregate** (section 18). An output is declared as a measure over an aggregate, never coded as a route of its own: scope expressions, ad-hoc and personal baskets, the P&L path, tree, matrix, compare, what-if, sharding and intraday need no engine code of their own | one bespoke engine output per screen (most of R2 step 4b as first counted) |
+| EN-68 | Scope | **The host resolves every scope kind** (hierarchy node, system basket, scope expression, ad-hoc or personal basket) with the caller's row rules **to a `RowSet`**; the engine never learns the kind (18.1). The resolver, the expression grammar and the baskets stay in Drishti | the engine parses scopes (each engine its own grammar and its own access check) |
+| EN-69 | The aggregate | **`aggregate(view, rows, groups)` gives a partial; `merge(partials)` gives the aggregate** (18.2), carried by the API's `Partial`, `Partitioned`, `Assembling` and `Incremental`. One pass with group ids serves tree, matrix and many scopes at once; shards and intraday are merges | separate code paths for single scope, cube, shard and intraday |
+| EN-70 | Measures | **A measure is a pure function of one or more aggregates** (VaR, ES, parametric, stressed, 10-day, component, marginal, incremental, correlation, beta; exposure the same over time buckets), declared in the descriptor with its explanation (18.3) | measures that read rows themselves |
+| EN-71 | Bits | **One canonical reduction order, fixed by the snapshot and the row set, never by threads, shards or arrival; a partial is keyed by its place in that order and merge is exact only between whole units** (18.4). A unit split between parties is chained or re-summed from rows; a folded vector is never patched | exact (order-free) summation: other bits than every recorded answer; or "close enough" merges |
+| EN-72 | What is not the engine's | **Captures and history are host sinks of answers (EN-12); compare is the same ask on two versions; the MR cube is the `query` engine grouping the risk engine's measures** (18.5) | capture, compare and cube routes inside each engine |
+| EN-73 | Query and OLAP | **The same contract**: cells are group ids, aggregate states merge by their function, measures are functions of states; sums of doubles follow the canonical order or carry their exactness class when pushed to a source (18.6) | a second aggregation model for the query engine |
+| EN-74 | Proof | **Kit laws from every case: scope-kind blindness, grouping, merge order, split anywhere, incremental at unit grain** (18.7); the R2 coverage table (cut plan 4b) is filled by declaring measures, not by new outputs | parity by goldens per output |
 
 ## 17. Zero-copy data access (EN-56 to EN-65)
 
@@ -1586,7 +1592,7 @@ with the speed gate of 2.5, and its figures go to `BENCHMARK.md`.
 | `genomics` | sample-by-feature matrices as `FloatVectors` or `DoubleVectors`; a cohort is a `RowSet`; cohort statistics accumulate in place |
 | every later engine | the same types; an engine that needs another shape of bulk data asks for a view type in the API, never a private copy |
 
-## 18. The engine computation contract (EN-66 to EN-73)
+## 18. The engine computation contract (EN-66 to EN-74)
 
 **The owner's concern (2026-11-22):** the outputs still missing from the Risk engine (scope expressions, ad-hoc and personal
 baskets, the P&L path, tree, matrix, compare, captures, the MR cube, the exposure tree and what-if, correlation and beta,
@@ -1682,11 +1688,39 @@ exactness class when the source computed it. One aggregation model, one set of l
 | Split anywhere | partials over any split on unit boundaries, merged, equal the whole to the bit; a split inside a unit equals it through the chain (this sharpens the additivity law of 6.2) |
 | Incremental at unit grain | touched units re-aggregated and merged equal a fresh session (the incremental law of 6.2) |
 
+### 18.8 Declared engine functions: the second level (EN-66)
+
+Two levels. The computation contract above carries what engines share (about nine parts in ten). What it does not fit (a
+desk's own measure, a regulator's special case, a one-off diagnostic) is a **declared function**, and an engine may have any
+number of them.
+
+```java
+@EngineFunction(name = "tail-concentration", version = "1.0",
+                description = "Share of the worst 1% of scenarios carried by the ten largest positions")
+public double tailConcentration(FloatVectors pnl, RowSet rows, double level) { ... }
+```
+
+| Aspect | Rule |
+|---|---|
+| Declaration | the annotation `@EngineFunction(name, version, description)` of `engine-api` on a public method of the engine's session class; name unique within the engine |
+| Types | parameters: `RowSet`, `FloatVectors`, `DoubleVectors`, `Columns`, numbers, text, dates, flags, lists of those; result: one of the plain values, a `Table`, or a `TableWriter` for a large one (17.5). The views are leased as for any ask (17.2): a function copies no bulk data and keeps nothing |
+| Discovery | at JAR load the host reads the annotation on the classes the engine registers, and binds each function once to a method handle (section 7, G2). A method without the annotation cannot be called, whatever configuration says: no reflection over arbitrary methods |
+| Configuration | `config/engines/<name>.yaml`, block `functions`: per function `enabled`, the version expected, and what it is mapped to: an API route, a BI measure, a Sutra call. Configuration switches and maps; it defines nothing. A function not named there is off |
+| Start check | the configured name and version against the JAR's. A mismatch or a missing function turns that one function off with one sentence naming both versions (Admin → Engines, the log, the route's answer); the engine and the server start (EN-17) |
+| Every call | goes through the host: the caller's row rules give the `RowSet` (18.1), masks apply to `Columns`, the licence is checked, the call is audited with function, version and caller; limits and cancellation as for an ask (3.6) |
+| Rules kept | pure and deterministic like any engine code (EN-1, EN-10): no side effects, no thread, no I/O. Mapped as a BI measure, its value carries an explanation, or one counted opaque step when it gives none (as EN-54) |
+| Mergeable | `mergeable = true`: the function is called per shard and returns a partial, and a method marked `@EngineFunction.Merge(name, version)` merges them, under 18.4's order and laws. Otherwise it runs on one node that holds the whole version; where no node does, the answer says so in words |
+| Shown | Admin → Engines lists each function (name, version, description, parameters, state, mappings); the generated API documents and the engine's tool list carry the same, so the GenUI agent can call it by description |
+| The kit | each declared function: types within the list above, description and version present, the author's cases for it (raw bits), the zero-copy group (17.9) on every call, the merge laws (18.7) when mergeable, and a version change whenever its signature or recorded answers change (the additive gate of 6.1) |
+
 ## Decisions taken (owner)
 
 **2026-11-21.** EN-1 to EN-28 are **accepted as recommended** (owner). The two Drishti interfaces named `ComputeEngine` are folded into one in i7b G4 (owner: fix known duplicates now); the full engine model (drishti-engine repository, engine-api, kit, ladder) is built in the combined i8 as planned.
 
 **2026-11-22.** EN-29 to EN-44 are **accepted as recommended** (owner): the acceptance test A1 to A8 as release gates, one JAR per product in `lib/engines`, a loader per JAR with the four platform libraries shared, `ServiceLoader` discovery, the built-against compatibility rule, trust `folder` and `pinned`, an engine never a `.dmod`, at start only, the two-interface minimum, the kit's delivery group and harness, data only through `Inputs`, packs by name and contract, no engine class in the reactor after R2, Drishti Risk as one JAR, and the i8 scope.
+
+**2026-11-22, zero copy and functions.** EN-56 to EN-65 (zero-copy data access, section 17) are **accepted as written** (owner).
+EN-66 (declared engine functions, 18.8) is **accepted** (owner).
 
 **2026-11-22, direction.** "Expand the engine concept to literally everything where computations are done." Designed in section 2. EN-45 to EN-55 are **not yet taken**: they wait for the owner.
 
