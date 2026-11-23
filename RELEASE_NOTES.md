@@ -13,6 +13,33 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7c: release notes
+
+*A point release on i7b: the Python set-up is split, and the server's Python work finds the interpreter from one setting.* Everything else is
+as in i7b.
+
+## What changes for administrators
+
+- **`tools/drishti.py setup` is split in parts**: `setup drishti` (settings folder, `dev.ini`, data folder, JVM files, Java, jar and module
+  checks), `setup venv` (`drishti-console/.venv`: the pinned Lake wheel first, then `requirements.txt`), `setup libs` (the same libraries
+  into the current Python, no venv) and `setup --system` (drishti plus libs, for machines that forbid a `.venv`). `setup` alone is drishti
+  then venv; `--skip-venv` is `setup drishti`.
+- **`--check` verifies the libraries** name by name (version specs and the Lake wheel's pin) and exits 1 naming what is missing.
+- **`drishti.python` is written once** into `dev.ini` by setup (never over an existing value). The server uses it for the feeds' Run now, the
+  compute pool and the pivot Python functions when their own setting is blank. Precedence (`PythonSetting`): `DRISHTI_PYTHON`, then the work's
+  own setting, then `drishti.python`.
+- **pip on Windows uses the Windows certificate store** (`--use-feature=truststore` before pip 24.2), so machines behind a TLS-inspecting proxy install.
+
+## What changes for developers
+
+- Two PyCharm launchers, **Drishti: setup** and **Drishti: setup (system Python)**.
+- IDE_GUIDE 2.3 (no `.venv` allowed: `setup --skip-venv`, the libraries into the system Python, System Interpreter) and 9.5 (from the release
+  zip: the platform's IDE_GUIDE.md and the clean-install launcher, then this guide's launchers).
+
+## Known limits
+
+Carried from i7b unchanged (below).
+
 # Drishti 2.9.11.i7b: release notes
 
 **Drishti is one of five.** The language, the lake, the screens' libraries and the shared utilities are products of their own, in their own

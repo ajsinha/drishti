@@ -16,7 +16,7 @@
 # Changelog
 
 
-## Unreleased
+## 2.9.11.i7c (2026-11-23)
 
 - **`drishti.py setup` split in two parts; one Python setting.** `setup drishti` (settings folder, `dev.ini`, data folder, JVM files,
   Java/jar/modules checks), `setup venv` (`drishti-console/.venv`: the pinned Lake wheel first, then `requirements.txt`), `setup libs`
