@@ -19,9 +19,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 /** The rows the Home services keep and pass between them; the columns are those of the {@code home/*} contracts (docs/contracts/HOME.md). */
-public final class HomeData {
+public interface HomeData {
 
-    private HomeData() {}
 
     /** One followed measure of one subject at one moment ({@code drishti/measure-value@1}). */
     public record MeasureValue(String subjectKind, String subject, String measure, double value) {
