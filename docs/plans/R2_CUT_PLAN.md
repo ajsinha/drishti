@@ -68,3 +68,126 @@ Order is strict: nothing is deleted before step 3 is green; step 6 is a separate
   the side-by-side test reports both the exact-bits count and the within-one count separately, and the four stack figures must be exact.
 - Features without an engine output yet (captures workflow, saved views, intraday overlay stream) stay on the host side and keep working
   through stored outputs; any route not covered by an output stays in-tree until it is, and is listed in the step-6 commit.
+
+## 6. Fable review (2026-11-22)
+
+Read only: nothing was built or run. Read against `DRISHTI_RISK_DESIGN.md` and `ENGINE_INTEGRATION_DESIGN.md` (on `wip/i7b-products`; they
+are not on `i8/develop`), drishti-risk `develop` `c7c623e`, drishti-engine `develop` `a3196c0`, Drishti `i8/develop` `d8a6b8e4d`.
+
+**Verdict: GO WITH CHANGES.** Steps 0 to 4 are additive and may start. Steps 5 and 6 (the switch and the deletion) are NO-GO until the
+must-change list is in the plan and green. The order (nothing deleted before the side by side) is right; the plan is too thin on what the
+engine cannot answer yet, on speed, and on everything outside the two route families.
+
+### 6.1 Facts the plan does not state
+
+| # | Fact | Where |
+|---|---|---|
+| F1 | Every drishti-risk commit is `wip: unbuilt`. `RiskRecorder.java` has never run: `tck/recorded` holds harvested goldens only (whole units, with Drishti's bits for node and basket VaR and ES); there is no `tck/data`. The CCR reference is compared within a float32 tolerance, "never as bits". Parametric, stressed, 10-day, backtest, period statistics, what-if and reports have hand cases only | drishti-risk `tck/`, `tools/split/recorder/` |
+| F2 | The engines are a new assembly over the calc classes (`VarBook`, `VarMath`, `ParallelSums`). They do not use `VarService`, `VarLoader`, `VarIntake`, `VarTier`, `VarHotFile`, `VarSelection`, the shard classes or `VarIntraday`. The intake is new code, and K5 is not done (`DataNode` and about 30 other host types still parked in `hostcompat`) | `risk-engine-market/.../MarketDay.java`, `MarketBooks.java`; `java/SPLIT_EXEMPTIONS.md` |
+| F3 | Vectors are copied at the seam and again in the book: `Arrays.copyOf(values, length)` per row into a heap map (`MarketDay` 213, `CcrDay` 120), then `new double[]`/`clone()` in `MarketBooks` (79, 109). One book is built per (set, window, currency, **visibility signature**). No mapped tier. BENCHMARK 4.8 runs 1,000,000 positions in a 6 GB heap; one heap copy of those vectors is about 4 GB | as F2 |
+| F4 | Outputs are by hierarchy node and system basket. There is no output for a scope expression (`BANK - DESK:RATES`), a personal or ad-hoc basket (the 50,000-position basket of BENCHMARK 4.3), the P&L path, matured items, history, currencies, hints, tree, matrix, compare, captures, contributions by attribute, the MR cube headline/detail/history, exposure distribution/contributions/tree/what-if, SIMM `against`, FRTB/SIMM/VaR playground estimate and recipes, correlation and beta. Capabilities are `[explain, workbook]` only: no `Partitioned` (cluster shards, `VarShardController`), no `Incremental` (intraday) | `market-risk.engine.yaml`, `ccr.engine.yaml` |
+| F5 | 68 of the 161 `banking-service` main classes stay, and about 60 of them compile against the half that is deleted (`VarService`, `VarBook`, `VarViews`, `VarDate`, `OrdinalSet`, `ExposureService`, ...). The plan has no step for them (design D4, lane E15) | list in 6.3 |
+| F6 | Three classes were added after the freeze commit `3813b8735` and exist in neither the plan nor drishti-risk: `VarHomeMeasures`, `VarHomeBacktest`, `ExposureHomeMeasures` (role homes) | `banking-service/.../var`, `/exposure` |
+| F7 | drishti-risk builds one JAR per line (`drishti-risk-market-<v>.jar`, `drishti-risk-ccr-<v>.jar`, products `drishti-risk-market`, `drishti-risk-ccr`; CHANGELOG "owner, 2026-11-22"). The plan's step 1 merges them again. README and `FileLicence`'s example say product `drishti-risk`. With two JARs the kernel and its OpenBLAS binding (bytedeco) load in two class loaders; a JVM loads one native library in one loader only (not tested here) | drishti-risk `java/risk-engine-*/pom.xml`, `README.md`; `kernel/drishti-engine-host/.../FileLicence.java` |
+| F8 | The exposure routes are `/api/v1/risk/exposure/*`, not `/api/v1/ccr/exposure/*` (step 5) | `ExposureController` |
+| F9 | `engines/changes/.../ChangesEngine.java` implements `com.ash.engine.Engine` inside the Drishti repository (outside the reactor): step 6's guard must scan reactor modules, or it fails on it | `engines/changes` |
+
+### 6.2 Must change (before step 5; shortest list)
+
+1. **Coverage table, and no partial deletion.** Add to the plan one row per route of the 15 controllers and per kept class of 6.3: the
+   engine output or capability that answers it, or "dropped, owner agreed". Replace the Risks line "any route not covered stays in-tree":
+   a route that stays keeps `VarBook` and `VarService` alive, which is two engines in one release. Step 6 starts only when the table has
+   no empty cell. Today's gaps are F4; each needs an output in drishti-risk first (scope and ad-hoc basket asks, path, tree, matrix,
+   compare, captures, cube, exposure tree/what-if, correlation, beta, `Partitioned`, `Incremental`).
+2. **Bits, not "within one".** Step 3 is exact raw bits for every scope of every case, in one JVM; a scope that differs is named and
+   stops the plan (delete "the within-one count"). Widen the corpus beyond the goldens: scope expressions and ad-hoc sets (1, 50, 50,000
+   positions), parametric (equal and EWMA), stressed and 10-day (both methods), components, what-if, backtest, period statistics
+   (112,041,646), reports, FRTB, SIMM, exposure summary/profile/pre-deal; each under at least three visibilities (all, one desk, one
+   legal entity), heap and mapped tier, 1, 4 and 24 threads, Java and OpenBLAS (OpenBLAS at today's 1e-12 rule, recorded apart).
+   Workbooks byte for byte. BANK 167,372,692 / 210,131,972 and DESK:RATES 74,633,680 / 79,246,576 asserted by name.
+3. **Run the recorder first.** Step 1 includes: build Drishti at the freeze commit, run `RiskRecorder`, commit `tck/data` and the
+   raw-bit cases for market risk and CCR, and drop the word "unbuilt". The plan's section 1 row "every double as its raw bits" is true
+   only after that. The three post-freeze classes (F6) are covered by step 3, not by the recorder.
+4. **A speed step before deletion (EN-49).** New step between 4 and 5: `engine tck bench` and `var_bench.py` on the side-by-side
+   branch, in-tree against engine, at 200,000 and 1,000,000 positions (one heavy job at a time): first open cold and warm, p50 within 5%,
+   p99 at 16 callers and bytes per ask within 10%, peak memory within 5%, 1,000,000 at `-Xmx6g`; `VarTierBenchmark`,
+   `ExposureTierBenchmark`; figures into `BENCHMARK.md`. It cannot pass with F3: the engine must take vectors without a copy (the sink's
+   array handed over once, or its own mapped file as today's hot file) and must not build a book per visibility (one shared book with
+   the visibility applied as a selection, `access.isolation: shared` with the kit's laws, EN-47).
+5. **Step 5 covers every kept class, not two route families.** FRTB, SIMM, MR cube, sensitivities, regulatory, stress window,
+   system baskets, playgrounds; the pivot provider and lens, Flight form, PV stream, ready rule, caches, capacity figures, role homes,
+   explainers, why panels, trade links, approvals, shard classes (6.3). Each is rewired, or deleted with the reason, in the commit that
+   makes it compile without the engine half.
+6. **Packs and the other module.** `market-risk/pack.yaml` (`var-engine`), `counterparty-risk/pack.yaml` (`exposure-engine`) and
+   **`modules/market-data/packs/market-data/pack.yaml` (`correlation-engine`: `correlation-result`, `equity-beta`)** are reactive
+   blocks on the deleted classes; they become `uses.engines`, generated by `tools/packgen/banking/make_packs.py`. Correlation and beta
+   need an output or their own JAR (design section 12) before step 6.
+7. **Risk off is a step with a test.** With `lib/engines` empty and the banking module on: the server starts; every risk route answers
+   one sentence naming the missing engine (not 404, not 500); menus, mnemonics, role-home tiles, pivot and BI measures, Flight forms,
+   alerts, ready rules, caches and capacity lines of risk are absent; no figure is served from a stored copy as if live.
+   Extend `test_engine_off_everywhere.py` and the drop-in lane; the same with one of the two engines absent, and with a licence that
+   does not grant the product (ENG-1014).
+8. **JAR and licence, decided once.** Follow the owner's line isolation: one JAR and one product id per line, as the repository builds
+   today; remove "step 1 adds the merged-JAR module" (or record the owner's word for merging). Then: one product-id spelling in the
+   descriptors, README, `FileLicence` and the drop-in licence file; a test that both JARs loaded together give `linear-algebra: native`
+   in both (F7) or the plan says which falls back and the speed step is run that way; `LineOfBusinessIsolationTest` green; the empty
+   liquidity and climate modules produce no JAR and register nothing.
+9. **Rollback written per step.** Steps 0 to 4: revert the commit, nothing in production code changed. Step 5: one switch per route
+   family (in-tree or engine) so a family is put back without a revert, removed in step 6. Step 6: one commit per package group in
+   dependency order, each green on its targeted tests, tagged before the first (`pre-r2-cut`); after it the only way back is the tag.
+   Step 7 before the drill, not after.
+10. **Tests and documents in the same commit as the code they describe**: sections 6.4 and 6.5 become rows of the step table.
+11. Small: F8 (route name); F9 (guard scope); the design documents merged to `i8/develop`; the goldens' new home named (their
+    classes move to drishti-risk, so `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyGolden`, `HierarchyEquivalenceTest`
+    in Drishti are rewritten in `drishti-modules-it` over the host with the expected files copied unedited).
+
+### 6.3 Callers the plan does not name
+
+Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/` unless a path is given.
+
+| Group | Files |
+|---|---|
+| Role homes (post-freeze) | `var/VarHomeMeasures`, `var/VarHomeBacktest`, `exposure/ExposureHomeMeasures`; `kernel/drishti-server/.../server/home/` reads them |
+| Figures on screens | `var/VarFigures`, `exposure/ExposureFigures` (moved, but registered as `ViewAugmenter`), `var/VarTradeLinks`, `exposure/ExposureTradeLinks`, `var/VarWhyPanels`, `var/VarNumberExplainer`, `exposure/ExposureNumberExplainer`, `exposure/ExposurePreDealExplainer` |
+| Admin and sizing | `var/VarCaches`, `exposure/ExposureCaches` (`CacheGroup`), `var/VarCapacityFigures` (`CapacityFigures`), `kernel/.../capacity/planner.yaml`, `tools/sizing_planner.py` |
+| Cluster | `var/VarMeasure` (`ShardedMeasure`), `var/VarShards`, `var/VarShardRows`, `var/VarShardController`, `var/VarNodeParts` |
+| Kinds | `var/VarPositionsProvider`, `var/VarSystemBasketsProvider` (`KindProvider`), `var/VarMatrixLake`, `var/VarMatrixController` |
+| Jobs and rules | `var/VarReadyRule`, `var/VarPvStream`, `var/VarPvStreamPlugin`, `var/StressWindowApprovals`, `var/VarReportApprovals`, `var/VarReportSignoff`, `config/alerts/platform-alerts.yaml` |
+| Pivot and BI | `var/VarPivotProvider`, `var/VarPivotLens`, `var/VarPivotCodes`, `var/MrCubeExtras`, `var/MrCubeController` |
+| Saved content | `var/VarSaved`, `var/VarBasketEdit`, `var/VarBasketDelete`, `var/VarSystemBasketEdit`, `var/VarBasketController` |
+| Wiring | `VarConfiguration`, `ExposureConfiguration`, `FrtbConfiguration`, `SimmConfiguration`, `MrCubeConfiguration`, `VarRegulatoryConfiguration`, `BankingAutoConfiguration`; `META-INF/drishti/engines.yaml`, `moved-classes.properties`, `resources/engines/*.yaml`; `modules/banking/module.yaml` (`compute.engines`, `java.jars`), `modules/banking/pom.xml`, `modules/banking/java/kernel-internals.txt` |
+| Kernel | `kernel/drishti-server/.../nativelib/NativeLibraries.java` and `resources/engines/openblas.yaml` (stay, over `Engine.notes()`), `server/playground/{ExportSizing,PlaygroundTemplate,PlaygroundWorkbook,SeriesLayout}.java`, `application.yaml`, `kernel/drishti-api/.../resolution/ModuleLayout.java`, `config/engines/{var,exposure,frtb-sa,simm,sensitivities,mr-cube,openblas}.yaml`, `config/lakes/banking/var-official.yaml` |
+| Other modules | `modules/market-data/packs/market-data/pack.yaml` and its `correlation-result`, `equity-beta` contracts; `modules/trading/.../TradingStandIn.java` (test) |
+| Console | `drishti-console/plugins/banking/risk_api.py`, `routes/{var,var_regulatory,exposure,frtb,simm,mcube,play,smat}_routes.py`, `static/js/drishti_exposure-explorer.js`, `core/backend.py`, `core/facts.py`, `web/templates/admin/_native_banner.html`, `_health_body.html`, `modules/banking/console/plugin.yaml` |
+| Tools | `tools/{varcli,expcli,frtbcli,simmcli,pivotcli}.py`, `tools/bench/{var_bench,users}.py`, `tools/ccr/{whatif_api_parity,record_whatif_parity}.py`, `tools/lake/{demo,maintain}.py`, `tools/packgen/banking/*`, `tools/packgen/{var,ccr}/*`, `tools/pvgen/*` (moves), `tools/drillkit/{container_smoke,explain_hammer,lake_cache}.py`, `tools/docs/shots/{_risk,t25,t29}.py`, `tools/module_layout.py`, `tools/domain_strings.py`, `tools/xlsx_before_after/capture_patch.py` |
+| Benchmarks | `testing/drishti-benchmarks/.../ManyScopeBenchmark.java`; `VarTierBenchmark`, `VarScaleBenchmark`, `ExposureTierBenchmark`, `ColumnHierarchyBenchmark` (banking tests; BENCHMARK.md 2.5 runs them by name) |
+
+### 6.4 Test impact
+
+| Tests | Count | Fate | Breaks on |
+|---|---|---|---|
+| Banking tests whose class is in drishti-risk (`banking-compute` all; `banking-service` unit tests of moved classes, the four goldens, `ExposureParityTest`, the benchmarks) | 85 of 166 | **deleted in Drishti at step 6** (they live in drishti-risk); the four goldens and the two parity files rewritten over the host (must-change 11) | package `com.ash.drishti.banking.*`; resources `var/golden-matrix.json.gz`, `var/hierarchy-golden-2026-09-30.json`, `var/system-baskets-golden-2026-09-30.json`, `var/whatif-parity.json`, `ccr/reference.json`, `ccr/whatif-parity.json`, `simm/simm-toy.yaml` |
+| Banking API tests on the harness (`VarApiTest`, `VarHierarchyApiTest`, `VarCurrencyApiTest`, `VarIntradayApiTest`, `VarParametricApiTest`, `VarStressApiTest`, `VarStressWindowApiTest`, `VarRegulatoryApiTest`, `VarPlaygroundApiTest`, `VarExplainApiTest`, `VarBasketSheetApiTest`, `VarSystemBasketApiTest`, `VarMatrixApiTest`, `VarPivotApiTest`, `VarMrCube*Test`, `VarShard*Test`, `VarPvStream*Test`, `VarReadyRuleTest`, `VarOfficialBi*Test`, `Var*RiskEditionTest`, `Exposure*ApiTest`, `ExposureOfficial*Test`, `FrtbApiTest`, `SimmApiTest`, `VarWhyScenarioCardTest`, `VarResourcesSoakTest`, ...; fixtures `BankingTestHarness`, `BankingTestServer`, `VarLakeFixture`, `VarPvFixture`, `VarHierarchyFixture`, `ExposureLakeFixture`, `VarIntradayLake`) | about 80 | **stay, rewired**: the harness copies the Risk JAR(s) into a `@TempDir` lib folder and writes the engine files. Expected values unedited. The largest test item, with no row in the plan | no JAR on the class path; `VarSiteEngineFileTest`, `VarLensSettingsTest`, `VarShardingSettingsTest` (`var.yaml` keys); `VarComputeFirstGuardTest` (scans moved sources); `VarInstalledModuleRestartTest`, `EditionShardClusterTest` (module jar names: check `drishti-compute-banking.jar`) |
+| Engine lists and counts | | **stay, expected lists change** | `BankingEngineCatalogueTest` (`containsExactly("var","exposure","sensitivities","frtb-sa","simm","mr-cube")`); banking `server/engines/{EngineApiTest,EngineFilesTest,EngineRegistryTest}`, `net/EngineClusterTest`, `CacheAdminTest`, `HealthApiTest`, `capacity/CapacityControllerTest`, `PlatformMetricsApiTest`, `BankingModuleOffTest`/`OnTest`, `BankingBindingsTest`, `TokenScopeGuardTest` (`token-scopes.yaml` routes); kernel `engines/EngineCatalogueTest`, `KernelWithoutModulesTest`, `modules/ModuleGateFilterTest`, `nativelib/NativeLibrariesTest`, `playground/LibreOfficeRecalc`; `kernel/drishti-api` `ModuleLayoutTest`, `ModuleOverridesTest`; `kernel/drishti-packs` `ModuleSettingsSiteSetsTest`; `kernel/drishti-registry` `AccessRegistryTest` |
+| Architecture guards and allow-lists | | **stay, lists edited in the deleting commit** | `testing/drishti-it`: `ArchitectureRulesTest`, `OneGrammarRulesTest`, `ServerJarHoldsNoModuleTest`, `src/test/resources/flat-harness-tests.txt`, `count-only-caches.txt`; `testing/drishti-modules-it`: `ModuleArchitectureRulesTest`, `PackagedPackLifecycleTest`, `PackagedServer`, `PackagedVarGoldenTest`, `ModuleSettingsTest`, `ModuleEngineFilesTest`; `modules/banking/java/kernel-internals.txt`; the new guards of step 6 |
+| Console pytest and browser | about 60 files | **stay**; route tests on `engine_fakes.py`/`engine_standin.py` are unchanged only if the aliases keep the JSON shapes (prove it: one shape test per route against the engine); live stacks (`var_stack.py`, `trade_grain_stack.py`, `conftest.py`) must put the JAR(s) in the stack's `lib/engines` | `test_var_*` (16), `test_pvar_*`, `test_exposure_*`, `test_predeal_browser`, `test_frtb*`, `test_simm`, `test_mcube`, `test_smat*`, `test_play*`, `test_stress_window_*`, `test_blas_switch_browser`, `test_native_banner`, `test_native_select_guard`, `test_capacity_*`, `test_engine_off_everywhere`, `test_engine_pages_*`, `test_engines_browser`, `test_engines_per_app`, `test_engine_help_pages`, `test_engine_figures`, `test_admin_engines_budget`, `test_arrow_bench_var_browser`, `test_role_home_browser`, `test_home_*`, `test_release_from_other_folder` (the release must carry the JARs), `test_settings_catalogue`, `test_no_relative_paths`; answers `tests/answers/bootstrap-{all,finance,genomics,risk}.json` (engine ids and routes); `elements/risk-screens.test.mjs` |
+| Visual snapshots | 40 PNG | **stay**; pixel-equal, a changed snapshot is a changed number or message | `tests/snapshots/{var-bank,var-desk,var-basket,exposure,frtb,simm,home,home-risk,home-market,home-markets,home-trading}/` |
+| Tools tests | | **stay, rewired**; `test_pvgen.py` moves | `tools/test_{varcli,expcli,frtbcli,simmcli,enginescli,dataloadcli,contracts,domain_strings,module_layout,exports_offer_jsonl,generators_write_jsonl}.py`, `tools/packgen/var/test_stress_data.py`, `tools/lake/test_maintain_{rows,admin}.py`, `tools/pvgen/test_pvgen.py` |
+| Drill | | **edited before the drill, not during** | `tools/drillkit/affected-map.txt` lines 18 to 23 (paths `banking-compute`, `banking-service`), `test_affected.py`, `test_drill_lanes.py`, `container_smoke.json`/`.py` (the VaR golden through the API), `dropin.json`/`dropin.py` (add the Risk JARs and the goldens, design 0.11), `tools/drill-budgets.txt`, `drill-known.txt`, `drill-java25.txt`; `GATE_CONSOLE` in `tools/drill.sh` keeps its files (they are the doc gates of 6.5) |
+| Recorder | | drishti-risk; must-change 3 | `record.py` names `modules/banking/java/banking-service`, `banking-compute`, `testing/drishti-testkit` at `3813b8735`: it runs against that commit, never against the cut tree |
+
+### 6.5 Document impact (each updated in the commit that changes what it describes)
+
+| Documents | Change |
+|---|---|
+| `docs/guides/VAR_GUIDE.md`, `EXPOSURE_GUIDE.md`, `FRTB_SA_GUIDE.md`, `SIMM_GUIDE.md`, `REGULATORY_VAR_REPORTING.md` | method sections move to drishti-risk; Drishti keeps screens, commands, configuration and a link (design 5.4, D7) |
+| `docs/admin/CONFIGURATION.md` (generated), `tools/settings_schemas.yaml`, `tools/settings_catalogue.py`, `kernel/.../application.yaml` | the keys of `var.yaml`, `exposure.yaml`, `frtb-sa.yaml`, `simm.yaml`, `sensitivities.yaml`, `mr-cube.yaml`, `openblas.yaml` become `market-risk.yaml` and `ccr.yaml` options, old keys listed as aliases; regenerate |
+| `docs/guides/CLI_REFERENCE.md`, `API_REFERENCE.md`, `tools/api_docs.yaml` | the `var`, `exp`, `frtb`, `simm` commands; routes now aliases; `/api/v1/engines/{id}/...` |
+| `docs/guides/ADMIN_GUIDE.md`, `OPERATIONS_GUIDE.md`, `CLUSTER_GUIDE.md`, `BUILD_GUIDE.md`, `DEVELOPER_GUIDE.md`, `IDE_GUIDE.md`, `DATA_GUIDE.md`, `DATA_LAKE_GUIDE.md`, `FLIGHT_GUIDE.md`, `PVF_LOADING.md`, `USER_GUIDE.md`, `bi/{PIVOT,PIVOT_SCALE_AND_CUBES,GROUPINGS_AND_ANALYTICS}.md`, `docs/DEPLOYMENT_AND_QA_GUIDE.md` (and its PDF) | engine files, `lib/engines`, the licence line, the install order with drishti-risk, module paths |
+| `docs/architecture/{ARCHITECTURE,COUNTERPARTY_ENGINES,DATA_ARCHITECTURE,DOMAIN_MODULES,HIGH_PERFORMANCE_NATIVE,KERNEL_AND_MODULES,LENSES,LIFECYCLE,SHARED_SCREENS,TEST_HARNESS}.md`, `kernel-and-modules/examples/banking/{module.yaml,console/plugin.yaml,project-mapping.txt}`, `capital-parameters/simm.yaml`, `HOW_IT_FITS.md`, `compute/drishti-compute/README.md`, `modules/banking/docs/README.md`, root `README.md` (counts from the file system) | class and module names, line counts, what the banking module holds |
+| `docs/admin/BENCHMARK.md` | 2.4, 2.5 commands (`VarTierBenchmark`, `VarScaleBenchmark`, `ExposureTierBenchmark` leave Drishti); the speed step's figures; `tools/bench/results/*.jsonl` kept as the reference |
+| Help | `drishti-console/plugins/banking/help.yaml`, `modules/banking/docs/help.yaml`, `modules/banking/packs/{market-risk,counterparty-risk,trading}/config/help.yaml`, `modules/market-data/packs/market-data/config/help.yaml`, `drishti-console/config/help.yaml`, `config/docs-features.yaml`, `tools/docs/guide_data.yaml`, `docs/knowledge/{risk,data}.md`, `glossary.yaml` |
+| Packs and contracts | `modules/banking/packs/{market-risk,counterparty-risk}/guides/*.md`, `README.md`, `contracts/{scenario-pv,pnl-vector,fx-scenario,var-limit,var-result,exposure-path,exposure-result}.contract.yaml`; `modules/market-data/.../{correlation-result,equity-beta}.contract.yaml`, `guides/market-data.md`; `docs/contracts/**` (generated: `tools/contracts.py docs`), `tools/packgen/banking/{make_docs.py,kept/market-risk.yaml,readme/*.intro.md}` |
+| Tutorials and screenshots | `docs/tutorials/16-*.md`, `17-*.md` and the CLI lines of every VaR and exposure tutorial; `tools/docs/shots/{_risk,t25,t29}.py`; screenshots retaken only where a message or menu changed |
+| Other READMEs | `plugins/drishti-plugin-kafka/README.md`, `plugins/drishti-plugin-iceberg/README.md` (name banking classes); drishti-risk `README.md` (its status line still says K1, "the code moves at K3") and `CHANGELOG.md` |
+| Gates that fail until the above is done | `drishti-console/tests/test_docs_{api_endpoints,error_codes,gates,help_map,pdfs,placeholders,plugins,ready_example,rot,settings}.py`, `test_help.py`, `test_help_links.py`, `test_help_configuration.py`, `test_help_developer.py`, `test_tools_guide.py`, `test_engine_help_pages.py`, `test_settings_catalogue.py`; `tools/settings_catalogue.py --check`, `tools/contracts.py check` and `docs --check`, `tools/testdata/sample_docs.py --check`, `tools/api_docs.py check-python` and `check-java`, every `make_*.py --check`, `tools/test_readmes.py`, `tools/docs/help_map.py`. Run `tools/drill.sh --gate` after steps 2, 5 and 6 |
