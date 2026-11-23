@@ -269,6 +269,52 @@ def wheel_names(folder: Path) -> dict[str, Path]:
     return {norm(w.name.split("-")[0]): w for w in sorted(folder.rglob("*.whl"))}
 
 
+def wheel_dirs(folder: Path) -> list[Path]:
+    """The folder(s) pip must be given: ``--find-links`` does not look in sub-folders, so a pack unzipped one folder deep (Explorer's
+    "Extract All" makes a folder named after the zip) needs the folder that holds the .whl files. ``folder`` itself when it holds any."""
+    if any(folder.glob("*.whl")):
+        return [folder]
+    return sorted({w.parent for w in folder.rglob("*.whl")}) or [folder]
+
+
+_WHEEL_PY = re.compile(r"^cp(\d)(\d+)$")
+
+
+def pack_pythons(folder: Path) -> set[tuple[int, int]]:
+    """The (major, minor) of every binary wheel (cpNN tag, not abi3, not pure Python) of the pack."""
+    out = set()
+    for w in folder.rglob("*.whl"):
+        parts = w.name[:-4].split("-")
+        if len(parts) >= 5:
+            m = _WHEEL_PY.match(parts[-3])
+            if m and parts[-2] not in ("abi3", "none"):
+                out.add((int(m.group(1)), int(m.group(2))))
+    return out
+
+
+def check_pack_python(py: str, folder: Path, run=subprocess.run) -> None:
+    """Refuses, in one sentence, a pack of cpNN wheels for another Python than ``py`` (``py`` on Windows starts the newest one)."""
+    packs = pack_pythons(folder)
+    if not packs:
+        return
+    r = run([py, "-c", "import sys; print('PYVER %d.%d' % sys.version_info[:2])"], capture_output=True, text=True, cwd=tempfile.gettempdir())
+    m = re.search(r"PYVER (\d+)\.(\d+)", r.stdout or "")
+    if not m or r.returncode:
+        return
+    have = (int(m.group(1)), int(m.group(2)))
+    if have not in packs:
+        want = "/".join(f"{a}.{b}" for a, b in sorted(packs))
+        first = f"{sorted(packs)[0][0]}.{sorted(packs)[0][1]}"
+        raise LaunchError(f"this pack is for Python {want}; this Python is {have[0]}.{have[1]}: run it with `py -{first} tools\\drishti.py setup ...`, or download the pack for your Python")
+
+
+def offline_failure(output: str, dirs: list[Path], wanted: list[str]) -> str:
+    """One sentence for a pip failure under ``--wheels``: names the wheel(s) missing from the folder, never the package index."""
+    m = re.search(r"No matching distribution found for (\S+)|Could not find a version that satisfies the requirement (\S+)", output)
+    what = (m.group(1) or m.group(2)) if m else ", ".join(wanted)
+    return f"pip could not install {what} from the wheel folder {', '.join(map(str, dirs))}: the folder lacks a wheel for it or one for this Python version and system; add it (pip download on a machine with an index) and run setup again"
+
+
 def plain_requirements(req: Path) -> Path:
     """requirements.txt without its ``--find-links``/``-f`` lines: they name ``../lib/wheels`` relative to drishti-console/, which pip
     resolves against the current folder and warns about once per package; setup installs the Lake wheel itself, first, so the line
@@ -304,8 +350,11 @@ def install(py: str, home: Path, windows: bool | None = None, run=subprocess.run
         lacking = [n for n, _ in others if norm(n) not in found]
         if lacking:
             raise LaunchError(f"the wheel folder {wheels} has no wheel for {', '.join(lacking)}: add it (on a machine with a working index: pip download {' '.join(n + sp for n, sp in others)} -d <folder>) and run setup again")
+    if wheels:
+        check_pack_python(py, wheels, run)
+    dirs = wheel_dirs(wheels) if wheels else []
     extra = [] if wheels else pip_extra(py, win, run)
-    off = ["--no-index", "--find-links", str(wheels)] if wheels else []
+    off = ["--no-index", *[x for d in dirs for x in ("--find-links", str(d))]] if wheels else []
     req = plain_requirements(home / "drishti-console" / "requirements.txt")
     steps = ([["install", "-q", *extra, *off, str(wheel)]] if wheel else []) + ([["install", "-q", *extra, *off, "-r", str(req)]] if from_req else []) \
         + ([["install", "-q", *extra, *off, "-r", str(home / LOCK)]] if from_lock else [])
@@ -316,6 +365,8 @@ def install(py: str, home: Path, windows: bool | None = None, run=subprocess.run
         if out.strip():
             say(out.rstrip())                      # pip's own output is always shown
         if r.returncode:
+            if wheels:
+                raise LaunchError(offline_failure(out, dirs, [n + sp for n, sp in others]))
             why = explain_pip_failure(out) or f"pip failed in {py}: read its message above"
             by_hand = ([str(wheel)] if wheel else []) + [n + sp for n, sp in others]
             raise LaunchError(why + ("" if wheels else "\nthen install what is missing by hand:  " + pip_line(py, by_hand)))

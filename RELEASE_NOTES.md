@@ -34,7 +34,9 @@
 
 ## Known limits
 
-Carried from i7c unchanged (below).
+Carried from i7c (below), and one more: where Program Files is not writable, pip falls back to the user's own folder; setup, PyCharm and the
+console see it, but the server's pivot Python workers start Python isolated (`-I`) and do not. Use a Python the user can write to, or have
+IT run step 4 as administrator.
 
 # Drishti 2.9.11.i7c: release notes
 

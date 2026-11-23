@@ -369,6 +369,41 @@ def test_wheels_folder_installs_only_from_it_lake_first(tmp_path):
         assert "--no-index" in c and c[c.index("--find-links") + 1] == str(wheels) and "--use-feature=truststore" not in c
 
 
+def test_a_pack_unzipped_one_folder_deep_gives_pip_the_folder_with_the_wheels(tmp_path):
+    home = fake_home(tmp_path / "h")
+    wheels = make_wheels(tmp_path / "w" / "drishti-wheels")
+    run = pip_run({})
+    pylibs.install("py", home, windows=False, run=run, wheels=tmp_path / "w")
+    for c in pips(run):
+        assert c[c.index("--find-links") + 1] == str(wheels)
+
+
+def test_a_pack_for_another_python_is_refused_in_one_sentence_and_pip_never_runs(tmp_path):
+    home = fake_home(tmp_path / "h")
+    wheels = make_wheels(tmp_path / "w", ("beta",))
+    (wheels / "alpha-1.0-cp313-cp313-win_amd64.whl").write_bytes(b"w")
+    run = pip_run({})
+    base = run
+
+    def probing(cmd, **kw):
+        if cmd[1] == "-c" and "PYVER" in cmd[2]:
+            return subprocess.CompletedProcess(cmd, 0, "PYVER 3.14\n", "")
+        return base(cmd, **kw)
+    probing.calls = base.calls
+    with pytest.raises(LaunchError) as e:
+        pylibs.install("py", home, windows=True, run=probing, wheels=wheels)
+    assert "this pack is for Python 3.13; this Python is 3.14: run it with `py -3.13" in str(e.value) and "index" not in str(e.value)
+    assert not pips(probing)
+
+
+def test_pip_failing_under_wheels_names_the_wheel_and_never_the_index(tmp_path):
+    home = fake_home(tmp_path / "h")
+    run = pip_run({}, "ERROR: No matching distribution found for numpy==2.4.0", 1)
+    with pytest.raises(LaunchError) as e:
+        pylibs.install("py", home, windows=False, run=run, wheels=make_wheels(tmp_path / "w"))
+    assert "numpy==2.4.0" in str(e.value) and "index" not in str(e.value.args[0]).replace("pip download on a machine with an index", "") and "--wheels" not in str(e.value)
+
+
 def test_wheels_zip_is_unzipped_and_removed_afterwards(tmp_path):
     import zipfile
     z = tmp_path / "pack.zip"
