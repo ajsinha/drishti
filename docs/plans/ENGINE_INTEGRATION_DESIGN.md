@@ -19,7 +19,7 @@
 extended the same day to every computation in Drishti (section 2). Nothing built, nothing run. EN-1 to EN-44 are accepted;
 EN-45 to EN-55 are accepted as recommended (owner, 2026-11-22; section 16). Zero copy (section 17, EN-56 to EN-65) and
 declared engine functions (18.8, EN-66) are accepted (owner, 2026-11-22); the computation contract (section 18, EN-67 to
-EN-74) is recommended, for the owner.**
+EN-74) is accepted (owner, 2026-11-22).**
 For the refresh also read: `kernel/drishti-common/.../SharedLib`, `kernel/drishti-module-runtime` (`ModuleClassLoader`,
 `ModuleVerifier`, `FirstParty`, `KernelLibraries`), `lib/README.md`. Read from git only: Drishti
 `main` at `9ce7c3170` (`kernel/drishti-api/.../api/compute`, `kernel/drishti-kernel-api/.../kernel/api/engines`,
@@ -1456,7 +1456,7 @@ EN-35), EN-18 (the certificate is evidence, EN-39) and EN-19 (in process means t
 |---|---|---|---|
 | EN-66 | Custom and edge-case computations | **Declared engine functions: a method marked `@EngineFunction(name, version)` with typed parameters and result (the zero-copy views `RowSet`, `FloatVectors`, `DoubleVectors`, `Columns`, and plain values), found from the annotation at JAR load and bound once to a method handle.** Configuration only switches a function on and maps it (API route, BI measure, Sutra call); every call passes access rules, licence and audit; name and version are checked at start with a clear sentence on a mismatch; a function may declare itself mergeable (per shard, then merge), otherwise it runs on one node; functions are listed in Admin → Engines and the API documents with their description (also read by the GenUI agent); the kit checks them (types, zero copy, version). Two levels: the computation contract for the shared 90%, declared functions for edge cases, any number of them (18.8) | a bespoke output and route per edge case; or reflection over arbitrary methods named in configuration |
 
-### EN-67 to EN-74: the computation contract (owner's concern, 2026-11-22; recommended, for the owner)
+### EN-67 to EN-74: the computation contract (owner's concern, 2026-11-22; accepted, owner)
 
 | # | Decision | Recommendation | The alternative |
 |---|---|---|---|
@@ -1714,6 +1714,8 @@ public double tailConcentration(FloatVectors pnl, RowSet rows, double level) { .
 | The kit | each declared function: types within the list above, description and version present, the author's cases for it (raw bits), the zero-copy group (17.9) on every call, the merge laws (18.7) when mergeable, and a version change whenever its signature or recorded answers change (the additive gate of 6.1) |
 
 ## Decisions taken (owner)
+
+- **2026-11-22:** the engine computation contract, EN-67 to EN-74 (scope resolved by the host to a `RowSet`; the mergeable aggregate; measures as functions of an aggregate; one reduction order; captures, the MR cube and alerts outside the engine; the same contract for query and OLAP; the kit's laws), accepted.
 
 **2026-11-21.** EN-1 to EN-28 are **accepted as recommended** (owner). The two Drishti interfaces named `ComputeEngine` are folded into one in i7b G4 (owner: fix known duplicates now); the full engine model (drishti-engine repository, engine-api, kit, ladder) is built in the combined i8 as planned.
 
