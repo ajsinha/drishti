@@ -59,8 +59,6 @@ class HomesSideBySideTest {
         System.out.println("side by side, role Homes: " + inTree.size() + " tables, " + rows + " rows; differences: " + differences);
         System.out.println("homes sample: " + inTree.entrySet().stream().limit(6).map(e -> e.getKey() + "=" + cut(e.getValue())).toList());
         assertThat(inTree).isNotEmpty();
-        assumeTrue(rows > 0, "no Home row on either path: the module's MeasureSource and HomeTable beans are not yet handed to the kernel's "
-                + "HomeTables (ModuleBridge has no contributor for them), so the Homes' VaR panels are empty in a packaged server, in-tree too");
         assertThat(rows).as("rows compared").isGreaterThan(0);
         assertThat(differences).as("Home tables that differ between in-tree and engine").isEmpty();
     }
@@ -74,8 +72,22 @@ class HomesSideBySideTest {
         Path work = FOLDER.resolve("server-" + path);
         RiskSideBySideTest.deleteTree(work);
         SideBySide.dropJars(Path.of(jars), work);
-        PackagedServer server = PackagedServer.start(work, lake, "2026-09-30", Map.of("DRISHTI_VAR_CONSUMERS_PATH", path, "DRISHTI_HOMES_ROLES_*", String.join(",", HOMES), "DRISHTI_HOMES_DIR", PackagedServer.REPO.resolve("config").resolve("homes").toRealPath().toString()));
-        System.out.println("homes offered (" + path + "): " + server.get("/api/v1/homes"));
+        PackagedServer server = PackagedServer.start(work, lake, "2026-09-30", Map.of("DRISHTI_VAR_CONSUMERS_PATH", path, "DRISHTI_HOMES_ROLES_*", String.join(",", HOMES)));
+        if (path.equals("engine")) {                              // the engine starts with the server but answers when its day is read: wait for it
+            long end = System.currentTimeMillis() + 180_000;
+            while (true) {
+                try {
+                    server.get("/api/v1/risk/var/scope?scope=NODE:BANK&asOf=2026-09-30&window=250&path=engine");
+                    break;
+                } catch (IllegalStateException e) {
+                    if (System.currentTimeMillis() > end) {
+                        server.close();
+                        throw e;
+                    }
+                    Thread.sleep(3000);
+                }
+            }
+        }
         try {
             Map<String, JsonNode> out = new java.util.LinkedHashMap<>();
             for (String h : HOMES) {

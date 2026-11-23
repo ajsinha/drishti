@@ -86,6 +86,7 @@ final class VarHomeMeasures implements MeasureSource {
                 default -> OptionalDouble.empty();                  // TODO(R2): PNL_MTD, DV01
             };
         } catch (RuntimeException e) {
+            fault(e);
             return OptionalDouble.empty();                          // no data for the date, or the person may see none: said by the Home
         }
     }
@@ -156,7 +157,14 @@ final class VarHomeMeasures implements MeasureSource {
             Object rows = views.tree(p, null, date).get("nodes");
             return rows instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
         } catch (RuntimeException e) {
+            fault(e);
             return List.of();
+        }
+    }
+
+    private void fault(RuntimeException e) {
+        if (engine.consumers()) {                                   // the engine path says why a Home panel is empty
+            org.slf4j.LoggerFactory.getLogger(VarHomeMeasures.class).warn("role Home measure from the market-risk engine: {}", e.toString());
         }
     }
 
