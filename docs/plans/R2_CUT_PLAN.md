@@ -1,7 +1,7 @@
 <!-- Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Drishti. Proprietary: see LICENSE. -->
 # R2 cut plan: Drishti on Drishti Risk
 
-Status: plan for review (Fable) before any in-tree risk code is deleted. Branch `i8/develop`. Design: DRISHTI_RISK_DESIGN.md (sections 0a,
+Status: revised after Fable's review (section 6, GO WITH CHANGES): the eleven must-changes of 6.2 are in sections 1 to 5 (marked MC-n). Steps 0 to 4 proceed; steps 5 and 6 stay NO-GO until the coverage table has no empty cell and steps 1 to 4a are green. Branch `i8/develop`. Design: DRISHTI_RISK_DESIGN.md (sections 0a,
 5, 7, 9, 10) and ENGINE_INTEGRATION_DESIGN.md (sections 0, 9, 12). Gate: A8, "Risk from one dropped JAR, through configuration, with the
 goldens bit-identical".
 
@@ -9,65 +9,76 @@ goldens bit-identical".
 
 | Proof | Where | Figures |
 |---|---|---|
-| Stack headline | packaged server over the committed sample lake, 2026-09-30, 509-day window, USD | BANK VaR 167,372,692, ES 210,131,972; DESK:RATES VaR 74,633,680, ES 79,246,576 |
-| `PackagedVarGoldenTest` | `testing/drishti-modules-it` | 12 cases (3 dates x 2 windows x 2 currencies), > 1,500 scopes, members exact, VaR/ES within the test's existing rule, limit and use |
-| `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyGolden` | `modules/banking/java/*/src/test` | expected files unedited |
-| Recorder (RK-18) | drishti-risk `tck/recorded/**` (harvested from Drishti's goldens, raw bits) | every double as its raw bits |
+| Stack headline, asserted **by name** (MC-2) | packaged server over the committed sample lake, 2026-09-30, 509-day window, USD | BANK VaR 167,372,692, ES 210,131,972; DESK:RATES VaR 74,633,680, ES 79,246,576 |
+| `PackagedVarGoldenTest` | `testing/drishti-modules-it` | 12 cases (3 dates x 2 windows x 2 currencies), > 1,500 scopes, members exact, VaR/ES, limit and use |
+| `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyGolden`, `HierarchyEquivalenceTest` | today `modules/banking/java/*/src/test`; their classes move to drishti-risk, so at step 4 they are **rewritten in `drishti-modules-it` over the host, expected files copied unedited** (MC-11) | expected files unedited |
+| Recorder (RK-18) | drishti-risk `tck/recorded/**` and `tck/data/**`, written by `RiskRecorder` run against Drishti at the freeze commit `3813b8735` (step 1, MC-3) | every double as its raw bits; workbooks byte for byte |
 
-No expected value, tolerance or golden file is changed by any step of this plan. A step that needs one changed stops and is reported.
+No expected value, tolerance or golden file is changed by any step. **Equality is raw bits** (MC-2): a scope whose VaR or ES differs in
+any bit is named and stops the plan; there is no "within one" count. The CCR reference, recorded today within a float32 tolerance, is
+re-recorded as raw bits by the recorder.
 
 ## 2. What moves, what Drishti keeps
 
-Moves (already copied, with history, into `drishti-platform/drishti-risk` at R1; Drishti's copies are deleted only at step 6):
+Moves (copied with history into `drishti-platform/drishti-risk` at R1; Drishti's copies are deleted only at step 6):
 
 | Drishti today | Risk module |
 |---|---|
-| `compute.vector`, `compute.linalg` (drishti-compute), `server.playground`, `OpenBlasEngine` | `risk-kernel` |
-| `banking-compute/var`, `/frtb`, `/analytics`, `MethodChoices`; `banking-service/var` engine half (VarBook, VarService maths, loaders, tiers, captures model, explain, playgrounds) | `risk-market` + `risk-engine-market` (`market-risk`) |
+| `compute.vector`, `compute.linalg` (drishti-compute), `server.playground`, `OpenBlasEngine` | `risk-kernel` (Drishti keeps `NativeLibraries` and `openblas.yaml` over `Engine.notes()`) |
+| `banking-compute/var`, `/frtb`, `MethodChoices`; `banking-service/var` engine half | `risk-market` + `risk-engine-market` (`market-risk`) |
+| `banking-compute/analytics` (correlation, beta) | an output of `market-risk`, or its own engine JAR (design section 12), before step 6 (MC-6) |
 | `banking-compute/ccr`, `/simm`; `banking-service/exposure`, `/simm` engine half | `risk-ccr` + `risk-engine-ccr` (`ccr`) |
 
-Drishti keeps (banking module, naming no `com.ash.risk` type after step 6): controllers (old routes become aliases of
-`/api/v1/engines/{id}/...` or ask through the host by output name), access (`VarAccess`, `ExposureAccess` produce a `Visibility`), pivot
-adapters (ask by output name until M3), sign-off and approvals, saved views and basket edits, official sinks, Flight form, intraday
-stream, `BankingVocabulary`, `RiskOperations`; the three packs; `tools/mrloader`, `tools/drishti.py var|exp|frtb|simm`.
+Drishti keeps the 68 `banking-service` classes of section 6.3; **each one** is rewired to engine API values, or deleted with its reason,
+in the step-5 commit that makes it compile without the engine half (MC-5). Nothing that stays may keep `VarBook` or `VarService` alive
+(MC-1).
 
 ## 3. Engine-host wiring
 
-1. drishti-risk builds `drishti-risk-<version>.jar`: one shaded JAR holding `risk-kernel`, `risk-market`, `risk-ccr`,
-   `risk-engine-market`, `risk-engine-ccr` and the private libraries; platform packages (engine API, tools, Lake, Rachana) excluded; both
-   engines registered for `ServiceLoader`. Today the repository makes one JAR per engine: step 1 adds the merged-JAR module.
-2. Drishti has no Maven dependency on it. Packaging copies the JAR (version and SHA-384 listed in the distribution) into
-   `<home>/lib/engines`. A test that needs it copies it into a `@TempDir` lib folder (the drop-in pattern of `EngineHostTest`).
-3. `config/engines/market-risk.yaml` and `ccr.yaml` bind inputs to the packs' kinds (`scenario-pv` -> `market-risk/scenario-pv`,
-   `fx-scenario`, `scenario-set`, `var-limit`, `system-basket`, `var-official` history, ...; `ccr`: `exposure-path`, `simulation-run`,
-   `netting-set`, `csa`, `agreement`, `collateral-balance`, `credit-limit`), and carry `options`: hierarchies and position rules from
-   today's `var.yaml` and the market-risk pack (old keys read as aliases), `linear-algebra` from `openblas.yaml`.
-4. The banking module asks through `EngineHost` (`HostedEngine.ask` by output name: `node-var`, `basket-var`, `headline`, ...), with the
-   caller's `Visibility` from `VarAccess`.
+1. **One JAR and one product id per line** (the owner's isolation decision, MC-8): `drishti-risk-market-<v>.jar` (product
+   `drishti-risk-market`, engine `market-risk`) and `drishti-risk-ccr-<v>.jar` (product `drishti-risk-ccr`, engine `ccr`). No merged JAR.
+   The descriptors, the drishti-risk README, `FileLicence`'s example and the drop-in licence file use these two spellings. The empty
+   liquidity and climate modules produce no JAR and register nothing. A test loads both JARs together and states what
+   `linear-algebra: native` does in each loader (a JVM binds a native library in one loader): either both native, or the second falls
+   back to Java in words, and the speed step runs that way.
+2. Drishti has no Maven dependency on either JAR. Packaging copies them (versions and SHA-384 listed in the distribution) into
+   `<home>/lib/engines`. A test copies them into a `@TempDir` lib folder; the banking test harness (`BankingTestHarness`,
+   `BankingTestServer` and the fixtures, about 80 API tests) does the same and writes the engine files, expected values unedited.
+3. `config/engines/market-risk.yaml` and `ccr.yaml` bind inputs to the packs' kinds and carry `options` (hierarchies and position rules
+   from the market-risk pack; today's `var.yaml`, `exposure.yaml`, `frtb-sa.yaml`, `simm.yaml`, `sensitivities.yaml`, `mr-cube.yaml` keys
+   as aliases; `linear-algebra` from `openblas.yaml`).
+4. **Packs** (MC-6): the reactive blocks of `market-risk/pack.yaml` (`var-engine`), `counterparty-risk/pack.yaml` (`exposure-engine`) and
+   `modules/market-data/packs/market-data/pack.yaml` (`correlation-engine`: `correlation-result`, `equity-beta`) become `uses.engines`,
+   generated by `tools/packgen/banking/make_packs.py`.
+5. The banking module asks through `EngineHost` by output name, with the caller's `Visibility` from `VarAccess` and `ExposureAccess`.
+   Routes are `/api/v1/risk/var/*` and `/api/v1/risk/exposure/*` (F8).
 
-## 4. Steps, each a small commit green on its targeted tests
+## 4. Steps
 
-| Step | What | Proven by |
-|---|---|---|
-| 0 | i8/develop builds and `./mvnw clean verify` passes (step 1 of the lane) | full verify |
-| 1 | drishti-risk builds; its unit tests, kit (`MarketKitIT`, `CcrKitIT`) and recorder cases pass; merged JAR module | `./mvnw clean verify` in drishti-risk; recorder raw bits equal |
-| 2 | Engine files `market-risk.yaml`, `ccr.yaml` (bindings, options); the server starts with the JAR in `lib/engines` and both engines `running` | `EngineHostTest`-style drop-in test with the Risk JAR; Admin -> Engines |
-| 3 | **Side by side**: a test-only comparison (`RiskSideBySideIT` in `drishti-modules-it`) starts the packaged server with the Risk JAR dropped in and, for every golden scope, asks both the in-tree route (`/api/v1/risk/var/scope`) and the engine (`/api/v1/engines/market-risk/output` `node-var`/`basket-var`) | VaR and ES raw bits equal per scope; members, limit, use equal; the four stack figures |
-| 4 | Golden tests call through the host: `PackagedVarGoldenTest` asks the engine route; `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyGolden` run against the JAR in a temporary lib folder | expected files unedited, all pass |
-| 5 | Banking routes switch to the engine: `/api/v1/risk/var/*` and `/api/v1/ccr/exposure/*` answer by asking the host (old routes as aliases); the in-tree path still compiled, unused | step 3's test now compares the route against the recorder; the console's VaR browser tests |
-| 6 | **Deletion** (after Fable's review of this plan): `banking-compute` engine packages, the engine half of `banking-service`, `compute.vector`, `compute.linalg`, `server.playground`, `OpenBlasEngine`, `VarResultEngine`, `ExposureResultEngine`, the old engine files (aliases kept), `module.yaml compute.engines` | full verify; guard "no source imports `com.ash.risk`, no class implements `com.ash.engine.Engine`, no pom names an engine artifact" |
-| 7 | Upgrade proof: Risk 1.0.0 replaced by a 1.0.1 build in `lib/engines`, server jar hash unchanged, goldens pass | the drop-in lane |
+Each step is small commits, each green on its targeted tests; tests and documents change **in the same commit** as the code they describe
+(MC-10: the rows of 6.4 and 6.5 are listed per step).
 
-Order is strict: nothing is deleted before step 3 is green; step 6 is a separate commit series after the review.
+| Step | What | Proven by | Tests and documents in the same commits | Rollback (MC-9) |
+|---|---|---|---|---|
+| 0 | i8/develop builds; `./mvnw clean verify` passes | full verify | | revert |
+| 1 | drishti-risk builds (no `wip: unbuilt` left); **`RiskRecorder` run first** against Drishti built at `3813b8735`; `tck/data` and the raw-bit cases for market risk and CCR committed (MC-3); unit tests, `MarketKitIT`, `CcrKitIT`, `LineOfBusinessIsolationTest` green; the two per-line JARs (MC-8) | `./mvnw clean verify` in drishti-risk; recorder cases pass to the bit | drishti-risk README (status, product ids), CHANGELOG | revert in drishti-risk; Drishti untouched |
+| 2 | `config/engines/market-risk.yaml`, `ccr.yaml`; the server starts with both JARs in `lib/engines` and both engines `running`; the two-loader native test | drop-in test with the Risk JARs; Admin -> Engines | ENGINES_IN_DRISHTI (Risk as the worked example), CONFIGURATION.md regenerated | delete the two files and the JARs |
+| 3 | **Side by side** in one JVM (`RiskSideBySideTest`, `drishti-modules-it`): every golden scope asked in-tree and through the engine, raw bits; then the widened corpus (MC-2): scope expressions and ad-hoc sets of 1, 50, 50,000 positions; parametric equal and EWMA; stressed and 10-day (both methods); components; what-if; backtest; period statistics (112,041,646); reports; FRTB; SIMM; exposure summary, profile, pre-deal; each under three visibilities (all, one desk, one legal entity); heap and mapped tier; 1, 4 and 24 threads; Java and OpenBLAS (OpenBLAS at the 1e-12 rule, recorded apart); workbooks byte for byte; the four stack figures by name. The three post-freeze classes (F6: `VarHomeMeasures`, `VarHomeBacktest`, `ExposureHomeMeasures`) are covered here | zero differing scopes | the test and its row in TEST_HARNESS | test-only: revert |
+| 4 | The goldens over the host: `PackagedVarGoldenTest` asks the engine; `VarGoldenMatrixTest`, `SystemBasketGoldenTest`, `HierarchyGolden`, `HierarchyEquivalenceTest` rewritten in `drishti-modules-it`, expected files copied unedited (MC-11) | all pass | TEST_HARNESS; the goldens' new home named in VAR_GUIDE's proof section | test-only: revert |
+| 4a | **Speed** (MC-4, EN-49): `engine tck bench` and `tools/bench/var_bench.py`, in-tree against engine, at 200,000 and 1,000,000 positions, one heavy job at a time: first open cold and warm; p50 within 5 %; p99 at 16 callers and bytes per ask within 10 %; peak memory within 5 %; 1,000,000 at `-Xmx6g`; `VarTierBenchmark`, `ExposureTierBenchmark`. Needs, in drishti-risk first: vectors taken without a copy (the sink's array handed over once, or the engine's own mapped file as today's hot file) and one shared book with visibility as a selection (`access.isolation: shared`, kit laws filter-equivalence and interleaving) instead of a book per visibility (F3) | figures within the bounds | BENCHMARK.md (one section, the figures) | none needed (a measurement) |
+| 4b | **Coverage** (MC-1): every route of the 15 controllers and every kept class of 6.3 has an engine output or capability in drishti-risk, or "dropped, owner agreed". Today's gaps (F4) are R2 work: scope-expression and ad-hoc/personal basket asks, P&L path, matured items, history, currencies, hints, tree, matrix, compare, captures, contributions by attribute, MR cube headline/detail/history, exposure distribution/contributions/tree/what-if, SIMM `against`, playground estimate and recipes, correlation and beta, `Partitioned` (shards) and `Incremental` (intraday) | the coverage table (appendix A, filled as outputs land) has no empty cell; each new output has kit cases and is in step 3's corpus | the descriptors' docs; drishti-risk CHANGELOG | revert in drishti-risk |
+| 5 | **Switch, every kept class** (MC-5): FRTB, SIMM, MR cube, sensitivities, regulatory, stress window, system baskets, playgrounds; pivot provider and lens, Flight form, PV stream, ready rule, caches, capacity figures, role homes, explainers, why panels, trade links, approvals, shard classes. One switch per route family (`in-tree` or `engine`), so a family goes back without a revert | step 3's test compares the routes against the recorder; a route-shape test per route against the engine (the console's fakes keep their JSON); the console's VaR browser tests | 6.4 "stay, rewired" and "engine lists and counts"; 6.5 guides, API and CLI references, help | flip the family's switch back |
+| 5a | **Risk off** (MC-7): with `lib/engines` empty and banking on, the server starts; every risk route answers one sentence naming the missing engine (not 404, not 500); menus, mnemonics, role-home tiles, pivot and BI measures, Flight forms, alerts, ready rules, caches and capacity lines of risk are absent; no stored copy served as live. The same with one engine absent, and with a licence that does not grant the product (`ENG-1014`) | `test_engine_off_everywhere.py` extended; the drop-in lane | ADMIN_GUIDE (risk off) | revert |
+| 6 | **Deletion** (only when 4b has no empty cell and 5, 5a are green): tag `pre-r2-cut` first; one commit per package group in dependency order, each green on its targeted tests: `banking-compute` engine packages, the engine half of `banking-service`, `compute.vector`, `compute.linalg`, `server.playground`, `OpenBlasEngine`, `VarResultEngine`, `ExposureResultEngine`, the old engine files (keys kept as aliases), `module.yaml compute.engines`, the reactive blocks; the 85 moved tests | full verify; a guard over the **reactor modules** (F9: `engines/changes` is outside the reactor): no source imports `com.ash.risk`, no class implements `com.ash.engine.Engine`, no pom names an engine artifact | 6.4 "deleted at step 6" and the guards' allow-lists; 6.5 documents | the tag `pre-r2-cut` |
+| 7 | Upgrade proof, **before the drill**: Risk 1.0.0 replaced by 1.0.1 in `lib/engines`, the server jar's hash unchanged, the goldens pass | the drop-in lane | DEPLOYMENT_AND_QA_GUIDE (upgrade) | put the old JAR back |
 
 ## 5. Risks
 
-- Inputs arrive through the engine API's `Inputs` (columns) instead of `DataNode` documents: the intake is where a number can move (knot 1).
-  Step 3 compares raw bits scope by scope, so a drift is found before any route changes.
-- Summation order: the in-tree server sums in its own order (the golden test allows one unit). The engine's `ParallelSums` is fixed-order;
-  the side-by-side test reports both the exact-bits count and the within-one count separately, and the four stack figures must be exact.
-- Features without an engine output yet (captures workflow, saved views, intraday overlay stream) stay on the host side and keep working
-  through stored outputs; any route not covered by an output stays in-tree until it is, and is listed in the step-6 commit.
+- Inputs arrive through the engine API's `Inputs` (columns) instead of `DataNode` documents, through new intake code (F2): step 3 compares
+  raw bits scope by scope before any route changes.
+- Speed and memory (F3): a heap copy per visibility cannot meet step 4a; the engine changes come before the speed step, not after it.
+- Two loaders and one native library (F7): proven at step 2, measured at step 4a.
+- Scope: the outputs of step 4b are most of the R2 work; the deletion waits for them. No route stays in-tree past step 6 (MC-1).
 
 ## 6. Fable review (2026-11-22)
 
