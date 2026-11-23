@@ -17,7 +17,8 @@
 
 **Status: design for the owner, written 2026-11-21, refreshed 2026-11-22 around the owner's acceptance test (section 0) and
 extended the same day to every computation in Drishti (section 2). Nothing built, nothing run. EN-1 to EN-44 are accepted;
-EN-45 to EN-55 are accepted as recommended (owner, 2026-11-22; section 16).**
+EN-45 to EN-55 are accepted as recommended (owner, 2026-11-22; section 16). Zero copy (section 17, EN-56 to EN-65): the
+principle is the owner's (2026-11-22); EN-57 to EN-65 are recommended, for the owner.**
 For the refresh also read: `kernel/drishti-common/.../SharedLib`, `kernel/drishti-module-runtime` (`ModuleClassLoader`,
 `ModuleVerifier`, `FirstParty`, `KernelLibraries`), `lib/README.md`. Read from git only: Drishti
 `main` at `9ce7c3170` (`kernel/drishti-api/.../api/compute`, `kernel/drishti-kernel-api/.../kernel/api/engines`,
@@ -55,7 +56,8 @@ order in which today's code moves. It reads the code at `origin/wip/g4-rehearsal
 10. [Two paper tests](#10-two-paper-tests) · 11. [What stays in Drishti](#11-what-stays-in-drishti) ·
 12. [Migration of today's engines](#12-migration-of-todays-engines) · 13. [Repository and coordinates](#13-repository-and-coordinates) ·
 14. [Estimate and the combined i8 plan](#14-estimate-and-the-combined-i8-plan) · 15. [Risks](#15-risks) ·
-16. [Decisions EN-1 to EN-55](#16-decisions-en-1-to-en-55)
+16. [Decisions EN-1 to EN-65](#16-decisions-en-1-to-en-65) ·
+17. [Zero-copy data access](#17-zero-copy-data-access-en-56-to-en-65)
 
 ## 0. The acceptance test, and the answer in one page
 
@@ -517,11 +519,10 @@ applies.
 | 4 | **The engine's own mapped file** under its work folder (today's `VarHotFile`, `ExposureHotFile`, `MappedMatrix`), built once per input stamp and mapped on later opens | none after the first open | the hot files, unchanged in form |
 | 5 | **Arrow IPC** over a pipe or a mapped file | one, or a mapping | the process binding's wire only (section 8) |
 
-- **In process, zero copy means the same heap arrays, not Arrow buffers.** On Java 21 an off-heap Arrow buffer cannot be read
-  as a `double[]` without a copy, so Arrow stays what EN-3 made it: the format between processes and for Flight, not a type of
-  the API. If a benchmark gate ever shows a copy on a hot path that arrays cannot remove (a mapped lake file handed straight
-  through), the additive answer is a read-only `java.nio` buffer view on `Batch`: JDK-only, a minor API version. It is
-  reserved, not built (EN-48).
+- **Zero copy is the design, not a tuning step (section 17, EN-56 to EN-65).** The host owns bulk memory; rows 2 to 4 reach
+  an engine as leased, read-only `java.nio` views in Arrow's buffer layout (`Columns`, `FloatVectors`, `DoubleVectors`), over
+  heap arrays and mapped files alike, with the rows a caller may see as a `RowSet`. The API stays JDK-only and Arrow stays out
+  of its signatures (EN-3); the same bytes are an Arrow IPC file for row 5.
 - **Nothing per row crosses the seam**: no object, no map, no boxed value, no reflective call. Accessors are bound once per
   session through method handles (G2). The kit's contract group counts interface calls per batch.
 - **Answers are handed back the same way**: `Tables.columns(...)` takes the engine's arrays, and the host serves them to the
@@ -640,10 +641,10 @@ generators, the Admin card, Help and the AI tool list. The engine's class is not
 
 ### 3.2 Inputs
 
-- **Rows of a contract as column batches**, pulled by the engine through the host (`Inputs.table(name).scan(..)`). Arrays per
-  column (`double[]`, `long[]`, `String[]`), reused per batch, as Lake's read API hands them over: no object per row, no copy.
-  Vector columns (a 509-number P&L vector per position) come through a vector sink of the same four arguments as Lake's, so
-  Drishti's adapter over Lake adds one interface call per row and no allocation.
+- **Rows of a contract as column batches**, pulled by the engine through the host (`Inputs.table(name).scan(..)`), as
+  read-only views of the host's memory under a lease (section 17: the view types, ownership and lifetime). A buffer per
+  column, filled once by Lake's read API: no object per row, no copy. Vector columns (a 509-number P&L vector per position)
+  are a vector view over the store's rows, in the width the store holds.
 - **Own types only, JDK-only API.** Arrow is not in a public signature. The lead's note says "Data Protocol/Arrow" for tables;
   the recommendation is the Data Protocol's *types* in the API and Arrow as an optional adapter artifact (`engine-arrow`) and
   as the wire format of the process binding. Reason: Arrow Java moves its major version often, and an API that outside authors
@@ -1356,7 +1357,7 @@ ship with the sample engine and the analytics engines.
 | `engine-api` 1.0 is frozen before the query kind has been built | a 2.0 soon after | the query descriptor and the grouped scan are reviewed on paper at E0 (EN-53); all of 2.3 is additive |
 | `shared` isolation is trusted without its proof | one person's rows in another's answer | `shared` only with a certificate that lists both laws; the host's output re-check; the shadow comparison (2.4) |
 
-## 16. Decisions EN-1 to EN-55
+## 16. Decisions EN-1 to EN-65
 
 ### EN-1 to EN-28: accepted (owner, 2026-11-21)
 
@@ -1367,7 +1368,7 @@ ship with the sample engine and the analytics engines.
 | EN-3 | API dependencies | **`engine-api` is JDK-only**; Arrow is an adapter and a wire format, not a public type |
 | EN-4 | Lifecycle | **engine → session over a snapshot → ask**; no separate batch type |
 | EN-5 | Snapshot | **Declared dimensions** (often `date`, possibly none), not a business date in the API |
-| EN-6 | Inputs | **Contract rows as column batches pulled through the host**, the vector sink in Lake's shape; two modes, `session` and `request` |
+| EN-6 | Inputs | **Contract rows as column batches pulled through the host**, the vector sink in Lake's shape; two modes, `session` and `request`. The form of the batches and vectors is EN-58's views |
 | EN-7 | Contract schema | **Lake's contract schema** for inputs and stored outputs; **Data Protocol types** for output tables |
 | EN-8 | Missing input | **An answer (`NOT_FOUND` with names)**, never an error, never a substitute |
 | EN-9 | Identity | **Visibility and an actor name; no principal**; no visibility is a refusal |
@@ -1423,7 +1424,7 @@ EN-35), EN-18 (the certificate is evidence, EN-39) and EN-19 (in process means t
 | EN-45 | The scope of the engine model | **Every figure a person reads, stores or decides on is computed by an engine** (2.1). The whole list of what is not an engine: side effects and workflow, rows as they are, screens, Rachana Core's list aggregates over rows the page holds, the host's figures about itself, Calc in the person's browser (labelled as not Drishti's figures), LLM calls, libraries. Amends EN-1 and EN-23 | keep the pivot and BI engine as a kernel service (the first design) |
 | EN-46 | Kinds | **Five ways of interacting (run, query, live, what-if, explain), no kind in the API, no new engine interface.** Additions: empty `inputs`, the `document` and `table` parameter types, open inputs, and on the host side `Inputs.table(input, table)`, the grouped scan, `Control.interim`, `EngineContext.peer` (2.3) | an SPI per kind (`QueryEngine`, `StreamEngine`): five contracts, five kits |
 | EN-47 | Who enforces access | **The host decides and enforces, on inputs and on outputs.** `access.isolation`: `per-viewer` holds by construction and is always available; `shared` holds by the kit's laws and is allowed only with a certificate that lists them; open inputs are always `per-viewer` | `shared` for every engine on trust; or `per-viewer` only (a risk date per signature does not fit memory) |
-| EN-48 | The handover | **Column arrays by reference, the vector sink, the engine's own mapped file, push-down; Arrow only between processes** (EN-3 stands). A `java.nio` buffer view on `Batch` is reserved for the day a gate shows a copy | Arrow types in the API now |
+| EN-48 | The handover | **Column arrays by reference, the vector sink, the engine's own mapped file, push-down; Arrow only between processes** (EN-3 stands). The arrays, the sink and the mapped file reach the engine as EN-58's read-only `java.nio` views | Arrow types in the API now |
 | EN-49 | The migration gate | **Parity (recorded answers of the in-tree code as kit cases, raw bits) and speed (open and p50 within 5%, p99 and allocation within 10%, memory within 5%) before any in-tree code is deleted**; `engine tck bench`; results in `BENCHMARK.md` | goldens only; or a looser speed gate for the first release of each engine |
 | EN-50 | The order | **M1 Risk in combined i8; M2 calculators (capacity, genomics workbench, indicators); M3 the query engine in its own release with two drills; M4 Python; M5 new domains born as engines** (2.6). The release names of M2 to M4 are the owner's | query first (the largest duplicate, but before the host is proven) |
 | EN-51 | One query engine | **Fold the pivot core and the BI query engine into one `query` engine at M3**, with one push-down executor in the host; derived kinds become its declarations | migrate the two stacks as two engines and fold later (two parity corpora, two caches kept) |
@@ -1431,6 +1432,144 @@ EN-35), EN-18 (the certificate is evidence, EN-39) and EN-19 (in process means t
 | EN-53 | The API freeze | **EN-27 stands (1.0 at R2), on one more condition: the `query` descriptor and the grouped scan pass the E0 paper review** | hold 1.0 until M3 has shipped (Risk ships on a 0.x API) |
 | EN-54 | People's Python | **One `python` engine on the one process pool; approved code is an input under a contract; its measures carry one counted opaque step** | keep the three pools as host services outside the model |
 | EN-55 | Capacity sizing | **A `capacity` engine with no inputs: one evaluator, the workbook generated from its steps; the browser and Python evaluators and the workbook template are deleted** | leave it, as the host's figures about itself |
+
+### EN-56 to EN-65: zero copy (the owner's principle, 2026-11-22; EN-57 to EN-65 recommended, for the owner)
+
+| # | Decision | Recommendation | The alternative |
+|---|---|---|---|
+| EN-56 | The principle | **Engines are built zero copy, by design and architecture: bulk data exists once, in memory the host owns, and every engine reads it in place** (17.1). It holds for every engine and both bindings; it is a kit group, not a tuning step. Decoding a lake file, masking a column and a network hop each happen once per version, never per engine or per ask | zero copy as an optimisation applied where a benchmark shows a copy (EN-48 as first written) |
+| EN-57 | Ownership and lifetime | **The host owns bulk memory; an engine holds read-only views under a `Lease`** (the ask, or the session's snapshot version). No view outlives its lease; a session's book keeps row ordinals and view handles, never bytes. A view used after its lease answers "unloaded, ask again" (17.2) | the engine maps and owns its hot file (two owners of one lifetime; a copy per engine) |
+| EN-58 | The view types | **In `engine-api`, JDK-only, Java 21, no preview API: `Lease`, `RowSet`, `Columns`, `FloatVectors`, `DoubleVectors`, `TableWriter`**, over read-only `java.nio` buffers (heap arrays wrapped, `MappedByteBuffer` pieces sliced). They are the one handover: the array `Batch` and the `VectorSink` are replaced before 1.0. Amends EN-6 and EN-48 (17.3) | keep arrays and add views beside them (two ways for one job); FFM segments (a preview on Java 21) |
+| EN-59 | Framing | **Arrow's buffer layout, the existing bytes kept**: position rows stay float32 little-endian, aggregates float64; the file gains an Arrow IPC header and footer written with the official Arrow Java library, in the host. EN-3 stands: no Arrow type in an API signature (17.4) | a private layout plus a converter; or widening to float64 (changes position-level bits, doubles the mapped bytes) |
+| EN-60 | Results | **Small results as values (`Tables`, under 1 MB); large ones written once into a host-provided `TableWriter` buffer in the same layout**, served to the Data Protocol, Flight and the lake writer as it is (17.5) | every result as engine-owned arrays, copied by the host for each consumer |
+| EN-61 | Other processes | **A Python or Java worker maps the same Arrow files and gets the `RowSet` as a small message; a remote engine uses Flight, whose stream is the file's buffers unchanged** (17.6) | serialise inputs per ask into the worker (today's scratch files, one copy per call) |
+| EN-62 | Concurrency | **Snapshots are immutable and versioned by the store (the input stamp)**: a change is a new version or an overlay on an unchanged base; readers of a version never wait and never see it change; bytes are released when its last lease ends (17.7) | update in place under locks |
+| EN-63 | Access | **The host chooses the `RowSet`**: row rules and scope are resolved by the host to row ordinals over the one shared set of bytes; masked columns are absent from the view; `per-viewer` gives no whole-segment access. An engine cannot widen what it is given (17.8). Sharpens EN-47 | the engine applies the visibility filter itself; or a physical copy per visibility |
+| EN-64 | The kit | **A zero-copy group in `engine-tck`: an engine that copies bulk data fails** (allocation per ask independent of input size, backing identity, the poison law, the heap ceiling at 1,000,000 positions, scan additions) (17.9) | trust the benchmark gate alone (finds a slow engine, not a copying one) |
+| EN-65 | Scope and order | **Every engine: market risk, CCR, query, python, indicators, capacity, genomics and each later one** (17.10). The views enter `engine-api` 0.x and the host's `Inputs` before the market-risk intake is rewritten (R2 cut plan MC-12) and are part of the 1.0 freeze (EN-27, EN-53) | risk only, the others when they migrate (a second handover to retire later) |
+
+## 17. Zero-copy data access (EN-56 to EN-65)
+
+**The owner's principle (2026-11-22): "Engines should be built using zero copy as design and architecture."** The
+specification in `drishti-engine` takes this section at the API step; `R2_CUT_PLAN.md` 3a (MC-12) is its first use, and that
+plan's working name `ScenarioVectors` is the two vector types below.
+
+### 17.1 The principle
+
+Bulk data is anything whose size follows an input's row count: columns, P&L vectors, node aggregates, large result tables. It
+exists **once**, in memory the host owns, and every engine, every session and every caller reads it in place. What is small
+(a request, parameters, a `RowSet`, a result of a few thousand cells, an accumulator of one vector's width) is an ordinary
+value. Three things are work, not copies, and each happens once per version and is then shared: decoding a compressed lake
+file into columns, applying a mask to a column, and a network hop to another machine.
+
+### 17.2 Ownership and lifetime
+
+- **The host owns** every bulk buffer: lake columns decoded once per input stamp, the mapped vector files, result buffers,
+  and any bulk state an engine derives (node aggregates): the engine asks the host for the buffer, fills it once, and the host
+  seals it read-only and keeps its lifetime. An engine maps no file and allocates no direct memory.
+- **An engine holds views under a `Lease`.** A *request lease* covers one `ask`; a *session lease* covers the session's
+  snapshot version and ends when the host closes the session (a new version, eviction, the switch). A session's book keeps row
+  ordinals and view handles for its lease, never bytes; nothing is kept past a lease.
+- **The host releases only what is unleased.** It counts leases per version (`MappedMatrix`'s reader guard, made general)
+  and unmaps a file when the count is zero, so a read inside a lease is always safe. A view used after its lease answers
+  "unloaded, ask again" as a refusal, never a crash. A raw slice kept past its lease is a breach the kit finds (17.9); a JAR
+  the site does not trust runs in a separate process (section 8, trigger e), where a stray read ends the worker only.
+
+### 17.3 The view types
+
+In `engine-api`, package `com.ash.engine`: interfaces over read-only `java.nio` buffers, JDK-only, Java 21, no preview API
+(no FFM). A heap `double[]` chunk is wrapped (`DoubleBuffer.wrap(..).asReadOnlyBuffer()`), a mapped file is sliced
+(`MappedByteBuffer` pieces of at most 2 GB, little-endian, a row never across two pieces): the engine's code is the same over
+both tiers and cannot write to either.
+
+| Type | What it is | Main members |
+|---|---|---|
+| `Lease` | the lifetime of a set of views, and the version they show | `version()`, `open()`, `close()` (the host's) |
+| `RowSet` | row ordinals of one snapshot version, as runs or a bitmap (the shape of `OrdinalSet`): visibility, scope, a node, a basket | `size()`, `contains(row)`, `forEachRun(..)`, `and`, `or`, `andNot` |
+| `Columns` | one piece of a table's scalar columns, in place of the array `Batch` | `rows()`, `numbers(col)`: `DoubleBuffer` · `integers(col)`: `LongBuffer` · `texts(col)`: dictionary codes as `IntBuffer` plus the dictionary · `flags(col)` and `validity(col)`: bitmaps |
+| `FloatVectors` | fixed-width float32 rows (a position's 509 P&Ls), row-major | `rows()`, `width()`, `row(i)`: `FloatBuffer` slice · `value(i, j)` · `addInto(double[] acc, RowSet rows)` · `pieces()` |
+| `DoubleVectors` | the same over float64 rows (aggregates, the heap tier, spills) | as above with `DoubleBuffer` |
+| `TableWriter` | a host-provided, writable buffer for one large output, sealed by the host when the engine returns | `rows(n)`, a writable buffer per column, `vectors(col)` |
+
+- `InputTable.scan` delivers `Columns` pieces; `InputTable.vectors` returns a `FloatVectors` or `DoubleVectors` in the width
+  the store holds. Nothing is widened on the way: a sum reads float32 rows into a float64 accumulator, as the in-tree store
+  does, in the same row order, so the bits are today's.
+- `addInto` and its range forms are the host's kernels over its own tier (the heap loop the JIT turns into SIMD, the mapped
+  loop of `MappedMatrix`), so an engine's hot loop runs where the bytes are, with one interface call per sum.
+- One handover, one way: the array `Batch` and the `VectorSink` leave the API with this step (0.x). Section 2.5's rows 2 to 4
+  are these views.
+
+### 17.4 Framing: Arrow's layout, the existing bytes
+
+The buffers a view exposes are laid out as Arrow lays them out: little-endian fixed-width values, a validity bitmap,
+dictionary codes, and a vector column as the values buffer of a `FixedSizeList<float32>` or `<float64>`. The files keep the
+bytes they hold today (position rows float32, aggregates float64) and gain an Arrow IPC header and footer, written with the
+official Arrow Java library on the host side (`engine-arrow` and the store's writer), body buffers aligned as IPC asks. So one
+file is at once the Java view's backing, an Arrow file any Arrow reader maps, and a Flight stream's body. `engine-api` names
+no Arrow type and has no Arrow dependency (EN-3).
+
+### 17.5 Results
+
+- **Small** (under 1 MB, the memory budget's own threshold): returned as values through `Tables`, as today.
+- **Large** (a query's result set, a P&L path per position, partials of a shard): the engine asks `Control` for a
+  `TableWriter` sized in rows, writes each cell once into the host's buffer and returns it. The host seals it and serves the
+  same bytes to the Data Protocol, Flight, the lake writer and the answer cache.
+- Bulk state an engine derives for its session (aggregates per node) is written the same way, once per version, and read
+  back as a view.
+
+### 17.6 In the server's JVM, in a worker, on another machine
+
+| Binding | Inputs | The rows allowed | Results |
+|---|---|---|---|
+| Same JVM (the default) | the views of 17.3 over the host's heap chunks and mappings | a `RowSet` by reference | values, or the `TableWriter`'s buffer |
+| A worker process (`python`, a Java engine under `engine.run: process`) | the worker maps the **same Arrow files** read-only (pyarrow's memory map gives NumPy and Polars the pages; Java gets the same views from `engine-host`) | the `RowSet` as runs in the request message | an Arrow file the worker writes once in the scratch folder and the host maps |
+| Remote (Flight) | the host's Flight service streams the file's buffers as they are; a co-located engine maps the files the lake reports as local instead | in the ticket | a Flight stream of the result's buffers |
+
+The one copy a remote engine costs is the network's. The kit's binding law (6.2) holds over all three.
+
+### 17.7 Concurrency
+
+A snapshot version is immutable: written once, sealed, named by the store's stamp (`InputTable.stamp()`), and read by any
+number of threads and engines without a lock. A reload writes a new version beside the old one; sessions on the old version
+finish under their leases and the host then releases it. Intraday changes are an overlay (the changed and added rows as a
+small piece, a row map over the unchanged base, as `OverlayVectors`), itself a new immutable version. Nothing is updated in
+place.
+
+### 17.8 Access
+
+Access is decided where the memory is owned. The host resolves a caller's row rules and the request's scope to a `RowSet`
+over the snapshot's ordinals and hands the engine that set: one shared set of bytes, any number of visibilities, no book and
+no copy per signature. Masked columns are not in the caller's `Columns` at all. Under `access.isolation: per-viewer` the views
+give row access through the `RowSet` only (`pieces()` is refused), so the isolation still holds by construction; under
+`shared` the engine sees the version and the kit's filter-equivalence and interleaving laws prove it honours the set (EN-47).
+
+### 17.9 What the kit tests
+
+A **zero-copy group** in `engine-tck`, derived from the author's cases like the laws, for both bindings:
+
+| Check | An engine fails when |
+|---|---|
+| Allocation per call | bytes allocated on the engine's threads during `open` and during each reference ask (the JVM's per-thread allocation counter; `tracemalloc` in a Python worker) exceed the descriptor's declared budget, or grow with the input's rows when the case is run at n and 10 n rows (they may grow with result rows only) |
+| Backing identity | a large output does not come back in the `TableWriter` buffer the kit provided (identity); an input file's hash differs after the run; the engine's `MemoryBudget` reservations or `stats()` show bulk bytes held |
+| Poison | after a lease ends the kit overwrites the leased bytes and asks under a new version: any answer that differs from a fresh engine's shows a retained view or a retained copy |
+| Heap ceiling at size | `engine tck bench` at 1,000,000 positions of 509 float32 (2.04 GB mapped) with the heap capped below the data (`-Xmx1g`) and direct memory capped: open and the reference asks must complete, and the heap after open stays within the declared book bound |
+| Static scan | the JAR maps a file, allocates direct memory or reaches for `Unsafe` |
+
+The first three run everywhere at 10,000 positions; the heap ceiling runs on the benchmark machine, one heavy job at a time,
+with the speed gate of 2.5, and its figures go to `BENCHMARK.md`.
+
+### 17.10 Every engine
+
+| Engine | Zero copy means |
+|---|---|
+| `market-risk` | `FloatVectors` over the hot file's position rows, `DoubleVectors` over node aggregates; a scope, a node and a visibility are `RowSet`s; no vector is copied into the book (MC-12) |
+| `ccr` | the same over exposure paths (`ExposureHotFile`'s rows); netting sets and counterparties are `RowSet`s |
+| `query` (pivot, OLAP, BI) | grouping at the source first (nothing crosses); otherwise `Columns` with dictionary-coded text; result sets through `TableWriter` straight to the Data Protocol and Flight |
+| `python` | approved code gets the mapped Arrow files as NumPy or Polars frames without a load step; its result is one Arrow file |
+| `indicators` | series as `DoubleBuffer` columns; a rolling window is a slice of the column, never a copied window |
+| `capacity` | no inputs and a small result: nothing bulk exists; the allocation check still applies |
+| `genomics` | sample-by-feature matrices as `FloatVectors` or `DoubleVectors`; a cohort is a `RowSet`; cohort statistics accumulate in place |
+| every later engine | the same types; an engine that needs another shape of bulk data asks for a view type in the API, never a private copy |
 
 ## Decisions taken (owner)
 
