@@ -16,6 +16,20 @@
 # Changelog
 
 
+## 2.9.11.i7f (2026-11-23)
+
+- **`setup` never writes into another folder.** A `dev.ini` naming another folder (drishti.home, drishti.data.dir, drishti.modules.home,
+  drishti.lib.path) and a `jvm-*.args` that differs are moved into `drishti-envs/replaced-YYYY-MM-DD-HHMM` (unique) and fresh ones written,
+  in one line; identical files and a `dev.ini` naming this checkout are kept; `--check` reports what would move and writes nothing. The
+  i7e `[WARN]`/rename flow is gone. `launchers.machine` makes no folders (`machine_files` renders them); setup makes the named folders only
+  under this checkout or the resolved data folder; `--data-dir` wins and is recorded in the new `dev.ini`.
+- **One Python resolver, the Java order** (explicit > settings file > environment > this checkout): `find_home` and the modules folder
+  now read the file before the environment; `settingsfile.apply_roots` lets the file win (and covers drishti.lib.path). Setup reports each
+  `DRISHTI_*` folder variable naming another folder as a WARNING and never uses it (DRISHTI_TMP_DIR included, before any command).
+- Build: `drishti-module-parent` has no `${env.DRISHTI_HOME}` default; guard test: no pom reads `${env.DRISHTI_*}` or `${user.home}`.
+- Docs: DEPLOYMENT_AND_QA_GUIDE (no `setx DRISHTI_HOME/DATA_DIR`; the order table; setup moves old files), IDE_GUIDE 2.1/2.3, CLI_REFERENCE;
+  the run-time WARNING (server, console, tools) says to run setup. Version 2.9.11.i7f.
+
 ## 2.9.11.i7e (2026-11-23)
 
 - The server, the console and the tools warn at start when the settings file names another folder's drishti.home; setup's rename command quotes its paths; VS Code launches get their file prompt.

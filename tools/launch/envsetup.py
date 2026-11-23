@@ -16,8 +16,11 @@
 
 ``setup drishti``: checks Python and Java 21+ (says which java and why), shows the install folder (DRISHTI_HOME, read only), the data folder
 (DRISHTI_DATA_DIR, writable) and the modules folder with where each came from, makes the data folder's layout and the settings folder
-(~/drishti-envs; Windows %USERPROFILE%\\drishti-envs) with a copy of the example dev.ini (its paths filled in; an existing file is never
-overwritten), writes the JVM arguments files and checks the server jar and the modules.
+(~/drishti-envs; Windows %USERPROFILE%\\drishti-envs) with a copy of the example dev.ini (its paths filled in), writes the JVM arguments
+files and checks the server jar and the modules. A file setup writes in the settings folder that is already there and differs (a dev.ini
+naming another folder, a JVM arguments file of another data folder) is MOVED into a dated folder there (``replaced-YYYY-MM-DD-HHMM``), never
+overwritten or edited, and a fresh one is written; a dev.ini naming this checkout is kept as it is. Nothing is made outside this checkout,
+the settings folder and an explicit ``--data-dir``; a ``DRISHTI_*`` folder variable naming another folder is reported and never used.
 ``setup venv``: makes or checks drishti-console/.venv (the pinned Lake wheel first, then drishti-console/requirements.txt; --reinstall remakes it).
 ``setup libs``: the same libraries into the CURRENT Python, no venv. ``setup --system`` = drishti + libs, where no .venv is allowed.
 ``setup`` alone = drishti, then venv (``--skip-venv`` = drishti only). The Python that was set up or used is written once into dev.ini as
@@ -37,6 +40,7 @@ from pathlib import Path
 import procs
 from procs import LaunchError, say
 import javacmd  # noqa: E402 - tools/ is on the path through procs
+import settingsfile  # noqa: E402
 import pylibs
 
 #: the folders a data folder holds (docs/DEPLOYMENT_AND_QA_GUIDE.md, "Prepare your environment")
@@ -85,31 +89,42 @@ def dev_ini_text(home: Path, data: Path, modules: Path, java: Path | None = None
 REEXEC_ENV = "DRISHTI_SETUP_REEXEC"
 
 
-def other_home(ini: Path, home: Path) -> str | None:
-    """The folder an existing dev.ini's drishti.home names when it is not this checkout (else None: no such line, or the same folder)."""
+def ini_collision(ini: Path, home, explicit_data=None, flavour=None) -> list[str]:
+    """Why an existing dev.ini is not this checkout's: each root it names outside ``home`` (``drishti.home`` another folder,
+    ``drishti.data.dir``, ``drishti.modules.home``, ``drishti.lib.path`` outside it), a ``drishti.data.dir`` other than an explicit
+    ``--data-dir``, or a file that cannot be read. Empty: the file names this checkout and is kept as it is (the user's own lines too)."""
     try:
-        text = ini.read_text(encoding="utf-8")
-    except OSError:
-        return None
-    m = re.search(r"^\s*drishti\.home\s*[=:]\s*(.+?)\s*$", text, re.M)
-    if not m or not m.group(1):
-        return None
-    named = m.group(1).strip().strip("\"'")
+        e = settingsfile.read_all(str(ini))
+    except (settingsfile.SettingsError, OSError) as x:
+        return [f"it cannot be read ({x})"]
 
-    def norm(x) -> str:
-        return os.path.normcase(os.path.normpath(str(x).replace("\\", "/"))).replace("\\", "/").rstrip("/")
-    try:
-        same = norm(named) == norm(home) or norm(Path(named).expanduser().resolve()) == norm(Path(home).resolve())
-    except (OSError, RuntimeError):
-        same = False
-    return None if same else named
+    def same(x, y) -> bool:
+        return settingsfile.inside(x, y, flavour) and settingsfile.inside(y, x, flavour)
+    out = []
+    named = (e.get("drishti.home") or "").strip()
+    if named and not same(named, home):
+        out.append(f"drishti.home={named}")
+    for key in ("drishti.data.dir", "drishti.modules.home", "drishti.lib.path"):
+        v = settingsfile.home_value((e.get(key) or "").strip(), home) if (e.get(key) or "").strip() else ""
+        if key == "drishti.data.dir" and explicit_data is not None:
+            if not same(v or f"{home}/data", explicit_data):
+                out.append(f"{key}={v or '<home>/data'}, not the --data-dir {explicit_data}")
+        elif v and not settingsfile.inside(v, home, flavour):
+            out.append(f"{key}={v}")
+    return out
 
 
-def rename_command(ini: Path) -> str:
-    """The command that moves an old settings file aside: ren on Windows, mv elsewhere."""
-    if procs.windows():
-        return f'ren "{ini}" "{ini.stem}-old{ini.suffix}"'                                      # quoted: a user name may hold a space
-    return f'mv "{ini}" "{ini.with_name(ini.stem + "-old" + ini.suffix)}"'
+def dated_folder(edir: Path, now=None) -> Path:
+    """A new folder ``replaced-YYYY-MM-DD-HHMM`` in the settings folder (``-2``, ``-3`` ... when it exists): where setup moves the files
+    it would otherwise overwrite, so nothing is lost."""
+    import datetime
+    stamp = (now or datetime.datetime.now()).strftime("%Y-%m-%d-%H%M")
+    folder, n = edir / f"replaced-{stamp}", 1
+    while folder.exists():
+        n += 1
+        folder = edir / f"replaced-{stamp}-{n}"
+    folder.mkdir(parents=True)
+    return folder
 
 
 def have_yaml() -> bool:
@@ -147,15 +162,16 @@ def bootstrap(a, home: Path, env: dict, argv: list | None = None, run=subprocess
 
 def setup(a, env: dict | None = None, argv: list | None = None, run=subprocess.run) -> int:
     """setup; ``--wheels <folder or .zip>`` (else DRISHTI_WHEELS) installs the libraries only from that folder, offline."""
+    real = env is None
     env = dict(os.environ if env is None else env)
     spec = (getattr(a, "wheels", None) or env.get("DRISHTI_WHEELS") or "").strip() or None
     if spec and getattr(a, "check", False):
         spec = None                                  # --check changes nothing and installs nothing
     with pylibs.wheel_folder(spec) as wheels:
-        return _setup(a, env, argv, run, wheels)
+        return _setup(a, env, argv, run, wheels, real)
 
 
-def _setup(a, env: dict, argv: list | None, run, wheels: Path | None) -> int:
+def _setup(a, env: dict, argv: list | None, run, wheels: Path | None, real: bool = False) -> int:
     check = a.check
     part = getattr(a, "part", None)
     system = getattr(a, "system", False)
@@ -177,17 +193,44 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None) -> int:
     line("ok" if ok else "FAIL", "python", f"{sys.executable} {v.major}.{v.minor}.{v.micro}" + ("" if ok else f": Drishti needs Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]} or newer"))
     if not ok:
         problems.append(f"install Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]}+ (python.org; Windows: winget install Python.Python.3.13)")
-    # the roots
-    roots = javacmd.launch_roots(None, a.data_dir, env, javacmd.settings()[1])
-    home, data, modules = roots["home"][0], roots["data"][0], roots["modules"][0]
-    line("ok", "home (DRISHTI_HOME)", f"{home}  ({roots['home'][1]}; the install, read only)")
+    # a DRISHTI_* folder variable naming another folder (an old setx): reported, never used (the settings file is the one place for roots)
+    original = dict(env)
+    here = javacmd.REPO.resolve()
+    foreign = dict(settingsfile.foreign_vars(env, here) + [(n, v) for n, v in settingsfile.REPLACED.items() if not settingsfile.inside(v, here)])
+    where = "in Environment Variables" if procs.windows() else "from your shell profile"
+    for n, v in foreign.items():
+        line("WARN", n, f"{v}: names a folder outside this checkout; ignored: your settings file wins; you may delete it {where}")
+        env.pop(n, None)
+        if real:
+            os.environ.pop(n, None)                  # this process only: nothing setup runs reads it (the user's environment is not changed)
+    keys = javacmd.settings()[1]
+    home = javacmd.find_home(None, env, keys)[0]
     edir = Path(a.envs_dir).expanduser() if a.envs_dir else envs_dir(env)
     ini = edir / "dev.ini"
-    jar = roots["jar"][0]
+    explicit = Path(a.data_dir).expanduser().resolve() if a.data_dir else None
     j = {"ok": False, "java": "", "problem": ""}
-    rc = bootstrap(a, home, env, argv, run, wheels=wheels)
+    rc = bootstrap(a, home, original, argv, run, wheels=wheels)
     if rc is not None:
         return rc
+    # the settings file: this checkout's (kept as it is), else moved to a dated folder and a fresh one written (never edited in place)
+    stale = ini_collision(ini, home, explicit) if do_drishti and ini.is_file() else []
+    fresh = {"drishti.home": home.as_posix(), "drishti.data.dir": (explicit or home / "data").as_posix(),
+             "drishti.modules.home": (home / "modules").as_posix()}
+    use_fresh = do_drishti and bool(stale or not ini.is_file())
+    ini_keys = fresh if use_fresh else (settingsfile.read_all(str(ini)) if do_drishti else {})
+    roots = javacmd.launch_roots(None, a.data_dir, env, {**ini_keys, **keys})
+    data, modules = roots["data"][0], roots["modules"][0]
+    line("ok", "home (DRISHTI_HOME)", f"{home}  ({roots['home'][1]}; the install, read only)")
+    jar = roots["jar"][0]
+    moved: dict = {"to": None}
+
+    def move_aside(files: list, why: str) -> None:
+        """Moves ``files`` into this run's dated folder in the settings folder (one per run) and says so in one line."""
+        if moved["to"] is None:
+            moved["to"] = dated_folder(edir)
+        for f in files:
+            shutil.move(str(f), str(moved["to"] / f.name))
+        line("move", "old settings", f"{', '.join(f.name for f in files)} moved to {moved['to']}  ({why})")
     yaml_ok = have_yaml()
     if do_drishti:
         # Java: the one lookup
@@ -197,6 +240,26 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None) -> int:
         else:
             line("FAIL", "java", j["problem"] + (f"  ({j['java']}, from {j['why']})" if j["java"] else ""))
             problems.append("install a JDK 21 (Temurin) and set drishti.java.home in your settings file (or DRISHTI_JAVA_HOME) to its folder, or pass --java-home")
+        # the settings folder and dev.ini
+        if stale and check:
+            line("todo", "settings file", f"{ini} names {'; '.join(stale)}: setup moves it to {edir / 'replaced-<date>'} and writes a fresh one")
+            todo.append(f"python tools/drishti.py setup  (moves the old {ini.name} to a dated folder in {edir} and writes one for this checkout)")
+        elif ini.is_file() and not stale:
+            line("ok", "settings file", f"{ini}  (names this checkout: kept as it is)")
+        elif check:
+            line("todo", "settings file", f"{ini} is missing")
+            todo.append(f"copy config/settings.examples/dev.ini to {ini}")
+        else:
+            if stale:
+                move_aside([ini], f"it named {'; '.join(stale)}")
+            edir.mkdir(parents=True, exist_ok=True)
+            jdk = Path(j["java"]).resolve().parent.parent if j["ok"] and j["java"] else None
+            ini.write_text(dev_ini_text(home, data, modules, jdk), encoding="utf-8")
+            line("made", "settings file", f"{ini}  (from config/settings.examples/dev.ini, its paths filled in for this checkout" +
+                 (f"; drishti.java.home={jdk.as_posix()}" if jdk else "") + ")")
+            if jdk is None:
+                line("todo", "drishti.java.home", f"no Java 21+ found ({j['problem'] or 'none'}): in {ini} uncomment drishti.java.home and set it to a JDK 21 folder")
+                todo.append(f"set drishti.java.home in {ini} to a JDK 21 folder")
         # the data folder and its layout
         missing = [d for d in DATA_LAYOUT if not (data / d).is_dir()]
         if missing and not check:
@@ -222,55 +285,46 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None) -> int:
             todo.append(f"delete {note.split(':')[0]} (git clean -fdX modules/ removes every ignored file under modules/)")
         # every jar under the home: Drishti's own in <home>/lib, the site's in <home>/lib/ext (drishti.lib.path)
         line("ok" if jar else "todo", "server jar (<home>/lib)", str(jar) if jar else roots["jar"][1])
-        ext = Path(env.get("DRISHTI_LIB_PATH") or roots["ext"][0])
+        ext = Path(settingsfile.home_value((ini_keys.get("drishti.lib.path") or "").strip(), home) or env.get("DRISHTI_LIB_PATH") or roots["ext"][0])
         if not ext.is_dir() and not check:
             ext.mkdir(parents=True, exist_ok=True)
             line("made", "your jars (lib/ext)", f"{ext}  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)")
         else:
             line("ok" if ext.is_dir() else "todo", "your jars (lib/ext)", f"{ext}  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)")
-        # the settings folder and dev.ini
-        if ini.is_file():
-            other = other_home(ini, home)
-            if other:
-                fix = f"your settings file {ini} points at {other}, not this one ({home}): rename it ({rename_command(ini)}) and run setup again"
-                line("FAIL" if check else "WARN", "settings file", fix + "  (it is never overwritten)")
-                (problems if check else todo).append(fix)
-            else:
-                line("ok", "settings file", f"{ini}  (kept as it is)")
-        elif check:
-            line("todo", "settings file", f"{ini} is missing")
-            todo.append(f"copy config/settings.examples/dev.ini to {ini}")
-        else:
-            edir.mkdir(parents=True, exist_ok=True)
-            jdk = Path(j["java"]).resolve().parent.parent if j["ok"] and j["java"] else None
-            ini.write_text(dev_ini_text(home, data, modules, jdk), encoding="utf-8")
-            line("made", "settings file", f"{ini}  (from config/settings.examples/dev.ini, its paths filled in" +
-                 (f"; drishti.java.home={jdk.as_posix()}" if jdk else "") + ")")
-            if jdk is None:
-                line("todo", "drishti.java.home", f"no Java 21+ found ({j['problem'] or 'none'}): in {ini} uncomment drishti.java.home and set it to a JDK 21 folder")
-                todo.append(f"set drishti.java.home in {ini} to a JDK 21 folder")
-        # the JVM arguments files of the IDE's server launchers (generated: rewritten every time, from the function start server runs)
+        # the JVM arguments files of the IDE's server launchers (generated, from the function start server runs): one that differs is moved
         if not yaml_ok:
             line("todo", "JVM options", "needs PyYAML, which this Python has not got: python tools/drishti.py setup --system")
             todo.append("python tools/drishti.py setup --system  (installs the libraries into this Python, then the JVM options and the rest)")
-            args_files = []
         else:
             import launchers
-            args_files = [edir / f"jvm-{p}.args" for p in launchers.profiles_of_servers(home)]
-        if not yaml_ok:
-            pass
-        elif check:
-            missing = [f.name for f in args_files if not f.is_file()]
-            line("todo" if missing else "ok", "JVM options", f"{edir}: " + (f"missing {', '.join(missing)}" if missing else ", ".join(f.name for f in args_files)))
-            if missing:
-                todo.append("write the IDE server launchers' JVM options: python tools/drishti.py setup (or launchers --machine)")
-        elif ini.is_file():
             try:
-                written = launchers.machine(home, edir, ini)
-                line("made", "JVM options", f"{edir}: {', '.join(f.name for f in written)}  (the IDE server launchers' @files; data folder from {ini.name})")
+                want = launchers.machine_files(home, edir, ini, fresh if (use_fresh and check) else None)
             except Exception as e:                                   # noqa: BLE001 - a setup step reports, never stops the others
+                want = None
                 line("FAIL", "JVM options", f"{e}")
                 problems.append("python tools/drishti.py --settings <dev.ini> launchers --machine")
+            if want is not None:
+                missing = [f.name for f in want if not f.is_file()]
+                differ = [f for f, (text, _) in want.items() if f.is_file() and f.read_text(encoding="utf-8") != text]
+                if check:
+                    detail = "; ".join([*([f"missing {', '.join(missing)}"] if missing else []),
+                                        *([f"{', '.join(f.name for f in differ)} differ: setup moves them to {edir / 'replaced-<date>'}"] if differ else [])])
+                    line("todo" if detail else "ok", "JVM options", f"{edir}: " + (detail or ", ".join(f.name for f in want)))
+                    if detail:
+                        todo.append("write the IDE server launchers' JVM options: python tools/drishti.py setup (or launchers --machine)")
+                else:
+                    if differ:
+                        move_aside(differ, "they differ from this checkout's")
+                    edir.mkdir(parents=True, exist_ok=True)
+                    for f, (text, folder) in want.items():
+                        if not f.is_file():
+                            f.write_text(text, encoding="utf-8", newline="\n")
+                        # the folders the file names, only under this checkout or the data folder resolved above (never elsewhere)
+                        if settingsfile.inside(folder, home) or folder == data:
+                            for d in launchers.ARGS_FOLDERS:
+                                (folder / d).mkdir(parents=True, exist_ok=True)
+                    line("made" if (missing or differ) else "ok", "JVM options",
+                         f"{edir}: {', '.join(f.name for f in want)}  (the IDE server launchers' @files; data folder from {ini.name})")
     # the Python libraries: the console's .venv, or the current interpreter (--system, setup libs)
     py_used = None
     if do_venv:
@@ -333,8 +387,9 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None) -> int:
     # the environment
     say("\nEnvironment variables seen:")
     for n in ENV_VARS:
-        val = (env.get(n) or "").strip()
-        say(f"  {n:<24} {('set (not shown)' if secret(n) else val) if val else '-'}")
+        val = (original.get(n) or "").strip()
+        say(f"  {n:<24} {('set (not shown)' if secret(n) else val) if val else '-'}" +
+            (f"  WARNING: names a folder outside this checkout; ignored: your settings file wins; you may delete it {where}" if n in foreign else ""))
     settings = javacmd.settings()[0]
     say("\nNext steps" + (f" (python is {Path(sys.executable).name}; on Windows use py or python):" if procs.windows() else ":"))
     steps = [*problems, *todo]

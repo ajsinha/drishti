@@ -56,11 +56,16 @@ class SettingsFileTest(unittest.TestCase):
         self.assertTrue(any(a.startswith("-Ddrishti.home=") for a in cmd), cmd)
         self.assertEqual(javacmd.server_tmp(env={}), Path("/from/the/file/tmp/server"))
 
-    def test_the_roots_reach_the_python_tools_unless_the_environment_sets_them(self):
-        env = {"DRISHTI_HOME": "/mine"}
-        got = sf.apply_roots({"drishti.home": "/file/home", "drishti.data.dir": "/file/data", "lake.demo.root": "/x"}, env)
-        self.assertEqual(got, ["DRISHTI_DATA_DIR"])
-        self.assertEqual(env, {"DRISHTI_HOME": "/mine", "DRISHTI_DATA_DIR": "/file/data"})
+    def test_the_roots_reach_the_python_tools_and_the_file_beats_the_environment(self):
+        """The Java order (LaunchRoots): the settings file beats a stale DRISHTI_* variable of an old setx; the old value is remembered."""
+        sf.REPLACED.clear()
+        env = {"DRISHTI_HOME": "/mine", "DRISHTI_MODULES_HOME": "/file/modules"}
+        got = sf.apply_roots({"drishti.home": "/file/home", "drishti.data.dir": "/file/data", "drishti.modules.home": "/file/modules",
+                              "lake.demo.root": "/x"}, env)
+        self.assertEqual(got, ["DRISHTI_HOME", "DRISHTI_DATA_DIR"])
+        self.assertEqual(env, {"DRISHTI_HOME": "/file/home", "DRISHTI_DATA_DIR": "/file/data", "DRISHTI_MODULES_HOME": "/file/modules"})
+        self.assertEqual(sf.REPLACED, {"DRISHTI_HOME": "/mine"})
+        sf.REPLACED.clear()
 
     def test_explicit_beats_the_file(self):
         f = self.write("a=1\nb=2\n")

@@ -146,11 +146,14 @@ launchers --machine` (or `setup` again) to rewrite them.
    settings, data folder and JVM files; no Python libraries; the same as `--skip-venv`) and `setup venv` (the `.venv`). **No `.venv`
    allowed:** `setup --system` ([2.2](#22-python-for-the-console-and-the-tools-pycharm)). `--check` works for all of them. Without `--settings`, `start console` / `start all` make a `.venv` and the server uses `python` by name: on a no-venv machine always run with the settings file. In PyCharm, no
    terminal is needed: **Drishti: setup** and **Drishti: setup (system Python)** (section 4.3) run them. You should see `[made] settings file …/drishti-envs/dev.ini`,
-   `[made] JVM options … jvm-demo.args, jvm-qa.args, jvm-samples.args` and `[made] console .venv …`; a `dev.ini` already there is never
-   overwritten (the arguments files are rewritten every time: they are generated).
-   **An old `dev.ini` of another folder:** setup never overwrites an existing file. When its `drishti.home` names a different folder than this
-   checkout, `--check` shows `[FAIL] settings file` and `setup` a `[WARN]`, both saying: *your settings file …\dev.ini points at <other
-   folder>, not this one: rename it (`ren …\dev.ini dev-old.ini`; `mv` on Linux and macOS) and run setup again*.
+   `[made] JVM options … jvm-demo.args, jvm-qa.args, jvm-samples.args` and `[made] console .venv …`; a `dev.ini` already there that names
+   this checkout is kept as it is (your own lines too), and setup never overwrites or edits a file.
+   **An old `dev.ini` of another folder** (its `drishti.home`, `drishti.data.dir` or `drishti.modules.home` names another copy) and a
+   JVM arguments file that differs: setup **moves** them into a dated folder of the settings folder and writes fresh ones for this
+   checkout, in one line: *`[move] old settings  dev.ini moved to …\drishti-envs\replaced-2026-11-23-1630  (it named drishti.home=…)`*.
+   Nothing is lost and nothing is made in the other folder; there is nothing to rename or delete by hand. `--check` says what it would
+   move and moves nothing. A `DRISHTI_HOME`, `DRISHTI_DATA_DIR` … variable from an older guide that names another folder is shown as a
+   `[WARN]` (*ignored: your settings file wins; you may delete it in Environment Variables*) and never used.
 3. **With no Python on the machine** (a server-only machine): copy `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` and
    replace `/path/to/drishti` with the clone's folder (forward slashes, also on Windows).
 
@@ -229,7 +232,8 @@ or later with Polars, NumPy and PyYAML) in their own run configuration. The deta
    Python): Linux `…/drishti/drishti-console/.venv/bin/python`, Windows `C:\Users\you\IdeaProjects\drishti-platform\drishti\drishti-console\.venv\Scripts\python.exe`.
    **No `.venv` allowed on the machine** (everything goes to the system Python): run **Drishti: setup (system Python)** (or `py tools\drishti.py
    setup --system`), which makes the settings and installs the libraries (the Lake wheel first) into the interpreter that runs it, then
-   choose **System Interpreter** here for the same Python. The launchers use the project's interpreter; the server uses `drishti.python` of
+   choose **System Interpreter** here for the same Python. An old `dev.ini` or JVM arguments file from another copy is moved into a dated
+   folder in `drishti-envs` (`replaced-<date>`) and a fresh one written (section 2.1): nothing to do by hand. The launchers use the project's interpreter; the server uses `drishti.python` of
    `dev.ini` (written by setup), else `python` (Windows) or `python3`, or the one `DRISHTI_PYTHON` names. On such a machine run `start console` and
    `start all` with the settings file (`--settings ~/drishti-envs/dev.ini`; the launchers do): without it no `drishti.python` is seen, `start
    console/all` makes a `.venv` and the server starts `python` by name.
@@ -523,8 +527,8 @@ folder of the other IDE is expected.
 
 **Recipe F: `dev.ini` is missing, or names the wrong folders.**
 
-1. `py tools\drishti.py setup --check` lists what is missing; `py tools\drishti.py setup` makes `C:\Users\you\drishti-envs\dev.ini`.
-   Without Python: copy `config\settings.examples\dev.ini` there by hand.
+1. `py tools\drishti.py setup --check` lists what is missing; `py tools\drishti.py setup` makes `C:\Users\you\drishti-envs\dev.ini`
+   (one that names another folder is moved into `drishti-envs\replaced-<date>` and a fresh one written). Without Python: copy `config\settings.examples\dev.ini` there by hand.
 2. Open it and check the three folders (section 2.1): `drishti.home` the clone, `drishti.data.dir` `<clone>/data`,
    `drishti.modules.home` `<clone>/modules`; forward slashes, no quotes, no trailing slash; and `drishti.java.home` (recipe E).
 3. Start the server again: the `resolved paths:` block of its log names `dev.ini` as the origin of each folder.

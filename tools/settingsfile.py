@@ -49,8 +49,12 @@ def java_flag(named) -> str:
     return FLAG + ",".join(str(f) for f in files(named))
 
 
-#: the launch roots a Python tool reads from its environment (DRISHTI_HOME, DRISHTI_DATA_DIR, DRISHTI_MODULES_HOME)
-ROOTS = ("drishti.home", "drishti.data.dir", "drishti.modules.home")
+#: the launch roots a Python tool reads from its environment (DRISHTI_HOME, DRISHTI_DATA_DIR, DRISHTI_MODULES_HOME, DRISHTI_LIB_PATH)
+ROOTS = ("drishti.home", "drishti.data.dir", "drishti.modules.home", "drishti.lib.path")
+#: every DRISHTI_* variable that names a folder (setup reports one naming a folder outside this checkout, and never uses it)
+ROOT_VARS = ("DRISHTI_HOME", "DRISHTI_DATA_DIR", "DRISHTI_MODULES_HOME", "DRISHTI_LIB_PATH", "DRISHTI_TMP_DIR")
+#: the environment values :func:`apply_roots` replaced with the file's (the file wins): {variable: the old value}
+REPLACED: dict[str, str] = {}
 
 
 def env_name(key: str) -> str:
@@ -58,16 +62,45 @@ def env_name(key: str) -> str:
     return key.upper().replace(".", "_").replace("-", "_")
 
 
+def inside(path, root, flavour=None) -> bool:
+    """Whether ``path`` is ``root`` or under it, compared as text in the platform's own way (``flavour``: ``ntpath`` or ``posixpath``,
+    default this machine's ``os.path``): case and separators as Windows treats them on Windows. Nothing is resolved on the disk."""
+    import os
+    f = flavour or os.path
+
+    def norm(x) -> str:
+        return f.normcase(f.normpath(f.expanduser(str(x)))).rstrip("\\/") or f.sep
+    p, r = norm(path), norm(root)
+    return p == r or p.startswith(r + f.sep)
+
+
+def foreign_vars(environ, home, flavour=None) -> list[tuple[str, str]]:
+    """The ``DRISHTI_*`` folder variables (:data:`ROOT_VARS`) whose value names a folder outside ``home`` (this checkout): (name, value),
+    in order. An old ``setx`` from an earlier copy: setup reports each as a WARNING and never uses it."""
+    out = []
+    for n in ROOT_VARS:
+        v = (environ.get(n) or "").strip()
+        if v and not inside(v, home, flavour):
+            out.append((n, v))
+    return out
+
+
 def apply_roots(entries: dict[str, str], environ=None) -> list[str]:
-    """Puts the launch roots the files name into the environment the Python tools read, unless already set there (an explicit environment
-    variable beats the file, as a -D does on the Java side); the variables set, in order."""
+    """Puts the launch roots the files name into the environment the Python tools read, the Java order: the settings file beats the
+    environment (as ``LaunchRoots`` does: -D, then the file, then the environment), so a stale ``DRISHTI_DATA_DIR`` from an old ``setx``
+    never overrides a correct dev.ini. A value replaced is kept in :data:`REPLACED`; the variables set, in order."""
     import os
     env = os.environ if environ is None else environ
     out = []
-    home = (env.get("DRISHTI_HOME") or entries.get("drishti.home") or "").strip() or str(Path(__file__).resolve().parents[1])
+    home = (entries.get("drishti.home") or "").strip() or (env.get("DRISHTI_HOME") or "").strip() or str(Path(__file__).resolve().parents[1])
     for key in ROOTS:
         value = home_value((entries.get(key) or "").strip(), home)
-        if value and not (env.get(env_name(key)) or "").strip():
+        if not value:
+            continue
+        old = (env.get(env_name(key)) or "").strip()
+        if old and old != value:
+            REPLACED[env_name(key)] = old
+        if old != value:
             env[env_name(key)] = value
             out.append(env_name(key))
     return out
@@ -99,5 +132,6 @@ def other_home(entries: dict[str, str], checkout: Path | None = None) -> str | N
     if norm(a) == norm(b):
         return None
     return (f"WARNING: your settings file names drishti.home={named}, but these tools are in {here}: their data and modules come from"
-            f" {named}. If that is not what you want, rename the settings file (dev.ini) and run python tools/drishti.py setup again.")
+            f" {named}. If that is not what you want, run python tools/drishti.py setup: it moves the old settings files to a dated folder in"
+            f" drishti-envs and writes fresh ones for this checkout.")
 

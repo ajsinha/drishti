@@ -241,8 +241,8 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             return java.util.Optional.empty();
         }
         return java.util.Optional.of("WARNING: the settings name drishti.home=" + home + ", but this server is installed in " + installed
-                + ": its data and modules come from " + home + ". If that is not what you want, rename your settings file (dev.ini) and run"
-                + " python tools/drishti.py setup in " + installed + " again.");
+                + ": its data and modules come from " + home + ". If that is not what you want, run python tools/drishti.py setup in "
+                + installed + ": it moves the old settings files to a dated folder in drishti-envs and writes fresh ones.");
     }
 
     private static boolean sameFolder(Path a, Path b) {

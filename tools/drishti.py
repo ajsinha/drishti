@@ -1146,6 +1146,8 @@ def use_tmp_dir() -> None:
     base = (os.environ.get("DRISHTI_TMP_DIR") or "").strip()
     if not base:
         return
+    if is_setup(sys.argv[1:]) and not settingsfile.inside(base, ROOT):
+        return                                  # setup makes nothing outside this checkout: it reports the variable and never uses it
     import tempfile
     pathlib.Path(base).mkdir(parents=True, exist_ok=True)
     os.environ["TMPDIR"] = base
@@ -1167,7 +1169,7 @@ def main(argv: list[str] | None = None) -> int:
         entries = settingsfile.read_all(settings) if settings else {}
         settingsfile.apply_roots(entries)       # the Python side reads the roots the files name, as the JVMs do
         warning = settingsfile.other_home(entries)
-        if warning and not is_setup(argv):          # setup says it itself, with the rename command
+        if warning and not is_setup(argv):          # setup handles it itself: it moves the old file to a dated folder
             print(warning, file=sys.stderr)
         javacmd.set_settings(settings, entries)
         ap = drishti_parser.build_setup_parser(sys.modules[__name__]) if is_setup(argv) else build_parser()

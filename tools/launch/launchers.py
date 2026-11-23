@@ -299,23 +299,36 @@ def profiles_of_servers(home: Path) -> list[str]:
     return sorted({r["profile"] for r in table(home).get("intellij") or [] if r["kind"] == "server"})
 
 
-def machine(home: Path, envs_dir: Path, dev_ini: Path | None) -> list[Path]:
-    """This machine's arguments files, one per server profile: serverstart.jvm_flags with the data folder ``dev.ini`` and the profile
-    give (the same lookup as drishti.py start server); the folders they name are made. The files written."""
-    written = []
-    envs_dir.mkdir(parents=True, exist_ok=True)
+def machine_files(home: Path, envs_dir: Path, dev_ini: Path | None, keys: dict | None = None) -> dict:
+    """This machine's arguments files, one per server profile, as {file: (text, the data folder it names)}: serverstart.jvm_flags with the
+    data folder ``dev.ini`` (or ``keys``, the entries of a dev.ini about to be written) and the profile give, the Java order (the settings
+    file beats the environment; no ``DRISHTI_*`` folder variable is read). Nothing is written and no folder is made."""
+    out = {}
+    clean = {k: v for k, v in os.environ.items() if k not in settingsfile.ROOT_VARS}
     for profile in profiles_of_servers(home):
-        named = settingsfile.with_profiles(str(dev_ini) if dev_ini and dev_ini.is_file() else None, home, [profile])
-        keys = settingsfile.read_all(named)
-        roots = javacmd.launch_roots(home, None, {k: v for k, v in os.environ.items() if k != "DRISHTI_DATA_DIR"}, keys)
-        data = roots["data"][0]
-        heap = (keys.get(serverstart.HEAP_KEY) or "").strip() or "2g"
+        if keys is None:
+            got = settingsfile.read_all(settingsfile.with_profiles(str(dev_ini) if dev_ini and dev_ini.is_file() else None, home, [profile]))
+        else:
+            got = {**keys, **settingsfile.read_all(settingsfile.with_profiles(None, home, [profile]))}
+        data = javacmd.launch_roots(home, None, clean, got)["data"][0]
+        heap = (got.get(serverstart.HEAP_KEY) or "").strip() or "2g"
         flags = serverstart.jvm_flags(data, heap, "server", "server", home)
-        for d in (data / "tmp" / "server", data / "dumps" / "server", data / "logs", data / "run"):
-            d.mkdir(parents=True, exist_ok=True)
-        f = envs_dir / f"jvm-{profile}.args"
-        f.write_text(serverstart.argfile_text(flags, f"The JVM options of the IDE's server launchers on the {profile} profile, on this machine "
-                                                     f"(data folder {data.as_posix()})."), encoding="utf-8", newline="\n")
+        out[envs_dir / f"jvm-{profile}.args"] = (serverstart.argfile_text(flags, f"The JVM options of the IDE's server launchers on the {profile} "
+                                                                           f"profile, on this machine (data folder {data.as_posix()})."), data)
+    return out
+
+
+#: the folders the arguments files name under a data folder (made by setup and by start server, never by :func:`machine`)
+ARGS_FOLDERS = ("tmp/server", "dumps/server", "logs", "run")
+
+
+def machine(home: Path, envs_dir: Path, dev_ini: Path | None) -> list[Path]:
+    """Writes :func:`machine_files` into the settings folder (the only folder made); the folders the files name are never made here
+    (setup makes them under the data folder it resolved; the server and start server make their own). The files written."""
+    envs_dir.mkdir(parents=True, exist_ok=True)
+    written = []
+    for f, (text, _data) in machine_files(home, envs_dir, dev_ini).items():
+        f.write_text(text, encoding="utf-8", newline="\n")
         written.append(f)
     return written
 

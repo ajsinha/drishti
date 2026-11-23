@@ -375,9 +375,11 @@ def test_setup_check_changes_nothing_and_setup_is_idempotent(tmp_path):
     ini = (envs / "dev.ini").read_text(encoding="utf-8")
     assert f"drishti.home={ROOT.resolve().as_posix()}" in ini and f"drishti.data.dir={data.resolve().as_posix()}" in ini
     assert "/path/to/drishti" not in ini
-    (envs / "dev.ini").write_text("# mine\n", encoding="utf-8")
+    mine = ini + "# mine\n"                                        # this checkout's file with the user's own line: kept as it is
+    (envs / "dev.ini").write_text(mine, encoding="utf-8")
     r = run("setup", "--data-dir", str(data), "--envs-dir", str(envs), "--skip-venv")
-    assert (envs / "dev.ini").read_text(encoding="utf-8") == "# mine\n" and "kept as it is" in r.stdout
+    assert (envs / "dev.ini").read_text(encoding="utf-8") == mine and "kept as it is" in r.stdout
+    assert not list(envs.glob("replaced-*")), "identical files and this checkout's dev.ini: nothing moved"
     assert "Environment variables seen" in r.stdout and "Next steps" in r.stdout
 
 

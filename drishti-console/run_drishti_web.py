@@ -91,7 +91,8 @@ def warn_other_home(argv: list[str]) -> str | None:
     if norm(home) == norm(here):
         return None
     return (f"WARNING: your settings file names drishti.home={home}, but this console is in {here}: its data comes from {home}."
-            f" If that is not what you want, rename the settings file (dev.ini) and run python tools/drishti.py setup again.")
+            f" If that is not what you want, run python tools/drishti.py setup: it moves the old settings files to a dated folder in"
+            f" drishti-envs and writes fresh ones.")
 
 
 def main() -> None:

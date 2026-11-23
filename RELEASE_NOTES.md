@@ -13,6 +13,42 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7f: release notes
+
+*A point release on i7e: `setup` can no longer write into another folder, and nothing is left for you to rename or delete by hand.*
+Everything else is as in i7e.
+
+## What changes for administrators
+
+- **An old settings file is moved, never followed.** When `~/drishti-envs/dev.ini` (Windows `%USERPROFILE%\drishti-envs\dev.ini`) names
+  another folder (its `drishti.home`, `drishti.data.dir` or `drishti.modules.home`), `setup` moves it into a dated folder of the settings
+  folder, `drishti-envs\replaced-YYYY-MM-DD-HHMM`, writes a fresh one for this checkout and says so in one line. The same for a JVM
+  arguments file (`jvm-demo.args`, `jvm-qa.args`, `jvm-samples.args`) that differs from what setup writes now. Nothing is lost, nothing is
+  overwritten or edited in place, and identical files are left alone. A `dev.ini` that names this checkout is kept as it is, with your
+  own lines. `setup --check` says what it would move and moves nothing. The i7e rename-it-yourself step is gone.
+- **Setup makes no folder outside this checkout,** the settings folder and a `--data-dir` you pass (it is recorded in the new `dev.ini`).
+  The JVM arguments files only name their folders; setup makes them under the data folder it resolved.
+- **The settings file beats the environment** in the Python tools, as it already did in the server: explicit option, then the settings
+  file, then the environment, then this checkout, for every folder. A `DRISHTI_HOME`, `DRISHTI_DATA_DIR`, `DRISHTI_MODULES_HOME`,
+  `DRISHTI_LIB_PATH` or `DRISHTI_TMP_DIR` left by an old `setx` that names another folder is shown by setup as a WARNING (*ignored: your
+  settings file wins; you may delete it in Environment Variables*) and never used.
+- At run time the server, the console and the tools still only WARN when a settings file names another folder's `drishti.home`; the
+  warning now says to run setup.
+- The deployment guide no longer tells you to `setx DRISHTI_HOME` or `DRISHTI_DATA_DIR`: the folders live in the settings file.
+
+## What changes for developers
+
+- The Module SDK parent pom takes `drishti.home` only from `-Ddrishti.home=` (no `${env.DRISHTI_HOME}` default); a guard test fails when
+  any `pom.xml` reads `${env.DRISHTI_*}` or `${user.home}`.
+- `javacmd.launch_roots` is the one Python resolver, in the Java order; `settingsfile.apply_roots` lets the file win;
+  `launchers.machine_files` renders the JVM arguments files without writing or making anything.
+
+## Known limits
+
+Carried from i7d (below): where Program Files is not writable, pip falls back to the user's own folder; setup, PyCharm and the
+console see it, but the server's pivot Python workers start Python isolated (`-I`) and do not. Use a Python the user can write to, or have
+IT run step 4 as administrator.
+
 # Drishti 2.9.11.i7e: release notes
 
 *A point release on i7d: the IDE launchers are grouped by language, the loader asks for its file, and setup checks an old settings file.*

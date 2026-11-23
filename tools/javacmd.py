@@ -197,14 +197,15 @@ class HomeError(RuntimeError):
 
 
 def find_home(explicit=None, env=None, keys=None) -> tuple:
-    """(the install folder, where it came from), the ONE install root of the Python commands, as the server's ``drishti.home``: ``--home``,
-    else ``DRISHTI_HOME``, else ``drishti.home`` in the settings file, else the folder tools/drishti.py lives in. The install is read only;
+    """(the install folder, where it came from), the ONE install root of the Python commands, as the server's ``drishti.home``, in the Java
+    order (``LaunchRoots``): ``--home``, else ``drishti.home`` in the settings file, else ``DRISHTI_HOME``, else the folder tools/drishti.py
+    lives in (a stale ``DRISHTI_HOME`` never beats a correct settings file). The install is read only;
     what Drishti writes goes to the data folder. A home named anywhere that is not the folder these tools come from is refused in words:
     one release's tools never drive another release's install."""
     env = os.environ if env is None else env
     keys = _SETTINGS_KEYS if keys is None else keys
-    for name, value in (("--home", explicit), ("DRISHTI_HOME", (env.get("DRISHTI_HOME") or "").strip()),
-                        ("drishti.home in the settings file", (keys.get("drishti.home") or "").strip())):
+    for name, value in (("--home", explicit), ("drishti.home in the settings file", (keys.get("drishti.home") or "").strip()),
+                        ("DRISHTI_HOME", (env.get("DRISHTI_HOME") or "").strip())):
         if value:
             if not Path(value).expanduser().is_absolute():   # explicit paths: never taken under the working folder
                 raise HomeError(f"{name} is {value}, a relative path: name the install folder as an absolute path (or unset "
@@ -271,9 +272,10 @@ def _home_value(value: str, home) -> str:
 
 
 def launch_roots(home=None, data_dir=None, env=None, keys=None) -> dict:
-    """Every root a launcher uses, each {name: (path, where it came from)}: ``home`` (:func:`find_home`), ``data`` (``--data-dir``, else
-    ``drishti.data.dir`` in the settings file, else ``DRISHTI_DATA_DIR``, else <home>/data), ``modules`` (``DRISHTI_MODULES_HOME``, else
-    ``drishti.modules.home`` in the settings file, else <home>/modules), ``config`` (<home>/config) and ``jar`` (the newest built server jar
+    """Every root a launcher uses, each {name: (path, where it came from)}, the ONE resolver of the Python side, in the Java order for every
+    root (explicit option > settings file > environment > this checkout): ``home`` (:func:`find_home`), ``data`` (``--data-dir``, else
+    ``drishti.data.dir`` in the settings file, else ``DRISHTI_DATA_DIR``, else <home>/data), ``modules`` (``drishti.modules.home`` in the
+    settings file, else ``DRISHTI_MODULES_HOME``, else <home>/modules), ``config`` (<home>/config) and ``jar`` (the newest built server jar
     under <home>, or None). Nothing is made."""
     env = os.environ if env is None else env
     keys = _SETTINGS_KEYS if keys is None else keys
@@ -283,12 +285,10 @@ def launch_roots(home=None, data_dir=None, env=None, keys=None) -> dict:
                                            ("modules", None, "drishti.modules.home", "DRISHTI_MODULES_HOME", "modules")):
         if given:
             out[name] = (Path(given).expanduser().resolve(), f"--{name}-dir" if name == "data" else f"--{name}")
-        elif name == "data" and (keys.get(key) or "").strip():
+        elif (keys.get(key) or "").strip():
             out[name] = (Path(_home_value(keys[key].strip(), h)).expanduser().resolve(), f"{key} in the settings file")
         elif (env.get(var) or "").strip():
             out[name] = (Path(env[var].strip()).expanduser().resolve(), var)
-        elif (keys.get(key) or "").strip():
-            out[name] = (Path(_home_value(keys[key].strip(), h)).expanduser().resolve(), f"{key} in the settings file")
         else:
             out[name] = (h / default, f"<home>/{default}")
     out["config"] = (h / "config", "<home>/config")

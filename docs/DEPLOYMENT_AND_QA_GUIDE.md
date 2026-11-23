@@ -185,26 +185,29 @@ None is required on a developer machine: the install folder is where `tools/dris
 
 | Root | Taken from the first of |
 |---|---|
-| install folder | `--home`, `DRISHTI_HOME`, `drishti.home` in the settings file, the folder `tools/drishti.py` is in |
+| install folder | `--home`, `drishti.home` in the settings file, `DRISHTI_HOME`, the folder `tools/drishti.py` is in |
 | data folder | `--data-dir`, `drishti.data.dir` in the settings file, `DRISHTI_DATA_DIR`, `<drishti>/data` |
+| modules folder | `drishti.modules.home` in the settings file, `DRISHTI_MODULES_HOME`, `<drishti>/modules` |
 | Java | `--java-home` (`--java` for `lake demo`), `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the `PATH`; older than 21 is refused in words |
 
-**Set them permanently.** Linux and macOS: in `~/.bashrc` (or `~/.profile`, `~/.zshrc` on macOS), then open a new terminal; for every
-user, `KEY=value` lines in `/etc/environment`; for a service, the unit's `Environment=` or `EnvironmentFile=` ([section 8](#8-run-them-as-services)).
+The settings file beats the environment, as on the Java side, so a variable left from an earlier copy never overrides it.
+
+**The folders live in the settings file, not in the environment.** `setup` writes them into `dev.ini` for the checkout it runs in; never
+set `DRISHTI_HOME`, `DRISHTI_DATA_DIR`, `DRISHTI_MODULES_HOME`, `DRISHTI_LIB_PATH` or `DRISHTI_TMP_DIR` permanently on a developer or QA
+machine: a permanent one outlives the copy it was written for. `setup` lists each one that names a folder outside this checkout as a
+WARNING (*ignored: your settings file wins; you may delete it in Environment Variables*) and never uses it. A service sets its folders in
+its unit or env-file ([section 8](#8-run-them-as-services)). Only the JDK may stay in the environment. Linux and macOS: in `~/.bashrc`
+(or `~/.profile`, `~/.zshrc` on macOS), then open a new terminal.
 
 ```bash
 # ~/.bashrc
-export DRISHTI_HOME=/home/you/IdeaProjects/drishti-platform/drishti
-export DRISHTI_DATA_DIR=/home/you/IdeaProjects/drishti-platform/drishti/data
 export DRISHTI_JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ```
 
-Windows: `setx` writes your user's environment (seen by every window opened afterwards: open a new terminal, restart IntelliJ); `setx /M`
-in an administrator's window, or **System Properties → Advanced → Environment Variables** (`Win+R`, `sysdm.cpl`), sets it for the machine.
+Windows: `setx` writes your user's environment (seen by every window opened afterwards: open a new terminal, restart IntelliJ);
+**System Properties → Advanced → Environment Variables** (`Win+R`, `sysdm.cpl`) shows and deletes what an older guide had you set.
 
 ```powershell
-setx DRISHTI_HOME "C:\Users\you\IdeaProjects\drishti-platform\drishti"
-setx DRISHTI_DATA_DIR "C:\Users\you\IdeaProjects\drishti-platform\drishti\data"
 setx DRISHTI_JAVA_HOME "C:\jdk-21"
 ```
 
@@ -213,7 +216,9 @@ setx DRISHTI_JAVA_HOME "C:\jdk-21"
 **`python tools/drishti.py setup`**, from the install folder, does the rest, on every operating system, and can be run again at any time:
 it checks Python and Java (and says which `java` and why), shows the install, data and modules folders with where each came from, makes
 the data folder's layout, makes `~/drishti-envs` with a copy of `config/settings.examples/dev.ini` **with this machine's paths filled in**
-(a file already there is never overwritten), makes `drishti-console/.venv` and installs the pinned Lake wheel, then
+(a `dev.ini` already there that names this checkout is kept as it is; one that names another folder, and a JVM arguments file that
+differs, is **moved** into a dated folder there, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one is written, so nothing is
+lost and nothing is made in the other folder; `--check` says what it would move), makes `drishti-console/.venv` and installs the pinned Lake wheel, then
 `drishti-console/requirements.txt`, lists the environment variables it sees (a secret only as *set*), and prints the next steps.
 `--check` changes nothing and only reports (exit 1 when something needs doing). The two parts also run alone: `setup drishti` (everything
 but the Python libraries) and `setup venv` (the `.venv`); and where no `.venv` is allowed, **`setup --system`** puts the libraries into the
@@ -240,11 +245,12 @@ Drishti setup on linux
   [  ok] python                 /usr/bin/python3 3.13.1
   [  ok] java                   /usr/lib/jvm/java-21-openjdk-amd64/bin/java  Java 21  (from JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64)
   [  ok] home (DRISHTI_HOME)    /home/you/IdeaProjects/drishti-platform/drishti  (the folder holding tools/drishti.py; the install, read only)
-  [made] data (DRISHTI_DATA_DIR) /home/you/IdeaProjects/drishti-platform/drishti/data  (<home>/data): made run, logs, tmp, dumps, delta
+  [made] settings file          /home/you/drishti-envs/dev.ini  (from config/settings.examples/dev.ini, its paths filled in for this checkout)
+  [made] data (DRISHTI_DATA_DIR) /home/you/IdeaProjects/drishti-platform/drishti/data  (drishti.data.dir in the settings file): made run, logs, tmp, dumps, delta
   [todo] modules (packages)     /home/you/IdeaProjects/drishti-platform/drishti/modules  (<home>/modules): 0 .dmod file(s); python tools/drishti.py build modules
   [todo] server jar (<home>/lib) none in <home>/lib yet: python tools/drishti.py build jar
   [  ok] your jars (lib/ext)    /home/you/IdeaProjects/drishti-platform/drishti/lib/ext  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)
-  [made] settings file          /home/you/drishti-envs/dev.ini  (from config/settings.examples/dev.ini, its paths filled in)
+  [made] JVM options            /home/you/drishti-envs: jvm-demo.args, jvm-qa.args, jvm-samples.args  (the IDE server launchers' @files; data folder from dev.ini)
   [made] console .venv          /home/you/IdeaProjects/drishti-platform/drishti/drishti-console/.venv/bin/python
 
 Environment variables seen:
@@ -279,8 +285,8 @@ one have every option.
 **1 · Get the release.** Unpack the release ZIP (it carries the server jar in `lib/`), or get the platform's source and build it (JDK 21
 only; every repository carries Maven as `mvnw`). The source is five repositories (and the index repository) under one folder, `~/IdeaProjects/drishti-platform/`
 (Windows `C:\Users\you\IdeaProjects\drishti-platform\`): download the source bundle from the index repository's release, or
-`git clone https://github.com/drishti-platform/drishti-platform.git` into that folder and run `clone_all.py --release i7e`; then
-`build_all.py --release i7e` installs the products from their tags in order (tools, Rachana, Lake) and runs the whole Drishti build and its tests (to build only the jar, `build all` below). The steps have one home,
+`git clone https://github.com/drishti-platform/drishti-platform.git` into that folder and run `clone_all.py --release i7f`; then
+`build_all.py --release i7f` installs the products from their tags in order (tools, Rachana, Lake) and runs the whole Drishti build and its tests (to build only the jar, `build all` below). The steps have one home,
 [QUICKSTART_DEVELOPERS.md sections 1 and 2](QUICKSTART_DEVELOPERS.md#1-get-the-code-and-set-up-the-machine); the versions that go together are in the index
 repository's [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md). Then, in the `drishti` folder:
 

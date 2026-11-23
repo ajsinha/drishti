@@ -532,18 +532,20 @@ def test_pip_reads_the_requirements_without_their_find_links_line(tmp_path):
     assert "fastapi>=0.110" in text and "drishti-lake==0.9.1" in text and "# comment" in text
 
 
-def test_an_old_dev_ini_naming_another_checkout_is_reported_and_never_overwritten(tmp_path, libs, capsys):
+def test_an_old_dev_ini_naming_another_checkout_is_moved_to_a_dated_folder_and_a_fresh_one_written(tmp_path, libs, capsys):
     envs = tmp_path / "envs"
     envs.mkdir()
     old = "drishti.home=/somewhere/else/drishti\n"
     (envs / "dev.ini").write_text(old, encoding="utf-8")
     assert envsetup.setup(ns(tmp_path, "drishti", check=True), quiet()) == 1
     out = capsys.readouterr().out
-    assert "[FAIL] settings file" in out and "points at /somewhere/else/drishti, not this one" in out and "dev-old.ini" in out and "run setup again" in out
+    assert "names drishti.home=/somewhere/else/drishti" in out and "setup moves it to" in out
+    assert (envs / "dev.ini").read_text(encoding="utf-8") == old and not list(envs.glob("replaced-*")), "--check moves nothing"
     assert envsetup.setup(ns(tmp_path, "drishti"), quiet()) in (0, 1)
     out = capsys.readouterr().out
-    assert "[WARN] settings file" in out and "points at /somewhere/else/drishti, not this one" in out
-    assert (envs / "dev.ini").read_text(encoding="utf-8") == old
-    (envs / "dev.ini").write_text(f"drishti.home={TOOLS.parent.as_posix()}\n", encoding="utf-8")
+    moved = list(envs.glob("replaced-*"))
+    assert len(moved) == 1 and (moved[0] / "dev.ini").read_text(encoding="utf-8") == old
+    assert f"dev.ini moved to {moved[0]}" in out and "[WARN]" not in out
+    assert f"drishti.home={TOOLS.parent.as_posix()}" in (envs / "dev.ini").read_text(encoding="utf-8")
     envsetup.setup(ns(tmp_path, "drishti"), quiet())
-    assert "points at" not in capsys.readouterr().out
+    assert "moved to" not in capsys.readouterr().out and len(list(envs.glob("replaced-*"))) == 1
