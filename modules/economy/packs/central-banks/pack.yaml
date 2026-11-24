@@ -96,4 +96,3 @@ console:
     - ["CBANK CBANK-BOC", "The Bank of Canada · the target rate, CORRA, Canada's yields and USD/CAD"]
     - ["CBSER CBSER-FRED-DGS10", "The US 10-year Treasury yield · two years of daily history"]
     - ["CBSER CBSER-BOC-V39079", "The Bank of Canada's target for the overnight rate"]
-  help: config/help.yaml

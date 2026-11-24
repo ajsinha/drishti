@@ -95,4 +95,3 @@ console:
     - ["PRESS PRESS-ECB", "The European Central Bank"]
     - ["PRESS PRESS-FEDREG", "The US Federal Register's newest documents"]
     - ["PRESS PRESS-BOE", "The Bank of England (internal only: its terms allow no commercial reuse)"]
-  help: config/help.yaml

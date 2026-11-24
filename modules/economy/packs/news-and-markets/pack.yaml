@@ -77,7 +77,6 @@ console:
     - ["CO CO-AAPL", "Apple · quote, six months of prices, headlines"]
     - ["CO CO-XOM", "Exxon Mobil · energy"]
     - ["QUOTE QUOTE-MSFT", "Any ticker works: the quote and history for MSFT"]
-  help: config/help.yaml
 columns:
   news-topic:
     - NAME

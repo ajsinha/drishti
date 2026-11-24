@@ -230,8 +230,8 @@ rules (mode replace).
 
 ## The VaR engine's data (market-risk, dated by its files)
 
-Nine more market-risk folders feed the VaR engine ([VAR.md](../../docs/contracts/VAR.md),
-[VAR_EXPLORER.md](../../docs/guides/VAR_EXPLORER.md)). They are written by `tools/packgen/var/make_var_data.py` (which
+Nine more market-risk folders feed the VaR engine ([VaR guide, Part II](../../docs/guides/VAR_GUIDE.md#part-ii--the-data-contract),
+[the explorer](../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)). They are written by `tools/packgen/var/make_var_data.py` (which
 `make_testdata.py` runs) from the trades and desks above, and are **dated by their files** (`dated-by: BUSINESS_DATE` in
 `testdata.yaml`: each document's `BUSINESS_DATE` is its file's date): no snapshot and changes, `lake demo` loads each folder in one run,
 every date under its file's (or tar folder's) date, moved with the other business dates.
@@ -340,7 +340,7 @@ filing-feed, filing, financial-fact) and `gleif/<kind>/<kind>.<date>.jsonl.gz` (
   Both packs are off by default: add `us-equities,gleif` to `DRISHTI_PACKS`.
 - **Writing it.** The packs' generators write the snapshots and their `testdata.yaml` entries (`tools/testdata/publicsnap.py`):
   `tools/packgen/us_equities/make.py`, `tools/packgen/gleif/make.py`, run by the data feeds `drishti.py feed run us-equities`
-  and `gleif.py` ([PUBLIC_DATA.md](../../docs/guides/PUBLIC_DATA.md)); `make.py --check` without a cache checks the committed
+  and `gleif.py` ([external data](../../docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)); `make.py --check` without a cache checks the committed
   snapshot. `make_testdata.py` keeps both folders as they are and lists them.
 - **Licences.** SEC EDGAR is public domain, GLEIF and Wikidata CC0, the Nasdaq Trader directory a public file; no prices, index
   weights or GICS are included (the packs' guides).

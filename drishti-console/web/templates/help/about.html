@@ -24,7 +24,7 @@
   <h1>{{ PRODUCT }}{% if PRODUCT_NATIVE %} <span class="lp-grad">{{ PRODUCT_NATIVE }}</span>{% endif %}</h1>
   {% if HEADLINE %}<p class="about-headline">{{ HEADLINE }}</p>{% endif %}
   <p class="about-tag">{{ TAGLINE }}</p>
-  <p>A live, keyboard-driven terminal, risk engine and BI workbench: any record from any system as a dense, linked, ticking view, risk computed for any set of trades when you ask, and every figure explained down to the data it came from.</p>
+  <p>A platform for any domain: live, explainable analytics on the data you already have. Any record from any system as a dense, linked, ticking view, BI-style dashboards written in one grammar, and every figure explained down to the data it came from. Each field (banking risk, capital markets, economic data, genomics) is a module.</p>
   {% set sv_version = (info.version if info and info.version else server_about().version) %}{% if sv_version %}<p><span class="ab-ver mono" data-version>Version {{ sv_version }}</span></p>{% endif %}
   <div class="ab-cta">
     {% if AUTH_ENABLED and not me %}<a class="btn-pill btn-accent" href="{{ BASE }}/login"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Sign in</a>
@@ -36,7 +36,7 @@
   <section class="ab-sec" id="what"><h2>What is {{ PRODUCT }}</h2>
     <p>{{ PRODUCT }} ({{ PRODUCT_NATIVE or 'दृष्टि' }}, Sanskrit for <em>sight</em>) lets a person see a trade, a counterparty, a fund or an economy the same way: one live page, linked to what it relates to, showing only what that person may see.
        A short screen grammar called <b>Rachana</b> describes a view, a <b>Sutra</b> is a screen written in it, and <b>inference</b> completes whatever a Sutra leaves out.
-       Above the trades, {{ PRODUCT }} computes risk when it is asked (value at risk, expected shortfall and counterparty exposure) for any set of trades you can describe, and never stores a computed figure as a summary.</p></section>
+       Everything specific to a field comes as a module. In the banking module, {{ PRODUCT }} computes risk when it is asked (value at risk, expected shortfall and counterparty exposure) for any set of trades you can describe, and never stores a computed figure as a summary.</p></section>
   <section class="ab-sec" id="problem"><h2>The problem it solves</h2>
     <p>Every system has its own screens, built one by one, with their own access rules. Risk is published overnight for the hierarchy it was set up with, so a new question waits for a batch. Figures rarely say what they mean, where they came from or whether they were delivered or computed.
        {{ PRODUCT }} replaces the per-product screen with a grammar, computes risk for the scope you ask about from the trade-level inputs your engines already produce, and gives every command a data contract, so you can see what your data has not told you yet.</p></section>

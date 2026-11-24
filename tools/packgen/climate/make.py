@@ -204,8 +204,6 @@ def spec(bank: dict) -> PB.PackSpec:
         examples=[("CLIM CLIM-SOLARIS", "Climate profile · emissions by scope, transition and physical risk"), ("FE FE-RATES-1", "Financed emissions of a book"),
                   ("NGFS NGFS-DELAYED", "NGFS scenario · carbon price path, sector shocks"), ("CST CST-DELAYED-COMM", "Climate stress on the commodities desk"),
                   ("PHY PHY-002", "Physical risk · hazards at a refinery"), ("GAR GAR-FRA", "EU taxonomy green asset ratio")],
-        overview="Climate figures reuse the banking packs' counterparties, books, desks and legal entities: a counterparty's climate profile follows "
-                 "its sector, financed emissions attribute its emissions to the books that trade with it, and climate stress runs on each desk.",
         external_ids={"counterparty": set(bank["counterparty"]), "book": set(bank["book"]), "desk": set(bank["desk"]), "legal-entity": set(bank["legal-entity"])},
         roles={"climate-analyst": {"kinds": [k.kind for k in KINDS] + ["counterparty", "book", "desk", "legal-entity"], "raw": True}})
 

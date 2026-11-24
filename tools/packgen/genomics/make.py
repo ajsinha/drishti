@@ -233,8 +233,6 @@ def spec() -> PB.PackSpec:
         examples=[("GENE GENE-TP53", "Gene · GRCh38 location, expression by tissue, known variants"), ("VRNT VRNT-BRAF-V600E", "Variant · significance, population frequencies"),
                   ("PROT PROT-P00533", "Protein · EGFR domains"), ("SMPL SMPL-104120", "Tumour sample · variant calls with VAF and depth"),
                   ("SEQ SEQ-2026-0917-B", "Sequencing run · quality by cycle"), ("TRIAL TRIAL-ONC-101", "Clinical trial · enrolment and arms")],
-        overview="Genes carry GRCh38 coordinates, proteins UniProt accessions and variants dbSNP ids. A gene links to its protein and pathway, a variant to its gene, a sample "
-                 "to the run that sequenced it and the trial it was screened for, and a trial to its target gene and biomarker variant.",
         roles={"scientist": {"kinds": [k.kind for k in KINDS], "raw": True}})
 
 
