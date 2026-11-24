@@ -50,7 +50,11 @@ jobs:
           done
       - name: Build Drishti (packages the server jar and the modules, no tests)
         run: ./mvnw -B -q package -DskipTests
-      - run: pip install -r drishti-console/requirements-test.txt
+      - name: The Lake Python wheel (built from the Lake tag, as the pin in lib/lake-wheel.pin says) and the console's requirements
+        run: |
+          pip install uv
+          uv build --wheel "$RUNNER_TEMP/drishti-lake/python" --out-dir lib/wheels
+          pip install --find-links lib/wheels -r drishti-console/requirements-test.txt
       - name: Copyright headers
         run: python tools/license_headers.py
       - name: Every generated document is current
