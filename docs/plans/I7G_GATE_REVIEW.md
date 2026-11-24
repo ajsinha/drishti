@@ -165,3 +165,44 @@ Product files changed in the range (everything else is `tools/`, docs, launchers
 `EnvironmentTest.java`, `kernel/drishti-server/.../ComputeWritesApiTest.java`, `drishti-console/tests/test_bare_console_run.py`,
 `test_tmpdir.py`. No file of the risk, VaR, ES, BI, pivot, lake or engine code is in the diff (the only path match is the document
 `docs/guides/bi/NOTEBOOK_AND_PYTHON.md`).
+
+---
+
+## i7h checklist (2026-11-24 02:52 EST)
+
+Read-only: `git diff` / `git show` only, nothing built or run. Drishti `origin/release/i7h` (`833ec3fc4`, 2 commits, 29 files, +260 −42)
+against tag `v2.9.11.i_7g`; Drishti Tools `origin/release/1.1.1` (`d1305f2`, 16 files, +28 −13) against tag `v1.1.0`.
+
+### Verdict: TAG (both)
+
+No blocking item. Four notes, none blocking, at the end.
+
+| # | Result | What was read |
+|---|---|---|
+| 1 | **yes** | `CapacityController`: the planner and the workbook are `Supplier`s made by `lazy(...)` (double-checked, `volatile`, the value kept; a failure is not kept, so the next call tries again). A `RuntimeException` of the build becomes `DrishtiException(MODULE_PART_UNAVAILABLE)` = `DRS-1032` / 503, "the capacity template is missing <part>"; both `get()` calls are inside `plan()` and the workbook endpoint, before the streaming body, so nothing is read at construction and the server starts. `/admin/capacity/live` reads neither. `CapacityWorkbook.builtIn` reads each part through `file(meta, part)`: `template.json` `"files": {"_rels/.rels": "_rels/root.rels.xml"}`, the part's name in the workbook stays `_rels/.rels` (rename is 100% similarity; `sizing_planner.py` writes the same map through `SOURCE_NAMES`; `.rels` is out of `test_no_hidden_names` ALLOWED). No other reader of the old resource name in the tree. `CapacityLazyTemplateTest` (3 tests) covers lazy, once-only and the zip entry names. |
+| 2 | **yes** | `serverstart.require_settings(a)` is the first check of `start`: no `--data-dir` and no settings file of this process (`javacmd.settings()[0]`: `--settings`, else `~/drishti-envs/dev.ini` of this checkout) raises one `LaunchError` built by `procs.fail(...)` with `procs.setup_line()`. `start cluster` is not affected: every node and the console are started with `--data-dir` (`clusterctl.py` 419, 463). `test_matrix_start` row 04 asserts the one `[FAIL]`, no `--data-dir` in the Fix, nothing written. |
+| 3 | **yes** | `build_demo_lakes.closing`: the Next line is `procs.command('start', 'all', '--demo')`; the hard-coded Linux and Windows spellings are gone. No file name is shared between `tools/launch` and `tools/lake`, so the added `sys.path` entry shadows nothing. Message text only, no lake logic. |
+| 4 | **yes** | `drishti.py` hands `--server` (else `DRISHTI_SERVER`, first of a list) to `doctor.acceptance`. The development administrator is used only when one of three holds: the demo profile is named, `DRISHTI_SEED_PASSWORD` is given, or `server_says_demo` (GET `/public/about`, 200, JSON, `profile` equal to `demo`); any other answer (down, not JSON, no field, another value) is the old `[FAIL] demo profile` and no POST is sent (the new test asserts no POST). `PublicAboutController` adds `profile` only when `drishti.profile` is set, and the only file that sets it is `config/profiles/demo.ini`; a server without the demo profile has no field, so it never gets the sign-in by this path. The field carries one word: no path, user, password or secret. `CONFIGURATION.md` has the key (2,188 settings). |
+| 5 | **yes** | Both `mvnw` (Drishti `data/tmp/maven`, Tools `build-tmp/maven`): a temporary folder whose path holds a space is replaced by `${TMPDIR:-/tmp}/drishti[-tools]-maven-<uid>` before `mkdir -p` and `MAVEN_OPTS`. Two lines each, same shape. |
+| 6 | **yes** | Tools `SettingsFile.read`: a first line starting with U+FEFF loses that one character before `parse`. `SettingsFileTest.aLeadingUtf8ByteOrderMarkIsIgnored` writes the three bytes EF BB BF and reads the key. Everything else in Tools is the version (1.1.0 → 1.1.1) and the CHANGELOG. |
+| 7 | **yes** | `envsetup._setup`: the two module reports (they run the jar) are inside `try`; `JavaError` / `JarError` / `LaunchError` puts the message in `problems` only when no problem is there yet (the Java line already printed stays the one line) and the steps go back to `[*problems, *todo]`, so no traceback and no module line without Java. |
+
+### Risk, VaR, ES, BI and lake code: untouched
+
+Product files changed: `PublicAboutController.java`, `CapacityController.java`, `CapacityWorkbook.java`, the capacity template (rename,
+`template.json`, the jar name `i7g` → `i7h` in `sheet1.xml`, `sheet2.xml`, `test-vectors.json`, the sizing workbook), `config/profiles/demo.ini`,
+`pom.xml` and `.mvn/maven.config` (versions; Tools 1.1.1). Everything else is `tools/` (launch, doctor, setup, messages, tests), `mvnw` and
+documents. No file of the risk, VaR, ES, BI, pivot, lake or engine code is in either diff.
+
+**TEST IMPACT**: targeted only: `CapacityLazyTemplateTest` + the capacity tests (vectors carry the new jar name), `tools/test_doctor_acceptance.py`, `test_matrix_start.py`, `test_no_hidden_names.py`, `test_wheel_discovery.py`, the setup matrix, Tools `SettingsFileTest`; no risk, BI or lake lane.
+
+**DOCUMENT IMPACT**: already in the branch (CHANGELOG, RELEASE_NOTES, README version, `CONFIGURATION.md` regenerated, `CLI_REFERENCE.md` for `--server`, the demo rule and `start server`; Tools CHANGELOG); nothing further before the tag.
+
+### Notes (not blocking; carry to I8_CARRY_IN)
+
+| # | Note |
+|---|---|
+| N1 | `/public/about` needs no sign-in, so `"profile": "demo"` tells anyone who can reach a demo server that it runs the demo profile (whose development administrator is the documented product default). Nothing new is disclosed for a demo; never start a reachable non-demo server with `drishti.profile=demo` in its own settings file. |
+| N2 | No server-side test asserts that a server started with the demo profile answers `"profile": "demo"` (the doctor test uses a stand-in server); the drill's acceptance step without `--profile demo` is the proof. |
+| N3 | `doctor --acceptance --wait N` on a demo stack that is still starting, with no `--profile demo`: `server_says_demo` is asked once, before the wait, so it answers `[FAIL] demo profile` instead of waiting. The Fix line it prints works. |
+| N4 | `mvnw` fallback: a `TMPDIR` that itself holds a space is not covered, and the folder name under a shared `/tmp` is predictable (`drishti-maven-<uid>`); single-user development machines only. |
