@@ -37,8 +37,8 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`module
 
 | Command | Kind | Class | Key | Grain | Contract | Example |
 |---|---|---|---|---|---|---|
-| `WDI` | `development-profile` | fundamental | `PROFILE_ID` | One row per development profile, keyed by PROFILE_ID. | [WDI: Development profile](../../../../../docs/contracts/packs/world-development.md#wdi-development-profile-development-profile) (`contracts/development-profile.contract.yaml`) | — (no test data) |
-| `WDIS` | `development-series` | fundamental | `SERIES_ID` | One row per development indicator series, keyed by SERIES_ID. | [WDIS: Development indicator series](../../../../../docs/contracts/packs/world-development.md#wdis-development-indicator-series-development-series) (`contracts/development-series.contract.yaml`) | — (no test data) |
+| `WDI` | `development-profile` | fundamental | `PROFILE_ID` | One row per development profile, keyed by PROFILE_ID. | [WDI: Development profile](../../../../../docs/contracts/packs/world-development.md#wdi-development-profile-development-profile) (`contracts/development-profile.contract.yaml`) | [example](../../../../../docs/contracts/packs/world-development.md#example-world-development-development-profile) |
+| `WDIS` | `development-series` | fundamental | `SERIES_ID` | One row per development indicator series, keyed by SERIES_ID. | [WDIS: Development indicator series](../../../../../docs/contracts/packs/world-development.md#wdis-development-indicator-series-development-series) (`contracts/development-series.contract.yaml`) | [example](../../../../../docs/contracts/packs/world-development.md#example-world-development-development-series) |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
 

@@ -43,8 +43,8 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 
 | Command | Kind | Class | Key | Grain | Contract | Example |
 |---|---|---|---|---|---|---|
-| `PBOOK` | `path-book` | input | `BOOK_ID` | One row per path book, keyed by BOOK_ID. | [PBOOK: Path book](../../../../../docs/contracts/packs/compute-demo.md#pbook-path-book-path-book) (`contracts/path-book.contract.yaml`) | — (no test data) |
-| `PSTRIP` | `path-strip` | input | `STRIP_ID` | One row per p&l strip, keyed by STRIP_ID. | [PSTRIP: P&L strip](../../../../../docs/contracts/packs/compute-demo.md#pstrip-pl-strip-path-strip) (`contracts/path-strip.contract.yaml`) | — (no test data) |
+| `PBOOK` | `path-book` | input | `BOOK_ID` | One row per path book, keyed by BOOK_ID. | [PBOOK: Path book](../../../../../docs/contracts/packs/compute-demo.md#pbook-path-book-path-book) (`contracts/path-book.contract.yaml`) | [example](../../../../../docs/contracts/packs/compute-demo.md#example-compute-demo-path-book) |
+| `PSTRIP` | `path-strip` | input | `STRIP_ID` | One row per p&l strip, keyed by STRIP_ID. | [PSTRIP: P&L strip](../../../../../docs/contracts/packs/compute-demo.md#pstrip-pl-strip-path-strip) (`contracts/path-strip.contract.yaml`) | [example](../../../../../docs/contracts/packs/compute-demo.md#example-compute-demo-path-strip) |
 | `PSUM` | `path-sum` | computed | — | One answer per question (the id asked for and its parameters), computed when asked. | [PSUM: Book path (Python)](../../../../../docs/contracts/packs/compute-demo.md#psum-book-path-python-path-sum) (`contracts/path-sum.contract.yaml`) | — (computed when asked) |
 | `PSUMJ` | `path-sum-java` | computed | — | One answer per question (the id asked for and its parameters), computed when asked. | [PSUMJ: Book path (Java)](../../../../../docs/contracts/packs/compute-demo.md#psumj-book-path-java-path-sum-java) (`contracts/path-sum-java.contract.yaml`) | — (computed when asked) |
 

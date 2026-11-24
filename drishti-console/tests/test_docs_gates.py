@@ -118,7 +118,6 @@ def test_the_count_caps():
         warnings.warn(f"docs gate (warn): {len(contracts)} contract pages, the plan's count is {CONTRACTS_PLANNED} (tools/contracts.py)")
 
 
-@pytest.mark.parametrize("doc", _customer_docs(), ids=lambda p: p.name)
 def test_docs_architecture_holds_only_what_is_built():
     """A design that is not built lives in docs/plans/ (frozen until built); docs/architecture/ holds no document whose own status line says so."""
     for doc in sorted((DOCS / "architecture").glob("*.md")):
@@ -128,6 +127,7 @@ def test_docs_architecture_holds_only_what_is_built():
         assert "not built" in doc.read_text(encoding="utf-8")[:3000].lower() or "proposed" in doc.read_text(encoding="utf-8")[:3000].lower(), f"{doc.name} is built or finished: fold it into a guide and delete it"
 
 
+@pytest.mark.parametrize("doc", _customer_docs(), ids=lambda p: p.name)
 def test_customer_documents_carry_no_version_history(doc):
     text = re.sub(r"```.*?```", "", doc.read_text(encoding="utf-8"), flags=re.S)
     hits = [m.group(0) for m in HISTORY.finditer(text)]

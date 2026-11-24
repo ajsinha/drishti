@@ -46,7 +46,7 @@ JSON_BLOCK = re.compile(r"^```jsonc?[ \t]*\n(.*?)^```", re.S | re.M)
 KEY = re.compile(r'"([A-Za-z_][A-Za-z0-9_]*)"\s*:')
 CONTRACT_FILE = re.compile(r"(?:\{([a-z0-9,\- ]+)\}|([a-z][a-z0-9-]*))\.contract\.yaml")
 TICKED = re.compile(r"`([a-z][a-z0-9]*(?:-[a-z0-9]+)+)`")
-SAMPLE_LINK = re.compile(r"contracts/packs/([a-z0-9-]+)\.md#example-([a-z0-9]+)-([a-z0-9_-]+)\)")
+SAMPLE_LINK = re.compile(r"contracts/packs/([a-z0-9-]+)\.md#example-([a-z0-9_-]+)\)")
 
 _spec = importlib.util.spec_from_file_location("drishti_guide_data_for_links", ROOT / "tools" / "docs" / "guide_data.py")
 GD = importlib.util.module_from_spec(_spec)
@@ -67,9 +67,11 @@ def anchors() -> dict[str, tuple[str, str]]:
     """kind (the test-data folder's table name) -> (its pack page's stem, its example's <domain>-<table> anchor suffix), from the pages'
     <a id="example-<domain>-<table>"></a>."""
     out: dict[str, tuple[str, str]] = {}
+    domains = sorted((d.name for d in (ROOT / "data" / "testdata").iterdir() if d.is_dir()), key=len, reverse=True) + ["core"]
     for page in sorted(PACKS_DOCS.glob("*.md")):
-        for a in re.findall(r'<a id="example-([a-z0-9]+-[^"]+)"></a>', page.read_text(encoding="utf-8")):
-            out.setdefault(a.split("-", 1)[1], (page.stem, a))
+        for a in re.findall(r'<a id="example-([^"]+)"></a>', page.read_text(encoding="utf-8")):
+            domain = next(d for d in [*domains, page.stem] if a.startswith(d + "-"))      # a domain name may hold hyphens (market-risk)
+            out.setdefault(a[len(domain) + 1:], (page.stem, a))
     return out
 
 
@@ -98,7 +100,7 @@ def named_kinds(text: str, known: dict) -> set[str]:
 
 def missing_links(path: Path, known: dict, cons: dict[str, dict]) -> list[str]:
     text, rel = path.read_text(encoding="utf-8"), path.relative_to(ROOT)
-    linked = {(page, f"{d}-{k}") for page, d, k in SAMPLE_LINK.findall(text)}
+    linked = set(SAMPLE_LINK.findall(text))
     targets = set(re.findall(r"\]\(([^)\s]+)\)", text))
     probs = []
     for k in sorted(named_kinds(text, known)):

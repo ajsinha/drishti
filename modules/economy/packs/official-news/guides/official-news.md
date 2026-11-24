@@ -39,8 +39,8 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`module
 
 | Command | Kind | Class | Key | Grain | Contract | Example |
 |---|---|---|---|---|---|---|
-| `PRESS` | `release-source` | fundamental | `SOURCE_ID` | One row per official press releases, keyed by SOURCE_ID. | [PRESS: Official press releases](../../../../../docs/contracts/packs/official-news.md#press-official-press-releases-release-source) (`contracts/release-source.contract.yaml`) | — (no test data) |
-| `PREL` | `press-release` | fundamental | `RELEASE_ID` | One row per press release, keyed by RELEASE_ID. | [PREL: Press release](../../../../../docs/contracts/packs/official-news.md#prel-press-release-press-release) (`contracts/press-release.contract.yaml`) | — (no test data) |
+| `PRESS` | `release-source` | fundamental | `SOURCE_ID` | One row per official press releases, keyed by SOURCE_ID. | [PRESS: Official press releases](../../../../../docs/contracts/packs/official-news.md#press-official-press-releases-release-source) (`contracts/release-source.contract.yaml`) | [example](../../../../../docs/contracts/packs/official-news.md#example-official-news-release-source) |
+| `PREL` | `press-release` | fundamental | `RELEASE_ID` | One row per press release, keyed by RELEASE_ID. | [PREL: Press release](../../../../../docs/contracts/packs/official-news.md#prel-press-release-press-release) (`contracts/press-release.contract.yaml`) | [example](../../../../../docs/contracts/packs/official-news.md#example-official-news-press-release) |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
 

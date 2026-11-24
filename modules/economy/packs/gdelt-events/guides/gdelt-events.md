@@ -36,7 +36,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`module
 
 | Command | Kind | Class | Key | Grain | Contract | Example |
 |---|---|---|---|---|---|---|
-| `GDELT` | `event-country` | fundamental | `EVENT_COUNTRY_ID` | One row per world events by country, keyed by EVENT_COUNTRY_ID. | [GDELT: World events by country](../../../../../docs/contracts/packs/gdelt-events.md#gdelt-world-events-by-country-event-country) (`contracts/event-country.contract.yaml`) | — (no test data) |
+| `GDELT` | `event-country` | fundamental | `EVENT_COUNTRY_ID` | One row per world events by country, keyed by EVENT_COUNTRY_ID. | [GDELT: World events by country](../../../../../docs/contracts/packs/gdelt-events.md#gdelt-world-events-by-country-event-country) (`contracts/event-country.contract.yaml`) | [example](../../../../../docs/contracts/packs/gdelt-events.md#example-gdelt-events-event-country) |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
 

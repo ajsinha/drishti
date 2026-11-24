@@ -38,8 +38,8 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`module
 
 | Command | Kind | Class | Key | Grain | Contract | Example |
 |---|---|---|---|---|---|---|
-| `CBANK` | `central-bank` | fundamental | `BANK_ID` | One row per central bank, keyed by BANK_ID. | [CBANK: Central bank](../../../../../docs/contracts/packs/central-banks.md#cbank-central-bank-central-bank) (`contracts/central-bank.contract.yaml`) | — (no test data) |
-| `CBSER` | `rate-series` | fundamental | `SERIES_ID` | One row per central bank series, keyed by SERIES_ID. | [CBSER: Central bank series](../../../../../docs/contracts/packs/central-banks.md#cbser-central-bank-series-rate-series) (`contracts/rate-series.contract.yaml`) | — (no test data) |
+| `CBANK` | `central-bank` | fundamental | `BANK_ID` | One row per central bank, keyed by BANK_ID. | [CBANK: Central bank](../../../../../docs/contracts/packs/central-banks.md#cbank-central-bank-central-bank) (`contracts/central-bank.contract.yaml`) | [example](../../../../../docs/contracts/packs/central-banks.md#example-central-banks-central-bank) |
+| `CBSER` | `rate-series` | fundamental | `SERIES_ID` | One row per central bank series, keyed by SERIES_ID. | [CBSER: Central bank series](../../../../../docs/contracts/packs/central-banks.md#cbser-central-bank-series-rate-series) (`contracts/rate-series.contract.yaml`) | [example](../../../../../docs/contracts/packs/central-banks.md#example-central-banks-rate-series) |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
 

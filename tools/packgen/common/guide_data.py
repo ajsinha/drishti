@@ -122,9 +122,13 @@ def sample_anchors() -> dict[str, tuple[str, str]]:
             for page, text in pages.items():
                 if anchor and f'<a id="{anchor}"></a>' in text:
                     out.setdefault(kind, (page, anchor))
+    domains = sorted((d.name for d in (ROOT / "data" / "testdata").iterdir() if d.is_dir()), key=len, reverse=True)
     for page, text in pages.items():
         for a in re.findall(r'<a id="(example-[^"]+)"></a>', text):
-            out.setdefault(a.split("-", 2)[2], (page, a))
+            name = a[len("example-"):]
+            domain = next((d for d in [*domains, page] if name.startswith(d + "-")), None)
+            if domain:
+                out.setdefault(name[len(domain) + 1:], (page, a))
     return out
 
 

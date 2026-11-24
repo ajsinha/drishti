@@ -35,7 +35,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`module
 
 | Command | Kind | Class | Key | Grain | Contract | Example |
 |---|---|---|---|---|---|---|
-| `NSTAT` | `statistics-series` | fundamental | `SERIES_ID` | One row per national statistic, keyed by SERIES_ID. | [NSTAT: National statistic](../../../../../docs/contracts/packs/national-statistics.md#nstat-national-statistic-statistics-series) (`contracts/statistics-series.contract.yaml`) | — (no test data) |
+| `NSTAT` | `statistics-series` | fundamental | `SERIES_ID` | One row per national statistic, keyed by SERIES_ID. | [NSTAT: National statistic](../../../../../docs/contracts/packs/national-statistics.md#nstat-national-statistic-statistics-series) (`contracts/statistics-series.contract.yaml`) | [example](../../../../../docs/contracts/packs/national-statistics.md#example-national-statistics-statistics-series) |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
 
