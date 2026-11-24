@@ -282,6 +282,21 @@
       </resource>
     </resources>
     <plugins>
+      <plugin>
+        <!-- the test JVMs' temp folder (target/tmp, see surefire below) exists before the first test class runs: surefire creates it only
+             with its first working file, and on Windows the first class (a @TempDir test) can come before that -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>test-tmp-dir</id>
+            <phase>process-test-classes</phase>
+            <goals><goal>run</goal></goals>
+            <configuration><target><mkdir dir="${project.build.directory}/tmp"/></target></configuration>
+          </execution>
+        </executions>
+      </plugin>
       <!-- ${revision} (the one version, .mvn/maven.config) becomes the real number in the pom that is installed or deployed -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>

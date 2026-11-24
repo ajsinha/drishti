@@ -1090,6 +1090,11 @@ def cmd_docs_shots(a, extra) -> int:
     return subprocess.run(cmd, cwd=ROOT).returncode
 
 
+def cmd_docs_generate(a, extra) -> int:
+    """docs generate [--check]: every documentation generator in order (tools/docs/generate.py)."""
+    return load_module("docs_generate", "docs/generate.py").run(a.check, a.only)
+
+
 # ------------------------------------------------------------------------------------------------ smoke, doctor, view, completion
 
 def cmd_server_smoke(a, extra) -> int:

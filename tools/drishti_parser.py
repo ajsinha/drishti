@@ -374,6 +374,11 @@ def build_parser(h) -> argparse.ArgumentParser:
     ss.add_argument("--guide", help="one guide only")
     ss.add_argument("--only", help="comma list of picture-name fragments")
     ss.add_argument("--list", action="store_true", help="list the pictures")
+    gn = add(dc, "generate", h.cmd_docs_generate, "docs generate [--check]: run EVERY documentation generator in order (settings, contracts, CSV formats, feeds, glossaries, pack/module/connector READMEs, launchers, guide data, Help map, corpus); --check writes nothing and fails naming each stale reference with its fix",
+             epilog="examples:\n  drishti.py docs generate            # after changing a pack, setting, contract, mapping or registry\n  drishti.py docs generate --check    # what CI and the drill run\n"
+                    "Needs the built server jar (build jar). Guide: docs/guides/CLI_REFERENCE.md")
+    gn.add_argument("--check", action="store_true", help="write nothing; exit 1 naming every stale reference")
+    gn.add_argument("--only", action="append", help="only the generators whose name contains this text (repeatable)")
     # smoke, doctor, view, completion ----------------------------------------------------------------------
     sm = add(sv, "smoke", h.cmd_server_smoke, "server smoke: health, packs loaded and enabled, no Sutra problems, then open sample views of every kind on the latest and an earlier date (exit 1 on any failure)", [srv],
              "examples:\n  drishti.py server smoke --server http://localhost:18480 --pack market-risk --ids 2 --dates 2\n  drishti.py server smoke --json > smoke.json\n"
