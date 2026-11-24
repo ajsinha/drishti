@@ -124,7 +124,8 @@ def test_docs_architecture_holds_only_what_is_built():
         head = "\n".join(doc.read_text(encoding="utf-8").splitlines()[:40])
         assert not re.search(r"^\W*Status:\W*(design, not built|proposed)", head, re.M | re.I), f"{doc.name} is a design not built: move it to docs/plans/"
     for doc in sorted((DOCS / "plans").glob("*.md")):
-        assert "not built" in doc.read_text(encoding="utf-8")[:3000].lower() or "proposed" in doc.read_text(encoding="utf-8")[:3000].lower(), f"{doc.name} is built or finished: fold it into a guide and delete it"
+        head = doc.read_text(encoding="utf-8")[:3000].lower()
+        assert any(w in head for w in ("not built", "proposed", "nothing here is built")), f"{doc.name} is built or finished: fold it into a guide and delete it"
 
 
 @pytest.mark.parametrize("doc", _customer_docs(), ids=lambda p: p.name)

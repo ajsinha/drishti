@@ -1310,7 +1310,7 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 | D6 | Vendored front-end assets, no build pipeline | Air-gapped desks; MAYA/Pravaha practice |
 | D7 | Industries are packs that inherit; users live in the server | Neutral core; any number of consoles share users (ADR-009, ADR-010, ADR-015) |
 
-The full records are in [`docs/architecture/adr/`](adr).
+The full records are in [`docs/architecture/DECISIONS.md`](DECISIONS.md).
 
 ## 22. Testing architecture
 
