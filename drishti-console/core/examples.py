@@ -12,9 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Rachana examples (``docs/guides/examples``): each a ``<name>.sutra.yaml``, a self-contained ``<name>.json`` and a
-``<name>.md`` note. Studio opens them and the help centre lists them. A name is served only if its three files are present
-in the directory when asked, so a request can never name a path."""
+"""The Rachana examples (``docs/guides/examples``): each a ``<name>.sutra.yaml``, a self-contained ``<name>.json`` and a note, its
+section of the gallery's ``README.md`` (the section after the line ``<!-- example: <name> -->``). Studio opens them and the help
+centre lists them. A name is served only if its two files and its section are present in the directory when asked, so a request
+can never name a path."""
 from __future__ import annotations
 
 import re
@@ -23,6 +24,7 @@ from pathlib import Path
 
 _KIND = re.compile(r"^match:\s*\{[^}]*?\bkind:\s*([A-Za-z0-9_-]+)", re.M)
 _NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+_MARK = re.compile(r"^<!-- example: ([a-z0-9-]+) -->\s*$", re.M)
 
 
 @dataclass(frozen=True)
@@ -51,14 +53,25 @@ class Examples:
         return sorted(found, key=lambda n: (n != self.default, n))
 
     def _complete(self, name: str) -> bool:
-        return all((self.directory / f"{name}{ext}").is_file() for ext in (".sutra.yaml", ".json", ".md"))
+        return all((self.directory / f"{name}{ext}").is_file() for ext in (".sutra.yaml", ".json")) and name in self.notes()
+
+    def notes(self) -> dict[str, str]:
+        """Every example's note: its section of README.md, its ``##`` heading raised to the note's one ``#`` heading."""
+        gallery = self.directory / "README.md"
+        text = gallery.read_text(encoding="utf-8") if gallery.is_file() else ""
+        marks = list(_MARK.finditer(text))
+        out = {}
+        for i, m in enumerate(marks):
+            body = text[m.end():marks[i + 1].start() if i + 1 < len(marks) else len(text)].strip("\n")
+            out[m.group(1)] = re.sub(r"^## ", "# ", body, count=1) + "\n"
+        return out
 
     def get(self, name: str | None) -> Example | None:
         """The named example, or None: names are checked against the files present, never joined into a path first."""
         if not name or not _NAME.match(name) or name not in self.names():
             return None
         text = lambda ext: (self.directory / f"{name}{ext}").read_text(encoding="utf-8")  # noqa: E731
-        readme = text(".md")
+        readme = self.notes()[name]
         heading = next((ln[2:].strip() for ln in readme.splitlines() if ln.startswith("# ")), name)
         yaml_text = text(".sutra.yaml")
         kind = _KIND.search(yaml_text)
