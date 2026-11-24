@@ -185,7 +185,7 @@ server nor Spring, and the Delta and Iceberg source plugins read the lake throug
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | The **data folder** (`DRISHTI_DATA_DIR`): everything Drishti writes at run time, all git-ignored except `testdata/`: `delta/` (the demo lakes), `bi-store/` (BI columns and rollups), `connectors/` (`generated/` and `history/`), `identity/`, `feeds/`, `packs/` (`added.yaml`, installed archives), `loads/`, `governance/`, `collab/`, `reports/`, `qa/` (the QA profile), `build/` (tool output and staging), `drill/` (the drill's logs) |
 | `docs/` | These documents, by audience: `guides/` (getting started, user, developer, API, Rachana, reports and troubleshooting guides), `tutorials/` (18 hands-on tutorials), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance; the runbooks are in OPERATIONS_GUIDE.md), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
-| `.github/workflows/fast.yml`, `windows.yml` | CI: `fast.yml` runs `./mvnw -B -q verify` and the header check on Java 21 and 25 and `pytest` for the console on Python 3.13; `windows.yml` builds on Windows, runs the native Delta engine, the Delta connector and server tests, then the Python commands (`build jar`, `setup`, `setup --check`, `start server`, `status`, `stop server`) with the server on a small lake asked for a view, a search and a past date |
+| `.github/workflows/fast.yml`, `windows.yml` | CI: `fast.yml` builds Tools, Rachana and Lake from their release tags, packages Drishti (`./mvnw -B -q package -DskipTests`; Java 21, and a compile on 25), then runs the header check, `docs generate --check` and the docs and Help tests on Python 3.13; `windows.yml` builds on Windows, runs the native Delta engine, the Delta connector and server tests, then the Python commands (`build jar`, `setup`, `setup --check`, `start server`, `status`, `stop server`) with the server on a small lake asked for a view, a search and a past date |
 
 ### 1.5 The module runtime
 
@@ -1260,6 +1260,10 @@ See [BUILD_GUIDE.md](BUILD_GUIDE.md): the complete walk-through (a help-desk pac
 `pack.yaml` key, generators, signing and the tests that cover packs. Users and admins: the packs that ship, turning them on and who sees which are in [BUILD_GUIDE.md](BUILD_GUIDE.md). Give the pack's documents
 UPPER_SNAKE attribute names, its samples as `samples/<kind>.jsonl`, its connectors as templates (the server writes the files), and its
 Sutras a folder layout that suits it (folders are organisation only).
+
+After you change a pack, a setting, a contract, a mapping or a registry, run `python3 tools/drishti.py docs generate`: it rewrites every
+generated document (READMEs, CONFIGURATION.md, contract pages, CSV formats, launchers, the Help map) in the right order, and
+`docs generate --check` fails naming each stale one. Details: [CLI_REFERENCE.md](CLI_REFERENCE.md#docs-generate-every-generated-document).
 
 ### 5.6 Add a table to the identity database
 

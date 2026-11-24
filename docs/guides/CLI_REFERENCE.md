@@ -83,7 +83,7 @@ codes and, where it helps scripts, `--json`.
 | `bi`, `tables` | `bi workspace`, `catalogue`, `expr`, `migrate`, `sql`, `model`, `mq`, `transform`, `item`, `dataset`, `runs`, `statement`; `tables` list, check, preview, lineage, offer, migrate | REST; the Java `tables` tool | [12](#12-bi-and-tables) |
 | `var`, `exposure`, `sens`, `frtb`, `simm`, `play`, `pivot` | the VaR, exposure, FRTB-SA, SIMM and pivot engines | REST | [13](#13-the-risk-engines-var-exposure-sens-frtb-simm-pivot) |
 | `compute`, `contract`, `feed` | reactive connectors; data contracts; the data feeds | REST; `tools/contracts.py`; `tools/feeds/` | [14](#14-compute-contract-and-feed) |
-| `docs` | `docs shots` | `tools/docs/screenshots.py` (Playwright) | [17](#docs-shots-screenshots) |
+| `docs` | `docs generate [--check]`, `docs shots` | `tools/docs/generate.py`; `tools/docs/screenshots.py` (Playwright) | [17](#docs-generate-every-generated-document); [17](#docs-shots-screenshots) |
 | `calc`, `dev` | `calc install` (Calc's Python runtime); `dev bicompute-unit` (the pivot engine without Maven) | `tools/calcruntime.py`; `tools/dev/bicompute_unit.py` | [17](#17-developer-tools) |
 | `completion` | `completion bash`, `zsh`, `powershell` | the command tree | [2](#shell-completion) |
 
@@ -4106,6 +4106,22 @@ python3 tools/bench/net_soak.py --work ~/drishti-scale-test/net-2h --users 20 --
 
 It prints the latency and error table (one line per action, `history` its own) and the verdict, and keeps them in
 `<work>/soak-report.txt` beside the full `<work>/soak.json` (the per-minute samples are its `resources`).
+
+### `docs generate`: every generated document
+
+One command runs every documentation generator, in the order that is right (a page that lists other pages comes after them): the
+settings catalogue (`CONFIGURATION.md`), the under-construction page, the command catalogue, the data contracts' pages, the CSV formats,
+the feed pages, the glossaries, the pack, module and connector READMEs, the IDE launchers and their guide table, the guides' data
+sections, the Help map and the corpus tables. Run it after changing a pack, a setting, a contract, a mapping or a registry.
+
+```bash
+python3 tools/drishti.py docs generate                       # write every generated document
+python3 tools/drishti.py docs generate --check               # write nothing; exit 1 naming each stale document and the command that fixes it
+python3 tools/drishti.py docs generate --only CONFIGURATION   # the generators whose name contains the text (repeatable)
+```
+
+It reads the built server jar (`build jar`). CI and the drill run `--check`; the list of generators is `tools/docs/generate.py`
+(`GENERATORS`), the one place a new generator is added, and `tools/test_docs_generated.py` checks each of them.
 
 ### `docs shots`: screenshots
 
