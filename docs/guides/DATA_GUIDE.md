@@ -3175,7 +3175,7 @@ public-data folders are whole tables, a date each, and load as they are.
 chosen per system when the demo lakes are built, so one installation proves that the connectors, history, search, the grouped pages and
 BI answer the same whatever the storage. Every other dataset stays in Delta.
 
-| Command (`python3 tools/build_demo_lakes.py …`; Windows `py tools\build_demo_lakes.py …`) | Result |
+| Command (`python3 tools/build_demo_lakes.py …`; Windows `py -3.13 tools\build_demo_lakes.py …`) | Result |
 |---|---|
 | (no `--store`) | everything in Delta |
 | `--store calypso=iceberg` | CALYPSO in Iceberg, ENDUR and MUREX in Delta (the mixed case) |

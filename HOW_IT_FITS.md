@@ -293,7 +293,7 @@ What a distribution leaves out **does not exist in it**: not on the command line
 `VRES` typed in Drishti Finance answers *DRS-4023 VRES is not in Drishti Finance*.
 
 - **Choosing one**: `--distribution <name|path>` on `tools/drishti.py start all`, `start server` and `start console`, else
-  `DRISHTI_DISTRIBUTION`, else `drishti.distribution`. On Windows: `py tools\drishti.py start all --distribution risk`.
+  `DRISHTI_DISTRIBUTION`, else `drishti.distribution`. On Windows: `py -3.13 tools\drishti.py start all --distribution risk`.
 - **Two consoles over one cluster**: a console started with its own distribution keeps it whatever the servers run. A stack file's
   `consoles:` list (`{ name: risk, port: 17480, distribution: risk }`, `{ name: finance, port: 17481, distribution: finance }`) gives
   Drishti Risk and Drishti Finance side by side over the same kernels.

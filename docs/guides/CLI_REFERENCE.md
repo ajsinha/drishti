@@ -253,7 +253,7 @@ positional arguments:
 options:
   -h, --help    show this help message and exit
 
-    python3 tools/drishti.py <group> <command> [options]          (Windows: py tools\drishti.py ...; the one Python, its libraries from setup)
+    python3 tools/drishti.py <group> <command> [options]          (Windows: py -3.13 tools\drishti.py ...; the one Python, its libraries from setup)
 
 Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
 publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
@@ -287,7 +287,7 @@ or pass `--wheels <folder>`; `--index` lets pip use your package index instead).
 Python ([Running the tools from PyCharm](#running-the-tools-from-pycharm-and-the-java-sutra-from-intellij)):
 
 ```bash
-python3 tools/drishti.py setup            # Windows: py tools\drishti.py setup
+python3 tools/drishti.py setup            # Windows: py -3.13 tools\drishti.py setup
 python3 tools/drishti.py --help
 ```
 
@@ -2689,7 +2689,7 @@ connectors of desk-demo   [files in /srv/drishti/config/connectors; change them 
 ### `setup`, `build jar`, `start`, `stop` and `status`: install, build, run and stop Drishti
 
 One command, `tools/drishti.py`, prepares the machine, builds the server jar, and starts, stops and shows the server, the console and a
-cluster. It is the same on Linux, macOS and Windows; on Windows write `py tools\drishti.py ...` (or `python`) and backslash paths. The
+cluster. It is the same on Linux, macOS and Windows; on Windows write `py -3.13 tools\drishti.py ...` (or `python`) and backslash paths. The
 settings file goes **before** the command: `python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo`; with no
 `--settings`, every command but `setup` takes `~/drishti-envs/dev.ini` (Windows `%USERPROFILE%\drishti-envs\dev.ini`) by itself when that
 file names this checkout as `drishti.home` (another copy's file is never taken), so `python tools/drishti.py start all --demo` is enough. A
@@ -2733,7 +2733,7 @@ fixes come first, then `setup` again.
 
 Setup installs and `--check` verifies both `drishti-console/requirements.txt` and `config/compute/locks/python.lock` (the server's compute pool checks its interpreter against the lock; a missing pin names its file; the two files must agree on every pin). Setup installs only the libraries that are missing or at the wrong version and never calls pip when all are in order. When pip fails it
 says why in one sentence (index login rejected 401/403, index not reachable or certificate not trusted, index lacks `name==ver`), shows
-pip's own output, and prints the missing list as one `py -m pip install name==ver ...` line.
+pip's own output, and prints the missing list as one `py -3.13 -m pip install name==ver ...` line.
 
 `--check` changes nothing; it verifies the libraries name by name (every requirement's installed version against its
 spec, the Lake wheel against `lib/lake-wheel.pin`) and names what is missing or wrong (exit 1). The Python setup ran with is written into the settings file as `drishti.python` (`dev.ini`; with `--settings <file>` that file, and no `dev.ini` is made;

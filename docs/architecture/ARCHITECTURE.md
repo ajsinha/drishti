@@ -2637,7 +2637,7 @@ A pool's `environment` is either `system` (the site's interpreter, `compute.pyth
   never resolved again at install time.
 * **One environment per lock.** Its id is the sha256 of (Python version, platform, lock file); pools and connectors with the same lock share
   it. It is built under `<data dir>/compute/envs/<env id>/` (wheels cache `<data dir>/compute/wheels/`), never in a system location or
-  `/tmp`: `python -m venv`, then `pip install --require-hashes --no-deps --only-binary=:all:` from approved sources only (`shipped` wheels,
+  `/tmp`: `pip install --target <env>/site --require-hashes --no-deps --only-binary=:all:` (a library folder, no virtual environment) from approved sources only (`shipped` wheels,
   a named index in `compute.indexes`, or a local path; public PyPI only when the site names it). No source builds, no resolution.
 * **Read-only and verified.** The built folder is made read-only and a manifest of hashes is checked at every worker start; a changed file
   stops the worker (`DOWN` in Health, the file named). A new lock is a new environment; the old one stays until nothing uses it. A failed

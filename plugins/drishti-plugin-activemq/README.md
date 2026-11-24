@@ -210,7 +210,7 @@ DRISHTI_LIMITS_MQ=true java -jar lib/drishti-server-*-exec.jar
 ```
 
 ```python
-# uv run --with stomp.py python send_limit.py
+# python3 send_limit.py   # needs stomp.py in the Python you run Drishti with
 import json, stomp
 c = stomp.Connection([("localhost", 61613)]); c.connect("admin", "admin", wait=True)
 c.send("/queue/limits", json.dumps({"LIMIT_ID": "LIM-ALDERSHOT", "LIMIT": 338000000.0, "USED": 241900000,

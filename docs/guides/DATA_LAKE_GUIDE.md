@@ -2006,7 +2006,7 @@ forms and grains are [VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-f
 | Check | Value | Where |
 |---|---|---|
 | Java | 21 or newer | `java -version` |
-| Server heap | **8 to 10 GB** for 1.3M positions and two to three open dates | `python tools/drishti.py start server --heap 10g` (Windows: `py tools\drishti.py start server --heap 10g`). The measured book is about 0.77 GB of heap at 1M positions ([VAR_GUIDE.md 27.1](VAR_GUIDE.md#271-bytes-per-date)), so about 1 GB at 1.3M, and a date kept open about 1.5 GB of `-Xmx`; `-Xmx6g` served 1M positions with two dates |
+| Server heap | **8 to 10 GB** for 1.3M positions and two to three open dates | `python tools/drishti.py start server --heap 10g` (Windows: `py -3.13 tools\drishti.py start server --heap 10g`). The measured book is about 0.77 GB of heap at 1M positions ([VAR_GUIDE.md 27.1](VAR_GUIDE.md#271-bytes-per-date)), so about 1 GB at 1.3M, and a date kept open about 1.5 GB of `-Xmx`; `-Xmx6g` served 1M positions with two dates |
 | Loader heap | `16g` | `DRISHTI_DATALOAD_LOADER_HEAP=16g` for the inbox (default `4g`; the loader's budget is half of it): a separate process, memory bounded, the rest spilled to disk; for the CLI, `DRISHTI_LAKE_LOADER_HEAP` |
 | Reporting currencies | `DRISHTI_VAR_CURRENCIES=USD` **for the first load** | the default builds EUR, CAD, JPY and GBP books ahead, each about 77% of the USD book's disk; add them when you need them |
 | Open dates | `DRISHTI_VAR_HOT_DATES=3` | the default 10 keeps up to ten dates open |
@@ -2023,7 +2023,7 @@ DRISHTI_VAR_CURRENCIES=USD
 DRISHTI_VAR_HOT_DATES=3
 DRISHTI_DATALOAD_LOADER_HEAP=16g
 EOF
-python tools/drishti.py start server --env-file server.env --heap 10g --background      # Windows: py tools\drishti.py ...
+python tools/drishti.py start server --env-file server.env --heap 10g --background      # Windows: py -3.13 tools\drishti.py ...
 ```
 
 **Disk**, 1.3M positions, 250 values a vector, two dates, **estimated** from the measured 20,000-position run (below; 509 values roughly doubles the lake and

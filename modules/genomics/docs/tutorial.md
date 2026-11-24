@@ -15,7 +15,7 @@
 -->
 # Genomics: the tutorial
 
-1. **Start Drishti Genomics.** `python tools/drishti.py start all --distribution genomics` (Windows: `py tools\drishti.py start all --distribution genomics`). The
+1. **Start Drishti Genomics.** `python tools/drishti.py start all --distribution genomics` (Windows: `py -3.13 tools\drishti.py start all --distribution genomics`). The
    kernel starts with this module alone: the Research lens, no finance anywhere.
 2. **Open a gene.** Type `GENE TP53` and press Enter. The page shows TP53's variants along the protein: each stem at an amino acid
    position, the head as high as the samples carrying it, coloured by impact; the protein's domains are the bands. The grid under it
@@ -34,7 +34,7 @@ Read the [guide](guide.md) for what each part is.
 The script of the demo, step by step (the design's section 2). Each step gives the UI, the command line where there is one, and the YAML
 or address behind it. The data is synthetic, made by the module's generator and loaded with the other packs.
 
-1. **Load the data.** `python tools/drishti.py lake demo` (Windows: `py tools\drishti.py lake demo`) loads the packs `genomics` and
+1. **Load the data.** `python tools/drishti.py lake demo` (Windows: `py -3.13 tools\drishti.py lake demo`) loads the packs `genomics` and
    `protein` with the rest. Check what the server sees: open `/api/v1/genomics/showcase/status`, or
 
    ```bash

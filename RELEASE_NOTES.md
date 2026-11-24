@@ -52,9 +52,9 @@ Everything else is as in i7f.
   folder is ignored by every command unless a settings file is named with `--settings`; `start` makes no data folder and stops before setup
   with the setup line; `start --demo` stops when the demo lake is not built; `start all` checks both ports and the console's Python before
   it starts anything and gives the console the server's loopback address; the bare console and the launchers never follow another
-  checkout's settings file; every failure is one `[FAIL] ... Fix: <command>` line with a command you can paste (`py -3.13 tools\\drishti.py`
+  checkout's settings file; every failure is one `[FAIL] ... Fix: <command>` line with a command you can paste (`py -3.13 tools\drishti.py`
   on Windows), an unexpected one a log file, never a traceback; Drishti's own calls never go through a proxy; pip from the pack runs
-  `--isolated` (a company `pip.ini` plays no part); the wheel pack zip is found in `%USERPROFILE%\\drishti-wheels`, the platform folder or
+  `--isolated` (a company `pip.ini` plays no part); the wheel pack zip is found in `%USERPROFILE%\drishti-wheels`, the platform folder or
   Downloads; setup ends with `Drishti is ready.` and a second run changes nothing.
 - **`drishti.py doctor --acceptance`** (the launcher **Drishti: check acceptance**): signs in to the console, asks `VAR BANK` through it and
   compares VaR 167,372,692 and ES 210,131,972 with the release's.
@@ -64,7 +64,7 @@ Everything else is as in i7f.
 ## What changes in the IDEs
 
 - **Each IDE opens its own project and sees only its own launchers**, in that project's `.idea/runConfigurations/` (of `.idea` only that
-  folder is committed). IntelliJ IDEA opens `drishti`: **Drishti-java 1 Build**, **2 Run**, **3 Test**; PyCharm opens `drishti\\drishti-console`:
+  folder is committed). IntelliJ IDEA opens `drishti`: **Drishti-java 1 Build**, **2 Run**, **3 Test**; PyCharm opens `drishti\drishti-console`:
   **Drishti-python 1 Setup**, **2 Data**, **3 Run**, **4 Check** (with the new **Drishti: check setup** and **Drishti: check acceptance**), which
   reach the install folder as `$PROJECT_DIR$/..` and run on the project interpreter you choose (*Settings → Project → Python Interpreter*:
   the Python setup prepared; Cancel PyCharm's offer to create a virtual environment). No launcher names an interpreter path. VS Code keeps

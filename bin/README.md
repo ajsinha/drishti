@@ -15,7 +15,7 @@
 -->
 # bin: where the commands are
 
-Starting, stopping and checking Drishti is one Python command, `tools/drishti.py` (on Windows `py tools\drishti.py ...`), the same on
+Starting, stopping and checking Drishti is one Python command, `tools/drishti.py` (on Windows `py -3.13 tools\drishti.py ...`), the same on
 Linux, macOS and Windows; no shell script. `bin/` holds only this README. A server drains itself when it is stopped (the service unit, the
 images, a terminal's Ctrl+C: `drishti.node.drain.on-stop`); `drishti.py node drain|undrain|status|wait-ready` drains one ahead of a stop.
 
@@ -49,10 +49,10 @@ python tools/drishti.py stop cluster --cluster deploy/stack/stack.yaml
 ```
 
 ```powershell
-py tools\drishti.py start all --demo
-py tools\drishti.py start all --demo --distribution risk
-py tools\drishti.py start server --node drishti-b --seed 192.168.1.20:18480 --env-file C:\drishti-secrets\cluster.env --background
-py tools\drishti.py status
+py -3.13 tools\drishti.py start all --demo
+py -3.13 tools\drishti.py start all --demo --distribution risk
+py -3.13 tools\drishti.py start server --node drishti-b --seed 192.168.1.20:18480 --env-file C:\drishti-secrets\cluster.env --background
+py -3.13 tools\drishti.py status
 ```
 
 A settings file goes before the command: `python tools/drishti.py --settings FILE start server`.

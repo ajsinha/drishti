@@ -62,7 +62,7 @@ python3 tools/drishti.py feed run national-statistics               # pull today
 python3 tools/drishti.py feed run national-statistics --load inbox  # the same through the data inbox: the server loads it
 ```
 
-The same with the Python you run Drishti with: `python3 tools/drishti.py feed run national-statistics` on Linux and macOS, `py tools\drishti.py feed run national-statistics` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run national-statistics` on Linux and macOS, `py -3.13 tools\drishti.py feed run national-statistics` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Into the lake, checking, offline
 

@@ -241,7 +241,7 @@ python3 tools/drishti.py feed run world-development --load inbox        # the sa
 python3 tools/drishti.py feed run world-development --since 2026-01-01  # pull again although the World Bank has not changed (after editing the indicators)
 ```
 
-The same with the Python you run Drishti with: `python3 tools/drishti.py feed run world-development` on Linux and macOS, `py tools\drishti.py feed run world-development` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run world-development` on Linux and macOS, `py -3.13 tools\drishti.py feed run world-development` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
@@ -253,7 +253,7 @@ python3 tools/drishti.py feed run world-economy -- --no-imf               # the 
 python3 tools/drishti.py feed run world-economy --snapshot --internal-ok  # refresh the committed dataset and pack instead (they carry IMF data: internal demos only)
 ```
 
-The same with the Python you run Drishti with: `python3 tools/drishti.py feed run world-economy` on Linux and macOS, `py tools\drishti.py feed run world-economy` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run world-economy` on Linux and macOS, `py -3.13 tools\drishti.py feed run world-economy` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Into the lake, checking, offline
 

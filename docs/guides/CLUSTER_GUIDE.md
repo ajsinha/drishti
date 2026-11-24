@@ -436,7 +436,7 @@ Nothing deploys, upgrades or removes a module while a server runs, and nothing p
 
 ### 2.0 Starting the nodes
 
-Each node is a server started with `python tools/drishti.py start server --node <name>` (Windows: `py tools\drishti.py`): `--node-dir`
+Each node is a server started with `python tools/drishti.py start server --node <name>` (Windows: `py -3.13 tools\drishti.py`): `--node-dir`
 names its Drishti\*net folder (made when missing), `--seed <host:port>` the member it joins through, `--advertise` the address it
 advertises (by default the machine's real LAN address, never a loopback one), `--node-data` its own data folder when several nodes share a
 machine; the cluster key comes from an `--env-file`. The console is started with `python tools/drishti.py start console --server <the entry node>` (or several,
@@ -1030,7 +1030,7 @@ the drain:**
 | systemd (`deploy/systemd/drishti-server.service`) | the server's own drain on SIGTERM (`drishti.node.drain.on-stop`) | `DRISHTI_DRAIN_WAIT` (240 s), within `TimeoutStopSec` (300 s) |
 | Docker (`deploy/docker/server.Dockerfile`) | the server's own drain on `docker stop` | 90 s; `stop_grace_period: 120s` in `compose.yaml` (or `docker stop -t 120`) |
 | ECS (`deploy/docker/ecs/`) | the same entry point, on the task's SIGTERM | 90 s within `stopTimeout` of **120 s, Fargate's most**: a shard rebuild can take longer, so drain before the stop (the rolling runner does) |
-| Windows | the server's own drain on a stop, or `py tools\drishti.py node drain` first (the same REST call: `POST /api/v1/admin/node/drain` with `{"on":true}` (an administrator's token with the `node:drain` scope, as `Authorization: Bearer`), then `GET /api/v1/admin/node` until it says `safeToStop` | your own wait |
+| Windows | the server's own drain on a stop, or `py -3.13 tools\drishti.py node drain` first (the same REST call: `POST /api/v1/admin/node/drain` with `{"on":true}` (an administrator's token with the `node:drain` scope, as `Authorization: Bearer`), then `GET /api/v1/admin/node` until it says `safeToStop` | your own wait |
 
 The token: `DRISHTI_DRAIN_TOKEN` (or `DRISHTI_DRAIN_TOKEN_FILE`); with sign-in off none is needed. A drain that is refused, or not safe in
 time, never holds the stop: the replicas answer and the next owners build the shards, as after a crash. On ECS with EC2 capacity raise the

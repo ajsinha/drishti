@@ -385,7 +385,7 @@ python tools/drishti.py status                                                # 
 python tools/drishti.py stop all                                              # when you are done
 ```
 
-On Windows the same commands run as `py tools\drishti.py ...` with backslash paths. From IntelliJ IDEA and PyCharm the same steps are the
+On Windows the same commands run as `py -3.13 tools\drishti.py ...` with backslash paths. From IntelliJ IDEA and PyCharm the same steps are the
 launchers **Drishti: build all**, **Drishti: build demo lakes**, **Drishti: run server (demo)** and **Drishti: run console**
 ([IDE_GUIDE.md](docs/guides/IDE_GUIDE.md); VS Code: [IDE_GUIDE.md section 10](docs/guides/IDE_GUIDE.md#10-visual-studio-code)); they read the same profile, so the IDE and the terminal start the same server.
 

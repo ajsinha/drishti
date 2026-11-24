@@ -1576,7 +1576,7 @@ dark), **Drishti Finance** (capital markets, economy and market data; no VaR or 
 sample). What a distribution leaves out does not exist in it: its commands, words, menus, Home cards, Help pages and the catalogue the
 AI reads; a command typed anyway answers *DRS-4023 VRES is not in Drishti Finance*.
 
-**Choose one** at start: `python tools/drishti.py start all --distribution finance` (Windows `py tools\drishti.py start all --distribution finance`), or
+**Choose one** at start: `python tools/drishti.py start all --distribution finance` (Windows `py -3.13 tools\drishti.py start all --distribution finance`), or
 `DRISHTI_DISTRIBUTION=finance`, or `drishti.distribution: finance` (server) and `distribution: finance` (console). A path instead of a
 name loads a site's own file. A console started with its own `--distribution` keeps it whatever the server runs, so one cluster can serve
 a Drishti Risk console and a Drishti Finance console ([DEPLOYMENT_AND_QA_GUIDE.md 6.7](../DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance)).
