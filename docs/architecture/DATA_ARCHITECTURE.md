@@ -1518,7 +1518,7 @@ a key of `application.yaml` or a `@ConfigurationProperties` binding is not in th
   on 2026-10-02, is complete: the 54 days before 10-02 are before any lake, as the window's `loadedFrom` says. A source that keeps no
   dates, or a digest without the two dates (a node of an older release), may hold any date.
 - **A peer that refuses the connection** (it just died and gossip has not said so yet, or it is restarting and its port is not open:
-  `ConnectException`, a reset, no route) is down as far as the read goes (SOAK-02, SOAK-03): the next holder is asked for the same
+  `ConnectException`, a reset, no route, or a connect that times out because a firewall drops it) is down as far as the read goes (SOAK-02, SOAK-03): the next holder is asked for the same
   dates, and the dates no one answered are `DRS-5052` naming it, `… cannot be reached now: drishti-c (not answering: the connection
   failed)`, for the dates its digest says it may hold. Never `DRS-1003`.
 - A peer that is asked but does not answer in time (frozen, overloaded) is a time-out of those days: `504 DRS-1014` *the node qa1-b did

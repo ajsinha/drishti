@@ -317,7 +317,7 @@ read`); a token with a write scope must expire (at most `writeMaxDays`, 90). Rev
 
 `python tools/drishti.py stop all` (Windows `py -3.13 tools\drishti.py stop all`), `Ctrl+C` in a foreground terminal, or the red square in the IDE stops it; start again as
 in 2.5 and 2.6 (no rebuild unless the code changed; monitors, alerts, workspaces and settings are kept in the data folder). New demo data: run 2.4 again, with
-the server running or not. The start order does not matter ([5.2](#52-first-start-by-hand-and-check-it-works)). Three servers as one
+the server running or not. A stop while a BI refresh runs waits for it (at most 10 seconds) so its result is saved. The start order does not matter ([5.2](#52-first-start-by-hand-and-check-it-works)). Three servers as one
 cluster with a console, on this machine: `python tools/drishti.py start cluster` ([deploy/stack/README.md](CLUSTER_GUIDE.md#deploystack-a-ready-made-local-drishtinet-cluster),
 [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 

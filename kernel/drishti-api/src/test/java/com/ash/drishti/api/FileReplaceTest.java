@@ -59,4 +59,23 @@ class FileReplaceTest {
         assertThat(FileReplace.held(new NoSuchFileException("x"))).isFalse();
         assertThat(FileReplace.held(new AtomicMoveNotSupportedException("a", "b", "no"))).isFalse();
     }
+
+    /** Off Windows a refused replace (a read-only folder, a permission) fails at once: no five-second wait under a caller's lock. */
+    @Test
+    @org.junit.jupiter.api.condition.DisabledOnOs(org.junit.jupiter.api.condition.OS.WINDOWS)
+    void offWindowsARefusalFailsAtOnce(@org.junit.jupiter.api.io.TempDir Path dir) throws Exception {
+        Path folder = Files.createDirectory(dir.resolve("ro"));
+        Path file = Files.writeString(folder.resolve("a.json"), "old");
+        Path tmp = Files.writeString(dir.resolve("a.json.tmp"), "new");
+        folder.toFile().setWritable(false);
+        try {
+            org.junit.jupiter.api.Assumptions.assumeFalse(Files.isWritable(folder), "running as a user who may write anywhere");
+            long start = System.nanoTime();
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> FileReplace.atomically(tmp, file))
+                    .isInstanceOf(java.nio.file.FileSystemException.class);
+            assertThat((System.nanoTime() - start) / 1_000_000).isLessThan(1_000);
+        } finally {
+            folder.toFile().setWritable(true);
+        }
+    }
 }

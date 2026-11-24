@@ -34,6 +34,9 @@ public final class FileReplace {
     /** How long a refused replace is tried again, in all. */
     static final long PATIENCE_MS = 5_000;
 
+    /** Only Windows refuses to replace a file another handle holds open; elsewhere a refusal is real and is thrown at once. */
+    static final boolean RETRIES = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).startsWith("windows");
+
     private FileReplace() {
     }
 
@@ -46,7 +49,7 @@ public final class FileReplace {
                 Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
                 return;
             } catch (FileSystemException e) {
-                if (!held(e) || System.nanoTime() + pause * 1_000_000 > until) {
+                if (!RETRIES || !held(e) || System.nanoTime() + pause * 1_000_000 > until) {
                     throw e;
                 }
             }
