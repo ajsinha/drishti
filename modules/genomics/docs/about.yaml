@@ -1,0 +1,45 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this module's docs/README.md: its text. tools/packgen/module_readme.py writes the README from this and module.yaml; edit here, not there.
+readme: 1
+front: |
+  distributions: [drishti.genomics, drishti.all]
+  summary: The genomics sample module, built from the Module SDK alone; a VCF reader, the kinds variant, sample, gene and cohort, the functions VARIANT, GENE and COHORT, and the variant lollipop visual.
+body: |
+  # Genomics
+
+  A third party's module (publisher Helix Lab, a sample) made from the Module SDK's archetype and finished by hand. It uses the kernel API
+  and the plugin API only, and it carries no finance: Drishti Genomics boots the kernel with this module alone.
+
+  | Part | What |
+  |---|---|
+  | The VCF reader | `genomics-vcf`, a connector extension inside the module: reads VCF 4.x files (plain or gzipped) |
+  | Kinds | `variant` and `sample` (from the VCF files), `gene` and `cohort` (computed) |
+  | Functions | `VARIANT <id>`, `GENE <symbol>`, `COHORT <id>`, `GWAS <trait>`, `PROTEIN <gene>`, `DESIGNS <gene>`; the Rachana function `genomics_af_class(af)` |
+  | Pages | under `/m/genomics/`: variants, genes (with the lollipop), cohorts; the showcase: the linked board, its guided mode, the protein workbench |
+  | Visuals | `genomics.lollipop`, `genomics.manhattan`, `genomics.oncoprint`, `protein.dms`, `protein.backbone`, `protein.landscape`: glue in the module's library `drishti-genomics` over drishti-chart's generic kinds |
+  | API | `/api/v1/genomics/variants`, `/genes/{id}`, `/cohorts/{id}`; the showcase's calls (`showcase/status`, `associations`, `cohorts/{id}/summary`, `oncoprint`, `samples/map`, `genes/{id}/lollipop`, `proteins/{id}/…`, `explain/…`: the guide lists them) |
+
+  ## Data structures
+
+  | Kind | Key | Fields |
+  |---|---|---|
+  | `variant` | `VARIANT_ID` | CHROM, POS, REF, ALT, QUAL, FILTER, GENE, CONSEQUENCE, IMPACT, PROTEIN_POS, CARRIERS, AF, SAMPLES |
+  | `sample` | `SAMPLE_ID` | COHORT, SEX, POPULATION, VARIANTS |
+  | `gene` | `GENE` | CHROM, START, PROTEIN_LENGTH, DOMAINS, VARIANTS |
+  | `cohort` | `COHORT_ID` | SAMPLES, MEMBERS, VARIANTS, GENES |
+
+  The contracts are in `packs/genomics/contracts/`. Every sample and variant shipped is synthetic. Read the [guide](guide.md), then the
+  [tutorial](tutorial.md).
