@@ -35,13 +35,9 @@ sys.path.insert(0, str(HERE))
 #: the libraries without which the console cannot start (import name: distribution); the full list is checked by drishti.py setup
 NEEDS = {"fastapi": "fastapi", "uvicorn": "uvicorn", "httpx": "httpx", "yaml": "pyyaml", "jinja2": "jinja2", "drishti_lake": "drishti-lake"}
 def setup_line() -> str:
-    """The setup command, pasteable on this system: ``py -3.13 tools\\drishti.py setup`` on Windows (never ``python``, the Store stub there),
-    else this Python's own path; the tool's path in full (tools/launch/procs.py command() is the same rule)."""
-    tool = str(HERE.parent / "tools" / "drishti.py")
-    q = lambda w: f'"{w}"' if " " in w else w
-    if os.name == "nt":
-        return f"py -{sys.version_info[0]}.{sys.version_info[1]} {q(tool)} setup"
-    return f"{q(sys.executable)} {q(tool)} setup"
+    """The setup command, pasteable on this system (core/settings_ini.py setup_line, the one console copy of procs.command()'s rule)."""
+    from core import settings_ini
+    return settings_ini.setup_line()
 
 
 def missing_libraries(find=importlib.util.find_spec) -> list[str]:
@@ -165,15 +161,35 @@ def bare_defaults(argv: list[str], env: dict, home: Path | None = None) -> tuple
     return argv, said
 
 
+def trust_roots(argv: list[str], environ, scratch: str | None = None) -> list[str]:
+    """The tools' trust rule for a console run directly (an IDE's launcher; FIRST_RUN_ROBUSTNESS.md R5): every DRISHTI_* folder variable
+    (settings_ini.ROOT_VARS) naming a folder outside this checkout is removed from ``environ``, unless it is the folder the accepted
+    settings file of ``argv`` names, or under ``scratch`` (the system temp folder: a test's run). ``drishti.py start`` (it sets
+    DRISHTI_STOP_KEY) has applied the rule already and passes its own resolved roots: left alone. The [WARN] lines to print."""
+    from core import settings_ini
+    if (environ.get("DRISHTI_STOP_KEY") or "").strip():
+        return []
+    named = settings_ini.pop_option(list(argv))[1]
+    entries = settings_ini.read_all(named) if named else {}
+    return settings_ini.drop_foreign_vars(environ, HERE.parent, entries, scratch)
+
+
 def main() -> None:
-    argv, said = bare_defaults(sys.argv[1:], os.environ)
-    for line in said:
-        print(line, file=sys.stderr)
-    sys.argv[1:] = argv
-    other = foreign_settings(sys.argv[1:])
-    if other:                                          # another checkout's file: warned, and none of its roots followed (R6)
-        print(f"[WARN] {other} belongs to another checkout: not used (Fix: {setup_line()})", file=sys.stderr)
-        sys.argv[1:] = drop_settings(sys.argv[1:])
+    import tempfile
+    from core import settings_ini
+    try:
+        argv, said = bare_defaults(sys.argv[1:], os.environ)
+        for line in said:
+            print(line, file=sys.stderr)
+        sys.argv[1:] = argv
+        other = foreign_settings(sys.argv[1:])
+        if other:                                      # another checkout's file: warned, and none of its roots followed (R6)
+            print(f"[WARN] {other} belongs to another checkout: not used (Fix: {setup_line()})", file=sys.stderr)
+            sys.argv[1:] = drop_settings(sys.argv[1:])
+        for line in trust_roots(sys.argv[1:], os.environ, tempfile.gettempdir()):
+            print(line, file=sys.stderr)
+    except settings_ini.SettingsError as e:            # e.g. the launcher's ~/drishti-envs/dev.ini before setup: one line, no traceback
+        raise SystemExit(settings_ini.fail(e)) from None
     settings = load_settings(HERE / "config", sys.argv[1:])
     from core.launcher_stop import MAIN_PID_ENV
     os.environ[MAIN_PID_ENV] = str(os.getpid())   # the launcher's stop signals this process, whichever worker takes the request (core/launcher_stop.py)

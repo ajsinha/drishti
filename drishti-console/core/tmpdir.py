@@ -46,8 +46,19 @@ def configured_base(setting: str = "") -> str:
         return str(_base)
     # never the system temp folder (QA 2026-10-20: it can be a small in-memory file system, and the product owner's rule is never /tmp):
     # the data folder's tmp/console, as run_drishti_web.py sets it, also when the console is started another way
-    data = os.environ.get("DRISHTI_DATA_DIR") or str(Path(__file__).resolve().parents[2] / "data")
-    return str(Path(data) / "tmp" / "console")
+    return str(Path(_data_root()) / "tmp" / "console")
+
+
+def _data_root() -> str:
+    """The data folder: ``DRISHTI_DATA_DIR`` (the settings file's or the launcher's, after the trust rule), else the checkout's ``data``."""
+    return os.environ.get("DRISHTI_DATA_DIR") or str(Path(__file__).resolve().parents[2] / "data")
+
+
+def may_make(base: Path) -> bool:
+    """Whether :func:`start` may make ``base``: only under this checkout, its data folder, or the system temp folder (a test's scratch)."""
+    from core import settings_ini
+    roots = (Path(__file__).resolve().parents[2], Path(_data_root()).expanduser().resolve(), Path(tempfile.gettempdir()).resolve())
+    return any(settings_ini.inside(base, r) for r in roots)
 
 
 def _alive(pid: int) -> bool:
@@ -100,6 +111,13 @@ def start(setting: str = "") -> Path:
     if _root is not None:
         return _root
     base = Path(configured_base(setting)).expanduser().resolve()
+    if not base.is_dir() and not may_make(base):
+        # never a folder made outside this checkout and its data folder (an old DRISHTI_TMP_DIR of another clone): said, and the default
+        import sys
+        fallback = (Path(_data_root()) / "tmp" / "console").expanduser().resolve()
+        print(f"[WARN] the console's temp folder {base} does not exist and is outside this checkout and its data folder: not made; "
+              f"using {fallback}", file=sys.stderr)
+        base = fallback
     base.mkdir(parents=True, exist_ok=True)
     remove_stale(base)                           # crash leftovers (2.9.7): see remove_stale for why it is safe
     root = base / f"{_PREFIX}{os.getpid()}"

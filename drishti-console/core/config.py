@@ -141,7 +141,7 @@ def _read_settings_file(named: str) -> dict[str, str]:
     try:
         entries = settings_ini.read_all(named)
     except settings_ini.SettingsError as e:
-        raise SystemExit(f"--settings: {e}") from None
+        raise SystemExit(settings_ini.fail(e)) from None
     return {k[len("console."):]: v for k, v in entries.items() if k.startswith("console.")}
 
 
@@ -159,8 +159,8 @@ def _shared(named: str) -> dict[str, Any]:
     try:
         entries = settings_ini.read_all(named)
     except settings_ini.SettingsError as e:
-        raise SystemExit(f"--settings: {e}") from None
-    home = (str(entries.get("drishti.home") or "").strip() or (os.environ.get("DRISHTI_HOME") or "").strip()
+        raise SystemExit(settings_ini.fail(e)) from None
+    home =(str(entries.get("drishti.home") or "").strip() or (os.environ.get("DRISHTI_HOME") or "").strip()
             or str(Path(__file__).resolve().parents[2]))
     for key, var in SHARED.items():
         value = str(entries.get(key) or "").strip()
@@ -187,8 +187,8 @@ def load_settings(config_dir: Path, argv: list[str] | None = None) -> Settings:
         argv, profiles = settings_ini.pop_profile(argv)
         settings_path = settings_ini.with_profiles(settings_path, Path(config_dir).resolve().parents[1], profiles)
     except settings_ini.SettingsError as e:
-        raise SystemExit(str(e)) from None
-    shared = _shared(settings_path) if settings_path else {}
+        raise SystemExit(settings_ini.fail(e)) from None
+    shared =_shared(settings_path) if settings_path else {}
     files: list[dict[str, Any]] = []
     for name in ("application.yaml", "application.local.yaml"):
         path = config_dir / name

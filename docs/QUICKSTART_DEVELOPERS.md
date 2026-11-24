@@ -112,8 +112,8 @@ python3 tools/drishti.py doctor
 ```
 
 The Lake wheel comes first because `requirements.txt` installs `drishti-lake==<version>` from `lib/wheels`, and no package index has it; `../drishti-lake`
-must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release i7g` leaves it there). On Windows Drishti never makes a virtual
-environment: the Python you run it with holds the libraries, which you install: `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r drishti-console\requirements.txt`, then `py -3.13 tools\drishti.py setup` checks them, then
+must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release i7g` leaves it there). On every system Drishti never makes a virtual
+environment: the Python you run it with holds the libraries, which you install (on Windows): `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r drishti-console\requirements.txt`, then `py -3.13 tools\drishti.py setup` checks them, then
 `py -3.13 -m pip install -r drishti-console\requirements-test.txt`; Playwright's browsers go into the
 user's profile, no administrator rights needed.
 

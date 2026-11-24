@@ -51,6 +51,16 @@ def test_g1_the_committed_launchers_are_what_the_table_generates():
     assert launchers.check(ROOT) == []
 
 
+def test_every_folder_of_the_owner_holds_a_launcher_and_the_tests_are_in_3_test():
+    """i7g gate F4: the owner's folders Drishti-java 1 Build / 2 Run / 3 Test (and the Python four) each hold a launcher; Drishti: test
+    is in Drishti-java 3 Test."""
+    doc = launchers.table(ROOT)
+    for ide, groups in launchers.GROUPS.items():
+        used = {row["group"] for row in doc[ide]}
+        assert used == set(groups), f"{ide}: empty folders {set(groups) - used}"
+    assert {row["name"]: row["group"] for row in doc["intellij"]}["Drishti: test"] == "Drishti-java 3 Test"
+
+
 # G2: what a launcher may carry. Everything else with a config home lives in a profile (config/profiles/*.ini).
 ALLOWED_ENV = {"MALLOC_ARENA_MAX", "PYTHONUNBUFFERED", "DRISHTI_TOKEN_SECRET", "DRISHTI_SESSION_SECRET"}
 ALLOWED_D = ("-Ddrishti.home=", "-Ddrishti.settings.file=")

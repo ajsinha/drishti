@@ -93,7 +93,8 @@ def start(a, env: dict | None = None) -> int:
         pid_file.unlink()
         say(f"{stem}: stale {pid_file} removed (pid {pid or '?'} is not running)")
     if procs.port_in_use(port):
-        raise LaunchError(f"port {port} is in use by another process: stop it, or pick another with --port", 3)
+        raise LaunchError(procs.fail(f"port {port}", "it is in use by another process",
+                                     procs.command("stop", "console", *(["--name", a.name] if a.name else [])) + ", or pick another with --port"), 3)
 
 
     dev = []

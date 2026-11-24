@@ -156,11 +156,29 @@ def locate_java(explicit=None, java_home=None, env=None) -> tuple:
     return None, "none of --java, --java-home, drishti.java.home, DRISHTI_JAVA_HOME, JAVA_HOME names a JDK and no java is on the PATH"
 
 
+def _failure(what: str, why: str, fix: str) -> str:
+    """The text of a first-run failure in the one shape (procs.fail without its ``[FAIL] ``, which the funnel that prints it adds):
+    ``<what>: <why>. Fix: <fix>``."""
+    _cmd()                                      # puts tools/launch on the path
+    import procs
+    return procs.fail(what, why, fix)[len("[FAIL] "):]
+
+
+def _settings_file() -> str:
+    """The settings file a Fix names: the one given to this process, else this machine's ~/drishti-envs/dev.ini."""
+    return settings()[0] or str(Path.home() / "drishti-envs" / "dev.ini")
+
+
+def _java_fix() -> str:
+    return (f"install Java {MIN_JAVA} (a JDK, e.g. Temurin) and set JAVA_HOME to its folder, or set drishti.java.home in "
+            f"{_settings_file()}")
+
+
 def _home_java(home: Path, name: str) -> str:
     b = java_binary(home)
     if not b.is_file():
-        raise JavaError(f"{name} is {home}, which has no {b.relative_to(home) if b.is_absolute() else b}: point it at a JDK {MIN_JAVA} folder "
-                        f"(the folder that holds bin{os.sep}java)")
+        raise JavaError(_failure("Java", f"{name} is {home}, which has no {b.relative_to(home) if b.is_absolute() else b} (point it at a "
+                                 f"JDK {MIN_JAVA} folder, the folder that holds bin{os.sep}java)", _java_fix()))
     return str(b)
 
 
@@ -171,12 +189,12 @@ def find_java(explicit=None, java_home=None, env=None, required: bool = True):
     if not java:
         if not required:
             return None
-        raise JavaError(f"no Java found ({why}): install a JDK {MIN_JAVA} (Temurin) and set drishti.java.home in the settings file (or DRISHTI_JAVA_HOME, JAVA_HOME) to its "
-                        "folder, or pass --java-home")
+        raise JavaError(_failure("Java", f"no Java found ({why})", _java_fix() + ", or pass --java-home"))
     v = java_version(java)
     if v < MIN_JAVA:
-        raise JavaError(f"Drishti runs on Java {MIN_JAVA} or newer; the java from {why} ({java}) is Java {v}: set drishti.java.home in the settings file (or DRISHTI_JAVA_HOME) to a "
-                        f"JDK {MIN_JAVA} folder (they come before JAVA_HOME and the PATH), or pass --java-home")
+        raise JavaError(_failure("Java", f"Drishti runs on Java {MIN_JAVA} or newer; the java from {why} ({java}) is Java {v}",
+                                 f"install Java {MIN_JAVA} and set drishti.java.home in {_settings_file()} (or DRISHTI_JAVA_HOME) to its "
+                                 "folder (they come before JAVA_HOME and the PATH), or pass --java-home"))
     return java
 
 
@@ -266,14 +284,14 @@ def server_jar(explicit=None, home=None) -> Path:
     lib = lib_dir(home)
     jars = sorted(lib.glob(JAR_GLOB))
     if not jars:
-        raise JarError(f"no server jar in {lib}: run  {_cmd('build', 'jar')}  (it builds the jar and copies it there)")
+        raise JarError(_failure("the server jar", f"no server jar in {lib} (build jar builds it and copies it there)", _cmd("build", "jar")))
     if len(jars) > 1:
         raise JarError(f"{lib} holds {len(jars)} server jars ({', '.join(j.name for j in jars)}): an upgrade replaces the old one; remove "
                        "all but the version to run (your own jars belong in lib/ext and are never touched)")
     version = _version_of(home)
     if version and jars[0].name != f"drishti-server-{version}-exec.jar":
-        raise JarError(f"lib/ holds {jars[0].name} but this checkout is {version}: run  {_cmd('build', 'jar')}  "
-                       "(it replaces the old jar; your own jars in lib/ext are never touched)")
+        raise JarError(_failure("the server jar", f"lib/ holds {jars[0].name} but this checkout is {version} (build jar replaces the old "
+                                "jar; your own jars in lib/ext are never touched)", _cmd("build", "jar")))
     return jars[0]
 
 

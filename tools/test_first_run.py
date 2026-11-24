@@ -97,6 +97,32 @@ def test_row12_a_stale_setx_is_ignored_said_and_nothing_is_made_there(tmp_path):
     assert "Traceback" not in r.stderr and not old.exists()
 
 
+# ---- E1: Java, jar, modules and port failures are [FAIL] ... Fix: (i7g gate F3) --------------------------------------------------------
+
+def test_a_java_home_naming_nothing_is_one_fail_line_with_a_fix(tmp_path):
+    env = home_env(tmp_path, JAVA_HOME=str(tmp_path / "no-jdk"))
+    r = cli("sutra", "lint", tmp_path / "x.yaml", env=env)
+    fails = [l for l in r.stderr.splitlines() if l.startswith("[FAIL]")]
+    assert r.returncode == 2 and len(fails) == 1 and "Traceback" not in r.stderr and "drishti: " not in r.stderr, r.stderr
+    assert fails[0].startswith("[FAIL] Java: JAVA_HOME is ") and ". Fix: install Java 21" in fails[0] and "drishti.java.home in " in fails[0]
+
+
+def test_no_java_no_jar_and_a_busy_port_say_fix_with_the_command(tmp_path, monkeypatch):
+    with pytest.raises(javacmd.JavaError, match=r"^Java: no Java found .*\. Fix: install Java 21 .*JAVA_HOME"):
+        javacmd.find_java(None, None, {"PATH": str(tmp_path / "nothing")})
+    with pytest.raises(javacmd.JarError, match=r"^the server jar: no server jar in .*\. Fix: .*drishti\.py build jar$"):
+        javacmd.server_jar(None, tmp_path)
+    import drishti
+    assert drishti._fail_line(javacmd.JarError("the server jar: none. Fix: x")) == "[FAIL] the server jar: none. Fix: x"
+    import consolestart
+    monkeypatch.setattr(procs, "port_in_use", lambda port: True)
+    monkeypatch.setattr(consolestart, "prepared_python", lambda *a, **k: sys.executable)
+    (tmp_path / "data" / "run").mkdir(parents=True)
+    a = argparse.Namespace(env_file=None, data_dir=str(tmp_path / "data"), port=17998, name=None, distribution=None, demo=False, home=None)
+    with pytest.raises(procs.LaunchError, match=r"^\[FAIL\] port 17998: it is in use by another process\. Fix: .*drishti\.py stop console"):
+        consolestart.start(a, {k: v for k, v in os.environ.items() if not k.startswith("DRISHTI_")})
+
+
 # ---- G2, R3: start makes nothing before setup; --demo needs the lake; both ports first (rows 04, 06, 49) ------------------------------
 
 def test_row04_start_before_setup_is_one_fail_with_the_setup_line_and_makes_nothing(tmp_path):

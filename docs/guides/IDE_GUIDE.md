@@ -390,7 +390,7 @@ run IntelliJ's compiled classes: those carry no build stamp, and the server woul
 PyCharm is a Python configuration of the project interpreter. `dev.ini` is passed by every launcher but the Maven builds, then the
 launcher's profile (section 2.1); a server launcher's JVM options are `~/drishti-envs/jvm-<profile>.args`. The launchers are generated from
 one table, `tools/launch/launchers.yaml`, by `python tools/drishti.py launchers` (the tables below too), and the drill's gate fails when
-a committed launcher differs from it: change the table, never a `.run.xml`. **Ports**: 18480
+a committed launcher differs from it: change the table, never a file of `.idea/runConfigurations/`. **Ports**: 18480
 default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Finance console.
 
 <!-- generated: launchers begin (python tools/drishti.py launchers) -->
@@ -402,7 +402,6 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 | Name | What it runs | What it is | Use it when |
 |---|---|---|---|
 | **Drishti: build all** | Maven `clean package -DskipTests -pl :drishti-app,:drishti-modules -am` | the server jar into `lib/` and every module's package with `first-party.yaml` into `modules/`, stamped for that jar | after a clone or a pull (the one to click) |
-| **Drishti: test** | Maven `clean verify` | the whole Maven test run of the server, the engines and the modules (long, tens of minutes; each test class also has its own targeted run in the IDE) | before a release, or after a change that crosses modules |
 | **Drishti: build modules** | Maven `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` | the module packages only, stamped for the jar already in `lib/` | you changed only module code |
 
 **Drishti-java 2 Run**
@@ -413,13 +412,20 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 | **Drishti: run server (built-in samples)** | the jar, profile `samples.ini` | the packs' small built-in samples (generated, ticking), sign-in on | a first look before any lake is built |
 | **Drishti: run server (QA, port 18580)** | the jar, profile `qa.ini` | the samples on its own port and data folder (`data/qa/data`), sign-in on | QA, or a second server beside the first |
 
+**Drishti-java 3 Test**
+
+| Name | What it runs | What it is | Use it when |
+|---|---|---|---|
+| **Drishti: test** | Maven `clean verify` | the whole Maven test run of the server, the engines and the modules (long, tens of minutes; each test class also has its own targeted run in the IDE) | before a release, or after a change that crosses modules |
+
 ### 4.2 PyCharm: open `drishti\drishti-console` (`drishti-console/.idea/runConfigurations/`)
 
 **Drishti-python 1 Setup**
 
 | Name | What it runs | What it is | Use it when |
 |---|---|---|---|
-| **Drishti: setup** | `drishti.py setup`, `dev.ini` only | prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then CHECKS the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): what is missing is printed as the pip command to run, nothing is installed (it makes `dev.ini`, so it names none) | after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing |
+| **Drishti: setup** | `drishti.py setup`, `dev.ini` only | prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): checked, what is missing installed offline from the wheel pack in `~/drishti-wheels` (it makes `dev.ini`, so it names none) | after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing |
+| **Drishti: setup (package index)** | `drishti.py setup --index`, `dev.ini` only | the same, installing what is missing from your configured package index instead of the wheel pack | no wheel pack, and pip may reach your package index |
 | **Drishti: check setup** | `drishti.py setup --check`, `dev.ini` only | what setup would do, changing nothing: the settings file, the data folder and the libraries of the project interpreter, name by name | before setup, or to see why a launcher refuses |
 
 **Drishti-python 2 Data**
@@ -488,7 +494,7 @@ Two servers must never share a data folder.
 | A Python configuration says *Python interpreter is not configured* | PyCharm: choose the interpreter (section 2.3, step 2). |
 | `lake demo` says the jar is missing | run **Drishti: build all** first; `lake demo --engine java` reads the jar in `lib/`. |
 | Started with the **▶ in the margin of `DrishtiApplication.java`** and nothing works | never use it: it sets none of the settings above (no `dev.ini`, no packs, no sign-in, no home) and runs compiled classes, an unknown build that refuses banking. Use a shipped configuration. |
-| A change to a configuration does not stay | a shipped `.run.xml` is overwritten by a pull. Copy the configuration (Ctrl+D); the copy lives in `.idea/`, which git ignores. Never copy a configuration into the repository. |
+| A change to a configuration does not stay | a shipped file of `.idea/runConfigurations/` is overwritten by a pull. Copy the configuration (Ctrl+D); the copy lives in `.idea/workspace.xml`, which git ignores. Never copy a configuration into the repository. |
 | *module not specified*, or the Maven modules vanished | both IDEs were opened on the same folder (section 1.1). Close both, delete the root's `.idea/`, reopen. |
 | After a pull the build behaves oddly | **Build → Rebuild Project** once, after **Drishti: build all**. |
 | A console runs but the page cannot reach the server | the console's `--backend.url` and the server's port differ (18480 against 18580). A QA console needs the QA server. |
@@ -755,7 +761,6 @@ in IntelliJ and PyCharm, so a team mixes the three without translating.
 | `Drishti: build all` | Maven `clean package -DskipTests -pl :drishti-app,:drishti-modules -am`: the server jar into `lib/` and every module package into `modules/` | after a clone and after every pull |
 | `Drishti: build modules` | only the module packages, stamped for the jar in `lib/` | you changed only module code |
 | `Drishti: test` | the Maven tests | before a hand-over |
-| `Drishti: test Python` | the console's and the tools' pytest | before a hand-over |
 | `Drishti: build demo lakes` | `drishti.py lake demo`, the demo lakes through Drishti Lake's loader | after a build, with the server stopped |
 | `Drishti: run server (demo)` | the server on 18480 on the demo lakes | the normal run |
 | `Drishti: run console` | the console on 17480 | with the server |

@@ -52,8 +52,8 @@ def java_flag(named) -> str:
 
 #: the launch roots a Python tool reads from its environment (DRISHTI_HOME, DRISHTI_DATA_DIR, DRISHTI_MODULES_HOME, DRISHTI_LIB_PATH)
 ROOTS = ("drishti.home", "drishti.data.dir", "drishti.modules.home", "drishti.lib.path")
-#: every DRISHTI_* variable that names a folder (setup reports one naming a folder outside this checkout, and never uses it)
-ROOT_VARS = ("DRISHTI_HOME", "DRISHTI_DATA_DIR", "DRISHTI_MODULES_HOME", "DRISHTI_LIB_PATH", "DRISHTI_TMP_DIR")
+#: every DRISHTI_* variable that names a folder, the test of "outside this checkout" and the trust rule: one copy, the console's reader
+ROOT_VARS, inside, foreign_vars, drop_foreign_vars = _INI.ROOT_VARS, _INI.inside, _INI.foreign_vars, _INI.drop_foreign_vars
 #: the environment values :func:`apply_roots` replaced with the file's (the file wins): {variable: the old value}
 REPLACED: dict[str, str] = {}
 
@@ -62,28 +62,6 @@ def env_name(key: str) -> str:
     """The environment variable of a key, as the Java side names it (``drishti.data.dir`` is ``DRISHTI_DATA_DIR``)."""
     return key.upper().replace(".", "_").replace("-", "_")
 
-
-def inside(path, root, flavour=None) -> bool:
-    """Whether ``path`` is ``root`` or under it, compared as text in the platform's own way (``flavour``: ``ntpath`` or ``posixpath``,
-    default this machine's ``os.path``): case and separators as Windows treats them on Windows. Nothing is resolved on the disk."""
-    import os
-    f = flavour or os.path
-
-    def norm(x) -> str:
-        return f.normcase(f.normpath(f.expanduser(str(x)))).rstrip("\\/") or f.sep
-    p, r = norm(path), norm(root)
-    return p == r or p.startswith(r + f.sep)
-
-
-def foreign_vars(environ, home, flavour=None) -> list[tuple[str, str]]:
-    """The ``DRISHTI_*`` folder variables (:data:`ROOT_VARS`) whose value names a folder outside ``home`` (this checkout): (name, value),
-    in order. An old ``setx`` from an earlier copy: setup reports each as a WARNING and never uses it."""
-    out = []
-    for n in ROOT_VARS:
-        v = (environ.get(n) or "").strip()
-        if v and not inside(v, home, flavour):
-            out.append((n, v))
-    return out
 
 
 def dated_folder(edir: Path, now=None) -> Path:

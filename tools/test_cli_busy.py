@@ -131,7 +131,7 @@ class BusyCli(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             code, _, err = run("data", "get", "trade-valuation", "-o", pathlib.Path(tmp, "t.jsonl.gz"), "--server", self.base)
             self.assertEqual(code, 1)
-            self.assertIn("drishti: The download did not start: the server is short of memory", err)
+            self.assertIn("[FAIL] The download did not start: the server is short of memory", err)
             self.assertFalse(pathlib.Path(tmp, "t.jsonl.gz").exists())
         Busy.refusals = 0
 

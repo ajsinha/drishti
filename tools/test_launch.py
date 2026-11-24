@@ -169,7 +169,7 @@ def test_the_server_jar_is_found_in_home_lib_only(tmp_path):
     home = tmp_path / "home"
     (home / "kernel" / "drishti-server" / "target").mkdir(parents=True)
     (home / "kernel" / "drishti-server" / "target" / "drishti-server-1-exec.jar").write_bytes(b"x")   # Maven's output: never looked at
-    with pytest.raises(javacmd.JarError, match=r"no server jar in .*lib: run  .*drishti\.py build jar"):
+    with pytest.raises(javacmd.JarError, match=r"no server jar in .*lib .*\. Fix: .*drishti\.py build jar$"):
         javacmd.server_jar(None, home)
     (home / "lib").mkdir()
     (home / "lib" / "drishti-server-2-exec.jar").write_bytes(b"x")
@@ -190,7 +190,7 @@ def test_a_jar_of_another_version_than_the_checkout_is_refused(tmp_path):
     (home / ".mvn").mkdir()
     (home / ".mvn" / "maven.config").write_text("-Drevision=2.9.11.z9\n", encoding="utf-8")
     (home / "lib" / "drishti-server-2.9.11.g-exec.jar").write_bytes(b"x")
-    with pytest.raises(javacmd.JarError, match=r"lib/ holds drishti-server-2.9.11.g-exec.jar but this checkout is 2.9.11.z9: run  .*drishti\.py build jar"):
+    with pytest.raises(javacmd.JarError, match=r"lib/ holds drishti-server-2.9.11.g-exec.jar but this checkout is 2.9.11.z9 .*\. Fix: .*drishti\.py build jar$"):
         javacmd.server_jar(None, home)
     (home / "lib" / "drishti-server-2.9.11.g-exec.jar").unlink()
     (home / "lib" / "drishti-server-2.9.11.z9-exec.jar").write_bytes(b"x")

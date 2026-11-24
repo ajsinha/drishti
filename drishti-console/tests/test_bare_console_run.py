@@ -71,3 +71,51 @@ def test_a_bare_run_never_follows_another_checkouts_settings_file(tmp_path):
     (tmp_path / "drishti-envs" / "dev.ini").write_text("drishti.home=/an/old/clone\n", encoding="utf-8")
     argv, said = web.bare_defaults([], {"DRISHTI_TOKEN_SECRET": "x", "DRISHTI_SESSION_SECRET": "y"}, home=tmp_path)
     assert argv == ["--profile", "demo"] and said[0].startswith("[WARN]") and "another checkout" in said[0]
+
+
+def test_the_launchers_settings_file_before_setup_is_one_fail_line_never_a_traceback(tmp_path):
+    """i7g gate F1: Drishti: run console passes --settings ~/drishti-envs/dev.ini; before setup that file is not there."""
+    import os
+    env = {k: v for k, v in os.environ.items() if not k.startswith("DRISHTI_")}
+    env.update(HOME=str(tmp_path), USERPROFILE=str(tmp_path))
+    missing = tmp_path / "drishti-envs" / "dev.ini"
+    r = subprocess.run([sys.executable, "-B", str(CONSOLE / "run_drishti_web.py"), "--settings", str(missing), "--profile", "demo"],
+                       capture_output=True, text=True, timeout=120, env=env)
+    fails = [line for line in r.stderr.splitlines() if line.startswith("[FAIL]")]
+    assert r.returncode == 1 and "Traceback" not in r.stderr, r.stderr
+    assert len(fails) == 1 and fails[0].startswith("[FAIL] the settings file: ") and str(missing) in fails[0]
+    assert fails[0].endswith(web.setup_line()) and ". Fix: " in fails[0] and "drishti.py setup" in fails[0]
+
+
+def test_a_console_run_directly_ignores_old_drishti_folders_and_makes_nothing_there(tmp_path, monkeypatch, capsys):
+    """i7g gate F2: the tools' trust rule for the console run directly (no drishti.py start): an old DRISHTI_DATA_DIR / DRISHTI_TMP_DIR
+    naming another clone is said once each and dropped, and the console's temp folder is never made there."""
+    import os
+    import tempfile
+    from core import tmpdir
+    from core.launcher_stop import MAIN_PID_ENV
+    old = tmp_path / "old-clone"
+    scratch = tmp_path / "scratch"                     # the system temp folder of this run: the old clone is not under it
+    scratch.mkdir()
+    monkeypatch.setattr(tempfile, "tempdir", str(scratch))
+    for v in ("DRISHTI_HOME", "DRISHTI_MODULES_HOME", "DRISHTI_LIB_PATH", "DRISHTI_STOP_KEY", "DRISHTI_CONSOLE_TMP_DIR", "DRISHTI_BACKEND_URL",
+              "DRISHTI_BACKEND_URLS", ARGV_ENV, MAIN_PID_ENV):
+        monkeypatch.delenv(v, raising=False)
+    monkeypatch.setenv("DRISHTI_DATA_DIR", str(old / "data"))
+    monkeypatch.setenv("DRISHTI_TMP_DIR", str(old / "tmp"))
+    monkeypatch.setattr(sys, "argv", ["run_drishti_web.py", "--server.port=17997", "--server.workers=1"])
+    bases = []
+    monkeypatch.setattr(web, "create_app", lambda settings: bases.append(tmpdir.configured_base("")) or type("A", (), {"state": type("S", (), {})()})())
+    monkeypatch.setattr(web.uvicorn, "run", lambda *a, **k: None)
+    monkeypatch.setattr(web, "temp_under_data", lambda settings: None)    # the base below is the configured one, not the data folder's
+    web.main()
+    err = capsys.readouterr().err
+    assert "[WARN] DRISHTI_DATA_DIR=" in err and "[WARN] DRISHTI_TMP_DIR=" in err and err.count("ignored") >= 2
+    assert "DRISHTI_DATA_DIR" not in os.environ and "DRISHTI_TMP_DIR" not in os.environ
+    assert bases and str(old) not in bases[0] and not old.exists()
+    # started by drishti.py start (DRISHTI_STOP_KEY): its resolved roots are kept as given
+    env = {"DRISHTI_STOP_KEY": "k", "DRISHTI_DATA_DIR": str(old / "data")}
+    assert web.trust_roots([], env, str(scratch)) == [] and env["DRISHTI_DATA_DIR"] == str(old / "data")
+
+
+ARGV_ENV = "DRISHTI_CONSOLE_ARGV"

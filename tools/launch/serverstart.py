@@ -167,8 +167,8 @@ def check_modules(a, modules: Path, jar: Path) -> str:
     dmods = modulesbuild.packages(modules)
     problems = modulesbuild.missing_report(modules) or modulesbuild.fresh_report(modules, jar)
     if problems:
-        raise LaunchError("the modules beside the jar are not current:\n  " + "\n  ".join(problems)
-                          + "\n(" + procs.command("build", "all") + " builds the jar and every module; build modules <id> rebuilds one, then start again)")
+        raise LaunchError(procs.fail("the modules beside the jar", "not current (" + "; ".join(problems) + "); build all builds the jar "
+                                     "and every module, build modules <id> rebuilds one, then start again", procs.command("build", "all")))
     if not dmods:
         return f"modules: none ({modules} holds no .dmod: the server starts with no module)"
     return f"modules: {len(dmods)} package(s) in {modules}: {', '.join(p.name.removesuffix(modulesbuild.PACKAGE) for p in dmods)}"
@@ -240,9 +240,13 @@ def start(a, env: dict | None = None) -> int:
         if f != pid_file:
             p, fl = procs.read_pid(f)
             if fl.get("data") == str(server_data) and procs.alive(p, procs.SERVER_MARK):
-                raise LaunchError(f"{f.stem} (pid {p}) already uses the data folder {server_data}: give this node its own with --node-data", 3)
+                other = f.stem.removeprefix("server-") if f.stem != "server" else ""
+                raise LaunchError(procs.fail(f"{f.stem} (pid {p})", f"it already uses the data folder {server_data}",
+                                             procs.command("stop", "server", *(["--node", other] if other else []))
+                                             + ", or give this node its own with --node-data"), 3)
     if procs.port_in_use(port):
-        raise LaunchError(f"port {port} is in use by another process: stop it, or pick another with --port", 3)
+        raise LaunchError(procs.fail(f"port {port}", "it is in use by another process",
+                                     procs.command("stop", "all") + ", or pick another with --port"), 3)
 
     java = javacmd.find_java(None, a.java_home, env)
     why = javacmd.locate_java(None, a.java_home, env)[1]

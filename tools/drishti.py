@@ -1220,6 +1220,19 @@ def use_tmp_dir() -> None:
     tempfile.tempdir = base
 
 
+def _fail_line(e, what: str = "", fix_args: str = "") -> str:
+    """An error of a command as the one line a person reads (E1): kept when it is already ``[FAIL] ...``, ``[FAIL] `` before a text that
+    carries its own ``Fix:``, else ``procs.fail(what, text, <the command of fix_args>)`` when given, else ``[FAIL] <text>`` (an option mistake)."""
+    text = str(e).strip()
+    if text.startswith("[FAIL]"):
+        return text
+    if what and fix_args:
+        sys.path.insert(0, str(ROOT / "tools" / "launch"))
+        import procs
+        return procs.fail(what, text, procs.command(fix_args))
+    return f"[FAIL] {text}"
+
+
 def main(argv: list[str] | None = None) -> int:
     """Runs one command (``argv``, else the process's arguments); the exit code: 0 ok, 1 problems found, 2 usage."""
     try:
@@ -1232,14 +1245,9 @@ def main(argv: list[str] | None = None) -> int:
             scratch = tempfile.gettempdir()     # a folder under the system temp folder is a run's scratch (a test's), never another clone
             settings = default_settings()        # ~/drishti-envs/dev.ini of this checkout: no --settings needed on the command line
             mine = settingsfile.read_all(settings) if settings else {}
-            for name, value in settingsfile.foreign_vars(os.environ, ROOT):
-                key = name.lower().replace("_", ".")
-                if settingsfile.inside(value, scratch) or (mine.get(key) or "").strip() and settingsfile.inside(value, mine[key].strip()) \
-                        and settingsfile.inside(mine[key].strip(), value):
-                    continue                    # a scratch folder, or the very folder this checkout's settings file names (a re-run)
-                print(f"[WARN] {name}={value} names a folder outside this checkout: ignored (a settings file named with --settings may "
-                      "point elsewhere); you may delete the variable", file=sys.stderr)
-                os.environ.pop(name, None)
+            # a scratch folder, or the very folder this checkout's settings file names (a re-run), is kept (the console's rule too)
+            for line in settingsfile.drop_foreign_vars(os.environ, ROOT, mine, scratch):
+                print(line, file=sys.stderr)
         # --profile demo|samples|qa: a committed settings file of this install (config/profiles/<name>.ini), after --settings (it wins)
         lead = 0                                # only before the command: a command's own options are its own
         while lead < len(argv) and (argv[lead] == "--profile" or argv[lead].startswith("--profile=")):
@@ -1267,11 +1275,14 @@ def main(argv: list[str] | None = None) -> int:
         if extra and extra[0] == "--":
             extra = extra[1:]
         return a.func(a, extra) or 0
-    except (settingsfile.SettingsError, javacmd.JavaError, javacmd.HomeError) as e:
-        print(f"drishti: {e}", file=sys.stderr)
+    except settingsfile.SettingsError as e:          # the one shape (E1): [FAIL] <what>: <why>. Fix: <command>
+        print(_fail_line(e, "the settings file", "setup"), file=sys.stderr)
+        return 2
+    except (javacmd.JavaError, javacmd.HomeError) as e:
+        print(_fail_line(e), file=sys.stderr)
         return 2
     except CliError as e:
-        print(f"drishti: {e}", file=sys.stderr)
+        print(_fail_line(e), file=sys.stderr)
         return e.code
     except SystemExit as e:
         if isinstance(e.code, str):
