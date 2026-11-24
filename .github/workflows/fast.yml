@@ -29,7 +29,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
+      # the whole history and its tags: the docs merge audit reads the sources it audits from the base release tag
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '21' }
       - uses: actions/setup-python@v5
