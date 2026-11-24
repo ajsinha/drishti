@@ -21,13 +21,14 @@ files and checks the server jar and the modules. A file setup writes in the sett
 naming another folder, a JVM arguments file of another data folder) is MOVED into a dated folder there (``replaced-YYYY-MM-DD-HHMM``), never
 overwritten or edited, and a fresh one is written; a dev.ini naming this checkout is kept as it is. Nothing is made outside this checkout,
 the settings folder and an explicit ``--data-dir``; a ``DRISHTI_*`` folder variable naming another folder is reported and never used.
-``setup libs``: the libraries (the pinned Lake wheel first, then drishti-console/requirements.txt) of the Python that runs setup,
-checked name by name; NEVER installed (owner rule, 2026-11-23: an automatic install can corrupt an environment). ``setup`` alone =
-drishti, then libs, on every system. Drishti never makes a virtual environment and never runs pip: the Python is yours (a dedicated one,
-or a virtual environment you made yourself and run setup with); ``--system`` is accepted and changes nothing. A missing library is a
-[FAIL] line and the pip command you may run yourself, from drishti-console: offline from the wheel pack when one is found (``--wheels
-<folder or .zip>``, else DRISHTI_WHEELS, else ~/drishti-wheels, else the pack zip in Downloads; a zip is never unzipped: you unzip it), and
-from your package index as the second option. An operating system's own Python (PEP 668, EXTERNALLY-MANAGED) and a pack for another
+``setup libs``: CHECKS the libraries of the Python that runs setup, name by name: the pinned Lake wheel and drishti-console/requirements.txt
+(first pip command), then config/compute/locks/python.lock (second pip command). Setup NEVER installs anything (owner rule, 2026-11-23:
+an automatic install can corrupt an environment) and never makes a virtual environment: the Python is yours (a dedicated Python 3.13,
+or a virtual environment you made yourself and run setup with). ``setup`` alone = drishti, then libs, on every system. ``--system`` is
+accepted for old commands and ignored. A missing library is a [FAIL] line and the two pip commands you run yourself, from
+drishti-console: offline from the wheel pack when one is found, and from your package index otherwise. ``--wheels <folder>`` (else
+DRISHTI_WHEELS, else ~/drishti-wheels, else the pack zip in Downloads) only names the pack in those printed commands; a zip is never
+unzipped, you unzip it. An operating system's own Python (PEP 668, EXTERNALLY-MANAGED) and a pack for another
 Python version are one [FAIL] line each. The Python setup ran with is written as drishti.python into the settings file
 (~/drishti-envs/dev.ini, or the file --settings names): the Python of ``start console``, the cluster, the feed schedules and the server's
 Python work; DRISHTI_PYTHON overrides. ``start`` never makes an environment and never installs anything. The next steps never say

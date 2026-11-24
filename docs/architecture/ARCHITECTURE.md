@@ -2637,8 +2637,8 @@ A pool's `environment` is either `system` (the site's interpreter, `compute.pyth
   never resolved again at install time.
 * **The Python is the operator's.** The pool's workers run with `drishti.python` as it is: Drishti never installs a Python package, not
   at setup, not at start, not for the pool (no `pip --target`, no library folder it builds). The operator installs the libraries of
-  `requirements.txt` into that Python with the pip command (`python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt`
-  in `drishti-console`; `setup` checks and prints it). A library that is missing or at another version than the lock is a clear error that
+  `requirements.txt` and the lock into that Python with the two pip commands (`python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt`, then the same with
+  `-r ../config/compute/locks/python.lock`, in `drishti-console`; `setup` checks and prints them). A library that is missing or at another version than the lock is a clear error that
   names it and the pip command, and the pool does not start its work.
 * **The pin check for the pool `python`.** The allow-list `drishti.bi.report.python-packages` offers only what `python.lock` pins (a test
   holds the two together). With `environment: system`, the server asks the pool (`about`) for its interpreter's versions before any run and

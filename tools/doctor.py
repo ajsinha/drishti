@@ -80,10 +80,14 @@ def jar_check(find_jar) -> dict:
     return item("ok", "server jar", f"{jar} (version {m.group(1) if m else 'unknown'})")
 
 
+#: the one Python floor: the same as MIN_PYTHON of tools/launch/envsetup.py (setup)
+MIN_PYTHON = (3, 11)
+
+
 def python_check() -> list[dict]:
     v = sys.version_info
-    out = [item("ok" if v >= (3, 10) else "fail", "python", f"{sys.executable}: Python {v.major}.{v.minor}.{v.micro}",
-                "" if v >= (3, 10) else "the tools need Python 3.10+")]
+    out = [item("ok" if v >= MIN_PYTHON else "fail", "python", f"{sys.executable}: Python {v.major}.{v.minor}.{v.micro}",
+                "" if v >= MIN_PYTHON else f"the tools need Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]}+ (the same floor as setup; the wheel packs are built for 3.13)")]
     for mod, pip, why in LIBS:
         if importlib.util.find_spec(mod):
             out.append(item("ok", f"python {pip}", "installed"))

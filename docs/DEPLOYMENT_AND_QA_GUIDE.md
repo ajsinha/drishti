@@ -66,7 +66,7 @@ may be run but what you type yourself, [section 3](#3-manual-installation-step-b
 | Process | What it does | Port | Health | Runs on |
 |---|---|---|---|---|
 | **server** | one Java program, `drishti-server-<version>-exec.jar` in `<drishti>/lib` (the version is the one in `.mvn/maven.config`: `python3 tools/version.py` prints it; every Java library is inside it): reads the lakes and sources, computes every number (VaR, exposure, BI), lays out every screen | **18480** | `/actuator/health` | Java 21 |
-| **console** | the web pages people open, a Python program, `drishti-console/run_drishti_web.py`: renders what the server sends | **17480** | `/healthz`, `/readyz` | Python 3.13 in its own environment |
+| **console** | the web pages people open, a Python program, `drishti-console/run_drishti_web.py`: renders what the server sends | **17480** | `/healthz`, `/readyz` | the Python you run Drishti with (`drishti.python`) |
 
 Both read from **one install folder** (`DRISHTI_HOME`, read only) and write everything under **one data folder** (`DRISHTI_DATA_DIR`):
 the lakes, users, caches, logs. The server never takes a folder from the directory it is started in: `drishti.py start`, the IDE run
@@ -82,7 +82,7 @@ there waits and says so, and the rest works). The two can run on one machine or 
 | **Java 21**, a JDK, 64-bit | Temurin 21 **ZIP** from adoptium.net unpacked to `C:\jdk-21` (no installer needed), or the MSI | `sudo apt install openjdk-21-jdk` / `sudo dnf install java-21-openjdk-devel`, or the Temurin 21 `.tar.gz` | `brew install openjdk@21`, or the Temurin 21 `.tar.gz` |
 | **Python 3.11 or newer** (the release is tested on 3.13) | python.org's installer for Windows (it adds the `py` launcher), or its embeddable ZIP with pip | the distribution's `python3` when 3.11+ | `brew install python@3.13` |
 | The libraries | the offline wheel pack unzipped into `%USERPROFILE%\drishti-wheels`; you install it with one pip command ([1.6](#16-the-settings-file-and-drishtipy-setup)); `setup` only checks | the same, `~/drishti-wheels` | the same as Linux |
-| The commands | `py -3.13 tools\drishti.py …` (or `python`) in PowerShell or `cmd` | `python3 tools/drishti.py …` | the same as Linux |
+| The commands | `py -3.13 tools\drishti.py …`  in PowerShell or `cmd` | `python3 tools/drishti.py …` | the same as Linux |
 | An IDE (optional) | IntelliJ IDEA (Community or Ultimate) to build and run the server, Java only (no Python, no Python plugin); PyCharm for the console and the tools | the same | the same |
 | **Memory** | 8 GB free for the demo (the server's heap 4 GB, the console about 1 GB); building the demo lake: 4 GB a loader job ([section 6](#6-build-the-demo-lake)) | the same | the same |
 | **Disk** | 5 GB free: the release about 1 GB (the committed test data 140 MB of it), the demo lake 3.4 GB | the same | the same |
@@ -113,7 +113,7 @@ sizing planner (`tools/sizing_planner.py`, and **Admin → Capacity** in the con
 | Maven: `PKIX path building failed` on the first download | the company network re-signs HTTPS with its own root, which Windows trusts and the JDK does not | let Java trust the Windows store: `setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"`, open a new terminal; the same option goes into the IDE's Maven runner and importer ([IDE_GUIDE.md section 1.4](guides/IDE_GUIDE.md#14-maven-behind-a-company-network-pkix-path-building-failed)), and into the server's JVM options when it reaches public feeds on that network |
 | `Drishti needs Java 21 or newer`, or Maven names Java 8 | `JAVA_HOME` points at an older Java | `setx DRISHTI_JAVA_HOME "C:\jdk-21"` (the tools' own lookup, before `JAVA_HOME`) and set `JAVA_HOME` to the same folder for Maven |
 | the browser tests say Chromium is missing | Playwright's browsers are installed once per user | `py -3.13 -m playwright install chromium` (into your profile, no administrator rights) |
-| setup says `[FAIL] libraries ...` with a pip command, or `start` refuses with *the console's Python ... lacks libraries* | the Python you run Drishti with lacks a library; Drishti installs nothing (not setup, not start, not the server's compute environments) | unzip the wheel pack into `C:\Users\you\drishti-wheels` and run the command setup printed: `cd "<drishti>\drishti-console"` then `py -3.13 -m pip install --no-index --find-links "C:\Users\you\drishti-wheels" -r requirements.txt`; then `py -3.13 tools\drishti.py setup` again (it says "Drishti is ready."); Linux and macOS the same with `python3.13` and `/` |
+| setup says `[FAIL] libraries ...` with a pip command, or `start` refuses with *the console's Python ... lacks libraries* | the Python you run Drishti with lacks a library; Drishti installs nothing (not setup, not start, not the server's compute environments) | unzip the wheel pack into `C:\Users\you\drishti-wheels` and run the two pip commands setup printed (1.6: `requirements.txt`, then `..\config\compute\locks\python.lock`, both `--no-index --find-links "C:\Users\you\drishti-wheels"` from `drishti-console`); then `py -3.13 tools\drishti.py setup` again (it says "Drishti is ready."); Linux and macOS the same with `python3.13` and `/` |
 | your pip fails with `401 Credentials not correct` (or 403, "could not be reached", "No matching distribution"), or a certificate error | you left out `--no-index --find-links`, so pip asked the company package index in `pip.ini`, which refuses it; the proxy re-signs HTTPS | use the wheel-pack command above (no index). On Windows pip uses the Windows certificate store itself |
 | the company will not allow an `.exe` | nothing here needs one | Java (the Temurin ZIP), Python and Maven's wrapper only; every Drishti command is `py -3.13 tools\drishti.py ...`; the products install from their release tags with `mvnw.cmd` |
 
@@ -171,7 +171,7 @@ None is required on a developer machine: the install folder is where `tools/dris
 
 | Variable | Meaning | Default | Example (Linux / Windows) |
 |---|---|---|---|
-| `DRISHTI_HOME` | the install folder (read only). Must be the folder the tools come from: one release's tools never drive another's install | the folder `tools/drishti.py` is in | `/opt/drishti` / `C:\drishti` |
+| `DRISHTI_HOME` | the install folder (read only). Must be the folder the tools come from: one release's tools never drive another's install (a variable naming another folder is a WARNING and ignored) | the folder `tools/drishti.py` is in | `/opt/drishti` / `C:\drishti` |
 | `DRISHTI_DATA_DIR` | the data folder (writable) | `<drishti>/data` | `/srv/drishti-data` / `D:\drishti-data` |
 | `DRISHTI_MODULES_HOME` | the modules folder | `<drishti>/modules` | rarely set |
 | `DRISHTI_JAVA_HOME` | the JDK every Drishti tool uses, before `JAVA_HOME` | none | `/usr/lib/jvm/java-21-openjdk-amd64` / `C:\jdk-21` |
@@ -220,9 +220,22 @@ the data folder's layout, makes `~/drishti-envs` with a copy of `config/settings
 (a `dev.ini` already there that names this checkout is kept as it is, also when its data folder is elsewhere; one that names another folder, and a JVM arguments file that
 differs, is **moved** into a dated folder there, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one is written, so nothing is
 lost and nothing is made in the other folder; `--check` says what it would move), checks the libraries (the pinned Lake wheel, then
-`drishti-console/requirements.txt`) of the Python it runs with and **installs nothing**: when something is missing it prints the one pip command for you to run and exits 1, and when all is in order it prints "Drishti is ready." It writes that Python's path into `dev.ini` as `drishti.python` and the JVM argument files in either case, lists the environment variables it sees (a secret only as *set*), and prints
-the next steps. **You install the libraries yourself**, once, from the offline wheel pack unzipped into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`): Windows `cd "<drishti>\drishti-console"` then
-`py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt`; Linux and macOS `cd <drishti>/drishti-console` then `python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt` (or your own Python). Drishti never runs pip: not `setup`, not `start`, not the server's compute environments. `--check` changes nothing and only
+`drishti-console/requirements.txt`, then `config/compute/locks/python.lock`) of the Python it runs with and **installs nothing**: when something is missing it prints the pip commands for you to run and exits 1, and when all is in order it prints "Drishti is ready." It writes that Python's path into `dev.ini` as `drishti.python` and the JVM argument files in either case, lists the environment variables it sees (a secret only as *set*), and prints
+the next steps. **You install the libraries yourself** with TWO pip commands, once, offline from the wheel pack unzipped into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`), run from `drishti-console`: first `requirements.txt` (the console, the tools and the pinned Lake wheel), then `../config/compute/locks/python.lock` (the server's Python work):
+
+```bash
+cd <drishti>/drishti-console
+python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt
+python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r ../config/compute/locks/python.lock
+```
+
+```powershell
+cd "<drishti>\drishti-console"
+py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt
+py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r ..\config\compute\locks\python.lock
+```
+
+Linux needs a dedicated Python 3.13 (the operating system's own `python3` is refused, PEP 668). Drishti never runs pip: not `setup`, not `start`, not the server's compute environments. `--check` changes nothing and only
 reports (exit 1 when something needs doing). `setup` itself needs nothing installed beforehand, not even PyYAML. The next steps name `start` only when nothing is left to fix. All of it, with `--check`'s library verification and the `drishti.python` line, is in
 [CLI_REFERENCE.md › setup](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti).
 
@@ -250,7 +263,7 @@ Drishti setup on linux
   [todo] server jar (<home>/lib) none in <home>/lib yet: python tools/drishti.py build jar
   [  ok] your jars (lib/ext)    /home/you/IdeaProjects/drishti-platform/drishti/lib/ext  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)
   [made] JVM options            /home/you/drishti-envs: jvm-demo.args, jvm-qa.args, jvm-samples.args  (the IDE server launchers' @files; data folder from dev.ini)
-  [  ok] libraries              /usr/bin/python3: every library of requirements.txt is installed (the Lake wheel at its pin)
+  [  ok] libraries              /usr/bin/python3: every library of requirements.txt and python.lock is installed (the Lake wheel at its pin)
   [made] drishti.python         drishti.python=/usr/bin/python3
 
 Environment variables seen:
@@ -285,8 +298,8 @@ one have every option.
 **1 · Get the release.** Unpack the release ZIP (it carries the server jar in `lib/`), or get the platform's source and build it (JDK 21
 only; every repository carries Maven as `mvnw`). The source is five repositories (and the index repository) under one folder, `~/IdeaProjects/drishti-platform/`
 (Windows `C:\Users\you\IdeaProjects\drishti-platform\`): download the source bundle from the index repository's release, or
-`git clone https://github.com/drishti-platform/drishti-platform.git` into that folder and run `clone_all.py --release i7g`; then
-`build_all.py --release i7g` installs the products from their tags in order (tools, Rachana, Lake) and runs the whole Drishti build and its tests (to build only the jar, `build all` below). The steps have one home,
+`git clone https://github.com/drishti-platform/drishti-platform.git` into that folder and run `clone_all.py --release <release>`; then
+`build_all.py --release <release>` installs the products from their tags in order (tools, Rachana, Lake) and runs the whole Drishti build and its tests (to build only the jar, `build all` below). The steps have one home,
 [QUICKSTART_DEVELOPERS.md sections 1 and 2](QUICKSTART_DEVELOPERS.md#1-get-the-code-and-set-up-the-machine); the versions that go together are in the index
 repository's [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md). Then, in the `drishti` folder:
 
@@ -385,19 +398,19 @@ or the scheduled task's env-file.
 ([5.1](#51-the-settings-file)). The secrets go into an env-file only the service account can read (`chmod 600`; on Windows the folder's
 permissions), or a second settings file (`secrets.ini`) given last: never into `config/` or git ([7.4](#74-the-secrets-in-an-env-file)).
 
-**6 · The libraries**, which you install into the Python Drishti runs with (the system's, a dedicated one, or a virtual environment you made yourself). `requirements.txt` installs Drishti Lake's Python wheel from `/opt/drishti/lib/wheels` (Windows `C:\drishti\lib\wheels`): the exact
-wheel `lib/lake-wheel.pin` names (Lake ref, version, SHA-256). The release bundle does not carry it (it archives the tags, and git ignores `lib/wheels`): build it from the tag with
-`uv build --wheel <drishti-lake checkout at the pinned tag>/python --out-dir lib/wheels` (the build is reproducible), and check it with
-`python tools/lake/lakewheel.py` (exit 0 and `(ok)`). Then install the libraries yourself from the offline wheel pack unzipped into `~/drishti-wheels`, and let setup check them:
+**6 · The libraries**, which you install into the Python Drishti runs with (a dedicated Python 3.13, or a virtual environment you made yourself). `requirements.txt` installs Drishti Lake's Python wheel from `/opt/drishti/lib/wheels` (Windows `C:\drishti\lib\wheels`): the exact
+wheel `lib/lake-wheel.pin` names (Lake ref, version, SHA-256). The source zip and the wheel pack carry that wheel (no build step for you); `python tools/lake/lakewheel.py` checks it (exit 0 and `(ok)`). Only a git clone builds it, with uv ([QUICKSTART_DEVELOPERS.md section 2](QUICKSTART_DEVELOPERS.md#2-build)). Install the two pip commands of [1.6](#16-the-settings-file-and-drishtipy-setup) from the wheel pack unzipped into `~/drishti-wheels`, and let setup check them:
 
 ```bash
 cd /opt/drishti/drishti-console && python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt
+python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r ../config/compute/locks/python.lock
 python3.13 /opt/drishti/tools/drishti.py setup         # checks the libraries ("Drishti is ready."); drishti.python written
 ```
 
 ```powershell
 cd "C:\drishti\drishti-console"
 py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt
+py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r ..\config\compute\locks\python.lock
 py -3.13 C:\drishti\tools\drishti.py setup
 ```
 
@@ -832,6 +845,8 @@ setting of [CONFIGURATION.md](admin/CONFIGURATION.md) goes in the environment or
 option; `3` already running, the port is in use, or a node's data folder is taken.
 
 ### 7.2 One server and a console
+
+Started bare (no `--settings`), the console reads `~/drishti-envs/dev.ini` and uses the demo development secrets (the demo's `drishti-dev-admin` account); never on a shared machine.
 
 The quickest start, on one machine, with the demo's settings and its development secrets (for a QA machine; anyone else uses an
 env-file, 7.4):
@@ -1851,7 +1866,7 @@ $tools = "<drishti>\tools"
 3. **The IDE** (when you use it): IntelliJ IDEA on `<drishti>` with your settings file, as in [7.8](#78-from-intellij-idea-pycharm-or-vs-code)
    (IntelliJ: **Drishti: build all**, **Drishti: run server (demo)**; PyCharm: **Drishti: build demo lakes**, **Drishti: run console**, **Load ENDUR file
    into the lake**). With PyCharm for the console, PyCharm opens `<drishti>\drishti-console` and IntelliJ `<drishti>`, never one folder in both
-   (they overwrite each other's `.idea`; IntelliJ then says **module not specified**: close both, delete `<drishti>\.idea`, reopen).
+   (they overwrite each other's `.idea`; IntelliJ then says **module not specified**: close both, delete `<drishti>\.idea`, reopen; the launchers themselves are in `run-configs/`, so nothing is lost).
 
 ### 12.2 Put the data in place
 
@@ -1946,7 +1961,7 @@ Afterwards stop both, and check that `git status` (in a clone) shows nothing new
 | `Drishti needs Java 21 or newer` (build or start) | `JAVA_HOME` (or `DRISHTI_JAVA_HOME`, or `--java-home`) at a JDK 21 |
 | PowerShell says `lake` is not recognized | `lake …` is a sub-command: `& py -3.13 "$tools\drishti.py" lake …` |
 | setup says *this Python is managed by the operating system* (Linux `python3`, PEP 668), or *the wheel pack is for Python 3.13; this Python is 3.14* | install a dedicated Python 3.13 (for example under `/opt/python3.13`) and run `setup` with it; Drishti never uses `--break-system-packages` and never makes a venv |
-| `start` refuses: *the console's Python ... lacks libraries* | the pip command that `python3 tools/drishti.py setup` prints for that Python (`python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt` in `drishti-console`) |
+| `start` refuses: *the console's Python ... lacks libraries* | the two pip commands that `python3 tools/drishti.py setup` prints for that Python (1.6) |
 | `Port 18480 (or 17480) is already in use` | another copy is running: `python3 tools/drishti.py status` shows it; stop it (`python3 tools/drishti.py stop server`, `systemctl stop`, `launchctl unload`); more in [7.6](#76-when-a-command-stops-with-an-error) |
 | The console shows *Server not reachable* | the server is not up yet, or `--server` names the wrong address; `curl http://<host>:18480/actuator/health` |
 | Every page empty; the console's log says `DRS-5010 missing bearer token` | the console and the server need the same `DRISHTI_TOKEN_SECRET`, and `DRISHTI_AUTH_ENABLED=true` on the console |

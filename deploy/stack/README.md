@@ -21,9 +21,9 @@ server alone and learns the other two from the cluster. One command starts it, o
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-python tools/drishti.py start cluster       # start what is not running: the three servers, then the console
-python tools/drishti.py status --cluster deploy/stack/stack.yaml      # the processes and ports, the members, the console's servers
-python tools/drishti.py stop cluster        # stop everything start cluster started (by process id, never by name)
+python3 tools/drishti.py start cluster       # (Windows: py -3.13 tools\drishti.py ...) start what is not running: the three servers, then the console
+python3 tools/drishti.py status --cluster deploy/stack/stack.yaml      # the processes and ports, the members, the console's servers
+python3 tools/drishti.py stop cluster        # stop everything start cluster started (by process id, never by name)
 ```
 
 Windows: `py -3.13 tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start cluster`, `py -3.13 tools\drishti.py status --cluster deploy\stack\stack.yaml`,
@@ -76,14 +76,14 @@ Open `/v/trade/10000001` on the console: the trade is held by `drishti-b` only, 
 | `../../data/stack/` | **no** (`data/` is git-ignored) | `server.jar` (the copy the servers run), the nodes' data and connector folders, the synthetic lakes |
 
 On the first start `start cluster` makes what is missing: the secrets, `data/stack/server.jar` (a copy of THE
-`lib/drishti-server-*-exec.jar`; with no jar in `lib/` the start stops and tells you to run `python tools/drishti.py build jar`, whatever
+`lib/drishti-server-*-exec.jar`; with no jar in `lib/` the start stops and tells you to run `python3 tools/drishti.py build jar`, whatever
 copy is left), `data/stack/modules/` (the module packages: a copy of THE `modules/*.dmod` and `first-party.yaml`, see below), a node's net folder, and the two synthetic
 lakes (`tools/bench/trades.py`, as `lakes:` in `stack.yaml` says: 1,500 trades a day per system for sixty business days, 300
 counterparties). The servers run the copy, so a
 rebuild never replaces the jar under a running server: every `start cluster` compares the copy with `lib/`'s jar by name, size and
 SHA-256 (`data/stack/server-jar.source`), never by time, and copies it when they differ; a restarted node runs it.
 
-The modules are pinned the same way. A module is a package (`modules/<id>-<version>.dmod`, made by `python tools/drishti.py build modules`; the server jar holds none), and every node is given `data/stack/modules/` as its modules folder (`DRISHTI_MODULES_HOME`), a copy of the `.dmod` files and `first-party.yaml` of `modules/`, refreshed at every `start cluster` when they differ by name, size and SHA-256 (`data/stack/modules.source`). A rebuild of the modules never changes the files under a running node, and a node restarted alone gets the same jar and the same packages, so the kernel build stamped into a package always matches the jar it runs. In a checkout `start cluster` refuses packages that are older than their module folders or stamped for another jar, naming the module and the command (`python tools/drishti.py build all`). Upgrading from an earlier release: stop the stack, `git pull`, `python tools/drishti.py build all`, start the stack.
+The modules are pinned the same way. A module is a package (`modules/<id>-<version>.dmod`, made by `python3 tools/drishti.py build modules`; the server jar holds none), and every node is given `data/stack/modules/` as its modules folder (`DRISHTI_MODULES_HOME`), a copy of the `.dmod` files and `first-party.yaml` of `modules/`, refreshed at every `start cluster` when they differ by name, size and SHA-256 (`data/stack/modules.source`). A rebuild of the modules never changes the files under a running node, and a node restarted alone gets the same jar and the same packages, so the kernel build stamped into a package always matches the jar it runs. In a checkout `start cluster` refuses packages that are older than their module folders or stamped for another jar, naming the module and the command (`python3 tools/drishti.py build all`). Upgrading from an earlier release: stop the stack, `git pull`, `python3 tools/drishti.py build all`, start the stack.
 
 The synthetic lakes are laid out as the demo lake's file says (`config/lakes/demo.yaml`, [DATA_LAKE_GUIDE.md](../../docs/guides/DATA_LAKE_GUIDE.md)):
 `trades.py` writes through it (`lake build --lake demo --lake-root data/stack/lakes/<name>`), and a node with `lake:` reads the same file
@@ -122,8 +122,8 @@ it. Changing one signs everyone out (token, session) or splits the cluster until
 ## Restart one node
 
 ```bash
-python tools/drishti.py stop cluster drishti-b
-python tools/drishti.py start cluster drishti-b
+python3 tools/drishti.py stop cluster drishti-b
+python3 tools/drishti.py start cluster drishti-b
 ```
 
 The others see it `suspect` after 3 s and `dead` after 10 s (`gossip.yaml`), and `alive` again a second after it is back. A request for its
@@ -131,7 +131,7 @@ trades meanwhile answers "the node that holds it is down", never "not found". `c
 
 ## Upgrade
 
-The three nodes first, one at a time (`python tools/drishti.py stop cluster drishti-main`, update, `python tools/drishti.py start cluster drishti-main`, then
+The three nodes first, one at a time (`python3 tools/drishti.py stop cluster drishti-main`, update, `python3 tools/drishti.py start cluster drishti-main`, then
 `drishti-b`, then `drishti-c`), the console last. A console asks its servers for what it draws (packs, menus, the version shown); in front of an older
 server it shows no packs and says on every page and on Admin → Health that the server is older than the console
 ([OPERATIONS_GUIDE.md section 18](../../docs/guides/OPERATIONS_GUIDE.md#18-upgrades-and-rollback)).
@@ -150,7 +150,7 @@ Add one entry under `nodes:` in `stack.yaml`, for example:
     args: [--drishti.security.registered-users-only=false]
 ```
 
-Then `python tools/drishti.py start cluster drishti-d`. It makes `nodes/drishti-d/net/` (with the seed `drishti-main` as its peer) and its data folder,
+Then `python3 tools/drishti.py start cluster drishti-d`. It makes `nodes/drishti-d/net/` (with the seed `drishti-main` as its peer) and its data folder,
 starts it, and the cluster learns it within seconds. Commit the new net folder with the entry.
 
 ## Logs

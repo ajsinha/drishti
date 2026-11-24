@@ -19,7 +19,7 @@ The AWS side of the **Delta Lake on S3 connector** (the `delta` plugin with `roo
 [DELTA_CONNECTOR.md section 17](../../../plugins/drishti-plugin-delta/README.md#delta-lake-on-aws-s3)): a bucket, the lake's prefix in
 it, and the IAM policy the server (read) and the loaders (read, write and delete) need. Python with `boto3`, so it runs the same on
 Linux, macOS and Windows with no AWS CLI; the `.sh` and `.ps1` files only start the Python you run Drishti
-with: `DRISHTI_PYTHON`, else `python3` (`py` on Windows).
+with: `drishti.python` of the settings file, else `DRISHTI_PYTHON`, else `python3` (`py -3.13` on Windows).
 
 **Why a folder beside `deploy/aws/delta-lake/`.** `delta-lake/` is the production lake's pipeline in bash over the AWS CLI, driven by
 `deploy/aws/env`: buckets with KMS, a VPC endpoint, access logs and tiers, the nightly load, maintenance and alarms. This folder is the

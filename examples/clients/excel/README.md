@@ -22,7 +22,7 @@ example: [../README.md](../README.md).
 ## Run
 
 ```bash
-pip install pyarrow openpyxl pyyaml                    # in a virtual environment of your own
+pip install pyarrow openpyxl pyyaml                    # in a virtual environment of your own (a client of Drishti, not the Python Drishti runs with)
 export DRISHTI_FLIGHT_URL=grpc+tls://<a node's real address>:18815
 export DRISHTI_TOKEN_FILE=~/.config/drishti/token      # an API token with data:read (or DRISHTI_TOKEN)
 export DRISHTI_FLIGHT_CA=/path/to/ca.pem

@@ -16,7 +16,7 @@
 # Production deployment (Linux)
 
 How to run Drishti in production: one machine or a cluster, as services under a dedicated user, behind TLS, with secrets in a
-protected file, a real database, backups and upgrades. **Production is Linux only.** Every command below is exact; where a setting has a
+protected file, a real database, backups and upgrades. **Production is Linux only; Windows is for demo and QA (DEPLOYMENT_AND_QA_GUIDE.md), never production.** Every command below is exact; where a setting has a
 full table, this guide links it instead of repeating it ([CONFIGURATION.md](admin/CONFIGURATION.md),
 [CLI_REFERENCE.md](guides/CLI_REFERENCE.md), [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md), [CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md)).
 The developer and QA path (clone, demo lake, IDE) is [DEPLOYMENT_AND_QA_GUIDE.md](DEPLOYMENT_AND_QA_GUIDE.md); **the demo profile is not for
@@ -807,7 +807,7 @@ systemd ([section 6](#6-run-as-services-systemd)); `start`, `stop` and `status` 
 | `sudo $PY -m pip install --no-index --find-links <pack folder> -r ../config/compute/locks/python.lock` | the second pip command: the server's compute pool (hash-locked, so its own run) | the same |
 | `sudo $PY $D setup --settings <settings>` | checks Java 21, the jar, the modules, the folders and every library name by name; writes `drishti.python` into the settings file; installs nothing | `[  ok]` lines, then **`Drishti is ready.`** (else `[FAIL] ... Fix:`, [3.1](#31-what-setup-tells-you)) |
 | `sudo $PY $D setup --settings <settings> --check` | the same, changing nothing | exit 0 when nothing is to do, 1 otherwise |
-| `sudo $PY $D setup --settings <settings> --wheels <folder>` | names the unzipped wheel pack for the pip command setup prints | the printed pip command names that folder |
+| `sudo $PY $D setup --settings <settings> --wheels <folder>` | names the unzipped wheel pack in the pip commands setup prints | the printed pip commands name that folder |
 | `sudo systemctl enable --now drishti-server` / `drishti-console` | starts and enables a service; `systemctl stop` drains the server first | `systemctl is-active` says `active` |
 | `$PY $D --settings <settings> start server` / `start console` / `start all` | starts the server or the console from a terminal, with the same settings file as the units (add `--background` to keep your shell) | the log says started; `status` lists it |
 | `$PY $D --settings <settings> status` | the servers and consoles of this install and their ports | one line each; nothing running prints so |

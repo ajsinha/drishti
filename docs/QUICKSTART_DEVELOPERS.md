@@ -62,7 +62,7 @@ tests. Maven is not needed: every repository carries its own (`./mvnw`, `mvnw.cm
 |---|---|---|---|
 | JDK 21 | `sudo apt install openjdk-21-jdk` | `brew install openjdk@21` | the Temurin 21 MSI or ZIP (a ZIP needs no installer) |
 | Python 3.13 (the one Python Drishti runs with: the system's, a dedicated one, or a virtual environment you made yourself) | the system's `python3.13` | `brew install python@3.13` | python.org's installer or its embeddable ZIP |
-| uv (only to build the Lake wheel, section 2) | the installer script from astral.sh (`install.sh`) | `brew install uv` | optional |
+| uv (only to build the Lake wheel when you work from a git clone, section 2; the source zip and the wheel pack carry it) | the installer script from astral.sh (`install.sh`) | `brew install uv` | optional |
 | Node (Elements tests) | `sudo apt install nodejs` | `brew install node` | optional: the Node tests skip without it |
 | `JAVA_HOME` | `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64` | `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` | `$env:JAVA_HOME = 'C:\jdk-21'` |
 
@@ -89,7 +89,7 @@ tags (it puts the repositories in the folder *above* the index repository, so th
 mkdir -p ~/IdeaProjects/drishti-platform && cd ~/IdeaProjects/drishti-platform
 git clone https://github.com/drishti-platform/drishti-platform.git
 cd drishti-platform
-python3 clone_all.py --release i7g         # Windows: py clone_all.py --release i7g; --parent <folder> puts them elsewhere
+python3 clone_all.py --release <release>         # Windows: py -3.13 clone_all.py --release <release>; --parent <folder> puts them elsewhere
 ```
 
 `--release` is required (a release name from `platform.yaml`; `--develop` clones every repository at `develop` instead). `make_bundle.py` (the
@@ -102,9 +102,13 @@ From the `drishti` folder (every command below runs from it):
 
 ```bash
 cd ~/IdeaProjects/drishti-platform/drishti
-uv build --wheel ../drishti-lake/python --out-dir lib/wheels           # the Lake wheel first (section 2 explains it): the requirements name it
-python tools/lake/lakewheel.py                                         # exit 0 and (ok): lib/wheels holds exactly the pinned wheel
-python3 -m pip install --no-index --find-links ~/drishti-wheels -r drishti-console/requirements.txt   # YOU install the libraries (Drishti runs no pip)
+# Source zip or wheel pack: lib/wheels already holds the pinned Lake wheel, nothing to build. From a git clone only: build it (section 2)
+#   uv build --wheel ../drishti-lake/python --out-dir lib/wheels
+python3 tools/lake/lakewheel.py                                        # exit 0 and (ok): lib/wheels holds exactly the pinned wheel
+cd drishti-console                                                     # YOU install the libraries with two pip commands (Drishti runs no pip)
+python3 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt
+python3 -m pip install --no-index --find-links ~/drishti-wheels -r ../config/compute/locks/python.lock
+cd ..
 python3 tools/drishti.py setup              # checks them ("Drishti is ready."), writes the settings file and drishti.python
 python3 -m pip install -r drishti-console/requirements-test.txt   # a developer's test extras, into the same Python
 python3 -m playwright install chromium        # the browser tests' Chromium, once
@@ -112,8 +116,8 @@ python3 tools/drishti.py doctor
 ```
 
 The Lake wheel comes first because `requirements.txt` installs `drishti-lake==<version>` from `lib/wheels`, and no package index has it; `../drishti-lake`
-must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release i7g` leaves it there). On every system Drishti never makes a virtual
-environment: the Python you run it with holds the libraries, which you install (on Windows): `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r drishti-console\requirements.txt`, then `py -3.13 tools\drishti.py setup` checks them, then
+must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release <release>` leaves it there). On every system Drishti never makes a virtual
+environment: the Python you run it with holds the libraries, which you install (on Windows, from `drishti-console`): `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt`, then the same with `-r ..\config\compute\locks\python.lock`; then `py -3.13 tools\drishti.py setup` checks them, then
 `py -3.13 -m pip install -r drishti-console\requirements-test.txt`; Playwright's browsers go into the
 user's profile, no administrator rights needed.
 
@@ -129,10 +133,10 @@ The products install into `~/.m2` at the versions the root `pom.xml` pins (`dris
 
 ```bash
 cd ~/IdeaProjects/drishti-platform/drishti-platform
-python3 build_all.py --release i7g [--skip-tests] [--repo-local]       # Windows: py build_all.py --release i7g
+python3 build_all.py --release <release> [--skip-tests] [--repo-local]       # Windows: py -3.13 build_all.py --release <release>
 ```
 
-`build_all.py` checks that each repository is at the release's tag (it stops and says so if not: `clone_all.py --release i7g` puts them there), then runs
+`build_all.py` checks that each repository is at the release's tag (it stops and says so if not: `clone_all.py --release <release>` puts them there), then runs
 `mvnw -B clean install` in `drishti-tools/java`, `drishti-rachana/java` and `drishti-lake/java` in that order (their tests included unless `--skip-tests`),
 and then `mvnw -B clean verify` in `drishti`: the whole Drishti suite, not `build all`. It repeats what is already built (nothing is skipped), builds neither the
 Elements bundles (Drishti vendors them, [ELEMENTS_IN_DRISHTI.md](architecture/ELEMENTS_IN_DRISHTI.md)) nor the Lake wheel, and does not start Drishti.
@@ -178,11 +182,11 @@ what it builds: [DEVELOPER_GUIDE.md › Maven commands](guides/DEVELOPER_GUIDE.m
 
 ### 3.1 Without an IDE: every command, from the unzipped platform folder
 
-The whole path on the command line, nothing but Java 21 and Python 3.11+ (3.13 tested). Windows commands are for `cmd` from the
+The whole path on the command line, nothing but Java 21 and Python 3.13 (the wheel packs are built for it; `setup` checks 3.11 as the floor). Windows commands are for `cmd` from the
 unzipped platform folder (`C:\Users\you\drishti-platform`, holding `build_all.py` and `drishti\`); Linux and macOS are the same with
 `python3` and `/`, where `python3` is a dedicated Python 3.13 for Drishti (for example `/opt/python3.13/bin/python3.13`): the operating
 system's own `python3` of Debian or Ubuntu is *externally managed* (PEP 668) and setup refuses it in one line. Unzip the offline wheel
-pack (built for Python 3.13) into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`) first and install it yourself, once (Windows: `cd "<drishti>\drishti-console"` then `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt`; Linux and macOS the same with `python3.13` and `/`); Drishti never installs Python packages, `setup` only checks them.
+pack (built for Python 3.13) into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`) first and install it yourself, once, with the two pip commands (`requirements.txt`, then `../config/compute/locks/python.lock`, from `drishti-console`; Windows `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt`, the same with `-r ..\config\compute\locks\python.lock`; Linux and macOS the same with `python3.13` and `/`); Drishti never installs Python packages, `setup` only checks them.
 
 | Step | Windows (`cmd`) | Linux and macOS |
 |---|---|---|
@@ -270,7 +274,7 @@ capitalmarkets, economy, market-data, trading and one module per trading system 
 | `lake-io`, `lake-delta`, `lake-iceberg`, `lake-load` | the lakes: the lake core (their files and file access), Delta, Iceberg, and loading (the parallel loader, the data inbox, the in-memory lake) |
 | `drishti-identity`, `drishti-net`, `drishti-compute`, `drishti-bicompute`, `drishti-tables`, `drishti-flight`, `drishti-ai` | users and tokens; Drishti\*net (clusters); compute workers; the pivot and BI engine; tables and models; Arrow Flight; the AI layer |
 | `drishti-server` | the Spring Boot application: controllers, the core's configuration, the exec jar (`lib/*-exec.jar`) |
-| `drishti-app` | the assembly the release ships: the server with the banking module and the plugins (`-pl :drishti-app -am`) |
+| `drishti-app` | the assembly the release ships: the server with the banking module and the plugins (`-pl :drishti-app -am` builds the jar only; `build all` adds the modules) |
 | `plugins/drishti-connectors`, `plugins/drishti-plugin-*` | the connectors: the built-in light ones (file, rest, feed, news, demo, yfinance) in one module, and a plugin each for delta, iceberg, jdbc, kafka, s3 and more ([DATA_GUIDE.md](guides/DATA_GUIDE.md)) |
 | `drishti-elements`, `drishti-console/web/static/elements/` | Drishti Elements, the JavaScript libraries every screen is made of (core, inputs, grid, chart, data, insight, renderer, risk, graph, tree, designer), and their WebJar ([ELEMENTS_API.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/API.md)) |
 | `drishti-console/` | `run_drishti_web.py`, `core/` (one module per feature), `routes/`, `web/templates/`, `plugins/<module>/` (a module's console pages, help and static files: `banking`, `economy`), `config/` (`application.yaml`, `help.yaml`), `tests/` |
