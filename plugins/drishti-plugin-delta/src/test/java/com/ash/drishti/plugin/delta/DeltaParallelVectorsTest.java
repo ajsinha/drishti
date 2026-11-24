@@ -75,7 +75,7 @@ class DeltaParallelVectorsTest {
             }
             Path rowsFile = tmp.resolve("v" + p + ".rows");
             Files.write(rowsFile, lines, StandardCharsets.UTF_8);
-            parts.add("{\"file\":\"" + rowsFile + "\",\"values\":{\"business_date\":\"" + DAY + "\"}}");
+            parts.add("{\"file\":\"" + rowsFile.toString().replace('\\', '/') + "\",\"values\":{\"business_date\":\"" + DAY + "\"}}");
         }
         String m = "{\"table\":\"" + table + "\",\"partitionColumns\":[\"business_date\"],\"columns\":["
                 + "{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"doc\",\"type\":\"string\"},{\"name\":\"business_date\",\"type\":\"date\"},"

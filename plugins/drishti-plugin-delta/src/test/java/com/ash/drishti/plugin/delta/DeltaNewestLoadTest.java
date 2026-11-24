@@ -57,7 +57,7 @@ class DeltaNewestLoadTest {
                 + "{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"doc\",\"type\":\"string\"},{\"name\":\"business_date\",\"type\":\"date\"},"
                 + "{\"name\":\"DESK\",\"type\":\"string\"},{\"name\":\"PNL\",\"type\":\"vector\"},{\"name\":\"_load_id\",\"type\":\"string\"}],"
                 + "\"promoted\":[\"DESK\",\"PNL\",\"_load_id\"],\"mode\":\"append\",\"batchRows\":100,\"statsColumns\":[\"id\",\"business_date\",\"_load_id\"],"
-                + "\"parts\":[{\"file\":\"" + rowsFile + "\",\"values\":{\"business_date\":\"" + DAY + "\"}}]}";
+                + "\"parts\":[{\"file\":\"" + rowsFile.toString().replace('\\', '/') + "\",\"values\":{\"business_date\":\"" + DAY + "\"}}]}";
         Path mf = tmp.resolve("manifest-" + n + ".json");
         Files.writeString(mf, m);
         ByteArrayOutputStream err = new ByteArrayOutputStream();
