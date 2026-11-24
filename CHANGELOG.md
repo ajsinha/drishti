@@ -22,7 +22,7 @@
   `_rels/.rels` kept as `_rels/root.rels.xml` in the source (`template.json` "files"), written into the workbook under Excel's name.
 - **`start server` with no settings file and no `--data-dir` refuses** with one `[FAIL] ... Fix: <setup command>` (matrix row 04).
 - Demo-lake "Next" text uses the system's command spelling; `doctor --acceptance` honours `--server` and accepts a demo stack without
-  `--profile demo` (`/public/about` says `profile: demo`). Drishti Tools 1.1.1. Version 2.9.11.i7h.
+  `--profile demo` (`/public/about` says `profile: demo`). Version 2.9.11.i7h.
 
 ## 2.9.11.i7g (2026-11-23)
 

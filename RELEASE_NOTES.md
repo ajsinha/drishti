@@ -29,11 +29,11 @@ Everything else is as in i7g.
   elsewhere).
 - **`doctor --acceptance`** checks the server named by `--server` (it used the default port), and works on a demo stack started in another window
   without `--profile demo`: a demo server says `"profile": "demo"` in `/public/about` (`config/profiles/demo.ini`).
-- Drishti Tools 1.1.1 (settings-file BOM fix).
 
 ## Known limits
 
-Carried from i7g. On macOS the demo lake may report "locked by another run" and fall back to the Python loader.
+Carried from i7g. On macOS the demo lake may report "locked by another run" and fall back to the Python loader. The server reads a settings
+file saved as "UTF-8 with BOM" without its first line (save it as plain UTF-8, Notepad's default; the tools and the console read both).
 
 # Drishti 2.9.11.i7g: release notes
 

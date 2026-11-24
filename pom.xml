@@ -105,7 +105,7 @@
     <drishti.rachana.version>1.0.1</drishti.rachana.version>
     <!-- Drishti Tools (github.com/drishti-platform/drishti-tools): the shared, domain-free utilities (settings and placeholders, TLS and proxy, single-flight,
          the load guard, the xlsx writer, test fixtures); one version for every module, through tools-bom. -->
-    <drishti.tools.version>1.1.1</drishti.tools.version>
+    <drishti.tools.version>1.1.0</drishti.tools.version>
     <!-- the pinned Drishti Lake release (DRISHTI_LAKE_DESIGN D1): the tag v0.9.1 -->
     <drishti.lake.version>0.9.1</drishti.lake.version>
     <java.version>21</java.version>
