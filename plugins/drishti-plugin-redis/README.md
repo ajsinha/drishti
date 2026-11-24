@@ -70,9 +70,7 @@ and Drishti asks that store for any date Redis does not hold.
 
 ## Build and use
 
-- **Build.** The plugin is a Maven module (`drishti-plugin-redis`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-redis-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
-- **Enable.** A connector file in the site's `config/connectors/` with `plugin: redis` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
-- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
+The plugin is a module of the platform build (`drishti-plugin-redis`), packed into the server jar with nothing to copy; a driver of your own goes into `lib/ext/`. A connector file in `config/connectors/` with `plugin: redis` turns it on (ready-made: `config/connectors.examples/`). Build, enabling and commands: [DATA_GUIDE.md, section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors). Below, `drishti.py` stands for `python3.13 tools/drishti.py` (Windows `py -3.13 tools\drishti.py`).
 
 ## What it reads
 
@@ -250,15 +248,8 @@ redis: trading:trade 2026-09-30: 1,000,000 rows, 19 columns in 2,000 chunks of 1
 redis: loaded 1,000,000 rows into redis://localhost:26479 in 81 s; documents 6,021 MB as JSON, 811 MB stored (7.4 times smaller)
 ```
 
-- **Input:** loader rows, one JSON line per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`.
-  `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write tars of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders;
-  `RedisLoader -` reads standard input (one kind on one date). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and
-  `.jsonl.gz` in it, in name order.
-- **Business dates come from outside the row** ([the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
-  a tar's folder names the date; a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-`) is one kind on one date: `--as-of`, else
-  its `.ready` file's `business-date:`, else the date in its name, else the business today. Rows whose own `date` differs are loaded
-  under the file's date and counted. A plain file of two kinds is refused (send a tar), and so is `--as-of` with a tar. A row dated
-  after tomorrow in the business zone (`--future-days`, `--zone`) is not loaded and the load ends with an error.
+- **Input:** loader rows, one JSON line per entity per day, in the same files and folders as for every loader: [Table mode: loading](../drishti-plugin-jdbc/README.md#table-mode-loading).
+- **Business dates come from outside the row**, by the same rules for every loader: [the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) and [the PostgreSQL loader's list](../drishti-plugin-jdbc/README.md#table-mode-loading).
 - **Streaming:** worker threads (`--threads`) parse and compress each line and pipeline its commands over one Lettuce connection:
   `SADD` of the id to the day's journal, then `SET` of the document (`EX` with `--ttl-days`) and `ZADD` of the day to the entity's
   days. At most `--in-flight` lines are unanswered at once. A kind's dictionary is trained on its first `--dict-samples` documents
@@ -288,8 +279,7 @@ redis: loaded 1,000,000 rows into redis://localhost:26479 in 81 s; documents 6,0
 | `--ttl-days N` | no expiry | every key expires N days after it is written; the kinds' days keep N days back from the load's newest business date |
 | `--replace` / `--merge` | replace | each day holds exactly the stream's entities, switched atomically / add to each day in place |
 | `--keep-replaced-seconds N` | `120` | how long a replaced generation stays readable (0: deleted at once) |
-| `--as-of yyyy-MM-dd` | the file's name, else the business today | a plain file's business date (refused for a tar) |
-| `--future-days N`, `--zone Z` | `1`, `LAKE_BUSINESS_ZONE` else `America/New_York` | how far after today a business date may be, in which zone |
+| `--as-of`, `--future-days N`, `--zone Z` | the file's name, else the business today; `1`; `LAKE_BUSINESS_ZONE` else `America/New_York` | the options every loader takes: a plain file's business date, how far after today a date may be, in which zone ([Table mode: loading](../drishti-plugin-jdbc/README.md#table-mode-loading)) |
 | `--max-drop-share F`, `--force-drop` | `0.5`, off | the largest share of a kind's days, or of a day's entities, one run may drop; drop more anyway |
 | `--codec`, `--level N` | `zstd-dict`, `3` | `zstd-dict`, `zstd`, `deflate` or `none`; the compression level |
 | `--chunk-rows N`, `--in-flight N`, `--threads N` | `10000`, `2000`, cores less two | values per column chunk; lines unanswered; worker threads |
