@@ -98,4 +98,3 @@ console:
     - ["WDI WDI-NGA", "Nigeria · a lower-middle-income economy"]
     - ["WDIS WDIS-IND-NY_GDP_MKTP_KD_ZG", "India · real GDP growth by year"]
     - ["WDIS WDIS-BRA-SI_POV_DDAY", "Brazil · poverty headcount by year"]
-  help: config/help.yaml

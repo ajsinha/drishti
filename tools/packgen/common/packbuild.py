@@ -72,7 +72,6 @@ class PackSpec:
     # kind -> the fields its Delta table keeps as real columns (the connector's layout): what a BI dataset over the kind reads without
     # opening every document (the world-economics and region-economics models)
     layouts: dict[str, list[str]] = field(default_factory=dict)
-    overview: str = ""                              # prose about the pack (no guide is written since i7k: the story is in the feature guide)
     external_ids: dict[str, set[str]] = field(default_factory=dict)   # kind -> ids that live in required packs
     compact_json: bool = False                      # write the sample documents without indentation (large generated packs)
     form_overrides: dict[str, dict[str, dict]] = field(default_factory=dict)   # kind -> field path -> {type:, label:} replacing the name-derived ones
@@ -134,7 +133,7 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
          "mnemonics": {k.mnemonic: {"kind": k.kind, "label": k.label} for k in kinds},
          "graph": {"id-patterns": [{"pattern": "^" + k.prefix, "kind": k.kind} for k in kinds], "fields": dict(sorted(fields.items()))},
          "connectors": {}, "routes": {},
-         "console": {"examples": [list(e) for e in spec.examples], "help": "config/help.yaml"}}
+         "console": {"examples": [list(e) for e in spec.examples], **({"help": "config/help.yaml"} if spec.retired else {})}}
     badges = {k.kind: k.badge for k in kinds if k.badge}
     if badges:
         m["graph"]["badges"] = badges

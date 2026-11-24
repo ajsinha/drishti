@@ -90,4 +90,3 @@ console:
     - ["OECD OECD-CAN", "Canada · leading indicator, unemployment, inflation, growth; the members on a map"]
     - ["OECD OECD-JPN", "Japan"]
     - ["OECDS OECDS-USA-CLI", "The US composite leading indicator, month by month"]
-  help: config/help.yaml

@@ -70,4 +70,3 @@ console:
     - ["GDELT GDELT-USA", "The United States · yesterday's events, tone, the conflict share, by category, the top stories"]
     - ["GDELT GDELT-GBR", "The United Kingdom"]
     - ["GDELT GDELT-CAN", "Canada"]
-  help: config/help.yaml

@@ -252,8 +252,6 @@ def spec(bank: dict) -> PB.PackSpec:
         examples=[("LCR LCR-NY", "Liquidity coverage ratio · HQLA by level, outflows, 30-day trend"), ("NSFR NSFR-LDN", "Net stable funding ratio"),
                   ("MLAD MLAD-LDN-GBP", "Maturity ladder · net gap by bucket"), ("LST LST-COMB-NY", "Liquidity stress · survival horizon"),
                   ("IDL IDL-NY-USD", "Intraday liquidity · usage through the day")],
-        overview="Liquidity figures are computed per legal entity from the same entities, counterparties and bonds as the banking packs: HQLA holdings "
-                 "are the sovereign and corporate bonds of the market-data pack, funding sources are the core counterparties.",
         external_ids={"legal-entity": set(bank["legal-entity"]), "counterparty": set(bank["counterparty"]), "bond": set(bank["bond"])},
         roles={"treasury": {"kinds": [k.kind for k in KINDS] + ["legal-entity", "counterparty", "bond"], "raw": True}})
 

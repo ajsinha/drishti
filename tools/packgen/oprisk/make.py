@@ -239,8 +239,6 @@ def spec(bank: dict) -> PB.PackSpec:
         examples=[("LOSS LOSS-2025-0001", "Operational loss event · timeline and failed control"), ("KRI KRI-RATES-1", "Key risk indicator against its thresholds"),
                   ("RCSA RCSA-FX-2", "Risk and control self-assessment"), ("ISSUE ISSUE-101", "Issue and actions"),
                   ("VEND VEND-001", "Critical vendor · services, exit plans, incidents"), ("OPCAP OPCAP-LDN", "SMA operational-risk capital")],
-        overview="Operational risk is organised by the core desks and legal entities: losses, controls and indicators belong to desks, capital "
-                 "and scenarios to legal entities. A loss links to the control that failed, and issues and cyber incidents link to the losses they caused.",
         external_ids={"desk": set(bank["desk"]), "legal-entity": set(bank["legal-entity"])},
         roles={"oprisk": {"kinds": [k.kind for k in KINDS] + ["desk", "legal-entity"], "raw": True}})
 

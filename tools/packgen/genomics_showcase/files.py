@@ -236,7 +236,7 @@ def pack_yaml(pack: str, story: dict) -> str:
                 rows.append({"path": name, "type": "text", "group": "Filters"})
         form[k.kind] = rows
     m["form"] = form
-    m["console"] = {"examples": [[a.format(**ids), b] for a, b in p["examples"]], "help": "config/help.yaml"}
+    m["console"] = {"examples": [[a.format(**ids), b] for a, b in p["examples"]]}
     m["columns"] = {k.kind: list(k.columns) for k in ks}
     m["connectors"] = {connector: {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": [k.kind for k in ks],
                                    "settings": {"lake": "demo", "lake-tables": ",".join(table_of(k) for k in ks)}}}

@@ -89,8 +89,8 @@ python3 tools/drishti.py lake demo                    # every table; or: python3
 
 On Windows, `py -3.13 tools\drishti.py start server --demo` loads the public-data packs including `funds`, and
 `py -3.13 tools\build_demo_lakes.py --only funds` builds its three tables. The demo cluster (`deploy/stack/stack.yaml`) loads it on
-every node. Type `FUNDS` and press Enter: the pack's overview lists its three commands with their counts (200 funds, 586 companies
-held, 3 indexes tracked).
+every node. Type `FUNDS` and press Enter: the pack's overview lists its three commands with their counts (what the pack holds is in
+[the funds pack README](../../modules/capital-markets/packs/funds/README.md)).
 
 The pack's data is served by its Delta connector `funds-store` from the lake, never by the demo connector: a server with
 `DRISHTI_DEMO_ENABLED=false` opens every page.
@@ -259,7 +259,7 @@ in `num.tsv`.
 
 ### 8. fund
 
-One document per fund, keyed by `TICKER` (command `FUND`), 200 documents; stored as the Delta table `<root>/funds/fund/` with the
+One document per fund, keyed by `TICKER` (command `FUND`); the count is in [the funds pack README](../../modules/capital-markets/packs/funds/README.md); stored as the Delta table `<root>/funds/fund/` with the
 promoted columns `TICKER, NAME, TYPE, TICKERS, ADVISER, INDEX_ID, NET_ASSETS, EXPENSE_RATIO, HOLDING_COUNT, REPORT_DATE, RANK` (the
 search form and the type-ahead read them; the type-ahead also `NAME` and `TICKERS`). Links: a holding's `COMPANY` to `USEQ`
 (us-company), `FUND` to another `FUND`, `LEI`, `ADVISER_LEI`, `CUSTODIAN_LEI` and a counterparty's `CPTY_LEI` to `LEI` (gleif's
@@ -269,7 +269,7 @@ lei-entity), `INDEX_ID` to `IDX` (index-membership).
 
 ### 9. fund-holder
 
-One document per us-equities company held by at least one fund, keyed by the company's `TICKER` (command `HELD`), 586 documents. Built
+One document per us-equities company held by at least one fund, keyed by the company's `TICKER` (command `HELD`); the count is in [the funds pack README](../../modules/capital-markets/packs/funds/README.md). Built
 from every holding of every fund (not only those a fund page keeps): a holding is the company when its ticker is the company's, else
 (an equity) when its CUSIP is one some fund filed with the company's ticker, its issuer LEI is the company's, or its issuer name is the
 company's (legal suffixes and punctuation aside).
@@ -2075,8 +2075,7 @@ Further: [../guides/bi/README.md section 5](bi/README.md) (ECG with worked numbe
 #### Part B · Companies
 
 The `us-equities` pack holds every company of the S&P 500, the Nasdaq-100 and the Dow from the SEC's EDGAR: its identifiers, its industry,
-its index memberships, its filings and ten years of annual financials. The committed snapshot was retrieved on 2026-10-24: 586 companies,
-194 SIC codes in 9 divisions, 531 with an LEI ([Companies, funds and ETFs primer](../knowledge/world.md#companies-funds-and-etfs-a-worked-example-on-the-demo-data)).
+its index memberships, its filings and ten years of annual financials. The committed snapshot was retrieved on 2026-10-24 (the counts of companies, SIC codes and LEIs are in [the us-equities pack README](../../modules/capital-markets/packs/us-equities/README.md)) ([Companies, funds and ETFs primer](../knowledge/world.md#companies-funds-and-etfs-a-worked-example-on-the-demo-data)).
 
 ### Step 3 · One company, five identifiers
 

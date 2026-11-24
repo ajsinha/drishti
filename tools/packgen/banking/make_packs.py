@@ -259,7 +259,7 @@ def manifest(name: str) -> dict:
         m["pivot"] = PIVOTS[name]
     m["form"] = forms(name, m["kinds"], specs)
     extra = VK.EXAMPLES if name == "market-risk" else XK.EXAMPLES if name == "counterparty-risk" else CK.EXAMPLES if name == "market-data" else []
-    m["console"] = {"examples": [list(e) for e in EXAMPLES[name] + extra], "help": "config/help.yaml"}
+    m["console"] = {"examples": [list(e) for e in EXAMPLES[name] + extra]}
     if calc_snippets.SNIPPETS.get(name):    # Calc on the pack's kinds, with its snippets under python/ (calc_snippets.py)
         m["python"] = {"enabled": True}
     if name in IMPACT:

@@ -77,7 +77,6 @@ console:
     - ["LEIG ALL", "Every ownership group, and a search of the entities"]
     - ["LEIC GB", "United Kingdom, computed from the entities · every entity with a British legal address"]
     - ["LEIC ALL", "Every country of the entities"]
-  help: config/help.yaml
 columns:
   lei-entity: [LEI, NAME, LEI_COUNTRY, LEGAL_FORM, REGISTRATION_STATUS, NEXT_RENEWAL]
   lei-group: [GROUP_ID, NAME, LEI_COUNTRY, SEGMENT, MEMBERS]

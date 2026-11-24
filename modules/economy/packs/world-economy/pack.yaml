@@ -310,7 +310,6 @@ console:
     - Sub-Saharan Africa · a World Bank region
   - - SOCI SOCI-NGA-WGI-LAW
     - Nigeria · rule of law
-  help: config/help.yaml
 columns:
   economy:
   - NAME

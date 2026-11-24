@@ -6,7 +6,9 @@
 
 # How Drishti fits together
 
-A short tour for someone new to Drishti: an architect at a bank, a developer, an administrator. One idea per section, one picture per
+Drishti is a platform for any domain: live, explainable analytics on the data you already have, with screens written in one grammar
+(Rachana, drawn by Elements) and everything specific to a field brought by a module (banking risk, capital markets, economic data and
+genomics are modules today). A short tour for someone new to it: an architect, a developer, an administrator. One idea per section, one picture per
 idea, one small real example each. The long references are linked at the end; this page only shows how the pieces connect.
 Also as a [PDF](HOW_IT_FITS.pdf).
 

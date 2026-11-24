@@ -14,12 +14,35 @@
 
 ## What Drishti is
 
-Drishti is the **real-time risk and analytics layer next to a bank's trading systems**. It is not an order or execution management
-system. Pricing and simulation engines deliver trade-grain inputs (scenario P&L vectors, exposure paths, sensitivities); Drishti
-aggregates them, on demand and for any scope from the whole bank to an ad-hoc set of trades: **VaR, ES, counterparty exposure, the
-pre-deal check, FRTB-SA and SIMM**. **Drishti never prices.** It shows the data it was supplied, and when something is missing it says
-exactly which data or attributes were not found. Every figure says where it came from, how it was calculated and why it moved, and
-obeys roles, masks, four eyes and the audit trail.
+**Live, explainable analytics on the data you already have.** Drishti connects to data where it lives (Delta and Iceberg lakes,
+files, databases, streams) and keeps it in one lake. It aggregates on demand for any scope, from everything down to a hand-picked
+handful of rows, and explains every figure: where it came from, how it was calculated and why it moved. Screens, reports and
+dashboards are described, not coded, in one grammar, and served to many users at once with roles, masks, four eyes and an audit trail,
+on one machine or a cluster. Drishti never invents a number: it shows what its sources supply and says exactly what is missing.
+
+**Visual analytics and GenUI from the same parts.** Screens are written in **Rachana**'s Sutra language and painted by **Elements**,
+plain JavaScript libraries for a grid with a pivot, charts, maps, forms and live tables. Together they give BI-style dashboards and
+reports, and they make GenUI safe: an AI assistant writes a Sutra through MCP tools, Rachana checks and compiles it, Elements draws it,
+with no generated code to trust. The same parts work outside Drishti: Rachana and Elements in your own Flask or FastAPI application
+([IN_YOUR_APP](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide3/docs/guides/IN_YOUR_APP.md), [GENUI](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide3/docs/guides/GENUI.md)),
+Lake as a Delta and Iceberg library in Java or Python, Tools as shared Java utilities.
+
+Everything specific to a field comes as a **module**: its data shapes, measures, screens and rules. Banking risk, capital markets,
+economic data and genomics are modules today; a new field is a new module, not a new product.
+
+## Sample uses
+
+**Banking risk.** Trades and positions arrive from the trading systems a bank already runs (Endur, Calypso, Murex and others, each
+through its own source module) into one lake. Drishti computes VaR and expected shortfall by historical simulation for any scope, from
+the whole bank down to an ad-hoc set of trades, plus exposure and a pre-deal check of a trade against its limits. Every figure opens to
+its contributors, its scenarios and how it was calculated, and a playground lets a user rebuild it step by step in a spreadsheet.
+Pricing and simulation engines deliver the trade-grain inputs; Drishti never prices.
+
+**Genomics.** A sample module built with the Module SDK alone and run with no finance at all, which shows the platform carries no
+domain of its own. It reads VCF files into variants, samples, genes and cohorts, and its screens include a GWAS Manhattan plot, gene
+lollipops, an oncoprint across a cohort and a protein-engineering workbench, all written as Sutras on Elements. Its data is synthetic.
+
+Other modules work the same way: capital markets, and economic and public-sector data from sources such as the World Bank and FRED.
 
 It is built from three blocks:
 

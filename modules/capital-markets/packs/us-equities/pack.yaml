@@ -91,7 +91,6 @@ console:
     - ["SIC ALL", "Every SIC code covered, by revenue (computed)"]
     - ["EDGAR 8-K", "The latest current reports; a click opens the filing beside"]
     - ["FACT AAPL-REVENUE", "Apple's revenue over ten fiscal years"]
-  help: config/help.yaml
 columns:
   us-company: [TICKER, NAME, EXCHANGE, SIC_DESCRIPTION, INDEX_TEXT, REVENUE]
   filing: [ACCESSION, COMPANY, FORM, FILED, REPORT_DATE]
