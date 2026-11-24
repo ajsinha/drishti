@@ -22,6 +22,9 @@ exits 0; `--fail` exits 1 when there is any finding (switched on at the end of t
 4. repeated text: a window of 40 normalised words of prose (not code) found in two hand-written documents
 5. folder notes: over 60 lines
 
+Generated blocks inside a hand-written document (`<!-- <name>:begin -->` ... `<!-- <name>:end -->`, e.g. a connector README's settings
+table) are left out: a tool writes them.
+
 The hand-written corpus is read from config/docs-corpus.yaml (classes keep, rename, move, connector, note; a document that is merged or
 deleted goes away and is not counted).
 """
@@ -42,6 +45,15 @@ WINDOW = 40
 CMD = re.compile(r"^\s*(\$ |> |PS> )?(py\s+-3\.\d+|python3?|mvn|mvnw|\./mvnw|pip3?|git\s+clone|systemctl|sudo)\b")
 DRISHTI = re.compile(r"(py\s+-3\.\d+|python3?(\.\d+)?)\s+(\./)?tools[/\\]drishti\.py")
 SETTING = re.compile(r"^\|\s*`(drishti\.[a-z0-9_.\-\[\]]+|DRISHTI_[A-Z0-9_]+)`")
+
+
+GENERATED = re.compile(r"^<!-- ([a-z][a-z-]*):begin\b.*?^<!-- \1:end\b[^\n]*$", re.S | re.M)
+
+
+def hand_written(text: str) -> str:
+    """The text without its generated blocks (``<!-- settings:begin ... -->`` to ``<!-- settings:end -->``, and every other tool's
+    ``<name>:begin``/``<name>:end`` pair: guide-data, files, realdata, ...): a tool writes them, so they are no one's duplicate."""
+    return GENERATED.sub("", text)
 
 
 def corpus(root: Path = ROOT) -> list[str]:
@@ -96,7 +108,7 @@ def analyse(texts: dict[str, str], owners: dict | None = None) -> dict:
     allow = [tuple(sorted(a[:2])) for a in owners.get("allow_runs") or []]
     pats = [(re.compile(o["pattern"]), o["home"]) for o in owners.get("owners") or []]
     for path, text in texts.items():
-        blocks, prose = split(text)
+        blocks, prose = split(hand_written(text))
         for r in runs(blocks):
             run_in[r].add(path)
         w = words(prose)

@@ -32,6 +32,8 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "tools"))
+import resolved as PP  # noqa: E402  (where the kernel's packs are: the Java resolver's answer, never a path written here)
 CORPUS = ROOT / "config" / "docs-corpus.yaml"
 MOVED = ROOT / "tools" / "docs" / "moved.yaml"
 
@@ -47,6 +49,14 @@ GEN = "modules/genomics/docs/guide.md"
 KM = "docs/architecture/KERNEL_AND_MODULES.md"
 TC = "docs/architecture/THIN_CONSOLE_DESIGN.md"
 
+
+def _pack(name: str) -> str:
+    """A pack's folder from the repository root, as a regex (the resolver's answer: the kernel packs' folder is the site's setting)."""
+    return re.escape(PP.pack_dir(name).resolve().relative_to(ROOT).as_posix())
+
+
+KERNEL_PACKS = re.escape(PP.pack_dir("core").resolve().parent.relative_to(ROOT).as_posix())
+
 # (regex, class, lane, target, tool)   class: record keep generate merge delete rename move connector note notdoc
 R: list[tuple[str, str, str, str, str]] = [
     (r"(CHANGELOG|RELEASE_NOTES|THIRD-PARTY-NOTICES)\.md", "record", "A", "", ""),
@@ -57,10 +67,10 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"config/bi/(python|reports)/README\.md", "merge", "C", "config/bi/README.md", ""),
     (r"config/connectors\.examples/[^/]+/README\.md", "generate", "C", "", "tools/connector_readmes.py"),
     (r"config/feeds/[^/]+\.md", "generate", "C", "", "tools/feeds/feedreadme.py"),
-    (r"config/packs/core/[^/]+/README\.md", "generate", "C", "", PACKGEN),
-    (r"config/packs/core/compute-demo/guides/[^/]+\.md", "merge", "A", GL + "bi/NOTEBOOK_AND_PYTHON.md", ""),
-    (r"config/packs/core/core/guides/[^/]+\.md", "merge", "A", BANK, ""),
-    (r"config/packs/core/gleif/guides/[^/]+\.md", "merge", "A", WORLD, ""),
+    (KERNEL_PACKS + r"/[^/]+/README\.md", "generate", "C", "", PACKGEN),
+    (_pack("compute-demo") + r"/guides/[^/]+\.md", "merge", "A", GL + "bi/NOTEBOOK_AND_PYTHON.md", ""),
+    (_pack("core") + r"/guides/[^/]+\.md", "merge", "A", BANK, ""),
+    (_pack("gleif") + r"/guides/[^/]+\.md", "merge", "A", WORLD, ""),
     (r"data/(dataload|delta)/.+/README\.md|data/dataload/README\.md", "delete", "C", "", ""),
     (r"data/testdata/README\.md", "keep", "C", "", ""),
     (r"deploy/aws/[^/]+/README\.md", "merge", "A", GL + "CLUSTER_GUIDE.md", ""),

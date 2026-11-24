@@ -1,0 +1,48 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The documentation consolidation's intended changes to files that are not Markdown (i7k; the plan DOCS_CONSOLIDATION.md, its decisions
+# D1-D6 and sections 3-4). `python3 tools/docs/moved.py --verify --base <step 0>` accepts a changed line that is a comment, sits in a
+# test, or differs from its removed twin only in the documents it names (the D1 sweep); every other changed line must be in a file
+# listed here, and the report counts the lines per decision. A changed line in no listed file fails the check.
+intended:
+  - decision: D3
+    why: "a pack README is generated whole; its intro moves from tools/packgen/**/*.intro.md into the pack's about.yaml (intro:)"
+    paths: ["config/packs/core/*/config/about.yaml", "modules/*/packs/*/config/about.yaml", "tools/packgen/banking/about/*.yaml",
+            "tools/packgen/world/about.yaml", "tools/packgen/world/intro.yaml", "tools/packgen/funds/intro.yaml", "tools/packgen/funds/fundsglossary.py",
+            "tools/packgen/genomics_showcase/intros.yaml", "tools/realdata/about.py", "tools/packgen/pack_from_jsonl.py",
+            "tools/packgen/common/readme.py", "tools/packgen/readme.py"]
+  - decision: READMES
+    why: "plan section 4.1: the module READMEs and the connector template READMEs are generated whole from their own YAML"
+    paths: ["modules/*/docs/about.yaml", "tools/packgen/module_readme.py", "tools/connector_readmes.py", "tools/connector_readmes/*.yaml"]
+  - decision: D4
+    why: "the example packs keep their YAML but carry no guide (their Help entry goes); set-up makes the data folders the placeholders kept"
+    paths: ["examples/packs/*/config/help.yaml", "tools/launch/envsetup.py"]
+  - decision: D5
+    why: "the gallery reads its sections of the examples README; Help > Developer reads a section of API_REFERENCE.md; Help redirects a merged page (help.yaml moved:)"
+    paths: ["drishti-console/core/examples.py", "drishti-console/core/guides.py", "drishti-console/routes/help_routes.py",
+            "drishti-console/web/templates/help/_developer.html", "drishti-console/config/help.yaml", "tools/settings_schemas.yaml",
+            "drishti-console/plugins/banking/templates/home/market_landing.html"]
+  - decision: HELP
+    why: "plan section 3.4: a module's Help, its docs.guides and the content its package copies name the feature guides that absorbed its pack and module guides"
+    paths: ["modules/*/docs/help.yaml", "modules/*/module.yaml", "modules/*/content.yaml"]
+  - decision: PACK_GUIDES
+    why: "plan section 2, rows 9, 65-72: a pack has no guide; its facts are its README (with the generated Data contracts and Data retrieval) and contracts, its story a feature guide's section; the generators stop writing guides, Ask reads the README"
+    paths: ["tools/packgen/banking/make_docs.py", "tools/packgen/gleif/make.py", "tools/packgen/us_equities/make.py", "tools/packgen/funds/make.py",
+            "tools/packgen/genomics_showcase/files.py", "tools/packgen/genomics_showcase/make.py", "tools/packgen/common/guide_data.py",
+            "tools/packgen/common/packbuild.py", "tools/packgen/publicsector/make.py", "tools/testdata/publicsnap.py",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/explain/PackGuides.java"]
+  - decision: GENERATED
+    why: "plan section 4: one example per kind on the contract pages (docs/contracts/samples deleted), one CSV_FORMATS page for the loader pages, the guides' data sections, the three kept PDFs"
+    paths: ["tools/contracts.py", "tools/testdata/sample_docs.py", "tools/mrloader/kind_docs.py", "tools/docs/guide_data.py", "tools/docs/md_to_pdf.py"]

@@ -81,11 +81,16 @@ def test_sweep_rewrites_full_paths_and_unique_names_and_lists_deleted():
     assert moved.hint("docs/plans/LAUNCHER_REVIEW.md", ROWS).endswith("was deleted")
 
 
-def test_verify_accepts_comment_and_test_lines_only():
+def test_verify_accepts_comments_tests_document_references_and_the_plans_decisions_only():
     diff = "+++ b/src/Main.java\n-// docs/A.md\n+// docs/B.md\n+++ b/tools/test_x.py\n-x = 'docs/A.md'\n+x = 'docs/B.md'\n"
     assert moved.verify_diff(diff) == []
-    code = "+++ b/src/Main.java\n-String s = \"docs/A.md\";\n+String s = \"docs/B.md\";\n"
+    ref = "+++ b/src/Main.java\n-String s = \"docs/A.md\";\n+String s = \"docs/guides/B_GUIDE.md#3-x\";\n"
+    assert moved.verify_diff(ref) == [] and len(moved.classify(ref, [])["reference"]) == 2     # only the document it names changed
+    code = "+++ b/src/Main.java\n-int n = 1;\n+int n = 2;\n"
     assert len(moved.verify_diff(code)) == 2
+    rules = [{"decision": "D5", "paths": ["src/*.java"]}]
+    assert moved.classify(code, rules) == {"D5": ["src/Main.java: -int n = 1;", "src/Main.java: +int n = 2;"]}
+    assert all(r["decision"] and r["paths"] for r in moved.intended())     # the plan's list: every entry names its decision and its files
 
 
 def test_dup_check_finds_a_repeated_run_an_owned_command_a_settings_row_and_repeated_text():

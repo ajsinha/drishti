@@ -182,6 +182,7 @@ files:
   - {path: 'docs/guides/AI_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/API_REFERENCE.md', class: keep, lane: A}
   - {path: 'docs/guides/APPROVALS_GUIDE.md', class: keep, lane: A}
+  - {path: 'docs/guides/BANK_DATA_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/BUILD_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/CLI_REFERENCE.md', class: keep, lane: A}
   - {path: 'docs/guides/CLUSTER_GUIDE.md', class: keep, lane: A}

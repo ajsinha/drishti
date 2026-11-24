@@ -19,7 +19,9 @@ python3 tools/docs/moved.py --hint <old-path>                            one lin
 python3 tools/docs/moved.py --apply [--write]                            the sweep of non-Markdown files (code comments, tests, YAML):
                                                                          counts per file; --write rewrites them
 python3 tools/docs/moved.py --verify [--base REF]                        every changed line of a non-Markdown file since REF is a comment
-                                                                         line or sits in a test file (the plan's "comment lines only")
+                                                                         line, sits in a test file, differs only in the documents it names,
+                                                                         or is in a file the plan changes on purpose (tools/docs/intended.yaml,
+                                                                         by decision); the report counts each reason
 
 The sweep replaces the full repository path of a document that was merged, renamed or moved by its new home, and a bare file name
 `NAME.md` only when it is an upper-case name that is unique among the moved documents. A deleted document has no new home and is
@@ -27,6 +29,7 @@ never rewritten (a code comment that names one is the lane's to fix by hand: --a
 """
 from __future__ import annotations
 
+import fnmatch
 import re
 import subprocess
 import sys
@@ -38,7 +41,7 @@ ROOT = Path(__file__).resolve().parents[2]
 MOVED = ROOT / "tools" / "docs" / "moved.yaml"
 COMMENT = re.compile(r"^\s*(#|//|\*|/\*|<!--|-->|--|;|rem\b)", re.I)
 SKIP = {"tools/docs/moved.yaml", "tools/docs/moved.py", "tools/docs/corpus.py", "config/docs-corpus.yaml", "config/docs-owners.yaml",
-        "tools/docs/dup_check.py", "tools/docs/merge_audit.py", "tools/docs/merge_log_B.txt", "tools/test_docs_consolidation.py"}
+        "tools/docs/dup_check.py", "tools/docs/merge_audit.py", "tools/docs/intended.yaml", "tools/docs/merge_log_A.txt", "tools/docs/merge_log_B.txt", "tools/test_docs_consolidation.py"}
 TEXT_SUFFIXES = {".java", ".py", ".yaml", ".yml", ".xml", ".js", ".html", ".css", ".sh", ".ps1", ".properties", ".json", ".txt", ".toml"}
 
 
@@ -97,17 +100,65 @@ def non_markdown() -> list[str]:
             and not f.startswith("drishti-console/web/static/vendor/")]
 
 
-def verify_diff(diff: str) -> list[str]:
-    """Problems in a unified diff of non-Markdown files: a changed line that is neither a comment nor in a test file."""
-    bad, cur = [], ""
+DOCREF = re.compile(r"[\w./<>-]*[\w<>-]+\.(?:md|pdf)(?:#[\w.-]+)?|\b[A-Z][A-Z0-9_]{4,}\b")
+INTENDED = ROOT / "tools" / "docs" / "intended.yaml"
+
+
+def intended(path: Path = INTENDED) -> list[dict]:
+    """The plan's intended changes to non-Markdown files (tools/docs/intended.yaml): [{decision, why, paths: [glob]}]."""
+    return (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("intended") or [] if path.is_file() else []
+
+
+def _decision(name: str, rules: list[dict]) -> str | None:
+    for r in rules:
+        if any(fnmatch.fnmatch(name, g) for g in r.get("paths") or []):
+            return r.get("decision")
+    return None
+
+
+def classify(diff: str, rules: list[dict] | None = None) -> dict[str, list[str]]:
+    """Every changed line of a unified diff of non-Markdown files, by why it may change: ``comment`` (a comment line), ``test`` (a test
+    file), ``reference`` (the line differs from its removed twin only in the documents it names: the sweep), ``<decision>`` (a file the
+    plan changes on purpose, tools/docs/intended.yaml: D3, D4, D5, a generator), else ``bad``."""
+    rules = intended() if rules is None else rules
+    out: dict[str, list[str]] = {}
+    cur, minus, plus = "", [], []
+
+    def flush():
+        pairs = len(minus) == len(plus)
+        for i, (sign, line) in enumerate([("-", m) for m in minus] + [("+", p) for p in plus]):
+            twin = (plus if sign == "-" else minus)[i if sign == "-" else i - len(minus)] if pairs else None
+            if re.search(r"(^|/)(test_[^/]*|[^/]*Test\.java|tests?/.*)$", cur):
+                why = "test"
+            elif COMMENT.match(line):
+                why = "comment"
+            elif twin is not None and DOCREF.sub("DOC", line) == DOCREF.sub("DOC", twin):
+                why = "reference"
+            else:
+                why = _decision(cur, rules) or "bad"
+            out.setdefault(why, []).append(f"{cur}: {sign}{line[:110]}")
+        minus.clear()
+        plus.clear()
+
     for line in diff.splitlines():
         if line.startswith("+++ "):
+            flush()
             cur = line[6:] if line.startswith("+++ b/") else line[4:]
-        elif line[:1] in "+-" and not line.startswith(("+++", "---")):
-            test = bool(re.search(r"(^|/)(test_[^/]*|[^/]*Test\.java|tests?/.*)$", cur))
-            if not test and not COMMENT.match(line[1:]):
-                bad.append(f"{cur}: {line[:110]}")
-    return bad
+        elif line.startswith("@@") or line.startswith("diff ") or line.startswith("--- "):
+            flush()
+        elif line[:1] == "-":
+            if plus:
+                flush()
+            minus.append(line[1:])
+        elif line[:1] == "+":
+            plus.append(line[1:])
+    flush()
+    return out
+
+
+def verify_diff(diff: str, rules: list[dict] | None = None) -> list[str]:
+    """The changed lines of non-Markdown files that no reason covers (classify's ``bad``)."""
+    return classify(diff, [] if rules is None else rules).get("bad", [])
 
 
 def main(argv: list[str]) -> int:
@@ -138,9 +189,14 @@ def main(argv: list[str]) -> int:
         base = argv[argv.index("--base") + 1] if "--base" in argv else "HEAD"
         diff = subprocess.run(["git", "-C", str(ROOT), "diff", "-U0", base, "--", *[f for f in non_markdown()]],
                               check=True, capture_output=True, text=True).stdout
-        bad = verify_diff(diff)
+        c = classify(diff)
+        bad = c.pop("bad", [])
+        for why, lines in sorted(c.items()):
+            files = sorted({x.split(": ", 1)[0] for x in lines})
+            print(f"{why:>10}: {len(lines)} lines in {len(files)} files")
         print(*bad, sep="\n")
-        print(f"[{'FAIL' if bad else 'OK'}] {len(bad)} changed non-comment lines outside tests")
+        print(f"[{'FAIL' if bad else 'OK'}] {len(bad)} changed lines no reason covers (a comment, a test, a document reference, "
+              f"or a decision of tools/docs/intended.yaml)")
         return 1 if bad else 0
     print(__doc__)
     return 2
