@@ -299,7 +299,7 @@ Each row names what to change for a common need and the document that explains i
 | Let people choose what a panel shows | `controls:` in the Sutra (dropdowns, sliders, date ranges), read by panels as `ctl.<id>` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#controls) |
 | Tell Drishti a batch of data landed (refresh, verify, tell people, flag late data) | `POST /api/v1/packs/{pack}/loads` from your ETL; what a pack expects is its `loads:` section | [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) |
 | Reach a source over TLS or through a proxy | `tls.*` and `proxy:` in the connector file | [DATA_GUIDE.md section 10](../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [DATA_GUIDE.md section 10 (proxy)](../guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
-| Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [README.md](../guides/bi/README.md), [MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads), [REPORT_FILE_FORMAT_STATEMENTS.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers), [ARCHITECTURE.md §28](#28-business-intelligence-on-the-table-layer) |
+| Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [README.md](../guides/bi/README.md), [MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads), [REPORT_FILE_FORMAT_STATEMENTS.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers), [ARCHITECTURE.md §28](#28-business-intelligence-on-the-table-layer) |
 | Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [EMBED_GUIDE.md](#30-the-client-renderer-and-drishti-elements) |
 | Use a language model, or an MCP tool server | a provider file in `config/ai/` or `config/mcp/` and `drishti.ai.enabled` / `drishti.mcp.enabled` (both off by default) | [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers), [AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) |
 | Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, a seed in `peers/`), or Admin → Cluster → Files; members advertise a real address, never a loopback one | [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [tutorial 22](../tutorials/22-a-cluster-of-three.md) |
@@ -365,7 +365,7 @@ describes every kind in depth. The full grammar is in
 options) and to the binder on the Java side, plus a Jinja macro in `_macros/panels.html` and its client-side
 handling on the console ([section 7a](#7a-how-a-screen-is-made-generic-not-bespoke) maps each kind to its macro).
 
-**Formats** (`fmt`) are named and config driven: the core set is `formats.yaml` of Drishti Elements (`data/formats.yaml` of its vendored copy, a resource of drishti-rachana: [ELEMENTS_IN_DRISHTI.md](ELEMENTS_IN_DRISHTI.md#5-the-two-tables-the-server-reads))
+**Formats** (`fmt`) are named and config driven: the core set is `formats.yaml` of Drishti Elements (`data/formats.yaml` of its vendored copy, a resource of drishti-rachana: [ELEMENTS_IN_DRISHTI.md](THIN_CONSOLE_DESIGN.md#5-the-two-tables-the-server-reads))
 (`text`, `amount0`, `amount2`, `signed0`, `signed2`, `pct0`, `pct2`, `price2`, `compact` (4.1m), `date`, `dmy`), a
 site file can be named in `drishti.rachana.formats-file`, and packs add their own (the finance pack's
 `config/formats.yaml` adds `pct4`, `rate5`, `pips1`, `df4`, `bp1`). **Tones** (`sign`, `threshold`, `status`) colour
@@ -962,10 +962,10 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-lake-host` | Drishti's side of Drishti Lake, the lake product (its own repository; jars `lake-io`, `lake-config`, `lake-delta`, `lake-iceberg`, `lake-files`, `lake-load`, `lake-memory`, read API `com.ash.lake.read`): the shipped lake files, `DrishtiLakeCatalog`, the one `LakeRuntime` of the process (`DrishtiLake`, with the `mem://` storage), the loader and checker with Drishti's catalog (`DrishtiLakeCli`), `LakeReads` for the connectors. The product: the lake files and file access without Hadoop (local disk, Windows included, and S3), the Delta and Iceberg readers and writers, the parallel loader (`drishti.py lake build --engine java`, [PARALLEL_LOADER.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load)), the data inbox and the in-memory lake ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#98-the-package-memlake-in-lake-load)) | – |
 | `drishti-tables` | The table layer, plain Java ([TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md), [section 24](#24-virtual-tables-the-central-table-layer)): the catalogue of virtual tables and models (`config/tables`, stored items), their definitions and checks, preview, lineage, the materialisation's API, `tables migrate`; on Rachana and the pivot engine, never on BI | read by the server (`tables` on the command line); BI reads it with the switch |
 | `drishti-net` | Drishti*net's core, no Spring ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)): the member table and SWIM-style gossip over HTTP (`MemberTable`, `Gossiper`, `PeersFile`), the cluster key and on-behalf-of tokens (`ClusterKey`, `OnBehalfOf`), the `config/net/` folder and its schema (`NetFolder`, `NetSchema`), signed HTTP between nodes (`PeerHttp`) | – |
-| `drishti-registry` | The access registry, plain Java ([ACCESS_MODEL.md](ACCESS_MODEL.md)): licence → module → lens → function → permission decided in one place (`AccessRegistry`, `EmbeddedAccessRegistry`), over the YAML store (`AccessStore`, `YamlAccessStore`: the modules' manifests, `config/modules/`, `config/access/`); nothing else reads the access model | wired by `server.modules.ModuleConfiguration` |
+| `drishti-registry` | The access registry, plain Java ([ACCESS_MODEL.md](KERNEL_AND_MODULES.md)): licence → module → lens → function → permission decided in one place (`AccessRegistry`, `EmbeddedAccessRegistry`), over the YAML store (`AccessStore`, `YamlAccessStore`: the modules' manifests, `config/modules/`, `config/access/`); nothing else reads the access model | wired by `server.modules.ModuleConfiguration` |
 | `drishti-server` | **The** Spring Boot application, the core: `DrishtiApplication`, REST controllers, SSE, security (`TokenFilter`, OIDC), governance, alerts, actuator, OpenAPI; the SPIs a domain module fills (`PivotSourceProvider`, `CacheGroup`, `CapacityFigures`, `HealthFigures`, `ApiAlias`, `@ConditionalOnModule`) | controllers, filters |
-| `drishti-compute-banking` | The banking domain's maths, no Spring ([DOMAIN_MODULES.md](DOMAIN_MODULES.md)): VaR and ES, parametric, components, backtesting, the scope algebra, exposure, FRTB-SA, SIMM, beta and correlation (`com.ash.drishti.banking.compute`) | – |
-| `drishti-banking` | The banking domain module ([DOMAIN_MODULES.md](DOMAIN_MODULES.md)): the VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube and official-results services, storage and API under `/api/v1/risk` (`com.ash.drishti.banking`); its manifest and lenses; loaded only while the module is on | `BankingAutoConfiguration` |
+| `drishti-compute-banking` | The banking domain's maths, no Spring ([DOMAIN_MODULES.md](KERNEL_AND_MODULES.md)): VaR and ES, parametric, components, backtesting, the scope algebra, exposure, FRTB-SA, SIMM, beta and correlation (`com.ash.drishti.banking.compute`) | – |
+| `drishti-banking` | The banking domain module ([DOMAIN_MODULES.md](KERNEL_AND_MODULES.md)): the VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube and official-results services, storage and API under `/api/v1/risk` (`com.ash.drishti.banking`); its manifest and lenses; loaded only while the module is on | `BankingAutoConfiguration` |
 | `drishti-app` | The runnable jar: the core with the domain modules this build ships, at `kernel/drishti-server/target/drishti-server-<version>-exec.jar`; no code | – |
 | `plugins/drishti-plugin-*` | Source plugins: `demo`, `file`, `rest`, `jdbc`, `delta`, `aerospike`, `cassandra`, `redis`, `mongodb`, `iceberg`, `iceberg-external`, `duckdb`, `feeds`, `news`, `yfinance`, `kafka`, `activemq`, `rabbitmq`, `s3` (ServiceLoader; all are on the server's class path, extra jars from `drishti.sources.plugin-dir` get their own class loader) | – |
 | `drishti-testkit` | Shared contract tests for plugins (`DatedSourceContract`, `MessageSourceContract`, `BrokerOutage`) | – |
@@ -1310,7 +1310,7 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 | D6 | Vendored front-end assets, no build pipeline | Air-gapped desks; MAYA/Pravaha practice |
 | D7 | Industries are packs that inherit; users live in the server | Neutral core; any number of consoles share users (ADR-009, ADR-010, ADR-015) |
 
-The full records are in [`docs/architecture/adr/`](adr/).
+The full records are in [`docs/architecture/adr/`](adr).
 
 ## 22. Testing architecture
 
@@ -1416,7 +1416,7 @@ equivalent where one exists, so the pivot's Excel export writes a live formula. 
 | Math, logic, text, lists, dates | `round`, `power`, `if`, `ifs`, `switch`, `let`, `left`, `split`, `regex_extract`, `sort`, `unique`, `map`, `reduce`, `edate`, `workday(d, n, calendar)`, `yearfrac(a, b, basis)`, `intck`, `intnx` | Rachana (no aggregation: `reduce` with `+` is refused in favour of `sum`) |
 | Finance on given flows, distributions | `npv`, `xnpv`, `irr`, `xirr`, `pmt`, `accrued`, `modified_duration`, `norm_dist`, `t_dist` | Rachana; `discount_factor` and `forward_rate` wait for a curve reader agreed with the quant engine |
 | MATLAB-style list analytics | `cumsum`, moving windows, `zscore`, `isoutlier`, `polyfit` | registered into Rachana, computed with the engine's `AggFunction`s |
-| Matrix functions | `mmult`, `solve`, `inverse`, `cov_matrix`, `eigen`, `pca(k)`, `cholesky` | planned, in the engine on [drishti-native](#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks)'s linear algebra ([HIGH_PERFORMANCE_NATIVE.md section 6](HIGH_PERFORMANCE_NATIVE.md#6-blas)); small matrices stay in plain Java |
+| Matrix functions | `mmult`, `solve`, `inverse`, `cov_matrix`, `eigen`, `pca(k)`, `cholesky` | planned, in the engine on [drishti-native](#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks)'s linear algebra ([HIGH_PERFORMANCE_NATIVE.md section 6](../plans/HIGH_PERFORMANCE_NATIVE.md#6-blas)); small matrices stay in plain Java |
 
 **The boundary.** Pricing a trade from market data is the quant engine's job, and VaR, ES, exposure, FRTB-SA and SIMM come only from their
 own engines through `measure(...)`: the catalogue never re-implements them (no `var(vector, p)`). Python custom functions (NumPy in the
@@ -1505,14 +1505,14 @@ each edit; invalid YAML is marked at its line and the visual side keeps the last
 
 *Product owner: "Key is we maintain abstractions and have fallbacks so we can run on any environment."* Every native integration of the
 server sits behind a Drishti interface with a pure-Java implementation that always works, so Drishti runs anywhere. It realises the seam
-of [HIGH_PERFORMANCE_NATIVE.md section 2.8](HIGH_PERFORMANCE_NATIVE.md#28-two-builds-one-code-base-the-baseline-and-the-accelerated-path-side-by-side)
+of [HIGH_PERFORMANCE_NATIVE.md section 2.8](../plans/HIGH_PERFORMANCE_NATIVE.md#28-two-builds-one-code-base-the-baseline-and-the-accelerated-path-side-by-side)
 on Java 21 (JNI through JavaCPP) and keeps room for the Java 25 paths of that design (FFM, the Vector API) as further implementations of
 the same interfaces.
 
 **What runs today.** Linear algebra: OpenBLAS (bundled through bytedeco for Linux and Windows x86-64) behind `LinearAlgebra` in
 `drishti-compute` (`compute.linalg`: `JavaBlas`, `NativeBlas`, `GuardedBlas`, `Canary`) and the server's `server.nativelib`
 (`NativeLibraries`, `OpenBlasEngine`), with the Java kernels as the fallback, `drishti.native.blas.mode` (`auto` or `java`), Health
-DEGRADED and an alert when it falls back ([HIGH_PERFORMANCE_NATIVE.md section 6](HIGH_PERFORMANCE_NATIVE.md#6-blas)). The module
+DEGRADED and an alert when it falls back ([HIGH_PERFORMANCE_NATIVE.md section 6](../plans/HIGH_PERFORMANCE_NATIVE.md#6-blas)). The module
 `drishti-native` below is the design that gathers every native capability into one home.
 
 **The rule.**
@@ -2300,7 +2300,7 @@ measures:
 
 The `filter =` argument is the per-measure override of a relationship's direction. Two active paths between the same tables are refused when
 the model is saved, naming both paths; `via:` is how a measure chooses the other one. Screens:
-[bi-depth mock-ups](../lenses/mockups/bi-depth/README.md).
+[bi-depth mock-ups](LENSES.md).
 
 ### 28.5 The query engine and the plan
 
@@ -2676,8 +2676,8 @@ test between the two. Base VaR needs neither: it adds precomputed vectors.
 How other web applications show Drishti screens without an iframe, and how the code that draws them is built. The how-to for host
 developers (the elements, tokens, the sign-in window, the render API, theming, versions) is [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md);
 the screen contract both renderers draw is [VIEWMODEL.md](VIEWMODEL.md); the JavaScript component libraries are [ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/DESIGN.md).
-Decisions: [ADR-021](adr/021-embedding-is-html-over-the-wire.md) (embedding, the token, served versions) and
-[ADR-022](adr/022-one-renderer-in-the-browser.md) (one renderer in the browser).
+Decisions: [ADR-021](DECISIONS.md) (embedding, the token, served versions) and
+[ADR-022](DECISIONS.md) (one renderer in the browser).
 
 ### 30.1 One page renderer, one embed renderer
 
@@ -2811,7 +2811,7 @@ version's `integrity.json` (SHA-384 of every distributed file and of the rendere
 - **Lifecycle.** `embed.lifecycle` (one entry per API major) adds `Deprecation` (RFC 9745), `Sunset` (RFC 8594) and a `Link` to every
   answer from the announcement, and `410 DRS-8006` from the sunset day; a `Drishti-Embed-Api` header naming an unserved major is `410`.
 - **Packages.** `@drishti/render` is the version folder laid out as an npm package (documented, not published); the Elements libraries are
-  a separate project, Drishti Elements, vendored at a pinned version ([ELEMENTS_IN_DRISHTI.md](ELEMENTS_IN_DRISHTI.md)).
+  a separate project, Drishti Elements, vendored at a pinned version ([ELEMENTS_IN_DRISHTI.md](THIN_CONSOLE_DESIGN.md)).
 
 ### 30.8 The parity suite
 
@@ -3069,7 +3069,7 @@ because masks are binary (two mask classes per entity).
 ### 31.16 Key decisions and constraints
 
 - Collaboration records are durable per-user state with a transactional outbox and links instead of data
-  ([ADR-020](adr/020-collaboration-records-live-in-the-identity-database.md)); notes grew into threads; roles are the groups; error codes
+  ([ADR-020](DECISIONS.md)); notes grew into threads; roles are the groups; error codes
   use the first digit 7.
 - Comments: a 15-minute edit window keeping every revision, then retract only; administrators hide with a reason; nothing erased before
   retention.

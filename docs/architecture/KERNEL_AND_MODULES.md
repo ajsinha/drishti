@@ -36,8 +36,8 @@ contract), and the distribution default is a pack's `routes:` until distribution
 
 This is the one home for the three blocks, the module package, loading, data binding, distributions, the SDK and the console tier. It builds on what is already
 built and does not repeat it: the access chain (licence → module → lens → function → permission) and the registry are
-[ACCESS_MODEL.md](ACCESS_MODEL.md); the boundary survey, the dependency rules and the split as built are
-[DOMAIN_MODULES.md](DOMAIN_MODULES.md) (section 16 says what moves from it into this document); the JavaScript libraries are
+[ACCESS_MODEL.md](KERNEL_AND_MODULES.md); the boundary survey, the dependency rules and the split as built are
+[DOMAIN_MODULES.md](KERNEL_AND_MODULES.md) (section 16 says what moves from it into this document); the JavaScript libraries are
 [ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/DESIGN.md); the lakes and connectors are [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md); the lenses are [LENSES.md](LENSES.md).
 
 Worked examples (files, not product code) are in `docs/architecture/kernel-and-modules/examples/` (the banking manifest:
@@ -97,7 +97,7 @@ them or off the glue between them. The names below are used throughout; *the ker
 |---|---|---|
 | G1 | **A domain-free kernel**: general BI and aggregation (packs runtime, Sutras, Rachana, Pivot, BI, tables and models, lakes, connectors, search, Explain, approvals, security, cluster, Elements core) that serves a bank, a hospital or a genome lab unchanged | the kernel boots and serves BI, Pivot and its own reference data with **no module installed**; `tools/domain_strings_allowed.yaml` is empty |
 | G2 | **Modules built and shipped separately**, like Linux kernel modules: one signed file (`.dmod`) per module, compiled against the kernel API only, dropped into a configured folder | the banking module is built in its own build against the SDK jars and passes its suite against the kernel alone |
-| G3 | **A module carries everything its capability needs**: Java compute, services and API; Python compute; packs (kinds, contracts, Sutras, samples); console routes, templates, the domain Elements library, CSS on the theme tokens; lenses, functions, Home cards; feeds; Help, guides, tutorials, glossary; settings schema; licence feature | removing `banking.dmod` leaves no banking word, page, file, Help page, engine or API anywhere ([ACCESS_MODEL.md section 6](ACCESS_MODEL.md#6-guarantees-as-tests), extended to "not installed") |
+| G3 | **A module carries everything its capability needs**: Java compute, services and API; Python compute; packs (kinds, contracts, Sutras, samples); console routes, templates, the domain Elements library, CSS on the theme tokens; lenses, functions, Home cards; feeds; Help, guides, tutorials, glossary; settings schema; licence feature | removing `banking.dmod` leaves no banking word, page, file, Help page, engine or API anywhere ([ACCESS_MODEL.md section 6](#6-guarantees-as-tests), extended to "not installed") |
 | G4 | **The kernel controls connectors.** A module declares the *data* it needs (kinds and contracts); the site binds its configured connectors and lake tables to them | no host or credential in any module file, and no connector outside its read-only templates, whose site values are `${...}` placeholders (a packager check, C9); Admin → Data bindings shows every need and what serves it |
 | G5 | **White label by configuration**: one distribution file picks modules, brand, theme, lenses, Home and docs | `drishti.finance` and a sample `drishti.genomics` boot from configuration only, from the same kernel build |
 | G6 | **VaR exactly equal** through every phase | the 2.9.11.c VaR check, bit for bit, at the 509 and 250 windows |
@@ -114,7 +114,7 @@ them or off the glue between them. The names below are used throughout; *the ker
 ### 1.4 Principles
 
 1. **The kernel knows no domain.** No banking word, engine id, kind, path or package in kernel code, templates, scripts or styles. The
-   rule-4 check of [DOMAIN_MODULES.md section 4](DOMAIN_MODULES.md#4-the-dependency-rules) becomes a gate with an empty allow list.
+   rule-4 check of [DOMAIN_MODULES.md section 4](#4-the-dependency-rules) becomes a gate with an empty allow list.
 2. **One way. Banking ships as a module like any other.** No privileged module, no "built-in" path. Economy and capital markets are
    content-only modules packaged the same way. The kernel's own reference data (calendar, GLEIF) stays kernel content.
 3. **Modules reach the kernel only through the kernel API** (section 2.2): versioned SPIs and services, the Rachana grammar, the
@@ -330,7 +330,7 @@ the trading landings reach the banking module's VaR and exposure engines through
 | Kernel-only | Why |
 |---|---|
 | Connector plugins (`SourcePlugin`), storage providers, the lake formats | the site's data, credentials and network belong to the site's administrators; one place to secure and audit them (G4) |
-| Identity, RBAC, the licence check, the registry's model | one trust point ([ACCESS_MODEL.md section 2](ACCESS_MODEL.md#2-one-registry-asked-by-every-layer)) |
+| Identity, RBAC, the licence check, the registry's model | one trust point ([ACCESS_MODEL.md section 2](#2-one-registry-asked-by-every-layer)) |
 | The Python runtime, its lock file and sandbox | one runtime ([ARCHITECTURE.md section 29.1](ARCHITECTURE.md#291-one-python-runtime)) |
 | In the Drishti Console, never in a module: the shell, menus, Help centre, search, Drishti Elements and every vendored library | one look, one search, one Help, one controlled set of UI statics (section 11) |
 | The database schema files | no migrations, two complete schema files; modules keep state in files under their data folder or in kinds |
@@ -498,7 +498,7 @@ Representative stub files with real-looking content:
 | [data/needs.yaml](kernel-and-modules/examples/banking/data/needs.yaml) | banking's data needs (section 5.3) |
 | [settings/schema.json](kernel-and-modules/examples/banking/settings/schema.json) | the settings schema (VaR windows, confidence, root names, hierarchies) |
 | [packs/market-risk/sutras/var-desk.v1.sutra.yaml](kernel-and-modules/examples/banking/packs/market-risk/sutras/var-desk.v1.sutra.yaml) | one Sutra as the module ships it |
-| [docs/help/var-in-five-minutes.md](kernel-and-modules/examples/banking/docs/help/var-in-five-minutes.md) | a Help page stub |
+| [docs/help/var-in-five-minutes.md](KERNEL_AND_MODULES.md) | a Help page stub |
 | [console/plugin.yaml](kernel-and-modules/examples/banking/console/plugin.yaml) | the console plugin as packaged (today's file, paths made module-relative) |
 
 ## 4. Loading
@@ -511,7 +511,7 @@ Representative stub files with real-looking content:
 |---|---|---|
 | `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `<drishti.home>/modules` | the modules folder: one `<id>-<version>.dmod` file per module (files directly in it only); read by the module boot at start, read-only to the server |
 | `drishti.modules.trust` | `config/trust/publishers/` | publisher certificates the site trusts |
-| `drishti.modules.<id>.enabled` | `true` | the existing switch ([ACCESS_MODEL.md section 8](ACCESS_MODEL.md#8-as-built-the-backend-phase-1-of-the-split)) |
+| `drishti.modules.<id>.enabled` | `true` | the existing switch ([ACCESS_MODEL.md section 8](#8-as-built-the-backend-phase-1-of-the-split)) |
 | `drishti.lib.path` | `${drishti.home}/lib/ext` | **the site's shared jars, Tomcat `lib/` style** (kept on an upgrade; `<home>/lib` holds Drishti's own jar): every jar there is loaded at start into one shared *lib* class loader (section 4.4); restart to pick up changes |
 | `drishti.modules.dev` | `false` | **development only**: the module source folders of the modules folder are the modules, loaded unverified; Health marks each *development (unverified)*; refused in a cluster and in a production distribution |
 | `drishti.modules.sources` | `false` | **the kernel's own tests of the shipped files**: the module source folders of the modules folder are the modules, read (manifests, packs, console parts, data needs) and not loaded as code, because the module's classes are already on the class path |
@@ -1180,7 +1180,7 @@ One YAML file, `config/distributions/drishti.<name>.yaml` (chosen by `--distribu
 brand and theme, which lenses and Home, which docs, which default bindings. It folds today's scattered product settings
 (`drishti.edition`, `ui.product`, `ui.copyright`, `drishti.branding.*`, the lens files' `title`, the old default pack list) into
 one place, **as the one way**: the old keys are read for one release, each named on Health as deprecated. Built:
-[DISTRIBUTIONS.md section 10](DISTRIBUTIONS.md#10-how-it-works-as-built).
+[DISTRIBUTIONS.md section 10](#10-how-it-works-as-built).
 
 **Kernel and console.** The same file format serves both blocks. On a kernel it decides **what is loaded** (modules, default bindings); on
 a Drishti Console it decides **the presentation** (brand, theme, lenses, Home, the modules shown, docs). A console in front of several
@@ -1210,7 +1210,7 @@ differently branded consoles over the same kernels. Brand and theme are always t
 ### 6.3 Examples
 
 The shipped distributions (Drishti Risk, Drishti Finance, Drishti Genomics, Drishti All), what each holds and how to start each:
-[DISTRIBUTIONS.md](DISTRIBUTIONS.md).
+[DISTRIBUTIONS.md](KERNEL_AND_MODULES.md).
 
 - [examples/distributions/drishti.finance.yaml](kernel-and-modules/examples/distributions/drishti.finance.yaml): banking + capital markets
   + economy; navy theme; Risk lens default; Help in the banking order; risklake defaults.
@@ -1914,7 +1914,7 @@ the person's row rules), **never in the console**.
 
 **The route groups, in order** (sizes from the code on `970160f9f`: route-file lines and route count, templates; `core/` helpers, 20,140
 lines, move with the groups that use them). The full table with the files of each group is
-[examples/console/route-groups.md](kernel-and-modules/examples/console/route-groups.md).
+[examples/console/route-groups.md](KERNEL_AND_MODULES.md).
 
 | # | Group | Route files (lines · routes) | Templates | Why this place |
 |---|---|---|---|---|
@@ -1957,7 +1957,7 @@ lines, move with the groups that use them). The full table with the files of eac
 
 **Decided by the owner on 2026-11-08: i5 includes how Drishti integrates with enterprise single sign-on.** Authentication and SSO move from
 j to i5, because the Spring Boot console's security chain is where they belong. j keeps roles, licensing, module signing, audit and
-hardening (section 14.2). Roles, row rules and the access chain are [ACCESS_MODEL.md](ACCESS_MODEL.md); this section does not repeat them.
+hardening (section 14.2). Roles, row rules and the access chain are [ACCESS_MODEL.md](KERNEL_AND_MODULES.md); this section does not repeat them.
 
 **What exists today, and stays true.** OpenID Connect sign-in is built: the Python console runs the browser redirect and the **server verifies
 every ID token itself**, maps the provider's groups to roles (`drishti.security.oidc.role-map`), creates the user on first sign-in, and
@@ -2306,7 +2306,7 @@ A failure names the surface and the leftover (*search still finds "Variant explo
 
 ### 13.2 The licence
 
-The signed licence of [ACCESS_MODEL.md section 7](ACCESS_MODEL.md#7-what-is-built-when) (built in i, after the security discussion)
+The signed licence of [ACCESS_MODEL.md section 7](#7-what-is-built-when) (built in i, after the security discussion)
 names **features**; each module's `licence.feature` must be in it (V5). Limits (`positions`, `nodes`, `users`) are read by the registry and
 offered to the module through `ModuleContext.licence()` (read-only, the module cannot change them). The licence check is the kernel's;
 modules know nothing of it beyond the limits.
@@ -2385,7 +2385,7 @@ console, and Java context builders become available as an option for later modul
 
 ### 14.3 Banking step by step (P1–P2)
 
-1. Survey again; freeze the boundary list (refresh [DOMAIN_MODULES.md section 2](DOMAIN_MODULES.md#2-the-boundary-list)).
+1. Survey again; freeze the boundary list (refresh [DOMAIN_MODULES.md section 2](#2-the-boundary-list)).
 2. Create `drishti-kernel-api`; move the SPI interfaces (package rename `com.ash.drishti.kernel.api.*`; the old types deleted, not
    aliased: banking is the only implementer and moves in the same branch).
 3. Banking's `pom.xml` depends on `drishti-kernel-api` (`provided`) and drops `drishti-server`; fix each compile error by a kernel API
@@ -2464,7 +2464,7 @@ The owner accepted every recommendation on 2026-11-08; each row below is a decis
 
 ## 16. What moves from DOMAIN_MODULES.md
 
-[DOMAIN_MODULES.md](DOMAIN_MODULES.md) remains the record of the split as built (sections 1–5, 8) until P2 completes, then is deleted
+[DOMAIN_MODULES.md](KERNEL_AND_MODULES.md) remains the record of the split as built (sections 1–5, 8) until P2 completes, then is deleted
 (git keeps it) and its rules move into the developer guide. From today:
 
 | DOMAIN_MODULES.md | Moves to |
@@ -2474,7 +2474,7 @@ The owner accepted every recommendation on 2026-11-08; each row below is a decis
 | section 4 rule 4 (strings) with its allow list | section 1.4 principle 1 and P1's gate (empty) |
 | section 3 (the layout as built) | stays until P2, then replaced by section 3.2 here |
 
-[ACCESS_MODEL.md](ACCESS_MODEL.md) stays the home of the access chain and the registry; this document adds the package, the loader and
+[ACCESS_MODEL.md](KERNEL_AND_MODULES.md) stays the home of the access chain and the registry; this document adds the package, the loader and
 binding, and only links back.
 
 ## 17. Mock-ups
@@ -2589,7 +2589,7 @@ the site's changes over it). Bindings are **decided** top down (the site's entry
 
 ### 18.1 The one source of "what is on"
 
-The access registry ([ACCESS_MODEL.md](ACCESS_MODEL.md)) decides each module's state from the distribution, the licence, the
+The access registry ([ACCESS_MODEL.md](KERNEL_AND_MODULES.md)) decides each module's state from the distribution, the licence, the
 administrator's switch and the modules it requires. The resolver asks it and nothing else: no reader looks at a switch file, the
 distribution or `drishti.packs.enabled` to decide whether a module's content counts. For each module the registry gives its id,
 version, state, the reason when off, and **its folder**: the one the module boot gave it (section 4.2.1, `ModuleHomes`): the cache folder
@@ -2846,3 +2846,737 @@ The start's log says `module overrides: 1 file(s) over /…/modules, read from t
 `banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml <- /home/me/drishti-overrides/…`; an Endur cash trade's page now shows
 the edited Sutra, and Admin → Health lists the file. Delete the copy (or the setting) and restart: the module's Sutra is back and the
 view is gone.
+
+## The access model: licence, module, lens, function, permission
+
+*Internal design, decided with the product owner on 2026-11-07. Status: design; the mechanism is built with the domain-module split in
+the e+f+g release train (v2.9.11.g); the signed licence, the permission rules and the database store come with trust, RBAC and security
+(2.9.11.j), after the owner's security discussion.*
+
+Drishti serves many industries and lines of business as **modules** (banking and risk first; public sector, AML and others later). A
+customer runs only what it licenses, and a person sees only what their role allows. This document fixes how that is decided and enforced,
+end to end: backend, data, screens, JavaScript, Help.
+
+### 1. Four layers, one chain
+
+| Layer | Question | Decided by |
+|---|---|---|
+| **Licence** | Which modules may this customer run, within which limits? | the customer's licence |
+| **Module** | Does this capability exist here? | installed ∧ licensed ∧ enabled by an administrator |
+| **Lens** | Which experience does a person work in? (Risk, Trading, Market, World, later Public sector, AML) | its definition; offered only when every module it needs is on |
+| **Function** | Which functions (command words such as VAR, TRD, EQV, EXP) may be used? | each belongs to one module; lenses bundle functions; roles are granted or denied single functions on top (as Bloomberg entitles functions) |
+| **Permission** | Which lenses may this person open, and what may they do inside? | their roles and attributes; row rules and masks inside |
+
+```
+licence  →  modules on  →  lenses offered  →  functions this person may use  →  actions, rows and columns inside
+(customer)  (installation)  (needs its modules)  (lens bundles + grants/denials)  (role + row rules + masks)
+```
+
+A module sells; a lens serves. Permissions are granted per lens and action, never per screen.
+
+### 2. One registry, asked by every layer
+
+**drishti-registry** is its own backend component (a Maven module). Every layer asks it; nothing else reads the access model.
+
+| Asked by | What it asks | What "no" means |
+|---|---|---|
+| The server at start | which modules to load | an unlicensed or disabled module's beans, engines, jobs and APIs are never registered |
+| Every API call | module on? lens open to this person? action allowed? | 404 "module not licensed" for a module that is off; 403 with the reason for a person not entitled; audited |
+| Data | which packs, connectors and lake tables to load | an off module's packs and connectors are not loaded |
+| The console | routes, menus, the sitemap, the Build home, search, commands, Help | entries absent; direct links refused |
+| The command line, type-ahead, keys, shared views | function allowed for this person? | the function is invisible; typed anyway, it answers "VRES is not available to you: ask your administrator", audited |
+| JavaScript and assets | which libraries may be served (e.g. drishti-risk) | not served to an installation or person without the module |
+| The AI assistant, exports, embeds, API tokens | the same questions | tools, exports and embeds absent; tokens never exceed their owner |
+
+The console and the browser never ask the registry directly: they ask the server, which asks the registry. One trust point.
+
+### 3. The model
+
+| Entity | Holds |
+|---|---|
+| **Module** | id, domain, version, dependencies on other modules, what it contributes (compute, services, packs, screens, JavaScript libraries, Help, AI tools), the licence feature that unlocks it |
+| **Licence** | customer, modules allowed, limits (users, nodes, data volume, per module or per installation), valid from and to |
+| **Lens** | name, the modules it needs, the functions it bundles, its menus, home and Help |
+| **Function** | the command word (VAR, TRD, EQV ...), its module, the APIs and screens behind it, its Help page; the administrator's on/off switch (the mnemonic switch, folded in) |
+| **Role** | lenses it may open; single functions granted or denied on top of the lenses' bundles; actions inside (view, edit, approve, see raw rows, administer) |
+| **Assignment** | a person or group → roles, plus the attributes row rules use (desk, legal entity, ...) |
+
+### 4. Two stores behind one interface
+
+| | Now (v2.9.11.g) | Later (2.9.11.j) |
+|---|---|---|
+| Store | **YAML**: each module's manifest in its jar (`META-INF/drishti/module.yaml`, `lenses.yaml`), the site's switch `config/modules/<module>.yaml`; `config/access/licence.yaml`, `lenses.yaml`, `roles.yaml`, `assignments.yaml` (section 8) | **the one database**: SQLite by default, PostgreSQL; the same tables in both complete schema files; no migrations; switched by configuration; a tool copies the YAML into it once |
+| Interface | `AccessStore` (read, change, watch) → `YamlAccessStore` | the same interface → `DatabaseAccessStore` |
+| Changes | proposed and approved through the Approvals queue (four eyes), audited | the same |
+
+One test suite runs against both stores and must give the same answers.
+
+### 5. Embedded now, a service later
+
+| | Now | Later |
+|---|---|---|
+| Where it runs | inside drishti-server, in process | its own service: an encrypted REST server (TLS or mTLS, signed answers) every node and console asks |
+| Interface | `AccessRegistry` → `EmbeddedAccessRegistry` | the same interface → `RemoteAccessRegistry` (HTTP client: mTLS, signature check, local cache, change notifications) |
+| When unreachable | not applicable | a setting: fail closed, or a grace period on the last signed answer (defaults decided in 2.9.11.j) |
+
+Every answer is cacheable and invalidated on change, so asking stays cheap when the registry is remote.
+
+### 6. Guarantees, as tests
+
+- **Module off = gone everywhere**, per module: no bean, engine, job, API, pack, connector, route, menu entry, search hit, command, Help
+  page, JavaScript asset, AI tool, export or embed (the engine switches' existing "engine off everywhere" test, generalised).
+- **A lens whose modules are off does not exist**: no menu, no home, no link.
+- **Function off = gone everywhere**, per function: command line, type-ahead, search, menus, keys, the APIs behind it, its Help page, AI tools, links, embeds and tokens.
+- **Only drishti-registry reads the access model** (an architecture test, as for the domain boundaries).
+- **Both stores answer the same** (one suite, run against each).
+- **Session isolation**: nothing per person in shared state.
+- **A module's typed call passes the same doors as the REST path it replaces** (entitlements, masks, row rules, token scopes, the
+  refusal's code and words, the access log): `TypedCallParityTest`; the table of doors is in
+  [KERNEL_AND_MODULES.md section 2.3](#23-the-spis).
+
+### 7. What is built when
+
+| Release | Built |
+|---|---|
+| v2.9.11.g (the e+f+g train, with the domain-module split) | drishti-registry with the embedded registry and the YAML store; module manifests declaring their functions; lenses declaring their modules and function bundles; the mnemonic switches folded into the registry (installation-level function on/off); the administrator's module switch; editions folded into modules and lenses; the guarantees of section 6 |
+| 2.9.11.j (after the security discussion) | the signed licence (offline verification, expiry and grace, limits, audit); permissions per lens, function (grants and denials) and action; data licensing; the database store; the standalone service when wanted |
+
+### 8. As built: the backend (phase 1 of the split)
+
+What exists now, on the server and in the console (the console's part since phase 2's first half: [DOMAIN_MODULES.md](KERNEL_AND_MODULES.md) section 8).
+
+| Part | As built |
+|---|---|
+| **drishti-registry** | A Maven module of its own, plain Java (Jackson only). `AccessRegistry` (the questions) with `EmbeddedAccessRegistry` (one immutable snapshot of decisions, recomputed when the model changes, listeners told); `AccessStore` (read, change, stamp, watch) with `YamlAccessStore`; `AccessRegistries.embedded(settings)` makes it from the server's settings. Nothing else reads the model: an architecture test fails a class outside the registry that names `YamlAccessStore` or `AccessModel`. |
+| **Module manifests** | Each module's jar ships `META-INF/drishti/module.yaml`: id, domain, title, feature, requires, and what it contributes (Java packages, engines, packs, connectors, API prefixes, functions). Installed exactly when its `.dmod` is in the modules folder. The core server's jar ships two content-only modules (packs, lenses and functions, no code): **economy** (world-economy, news-and-markets and the public sector's world-development, central-banks, national-statistics, oecd, official-news and gdelt-events; the World and Public sector lenses: [WORLD_DATA_GUIDE.md](../guides/WORLD_DATA_GUIDE.md)) and **capitalmarkets** (us-equities, funds, and the market data's functions). GLEIF's legal entities are core reference data. The core is always on and is not a module file. |
+| **The switch** | `config/modules/<module>.yaml` holds `enabled:` only (`POST /api/v1/admin/modules` writes it, with a reason, audited); `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module is on when installed ∧ licensed ∧ enabled ∧ every module it requires is on. A change takes effect at the next start (Admin shows *restart needed*). |
+| **Licence** | `config/access/licence.yaml` (customer, modules or `*`, limits, valid-from, valid-to) is read and decided, **unsigned**; without the file the installation runs the **development licence** (every module, no limits, no end), so nothing changes for an existing installation. Signature, grace and limits' enforcement: 2.9.11.j. |
+| **Loading** | A module is loaded into its own child Spring context (the kernel's is its parent; the one design, KERNEL_AND_MODULES.md section 4.4) only when it is on: off, none of its beans, engines, scheduled jobs or controllers exist. Its engines show *not installed: the module 'banking' is off* on Admin → Engines; its API (new and old prefixes) answers `404 DRS-1025` in words; its packs (by the manifest's list, else by the pack's `domain:`) and its connectors do not load. |
+| **Lenses** | Each jar ships `META-INF/drishti/lenses.yaml` (the banking module: risk, trading, market (it needs capitalmarkets and banking), cro, mr-cube, ccr-cube; the core: world, cio, oversight), each with the modules it needs and the functions it bundles; `config/access/lenses.yaml` adds or replaces lenses. A lens whose modules are off is not offered, and an edition opened as a lens (`drishti.lenses`) whose registry lens is not offered is dropped. |
+| **Functions** | Each manifest lists its functions (the engines' words with the APIs behind them, and every command of its packs); a word no module declares is the core's. The mnemonic switches (Admin → Functions, kept in the switches ledger and gossiped) fold in: the ledger is the store of the installation-level switch, the registry decides (`functionOn` = its module on ∧ not switched off), and `CommandSwitches` asks the registry. A function that is off answers `404 DRS-1026` on its APIs. |
+| **Per person** | `lensesFor(subject)`, `allowed(subject, lens, action)` and `functionAllowed(subject, word)` take the person already; with no `roles.yaml` every offered lens and every function that is on is open to everyone (403 `DRS-1027` is wired for 2.9.11.j's grants and denials). |
+| **Module permissions** | The first action permission of a module, ahead of 2.9.11.j's model: a role carries `permissions`, a list of the names `RoleDefinition.PERMISSIONS` knows (today `var:system-baskets`: create, edit, retire and import the VaR engine's system baskets, [VAR_GUIDE.md section 5.7](../guides/VAR_GUIDE.md#57-system-baskets)). Configured roles and packs' roles list it (`permissions: [var:system-baskets]`); a role defined in Admin → Roles ticks it in its *Permissions* group (`PUT /api/v1/admin/role-definitions/{name}` `permissions`, kept as a row of `drishti_role_power` by its own name in both schema files: no schema change); every administrator holds every permission. `Entitlements.holds(person, permission)` asks; `requirePermission` answers `403` naming the permission. 2.9.11.j folds it into the per-lens action grants. |
+| **API** | `GET /api/v1/admin/modules` (states, what each brings, licence, lenses, warnings), `POST /api/v1/admin/modules` (the switch), `GET /api/v1/modules` (as the caller: the modules loaded and `off` with why, the lenses open to them with their modules and functions, and `functions.off`: each function they may not use with its module, the reason and the words to say); `/public/about` lists the `modules` loaded at this start. |
+| **The console** | Asks the server, never the model: the installation's `modules` (from the about answer, per console app) and the person's `/api/v1/modules` (cached per person, set per request). Every door asks one helper module (`core/modules.py`): routes and pages (404), words (the edition's `word_on`, `command_shown`, `typed_shown`), menus and the sitemap (`domain:` tags, `requires: module:<id>`), the Admin strip, search and the type-ahead, the command line (*VRES is not available to you: ask your administrator*), Help, the Build home and static files (a module's files are not served while it is off, nor to a person whose lens does not use it; the Elements loader refuses a library of a module the page does not list). What a module brings to the console is its `drishti-console/plugins/<module>/plugin.yaml`. |
+| **Configuration by module** | A module's packs, lakes, BI files, tables, report definitions and lenses sit in a folder named after it (`config/packs/banking/`, `config/lakes/banking/`, `config/bi/reports/banking/`, `config/tables/banking/`, `config/reports/banking/`, `config/lenses/banking/`), read only while it is on; its token scopes come with its jar (`META-INF/drishti/token-scopes.yaml`) and its Help with its console plugin. Editions are lenses: `config/lenses/<module>/<lens>.yaml` carries a lens's packs by module, Home, menus, Help and branding ([DOMAIN_MODULES.md](KERNEL_AND_MODULES.md) section 8). |
+| **Guarantee tests** | `BankingModuleOffTest` (no bean of its code, no engine, no job, no API new or old, no pack of its domain, no connector of its own, no function), `CapitalMarketsModuleOffTest` (its packs, connectors and functions gone; banking and GLEIF unaffected), `EconomyModuleOffTest` and `PublicSectorLensTest` (the economy's eight packs, connectors, functions and both lenses gone, or the public sector's there; banking, capital markets and GLEIF unaffected), `BankingModuleOnTest` (loaded, the old paths answered as the new, a function off gone from its API), `AccessRegistryTest` (the decisions), the architecture rules.; in the console `test_modules_off.py` (banking off, capital markets off, single functions off, a lens without a module: every door; the server's `/api/v1/modules` and `/public/about` answers in `BankingModuleOffTest` and `BankingModuleOnTest`) and `test_module_boundaries.py` (the core imports, includes and names nothing of a module). |
+
+### 9. Related
+
+The domain boundaries and the move: [DOMAIN_MODULES.md](KERNEL_AND_MODULES.md). The kernel, the module package, its loading and data binding, and distributions: [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md). The JavaScript libraries
+modules contribute: `docs/architecture/ELEMENTS.md` (planned until the train merges). The one database: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md).
+
+### 10. Row rules
+
+A role may restrict **which records of a kind** its holders see, by the record's fields and the person's attributes. Row rules are declared
+in the configured roles (`drishti.security.roles.<role>` in `config/application.yaml` or a pack's roles), beside `kinds` and `permissions`:
+
+```yaml
+drishti:
+  security:
+    roles:
+      rates-trader:
+        kinds: [trade, position]
+        edit: true
+        rows:
+          trade: "ASSET_CLASS = 'RATES' and DESK in $user.desks"
+      endur-support:
+        kinds: [trade]
+        edit: true
+        rows:
+          trade: "SOURCE_SYSTEM = 'ENDUR'"
+        edit-systems: [ENDUR]           # write-back only to Endur's records
+```
+
+| Key | Meaning |
+|---|---|
+| `rows.<kind>` | A row predicate ([DATA_LAKE_GUIDE.md section 6.2](../guides/DATA_LAKE_GUIDE.md#62-several-source-systems-shared-or-separate-tables): `=`, `<>`, `in (...)`, `and`, `or`, `not`, `is null`; text quoted). `$user.<attribute>` is the person's attribute (`desks`, `desk`, `name`, `roles`, `email`, as the user directory gives them): a list after `in`, its one value otherwise; an attribute the person lacks matches nothing. |
+| `edit-systems` | The trading systems (`SOURCE_SYSTEM`) whose records the role may change through write-back; absent or empty: every system. |
+
+**Combining.** A person sees a record when any of their roles that opens the kind passes it; a role that opens the kind without a rule for
+it opens every record of it; an administrator and a server with sign-in off see every record. A person may change a record of a system when
+none of their roles lists `edit-systems`, or one of them lists that system.
+
+**Where they apply.** Row rules restrict **record views**: the live tables behind lists and blotters (Rachana's live tables) (the person's reader, per request,
+tested on every row and every live change; part of the audience, so two people with different rules never share a filled set), search (the
+rule joins the search's condition), FORM and Raw JSON (a record outside the rule is not found). **Aggregates keep their own scope model**:
+VaR, BI totals and other computed measures are not filtered by row rules (BI's dataset rules and VaR's scopes decide them).
+
+**Tests.** `RowRulesTest` (two people on one canonical kind, a role without a rule, edit rights per `SOURCE_SYSTEM`, a rule that is not a
+predicate), `LiveIsolationTest` (a reader's row scope on shared sets), `SourceRoutingTest` (write-back to the record's own system).
+
+## Drishti distributions: Drishti Risk, Drishti Finance, Drishti Genomics, Drishti All
+
+**Status: built (2.9.11.i2 + i3 wave 3, white label; section 10 is how it works as built).** The distribution file of
+[KERNEL_AND_MODULES.md section 6](#6-the-distribution-file-white-label). One kernel build, one console build; each
+distribution is a distribution file plus the modules it picks. The owner demos and tests **Drishti Risk** and **Drishti Finance**;
+**Drishti Genomics** is the sample that proves the kernel carries no finance.
+
+A distribution loads only the modules it carries and requires: Drishti Genomics shows no trading menu, a page of a module the distribution lacks
+(`/live/<id>` of the trading module's blotter) answers a plain "Not part of this distribution" page, and the Elements gallery asks only for the libraries
+of modules that are on. The platform's own engines (FORM search, mnemonics, [live results](../guides/LIVE_RESULTS_GUIDE.md)) serve every distribution.
+
+### 1. The three at a glance
+
+| | **Drishti Risk** | **Drishti Finance** | **Drishti Genomics** (sample) |
+|---|---|---|---|
+| Id | `drishti.risk` | `drishti.finance` | `drishti.genomics` |
+| For | traders, risk analysts, risk managers, middle office, model validation | investment and research analysts, economists, portfolio and fund analysts | research scientists, bioinformaticians (a demonstration) |
+| Question it answers | "What is my risk, why did it move, am I within limits?" | "What are these companies, funds and economies doing, and what moves them?" | "What is in this cohort's data?" |
+| Modules | `banking` (wave 2: one `.dmod`; later split into banking-core, var, exposure, frtb, simm), `market-data` | `capital-markets`, `economy`, `market-data` (no VaR or any risk number) | `genomics` (sample) |
+| Lenses | **Risk** (default), Trading, Market | **Markets** (default), World | Research |
+| Theme | navy, dark by default, terminal density | slate/teal, light by default, comfortable density | green, light |
+| Data | trades, positions, scenario PVs, market data, limits, agreements (bank feeds, `.ready` files) | public data packs: US equities, funds, central banks, national statistics, OECD, World Bank, news, GDELT | a VCF connector (kernel extension) and sample cohorts |
+| Engines on | VaR, sensitivities, FRTB-SA, SIMM, exposure, MR cube, OpenBLAS, pivot, data load | pivot, data load, memory lake (news), Flight | pivot, data load |
+
+The kernel in every one: lakes and connectors, bindings, Rachana, Pivot and BI, Sutras, forms, data loads and the Inbox, Health,
+Admin, Help, AI, Drishti Elements, the cluster.
+
+### 2. Drishti Risk (traders and risk analysts)
+
+**Functions (commands), all from the `banking` module:**
+
+| Area | Commands |
+|---|---|
+| VaR and ES | VRES (VaR explorer, scoped tree, Why it moved, compare date), VTRD, VOFF, VLIM (limits), PORT (system and own baskets), POS, BANK, SCN, SSET, SPV, backtest, stressed VaR, parametric VaR, matured-items switch |
+| P&L | PNL, PNLH, PNLV, PNLX, DPNL, FPNL, SSPNL, TCF |
+| Sensitivities and market risk | SENS, RFAC, RTYP, RRAI, MRSK, MR cube, FXS, TVAL, STR |
+| Regulatory capital | FRTB (SA: SBM, DRC, RRAO), DRCI, CAPI, regulatory reporting |
+| Counterparty | EXP, XPATH, XRUN, XOFC, SACCR, SIMM, CCR, CVA, CSA, AGR, NSET, NSMTM, CPMTM, COLL, MC, CMP, LIM |
+| Trading | TRD, CTRD, ITRD, LTRD, PTRD, TRDS, LEGS, SWAP, FUT, DEP, CSH, FLOWS, PAY, PAYM, EVT, EVTL, MAT, DLV, BAS, INV, PROD, IDX, DES |
+| Market data (the shared `market-data` module, also in Finance) | MKT, CRV, IRV, SURF, FX, FXF, FXV, EQ, EQV, EQB, EQX, CMD, CMDC, CMDV, INF, INFC, BND, CDS, REPO, DIV, CORR, CORRC, CPV, FIX, OHLC |
+| Playgrounds | PLAY VAR, PLAY FRTB, PLAY SIMM, exposure playground (k) |
+
+**Screens:** Home "Risk today" (bank VaR and ES, limit board, biggest movers, breaches, data health); VaR explorer; Why it moved
+(layout A); MR cube; P&L explain; FRTB, SIMM, SA-CCR, exposure and CCR screens; limits board; trade and position screens; market data
+screens; playgrounds; Pivot and BI with the risk presets; Admin → Data loads, Upload (`.ready`), Data bindings, Engines, Cluster.
+
+**Backend:** the `banking` module's compute (VaR, ES, Euler components, parametric, backtest, FRTB-SA, SIMM, SA-CCR, exposure, CVA),
+its KindProviders (positions, system baskets), the VaR hierarchy from promoted columns, the scenario-PV intake at position grain; the
+kernel's engines switched on as listed; cluster placement: VaR, FRTB and exposure compute on the heavy nodes, pages and API on all.
+
+**Bindings:** trade, position, scenario-pv, scenario-set, fx-scenario, pnl-vector, var-limit, market data kinds, netting-set, csa,
+agreement → the bank's lake (production) or the demo risk lake.
+
+### 3. Drishti Finance (investment, research and economics)
+
+**Functions (commands):**
+
+| Area | Commands | Module |
+|---|---|---|
+| Companies | USEQ, USEQS, SIC, FACT, FILING, EDGAR, HLD, PXH, IDX, ETF | capital-markets |
+| Funds | FUND, FUNDS, FND, HELD, TOP, TRACK, TRK, VIEW | capital-markets |
+| Economies | WRLD, ECON, MACRO, FCST, FISC, LABR, ELEC, SOCI, REGN, REGE, JUR, OFFC, PARTY, ECG | economy |
+| Central banks and statistics | CBANK, CBNK, CBSER, SER, NSTAT, STCAN, OECD, OECDS, OECDP, MEAS, WDI, WDIS, WDEV, IND | economy |
+| News and events | NEWS, NWMK, QUOTE, TOPIC, CO, ONEWS, PRESS, PREL, LIST, GDELT, GDLT | economy |
+
+**Screens:** Home "Markets and economy" (indices, movers, central-bank decisions, news); company and fund pages; the world map and
+country pages; series charts; Pivot and BI over fundamentals and series; Admin → External data (the refresh scripts).
+
+**Backend:** the `capital-markets` and `economy` modules (today packs and the economy console plugin; packaged as modules in wave 2
+next to banking, mostly content: kinds, Sutras, pages), the public-data refresh scripts, the memory lake for news, Flight for data out.
+
+**Cautions carried over:** IMF data and US equity prices stay internal-only (off by default in this distribution's `demo`), as today.
+
+### 4. Drishti Genomics (sample)
+
+A module built from the Module SDK alone: a VCF reader as a kernel connector extension; kinds `variant`, `gene`, `sample`, `cohort`;
+commands VAR-free (`VARIANT`, `GENE`, `COHORT`); one page folder; synthetic data. Purpose: the release's proof that the kernel boots and
+is useful with no finance at all. Not for the owner's demos.
+
+**As built (wave 3).** `modules/genomics` (publisher Helix Lab, a sample third party) is made from the archetype and finished by hand
+([DEVELOPER_GUIDE.md section 1.9](../guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step)): the VCF reader is a `SourcePlugin`
+inside the module (it serves only the module's kinds and must go with it, so not the lib folder); `gene` and `cohort` are computed;
+`GENE TP53` draws the module's own visual, `genomics.lollipop`, a kind of drishti-chart's registry. Its `.dmod` passes C1 to C14. The file
+takes **none of the kernel's packs** (`kernel-packs: []`: no counterparty, book or desk) and offers one lens, **Research**
+(`config/lenses/genomics/research.yaml`); the module's words are its commands. `GenomicsDistributionServerTest` boots it on the thin
+kernel with the package dropped into the modules folder; `test_genomics_walk_browser.py` walks it in a browser on the one server jar over a modules folder that holds the genomics package only.
+
+### 5. What is shared, and what is not
+
+- **One kernel build and one console build.** A distribution never forks code: it is a file (brand, theme, lenses, Home, menus, docs,
+  features, default bindings, demo) plus the modules it lists.
+- **Help per distribution:** each shows only its modules' guides and tutorials, titled "Drishti Risk Help" etc.; kernel guides in all.
+- **Commands not in a distribution's modules do not exist there** (not greyed out): they are not in the command bar, menus, Help or AI.
+- **Both on one estate (the owner's demo):** one kernel cluster with all three finance modules placed, and **two consoles**:
+  Drishti Risk on 17480 and Drishti Finance on 17481, each showing the intersection of its distribution and the kernels' modules
+  (KERNEL_AND_MODULES 10.6). Or two separate stacks; the file decides.
+
+### 6. Drishti All
+
+`drishti.all`: **every module, every lens, every engine**, the neutral Drishti brand. It makes sense as:
+
+- **the default when no distribution file is given**, so today's installs and everyone's habits keep working unchanged;
+- **the developer and QA distribution**: the drill, the page walk and the tutorials run on it, so one run covers every module;
+- **the demo switcher**: one stack where the lens picker moves between Risk, Markets and World.
+
+It is not a product to sell (too broad for any one user community), so customer installs pick Risk or Finance. Genomics is packed and installed with the others (its server part answers the showcase pages); the
+distribution files decide who sees it: Genomics shows it, Risk and Finance do not.
+
+### 7. Starting a particular distribution
+
+The distribution is chosen **at start, by one argument or one setting**; nothing else changes.
+
+| How | Command |
+|---|---|
+| One node, Linux and macOS | `python tools/drishti.py start all --distribution risk` (or `finance`, `genomics`, `all`) |
+| One node, Windows | `py -3.13 tools\drishti.py start all --distribution risk` |
+| A cluster | `python tools/drishti.py start cluster --cluster deploy/stack/stack.yaml` with `distribution: risk` in the stack file (per console, so one cluster can serve a Risk console and a Finance console) |
+| Any start, by setting | `DRISHTI_DISTRIBUTION=risk` or `drishti.distribution: risk` in `config/drishti.yaml`; a path instead of a name loads a custom distribution file |
+| IntelliJ / PyCharm | the consoles `Drishti: run console (Risk)` and `(Finance)` pass the console's `--distribution`; one server of every module serves both |
+
+`python tools/drishti.py status` and Admin → White label show the running distribution; Health says which modules it asked for and which loaded. A short
+name maps to `config/distributions/drishti.<name>.yaml`; a site may add its own file there (its own brand) without touching the shipped ones.
+
+**The owner's stack (recommended):** one 3-node cluster with every finance module placed; two consoles from one stack file:
+
+```yaml
+consoles:
+  - { name: risk,    port: 17480, distribution: risk }
+  - { name: finance, port: 17481, distribution: finance }
+```
+
+`python tools/drishti.py start cluster --cluster deploy/stack/stack.yaml` then starts both: Drishti Risk on http://<host>:17480 and Drishti Finance on
+http://<host>:17481. The Deployment and QA guide gets a step-by-step section for each, Linux, macOS and Windows, with what you should see.
+
+### 8. Build plan inside 2.9.11.i2 + i3
+
+| Wave | Item |
+|---|---|
+| 2 | `banking` as a `.dmod` (built: `modules/banking`, first-party with its kernel-internals allowance, loaded as a module by the full distribution); **`market-data` split out of banking as its own module** (built: banking requires it); **`capital-markets` and `economy` packaged as modules** (built: `modules/<id>/`, each `.dmod` passing the fourteen checks) |
+| 3 | the distribution file reader (kernel and console), `drishti.risk.yaml`, `drishti.finance.yaml`, `drishti.genomics.yaml`, `drishti.all.yaml` (the default); `--distribution` on every bin/ script and stack file consoles; Home, menus, Help and AI filtered by distribution; themes; Admin → White label (option A); the old product keys read once |
+| 4 | proofs: each distribution boots from its file alone; the owner's stack runs Risk on 17480 and Finance on 17481 over one cluster; genomics boots with no finance |
+
+### 9. Decisions (product owner, 2026-11-10)
+
+1. **Drishti Finance shows no VaR** or any other risk number; every risk number stays in Drishti Risk.
+2. **Market data screens are in both** Drishti Risk and Drishti Finance (curves, FX, quotes, surfaces): they move out of `banking` into
+   a shared **`market-data` module** that both distributions list.
+3. **The owner's demo: two consoles over one cluster** (Risk on 17480, Finance on 17481), from one stack file.
+4. **Drishti All is the default** when no distribution is named.
+
+### 10. How it works (as built)
+
+**The files.** `config/distributions/drishti.all.yaml`, `drishti.risk.yaml`, `drishti.finance.yaml` and `drishti.genomics.yaml`, and
+`config/distributions/kernel.yaml`, the kernel's own packs, words and menus. A site adds its own file beside them (or anywhere, named by
+path). What each module holds is read from **its own manifest**, never from a hand list: every module's `modules/<id>/module.yaml`
+(one layout for all, [KERNEL_AND_MODULES.md section 8.10](#810-the-one-module-layout)), the `.dmod` manifest (`packs.list`, `functions`,
+`compute.engines`, `console.menus`, `docs.domains`, `requires`). The modules are the ones the server booted from its modules folder
+(`drishti.modules.home`, `DRISHTI_MODULES_HOME`; default `./modules`). A listed module brings the modules it requires (banking brings
+market-data); a listed module with no manifest stops the start unless the file says `required: false`. A module with code (banking,
+genomics, trading, market-data) keeps its manifest at the same place, its Maven projects under `modules/<id>/java/`. The console reads
+none of these files: it draws the server's installation answer (`GET /api/v1/console/bootstrap`, the compiled distribution and every
+module with its menus), asked again when `/public/about`'s `stamps.installation` changes. A file may name the kernel's packs it takes
+(`kernel-packs:`; Genomics takes none, and a distribution of no packs loads none, not the default list).
+
+**The content modules.** Three `.dmod`s, each a folder in the `.dmod` layout (`module.yaml`, `console/plugin.yaml` with a Sutra page per
+function under `/m/<id>/`, `docs/` with a README, Help section, guides and tutorial, `data/needs.yaml`) plus `content.yaml`, the
+repository content the packer brings in when it packs (the packs without their connector templates, the lens, the tutorial), so
+every file keeps one home. `python3 tools/drishti.py module pack modules/<id>` writes `<id>-1.0.0.dmod`; `module verify --conformance` passes C1 to C14.
+
+| Module | Packs | Lens | In |
+|---|---|---|---|
+| `market-data` | market-data (MKT, CRV, REPO, IRV, CPV, FIX, INF, INFC, FX, FXF, FXV, CDS, BND, EQ, EQX, DIV, EQV, CMD, CMDC, CMDV, CORR, CORRC, EQB) | Market | Risk, Finance, All |
+| `capital-markets` | us-equities, funds | **Markets** (Home's Markets cards: USEQ AAPL, FUND SPY, IDX SP500, CRV, FXV) | Finance, All |
+| `economy` | world-economy, news-and-markets, world-development, central-banks, national-statistics, oecd, official-news, gdelt-events | World | Finance, All |
+
+The IMF figures stay out of the economy package (world-economy's samples are left out); US equity prices stay internal-only and off.
+The World landing (Home's World desk) is still drawn by the console's economy plugin: its two hand-drawn tables move onto the Elements
+grid before the page can ship in the economy `.dmod` (conformance C2).
+
+**Choosing one.** `--distribution <name|path>` (the server's `--distribution=` argument, the console's `--distribution=` setting, every
+`bin/` start script), else `DRISHTI_DISTRIBUTION`, else `drishti.distribution` in the server's configuration (`distribution:` in the
+console's). Nothing named: Drishti All, and a server with no `config/distributions` folder behaves as Drishti All too. A named
+file that does not exist stops the start with the list of names. A console that names its own distribution (a Finance console over a
+Drishti All cluster) asks the server for it (`GET /api/v1/console/bootstrap?distribution=finance`): the server compiles it from its own
+files, and refuses (`409`) a name that is not one of its distributions; the console reads no distribution file.
+
+**One reader.** The kernel (drishti-packs `Distributions`) reads the file and compiles it; the console draws what the server compiled
+(the `distribution` of the installation's answer: the filter, the brand, the settings layers, each offered lens's arrangement):
+
+| From the file | On the kernel | On the console |
+|---|---|---|
+| `brand` | `drishti.branding.*` (the About answer, messages) | `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner`, `ui.notice`, `ui.logo`, `ui.favicon` |
+| `theme` | | the default theme (`tokens`), mode and density; each person's own choice still wins |
+| `modules` | the packs to load (kernel's and its modules'); the engines of the modules it leaves out are *not installed* | the visibility filter below |
+| `lenses` | `drishti.lenses` (the lenses a person may open; a lens changes nothing the server answers) | the same; `lenses.default` is everyone's starting workspace; a lens arranges, never hides |
+| `features` | each feature's server keys, through `kernel.yaml`'s `features:` (an engine: off only) | each feature's console keys, the same way |
+| `menus`, `home` | | the top menus, the command line's placeholder, Home's cards |
+| `docs` | | Help's title ("Drishti Risk Help") |
+
+**The three layers of switches.** The distribution says what exists; a module's switch whether it is on at this site
+(`config/modules/<module>.yaml`, Admin → Modules); an engine's switch whether its compute runs on this server (`config/engines/<id>.yaml`).
+A distribution's `features:` presets the settings `kernel.yaml`'s `features:` maps (the one list: the feature, its server keys, its
+console keys); it presets an engine off when its module is not in it, never on (that engine does not exist there: it shows *not installed*). A **lens** (`config/lenses/<module>/<lens>.yaml`) is a
+workspace: it arranges Home and the menus for a role and never hides anything.
+
+**The visibility filter.** A distribution other than All is a filter: the commands of the kernel's packs (each pack's mnemonics and
+code) and of its modules (each manifest's `functions:`, the one list), the command words of the modules it leaves out switched off (Finance: VAR, EXP, SMAT, PLAY, FRSA, SIMM,
+MCUBE ...), its menus, and Help kept to the kernel's guides plus its modules' (by the guide's domain or engine; a pack's guide by its
+pack). What it leaves out does not exist there: not on the command line, the type-ahead, FUNC, menus, Home, Help or the catalogue the AI
+reads. A command of another module typed anyway answers `DRS-4023 VRES is not in Drishti Finance`; its pages answer 404.
+
+**A console of its own.** A console started with `--distribution` keeps it whatever the server runs, so one Drishti All cluster serves a
+Drishti Risk console on 17480 and a Drishti Finance console on 17481. A console started without one follows the server's (learned from
+its about answer).
+
+**Menus from the modules.** A module's top menus are in its manifest (`console.menus`, in the console sitemap's form; a menu of
+another module's id adds its columns, as economy and capital-markets do to market-data's Markets); `drishti-console/config/sitemap.yaml`
+keeps only the kernel's pages. A module's menu is in the top bar only while the module is active: in the running distribution, installed,
+loaded and on at this site; it goes and comes back at the next page when that changes.
+
+**The old keys, no longer read.** `drishti.edition` (`DRISHTI_EDITION`: a lens file is never an instance's filter), and a site's
+`drishti.branding.*`, `DRISHTI_PRODUCT`, `ui.product`, `ui.tagline`, `ui.copyright`, `ui.owner`, `ui.notice` (the file's `brand:`
+decides). Health names each one a site still sets.
+
+**Health and Admin.** Admin → Health shows the console's and the server's distribution, which of its modules loaded ("loaded", "off",
+"not installed": a listed module whose package is not deployed) and the deprecation notes; `GET /api/v1/health` carries the same under
+`distribution`. Admin → White label shows every distribution file side by side (mock-up A): brand, theme, modules (loaded here or not),
+lenses, menus, Home cards, Help title and how to start it, the running one first. It is read only: a distribution changes in its file
+and takes effect at the next start.
+
+**Starting.** `python tools/drishti.py start all --distribution risk`, `start server --distribution finance`,
+`start console --distribution finance --port 17481 --name finance` (the same on Windows with `py -3.13 tools\drishti.py`); a stack file's `consoles:` list (section 7) starts one
+console per entry, each `console-<name>` with its own pid file, log and temp folder; `drishti.py status` shows each process's distribution.
+IDEs: `Drishti: run server (demo)` (every module) with PyCharm's `Drishti: run console (Risk)` (17480) and `(Finance)` (17481); a server of
+one distribution is the settings line `drishti.distribution=risk` in a settings file of your own. The
+Deployment and QA guide has the step-by-step for each on Linux, macOS and Windows.
+
+**Banking as a module.** The server jar (drishti-app) is the kernel and holds no module. The first-party packages (`modules/banking-1.0.0.dmod`,
+`market-data-`, `trading-`, `capital-markets-`, `economy-`, `genomics-`, the source-system modules) and `first-party.yaml` sit beside it in the
+modules folder, made by `python tools/drishti.py build modules` (Maven's `packaging/dist` packs those with Java; banking is put through the
+fourteen checks there, with market-data beside it). At start the server installs each one that is not installed or was rebuilt (`drishti.modules.shipped`, default true); one an administrator removed or switched
+off stays so. The default placement for first-party modules puts every part on every node unless `config/placement.yaml` names the
+module. The access registry reads these manifests (installed when its manifest is among the modules the server booted), so their packs and functions are the
+modules'. Banking's code is no longer on the kernel's class path; its in-process wiring survives only as its own tests' harness.
+
+**Not yet.** The packs still load from `config/packs` (the packages carry copies); logos and favicons beyond the eye are blank until a
+distribution ships its own files.
+
+## Domain modules: the boundary between the core and banking
+
+> **What comes next is [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md)** (2.9.11.i, design): the kernel, the signed module package, loading from
+> module folders, kernel-controlled data binding and distributions. Section 6 step 9, section 7's D1 and D6 and section 8's *Phase 2, still to do*
+> moved there (its section 12); this document stays the record of the split as built until that design's phase P2 completes.
+
+**Status: phase 1 (the backend) built in 2.9.11.f: the Java modules split, the cycles J1 to J6 broken, the API under `/api/v1/risk`, the
+packs naming their domain, the rules as tests. Phase 2's first half built: the console asks the server for modules and functions on every
+door, static assets by module and lens, the console cycles C1 to C7 broken in place, the console on `/api/v1/risk` (section 8). The moves
+(screens into the plugin folder, packs into domain folders, the banking configuration in its folders, editions folded into lenses)
+are built (phase 2's second half, section 8); the thin jar is designed, not built.** The survey of sections 1 and 2 was taken on develop `b3f2af7c2` on 2026-11-07. The principle is the product owner's
+([the release notes](../../RELEASE_NOTES.md), the 2.9.11.e row and *Domains are modules*): the core knows no industry; each domain
+is a set of modules owning its compute, services and API, console screens and assets, Help, tutorials and packs; what a person sees
+follows role and lens; licences name modules. This document is the boundary list, the target layout, the dependency rules, the cycles
+that exist today and the order of the move. The native libraries' module, which every domain shares, is [DRISHTI_NATIVE.md](ARCHITECTURE.md#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks).
+
+### 1. The two sides
+
+| Side | What belongs | How to tell |
+|---|---|---|
+| **Core** | everything generic: entities, packs and the pack loader, Sutras and Rachana, Pivot, BI, tables and models, lakes, loaders and the data inbox, connectors, search, Explain, approvals and changes, collaboration, security, the cluster, Flight, AI, the console shell, the generic compute (Python workers, the vector store, parallel and many-set sums, sharding, fan-out), `drishti-native` | it would serve a hospital, a utility or a ministry unchanged |
+| **Banking** (the risk and banking domain) | VaR and ES (historical, parametric), the VaR playground content, backtesting, regulatory VaR reporting, the scenario matrix, stress windows, baskets; exposure and CCR (PFE, EEPE, what-if); FRTB-SA and sensitivities; ISDA SIMM; SA-CCR and CVA (planned); the MR and CCR cubes; the risk, trading, market and CRO lenses; the official risk results; equity analytics (beta, correlation); the trading, market-data, market-risk and counterparty-risk packs | it names a trade, a position, a risk factor, a desk or a regulation |
+| **Economy** (no code of its own: a content module shipped with the core) | the world-economy and news-and-markets packs and the public sector's six (world-development, central-banks, national-statistics, oecd, official-news, gdelt-events), the World and Public sector lenses, the world landing, the IMF-based BI reports | public economic and public-sector data |
+| **Capital markets** (no code of its own yet: a content module shipped with the core; the owner's choice, 2026-11-07) | the us-equities and funds packs; the market data's functions (curves, FX, vols, equities, bonds: `CRV` ... `EQV`); the market lens with banking | listed companies, funds, prices and market data |
+
+### 2. The boundary list
+
+Counts are files (or entries) as surveyed; "core" is everything not listed under banking or economy.
+
+| Kind | Core | Banking | Economy |
+|---|---|---|---|
+| Java packages (main) | 194 | 10 (185 files, 55,261 lines) | 0 |
+| Console route modules | 61 | 9 | 0 |
+| Console core modules | 89 | 2 | 0 |
+| Templates | 152 | 15 | 1 |
+| JavaScript (`drishti_*.js`) | 191 | 22 | 0 |
+| CSS (`drishti_*.css`) | 72 | 14 | 0 |
+| Guides (`docs/guides`) | 25 | 7 | 0 |
+| Tutorials | 29 | 9 | 1 |
+| Lenses (`docs/lenses`) | 2 (CIO, oversight) | 6 | 1 (world) |
+| Help pages (`help.yaml`) | 56 | 19 | 0 (pack guides) |
+| Packs | 2 (core, compute-demo) | 7 | 2 |
+| Engine files (`config/engines`) | 5 | 6 | 0 |
+| Editions (`config/lenses`) | 1 (features) | 3 | 1 (world) |
+| Configuration files (outside packs, connectors, engines, editions) | 28 | 51 | 6 |
+| Data contracts (`docs/contracts`) | 12 | 87 (4 of them the core pack's finance entities: question D1) | 19 |
+| API prefixes (server) | about 100 | 6 | 0 |
+
+#### 2.1 Java
+
+| Module today | Banking packages | Core packages |
+|---|---|---|
+| `drishti-compute` | `compute.var` (25), `compute.ccr` (7), `compute.frtb` (12), `compute.simm` (7), `compute.reactive.analytics` (2: beta, correlation) | `compute` (the supervisor), `approval`, `arrow`, `cluster`, `env`, `reactive` (the reactive-connector machinery), `reactive.samples`, `sched`, `shard`, `vector` (the vector store, `MultiSums`, `ParallelSums`, `OrdinalSet`: generic sums over rows of one width), `worker` |
+| `drishti-server` | `server.var` (89), `server.exposure` (23), `server.frtb` (8), `server.simm` (8), `server.official` (4: the official end-of-day risk results sinks) | the other 73 packages, among them `bi.*`, `pivot`, `tables`, `api`, `security`, `net`, `edit`, `collab.*`, `engines`, `nativelib`, `caches`, `capacity`, `shard` (sharding for any measure), `playground` (the generic workbook streamer every metric's playground uses) |
+| every other module | none | all (`drishti-api`, `-common`, `-rachana`, `-engine`, `-bicompute`, `-packs`, the lake modules, `-net`, `-flight`, `-ai`, `-native`, the plugins) |
+
+`drishti-native`'s `nativ.linalg` (BLAS) is core: VaR is its first caller, not its owner.
+
+#### 2.2 Console (`drishti-console`)
+
+| Kind | Banking |
+|---|---|
+| Routes | `var_routes`, `var_regulatory_routes`, `exposure_routes`, `frtb_routes`, `simm_routes`, `smat_routes`, `play_routes` (the VaR, FRTB and SIMM playgrounds), `mcube_routes`, `trading_routes` |
+| Core modules | `trading_landing`, `market_landing` |
+| Templates | `terminal/var.html`, `var_backtesting.html`, `var_reports.html`, `var_statistics.html`, `exposure.html`, `frtb.html`, `simm.html`, `smat.html`, `play.html`, `stress_window.html`, `_mr_lens.html`, `_mr_panes.html`; `home/risk_landing.html`, `trading_landing.html`, `market_landing.html` |
+| JavaScript | `drishti_var-*` (backtesting, basket, basket-sheet, charts, explain, explorer, layout, parametric, playground, reports), `drishti_exposure-charts`, `drishti_exposure-explorer`, `drishti_frtb-sa`, `drishti_simm`, `drishti_scenario-matrix`, `drishti_smat-link`, `drishti_play-link`, `drishti_stress-window`, `drishti_mr-lens`, `drishti_risk-landing`, `drishti_trading-landing`, `drishti_market-landing` |
+| CSS | `drishti_var`, `drishti_var-basket`, `-layout`, `-parametric`, `-playground`, `-regulatory`, `drishti_exposure`, `drishti_frtb-sa`, `drishti_scenario-matrix`, `drishti_stress-window`, `drishti_mr-lens`, `drishti_risk-landing`, `drishti_trading-landing`, `drishti_market-landing` |
+| Configuration | `config/engines.yaml` entries `var`, `exposure`, `sensitivities`, `frtb-sa`, `simm`, `mr-cube`; `pivot-presets.yaml` preset `mr`; the risk words in `menus.yaml`; `help.yaml` section `risk` |
+| Economy | `home/world_landing.html` |
+
+Everything else (the shell, BI, Pivot, Build, designer, admin, Help, embed, phone, alerts, monitor, workspace, data, history) is core.
+
+#### 2.3 Documentation and Help
+
+| Kind | Banking |
+|---|---|
+| Guides | `VAR_GUIDE`, `REGULATORY_VAR_REPORTING`, `EXPOSURE_GUIDE`, `FRTB_SA_GUIDE`, `SIMM_GUIDE`, `MR_CUBE_GUIDE`, `FUNDS_GUIDE` |
+| Tutorials | 24 (correct a trade: a core feature on banking data; moves with banking until it has a neutral twin), 25, 26, 28, 29, 30, 32, 38, 43 |
+| Lenses | `RISK_LENS`, `CRO_LENS`, `TRADING_LENS`, `MARKET_LENS`, `MR_CUBE_LENS`, `CCR_CUBE_LENS` |
+| Architecture | `PARAMETRIC_VAR`, `SENSITIVITIES_AND_FRTB_SA`, `VAR_PLAYGROUND`, `DATA_ARCHITECTURE.md section 13` (its machinery is core: the document is split when it moves) |
+| Help pages | the 19 listed under section `risk` and the banking pages of `analytics` (MR cube, funds) and `knowledge` (market risk, counterparty credit risk, trades and products, market data, companies, funds and ETFs) |
+| Contracts | `CVA`, `FRTB`, `FRTB_DATA_STRUCTURES`, `PNL`, `SACCR`, `SIMM`, `TRADING_GROUPINGS`, `COLL`, `GRP`, `LIM`, `MC`, `NSET`, `STR`, `TVAL`, `WWR`, the banking packs' pages and samples |
+
+`GROUPINGS_ANALYTICS_GUIDE` and tutorial 6 are mixed (generic groupings, equity beta and correlation): split when the analytics move.
+
+#### 2.4 Packs, configuration, engines and API
+
+| Kind | Banking | Economy |
+|---|---|---|
+| Packs (`config/packs`) | `trading`, `market-data` (its commands are capital markets' functions; the pack stays banking's while the engines read it), `market-risk`, `counterparty-risk` | economy: `world-economy`, `news-and-markets`; capital markets: `us-equities`, `funds`; public sector: `world-development`, `central-banks`, `national-statistics`, `oecd`, `official-news`, `gdelt-events` (each filled daily by its feed); core reference data: `gleif` (section 7, D6) |
+| Engines (`config/engines`) | `var`, `exposure`, `frtb-sa`, `simm`, `mr-cube`, `sensitivities` (core: `dataload`, `flight`, `memory-lake`, `openblas`, `pivot`) | |
+| Editions | `risk`, `trading`, `market` | `world` |
+| Lakes | `config/lakes/banking/var-official.yaml`, `ccr-official.yaml` | |
+| BI content | reports `counterparty-risk`, `desk-wall`, `live-exposure`, `live-trading-desk`, `market-risk-var`, `pnl-vs-exposure`, `python-desk-risk`, `trades-overview`, `cashflow-ladder`; their models and tables under `config/tables/bi/`; notebooks and Python items on P&amp;L; `reports/annual-report-var.yaml`, `var-backtesting-chart.yaml`; fragments `pnl-distribution`, `risk-links`, `curve-overview`, `curve-table`, `cashflow-ladder` | reports `world-economics`, `region-economics` and their models |
+| Server API | `/api/v1/var/**` (explorer, explain, matrix, playground, regulatory, shards, basket, stress-window), `/api/v1/exposure/**`, `/api/v1/frtb/**`, `/api/v1/sensitivities`, `/api/v1/risk-factors`, `/api/v1/simm/**`, `/api/v1/pivot/mr` | |
+| Console API | `/var`, `/exposure`, `/frtb`, `/simm`, `/smat`, `/play`, `/api/var/**`, `/api/exposure/**`, `/api/frtb/**`, `/api/simm/**`, `/api/smat/**`, `/api/play/**`, `/api/home/trading/**`, the `MCUBE` word | |
+| Tools | `varcli.py`, `expcli.py`, `frtbcli.py`, `simmcli.py` (and their tests), `tools/ccr/`, `tools/bench/var_bench.py` | the public-data refresh scripts of the economy packs |
+
+To decide with the product owner: whether the **core** pack keeps its finance-flavoured entities (`book`, `ccp`, `clearing-account`,
+`issuer`, `legal-entity`, `counterparty`, `counterparty-group`, `desk`, `trader`), or they move into a `banking-reference` pack and the
+core pack keeps only `calendar` and the generic entities; and whether the **market** lens and edition are banking (trading desks) or
+economy (markets and news).
+
+### 3. The layout (as built in phase 1)
+
+| Module | Holds | Depends on |
+|---|---|---|
+| `drishti-registry` | the access registry ([ACCESS_MODEL.md](KERNEL_AND_MODULES.md)): `AccessRegistry`, `EmbeddedAccessRegistry`, `AccessStore`, `YamlAccessStore`; plain Java | Jackson only |
+| `drishti-compute` | the generic compute of section 2.1 | core modules |
+| `drishti-compute-banking` | `com.ash.drishti.banking.compute.{var,ccr,frtb,simm,analytics}` (was `compute.{var,ccr,frtb,simm,reactive.analytics}`), with their tests (the hot-file soak runs here alone); pure maths, no Spring | `drishti-compute` |
+| `drishti-server` | the core server: every generic package, the SPIs the domains fill (section 5), `server.modules` (the registry in the server, `@ConditionalOnModule`, the API aliases, the module gate, the module switch over REST, `/api/v1/admin/modules`), and the economy content module's manifest and the core lenses (`META-INF/drishti/`) | core modules, `drishti-registry` |
+| `drishti-banking` | `com.ash.drishti.banking.{var,exposure,frtb,simm,official}` (was `server.{var,exposure,frtb,simm,official}`), with their tests; `BankingAutoConfiguration` (`META-INF/spring/…AutoConfiguration.imports`, `@ConditionalOnModule("banking")`, a component scan of `com.ash.drishti.banking`); its manifest and lenses (`META-INF/drishti/`); the banking playground templates (`playground/{var,var-explain,exposure,frtb-sa,simm,saccr,fva}`); its connector plugins and official-results provider (`META-INF/services`); the API under **`/api/v1/risk/{var,exposure,frtb,simm,sensitivities,risk-factors,mr}`** | `drishti-server`, `drishti-compute-banking` |
+| `drishti-app` | no code: the runnable jar (the core with the domain modules this build ships), written as before to `kernel/drishti-server/target/drishti-server-<version>-exec.jar`, so every launcher, script, Docker file and guide is unchanged; `loader.properties` (the external library folder) moved here | `drishti-server`, `drishti-banking` |
+| `config/packs/*/pack.yaml` | each pack names its `domain:` (core, banking, economy); ids and folders unchanged | |
+| `docs/tutorials`, `docs/guides` | stay where they are; Help groups them by module in phase 2 | |
+
+**Where the domain modules' files are now:** every module has the one folder layout of
+[KERNEL_AND_MODULES.md section 8.10](#810-the-one-module-layout): `modules/<module>/` holds its `.dmod` content at the
+top (`module.yaml`, `packs/`, `console/`, `data/`, `docs/` ...) and, only with code, its Maven projects under `java/` (banking's
+`java/banking-compute` is `drishti-compute-banking` above, `java/banking-service` is `drishti-banking`) with the aggregating `pom.xml`.
+
+The API is under `/api/v1/risk` (`/var`, `/exposure`, `/frtb`, `/simm`, `/sensitivities`, `/risk-factors`, `/mr`); the old prefixes are not answered.
+
+### 4. The dependency rules
+
+Rules 1 to 3 are enforced on the Java side by `ArchitectureRulesTest` (drishti-it: `coreNeverImportsADomain`, the two
+`…DoesNotSeeAnotherDomain`, `domainComputeIsPlainJava`, `onlyTheRegistryReadsTheAccessModel`, `registryIsPlainJava`); the console import
+guard and rule 4's string check come with phase 2:
+
+1. **The core never imports a domain**: no class outside `com.ash.drishti.banking..` depends on one inside it; no console module outside
+   `drishti-console/plugins/banking` imports one inside it; no core template includes a banking template.
+2. **Domains never import each other**: `com.ash.drishti.banking..` and `com.ash.drishti.economy..` (and later `aml`) are disjoint.
+3. **Domains reach the core only through its SPIs** (section 5) and public services; a domain may use anything public of the core.
+4. **Strings count too**: the core names no banking word, engine id, source name or path in code (a static check over the core's
+   sources for the banking words of section 2, with an allow list that starts empty).
+
+### 5. The cycles today, and how each is broken
+
+Core code that imported banking code (Java: imports and fully qualified names; console: Python imports and string knowledge). **J1 to J6
+are broken (phase 1)**; C1 to C7 wait for the console plugin (phase 2):
+
+| # | Where (core) | Uses (banking) | How to break it |
+|---|---|---|---|
+| J1 | `server.pivot.PivotConfiguration` | `VarPivotProvider`, `VarService`, `MrCubeExtras`, `MrCubeProperties`, `VarParametricProperties`, `FrtbService` | **built**: `server.pivot.PivotSourceProvider`; the pivot engine asks every one before the tabular provider; `MrCubeConfiguration` registers the VaR source with the MR lens |
+| J2 | `server.caches.CachesConfiguration` | `VarCaches`, `ExposureCaches` | **built**: `server.caches.CacheGroup`, joined in `@Order` (VaR, then exposure, as before) |
+| J3 | `server.capacity.CapacityController`, `CapacityLive` | `VarController` (its figures for "today against the plan") | **built**: `server.capacity.CapacityFigures` (its key, its figures and planner inputs, its rows); `VarCapacityFigures` |
+| J4 | `server.api.HealthController` | `var.Hierarchies.warnings()` | **built**: `server.api.HealthFigures`; the banking module contributes `hierarchyWarnings` |
+| J5 | `packs.edition.Edition.WORDS` | the words `VAR`, `EXP` | **built**: `Edition.WORDS` holds the core's words; a module declares its functions in its manifest; an edition reads every word it names |
+| J6 | `packs.OfficialReaders` | the lake forms `var-official`, `ccr-official` | **built**: `OfficialReaders.OfficialResults`, found with the `ServiceLoader` (it runs before any bean); `BankingOfficialResults` (the `config/lakes/*-official.yaml` files themselves move in phase 2, step 8) |
+| C1 | `core/app.py` | includes nine banking routers by name | **built**: `drishti-console/plugins/<module>/plugin.yaml` lists the module's routers (in order), the files that register its hooks and its other code; `core/plugins.py` `include(app)` includes them where the banking routers were; a module's routes answer 404 while it is off |
+| C2 | `routes/terminal_routes.py` | `redirect_for` and `retired_link` of eight banking route modules | **built**: `plugins.command(fn, needs=words)` and `plugins.retired(fn)`, filled by each banking route module; the terminal asks `plugins.redirect` and `plugins.retired_link` |
+| C3 | `core/search.py` (was `routes/api_routes.py`) | `smat_command`, `play_command`, `var_suggestions` | **built**: `plugins.type_ahead(pattern, fn, needs)` and `plugins.hints(...)`, filled by the SMAT, PLAY and VAR routes |
+| C4 | `routes/admin_routes.py` | `play_routes._stream` (the workbook streamer) | **built**: `core/workbook_stream.py` `stream(...)`, used by the VaR, FRTB-SA and SIMM playgrounds, why VaR moved and the capacity planner; `_stream` deleted |
+| C5 | `routes/pivot_routes.py` | `mcube_routes.parse` (a preset's word) | **built**: `plugins.preset("mr", parse)` by the MR cube's routes; the Pivot page draws the MR lens's style, script and panes from the plugin's `screens.pivot` (`screen_parts()`), naming none |
+| C6 | `routes/edition_routes.py` | `core/trading_landing`, `core/market_landing` | **built**: `plugins.landing_rule(fn)` (the trading role's landing, by `plugins/banking/routes/trading_routes.py`); the market landing's figures (`/api/home/market/{part}`) moved to the banking routes |
+| C7 | `core/backend.py` | the VaR, FRTB, SIMM and exposure client methods | **built**: the core client's one `engine(method, path, ...)` call; the typed calls are the module's (`drishti-console/plugins/banking/risk_api.py`: `var`, `exposure`, `risk`, `mr`, `path`) on `/api/v1/risk`; `core/facts.py` reads an engine step's API root from the engine catalogue |
+
+No banking code imports another domain (there is no other domain's code yet), and no core module imports banking code: in Java
+`ArchitectureRulesTest`, in the console `tests/test_module_boundaries.py` (no core module imports a module's code, no core template
+includes a module's template or names its static files, no core script or style names a module's file). Admin → Saved VaR baskets
+(`/admin/scopes`) moved from the core's Admin routes to the VaR routes for the same rule. The generic packages that only *mention* VaR in their documentation (`compute.vector`, `compute.shard`, `server.shard`,
+`server.playground`) import nothing of banking; their comments are reworded when the documentation is rewritten (2.9.11.g).
+
+### 6. The move, step by step (after 2.9.11.d merges)
+
+Each step is one branch with its gate; the VaR check stays exactly equal throughout; old paths keep working for one release.
+
+Steps 2 (Java), 3 (Java), 4, 5 and 7 (the `domain:` key) are **built in phase 1**; 1's refreshed counts, 2 and 3 for the console, 6, 7's
+folders, 8, 9 and 10 are phase 2 (section 8).
+
+1. **Freeze and survey again**: rerun this survey on develop after d; refresh section 2's counts.
+2. **Break the cycles in place** (section 5): the SPIs J1 to J6 and the console hooks C1 to C7, no file moved; all suites green.
+3. **Add the rules** (section 4) with an allow list holding exactly what has not yet moved; the list only shrinks.
+4. **`drishti-compute-banking`**: `git mv` the five compute packages into the new module under `com.ash.drishti.banking.compute`, their
+   tests with them; `drishti-compute`'s description loses VaR. The VaR check and the compute suites.
+5. **`drishti-banking`**: `git mv` the five server packages under `com.ash.drishti.banking`; the auto-configuration; the API moved to
+   `/api/v1/risk/…` with `308` redirects from the old prefixes (one controller listing them, deleted in the next release); the CLIs,
+   the console client and the examples switched to the new paths. The server and integration suites, the drill.
+6. **The banking console plugin**: `git mv` the routes, templates, JavaScript, CSS, landings and their tests into
+   the console's plugins/banking folder (planned); static assets served from the plugin's folder behind the entitlement check; Help's `risk`
+   section and the engine catalogue entries moved into the plugin's files.
+7. **Packs by domain**: `git mv` into `config/packs/core/core|banking|economy|capitalmarkets/`; the pack loader reads one level of domain folders and each
+   pack's `domain:`; Admin → Packs, Help and the Build home group by it; editions unchanged (they name pack ids).
+8. **Banking configuration**: the official lakes, the banking BI reports, models and tables (after d's tables settled), fragments and
+   notebooks into the banking folders the loader reads.
+9. **The thin jar and the plugins folder**: the server's runnable jar without `drishti-banking`; the release ships both, and a
+   site's `plugins/` holds the modules it runs.
+10. **Documentation and drills**: this document's status to built; the guides' module notes; the CHANGELOG; two drills, one with the
+    banking module absent (the core must start, serve BI, Pivot and the economy packs, and say "not installed" for a banking word).
+
+### 7. Open questions
+
+| # | Question | Proposal |
+|---|---|---|
+| D1 | The core pack's finance entities (section 2.4) | a `banking-reference` pack in banking; the core pack keeps the calendar and generic entities |
+| D2 | The market lens and edition | banking (trading desks) |
+| D3 | Package root for domains | **as built**: `com.ash.drishti.banking` (`.compute` for its maths); `com.ash.drishti.economy` when it has code |
+| D4 | Tutorials' location | stay in `docs/tutorials/` with their numbers; Help lists them by module (no broken link) |
+| D5 | Old API paths | **as built**: answered as the new paths for one release (a rewrite with `Deprecation` and `Link`, section 3), then deleted |
+| D6 | The us-equities, gleif and funds packs | **decided (owner, 2026-11-07)**: us-equities and funds are the **capitalmarkets** module's (later also the market data's prices, curves and vols); **gleif** is core reference data (legal entities every domain uses); economy keeps world-economy, news-and-markets and the public-sector data. The market-data pack stays banking's while the banking engines read it (it moves when banking can require capital markets); its commands are capital markets' functions already. The editions' pack lists are unchanged in phase 1 (the World edition still opens us-equities and funds: their functions follow capital markets): they change with the console's lens work (phase 2) |
+
+### 8. Phase 1 as built, and what phase 2 must do
+
+**Built (2.9.11.f, backend; the CLIs, tools and documents on the new paths too):** the modules of section 3; J1 to J6; the API under `/api/v1/risk` with the old prefixes answered; module
+registration through the registry (`@ConditionalOnModule`, `404 DRS-1025` for an off module's API, its engines *not installed* with the
+reason, its packs and connectors not loaded); functions in the manifests, the mnemonic switches decided by the registry, a function off
+answering `404 DRS-1026`; packs naming their `domain:`; the rules of section 4 (Java) as `ArchitectureRulesTest`; the backend guarantee
+(`BankingModuleOffTest`, `BankingModuleOnTest`); connector files written before the move keep naming the old engine classes for a release
+(`META-INF/drishti/moved-classes.properties`, read by the reactive connectors' Java runner).
+
+**Tests that moved with banking:** the banking packages' own; `ConnectorUpgradeTest` and `HierarchyUpgradeWithoutLettersTest` (they build
+the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in drishti-banking's tests, with their fixtures); a
+`TokenScopeGuardTest` beside the server's, over the banking API. Banking tests start the whole server through `BankingTestServer`
+(`@SpringBootConfiguration` importing `DrishtiApplication`), with the server's test helpers from its test jar.
+
+**Phase 2, first half, as built (2.9.11.f, the console; additive, no screen moved):**
+
+- **The console asks the server** and nothing else. The public about answer lists the `modules` loaded at the server's start (polled with
+  the edition and the engines, kept per console app: `core/modules.py` `State`); `GET /api/v1/modules`, as the person, answers the modules
+  loaded and not (with why), the lenses open to them (with the modules and functions each needs) and `functions.off`: every function they
+  may not use (its module off, an administrator's switch, from 2.9.11.j not granted), each with its module and the words to say (*VRES is
+  not available to you: ask your administrator*). The console caches it per person (`ui.user_cache_seconds`, dropped on a change seen by
+  any worker) and sets it per request; an older server that says nothing hides nothing.
+- **Every door asks** `core/modules.py`: the routes (`core/edition_gate.py`: a module's pages and APIs 404), the words
+  (`Edition.word_on`, `command_shown`, `typed_shown`: menus' `word:` and `cmd:` requirements, the Build home's, the landings' chips),
+  menus (Risk's engine pages included) and the Admin strip (sitemap `domain:` tags on a menu, column or item, the innermost wins; `requires:
+  module:<id>`), search and the type-ahead (`modules.allowed`), the command line (`/go`: typed anyway, the refusal in words), Help (a
+  guide's module is its engine's, else its section's `domain:`; the section too), the Build home (a type's `domain`), keys (a module's
+  keys are registered only by its own pages, which are refused) and the static files.
+- **Each module's console part** is `drishti-console/plugins/<module>/plugin.yaml`: `routers` (included in order, C1), `registers` (files
+  that fill the hooks on import), `code` (its other Python modules), `engines` (their words, pages, menus, Help and tiles from the engine
+  catalogue), `words`, `paths`, `templates`, `assets` (globs under `web/static`) and `screens` (what it adds to a core screen while it is
+  on: the Pivot's MR lens). banking and economy have one; capitalmarkets has none (its functions are its packs' commands, which the
+  server stops offering).
+- **Static assets by module and lens**: a module's file is served only while the module is on for the person and, when they work in a
+  lens or an edition, only when that lens uses the module (the World lens gets no banking file; `core/app.py`
+  `_module_asset_refused`: only a module's file costs the session check). The Elements manifest carries each library's `module`
+  (drishti-risk: banking) and the loader refuses a library of a module the page does not list (`<meta name="drishti-modules">`, from the
+  person's modules and lens; `configure({modules})`; `refused(name)`), and every library that requires it.
+- **C1 to C7 broken in place** (section 5), and the console on `/api/v1/risk` (its client, the workbook streams, the MR cube's extras);
+  the old aliases stay one release for other clients.
+- **Tests**: `test_modules_off.py` (banking off: pages, APIs, menus, the Admin strip, the command line, the type-ahead,
+  search, Help, the Build home, the files and the page's module list; banking on draws them again; an older server hides nothing;
+  capital markets off: its functions refused and not offered; single functions off (VRES, SMAT): their menu items, command, type-ahead and
+  pages gone, VAR kept; a lens without the module gets none of its files), `test_module_boundaries.py` (static: the plugins name files
+  that exist; the core imports no module's code; modules do not import each other; no core template includes a module template or names
+  its files; no core script or style names a module file), the Elements loader's refusal (`tests/elements/core.test.mjs`), and on the
+  server `BankingModuleOffTest` / `BankingModuleOnTest` (the console's answers: `/api/v1/modules` and `/public/about`).
+
+**Phase 2, second half, as built so far (2.9.11.f):**
+
+- **The console plugin's moves** (with `git mv`, so later merges follow): the banking routes (`drishti-console/plugins/banking/routes`: VaR, regulatory
+  VaR, SMAT, FRTB-SA, SIMM, the playgrounds, exposure and the pre-deal check, the MR cube, the trading and market landings' figures), its
+  landings' code and Build types (`trading_landing.py`, `market_landing.py`, `build_types.py`, `risk_api.py` in `drishti-console/plugins/banking`), its templates
+  (`drishti-console/plugins/banking/templates`, the same names: the console searches each module's folder after `web/templates`) and its scripts and
+  styles (`drishti-console/plugins/banking/static`, served at the same `/static/...` addresses after `web/static`, gated by module and lens); the World
+  landing into the economy module's console part (`modules/economy/console`, hosted under `/m/economy/`, KERNEL_AND_MODULES.md section 4.7). drishti-risk stays an Elements library under `web/static/elements` (its manifest names its module).
+- **The engine catalogue by module**: the banking engines' entries are drishti-banking's `META-INF/drishti/engines.yaml` (read before the
+  core's `engines/catalogue.yaml`; absent when the module is not installed), their jar files `engines/<id>.yaml` are its own (imported
+  `optional:` by `application.yaml`), and the console's copies are `plugins/banking/engines.yaml` and `config/engines.yaml` (the core's),
+  byte for byte (`EngineCatalogueTest`, `BankingEngineCatalogueTest`). A core engine's soft use of a module's engine (the pivot uses VaR)
+  counts only where the module is installed.
+- **Rule 4 (strings)**: `tools/domain_strings.py` counts the banking names (command words, engine ids, connectors, API and console paths,
+  packages) in the core's code (Java outside the banking modules; the console's core, routes, scripts, styles and templates) against
+  `tools/domain_strings_allowed.yaml` (empty since 2.9.11.i1: a line that only looks like banking carries `domain-strings: generic`), which only shrinks (a quick file check, `tools/test_domain_strings.py`).
+
+**Phase 2, second half, as built (2.9.11.f, the configuration):**
+
+- **The banking token declarations** are the module's: `META-INF/drishti/token-scopes.yaml` in its jar (`module:`, `read-posts:`,
+  `scopes:`, the shapes of `drishti.security.token-read-posts` and `token-scopes`), merged by the core's `ModuleTokenScopes` into the
+  `TokenScopes` bean only while the module is on (Spring cannot split one list across files). `risk:write` is the banking module's; the
+  core's `compute:write` keeps the sandboxes and cancellations. **Help's Risk measures section** is the plugin's
+  (`drishti-console/plugins/banking/help.yaml`: `help-sections:` heads with `after:`, and `sections:` pages), merged by `core/modules.py` (`help_heads`,
+  `help_pages`) into the sitemap's heads and `help.yaml`'s pages.
+- **Where a pack is found** is specified in one place, [KERNEL_AND_MODULES.md section 18](#18-configuration-resolution-packs-connectors-bindings-and-inbox-rules) (the site, then the modules that are on, then the kernel); the bullet below is the layout as built before it.
+- **Packs in domain folders** (step 7): `modules/<module>/packs/<pack>`: core (core, gleif, compute-demo), banking (trading, market-data,
+  market-risk, counterparty-risk), economy (world-economy, news-and-markets), capitalmarkets (us-equities, funds). **One rule** says where a
+  pack is: a packs root holds packs directly or one level down in domain folders (a folder with no `pack.yaml` of its own); in Java
+  `com.ash.drishti.api.PackFolders` (`roots`, `all`, `list`, `of`: plain Java in drishti-api, so the pack loader, the reloader and its
+  watchers, Admin -> Packs, deploy and roll back, the Sutra CLI and the lake files' pack tables share it), the Python
+  tools read the Java resolver's answer (`tools/resolved.py`: `pack_dirs`, `pack_dir`, `manifests`, through the kernel jar's `resolve --json`;
+  KERNEL_AND_MODULES.md section 18).
+  A pack's `domain:` names its folder (`tools/test_pack_layout.py`). The default packs are the kernel's and every module's that is on, less a manifest's `packs.off-by-default`.
+- **Banking configuration** (step 8): a content folder holds a domain's files one level down, and a folder named after a module is read
+  only while the module is on (`server.modules.DomainFolders`): `config/lakes/banking/{var,ccr}-official.yaml` (`Lakes.files` and
+  `Lakes.file` read a lake file in a domain folder; the jar copies are drishti-banking's, listed in its `drishti/lakes/shipped.txt`, so
+  `Lakes.SHIPPED` is the core's demo lake plus the modules' on the class path), the regulatory report definitions
+  `config/reports/banking/`, the BI files `config/bi/{reports,python,notebooks}/banking/` (`BiFolder`) and the tables and models
+  `config/tables/banking/` (`Catalogue.load(root, store, domainOn)`; the banking tables are `banking.<name>`). With banking off, BI lists
+  none of its reports, tables or models. The economy samples stay in `config/tables/bi/` and `config/bi/reports/`.
+- **Editions folded into lenses** (step 5 of the list before): `config/editions/` is gone. A lens's file is
+  `config/lenses/<module>/<lens>.yaml` (risk, trading, market: banking; world and public sector: economy), the feature presets
+  `config/distributions/kernel.yaml `features:`` (the server's `drishti.lenses-dir`, default `<config>/lenses`; the console reads no lens file); a lens names its packs by module
+  (`packs.enabled: {economy: [...], capitalmarkets: [...]}`), so World is economy with capital markets: while capitalmarkets is off its
+  packs, functions, cards and the World landing's company, filing and fund parts are gone (`module_on` in the templates). The registry's lens
+  carries its Home cards and chips (`cards:`, `chips:` in its module's `META-INF/drishti/lenses.yaml`, answered per person by
+  `/api/v1/modules`; each shown only while its function is on), and the lens file its landing, menus, Help, Admin pages, BI lists and
+  branding; `drishti.edition` (a lens for the
+  whole instance) and `drishti.lenses` are unchanged ([LENSES.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), *Editions are lenses of modules*).
+
+**Phase 2, still to do** (carried into [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md) section 14, phases P1 and P2):
+
+1. **The thin jar and the plugins folder** (step 9): `drishti-app` builds the core jar alone; the banking module (drishti-banking with
+   drishti-compute-banking) is a module jar in a site's modules folder on the launcher's `loader.path`, and the registry's *installed*
+   follows the jar. **Deferred out of this release** (a packaging change across every launcher: the scripts, Docker, ECS, the stack and
+   the drill gain the modules folder in the same change, and the release ships both jars); until then a module is installed with the one
+   jar and switched off with `config/modules/<module>.yaml`.
+2. **Python worker code**: none of banking's is left in `compute/drishti-compute/src/main/python/drishti_compute`; the tools' banking scripts
+   (`varcli.py`, `expcli.py`, `frtbcli.py`, `simmcli.py`, `tools/ccr/`) move with the module.
+3. **The drills**: one with the banking module absent (the core starts, serves BI, Pivot and the economy packs, and says *not
+   installed* for a banking word).
+
+## Kernel and modules: mock-ups
+
+**Status:** design, not built.
+
+Static, self-contained pages (no CDN) for the screens of [KERNEL_AND_MODULES.md](KERNEL_AND_MODULES.md); the list, the
+alternatives and the recommendation for each are in its [section 17](#17-mock-ups). Each page holds its
+options as views: open it in a browser and use the A, B, C buttons, or address one directly with `?v=B` (or `#B` on the newer pages)
+and `?theme=light`. The PNGs beside each page are those views in the dark theme.
+
+The cluster and developer screens:
+
+- [admin-cluster.html](kernel-and-modules/mockups/admin-cluster.html): Admin → Cluster, the node × module placement matrix (recommended A, the matrix with a
+  detail drawer).
+- [module-run.html](kernel-and-modules/mockups/module-run.html): the Module SDK's `drishti.py module run` for the genomics module (recommended A, terminal and
+  browser side by side with a developer bar).

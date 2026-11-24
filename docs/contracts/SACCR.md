@@ -192,7 +192,7 @@ maturity bucket, supervisory factor, add-ons, RC, multiplier, EAD, RWA. A table 
 | `cap-at-unmargined` | `true` | margined EAD ≤ unmargined EAD |
 | `risk-weights` | by counterparty type and rating (a standardised table, CRE20; 100% when unknown) | the RWA hook |
 | `derive` | `none` | `rules`: derive `saccr-trade` from the trade master (§3.2) |
-| `regulation` | `BCBS` | `BCBS`; OSFI CAR chapter 4 next as its own parameter file, the US final rule and EU CRR2 when a client asks (decided 2026-11-02, [COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions), decision 4) |
+| `regulation` | `BCBS` | `BCBS`; OSFI CAR chapter 4 next as its own parameter file, the US final rule and EU CRR2 when a client asks (decided 2026-11-02, [COUNTERPARTY_ENGINES.md section 14](../plans/COUNTERPARTY_ENGINES.md#14-decisions), decision 4) |
 | `unclassified` | `exclude` | `exclude`: a live derivative without a classification row is left out, counted `unclassified` and its set marked `incomplete`; `stand-in`: charged at its notional at the largest SF of its asset class, unmargined, flagged `STAND_IN` (for banks that report from Drishti; decision 3) |
 | `specific-wwr` | `own-set` | a member flagged `SPECIFIC_WWR` forms its own netting set with no netting benefit (decision 7) |
 
@@ -572,7 +572,7 @@ AddOn_credit = √((0.5 × 1.08 − 0.8 × 1.14)² + (1 − 0.25) × 1.08² + (1
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
-| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions)): C and NICA at supervisory haircuts; MPOR as written with `MPOR_DAYS` excluding the remargining period; `unclassified` (exclude by default, a conservative stand-in as a setting); OSFI CAR next; `SPECIFIC_WWR` trades in their own set |
+| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../plans/COUNTERPARTY_ENGINES.md#14-decisions)): C and NICA at supervisory haircuts; MPOR as written with `MPOR_DAYS` excluding the remargining period; `unclassified` (exclude by default, a conservative stand-in as a setting); OSFI CAR next; `SPECIFIC_WWR` trades in their own set |
 
 ## 17. JSON examples
 

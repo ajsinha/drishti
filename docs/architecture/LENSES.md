@@ -389,7 +389,7 @@ the VaR explorer: the baskets leave the left-hand column for two drop-downs, and
 | L3 | + New basket | the basket's sheet (`drishti_var-basket.js`) | Alt+B | **Built** |
 | L4 | The hierarchy tree | `/api/var/tree` | ▸ opens, click shows the node's VaR | **Built** |
 | L5 | Keys strip | — | the keys | **Built** |
-| L6 | How calculated › | — | **H** | **Folded** into the one **Explain ›**, key **E** ([SHARED_SCREENS.md](SHARED_SCREENS.md)) |
+| L6 | How calculated › | — | **H** | **Folded** into the one **Explain ›**, key **E** ([SHARED_SCREENS.md](THIN_CONSOLE_DESIGN.md)) |
 | L7 | The drawer | the scope's `provenance` | Esc, ✕ | **Folded** into the Explain drawer, tab Inputs & lineage |
 | L8 | Phone (700 px and below) | — | tap | **Built** (full-width drop-downs, the drawer a bottom sheet) |
 
@@ -1598,7 +1598,7 @@ forms and rules in YAML. The screen is a page kind `breach-queue` whose id is th
 child reading `source: { kind: limit-breach, id: "@queue.open.id" }`; `BRCH <id>` opens the same panels on its own page through the pack
 fragment `breach-detail@1`. Each action is a Sutra Next form (`new: drawer`) whose `save:` writes a new record to the `owned` target
 ([APPROVALS_GUIDE section 4a](../guides/APPROVALS_GUIDE.md#4-submitting-a-change)); the breach service hears the record's `edit.applied`
-event ([ARCHITECTURE section 18.3](../architecture/ARCHITECTURE.md#317-the-applied-event-triggers-and-viewers)) and writes the breach's next version, pushed
+event ([ARCHITECTURE section 18.3](ARCHITECTURE.md#317-the-applied-event-triggers-and-viewers)) and writes the breach's next version, pushed
 live to every viewer. The thread is the record's Discussion ([ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion)).
 
 | Action | Who | Form | `save:` | Approval |
@@ -2197,7 +2197,7 @@ are included in the official run by default, with the list on the run. **Data:**
 | Method | When | How | Status |
 |---|---|---|---|
 | **copy** | the new trade resembles a booked one | a booked trade's vector scaled (1, −1, 0.5) | **Built** ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet); side by side per row in tab C) |
-| **price** | new terms | QLRisk prices the trade on the base market and under each scenario move; its vector joins the scope; its sensitivities feed the ladder and SBM | proposed (QLRisk design only until its API is stable; [bi/TABLES_AND_MODELS.md section 9.2](../architecture/ARCHITECTURE.md#298-pricing-engines-planned)) |
+| **price** | new terms | QLRisk prices the trade on the base market and under each scenario move; its vector joins the scope; its sensitivities feed the ladder and SBM | proposed (QLRisk design only until its API is stable; [bi/TABLES_AND_MODELS.md section 9.2](ARCHITECTURE.md#298-pricing-engines-planned)) |
 | **delta-gamma** | no pricer, or a quick answer | `P&L_s ≈ Σ_f s_f Δx_{f,s} + ½ Σ_f Γ_f Δx_{f,s}²` from the trade's sensitivities and each scenario's factor moves; flagged, its error shown as the gap on the same product's booked trades | proposed |
 
 The QLRisk bridge is **shared with the CCR cube** (scenario P&L here, path MtMs there; CC12 in [7.3](#73-gaps-and-proposals)): one market
@@ -2346,7 +2346,7 @@ seen only in aggregate shows the aggregate and says drill is not allowed); **sta
 #### 6.4.4 Pivot fields: the View picker, the compact line and the panes
 
 The MR cube's field list (about 45 chips in four rows: every hierarchy level and every column it is built from) left the grid a quarter of
-the screen. Three mock-ups ([README](../lenses/mockups/pivot-fields/README.md)): [A · Power BI panes](../lenses/mockups/pivot-fields/A-powerbi-panes.html),
+the screen. Three mock-ups ([README](LENSES.md)): [A · Power BI panes](../lenses/mockups/pivot-fields/A-powerbi-panes.html),
 [B · trader view first](../lenses/mockups/pivot-fields/B-trader-view.html), [C · saved views + B](../lenses/mockups/pivot-fields/C-saved-views.html).
 **Decided (owner, 2026-11-08): C + B is the default** (the View picker in front of B's compact line) **everywhere a pivot opens; A is behind
 Customize ›** (`\`); the BI designer, an authoring tool, keeps its panes. A preset names the view it opens with; any number of rows and
@@ -3296,7 +3296,7 @@ hardest families from trade-grain data (VaR at any scope; PFE by counterparty an
 | VaR change explanation by cause (RO1) | **Built** for VaR; exposure, liquidity and capital reasons not built | [VAR_GUIDE 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained) |
 | A breach as a record; one limit catalogue (RO2, RO3) | **Not built**, designed ([section 5.3](#53-gaps-and-proposals)) | — |
 | Temporary limit increases with four eyes | **Not built**; the pattern exists in write-back approval | [APPROVALS_GUIDE 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue) |
-| Comments anchored to data; alerts on numbers | **Built**; alerts are set per person, not from a catalogue | [ARCHITECTURE](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals), [USER_GUIDE, alerts](../guides/USER_GUIDE.md#alerts-on-numbers) |
+| Comments anchored to data; alerts on numbers | **Built**; alerts are set per person, not from a catalogue | [ARCHITECTURE](ARCHITECTURE.md#31-collaboration-write-back-and-approvals), [USER_GUIDE, alerts](../guides/USER_GUIDE.md#alerts-on-numbers) |
 | LCR, NSFR, survival horizon; CET1, RWA | **Not built** (balance-sheet roadmap; stored SA-CCR and FRTB charges are partial RWA inputs only) | |
 | Financed emissions | **Not built**; climate stays out of scope as a computed measure | — |
 | News, market moves, macro signals | **Built** (World and Market lenses; IMF data internal only) | [ADMIN_GUIDE 16.4](../guides/ADMIN_GUIDE.md#164-drishti-world) |
@@ -4317,7 +4317,7 @@ code change. The administrator's view of the same mechanism (the two uses, the s
   module's console plugin (`drishti-console/plugins/banking/`: `trading_landing.py`, `market_landing.py`, `routes/trading_routes.py`;
   `drishti-console/plugins/economy/`), each with its `home/<lens>_landing.html`, `drishti_<lens>-landing.js` and `.css`.
 - **Who sees a lens.** `lens.roles` in the console's configuration is read and is the hook for role-based access; grants and denials of
-  lenses per role belong to the access model ([ACCESS_MODEL.md](ACCESS_MODEL.md), [DOMAIN_MODULES.md](DOMAIN_MODULES.md) section 8).
+  lenses per role belong to the access model ([ACCESS_MODEL.md](KERNEL_AND_MODULES.md), [DOMAIN_MODULES.md](KERNEL_AND_MODULES.md) section 8).
 - **A lens file extending another** (`extends: risk`, so shared command lists do not drift) is decided for the Oversight lens
   ([section 5.5](#55-the-oversight-lens-design)) and not built.
 
@@ -4354,3 +4354,398 @@ code change. The administrator's view of the same mechanism (the two uses, the s
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
 Proprietary and confidential. Unauthorised copying, use or distribution is prohibited.*
+
+## Mock-up index and build checklists
+
+The mock-up pages stay under `docs/lenses/mockups/<name>/`; each entry below is that folder's note.
+
+
+### Admin → Modules: three mock-ups (for the owner's choice, before I8b builds it)
+
+Status: design, not built (mock-ups; the commands below are the planned ones).
+
+Shared content (all three): every module with id, title, version, origin, content hash (short), on/off switch with reason, parts placed per node,
+problems (stale package, refused verify, need not met, library duplicate), each node's fingerprint and whether the nodes agree, "Download .dmod" and the
+install/upgrade commands (the install command, `verify`, `restart`; nothing deploys from the browser), and a "module not installed" list for saved work.
+Admin-only. Built later from Drishti Elements only (grid, chips, cards, inputs, tabs); these files use the vendored 2.4.0 tokens and chip CSS.
+Sample data: 10 modules, 3 nodes (drishti-main, b, c); capitalmarkets stale, source-swapone refused, market-data/economy warnings, trading differs on drishti-c.
+
+| | Layout | Strong | Weak |
+|---|---|---|---|
+| A | One dense grid, rows expand in place; nodes and install below | Everything in one scan; fewest clicks; best for 10-30 modules; one grid component | Per-node placement only as text; the cluster story is at the bottom |
+| B | Master-detail: list left, detail with tabs right | Room for depth per module (parts x nodes, problems, install) | Two panes; the overview of all modules is narrow; more clicks to compare; weakest on a phone |
+| C | Cluster-first: counts, nodes x modules matrix (cell = content hash booted), then detail | A disagreeing node or stale module is visible at once; matches the fingerprint model (content hash is the identity) | A matrix gets wide with many nodes (scrolls sideways); less room for per-module text |
+
+Files: `A.html`/`A.png`/`A-phone.png`, `B...`, `C...` (PNG 1440x900 and 390 wide).
+
+**Recommendation: C.** After i7a the question an admin asks is "did every node boot the same modules, and is anything stale or refused?", and C answers it first, in one
+table, while still carrying the per-module detail and the install commands. If a plain list is preferred, A is the cheapest to build (one grid).
+Build checklist for I8b: the matrix and list are one grid; chips for origin/problem; no bespoke widget; the switch is the existing per-module setting.
+
+### BI depth: five sets of mock-ups
+
+**The request.** The screens for the BI-depth release: a decomposition tree that can break down VaR, a Playground for Drishti Elements,
+linked brushing, the first new visuals, and modelling of many-to-many and both-ways relationships. The gaps they close are in
+[BI_AND_POWER_BI.md](../guides/bi/README.md).
+
+Each HTML file is self-contained (system fonts, no CDN). The caption bar switches option, state and theme; the address keeps the choice
+(`#B-error-light`). The interactions work, in plain JavaScript written for these mock-ups: the figures are synthetic, but VaR is really
+computed for each selection from generated scenario P&L (509 scenarios). The real screens are built from Drishti Elements, never from this code.
+
+#### 1. Decomposition tree: [decomposition-tree.html](../lenses/mockups/bi-depth/decomposition-tree.html)
+
+| A · Tree | A · Notional | B · Ladder | C · Waterfall |
+|---|---|---|---|
+| ![](../lenses/mockups/bi-depth/decomposition-tree-A-var.png) | ![](../lenses/mockups/bi-depth/decomposition-tree-A-sum.png) | ![](../lenses/mockups/bi-depth/decomposition-tree-B-var.png) | ![](../lenses/mockups/bi-depth/decomposition-tree-C-var.png) |
+
+Light: ![](../lenses/mockups/bi-depth/decomposition-tree-A-var-light.png)
+
+**Non-additive splits.** Every box is its own number, recomputed for that slice. A VaR split states *Σ standalone − diversification = parent*
+beside the column; a plain sum says the children add exactly.
+
+- **A · Tree.** Boxes left to right, one open at each level, the next split chosen by a list at the column head. *For:* the shape Power BI
+  users know; the path is visible at once; diversification sits on each split. *Against:* wide after four levels; horizontal scrolling.
+- **B · Ladder.** Indented lists of levels, down the page. *For:* the best fit on a narrow panel; every level has its share column. *Against:*
+  reads as a report, the exploring feel is weaker.
+- **C · Waterfall.** One split at a time: standalone bars, the green diversification step, the true figure. *For:* the clearest statement of
+  the benefit, and it needs no explanation for a risk manager. *Against:* only one level is on screen.
+
+**Recommendation: A**, with C as the view a node opens ("explain this split") in a later release. The diversification line in A is what no
+other tool has.
+
+**Decide:** whether to show Euler contribution (component VaR) beside standalone. It adds up exactly, but it needs the risk engine's vectors.
+
+#### 2. Elements Playground: [elements-playground.html](../lenses/mockups/bi-depth/elements-playground.html)
+
+| A · One column | A · Error | B · Workbench | B · Error |
+|---|---|---|---|
+| ![](../lenses/mockups/bi-depth/elements-playground-A-ok.png) | ![](../lenses/mockups/bi-depth/elements-playground-A-error.png) | ![](../lenses/mockups/bi-depth/elements-playground-B-ok.png) | ![](../lenses/mockups/bi-depth/elements-playground-B-error.png) |
+
+Light: ![](../lenses/mockups/bi-depth/elements-playground-A-ok-light.png)
+
+Both have the live visual, an editable data table, an options form, and formatted, editable HTML and JavaScript; every edit redraws after a
+short pause; Reset restores the example. The frame is `sandbox="allow-scripts"` with no same-origin and a content policy that blocks the
+network. **An error** names the message and the line, marks the line in the gutter, offers *Go to the line*, and keeps the last good drawing
+greyed out above it. A new frame is built for each edit and swapped in only if it ran cleanly.
+
+- **A · One column** (like a D3 reference page). *For:* reads as documentation, then an experiment; the page links well. *Against:* the code is
+  below the fold on a laptop.
+- **B · Workbench** (code left, visual right). *For:* code and result side by side while editing. *Against:* no room for the prose, weak as reference.
+
+**Recommendation: A.** It is what was asked for, and it doubles as the element's reference page.
+
+#### 3. Linked brushing: [linked-brushing.html](../lenses/mockups/bi-depth/linked-brushing.html)
+
+| A · Filter | B · Highlight | C · Crossfilter | Cleared |
+|---|---|---|---|
+| ![](../lenses/mockups/bi-depth/linked-brushing-A-brushed.png) | ![](../lenses/mockups/bi-depth/linked-brushing-B-brushed.png) | ![](../lenses/mockups/bi-depth/linked-brushing-C-brushed.png) | ![](../lenses/mockups/bi-depth/linked-brushing-A-empty.png) |
+
+Light: ![](../lenses/mockups/bi-depth/linked-brushing-A-brushed-light.png)
+
+Drag across the time chart, the histogram or the scatter; click bars. Clearing: the chip's ✕, *Clear all*, Esc, or a click on empty chart area.
+VaR in the tiles and the bars is recomputed for the selection, never re-added.
+
+- **A · Filter.** One selection; the other charts filter to it. *For:* one engine query per brush, easy to read. *Against:* the context goes.
+- **B · Highlight.** Same, with the unfiltered figures ghosted behind. *For:* keeps proportion. *Against:* two queries per chart, and costly for VaR.
+- **C · Crossfilter.** Several brushes at once, each chart ignoring only its own. *For:* the analyst's tool. *Against:* more to explain, more queries.
+
+**Recommendation: A** as the default for every chart, with C as a report setting.
+
+#### 4. First new visuals: [new-visuals.html](../lenses/mockups/bi-depth/new-visuals.html)
+
+| A · Sunburst | A · Icicle | A · Calendar | B · Board |
+|---|---|---|---|
+| ![](../lenses/mockups/bi-depth/new-visuals-A-sunburst.png) | ![](../lenses/mockups/bi-depth/new-visuals-A-icicle.png) | ![](../lenses/mockups/bi-depth/new-visuals-A-calendar.png) | ![](../lenses/mockups/bi-depth/new-visuals-B-sunburst.png) |
+
+Light: ![](../lenses/mockups/bi-depth/new-visuals-A-sunburst-light.png)
+
+Segment size is **notional**, because it adds up; **VaR use of limit is colour**, read per node, because VaR does not add. Click to zoom,
+the centre or the path to go back. The calendar shows limit breaches or backtesting exceptions per day, with non-business days hollow.
+
+- **A · One visual at a time,** with a detail panel. *For:* the size needed for labels; simple. *Against:* no comparison.
+- **B · Board.** The three linked: the sunburst sets the scope of the icicle and the calendar. *For:* a daily risk view. *Against:* the sunburst labels are tight.
+
+**Recommendation: A** for the elements themselves. B then needs no new element: it is a report that places three of them.
+
+#### 5. Modelling: [modelling.html](../lenses/mockups/bi-depth/modelling.html)
+
+| A · Bridge | A · Both ways | A · Refused | B · Bridge | B · Refused |
+|---|---|---|---|---|
+| ![](../lenses/mockups/bi-depth/modelling-A-bridge.png) | ![](../lenses/mockups/bi-depth/modelling-A-direction.png) | ![](../lenses/mockups/bi-depth/modelling-A-refused.png) | ![](../lenses/mockups/bi-depth/modelling-B-bridge.png) | ![](../lenses/mockups/bi-depth/modelling-B-refused.png) |
+
+Light: ![](../lenses/mockups/bi-depth/modelling-A-bridge-light.png)
+
+**The refusal** names the two paths in words and draws them in red; the model is not saved, and each fix is one button. The bridge form shows why group rows do not add to the total.
+
+- **A · Canvas and inspector.** *For:* the paths are visible, which is the whole subject. *Against:* a new graph element; a model of forty tables gets messy.
+- **B · Table first.** A grid of relationships, the same forms, a diagram below. *For:* scales; built from the grid and inputs that exist. *Against:* the paths are one step away.
+
+**Recommendation: B**, drawing the diagram on the refusal and on request. The new graph element then has one small job.
+
+#### Build checklist
+
+| Item | Library | Data | Interaction | Status |
+|---|---|---|---|---|
+| Decomposition tree: columns, split list, links, diversification line | `drishti-tree` | pivot engine; VaR from the engine per node | open a node, change a split | built |
+| Playground page per element; sandbox with error reporting; last good drawing; reset | `drishti-inputs` (code editor), `drishti-grid` (data) | element's example | edit redraws | built |
+| Brush on line, histogram, scatter; click on bars; chips; Esc | `drishti-chart`, `drishti-core` (events) | cross-filter of the report, VaR recomputed | drag, clear | built |
+| Sunburst, icicle | `drishti-tree` (its modes) | hierarchy from promoted columns | zoom, path | built (reports; Sutra panels later, with the Rachana track) |
+| Calendar heatmap | `drishti-chart` | breaches or exceptions per business date | pick a day | built (reports; Sutra panels later) |
+| Relationship grid and forms; bridge form; path diagram | `drishti-grid`, `drishti-inputs`, `drishti-chart` | the model file | edit, save | to build |
+| Refusal with paths and one-click fixes | server model check; `drishti-core` | a new error code, one per refusal | apply a fix, undo | to build |
+
+The language these screens rest on is designed in [ARCHITECTURE.md section 28.4](ARCHITECTURE.md#284-the-expression-language-del-and-its-checks).
+
+### Pivot fields: three mock-ups
+
+**The problem.** The MR cube pivot (`/pivot?preset=mr&text=POS:POS-BOOK-CREDIT-1~CLY-4001063`) lists about 45 field chips in
+four rows. Every hierarchy level appears as its own field (`MGMT.DESK`, `LEGAL.BOOK`, `LL.LIMIT-LETTER`, …). So does every raw column
+those levels are built from (`DIVISION`, `TT_BOOK`, `LIMIT_LETTER`, …). The measures sit among them as wide chips. Below that come the
+four wells, a scan banner and a long title. The grid gets about a quarter of the screen, with truncated labels and a
+`Σ-total VaR 0.00` line. A trader will not use it.
+
+**What the mock-ups change.** They follow Power BI's idea of a field list: grouped, searchable and collapsible, with hierarchies as one
+item and measures apart. They also follow the Bloomberg bar: dense but calm, keyboard first, and a default that answers at once.
+
+Each mock-up is self-contained (system fonts, no CDN). Open it in a browser. The address picks the state: `#desk` or `#pos`, `open`,
+`collapsed` (A only) and `light`. The caption bar at the top switches between them. All three use the same data. The first scope is
+the owner's screenshot (`POS:POS-BOOK-CREDIT-1~CLY-4001063`, VaR 10.60 m). The second is `DESK:DESK-RATES`, a 17-row tree with seven
+books, nine positions, a `(Blank)` book and the diversification line. The figures are made up for the illustration.
+
+| Option | File | Closed | Open | Light, the screenshot's scope |
+|---|---|---|---|---|
+| A · Power BI panes | [A-powerbi-panes.html](../lenses/mockups/pivot-fields/A-powerbi-panes.html) | ![](../lenses/mockups/pivot-fields/A-closed-desk.png) | ![](../lenses/mockups/pivot-fields/A-open-desk.png) | ![](../lenses/mockups/pivot-fields/A-open-pos-light.png) |
+| B · Trader view first | [B-trader-view.html](../lenses/mockups/pivot-fields/B-trader-view.html) | ![](../lenses/mockups/pivot-fields/B-closed-desk.png) | ![](../lenses/mockups/pivot-fields/B-open-desk.png) | ![](../lenses/mockups/pivot-fields/B-closed-pos-light.png) |
+| C · Saved views + B | [C-saved-views.html](../lenses/mockups/pivot-fields/C-saved-views.html) | ![](../lenses/mockups/pivot-fields/C-closed-desk.png) | ![](../lenses/mockups/pivot-fields/C-open-desk.png) | ![](../lenses/mockups/pivot-fields/C-closed-pos-light.png) |
+
+#### What is common to all three (the cleanups)
+
+- **A hierarchy is one field.** `MGMT ▸ Division › Desk › Book` is a single item: drag it to get drill-down, or open it to choose
+  levels. A level above the view's scope (Division under `DESK:DESK-RATES`) is shown greyed as *above the scope*. `Positions ▸ Position › Trade` is the
+  members' drill.
+- **Hierarchy-level columns are hidden.** Hierarchies are built from promoted columns, so `DIVISION`, `DESK`, `TT_BOOK`,
+  `LEGAL_ENTITY` and `LIMIT_LETTER` would only duplicate them. They go under **More fields** with the rest of the long tail (14
+  columns, collapsed). This is Power BI's "hide in report view", applied automatically.
+- **Measures are grouped apart** with a Σ icon, in display folders: VaR (VaR, ES, Parametric, Stressed), Contribution (Comp VaR, Comp ES,
+  Incr VaR), Limits (Limit, Limit use), Sensitivities (DV01, CS01, SBM capital) and Book (PV, Trades).
+- **The grid:** full row labels, indented, with a tooltip giving the scope, and a row-header column wide enough for
+  `POS-BOOK-RATES-3~CORP-BOND-ALLY-4.25-2031`. Every figure is in one format (`10.60 m`, USD m stated once in the footer). An empty
+  cell is blank, never 0.00. There is no `Σ-total VaR 0.00` line. Instead, a **Diversification (Σ books − desk)** row appears only
+  where it means something. `(Blank)` marks an empty level, in muted italics, with a **?** that explains it.
+- **The header:** the title is shortened to `MR cube · DESK-RATES 2026-11-06 · 1d 99% · USD`. The headline figures (VaR, ES, Limit
+  use, the change since the previous day, Trades) share that line, so no tiles are cut off. The scan banner moves into the **i** icon.
+- **A keyboard line** sits under the grid, and every picker has its keys.
+
+#### The three options
+
+**A · Power BI panes.** The grid fills about 70% on the left. On the right are **Build** (the four wells as short vertical lists;
+Filters split into *on this view* and *on every view of the MR cube*) and **Fields** (search with `/`, then Hierarchies, Trade &
+position, Measures, More fields). Drill arrows sit on the grid's corner (↑ up, ↓ drill mode, ⇊ next level, ⤓ expand all). Both panes
+collapse to a 28 px rail (`\`). The open screenshot shows LEGAL being dragged to Rows.
+*For:* everything is visible and familiar to Power BI and Excel users. *Against:* even tidied, it is an authoring screen. A trader who
+only reads the cube still sees about 40 names, and the grid loses about 30% of the width while the panes are open.
+
+**B · Trader view first.** There is no field list on screen. One compact line holds
+`Rows [⋔ MGMT ▾ Desk › Book ▲▼] [› Position › Trade] · Columns [Risk class] · Filters [Trade status = LIVE] [+] · Values` and then a
+measure toggle strip. The hierarchy is one chip with a level stepper (`[` `]`). Each chip opens a picker, grouped like A's tree, with
+level check-boxes and search. `R`, `C` and `F` open the pickers, and `M` jumps to the measures. **Customize ›** (`\`) opens A's panes.
+I merged the brief's `Values [VaR ▾ ES ▾]` with the toggle row: the lit toggles *are* the Values well, in order, and ▾ on a lit toggle
+sets its options. That saves a line. The grid gets about 85% of the screen at 1600×960, including the console bar.
+*For:* calm and fast, and the screen is the answer. *Against:* a field is not visible until you open a picker, and new users must
+learn the chips.
+
+**C · Saved views + B.** B plus a **View** picker as the first control (`Shift+V`). It offers ready-made layouts for this cube (By desk,
+By book, By limit letter, By risk class × desk, Top contributors, Trades in my scope; keys `1`–`6`), then *My views* and *Shared with
+me*, and **Save view as…** (Personal or Shared, `Ctrl+S`). The closed screenshot shows *By book*, which adds Limit use with bars to
+the total. The open screenshot shows the picker.
+*For:* the trader's first click answers the question, and the desk head can share a morning view. *Against:* the ready-made list has
+to be curated for each preset. A changed layout must show that it differs from its view (a dot, plus Save or Revert).
+
+#### Recommendation
+
+**Make B + C the default. They are one screen: C is B with the View picker in front. Put A behind Customize ›.** The one exception is
+the BI designer, which is an authoring tool and should open with A's panes.
+
+- Traders read the cube; they rarely build it. C's ready-made views plus B's line cover the daily questions with no field list at all.
+  Power BI makes the same split: report readers never see the Fields pane, only authors in edit mode do.
+- A is still needed: by power users, by anyone building a new view, and by the BI designer. Customize › opens it from B or C,
+  and `\` closes it again. A's cleanups (one hierarchy item, hidden level columns, measure folders) are also what B's pickers show,
+  so both read one catalogue.
+
+#### What the choice means, since the pivot is a shared Elements component
+
+The field list and wells are **drishti-grid**'s `WellsModel` (`drishti_wells.js`) drawn by `drishti_grid-wells-ui.js`. Its own header
+already says *"the ribbon above the grid, or the side tool panel: the same model"*. So B's line is the ribbon, A is the side tool
+panel, and C adds a view picker over both. Nothing is bespoke to the MR cube (see the no-bespoke-UI rule). The change applies to
+every pivot: Views → Pivot, the MR cube, the CCR cube when it is built, the panel pivots (Pivot under a Sutra table), search-result
+pivots and the BI visuals on the pivot engine. In practice:
+
+1. **The catalogue grows metadata.** `GET /api/v1/pivot/catalogue` gains, for each field: its *group* (hierarchy, field, measure),
+   *display folder*, *hidden*, and for a hierarchy its *levels*. A hierarchy's level columns are hidden automatically. A source or
+   pack can set folders and hidden fields in YAML. Each source supplies this data (VaR, tabular/BI layers, panel), and the
+   component draws it the same way for all of them.
+2. **The default mode is chosen per host, not per screen.** A preset or Sutra `pivot:` block says `mode: views` (C), `compact` (B) or `panes`
+   (A). Defaults: risk presets and panel pivots use C, the generic Views → Pivot uses B, and the BI designer uses A. A person's choice
+   between closed and open panes is kept.
+3. **Ready-made views are configuration.** The preset (`drishti-console/config/pivot-presets.yaml`) gets a `views:` list, and the
+   existing saved and shared views ([PIVOT_GUIDE §11](../guides/bi/PIVOT.md#11-saved-and-shared-views-compare)) feed *My
+   views* and *Shared with me*. There is no new store.
+4. **The level stepper and drill arrows** belong to drishti-grid's pivot body (next to `1`–`9` and `Shift+→`), and the picker is
+   drishti-inputs (combobox and tree). Grid formats (`10.60 m`, blanks, `(Blank)`) belong to drishti-core's number formats, so every
+   pivot gets them.
+5. **Existing keys stay as they are:** `R C V F` in A, `→ ← 1–9 Enter G X E`. In B and C, `R C F` open pickers instead of placing a
+   selected field, because there is no field list to select from. `M` opens the measures. `[` `]` drill, `Shift+V` opens views and
+   `\` opens Customize.
+6. **Tests and docs:** the pivot browser tests (`test_pivot_screen_browser.py`, `test_pivot_expand_browser.py`) cover all three modes.
+   PIVOT_GUIDE §2 (the screen) and §29, the pivot tutorial, and its screenshots are redone with the build.
+
+#### Decision and build checklist
+
+**Decided (owner, 2026-11-08): C + B is the default everywhere a pivot opens, A behind Customize ›; the BI designer keeps its panes.** The
+build checklist, ticked as built, lives in the lens document:
+[LENSES.md section 6.4.4](#644-pivot-fields-the-view-picker-the-compact-line-and-the-panes).
+
+### Upload a file and build its `.ready`: three mock-ups
+
+**The request.** An Admin page that takes a data file (and optionally a `.ready`), builds the `.ready` from a form so nobody edits it by
+hand, shows the exact text, and pushes both to the data inbox.
+
+Each mock-up is self-contained (system fonts, no CDN). Open it in a browser. The caption bar switches option, state (empty, uploading,
+filled, refused, pushed), file (a `.jsonl.gz` or a tar) and theme; the address keeps the choice (`#refused-tar-light`). The form really
+drives the `.ready` text and the checks: change the mode, pick a pack, press Copy. The example loads position-grain scenario PVs for
+2026-11-06 from ENDUR into `risklake`. The figures are made up.
+
+| Option | File | Filled | A refusal blocking Push | Tar, light |
+|---|---|---|---|---|
+| A · Step wizard | [A-step-wizard.html](../lenses/mockups/ready-upload/A-step-wizard.html) | ![](../lenses/mockups/ready-upload/A-filled.png) | ![](../lenses/mockups/ready-upload/A-refused.png) | ![](../lenses/mockups/ready-upload/A-tar-light.png) |
+| B · One page, split view | [B-split-view.html](../lenses/mockups/ready-upload/B-split-view.html) | ![](../lenses/mockups/ready-upload/B-filled.png) | ![](../lenses/mockups/ready-upload/B-refused.png) | ![](../lenses/mockups/ready-upload/B-tar-light.png) |
+| C · Inbox first | [C-inbox-first.html](../lenses/mockups/ready-upload/C-inbox-first.html) | ![](../lenses/mockups/ready-upload/C-filled.png) | ![](../lenses/mockups/ready-upload/C-refused.png) | ![](../lenses/mockups/ready-upload/C-tar-light.png) |
+
+#### What all three show
+
+- **The file:** upload (drag and drop, progress for a large file) or pick one already in the inbox folder, which is the advice for very
+  large files. Accepted: `.jsonl`, `.gz`, `.zip`, `.tar`, `.tar.gz`. A `.ready` you already have can be uploaded to fill the form.
+- **The form,** one field per key of [the `.ready` file](../guides/DATA_LAKE_GUIDE.md#4-the-ready-file-every-key), a **?** on each, and
+  a note saying where each value came from: *from the file name*, *from the contract*, *computed*, *you set this*.
+- **A tar** has no pack, kind, table or business date to choose: the date field is read-only and says why, and a Folders table maps each
+  top folder to its pack.
+- **The checks,** as pass, warning or refused, in plain words with the fix. A refusal disables Push; *Use replace* shows a fix applied in
+  one click.
+- **The exact `.ready` text,** read-only with syntax colouring, Copy and Download.
+- **Push:** data first, `.ready` last, then a confirmation with the next cycle and the way to the Inbox board.
+
+#### The three options
+
+**A · Step wizard** (File → Details → Check → Review `.ready` → Push). Check is a gate: a refusal stops you at step 3.
+*For:* the clearest for someone who does this rarely; one thing at a time. *Against:* the `.ready` appears only at step 4, so the link
+between a field and its line is lost; four clicks for a daily job; fixing a refusal means going back.
+
+**B · One page, split view.** The form on the left, the live `.ready` on the right, the checks underneath, Push held at the bottom of the
+window. *For:* the request's point on one screen: change a field and see the line change; the refusal and its field are on the same
+page; fast for a daily user, and easy to read top to bottom. *Against:* a long page, the checks sit below the form at 1600×960, and a
+first-time user gets every field at once (the pre-filled values soften this).
+
+**C · Inbox first.** A drop band on the existing Inbox tab; a drawer opens with the form, checks and preview, and after the push the file
+is simply there in Waiting. *For:* no new tab, the shortest path to the result, and *Build its .ready* on a file waiting without a marker is
+the natural way in for very large files. *Against:* a 660 px drawer stacks everything, so the form and the `.ready` are not side by side
+and a refusal needs scrolling; the board behind is dimmed while you work.
+
+#### Recommendation
+
+**Build B as the screen (Data loads → Upload), and take from C its two ways in, opening B already filled in: dropping a file on the Inbox
+board, and *Build its .ready* on a Waiting card with no marker. Leave A out unless wanted.**
+
+- Seeing the `.ready` form as you type is what replaces hand-editing; only B keeps both in view.
+- C's entry points cost little and fit how large files really arrive (copied to the folder first). Its drawer would be a second layout
+  of the same form for no gain.
+- **This departs from the general rule (A, B, C as views of one screen, A the default)**, as the data inbox itself did. If the rule should
+  hold, all three are views over one form, one checks list and one preview, and I would still ask for B as the default rather than A.
+
+#### Things the build must get right
+
+These came out of reading the code and the guide; the mock-ups simplify them.
+
+1. **DRS-5210 belongs to the VaR intake, not the loader.** The loader would take the file; the date is refused later, in `VarIntake`. The
+   check must call that same rule, for the system and date in the file, or the page promises something the load does not do.
+2. **`Use replace` is only sometimes the right fix.** Replace clears the date in *this table*. If the other grain arrived through another
+   table (P&L vectors), replace does not remove it, so the server decides which fix to offer.
+3. **Replace clears the date for every system in the table.** The mock-up's date holds only ENDUR rows. If it also holds another system's rows,
+   the check must be a warning that names them and their count, because a single-system file would remove them.
+4. **The checks read a sample.** Say so on the screen. SHA-256 and rows are the whole file: on a very large gz that is minutes of
+   server work, so it is a job with progress, not a request.
+5. **A file of that name already waiting** must not be overwritten: refuse with the name, as a check.
+6. **The data inbox can be off**, and the upload then has nowhere to go: Push is disabled with the link to Admin → Engines, as the board does.
+
+#### Build checklist
+
+Built: **B**, with C's two ways in; A and C were not built.
+
+| Area | Item | Status |
+|---|---|---|
+| Server | `POST /api/v1/admin/dataload/upload`: streams the raw body into `<dataload>/staging/`, never into memory; free-space floor; size limit in `config/engines/dataload.yaml` | built |
+| Server | `POST /api/v1/admin/dataload/inspect`: name, tar layout, SHA-256 and rows as a job with progress; for an upload or a file in `inbox/` (names only, no paths, no links) | built |
+| Server | `POST /api/v1/admin/dataload/check`: the form's values against a sample; returns the pass, warning and refused list in words with the fix | built |
+| Server | `POST /api/v1/admin/dataload/push`: rename the data file into `inbox/`, then write the `.ready` the same way, last; refuses when a check refuses, re-checked on the server | built |
+| Server | `GET /api/v1/admin/dataload/choices`: lakes, packs, kinds, connectors, each kind's key from its contract, files in `inbox/` with no marker | built |
+| Reuse | `ReadyNote` for the keys and rules (today it reads a `Path`: add parsing from text); one writer beside it, tested by reading its output back; `READY_KEYS` in `tools/lake/feedroute.py` stays compared | built |
+| Reuse | `Routes` for what a name routes to, the contract validator for the sample, `VarIntake`'s rule for DRS-5210 | built |
+| Reuse | The streaming of `/api/lakes/upload` in `drishti-console/routes/lake_routes.py`, passed on to the server rather than kept in the console's temporary folder | built |
+| Security | Administrator only; add the new endpoints to the `loads:write` list in `application.yaml` for API tokens; file names validated (no `..`, no leading dot, accepted extensions only) | built |
+| Audit | One audit line per push: who, file, SHA-256, rows, the `.ready` text; a refusal overridden is impossible, so none to record | built |
+| Cluster | Every call goes to the owner node (`owner: true`), which holds the inbox folder; another node forwards; the page names the owner node | built |
+| CLI | `drishti.py dataload ready <file>` in `tools/dataloadcli.py`: same inspect and check, prints the `.ready`, `--push` to push; shares the endpoints | built |
+| Console | Tab *Upload* in `_loads_tabs.html`; *Build its .ready* on a no-marker card in `_inbox_body.html`; dropping on the board opens Upload | built |
+| Elements | No bespoke UI: `Form`, pickers and read-only `CodeEditor` from drishti-inputs. **A file-drop input with progress does not exist yet:** add it to drishti-inputs, with its gallery page | built |
+| Docs | DATA_LAKE_GUIDE section 3.5 (the page), one tutorial with UI, CLI and YAML (screenshots deferred, owner), `CONFIGURATION.md` for the new settings, CHANGELOG | built |
+| Tests | Writer and `ReadyNote` round trip for every key; each check's words; refusal blocks push on the server; data before `.ready` (crash between them leaves no marker); name collision; path traversal; tar with an unresolved folder; `loads:write` and non-admin refused; owner-node forwarding; one browser test per state, dark and light | built |
+
+### The live blotter: mock-ups
+
+Three options for the live, editable blotter (the trading module's trade blotter is the first declaration; the same screen serves every
+blotter a module declares). Each is a self-contained HTML file with the theme tokens inlined, no CDN; `#light` shows the light theme.
+PNGs at 1440 × 900, dark and light, from headless Chrome.
+
+| Option | File | In one line |
+|---|---|---|
+| A | `blotter-A-terminal-grid.html` | the dense terminal grid: every editable cell edits in place; refusals as a toast |
+| B | `blotter-B-grid-and-panel.html` | the grid plus the record's panel: editable fields, reason, four-eyes state, version history, links to Explain, VaR and limits |
+| C | `blotter-C-grouped-stream.html` | grouped by desk and book with live subtotals, an event ticker and the tray of my changes (the outbox) |
+
+**Recommended: B**, with C's *My changes* tray and grouping as grid options (grouping is a grid feature in every option): quick edits stay
+in the cells, while a change that needs a reason or an approver is reviewed in the panel, where the version and who changed the record
+last are in view before anything is sent.
+
+### Include or exclude matured items on the VaR explorer: two mock-ups
+
+**The request.** A control on the VaR explorer that adds matured items back into the figure, at the grain of the input: positions for
+`GRAIN=POSITION`, trades for `GRAIN=TRADE`. Off by default.
+
+Each mock-up is self-contained (system fonts, no CDN). Open it in a browser. The caption bar switches the control, the input grain and the
+theme; the address keeps the choice (`#on-trade-light`). The figures are made up.
+
+| Option | File | Off | On, positions | On, trades | On, light |
+|---|---|---|---|---|---|
+| A · Header switch | [A-header-switch.html](../lenses/mockups/var-matured/A-header-switch.html) | ![](../lenses/mockups/var-matured/A-off.png) | ![](../lenses/mockups/var-matured/A-on-position.png) | ![](../lenses/mockups/var-matured/A-on-trade.png) | ![](../lenses/mockups/var-matured/A-on-light.png) |
+| B · Scope compare | [B-scope-compare.html](../lenses/mockups/var-matured/B-scope-compare.html) | ![](../lenses/mockups/var-matured/B-off.png) | ![](../lenses/mockups/var-matured/B-on-position.png) | ![](../lenses/mockups/var-matured/B-on-trade.png) | ![](../lenses/mockups/var-matured/B-on-light.png) |
+
+#### What both show
+
+- **The control names the grain:** "matured positions" or "matured trades", from the input. It is off whenever the page opens.
+- **When on, the figure says so:** an INCLUDES MATURED tag in the header, the first words of the commentary, and each export (Excel title and
+  Scope column, PDF banner, CSV `SCOPE` column).
+- **What ignores it:** the official record, captures and sign-off, limit use and breaches. Limit use stays on the official figure in both.
+- **A matured trade inside a position** is flagged only. A position's PVs arrive whole, so it stays in the figure either way.
+
+#### The two options
+
+**A · Header switch.** One switch beside Export; on, a band with *Back to official*.
+*For:* least on the screen, one click, the page looks as it does today while off. *Against:* the size of the difference is visible only once on.
+
+**B · Scope compare.** Official or With matured as two segments, the official figure, the other figure and the difference always shown, and a
+list of the matured items. *For:* the official figure is never out of sight, and the list answers "what was added". *Against:* a permanent
+card and a second VaR figure on the page, even for people who never use it, and the second figure must be computed on every open.
+
+#### Recommendation
+
+**A as the default,** with B's list of matured items opened from the band when the control is on. A keeps the explorer as it is for the people
+who never need this and computes the second figure only on request; the band already states the official figure and the difference.
