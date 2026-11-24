@@ -58,12 +58,15 @@ jobs:
       - name: Copyright headers
         run: python tools/license_headers.py
       - name: Every generated document is current
+        env: { DRISHTI_TOOLS_HOME: '${{ runner.temp }}/drishti-tools' }   # the settings catalogue reads the shared tls.* / proxy.* settings from the Tools source
         run: python tools/drishti.py docs generate --check
       - name: Docs and Help tests of the console
+        env: { DRISHTI_TOOLS_HOME: '${{ runner.temp }}/drishti-tools' }
         run: python -m pytest -q -p no:randomly drishti-console/tests/test_docs_*.py drishti-console/tests/test_help*.py drishti-console/tests/test_settings_catalogue.py drishti-console/tests/test_tools_guide.py -m "not browser"
       - name: Docs consolidation
         run: python -m pytest -q tools/test_docs_consolidation.py
       - name: Generated docs
+        env: { DRISHTI_TOOLS_HOME: '${{ runner.temp }}/drishti-tools' }
         run: python -m pytest -q tools/test_docs_generated.py
       - name: README standard
         run: python -m pytest -q tools/test_readmes.py
