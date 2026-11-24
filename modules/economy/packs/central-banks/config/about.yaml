@@ -29,7 +29,7 @@ kinds:
   central-bank:
     title: Central bank
     about: The ${$.NAME}'s policy rate was ${fmt($.POLICY_RATE, 'price2')}% on ${$.POLICY_RATE_DATE}; it last moved on ${$.LAST_MOVE_DATE}.
-    guide: central-banks
+    guide: world-data-guide
     glossary:
       BANK_ID: { term: Bank id, means: "CBANK- and the bank's short id in the feed's YAML (FED, BOC)." }
       NAME: { term: Name, means: "The central bank's name." }
@@ -64,7 +64,7 @@ kinds:
   rate-series:
     title: Central bank series
     about: ${$.TITLE} was ${fmt($.LATEST, 'amount2')} (${$.UNIT}) on ${$.LATEST_DATE}.
-    guide: central-banks
+    guide: world-data-guide
     glossary:
       SERIES_ID: { term: Series id, means: "CBSER-, the source (FRED or BOC) and the source's series code with dots as underscores." }
       NAME: { term: Name, means: "The series' title, as NAME for search." }

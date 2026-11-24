@@ -30,7 +30,7 @@ kinds:
     about: >-
       ${$.AGREEMENT_ID} is the ${$.TYPE} the bank signed with ${$.COUNTERPARTY_NAME} on ${$.SIGNED}, under ${$.GOVERNING_LAW} law;
       close-out netting is ${$.CLOSE_OUT_NETTING}, so the trades under it net to one amount if either side defaults.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       TYPE: { term: "Agreement type", means: "The master agreement form, for example the ISDA 2002 Master Agreement." }
       COUNTERPARTY_NAME: { term: "Counterparty", means: "The legal entity that signed the agreement with the bank." }
@@ -48,7 +48,7 @@ kinds:
     about: >-
       ${$.CSA_ID} secures ${$.AGREEMENT} with ${$.MARGIN_TYPE} margin, called ${$.FREQUENCY}: the bank's threshold is
       ${fmt($.THRESHOLD_US, 'compact')} and the counterparty's ${fmt($.THRESHOLD_THEM, 'compact')}, with a minimum transfer of ${fmt($.MTA, 'compact')}.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       MARGIN_TYPE: { term: "Margin type", means: "Variation margin (VM) covers today's value; initial margin (IM) covers how it may move before a default is closed out." }
       THRESHOLD_US: { term: "Threshold (bank)", means: "The exposure the counterparty may have to the bank before the bank must post collateral.", unit: "USD" }
@@ -67,7 +67,7 @@ kinds:
       ${$.NETTING_SET_ID} groups ${$.TRADE_COUNT} trades that net on close-out under one agreement: they are worth
       ${fmt($.NET_MTM, 'signed0')} USD together, secured by ${fmt($.COLLATERAL, 'signed0')} of collateral. Its exposure profile is the
       exposure engine's, computed from the simulated paths as the page opens: ${coalesce($.EXPOSURE_ENGINE.NOTE, 'not computed here')}.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       TRADE_COUNT: { term: "Trades", means: "The number of trades that are netted together under the agreement." }
       NET_MTM:
@@ -108,7 +108,7 @@ kinds:
     about: >-
       ${$.NETTING_SET_ID}: ${$.TRADE_COUNT} live trades worth ${fmt($.NET_MTM, 'signed0')} USD together, worked out from the day's trade
       valuations (not stored); ${$.PAST_MATURITY_COUNT} trades of a live status are past their maturity date and count in no total.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       NET_MTM: { term: "Net mark to market (derived)", means: "The sum of the live trades' mark to market, from the trade valuations.", unit: "USD", sign: "Positive is owed to the bank." }
       TRADE_COUNT: { term: "Live trades", means: "Trades of a live status (new, validated, amended) not past their maturity date." }
@@ -124,7 +124,7 @@ kinds:
       ${$.COUNTERPARTY}: ${$.TRADE_COUNT} live trades in ${$.NETTING_SET_COUNT} netting sets worth ${fmt($.NET_MTM, 'signed0')} USD
       together, worked out from the day's trade valuations; before collateral its exposure is ${fmt($.CE_UNCOLLATERALISED, 'compact')}
       (each set's positive net, added: exposures never net across netting sets).
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       NET_MTM: { term: "Net mark to market (derived)", means: "The sum of the live trades' mark to market over all the counterparty's netting sets.", unit: "USD" }
       CE_UNCOLLATERALISED: { term: "Current exposure before collateral", means: "The sum over the netting sets of each set's positive net mark to market.", unit: "USD" }
@@ -133,7 +133,7 @@ kinds:
     about: >-
       ${$.COUNTERPARTY_NAME} may be exposed up to ${fmt($.LIMIT, 'compact')} USD on the measure "${$.MEASURE}": it uses
       ${fmt($.USED, 'compact')}, which is ${fmt($.UTILISATION, 'pct0')}. Status: ${$.STATUS}.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       COUNTERPARTY_NAME: { term: "Counterparty", means: "The legal entity the limit applies to." }
       MEASURE: { term: "Limit measure", means: "The exposure measure the limit is set on, for example the peak of the 95th-percentile potential future exposure." }
@@ -150,7 +150,7 @@ kinds:
       ${$.LABEL} on ${$.BUSINESS_DATE}: expected positive exposure ${fmt($.EPE, 'compact')} USD, effective ${fmt($.EEPE, 'compact')},
       peak ${fmt($.CONFIDENCE, 'pct0')} potential future exposure ${fmt($.PEAK_PFE, 'compact')} on ${$.PEAK_PFE_DATE}, computed by the
       exposure engine from the ${$.PATHS} paths of run ${$.RUN_ID} when asked, never stored.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       SCOPE: { term: "Scope", means: "What the exposure is computed for, in the scope grammar: a netting set (NSET:), a counterparty (CPTY:), a group (GROUP:), a legal entity (LE:), a trade alone (TRD:), or a combination." }
       STATUS: { term: "Status", means: "ok, or no-paths when the day's simulation run covers none of the scope's netting sets." }
@@ -182,7 +182,7 @@ kinds:
       ${$.NODE_NAME} (${$.LEVEL}) on ${$.BUSINESS_DATE}: the official end-of-day peak expected exposure of ${fmt($.PEAK_EE, 'compact')} USD
       and peak 95% potential future exposure of ${fmt($.PEAK_PFE_95, 'compact')} USD, result version ${$.RESULT_VERSION}, as the server
       captured and published it (read only; EXP ${$.NODE_ID} computes it again now).
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       HIERARCHY: { term: "Row type", means: "NSET for a netting set, CPTY for a counterparty (all its netting sets netted path by path), GROUP for a connected group." }
       NODE_ID: { term: "Scope", means: "The scope the figures are for, in the scope grammar: NSET:<set>, CPTY:<counterparty> or GROUP:<group>." }
@@ -199,7 +199,7 @@ kinds:
     about: >-
       ${$.RUN_ID} is the upstream exposure simulation of ${$.BUSINESS_DATE}: ${$.PATHS} market paths over a grid of future dates
       (${$.CALIBRATION} calibration); every trade was valued on every path and date, and the exposure engine reads them.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       PATHS: { term: "Paths", means: "The number of simulated market scenarios; every trade's values are on the same paths." }
       CALIBRATION: { term: "Calibration", means: "REAL_WORLD (for PFE and limits) or RISK_NEUTRAL (for CVA and pricing) or STRESSED." }
@@ -211,7 +211,7 @@ kinds:
     about: >-
       ${$.TRADE_ID}'s value on every one of the run's paths at ${$.GRID_DATE} (grid index ${$.GRID_INDEX}), in netting set
       ${$.NETTING_SET}: the input the exposure engine nets, collateralises and counts.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       MTM: { term: "Path values", means: "The trade's mark to market on each simulated path at the grid date, from the bank's side.", unit: "USD", sign: "Positive is owed to the bank." }
       GRID_INDEX: { term: "Grid index", means: "The position of the date in the run's grid." }
@@ -224,7 +224,7 @@ kinds:
       The valuation adjustments of ${$.NETTING_SET} are CVA ${fmt($.CVA, 'signed0')}, DVA ${fmt($.DVA, 'signed0')}, FVA ${fmt($.FVA, 'signed0')}
       and KVA ${fmt($.KVA, 'signed0')} USD; a one basis point rise in the counterparty's credit spread moves the CVA by
       ${fmt($.CS01, 'signed0')}.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       CVA: { term: "Credit valuation adjustment", means: "The expected loss from the counterparty defaulting, valued at market spreads and taken off the value of the trades.", unit: "USD", sign: "Negative is a cost." }
       DVA: { term: "Debit valuation adjustment", means: "The mirror image of CVA: the gain from the bank's own possible default, which reduces what it would owe.", unit: "USD", sign: "Positive is a gain." }
@@ -240,7 +240,7 @@ kinds:
       The regulatory exposure at default of ${$.NETTING_SET} is ${fmt($.EAD, 'compact')} USD: replacement cost ${fmt($.REPLACEMENT_COST, 'compact')}
       plus an add-on of ${fmt($.ADD_ON, 'compact')} scaled by a multiplier of ${fmt($.MULTIPLIER, 'price2')}; its risk-weighted assets are
       ${fmt($.RWA, 'compact')}.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       REPLACEMENT_COST:
         term: "Replacement cost"
@@ -268,7 +268,7 @@ kinds:
     about: >-
       Under ${coalesce($.CSA, 'the CSA')} the bank holds ${fmt($.HELD, 'compact')} and has posted ${fmt($.POSTED, 'compact')} USD of collateral
       for netting set ${$.NETTING_SET}, a net ${fmt($.NET, 'signed0')} as of ${$.AS_OF}.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       HELD: { term: "Collateral held", means: "The collateral the bank has received from the counterparty.", unit: "USD" }
       POSTED: { term: "Collateral posted", means: "The collateral the bank has delivered to the counterparty.", unit: "USD" }
@@ -288,7 +288,7 @@ kinds:
     about: >-
       ${$.CALL_ID} is a ${lower($.MARGIN_TYPE)} margin call of ${fmt($.AMOUNT, 'amount0')} ${$.CURRENCY} dated ${$.CALL_DATE}
       (${lower($.DIRECTION)}); its status is ${$.STATUS}.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       CALL_DATE: { term: "Call date", means: "The day the margin call was issued." }
       MARGIN_TYPE:
@@ -312,7 +312,7 @@ kinds:
     about: >-
       ${$.CALC_ID} is the ${$.VERSION} initial margin for the netting set: ${fmt($.TOTAL, 'compact')} USD in total, of which the bank has
       posted ${fmt($.POSTED, 'compact')} and received ${fmt($.RECEIVED, 'compact')}.
-    guide: counterparty-risk
+    guide: docs-guides-exposure-guide
     glossary:
       POSTED: { term: "Initial margin posted", means: "The initial margin the bank has delivered to the counterparty or a custodian.", unit: "USD" }
       RECEIVED: { term: "Initial margin received", means: "The initial margin the counterparty has delivered to the bank.", unit: "USD" }

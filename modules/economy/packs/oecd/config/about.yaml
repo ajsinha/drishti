@@ -28,7 +28,7 @@ kinds:
   oecd-country:
     title: OECD country
     about: ${$.COUNTRY_NAME}'s consumer price inflation was ${fmt($.INFLATION, 'price2')}% in ${$.INFLATION_PERIOD}.
-    guide: oecd
+    guide: world-data-guide
     glossary:
       COUNTRY_ID: { term: Country id, means: "OECD- and the member's ISO 3166-1 alpha-3 code." }
       NAME: { term: Name, means: "The member's name as the OECD writes it." }
@@ -62,7 +62,7 @@ kinds:
   oecd-series:
     title: OECD series
     about: ${$.TITLE} for ${$.COUNTRY_NAME} was ${fmt($.LATEST, 'amount2')} (${$.UNIT}) in ${$.LATEST_PERIOD}.
-    guide: oecd
+    guide: world-data-guide
     glossary:
       SERIES_ID: { term: Series id, means: "OECDS-, the member's ISO alpha-3 code and the measure's id." }
       NAME: { term: Name, means: "The member and the measure, as one name." }

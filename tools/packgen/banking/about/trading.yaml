@@ -341,7 +341,7 @@ kinds:
       ${$.TRADE_ID} from ${$.SOURCE_SYSTEM}: ${$.PRODUCT_TYPE} (${nonblank($.PRODUCT_SUB_TYPE, $.PRODUCT_GROUP, 'no sub type')}) with ${$.COUNTERPARTY},
       ${$.BUY_SELL_CODE == 'B' ? 'bought' : 'sold'} on ${$.TRADE_DATE}: ${size($.LEGS)} leg(s), the first of
       ${fmt(first($.LEGS).NOTIONAL, 'compact')} ${$.CURRENCY}, maturing ${$.MATURITY_DATE}. Its status is ${nonblank($.TRADE_STATUS, 'not given')}.
-    guide: trading
+    guide: bank-data-guide
     glossary:
       LEGS.CASH_FLOWS: { use: "CASH_FLOWS" }
       LEGS.INDEX.NAME: { use: "NAME" }
@@ -350,7 +350,7 @@ kinds:
     about: >-
       ${$.TRADE_COUNT} trades from ${size($.SOURCE_SYSTEMS)} source system(s), in ${size($.PRODUCT_TYPES)} product type(s) and
       ${size($.CURRENCIES)} currency(ies); the last matures on ${$.LAST_MATURITY}.
-    guide: trading
+    guide: bank-data-guide
     glossary:
       TRADES.TRADE_ID: { use: "TRADE_ID" }
   portfolio-trades:
@@ -358,7 +358,7 @@ kinds:
     about: >-
       ${$.TRADE_COUNT} trades from ${size($.SOURCE_SYSTEMS)} source system(s), in ${size($.PRODUCT_TYPES)} product type(s) and
       ${size($.CURRENCIES)} currency(ies); the last matures on ${$.LAST_MATURITY}.
-    guide: trading
+    guide: bank-data-guide
     glossary:
       TRADES.TRADE_ID: { use: "TRADE_ID" }
   legal-entity-trades:
@@ -366,7 +366,7 @@ kinds:
     about: >-
       ${$.TRADE_COUNT} trades from ${size($.SOURCE_SYSTEMS)} source system(s), in ${size($.PRODUCT_TYPES)} product type(s) and
       ${size($.CURRENCIES)} currency(ies); the last matures on ${$.LAST_MATURITY}.
-    guide: trading
+    guide: bank-data-guide
     glossary:
       TRADES.TRADE_ID: { use: "TRADE_ID" }
   index-trades:
@@ -374,7 +374,7 @@ kinds:
     about: >-
       ${$.TRADE_COUNT} trades from ${size($.SOURCE_SYSTEMS)} source system(s), in ${size($.PRODUCT_TYPES)} product type(s) and
       ${size($.CURRENCIES)} currency(ies); the last matures on ${$.LAST_MATURITY}.
-    guide: trading
+    guide: bank-data-guide
     glossary:
       TRADES.TRADE_ID: { use: "TRADE_ID" }
 intro:

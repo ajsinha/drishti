@@ -135,8 +135,15 @@ class AboutPacksTest {
             packs.map(p -> p.resolve("config").resolve("help.yaml")).filter(Files::isRegularFile).forEach(helpFiles::add);
         }
         for (Path f : helpFiles) {
-            JsonNode guides = yaml.readTree(Files.readString(f)).path("guides");
-            guides.forEach(g -> slugs.add(g.path("slug").asText()));
+            slugsIn(yaml.readTree(Files.readString(f)), slugs);
+        }
+        // the Help centre also serves every document under docs/ at its automatic address: docs-<path with / and _ as ->, lower case
+        Path docs = Path.of(TestRoots.repo(), "docs");
+        try (Stream<Path> md = Files.walk(docs)) {
+            md.filter(p -> p.toString().endsWith(".md")).forEach(p -> {
+                String rel = docs.relativize(p).toString().replace('\\', '/');
+                slugs.add(("docs/" + rel.substring(0, rel.length() - 3)).replace('/', '-').replace('_', '-').toLowerCase(java.util.Locale.ROOT));
+            });
         }
         List<String> broken = new ArrayList<>();
         for (String pack : PACKS) {
@@ -149,5 +156,13 @@ class AboutPacksTest {
             }
         }
         assertThat(broken).as("guides that do not exist").isEmpty();
+    }
+
+    /** Every {@code slug} the Help centre declares (guides, sections and their nested pages). */
+    private static void slugsIn(JsonNode node, Set<String> slugs) {
+        if (node.isObject() && node.hasNonNull("slug")) {
+            slugs.add(node.path("slug").asText());
+        }
+        node.forEach(child -> slugsIn(child, slugs));
     }
 }

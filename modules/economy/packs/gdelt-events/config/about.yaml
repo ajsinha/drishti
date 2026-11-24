@@ -28,7 +28,7 @@ kinds:
   event-country:
     title: World events by country
     about: On ${$.DATE} the news reported ${$.EVENTS} events whose first actor is ${$.COUNTRY_NAME}, with an average tone of ${fmt($.AVG_TONE, 'signed2')}.
-    guide: gdelt-events
+    guide: world-data-guide
     glossary:
       EVENT_COUNTRY_ID: { term: Country id, means: "GDELT- and the country's ISO 3166-1 alpha-3 code (the CAMEO country code of the event's first actor)." }
       NAME: { term: Name, means: "The country's name (Natural Earth)." }

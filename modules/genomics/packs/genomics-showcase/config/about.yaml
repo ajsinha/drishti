@@ -20,7 +20,7 @@ kinds:
   study-gene:
     title: Study gene
     about: '${$.GENE} on chromosome ${$.CHROM} (${$.ROLE}): ${$.ALTERED_SAMPLES} of the cohort''s 1,500 samples carry a damaging change in it.'
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       GENE:
         term: Gene
@@ -64,7 +64,7 @@ kinds:
   study-sample:
     title: Study sample
     about: 'Sample ${$.SAMPLE_ID}: ${$.TUMOUR_TYPE}, stage ${$.STAGE}, ${$.RESPONSE}, in cluster ${$.CLUSTER}.'
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       SAMPLE_ID:
         term: Sample id
@@ -106,7 +106,7 @@ kinds:
   study-variant:
     title: Study variant
     about: '${$.VARIANT_ID} in ${$.GENE}: ${$.CONSEQUENCE}, ${$.IMPACT} impact, carried by ${$.CARRIERS} samples.'
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       VARIANT_ID:
         term: Variant id
@@ -150,7 +150,7 @@ kinds:
   variant-call:
     title: Variant call
     about: Sample ${$.SAMPLE_ID} carries ${$.VARIANT_ID} (${$.GENE}) with ${$.GENOTYPE} at an allele fraction of ${$.VAF}.
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       CALL_ID:
         term: Call id
@@ -178,7 +178,7 @@ kinds:
   association:
     title: Association of a variant with a trait
     about: '${$.VARIANT_ID} in ${$.GENE} against ${$.TRAIT}: minus log10 p ${$.NEG_LOG10_P}, effect ${$.BETA}.'
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       ASSOC_ID:
         term: Assoc id
@@ -218,7 +218,7 @@ kinds:
   cnv-segment:
     title: Copy-number segment
     about: 'Sample ${$.SAMPLE_ID}: ${$.CALL} on chromosome ${$.CHROM} (${$.COPY_NUMBER} copies).'
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       SEGMENT_ID:
         term: Segment id
@@ -250,7 +250,7 @@ kinds:
   pathway-gene:
     title: Pathway membership
     about: ${$.GENE} is ${$.ROLE_IN_PATHWAY} in ${$.PATHWAY}.
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       PATHWAY_GENE_ID:
         term: Pathway gene id
