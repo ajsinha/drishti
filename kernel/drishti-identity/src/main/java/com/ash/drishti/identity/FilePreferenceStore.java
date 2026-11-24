@@ -178,7 +178,7 @@ public final class FilePreferenceStore implements PreferenceStore {
             Path tmp = f.resolveSibling(f.getFileName() + ".tmp");
             json.writerWithDefaultPrettyPrinter().writeValue(tmp.toFile(), all);
             try {
-                Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, f);
             } catch (AtomicMoveNotSupportedException e) {
                 Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING);
             }

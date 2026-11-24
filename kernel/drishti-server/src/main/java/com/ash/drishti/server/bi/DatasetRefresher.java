@@ -377,7 +377,7 @@ public final class DatasetRefresher implements AutoCloseable {
                 java.nio.file.Files.createDirectories(stateFile.getParent());
                 java.nio.file.Path tmp = stateFile.resolveSibling(stateFile.getFileName() + ".tmp");
                 java.nio.file.Files.writeString(tmp, JSON.writeValueAsString(Map.of("saved", clock.instant().toString(), "jobs", jobs)), java.nio.charset.StandardCharsets.UTF_8);
-                java.nio.file.Files.move(tmp, stateFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, stateFile);
             } catch (java.io.IOException | RuntimeException e) {
                 LOG.warn("BI refresh state could not be saved to {}: {}", stateFile, e.toString());
             }

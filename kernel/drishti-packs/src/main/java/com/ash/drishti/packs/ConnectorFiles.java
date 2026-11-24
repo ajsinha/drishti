@@ -481,7 +481,7 @@ public final class ConnectorFiles {
             backup(name);
             Path tmp = com.ash.drishti.common.TempFiles.createFile(dir, name + "-", ".tmp");
             Files.writeString(tmp, text, StandardCharsets.UTF_8);
-            Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(tmp, f);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -476,7 +476,7 @@ public final class IdentitySync implements StateSync.Part, AutoCloseable {
             Path tmp = tombstoneFile.resolveSibling(tombstoneFile.getFileName() + ".tmp");
             json.writeValue(tmp.toFile(), out);
             try {
-                Files.move(tmp, tombstoneFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, tombstoneFile);
             } catch (AtomicMoveNotSupportedException e) {
                 Files.move(tmp, tombstoneFile, StandardCopyOption.REPLACE_EXISTING);
             }

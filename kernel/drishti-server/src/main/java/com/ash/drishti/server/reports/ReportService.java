@@ -37,7 +37,6 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -234,7 +233,7 @@ public final class ReportService implements AutoCloseable {
         Path file = dir.resolve(safe + "-" + day + "-" + ZonedDateTime.now(dates.zone()).format(STAMP) + (jsonl ? ".jsonl" : ".csv"));
         Path tmp = com.ash.drishti.common.TempFiles.createFile(dir, "report-", ".part");
         Files.writeString(tmp, body, StandardCharsets.UTF_8);
-        Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        com.ash.drishti.api.FileReplace.atomically(tmp, file);
         return file.toString();
     }
 

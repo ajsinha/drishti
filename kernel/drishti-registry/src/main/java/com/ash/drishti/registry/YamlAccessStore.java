@@ -24,7 +24,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -195,7 +194,7 @@ public final class YamlAccessStore implements AccessStore {
             }
             Path next = f.resolveSibling(f.getFileName() + ".next");
             Files.write(next, lines, StandardCharsets.UTF_8);
-            Files.move(next, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(next, f);
         } catch (IOException e) {
             throw new UncheckedIOException("could not write " + f, e);
         }

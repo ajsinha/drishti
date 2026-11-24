@@ -445,7 +445,7 @@ public final class PlacementService {
             }
             Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
             Files.writeString(tmp, p.toYaml());
-            Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(tmp, file);
             current = p;
             fileProblem = null;
             seen = Files.getLastModifiedTime(file).toMillis() ^ Files.size(file);

@@ -180,7 +180,7 @@ public final class ProposalStore {
         try {
             json.writerWithDefaultPrettyPrinter().writeValue(tmp.toFile(), p);
             try {
-                Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, target);
             } catch (AtomicMoveNotSupportedException e) {
                 Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
             }
