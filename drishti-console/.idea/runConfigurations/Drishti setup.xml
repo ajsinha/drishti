@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Drishti: setup: prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): checked, what is missing installed offline from the wheel pack in `~/drishti-wheels` (it makes `dev.ini`, so it names none).
+  Drishti: setup: prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): CHECKED, never installed; what is missing is one [FAIL] with the pip command you may run yourself (it makes `dev.ini`, so it names none).
   Use it when: after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing.
   PyCharm: open drishti/drishti-console as the project (the install folder is $PROJECT_DIR$/..); it runs on the project
   interpreter you choose (Settings, Project, Python Interpreter), the one setup prepared.

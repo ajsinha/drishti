@@ -72,20 +72,20 @@ NUMBER = {"integer", "amount", "rate"}
 
 # -- the packs ----------------------------------------------------------------------------------------------------------------
 
-def _yaml():
+def _yaml_mod():
     """PyYAML, imported when a contract is read or written (``drishti.py setup`` runs on a Python that has not got it yet)."""
     import yaml
     return yaml
 
 
 def _loader():
-    y = _yaml()
+    y = _yaml_mod()
     return getattr(y, "CSafeLoader", y.SafeLoader)
 
 
 @functools.lru_cache(maxsize=256)
 def _parsed(path: str, mtime: int):
-    return _yaml().load(Path(path).read_text(encoding="utf-8"), Loader=_loader())
+    return _yaml_mod().load(Path(path).read_text(encoding="utf-8"), Loader=_loader())
 
 
 def _yaml(path: Path):
@@ -861,7 +861,7 @@ def header() -> str:
 
 @functools.lru_cache(maxsize=1)
 def _dumper():
-    class _Dumper(_yaml().SafeDumper):
+    class _Dumper(_yaml_mod().SafeDumper):
         pass
 
     _Dumper.add_representer(OrderedDict, lambda d, data: d.represent_dict(data.items()))
@@ -871,7 +871,7 @@ def _dumper():
 
 def dump(contract: dict) -> str:
     """A contract as its YAML file: the licence, a line on what the file is, the contract."""
-    body = _yaml().dump(contract, Dumper=_dumper(), sort_keys=False, allow_unicode=True, width=140, default_flow_style=False)
+    body = _yaml_mod().dump(contract, Dumper=_dumper(), sort_keys=False, allow_unicode=True, width=140, default_flow_style=False)
     return (header() + f"# Data contract of the {contract['kind']} kind (command {contract['mnemonic']}): docs/contracts/README.md section 16.\n"
             f"# Drafted by `drishti.py contract bootstrap {contract['kind']}`; owned by people from then on: confirm the review points, then remove them.\n"
             + body)

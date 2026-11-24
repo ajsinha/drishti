@@ -424,8 +424,7 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 
 | Name | What it runs | What it is | Use it when |
 |---|---|---|---|
-| **Drishti: setup** | `drishti.py setup`, `dev.ini` only | prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): checked, what is missing installed offline from the wheel pack in `~/drishti-wheels` (it makes `dev.ini`, so it names none) | after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing |
-| **Drishti: setup (package index)** | `drishti.py setup --index`, `dev.ini` only | the same, installing what is missing from your configured package index instead of the wheel pack | no wheel pack, and pip may reach your package index |
+| **Drishti: setup** | `drishti.py setup`, `dev.ini` only | prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): CHECKED, never installed; what is missing is one [FAIL] with the pip command you may run yourself (it makes `dev.ini`, so it names none) | after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing |
 | **Drishti: check setup** | `drishti.py setup --check`, `dev.ini` only | what setup would do, changing nothing: the settings file, the data folder and the libraries of the project interpreter, name by name | before setup, or to see why a launcher refuses |
 
 **Drishti-python 2 Data**

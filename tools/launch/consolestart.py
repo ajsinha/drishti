@@ -45,8 +45,10 @@ def console_python(env: dict, keys: dict, home: Path, settings: str | None = Non
         raise LaunchError(procs.fail("the console's Python", f"{chosen} (from {why}) is not there", setup_line(settings)))
     bad = verify(chosen, home) if verify else pylibs.verify(chosen, home, lock=False)     # the console's own requirements
     if bad:
-        raise LaunchError(procs.fail("the console's Python", f"{chosen} (from {why}) lacks libraries the console needs (start installs nothing):\n  "
-                                     + "\n  ".join(bad) + "\n", setup_line(settings)))
+        pack = pylibs.find_pack(None, env)
+        folder = pack.path if pack.path is not None and pack.path.is_dir() else None
+        raise LaunchError(procs.fail("the console's Python", f"{chosen} (from {why}) lacks libraries the console needs (Drishti installs nothing):\n  "
+                                     + "\n  ".join(bad) + "\n", "   or   ".join(pylibs.install_commands(chosen, home, folder))))
     return chosen
 
 

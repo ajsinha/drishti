@@ -40,13 +40,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Locked Python environments (docs/guides/bi/README.md section 5): one per lock, its id the sha256 of (interpreter version,
- * platform, lock text): a library folder {@code <data dir>/compute/envs/<id>/site/} filled by the configured interpreter
- * ({@code compute.python}, else {@code drishti.python}) with {@code pip install --target <site> --require-hashes --no-deps
- * --only-binary=:all:} from the approved source only (no resolution, no source builds, no index but the one named), then recorded in a
- * manifest of hashes and made read-only. No virtual environment is made: a worker runs that same interpreter with the folder first on its
- * {@code PYTHONPATH}. Never changed in place: a new lock is a new
- * environment. A build that fails leaves nothing behind and names the wheel in its message. pip's temporary files go under
- * {@code <data dir>/compute/work/}, never the machine's temporary folder.
+ * platform, lock text). Drishti NEVER installs a Python library (owner rule, 2026-11-23: an automatic install can corrupt an
+ * environment): "building" an approved environment CHECKS that the configured interpreter ({@code compute.python}, else
+ * {@code drishti.python}) has every pin of the lock at its exact version, and records the check in a read-only manifest under
+ * {@code <data dir>/compute/envs/<id>/}. A pin that is missing or at another version fails the build in words, naming each one and the pip
+ * command the operator may run himself (from the approved source: the shipped folder, a folder, or the named index); nothing is left
+ * behind. Workers run that same interpreter as it is, and the libraries are asked again before a worker starts
+ * ({@link #verifyLibraries}). No virtual environment is made; no {@code pip} is ever started.
  */
 public final class Environments {
 
@@ -85,7 +85,7 @@ public final class Environments {
         return settings.envs().resolve(id);
     }
 
-    /** The library folder of an environment (pip's {@code --target}): first on a worker's {@code PYTHONPATH}. */
+    /** The folder of an environment's record (no library is ever put there: the interpreter's own libraries are used, checked). */
     public static Path site(Path envDir) {
         return envDir.resolve("site");
     }
@@ -152,18 +152,11 @@ public final class Environments {
             if (!have.equals(py.version())) {
                 throw fail(id, "the lock wants Python " + py.version() + ", compute.python is " + have);
             }
-            Files.createDirectories(site(dir));                            // the libraries only: no virtual environment
-            Path lockCopy = work.resolve("requirements.lock");
-            Files.writeString(lockCopy, lock.text());
-            List<String> pip = new ArrayList<>(List.of(python, "-m", "pip", "install", "--target", site(dir).toString(), "--require-hashes", "--no-deps",
-                    "--only-binary=:all:", "--no-cache-dir", "--disable-pip-version-check", "--no-input", "--isolated", "--no-warn-script-location"));
-            pip.addAll(source(py.index()));
-            pip.add("-r");
-            pip.add(lockCopy.toString());
-            Run install = run(pip, work, log);
-            if (install.exit != 0) {
-                throw fail(id, "pip refused the lock: " + pipProblem(install.out));
+            List<String> missing = missing(python, lock, work, log);           // CHECKED, never installed (owner rule, 2026-11-23)
+            if (!missing.isEmpty()) {
+                throw fail(id, missingWords(python, missing, py.index()));
             }
+            Files.createDirectories(dir);
             Map<String, Object> info = new LinkedHashMap<>();
             info.put("id", id);
             info.put("python", py.version());
@@ -175,8 +168,8 @@ public final class Environments {
             info.put("builtBy", builtBy);
             Manifest.write(dir, info);
             ReadOnly.apply(dir);
-            log.add("built " + id + " (" + lock.pins().size() + " packages) and made it read-only");
-            LOG.info("compute: environment {} built by {} ({} packages)", id, builtBy, lock.pins().size());
+            log.add("checked " + id + ": " + python + " has every one of the lock's " + lock.pins().size() + " packages at its version");
+            LOG.info("compute: environment {} checked by {} ({} packages in {})", id, builtBy, lock.pins().size(), python);
             return new Built(id, dir, log, false);
         } catch (IOException e) {
             throw fail(id, "the build failed: " + e.getMessage());
@@ -200,6 +193,7 @@ public final class Environments {
         return new ComputeException(ComputeException.Code.REFUSED, "environment " + id + ": " + why);
     }
 
+    /** Where the operator's pip command takes the wheels from: the shipped folder, a folder, or a named index (printed, never run). */
     private List<String> source(String index) {
         if ("shipped".equals(index)) {
             return List.of("--no-index", "--find-links", settings.shipped().toString());
@@ -215,20 +209,57 @@ public final class Environments {
         return List.of("--index-url", url);
     }
 
-    /** The lines of pip's output that say what was wrong (a hash mismatch, a wheel missing for the platform). */
-    static String pipProblem(String out) {
-        List<String> keep = new ArrayList<>();
-        for (String line : out.split("\n")) {
-            String l = line.strip();
-            String lower = l.toLowerCase(Locale.ROOT);
-            if (lower.contains("hash") && (lower.contains("expected") || lower.contains("got") || lower.contains("do not match"))
-                    || lower.contains("no matching distribution") || lower.contains("could not find a version") || lower.startsWith("error:")
-                    || l.contains("==") && lower.contains("from")) {
-                keep.add(l);
+    private static final String PROBE = "import importlib.metadata as m, sys\nfor a in sys.argv[1:]:\n    n, v = a.split('==', 1)\n"
+            + "    try:\n        h = m.version(n)\n    except Exception:\n        h = None\n    if h != v:\n"
+            + "        print('MISSING ' + a + ' (' + ('not installed' if h is None else h + ' is installed') + ')')\n";
+
+    /** The lock's pins the interpreter has not got at their version, each in words; empty: every one is there. Nothing is installed. */
+    private List<String> missing(String python, LockFile lock, Path work, List<String> log) throws IOException {
+        List<String> cmd = new ArrayList<>(List.of(python, "-c", PROBE));
+        lock.pins().forEach(p -> cmd.add(p.name() + "==" + p.version()));
+        Run r = run(cmd, work, log);
+        if (r.exit != 0) {
+            throw new IOException("the interpreter " + python + " could not be asked what it has installed: " + r.last());
+        }
+        return r.out.lines().filter(l -> l.startsWith("MISSING ")).map(l -> l.substring(8)).toList();
+    }
+
+    /** What a check that found libraries missing says: their names and the pip command the operator may run himself. */
+    String missingWords(String python, List<String> missing, String index) {
+        StringBuilder cmd = new StringBuilder(quote(python)).append(" -m pip install");     // printed for the operator, never run
+        source(index).forEach(w -> cmd.append(' ').append(quote(w)));
+        missing.forEach(m -> cmd.append(' ').append(quote(m.split(" ", 2)[0])));
+        return "the interpreter " + python + " lacks " + String.join(", ", missing) + "; Drishti installs nothing (an automatic install can "
+                + "corrupt an environment): install them yourself, e.g. " + cmd + ", then build again";
+    }
+
+    private static String quote(String w) {
+        return w.matches(".*[\\s&<>|()].*") ? "\"" + w + "\"" : w;
+    }
+
+    /**
+     * The libraries of an approved, checked environment, asked again before a worker starts (the owner may have changed the interpreter
+     * since): refused, with the pip command, when one is missing. Nothing is installed.
+     */
+    public void verifyLibraries(Requires.Python py, LockFile lock) {
+        String id = id(py.version(), lock);
+        Path work = settings.work().resolve("check-" + id + "-" + Thread.currentThread().threadId());
+        List<String> log = new ArrayList<>();
+        try {
+            Files.createDirectories(work.resolve("tmp"));
+            List<String> missing = missing(settings.interpreter(), lock, work, log);
+            if (!missing.isEmpty()) {
+                throw fail(id, missingWords(settings.interpreter(), missing, py.index()));
+            }
+        } catch (IOException e) {
+            throw fail(id, e.getMessage());
+        } finally {
+            try {
+                ReadOnly.delete(work);
+            } catch (IOException e) {
+                LOG.warn("compute: could not remove the check folder {}: {}", work, e.getMessage());
             }
         }
-        String s = String.join(" ", keep.isEmpty() ? List.of(out.strip().lines().reduce((a, b) -> b).orElse("")) : keep);
-        return s.length() > 800 ? s.substring(0, 800) + "…" : s;
     }
 
     private record Run(int exit, String out) {

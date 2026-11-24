@@ -94,15 +94,8 @@ pycharm:
     kind: tool
     settings: false
     command: setup
-    what: "prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): checked, what is missing installed offline from the wheel pack in `~/drishti-wheels` (it makes `dev.ini`, so it names none)"
+    what: "prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): CHECKED, never installed; what is missing is one [FAIL] with the pip command you may run yourself (it makes `dev.ini`, so it names none)"
     when: after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing
-  - name: "Drishti: setup (package index)"
-    group: "Drishti-python 1 Setup"
-    kind: tool
-    settings: false
-    command: setup --index
-    what: "the same, installing what is missing from your configured package index instead of the wheel pack"
-    when: no wheel pack, and pip may reach your package index
   - name: "Drishti: check setup"
     group: "Drishti-python 1 Setup"
     kind: tool

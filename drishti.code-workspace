@@ -212,24 +212,6 @@
         "problemMatcher": []
       },
       {
-        "label": "Drishti: setup (package index)",
-        "type": "shell",
-        "command": "python3 tools/drishti.py setup --index",
-        "windows": {
-          "command": "py -3.13 tools/drishti.py setup --index"
-        },
-        "linux": {
-          "command": "python3 tools/drishti.py setup --index"
-        },
-        "osx": {
-          "command": "python3 tools/drishti.py setup --index"
-        },
-        "options": {
-          "cwd": "${workspaceFolder}"
-        },
-        "problemMatcher": []
-      },
-      {
         "label": "Drishti: check setup",
         "type": "shell",
         "command": "python3 tools/drishti.py setup --check",
@@ -417,18 +399,6 @@
         "program": "${workspaceFolder}/tools/drishti.py",
         "args": [
           "setup"
-        ]
-      },
-      {
-        "name": "Drishti: setup (package index)",
-        "type": "debugpy",
-        "request": "launch",
-        "cwd": "${workspaceFolder}",
-        "console": "integratedTerminal",
-        "program": "${workspaceFolder}/tools/drishti.py",
-        "args": [
-          "setup",
-          "--index"
         ]
       },
       {

@@ -52,7 +52,7 @@ INTELLIJ = ("Drishti: build all", "Drishti: test", "Drishti: build modules", "Dr
             "Drishti: run server (QA, port 18580)")
 PYCHARM = ("Drishti: run console", "Drishti: run console (QA, port 17580)", "Drishti: run console (Risk)", "Drishti: run console (Finance)", "Drishti: build demo lakes",
            "Drishti: run loader (file into the lake)", "Drishti: check environment", "Drishti: check environment (QA)",
-           "Drishti: setup", "Drishti: setup (package index)", "Drishti: check setup", "Drishti: check acceptance")
+           "Drishti: setup", "Drishti: check setup", "Drishti: check acceptance")
 
 
 def options(conf: ET.Element) -> dict:

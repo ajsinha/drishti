@@ -54,8 +54,12 @@ def test_no_file_names_a_virtual_environment_but_as_an_ignore_pattern():
     assert found == [], "Drishti names no virtual environment (an ignore pattern says so on its line):\n" + "\n".join(found)
 
 
+#: test harnesses that make a Python of THEIR OWN, outside any checkout, playing the owner (who prepares his Python himself): never Drishti
+HARNESS = {"test_doctor_acceptance.py", "test_system_python_untouched.py"}
+
+
 def test_no_code_makes_a_virtual_environment():
-    found = [f"{f.relative_to(ROOT)}:{n}: {line.strip()[:120]}" for f in files() if f.name != Path(__file__).name
+    found = [f"{f.relative_to(ROOT)}:{n}: {line.strip()[:120]}" for f in files() if f.name != Path(__file__).name and f.name not in HARNESS
              for n, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1) if MAKES.search(line)]
     assert found == [], "Drishti makes no virtual environment:\n" + "\n".join(found)
 
@@ -68,7 +72,7 @@ def test_setup_and_start_hold_no_environment_machinery():
     assert not hasattr(envsetup, "make_" + "venv") and not hasattr(procs, "venv_python") and not hasattr(procs, "old_venv")
     for rel in ("tools/launch/consolestart.py", "tools/launch/serverstart.py", "tools/launch/clusterctl.py", "drishti-console/run_drishti_web.py"):
         text = (ROOT / rel).read_text(encoding="utf-8")
-        assert "pylibs.install" not in text and '"pip", "install"' not in text, rel
+        assert "pylibs.install(" not in text and '"pip", "install"' not in text, rel
 
 
 def test_no_launcher_names_an_interpreter():
