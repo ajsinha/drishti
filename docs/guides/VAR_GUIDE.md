@@ -6380,7 +6380,7 @@ entitlement)* for the bank: the bank's 7,993 records less the rates desk's 1,358
 During the day a pricing system sends only the trades that changed. `tools/pvgen` is a stand-in for one (pure Python, JSONL only, every
 line one row of the contract; [VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)).
 
-**From the command line**, with the server of step 1 running (Windows: `py tools\pvgen\intraday.py` with the same options):
+**From the command line**, with the server of step 1 running (Windows: `py -3.13 tools\pvgen\intraday.py` with the same options):
 
 ```text
 $ python tools/pvgen/intraday.py --batches 3 --trades-per-batch 10 --lake data/delta/demo --server http://<host>:<port>

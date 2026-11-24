@@ -304,7 +304,7 @@ order it says is refused), or `--weekdays N` (the N weekdays before the date, no
 
 ```bash
 python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates data/pvf/scenario_dates_20261118.txt            # Linux / macOS
-py tools\mrloader\pvf_scenario_set.py --date 2026-11-18 --dates data\pvf\scenario_dates_20261118.txt               # Windows
+py -3.13 tools\mrloader\pvf_scenario_set.py --date 2026-11-18 --dates data\pvf\scenario_dates_20261118.txt               # Windows
 python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates FILE --order newest-first --dry-run             # check only
 python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --weekdays 251 --inbox --lake risklake                  # hand it to the inbox
 python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --weekdays 251 --load --lake risklake                   # or load it now
@@ -362,7 +362,7 @@ every problem (nothing is written).
 
 ```bash
 python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx data/pvf/fx_20261118.csv                  # Linux / macOS
-py tools\mrloader\pvf_fx_scenario.py --date 2026-11-18 --fx data\pvf\fx_20261118.csv                     # Windows
+py -3.13 tools\mrloader\pvf_fx_scenario.py --date 2026-11-18 --fx data\pvf\fx_20261118.csv                     # Windows
 python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx FILE --scenario-set path/scenario-set.2026-11-18.jsonl.gz --inbox
 ```
 
@@ -399,7 +399,7 @@ python3 tools/mrloader/pvf_fx_scenario.py  --date 2026-11-18 --fx data/pvf/fx_20
 python3 tools/mrloader/pvf_run.py --pv ... --portfolio ... --positions ... --date 2026-11-18 --no-scenario-set --scenario-set-id HS-PVF-251 --inbox
 ```
 
-On Windows use `py tools\mrloader\<script>.py` and backslashes. Synthetic samples to try it on (a 251-day dates file, EUR GBP JPY CAD AUD CHF
+On Windows use `py -3.13 tools\mrloader\<script>.py` and backslashes. Synthetic samples to try it on (a 251-day dates file, EUR GBP JPY CAD AUD CHF
 in both forms) are in `tools/mrloader/samples/`. To try a load: build set and FX from the samples with `--load --lake demo` and a settings file whose `[lake.demo] root=` is a
 scratch folder, `lake status`, then remove with `--remove ... --yes --no-signal`.
 

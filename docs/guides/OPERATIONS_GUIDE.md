@@ -65,7 +65,7 @@ processes, and users only ever talk to the console:
 
 | Process | Default port | Health check | Metrics | Started by |
 |---|---|---|---|---|
-| **server** (`drishti-server`, Spring Boot, Java 21 or newer; production runs 21): reads the sources, lays out each screen, answers BI, pushes live updates | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `tools/drishti.py start server` (Windows `py tools\drishti.py start server`), a service unit, or an IDE run configuration |
+| **server** (`drishti-server`, Spring Boot, Java 21 or newer; production runs 21): reads the sources, lays out each screen, answers BI, pushes live updates | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `tools/drishti.py start server` (Windows `py -3.13 tools\drishti.py start server`), a service unit, or an IDE run configuration |
 | **console** (FastAPI on uvicorn, Python): the web pages; it computes nothing itself | 17480 | `/healthz`, `/readyz` | none | `tools/drishti.py start console`, or `drishti-console/run_drishti_web.py` |
 
 Industries come as **packs**. Seven ship and load by default: `core` (counterparties, legal entities, books, calendars),
@@ -209,7 +209,7 @@ configuration **Drishti: run server (demo)** names the same file, so both start 
 
 ```bash
 cd /home/you/IdeaProjects/drishti-platform/drishti
-python tools/drishti.py --settings /home/you/drishti-envs/dev.ini start server --demo        # Windows: py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start server --demo
+python tools/drishti.py --settings /home/you/drishti-envs/dev.ini start server --demo        # Windows: py -3.13 tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start server --demo
 ```
 
 `--demo` adds that profile after your settings file and gives the development secrets where none is set; without it, name your own
@@ -247,7 +247,7 @@ connector from the modules' templates and **writes no connector file**; a site p
 
 ### 2.6 Start the console
 
-`python tools/drishti.py start console --demo --server http://<this machine's address>:18480` (Windows `py tools\drishti.py …`; the run configuration
+`python tools/drishti.py start console --demo --server http://<this machine's address>:18480` (Windows `py -3.13 tools\drishti.py …`; the run configuration
 **Drishti: run console**). With sign-in on, the console needs the server's token secret; `--demo` gives both the same development secrets, an
 `--env-file` gives your own:
 
@@ -312,7 +312,7 @@ read`); a token with a write scope must expire (at most `writeMaxDays`, 90). Rev
 
 ### 2.9 Stopping and starting again
 
-`python tools/drishti.py stop all` (Windows `py tools\drishti.py stop all`), `Ctrl+C` in a foreground terminal, or the red square in the IDE stops it; start again as
+`python tools/drishti.py stop all` (Windows `py -3.13 tools\drishti.py stop all`), `Ctrl+C` in a foreground terminal, or the red square in the IDE stops it; start again as
 in 2.5 and 2.6 (no rebuild unless the code changed; monitors, alerts, workspaces and settings are kept in the data folder). New demo data: run 2.4 again, with
 the server running or not. The start order does not matter ([5.2](#52-first-start-by-hand-and-check-it-works)). Three servers as one
 cluster with a console, on this machine: `python tools/drishti.py start cluster` ([deploy/stack/README.md](../../deploy/stack/README.md),
@@ -390,7 +390,7 @@ server on `windows-latest`. No `.exe` beyond Java and Python is needed.
 |---|---|---|
 | JDK 21 or newer (Temurin or any OpenJDK) | `winget install EclipseAdoptium.Temurin.21.JDK`, or the MSI from adoptium.net | `java -version` |
 | Python 3.13 | `winget install Python.Python.3.13`, or python.org (tick *Add python.exe to PATH*) | `python --version` |
-| the offline wheel pack | unzip the release's `drishti-wheels-*.zip` into `%USERPROFILE%\drishti-wheels` | `py tools\drishti.py setup --check` |
+| the offline wheel pack | unzip the release's `drishti-wheels-*.zip` into `%USERPROFILE%\drishti-wheels` | `py -3.13 tools\drishti.py setup --check` |
 | git (to build from source) | `winget install Git.Git` | `git --version` |
 
 The Java Drishti runs with need not be the default one: `tools\drishti.py` takes its folder as `--java-home`, or from `DRISHTI_JAVA_HOME`, then `JAVA_HOME`, then `java` on the `PATH`:
@@ -415,17 +415,17 @@ The Delta connector's tests: `.\mvnw.cmd -q verify -pl :drishti-lake-host,plugin
 **Or copy** a release built elsewhere (Java bytecode is the same everywhere) into a folder such as `C:\drishti`: what goes in it is listed
 in [DEPLOYMENT_AND_QA_GUIDE.md › Get the release](../DEPLOYMENT_AND_QA_GUIDE.md#4-get-the-release) (the jar in `lib\`, `modules\`, `config\`,
 `drishti-console\`, `tools\`, `data\testdata\`). `tools\drishti.py` works from the folder it lives in and finds the server jar in
-its `lib\` (one jar there; `py tools\drishti.py build jar` puts a freshly built one in it).
+its `lib\` (one jar there; `py -3.13 tools\drishti.py build jar` puts a freshly built one in it).
 
 ### 4.3 The demo lakes, the server and the console
 
 ```powershell
-py tools\drishti.py setup                                                 # Java 21+, the data folder, dev.ini, this Python's libraries (from %USERPROFILE%\drishti-wheels)
-py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
-py tools\drishti.py start server --packs market-risk --background
-py tools\drishti.py start console --background
-py tools\drishti.py status                                                # both running, UP, with their LAN addresses
-py tools\drishti.py stop all
+py -3.13 tools\drishti.py setup                                                 # Java 21+, the data folder, dev.ini, this Python's libraries (from %USERPROFILE%\drishti-wheels)
+py -3.13 tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
+py -3.13 tools\drishti.py start server --packs market-risk --background
+py -3.13 tools\drishti.py start console --background
+py -3.13 tools\drishti.py status                                                # both running, UP, with their LAN addresses
+py -3.13 tools\drishti.py stop all
 ```
 
 `lake demo` writes the same tables as on Linux, with Drishti's Java loader (no Hadoop, no `.exe`). The one command `tools\drishti.py` is the same on Windows, Linux and macOS
@@ -437,8 +437,8 @@ temporary files go, the exit codes and the errors: [DEPLOYMENT_AND_QA_GUIDE.md �
 Admin → Health then lists each lake connector as `UP (engine: native)`. From IntelliJ IDEA
 instead of the command: [IDE_GUIDE.md](IDE_GUIDE.md).
 
-**Iceberg tables on Windows** run on the same reader. `py tools\drishti.py lake build --format iceberg` loads them, then
-`py tools\drishti.py start server --iceberg` (settings only: the connectors folder is `config/connectors.examples/iceberg` and the
+**Iceberg tables on Windows** run on the same reader. `py -3.13 tools\drishti.py lake build --format iceberg` loads them, then
+`py -3.13 tools\drishti.py start server --iceberg` (settings only: the connectors folder is `config/connectors.examples/iceberg` and the
 warehouse `<data>/iceberg`; nothing is copied into `config/`). On Linux and macOS the same is `python tools/drishti.py lake build --format iceberg --lake ./data/iceberg ...`.
 
 ### 4.4 What works differently on Windows
@@ -1348,8 +1348,8 @@ kinds, ids, business dates and one Sutra per type, and previews them), then hand
 The tools are the same in PowerShell; keep the packs folder and the backup folder on the **same drive** so the swap is a rename:
 
 ```powershell
-py tools\drishti.py pack bundle config\packs\banking\trading --out dist
-py tools\drishti.py pack deploy dist\trading-1.0.1.tar.gz --to D:\drishti\packs --backup D:\drishti\backups
+py -3.13 tools\drishti.py pack bundle config\packs\banking\trading --out dist
+py -3.13 tools\drishti.py pack deploy dist\trading-1.0.1.tar.gz --to D:\drishti\packs --backup D:\drishti\backups
 Get-FileHash dist\trading-1.0.1.tar.gz -Algorithm SHA256     # compare with the .sha256 file
 tar -xzf dist\trading-1.0.1.tar.gz -C D:\drishti\stage       # tar.exe ships with Windows 10+; then move the folder into the packs folder
 ```
@@ -2484,7 +2484,7 @@ Sources are `shipped` (`<data>/compute/shipped/`), a named index of `compute.ind
 `native: true` is refused). **Approval**: a connector or pool whose items are not all approved **stays off** (Admin → Connectors shows *waiting for
 approval*); an administrator other than the one who asked approves or rejects with a reason (`compute.approval.roles` can narrow approvers); every
 decision is audited, approvals live in the Drishti database so every node sees them, and **Revoke** stops the connectors that need the items at
-once. **Environments**: one per lock; **Build** (or `compute.build: on-approval`) runs `python -m venv` and `pip install --require-hashes --no-deps
+once. **Environments**: one per lock; **Build** (or `compute.build: on-approval`) runs `pip install --target` (a library folder, no virtual environment) with `--require-hashes --no-deps
 --only-binary=:all:` from the named source only, writes a manifest of every file's sha256 and makes the folder read-only; every worker start checks
 it. A new lock is a new environment.
 
@@ -2844,7 +2844,7 @@ Run it from cron as the `drishti` user (`30 1 * * * /opt/drishti/backup.sh`) and
 1. **Read the release notes** (`RELEASE_NOTES.md`, `CHANGELOG.md`) for changes to configuration or storage.
 2. **Back up** ([17.1](#171-a-nightly-backup)) and keep the old jar: `cp drishti-server.jar drishti-server-$(date +%F).jar`.
 3. **Build or fetch** the release: `./mvnw -q clean package -DskipTests -pl :drishti-app -am`.
-4. **Stop** both: `sudo systemctl stop drishti-console drishti-server` (or `python tools/drishti.py stop all`; Windows `py tools\drishti.py stop all`).
+4. **Stop** both: `sudo systemctl stop drishti-console drishti-server` (or `python tools/drishti.py stop all`; Windows `py -3.13 tools\drishti.py stop all`).
 5. **Replace** the jar, `bin/`, `modules/`, `config/` (keep your own files in it: overrides in `config/connectors/`, module switches you
    changed), `drishti-console/`, `tools/` and `docs/` (keep your settings files and your local files), then
    `python3 tools/drishti.py setup --wheels <the new release's wheel pack>` in case the libraries changed (it installs only what is missing).

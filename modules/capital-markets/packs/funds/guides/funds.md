@@ -80,7 +80,7 @@ python3 tools/drishti.py feed run funds --snapshot                # the download
 python3 tools/packgen/funds/make.py --check              # no network: the pack matches its generator
 ```
 
-`python3 tools/drishti.py feed run funds` (Linux, macOS) and `py tools\drishti.py feed run funds` (Windows) run the same script. The downloads stay in the data folder
+`python3 tools/drishti.py feed run funds` (Linux, macOS) and `py -3.13 tools\drishti.py feed run funds` (Windows) run the same script. The downloads stay in the data folder
 (`<data>/datafeeds/sources/cache/funds`), never in git. After a refresh, rebuild the lake: `python3 tools/drishti.py lake demo`.
 
 ## Data contracts
@@ -127,7 +127,7 @@ python3 tools/drishti.py feed run funds --snapshot --offline                # th
 python3 tools/drishti.py feed run funds -- --scope FUNDS:300,HOLDINGS:1000  # a widened pull of more funds and holdings
 ```
 
-The same with the Python you run Drishti with: `python3 tools/drishti.py feed run funds` on Linux and macOS, `py tools\drishti.py feed run funds` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run funds` on Linux and macOS, `py -3.13 tools\drishti.py feed run funds` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Into the lake, checking, offline
 

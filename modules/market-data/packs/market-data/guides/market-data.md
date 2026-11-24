@@ -55,7 +55,7 @@ Real market data from public sources, each its own connector and **off by defaul
 | `us-treasury-feed` | `DRISHTI_FEED_US_TREASURY=true` | `ir-curve` | US Treasury daily par yield curve: CRV-USD-UST |
 | `fred-feed` | `DRISHTI_FEED_FRED=true` | `rate-fixing` | FRED series (needs FRED_API_KEY): FIX-FRED-DGS10, FIX-FRED-DFF |
 
-Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, with the Python you run Drishti with (Windows `py -3.13`), run `python3 tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
 ## Kinds
 
@@ -312,7 +312,7 @@ python3 tools/drishti.py feed run market-data                                   
 python3 tools/drishti.py feed run market-data -- ecb-fx --years 5 --scope USDMXN,EURSEK  # more history and more pairs
 ```
 
-The same with the Python you run Drishti with: `python3 tools/drishti.py feed run market-data` on Linux and macOS, `py tools\drishti.py feed run market-data` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run market-data` on Linux and macOS, `py -3.13 tools\drishti.py feed run market-data` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Generators
 

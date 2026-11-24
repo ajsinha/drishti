@@ -408,7 +408,7 @@ partitioned by `business_date` alone and refuses one another engine re-partition
 **Caches.** The reader reads each Parquet footer once and keeps it (`-Dlake.parquet.footer-cache-mb`, 64, shared with Delta), plus parsed
 manifests and delete files (`lake.iceberg.delete-cache-rows`). A purge of the connector empties every cache.
 
-**Windows**: `py tools\drishti.py start server --iceberg` starts the server with the Iceberg connector files
+**Windows**: `py -3.13 tools\drishti.py start server --iceberg` starts the server with the Iceberg connector files
 ([OPERATIONS_GUIDE.md](../../docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows)).
 
 ## Parity with Delta: vectors and disk caches

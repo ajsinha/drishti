@@ -63,7 +63,7 @@ python3 tools/drishti.py feed run gdelt-events                     # pull today'
 python3 tools/drishti.py feed run gdelt-events --since 2026-11-01  # read the GDELT days from this date (a run reads at most a week by default)
 ```
 
-The same with the Python you run Drishti with: `python3 tools/drishti.py feed run gdelt-events` on Linux and macOS, `py tools\drishti.py feed run gdelt-events` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run gdelt-events` on Linux and macOS, `py -3.13 tools\drishti.py feed run gdelt-events` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Into the lake, checking, offline
 

@@ -281,7 +281,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d kafka            # apache/kafka 3.9.1, single-node KRaft, compacted
-uv run --with kafka-python tools/samplegen/stream.py \
+python3 tools/samplegen/stream.py \
     --bootstrap localhost:9092 --topic drishti.trading.trades --samples modules/banking/packs/trading/samples --rate 5 --seconds 0
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false \
   java -jar lib/drishti-server-*-exec.jar

@@ -164,7 +164,7 @@ python tools/drishti.py start server --node drishti-c --port 18785 --node-dir ~/
 python tools/drishti.py status                  # the three running and UP, each with the address it advertises
 ```
 
-On Windows the same with `py tools\drishti.py`. Each node advertises this machine's real address (`--advertise` names another); every
+On Windows the same with `py -3.13 tools\drishti.py`. Each node advertises this machine's real address (`--advertise` names another); every
 option, and the layout on three machines: [DEPLOYMENT_AND_QA_GUIDE.md › section 11.6](../DEPLOYMENT_AND_QA_GUIDE.md#116-start-order-and-joining).
 
 Each logs its join and each member it learns. Node b's log, as captured:

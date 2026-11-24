@@ -51,7 +51,7 @@ The pack's exposure profiles are computed, never stored: the server nets every t
 
 The exposure guide (`docs/guides/EXPOSURE_GUIDE.md`) explains every number with worked examples, the explorer, scopes, collateral, captures, the what-if, entitlements, the CLI, the API and the settings; the exposure tutorial (`docs/guides/EXPOSURE_GUIDE.md`) walks through it on the test data; the data contract is its Part II.
 
-Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, with the Python you run Drishti with (Windows `py -3.13`), run `python3 tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
 ## Kinds
 

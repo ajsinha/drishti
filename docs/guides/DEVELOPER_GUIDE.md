@@ -3926,7 +3926,7 @@ with `required: false` and no manifest anywhere adds none. The console reads no 
 sends it with every module in its installation answer (`GET /api/v1/console/bootstrap`), asked again whenever `/public/about`'s
 `stamps.installation` changes, so a package installed after the start joins a running console's distribution and a removed one leaves it.
 
-**3. Start it**: `python tools/drishti.py start all --distribution freight` (Windows `py tools\drishti.py ...`), or `start server` and
+**3. Start it**: `python tools/drishti.py start all --distribution freight` (Windows `py -3.13 tools\drishti.py ...`), or `start server` and
 `start console` each with `--distribution freight`, or `DRISHTI_DISTRIBUTION=freight`, or `drishti.distribution: freight`; a path
 instead of a name loads a file elsewhere. What it leaves out does not exist in it: a word typed anyway answers *DRS-4023 … is not in
 Acme Freight*.

@@ -26,8 +26,8 @@ python tools/drishti.py status --cluster deploy/stack/stack.yaml      # the proc
 python tools/drishti.py stop cluster        # stop everything start cluster started (by process id, never by name)
 ```
 
-Windows: `py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start cluster`, `py tools\drishti.py status --cluster deploy\stack\stack.yaml`,
-`py tools\drishti.py stop cluster` (Java and Python only). The JDK is the one lookup of every tool: `drishti.java.home` of the settings
+Windows: `py -3.13 tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start cluster`, `py -3.13 tools\drishti.py status --cluster deploy\stack\stack.yaml`,
+`py -3.13 tools\drishti.py stop cluster` (Java and Python only). The JDK is the one lookup of every tool: `drishti.java.home` of the settings
 file, then `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the `PATH`; the cluster file names none.
 
 **The settings of every node and the console**, in order, a later file winning: the files of `drishti.py --settings` (your `dev.ini`),

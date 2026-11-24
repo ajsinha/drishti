@@ -112,8 +112,8 @@ python3 tools/drishti.py doctor
 
 The Lake wheel comes first because `requirements.txt` installs `drishti-lake==<version>` from `lib/wheels`, and no package index has it; `../drishti-lake`
 must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release i7g` leaves it there). On Windows Drishti never makes a virtual
-environment: the Python you run it with holds the libraries: `py tools\drishti.py setup`, then
-`py -m pip install -r drishti-console\requirements-test.txt`; Playwright's browsers go into the
+environment: the Python you run it with holds the libraries: `py -3.13 tools\drishti.py setup`, then
+`py -3.13 -m pip install -r drishti-console\requirements-test.txt`; Playwright's browsers go into the
 user's profile, no administrator rights needed.
 
 **You should see** `doctor` end with `doctor: all clear` (the Java, the Python and its libraries, the ports 18480 and 17480 free).
@@ -165,7 +165,7 @@ with the reason.
 **Drishti itself:**
 
 ```bash
-python tools/drishti.py build all        # Windows: py tools\drishti.py build all
+python tools/drishti.py build all        # Windows: py -3.13 tools\drishti.py build all
 ls lib/*-exec.jar modules/*.dmod
 ```
 
@@ -213,7 +213,7 @@ python tools/drishti.py status                                               # b
 python tools/drishti.py stop all                                             # the console, then the server (by their pid files)
 ```
 
-On Windows (`cmd` or PowerShell; Java and Python only) the same commands run as `py tools\drishti.py ...` (the settings file
+On Windows (`cmd` or PowerShell; Java and Python only) the same commands run as `py -3.13 tools\drishti.py ...` (the settings file
 `%USERPROFILE%\drishti-envs\dev.ini`, taken by itself).
 
 **You should see** `server: up on http://<this machine's address>:18480` and `console: up on http://<this machine's address>:17480`, with a
@@ -241,7 +241,7 @@ The same build starts as **Drishti Risk**, **Drishti Finance**, **Drishti Genomi
 (`config/distributions/drishti.<name>.yaml`; [DISTRIBUTIONS.md](architecture/DISTRIBUTIONS.md)). Without it you run Drishti All, every
 module: what the drill, the page walk and the tutorials use.
 
-| Distribution | Start (Windows: `py tools\drishti.py ...`) | You should see |
+| Distribution | Start (Windows: `py -3.13 tools\drishti.py ...`) | You should see |
 |---|---|---|
 | Drishti Risk | `python tools/drishti.py start all --demo --distribution risk` | **Drishti Risk**, navy dark; Risk, Counterparties and Markets menus; `VAR BANK` works, `ECON CAN` answers *not in Drishti Risk*; Help titled *Drishti Risk Help* |
 | Drishti Finance | `python tools/drishti.py start all --demo --distribution finance` | **Drishti Finance**, light; Economies, Markets and Companies menus, no Risk menu; `CRV` works, `VAR BANK` answers *not in Drishti Finance*; Help titled *Drishti Finance Help* with no VaR guide |

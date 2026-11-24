@@ -208,8 +208,8 @@ security on and a development administrator; the second signs people in with the
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-python tools/drishti.py start server --demo --background     # Windows: py tools\drishti.py start server --demo --background
-python tools/drishti.py start console --demo --background    # Windows: py tools\drishti.py start console --demo --background
+python tools/drishti.py start server --demo --background     # Windows: py -3.13 tools\drishti.py start server --demo --background
+python tools/drishti.py start console --demo --background    # Windows: py -3.13 tools\drishti.py start console --demo --background
 python tools/drishti.py status
 ```
 

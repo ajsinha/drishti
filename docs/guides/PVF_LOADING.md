@@ -49,7 +49,7 @@ from that name, so a date can be loaded again (it replaces that date as a whole)
 
 ## 2. One-time setup
 
-1. **Prepare the machine** (Python environment, settings file, data folder): `python3 tools/drishti.py setup` (Windows `py tools\drishti.py setup`).
+1. **Prepare the machine** (Python environment, settings file, data folder): `python3 tools/drishti.py setup` (Windows `py -3.13 tools\drishti.py setup`).
    It writes `~/drishti-envs/dev.ini` (Windows `%USERPROFILE%\drishti-envs\dev.ini`). Details: [DEPLOYMENT_AND_QA_GUIDE.md section 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup).
 2. **Build or place the server jar.** The loader asks the jar where the packs and contracts are, even to convert only:
    `PY tools/drishti.py build jar` puts `drishti-server-<version>-exec.jar` in `lib/`. Without it every script stops with *no server jar in .../lib*.
@@ -153,7 +153,7 @@ Windows (PowerShell):
 ```powershell
 foreach ($d in "20261027","20261028","20261029") {
   $iso = $d.Substring(0,4) + "-" + $d.Substring(4,2) + "-" + $d.Substring(6,2)
-  py tools\mrloader\pvf_run.py --pv data\pvf\pvf_path_$d.csv --portfolio data\pvf\portfolio_d2.csv `
+  py -3.13 tools\mrloader\pvf_run.py --pv data\pvf\pvf_path_$d.csv --portfolio data\pvf\portfolio_d2.csv `
      --positions data\pvf\pos_$d.csv --date $iso --load --lake risklake --server http://localhost:18480
   if ($LASTEXITCODE -ne 0) { break }
 }
