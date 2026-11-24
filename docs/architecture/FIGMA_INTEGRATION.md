@@ -67,7 +67,7 @@ makes the problem smaller than general design-to-code: map Figma components to S
 ## How Figma maps to a Sutra
 
 A Sutra screen is a title, a `data:` block naming its tables, and a list of `panels`, each with a `kind`, a `span` on a 12-column
-grid, labels, a format and data expressions (see Rachana's `examples/static-sales/overview.sutra.yaml`). Most of that has a direct
+grid, labels, a format and data expressions (see the static-sales overview Sutra among Drishti Rachana's examples). Most of that has a direct
 Figma counterpart.
 
 | Figma | Sutra / Elements | Converts automatically? |
@@ -129,7 +129,7 @@ Elements stay exactly as they are. A person confirms every AI-proposed binding.
 | Road | Who uses it | Strength | Weakness |
 |---|---|---|---|
 | A. Drishti plugin for Figma | designers | live node tree, bindings picked from the server's real tables, one click | a plugin to build and keep current with Figma's plugin API |
-| B. REST converter (`drishti.py figma import <file-key>`, proposed) | a pipeline | no Figma UI needed; screens regenerate on every design change | needs a Figma token; bindings must already be on the nodes (from A) |
+| B. REST converter (a proposed "figma import" command) | a pipeline | no Figma UI needed; screens regenerate on every design change | needs a Figma token; bindings must already be on the nodes (from A) |
 | C. AI agent over the Figma MCP server | anyone, for designs not built from the library | handles free-form designs | proposes, never decides; needs review |
 | D. Offline `.fig` parse | archives only | no Figma account | undocumented format; may break any release |
 
@@ -158,7 +158,7 @@ something a person can use.
    unmapped. *Done when* that layout exports a Sutra that Rachana compiles and Elements paints, with the same figures as the
    hand-written one.
 3. **Round trip and roads B and C.** Import a Sutra back into Figma as library instances (so existing screens become editable
-   designs), a `drishti.py figma import` converter on the REST API for pipelines, and an AI "propose bindings" step over the Figma
+   designs), a proposed "figma import" converter on the REST API for pipelines, and an AI "propose bindings" step over the Figma
    MCP server for free-form designs.
 
 **What to prototype first:** step 2 on a copy of `sales-overview`, read-only against the demo lake, to answer the one question that
@@ -176,4 +176,4 @@ instead.
 [Code Connect](https://developers.figma.com/docs/code-connect) ·
 [.fig format notes (Evan Wallace)](https://madebyevan.com/figma/) ·
 [Grida .fig documentation](https://grida.co/docs/wg/feat-fig/) ·
-Rachana `examples/static-sales/overview.sutra.yaml`.
+Drishti Rachana, its static-sales overview example.
