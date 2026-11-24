@@ -121,7 +121,7 @@ Screens (Sutras):
 |---|---|---|---|
 | Statistics Canada Web Data Service (WDS) | Statistics Canada Open Licence | no | statistics-series |
 
-Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/national-statistics.md](guides/national-statistics.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are below: *Data contracts* and *Data retrieval*.
 
 External data: Statistics Canada Web Data Service (WDS). Each source's URL, licence and data feed are on the External data help page, [docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).
 
@@ -145,7 +145,48 @@ The data feed `national-statistics` (config/feeds/national-statistics.yaml) pull
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`modules/economy/packs/national-statistics/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/national-statistics.md](../../../../docs/contracts/packs/national-statistics.md) and each kind's example (a real record of the test data, every field explained) on [docs/contracts/packs](../../../../docs/contracts/packs/README.md); this README links them and copies neither. Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Contract | Example |
+|---|---|---|---|---|---|---|
+| `NSTAT` | `statistics-series` | fundamental | `SERIES_ID` | One row per national statistic, keyed by SERIES_ID. | [NSTAT: National statistic](../../../../docs/contracts/packs/national-statistics.md#nstat-national-statistic-statistics-series) (`contracts/statistics-series.contract.yaml`) | [example](../../../../docs/contracts/packs/national-statistics.md#example-national-statistics-statistics-series) |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `NSTAT` | `statistics-series` | external: Statistics Canada Web Data Service (Statistics Canada Open Licence) — refreshed by `drishti.py feed run national-statistics` | the daily feed `national-statistics` → `<data>/delta/worldlake/statistics/statistics-series/` (lake `worldlake`) → connector `statistics-store`; nothing is committed but a few documents in `samples/` for the tests |
+
+### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| Statistics Canada Web Data Service | https://www150.statcan.gc.ca/t1/wds/rest | Statistics Canada Open Licence | no | `python3 tools/drishti.py feed run national-statistics` |
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status national-statistics            # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run national-statistics --dry-run     # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run national-statistics               # pull today's data and load it into the lake `worldlake` (what the daily schedule runs)
+python3 tools/drishti.py feed run national-statistics --load inbox  # the same through the data inbox: the server loads it
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run national-statistics` on Linux and macOS, `py tools\drishti.py feed run national-statistics` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
 ## See also
 
-- [The national-statistics pack](guides/national-statistics.md): Statistics Canada's headline series by vector (Statistics Canada Open Licence), filled daily by the national-statistics feed into worldlake: CPI, unemployment, monthly GDP, population, housing starts, the overnight rate. Type NSTAT NSTAT-V41690973.
+- [How to use the national-statistics pack](../../../../docs/guides/WORLD_DATA_GUIDE.md#the-national-statistics-pack): what it holds, its screens and a walk-through, in WORLD_DATA_GUIDE.md.
 - [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

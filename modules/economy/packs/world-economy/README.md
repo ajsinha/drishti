@@ -638,7 +638,7 @@ retrieval date and licence.
 | CIA World Factbook | Public domain | no | governments, office holders, elections, parties |
 | UNDP Human Development Index | CC BY 3.0 IGO | no | social indicators |
 
-Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/world-economy.md](guides/world-economy.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are below: *Data contracts* and *Data retrieval*.
 
 External data: World Bank World Development Indicators and Worldwide Governance Indicators; IMF World Economic Outlook (**internal only**); CIA World Factbook; UNDP Human Development Index. Each source's URL, licence and data feed are on the External data help page, [docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).
 
@@ -662,7 +662,92 @@ The data feed `world-economy` (config/feeds/world-economy.yaml) pulls `economy`,
 
 The pack's files are written by `tools/packgen/world/make.py`; its `--check` fails when the committed files differ from what it would write.
 
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`modules/economy/packs/world-economy/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/world-economy.md](../../../../docs/contracts/packs/world-economy.md) and each kind's example (a real record of the test data, every field explained) on [docs/contracts/packs](../../../../docs/contracts/packs/README.md); this README links them and copies neither. Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Contract | Example |
+|---|---|---|---|---|---|---|
+| `ECON` | `economy` | fundamental | `ECONOMY_ID` | One row per economy, keyed by ECONOMY_ID. | [ECON: Economy](../../../../docs/contracts/packs/world-economy.md#econ-economy-economy) (`contracts/economy.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-economy) |
+| `MACRO` | `macro-indicator` | fundamental | `INDICATOR_ID` | One row per macro indicator, keyed by INDICATOR_ID. | [MACRO: Macro indicator](../../../../docs/contracts/packs/world-economy.md#macro-macro-indicator-macro-indicator) (`contracts/macro-indicator.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-macro-indicator) |
+| `FCST` | `economic-forecast` | fundamental | `FORECAST_ID` | One row per economic forecast, keyed by FORECAST_ID. | [FCST: Economic forecast](../../../../docs/contracts/packs/world-economy.md#fcst-economic-forecast-economic-forecast) (`contracts/economic-forecast.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-economic-forecast) |
+| `LABR` | `labour-market` | fundamental | `LABOUR_ID` | One row per labour market, keyed by LABOUR_ID. | [LABR: Labour market](../../../../docs/contracts/packs/world-economy.md#labr-labour-market-labour-market) (`contracts/labour-market.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-labour-market) |
+| `FISC` | `fiscal-position` | fundamental | `FISCAL_ID` | One row per fiscal position, keyed by FISCAL_ID. | [FISC: Fiscal position](../../../../docs/contracts/packs/world-economy.md#fisc-fiscal-position-fiscal-position) (`contracts/fiscal-position.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-fiscal-position) |
+| `ECG` | `country-group` | computed | `GROUP_ID` | One record per GROUP_ID of the economy records, computed when asked. | [ECG: Country group](../../../../docs/contracts/packs/world-economy.md#ecg-country-group-country-group) (`contracts/country-group.contract.yaml`) | — (computed when asked) |
+| `REGE` | `region-economy` | fundamental | `REGION_ID` | One row per region economy, keyed by REGION_ID. | [REGE: Region economy](../../../../docs/contracts/packs/world-economy.md#rege-region-economy-region-economy) (`contracts/region-economy.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-region-economy) |
+| `JUR` | `jurisdiction` | fundamental | `JURISDICTION_ID` | One row per jurisdiction, keyed by JURISDICTION_ID. | [JUR: Jurisdiction](../../../../docs/contracts/packs/world-economy.md#jur-jurisdiction-jurisdiction) (`contracts/jurisdiction.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-jurisdiction) |
+| `PARTY` | `party` | fundamental | `PARTY_ID` | One row per party, keyed by PARTY_ID. | [PARTY: Party](../../../../docs/contracts/packs/world-economy.md#party-party-party) (`contracts/party.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-party) |
+| `OFFC` | `office-holder` | fundamental | `OFFICE_ID` | One row per office holder, keyed by OFFICE_ID. | [OFFC: Office holder](../../../../docs/contracts/packs/world-economy.md#offc-office-holder-office-holder) (`contracts/office-holder.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-office-holder) |
+| `ELEC` | `election` | fundamental | `ELECTION_ID` | One row per election, keyed by ELECTION_ID. | [ELEC: Election](../../../../docs/contracts/packs/world-economy.md#elec-election-election) (`contracts/election.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-election) |
+| `REGN` | `region` | fundamental | `REGION_ID` | One row per world region, keyed by REGION_ID. | [REGN: World region](../../../../docs/contracts/packs/world-economy.md#regn-world-region-region) (`contracts/region.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-region) |
+| `SOCI` | `social-indicator` | fundamental | `INDICATOR_ID` | One row per social indicator, keyed by INDICATOR_ID. | [SOCI: Social indicator](../../../../docs/contracts/packs/world-economy.md#soci-social-indicator-social-indicator) (`contracts/social-indicator.contract.yaml`) | [example](../../../../docs/contracts/packs/world-economy.md#example-world-economy-social-indicator) |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `ECON` | `economy` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `MACRO` | `macro-indicator` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `FCST` | `economic-forecast` | external: IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `LABR` | `labour-market` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `FISC` | `fiscal-position` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `ECG` | `country-group` | computed by Drishti: the derived connector macro-groupings over the kind economy; see the [Groupings and analytics guide](../../../../docs/guides/bi/README.md) | nothing to load: computed from its inputs when asked |
+| `REGE` | `region-economy` | external: US Census Bureau population estimates and BEA state GDP (rounded by hand, illustrative) (public domain (US Government work)) — refreshed by `tools/packgen/world/make.py` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `JUR` | `jurisdiction` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)); World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+| `PARTY` | `party` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+| `OFFC` | `office-holder` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+| `ELEC` | `election` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+| `REGN` | `region` | external: World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+| `SOCI` | `social-indicator` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); UNDP Human Development Index (CC BY 3.0 IGO) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+
+### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| World Bank World Development Indicators API (v2), pulled only by the world-development feed | https://api.worldbank.org/v2 | CC BY 4.0 | no | `python3 tools/drishti.py feed run world-development` |
+| World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) | https://api.worldbank.org/v2 | CC BY 4.0 | no | `python3 tools/drishti.py feed run world-economy -- worldbank` |
+| IMF World Economic Outlook (DataMapper) | https://www.imf.org/external/datamapper/api/v1 | IMF terms: reuse with attribution; commercial reuse needs the IMF's permission | **yes** | `python3 tools/drishti.py feed run world-economy -- imf` |
+| US Census Bureau population estimates and BEA state GDP (rounded by hand, illustrative) | https://www.census.gov/programs-surveys/popest.html | public domain (US Government work) | no | `tools/packgen/world/make.py` (typed into the generator; no fetch) |
+| CIA World Factbook (the factbook.json mirror at a pinned commit) | https://github.com/factbook/factbook.json | public domain (the mirror CC0 1.0) | no | `python3 tools/drishti.py feed run world-economy -- factbook` |
+| UNDP Human Development Index | https://hdr.undp.org/data-center/documentation-and-downloads | CC BY 3.0 IGO | no | `python3 tools/drishti.py feed run world-economy -- undp` |
+
+**Internal only:** IMF World Economic Outlook (DataMapper). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status world-development                  # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run world-development --dry-run           # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run world-development                     # pull today's data and load it into the lake `worldlake` (what the daily schedule runs)
+python3 tools/drishti.py feed run world-development --load inbox        # the same through the data inbox: the server loads it
+python3 tools/drishti.py feed run world-development --since 2026-01-01  # pull again although the World Bank has not changed (after editing the indicators)
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run world-development` on Linux and macOS, `py tools\drishti.py feed run world-development` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status world-economy                        # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run world-economy --dry-run                 # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run world-economy                           # pull today's data and load it into the lake `worldlake` (what the daily schedule runs)
+python3 tools/drishti.py feed run world-economy -- --no-imf               # the same without any IMF data, for anything shown outside the organisation
+python3 tools/drishti.py feed run world-economy --snapshot --internal-ok  # refresh the committed dataset and pack instead (they carry IMF data: internal demos only)
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run world-economy` on Linux and macOS, `py tools\drishti.py feed run world-economy` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
 ## See also
 
-- [World economy pack](guides/world-economy.md): Real public economic data for about 200 economies: output, growth, prices, jobs, debt and external balance (World Bank, IMF, CIA World Factbook), IMF forecasts, and World Bank regions and income groups; and governments and societies: government type, office holders, elections, parties with seats, and social and governance indicators (CIA World Factbook, World Bank, UNDP).
+- [How to use the world-economy pack](../../../../docs/guides/WORLD_DATA_GUIDE.md#world-economy-pack): what it holds, its screens and a walk-through, in WORLD_DATA_GUIDE.md.
 - [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

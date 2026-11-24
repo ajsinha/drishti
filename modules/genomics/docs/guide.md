@@ -393,29 +393,7 @@ byte-identical files; `--check` fails when the committed files differ from what 
 
 ### Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../docs/guides/WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
-
-| Command | Kind | Origin | How it reaches Drishti |
-|---|---|---|---|
-| `SGENE` | `study-gene` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/genomics-showcase/study-gene/` → `lake demo` → connector `genomics-showcase-store` |
-| `SSAMPLE` | `study-sample` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/genomics-showcase/study-sample/` → `lake demo` → connector `genomics-showcase-store` |
-| `SVARIANT` | `study-variant` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/genomics-showcase/study-variant/` → `lake demo` → connector `genomics-showcase-store` |
-| `VCALL` | `variant-call` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/genomics-showcase/variant-call/` → `lake demo` → connector `genomics-showcase-store` |
-| `ASSOC` | `association` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/genomics-showcase/association/` → `lake demo` → connector `genomics-showcase-store` |
-| `CNV` | `cnv-segment` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/genomics-showcase/cnv-segment/` → `lake demo` → connector `genomics-showcase-store` |
-| `PATHWAY` | `pathway-gene` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/genomics-showcase/pathway-gene/` → `lake demo` → connector `genomics-showcase-store` |
-
-#### Generators
-
-| Generator | Writes | Check |
-|---|---|---|
-| `python3 tools/packgen/genomics_showcase/make.py` | the genomics module's showcase, 200,000 invented rows from one seed (a cohort of 1,500 patients, an invented gene and protein, a design campaign) into data/testdata/genomics-showcase/<kind>/ and data/testdata/protein-engineering/<kind>/ | `python3 tools/packgen/genomics_showcase/make.py --check` |
-
-#### Into the lake, checking, offline
-
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../docs/guides/CLI_REFERENCE.md)).
-- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../packs/genomics-showcase/README.md#data-contracts) and [*Data retrieval*](../packs/genomics-showcase/README.md#data-retrieval).
 
 ## The protein-engineering pack
 
@@ -449,7 +427,7 @@ campaign with its rounds, the leaderboard) are drawn from the same kinds by the 
 ### The join to genomics
 
 The [genomics-showcase pack](guide.md)'s `study-variant` ([contract](../../../docs/contracts/packs/genomics-showcase.md#svariant-study-variant-study-variant),
-[example](../../../docs/contracts/samples/genomics-showcase.md#study-variant)) carries a gene, a protein position and an amino acid; with the gene
+[example](../../../docs/contracts/packs/genomics-showcase.md#example-genomics-showcase-study-variant)) carries a gene, a protein position and an amino acid; with the gene
 as the protein's id they are the key of a `dms-score` row.
 
 ### Making the data again
@@ -458,26 +436,4 @@ One generator writes both packs: `python3 tools/packgen/genomics_showcase/make.p
 
 ### Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../docs/guides/WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
-
-| Command | Kind | Origin | How it reaches Drishti |
-|---|---|---|---|
-| `PROT` | `protein` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/protein-engineering/protein/` → `lake demo` → connector `protein-engineering-store` |
-| `RESIDUE` | `residue` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/protein-engineering/residue/` → `lake demo` → connector `protein-engineering-store` |
-| `CONTACT` | `residue-contact` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/protein-engineering/residue-contact/` → `lake demo` → connector `protein-engineering-store` |
-| `DMS` | `dms-score` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/protein-engineering/dms-score/` → `lake demo` → connector `protein-engineering-store` |
-| `DESIGN` | `design` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/protein-engineering/design/` → `lake demo` → connector `protein-engineering-store` |
-| `DMUT` | `design-mutation` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/protein-engineering/design-mutation/` → `lake demo` → connector `protein-engineering-store` |
-| `DROUND` | `design-round` | synthetic: `python3 tools/packgen/genomics_showcase/make.py` | `data/testdata/protein-engineering/design-round/` → `lake demo` → connector `protein-engineering-store` |
-
-#### Generators
-
-| Generator | Writes | Check |
-|---|---|---|
-| `python3 tools/packgen/genomics_showcase/make.py` | the genomics module's showcase, 200,000 invented rows from one seed (a cohort of 1,500 patients, an invented gene and protein, a design campaign) into data/testdata/genomics-showcase/<kind>/ and data/testdata/protein-engineering/<kind>/ | `python3 tools/packgen/genomics_showcase/make.py --check` |
-
-#### Into the lake, checking, offline
-
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../docs/guides/CLI_REFERENCE.md)).
-- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../packs/protein-engineering/README.md#data-contracts) and [*Data retrieval*](../packs/protein-engineering/README.md#data-retrieval).

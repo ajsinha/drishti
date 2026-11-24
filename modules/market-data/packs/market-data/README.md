@@ -768,7 +768,7 @@ The committed samples are synthetic. Five feed connectors (off by default) read 
 | Synthetic sample data (tools/packgen/banking) | Proprietary (part of Drishti); fictitious names and figures | no | every document in samples/ and the demo lake |
 | Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors | Public sources, attribution; read live, off by default | no | rate-fixing, fx-spot and ir-curve when the feed connectors are on |
 
-Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/market-data.md](guides/market-data.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are below: *Data contracts* and *Data retrieval*.
 
 External data: Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors. Each source's URL, licence and data feed are on the External data help page, [docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).
 
@@ -797,8 +797,100 @@ The data feed `market-data` (config/feeds/market-data.yaml) pulls `fx-spot`, `ir
 
 The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--check` fails when the committed files differ from what it would write.
 
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`modules/market-data/packs/market-data/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/market-data.md](../../../../docs/contracts/packs/market-data.md) and each kind's example (a real record of the test data, every field explained) on [docs/contracts/packs](../../../../docs/contracts/packs/README.md); this README links them and copies neither. Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Contract | Example |
+|---|---|---|---|---|---|---|
+| `CRV` | `ir-curve` | fundamental | `CURVE_ID` | One row per interest rate curve per business date, keyed by CURVE_ID. | [CRV: Interest rate curve](../../../../docs/contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve) (`contracts/ir-curve.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-ir-curve) |
+| `REPO` | `repo-curve` | fundamental | `CURVE_ID` | One row per repo curve per business date, keyed by CURVE_ID. | [REPO: Repo curve](../../../../docs/contracts/packs/market-data.md#repo-repo-curve-repo-curve) (`contracts/repo-curve.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-repo-curve) |
+| `FX` | `fx-spot` | fundamental | `PAIR` | One row per fx spot rate per business date, keyed by PAIR. | [FX: FX spot rate](../../../../docs/contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (`contracts/fx-spot.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-fx-spot) |
+| `FXF` | `fx-forward-curve` | fundamental | `CURVE_ID` | One row per fx forward curve per business date, keyed by CURVE_ID. | [FXF: FX forward curve](../../../../docs/contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve) (`contracts/fx-forward-curve.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-fx-forward-curve) |
+| `FXV` | `fx-vol-surface` | fundamental | `SURFACE_ID` | One row per fx volatility surface per business date, keyed by SURFACE_ID. | [FXV: FX volatility surface](../../../../docs/contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface) (`contracts/fx-vol-surface.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-fx-vol-surface) |
+| `IRV` | `ir-vol-cube` | fundamental | `CUBE_ID` | One row per swaption volatility cube per business date, keyed by CUBE_ID. | [IRV: Swaption volatility cube](../../../../docs/contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube) (`contracts/ir-vol-cube.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-ir-vol-cube) |
+| `CPV` | `cap-vol-surface` | fundamental | `SURFACE_ID` | One row per cap/floor volatility surface per business date, keyed by SURFACE_ID. | [CPV: Cap/floor volatility surface](../../../../docs/contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface) (`contracts/cap-vol-surface.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-cap-vol-surface) |
+| `EQ` | `equity` | fundamental | `TICKER` | One row per equity per business date, keyed by TICKER. | [EQ: Equity](../../../../docs/contracts/packs/market-data.md#eq-equity-equity) (`contracts/equity.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-equity) |
+| `EQX` | `equity-index` | fundamental | `INDEX_ID` | One row per equity index per business date, keyed by INDEX_ID. | [EQX: Equity index](../../../../docs/contracts/packs/market-data.md#eqx-equity-index-equity-index) (`contracts/equity-index.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-equity-index) |
+| `DIV` | `dividend-curve` | fundamental | `CURVE_ID` | One row per dividend curve per business date, keyed by CURVE_ID. | [DIV: Dividend curve](../../../../docs/contracts/packs/market-data.md#div-dividend-curve-dividend-curve) (`contracts/dividend-curve.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-dividend-curve) |
+| `EQV` | `equity-vol-surface` | fundamental | `SURFACE_ID` | One row per equity volatility surface per business date, keyed by SURFACE_ID. | [EQV: Equity volatility surface](../../../../docs/contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface) (`contracts/equity-vol-surface.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-equity-vol-surface) |
+| `CDS` | `credit-curve` | fundamental | `CURVE_ID` | One row per credit curve per business date, keyed by CURVE_ID. | [CDS: Credit curve](../../../../docs/contracts/packs/market-data.md#cds-credit-curve-credit-curve) (`contracts/credit-curve.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-credit-curve) |
+| `INF` | `inflation-index` | fundamental | `INDEX_ID` | One row per inflation index per business date, keyed by INDEX_ID. | [INF: Inflation index](../../../../docs/contracts/packs/market-data.md#inf-inflation-index-inflation-index) (`contracts/inflation-index.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-inflation-index) |
+| `INFC` | `inflation-curve` | fundamental | `CURVE_ID` | One row per inflation curve per business date, keyed by CURVE_ID. | [INFC: Inflation curve](../../../../docs/contracts/packs/market-data.md#infc-inflation-curve-inflation-curve) (`contracts/inflation-curve.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-inflation-curve) |
+| `CMD` | `commodity` | fundamental | `COMMODITY_ID` | One row per commodity per business date, keyed by COMMODITY_ID. | [CMD: Commodity](../../../../docs/contracts/packs/market-data.md#cmd-commodity-commodity) (`contracts/commodity.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-commodity) |
+| `CMDC` | `commodity-curve` | fundamental | `CURVE_ID` | One row per commodity forward curve per business date, keyed by CURVE_ID. | [CMDC: Commodity forward curve](../../../../docs/contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve) (`contracts/commodity-curve.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-commodity-curve) |
+| `CMDV` | `commodity-vol-surface` | fundamental | `SURFACE_ID` | One row per commodity volatility surface per business date, keyed by SURFACE_ID. | [CMDV: Commodity volatility surface](../../../../docs/contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface) (`contracts/commodity-vol-surface.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-commodity-vol-surface) |
+| `FIX` | `rate-fixing` | fundamental | `INDEX_ID` | One row per rate index fixings per business date, keyed by INDEX_ID. | [FIX: Rate index fixings](../../../../docs/contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing) (`contracts/rate-fixing.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-rate-fixing) |
+| `BND` | `bond` | fundamental | `ISIN` | One row per bond (security master) per business date, keyed by ISIN. | [BND: Bond (security master)](../../../../docs/contracts/packs/market-data.md#bnd-bond-security-master-bond) (`contracts/bond.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-bond) |
+| `CORR` | `correlation-matrix` | fundamental | `MATRIX_ID` | One row per correlation matrix per business date, keyed by MATRIX_ID. | [CORR: Correlation matrix](../../../../docs/contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix) (`contracts/correlation-matrix.contract.yaml`) | [example](../../../../docs/contracts/packs/market-data.md#example-market-data-correlation-matrix) |
+| `CORRC` | `correlation-result` | computed | — | One answer per question (the correlation set asked for, its window and estimator, and the business date), computed when asked. | [CORRC: Correlations of a factor set (computed from price history)](../../../../docs/contracts/packs/market-data.md#corrc-correlations-of-a-factor-set-computed-from-price-history-correlation-result) (`contracts/correlation-result.contract.yaml`) | — (computed when asked) |
+| `EQB` | `equity-beta` | computed | — | One answer per question (the equity asked for, its window and the business date), computed when asked. | [EQB: An equity's beta against its index (computed from price history)](../../../../docs/contracts/packs/market-data.md#eqb-an-equitys-beta-against-its-index-computed-from-price-history-equity-beta) (`contracts/equity-beta.contract.yaml`) | — (computed when asked) |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `CRV` | `ir-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: US Treasury daily par yield curve (public domain (US Government work)) (`drishti.py feed run market-data`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/ir-curve/` → `lake demo` → connector `market-store` |
+| `REPO` | `repo-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/repo-curve/` → `lake demo` → connector `market-store` |
+| `FX` | `fx-spot` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: ECB euro reference FX rates (ECB: free reuse with the source acknowledged) (`drishti.py feed run market-data`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/fx-spot/` → `lake demo` → connector `market-store` |
+| `FXF` | `fx-forward-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/fx-forward-curve/` → `lake demo` → connector `market-store` |
+| `FXV` | `fx-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/fx-vol-surface/` → `lake demo` → connector `market-store` |
+| `IRV` | `ir-vol-cube` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/ir-vol-cube/` → `lake demo` → connector `market-store` |
+| `CPV` | `cap-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/cap-vol-surface/` → `lake demo` → connector `market-store` |
+| `EQ` | `equity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/equity/` → `lake demo` → connector `market-store` |
+| `EQX` | `equity-index` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/equity-index/` → `lake demo` → connector `market-store` |
+| `DIV` | `dividend-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/dividend-curve/` → `lake demo` → connector `market-store` |
+| `EQV` | `equity-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/equity-vol-surface/` → `lake demo` → connector `market-store` |
+| `CDS` | `credit-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/credit-curve/` → `lake demo` → connector `market-store` |
+| `INF` | `inflation-index` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/inflation-index/` → `lake demo` → connector `market-store` |
+| `INFC` | `inflation-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/inflation-curve/` → `lake demo` → connector `market-store` |
+| `CMD` | `commodity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity/` → `lake demo` → connector `market-store` |
+| `CMDC` | `commodity-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity-curve/` → `lake demo` → connector `market-store` |
+| `CMDV` | `commodity-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity-vol-surface/` → `lake demo` → connector `market-store` |
+| `FIX` | `rate-fixing` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: SOFR, Federal Reserve Bank of New York (NY Fed terms of use: reuse with attribution); Euro short-term rate (ECB) (ECB: free reuse with the source acknowledged) (`drishti.py feed run market-data`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/rate-fixing/` → `lake demo` → connector `market-store` |
+| `BND` | `bond` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/bond/` → `lake demo` → connector `market-store` |
+| `CORR` | `correlation-matrix` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/correlation-matrix/` → `lake demo` → connector `market-store` |
+| `CORRC` | `correlation-result` | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.banking.compute.analytics.CorrelationEngine); see the [Groupings and analytics guide](../../../../docs/guides/bi/README.md) | nothing to load: computed from its inputs when asked |
+| `EQB` | `equity-beta` | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.banking.compute.analytics.BetaEngine); see the [Groupings and analytics guide](../../../../docs/guides/bi/README.md) | nothing to load: computed from its inputs when asked |
+
+### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| US Treasury daily par yield curve | https://home.treasury.gov/resource-center/data-chart-center/interest-rates | public domain (US Government work) | no | `python3 tools/drishti.py feed run market-data -- us-treasury` |
+| ECB euro reference FX rates | https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip | ECB: free reuse with the source acknowledged | no | `python3 tools/drishti.py feed run market-data -- ecb-fx` |
+| SOFR, Federal Reserve Bank of New York | https://markets.newyorkfed.org/api/rates/secured/sofr | NY Fed terms of use: reuse with attribution | no | `python3 tools/drishti.py feed run market-data -- sofr` |
+| Euro short-term rate (ECB) | https://data-api.ecb.europa.eu/service/data/EST | ECB: free reuse with the source acknowledged | no | `python3 tools/drishti.py feed run market-data -- estr` |
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status market-data                                         # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run market-data --dry-run                                  # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run market-data                                            # pull today's data and load it into the lake `capitalmarket` (what the daily schedule runs)
+python3 tools/drishti.py feed run market-data -- ecb-fx --years 5 --scope USDMXN,EURSEK  # more history and more pairs
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run market-data` on Linux and macOS, `py tools\drishti.py feed run market-data` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+
+### Generators
+
+| Generator | Writes | Check |
+|---|---|---|
+| `python3 tools/testdata/make_testdata.py` | sixty business days of every dataset of the seven packs into data/testdata/<pack>/<kind>/ (the universe: tools/testdata/universe.py; deterministic, fictitious names) | `python3 tools/testdata/make_testdata.py --check` |
+| `python3 tools/packgen/banking/make_data.py` | the pack's few reference documents in samples/ (from the taxonomy, tools/packgen/banking/taxonomy.py) | `python3 tools/packgen/banking/make_data.py --check` |
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
 ## See also
 
-- [Market data pack](guides/market-data.md): Curves, surfaces, prices and fixings: kinds, connectors and examples.
-- [Market-data catalogue](guides/market-data-catalogue.md): Every curve, surface, spot and fixing the pack defines, and how products select them.
+- [How to use the market-data pack](../../../../docs/guides/BANK_DATA_GUIDE.md#market-data-pack): what it holds, its screens and a walk-through, in BANK_DATA_GUIDE.md.
 - [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

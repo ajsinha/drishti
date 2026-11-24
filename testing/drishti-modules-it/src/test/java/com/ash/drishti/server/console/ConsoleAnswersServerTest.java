@@ -144,20 +144,19 @@ class ConsoleAnswersServerTest {
     }
 
     @Test
-    void aPacksConsoleAnswerListsItsGuidesAndOnlyThoseFilesAreServed() throws Exception {
+    void aShippedPacksConsoleAnswerListsNoGuideAndServesNoFileItDoesNotList() throws Exception {
+        // since i7k a shipped pack has no guide: its facts are its README and contracts, its story a feature guide's section
         String who = person("cy");
         JsonNode a = ok(get("/api/v1/packs/gleif/console").header("Authorization", who));
         assertThat(a.path("pack").asText()).isEqualTo("gleif");
         List<String> slugs = new ArrayList<>();
         a.path("help").path("guides").forEach(g -> slugs.add(g.path("slug").asText()));
-        assertThat(slugs).contains("gleif-pack");
+        assertThat(slugs).doesNotContain("gleif-pack");
         List<String> files = new ArrayList<>();
         a.path("files").forEach(f -> files.add(f.path("path").asText()));
-        assertThat(files).contains("guides/gleif.md", "guides/images/gleif-entity.jpg");   // the picture beside the guide is allowed too
-        MvcResult md = call(get("/api/v1/packs/gleif/console/files/guides/gleif.md").header("Authorization", who));
-        assertThat(md.getResponse().getStatus()).isEqualTo(200);
-        assertThat(md.getResponse().getContentAsString()).contains("GLEIF");
-        assertThat(md.getResponse().getHeader("X-Content-Type-Options")).isEqualTo("nosniff");
+        assertThat(files).doesNotContain("guides/gleif.md");
+        assertThat(call(get("/api/v1/packs/gleif/console/files/guides/gleif.md").header("Authorization", who)).getResponse().getStatus())
+                .as("a guide that is gone").isEqualTo(404);
         assertThat(call(get("/api/v1/packs/gleif/console/files/pack.yaml").header("Authorization", who)).getResponse().getStatus())
                 .as("a file the answer does not list").isEqualTo(404);
         assertThat(call(get("/api/v1/packs/gleif/console/files/guides/../pack.yaml").header("Authorization", who)).getResponse().getStatus())

@@ -387,7 +387,7 @@ on sec.gov.
 | Nasdaq Trader symbol directory | Public directory, attribution | no | the listing market |
 | Yahoo Finance (us-equities-prices connector, yfinance plugin) | Terms forbid redistribution; nothing committed | yes | price-history, read live only when the connector is on |
 
-Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/us-equities.md](guides/us-equities.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are below: *Data contracts* and *Data retrieval*.
 
 External data: SEC EDGAR (submissions, company facts XBRL); Wikidata; GLEIF LEI records; Nasdaq Trader symbol directory; Yahoo Finance (us-equities-prices connector, yfinance plugin) (**internal only**). Each source's URL, licence and data feed are on the External data help page, [docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).
 
@@ -413,7 +413,68 @@ The data feed `yahoo-prices` (config/feeds/yahoo-prices.yaml) pulls `price-histo
 
 The pack's files are written by `tools/packgen/us_equities/make.py`; its `--check` fails when the committed files differ from what it would write.
 
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`modules/capital-markets/packs/us-equities/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/us-equities.md](../../../../docs/contracts/packs/us-equities.md) and each kind's example (a real record of the test data, every field explained) on [docs/contracts/packs](../../../../docs/contracts/packs/README.md); this README links them and copies neither. Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Contract | Example |
+|---|---|---|---|---|---|---|
+| `USEQ` | `us-company` | fundamental | `TICKER` | One row per us company, keyed by TICKER. | [USEQ: US company](../../../../docs/contracts/packs/us-equities.md#useq-us-company-us-company) (`contracts/us-company.contract.yaml`) | [example](../../../../docs/contracts/packs/us-equities.md#example-us-equities-us-company) |
+| `IDX` | `index-membership` | fundamental | `INDEX` | One row per index members, keyed by INDEX. | [IDX: Index members](../../../../docs/contracts/packs/us-equities.md#idx-index-members-index-membership) (`contracts/index-membership.contract.yaml`) | [example](../../../../docs/contracts/packs/us-equities.md#example-us-equities-index-membership) |
+| `SIC` | `sic-sector` | computed | `SIC` | One record per SIC of the us-company records, computed when asked. | [SIC: SIC sector](../../../../docs/contracts/packs/us-equities.md#sic-sic-sector-sic-sector) (`contracts/sic-sector.contract.yaml`) | — (computed when asked) |
+| `EDGAR` | `filing-feed` | fundamental | `FEED` | One row per edgar filings browser, keyed by FEED. | [EDGAR: EDGAR filings browser](../../../../docs/contracts/packs/us-equities.md#edgar-edgar-filings-browser-filing-feed) (`contracts/filing-feed.contract.yaml`) | [example](../../../../docs/contracts/packs/us-equities.md#example-us-equities-filing-feed) |
+| `FILING` | `filing` | fundamental | `ACCESSION` | One row per sec filing, keyed by ACCESSION. | [FILING: SEC filing](../../../../docs/contracts/packs/us-equities.md#filing-sec-filing-filing) (`contracts/filing.contract.yaml`) | [example](../../../../docs/contracts/packs/us-equities.md#example-us-equities-filing) |
+| `FACT` | `financial-fact` | fundamental | `FACT_ID` | One row per financial fact, keyed by FACT_ID. | [FACT: Financial fact](../../../../docs/contracts/packs/us-equities.md#fact-financial-fact-financial-fact) (`contracts/financial-fact.contract.yaml`) | [example](../../../../docs/contracts/packs/us-equities.md#example-us-equities-financial-fact) |
+| `PXH` | `price-history` | fundamental | — | One row per price history (live, internal use only), keyed by a key to be confirmed. | [PXH: Price history (live, internal use only)](../../../../docs/contracts/packs/us-equities.md#pxh-price-history-live-internal-use-only-price-history) (`contracts/price-history.contract.yaml`) | — (no test data) |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `USEQ` | `us-company` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy); Wikidata: index membership and company facts (CC0 1.0); Nasdaq Trader symbol directory (public symbol directory files); GLEIF LEI records (each company's LEI) (CC0 1.0) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/us-company/` → `lake demo` → connector `us-equities-store` |
+| `IDX` | `index-membership` | external: Wikidata: index membership and company facts (CC0 1.0) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/index-membership/` → `lake demo` → connector `us-equities-store` |
+| `SIC` | `sic-sector` | computed by Drishti: the derived connector us-equities-groupings over the kind us-company; see the [Groupings and analytics guide](../../../../docs/guides/bi/README.md) | nothing to load: computed from its inputs when asked |
+| `EDGAR` | `filing-feed` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/filing-feed/` → `lake demo` → connector `us-equities-store` |
+| `FILING` | `filing` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/filing/` → `lake demo` → connector `us-equities-store` |
+| `FACT` | `financial-fact` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/financial-fact/` → `lake demo` → connector `us-equities-store` |
+| `PXH` | `price-history` | external: Yahoo Finance daily prices (the us-equities-prices connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `drishti.py feed run us-equities` | read live by connector `us-equities-prices` (plugin `None`) when it is switched on; nothing is committed |
+
+### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| SEC EDGAR: tickers, submissions, XBRL company facts | https://data.sec.gov | public domain (US Government work); EDGAR fair access policy | no | `python3 tools/drishti.py feed run us-equities -- sec` |
+| Wikidata: index membership and company facts | https://query.wikidata.org/sparql | CC0 1.0 | no | `python3 tools/drishti.py feed run us-equities -- wikidata` |
+| Nasdaq Trader symbol directory | https://www.nasdaqtrader.com/dynamic/SymDir/ | public symbol directory files | no | `python3 tools/drishti.py feed run us-equities -- nasdaq` |
+| GLEIF LEI records (each company's LEI) | https://api.gleif.org/api/v1 | CC0 1.0 | no | `python3 tools/drishti.py feed run us-equities -- gleif` |
+| Yahoo Finance daily prices (the us-equities-prices connector) | https://finance.yahoo.com | Yahoo terms: personal use, no redistribution | **yes** | `python3 tools/drishti.py feed run us-equities -- prices` |
+
+**Internal only:** Yahoo Finance daily prices (the us-equities-prices connector). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status us-equities                          # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run us-equities --dry-run                   # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run us-equities                             # pull today's data and load it into the lake `capitalmarket` (what the daily schedule runs)
+python3 tools/drishti.py feed run us-equities --snapshot                  # refresh the committed pack instead: data/testdata/us-equities, samples/ and this guide, then make.py --check
+python3 tools/drishti.py feed run us-equities --snapshot --offline        # the same from the download cache only
+python3 tools/drishti.py feed run us-equities -- --scope TSLA,FILINGS:40  # a widened pull of more companies and filings
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run us-equities` on Linux and macOS, `py tools\drishti.py feed run us-equities` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
 ## See also
 
-- [The us-equities pack](guides/us-equities.md): Public data on the Dow 30, Nasdaq-100 and S&P 500 companies: SEC filings and financials, SIC sectors, LEIs and index membership. Prices are live only, off by default, internal use. Type USEQ AAPL, IDX SP500, SIC 3674, EDGAR 8-K, FACT AAPL-REVENUE or PXH PX-AAPL.
+- [How to use the us-equities pack](../../../../docs/guides/WORLD_DATA_GUIDE.md#the-us-equities-pack): what it holds, its screens and a walk-through, in WORLD_DATA_GUIDE.md.
 - [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

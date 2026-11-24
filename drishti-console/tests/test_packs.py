@@ -192,15 +192,13 @@ def test_an_older_server_is_said_in_words_never_an_empty_page_in_silence(client,
     assert client.app.state.packs.notice() == "", "an answer from the server clears it"
 
 
-def test_a_shipped_pack_guide_kept_in_the_console_s_folder_still_links_into_docs(client, with_packs):
-    """A pack's guide arrives from the server and is kept in the console's temp folder, not beside the pack; its links into the repository's
-    docs/ (``../../../../../docs/contracts/packs/gleif.md``, written as the guide sits in its pack) still open those documents in Help."""
-    import re
+def test_a_shipped_pack_has_no_guide_of_its_own_its_story_is_a_feature_guides_section(client, with_packs):
+    """Since i7k a shipped pack's facts are its README and contracts and its story a section of a feature guide (gleif: WORLD_DATA_GUIDE,
+    "The gleif pack"): the server sends no pack guide, the console keeps none, and the section opens in Help with the pack's README linked."""
     with_packs("core", "gleif")
-    page = client.get("/help/gleif-pack")
-    assert page.status_code == 200
-    body = page.text
-    assert 'href="/help/docs-contracts-packs-gleif' in body, "the link to the pack's data contract opens it in Help"
-    assert not re.search(r'data-unavailable="[^"]*docs/', body), "no link into docs/ is left unavailable"
-    kept = [str(g["path"]) for p in client.app.state.packs._console.values() for g in p["value"]["guides"]]
-    assert kept and not any("/config/packs/" in x for x in kept), "the guide is the console's copy, not the pack's file"
+    client.get("/help")
+    kept = [str(g["path"]) for k, p in client.app.state.packs._console.items() if any(n in str(k) for n in ("core", "gleif"))
+            for g in p["value"]["guides"]]
+    assert kept == [], "a shipped pack sends no guide"
+    page = client.get("/help/world-data-guide")
+    assert page.status_code == 200 and 'id="the-gleif-pack"' in page.text, "the pack's story is the guide's section"

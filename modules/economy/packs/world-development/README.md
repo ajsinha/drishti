@@ -164,7 +164,7 @@ Screens (Sutras):
 |---|---|---|---|
 | World Bank World Development Indicators API (v2) | CC BY 4.0 | no | development-profile, development-series |
 
-Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/world-development.md](guides/world-development.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are below: *Data contracts* and *Data retrieval*.
 
 External data: World Bank World Development Indicators API (v2). Each source's URL, licence and data feed are on the External data help page, [docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).
 
@@ -188,7 +188,51 @@ The data feed `world-development` (config/feeds/world-development.yaml) pulls `d
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`modules/economy/packs/world-development/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/world-development.md](../../../../docs/contracts/packs/world-development.md) and each kind's example (a real record of the test data, every field explained) on [docs/contracts/packs](../../../../docs/contracts/packs/README.md); this README links them and copies neither. Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Contract | Example |
+|---|---|---|---|---|---|---|
+| `WDI` | `development-profile` | fundamental | `PROFILE_ID` | One row per development profile, keyed by PROFILE_ID. | [WDI: Development profile](../../../../docs/contracts/packs/world-development.md#wdi-development-profile-development-profile) (`contracts/development-profile.contract.yaml`) | [example](../../../../docs/contracts/packs/world-development.md#example-world-development-development-profile) |
+| `WDIS` | `development-series` | fundamental | `SERIES_ID` | One row per development indicator series, keyed by SERIES_ID. | [WDIS: Development indicator series](../../../../docs/contracts/packs/world-development.md#wdis-development-indicator-series-development-series) (`contracts/development-series.contract.yaml`) | [example](../../../../docs/contracts/packs/world-development.md#example-world-development-development-series) |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `WDI` | `development-profile` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-profile/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `WDIS` | `development-series` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-series/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
+
+### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| World Bank World Development Indicators API (v2), pulled only by the world-development feed | https://api.worldbank.org/v2 | CC BY 4.0 | no | `python3 tools/drishti.py feed run world-development` |
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status world-development                  # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run world-development --dry-run           # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run world-development                     # pull today's data and load it into the lake `worldlake` (what the daily schedule runs)
+python3 tools/drishti.py feed run world-development --load inbox        # the same through the data inbox: the server loads it
+python3 tools/drishti.py feed run world-development --since 2026-01-01  # pull again although the World Bank has not changed (after editing the indicators)
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run world-development` on Linux and macOS, `py tools\drishti.py feed run world-development` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
 ## See also
 
-- [The world-development pack](guides/world-development.md): World Bank World Development Indicators by country and year (CC BY 4.0), filled daily by the world-development feed into worldlake: a profile per economy with the latest of each indicator and the world map by GDP per head, and the history of every indicator. Type WDI WDI-CAN.
+- [How to use the world-development pack](../../../../docs/guides/WORLD_DATA_GUIDE.md#the-world-development-pack): what it holds, its screens and a walk-through, in WORLD_DATA_GUIDE.md.
 - [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

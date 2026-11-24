@@ -173,7 +173,7 @@ FRTB's liquidity horizons or stressed calibration). Age-weighted and filtered me
 
 In words, with the scope's vector `v` (N values, gains positive) and its scenarios sorted worst first (equal P&Ls, and **near-equal**
 ones within a relative 1e-12 of the vector's largest P&L: the older scenario first, so the VaR date never depends on the last bits of a
-sum, whichever path summed it: [HIGH_PERFORMANCE_NATIVE.md section 6.2](../architecture/HIGH_PERFORMANCE_NATIVE.md#62-precision-and-parity)).
+sum, whichever path summed it: [HIGH_PERFORMANCE_NATIVE.md section 6.2](../plans/HIGH_PERFORMANCE_NATIVE.md#62-precision-and-parity)).
 The exact formulas are in [section 18](#18-the-computation).
 
 | Measure | Definition | At N = 509 |
@@ -1471,7 +1471,7 @@ Its **VaR limit** is a `var-limit` row of `HIERARCHY` `PORTFOLIO` whose `NODE_ID
 **Who changes them.** Everyone who may open VaR reads every system basket (the System baskets drop-down, key `B`; `PORT <GO>`;
 `GET /api/v1/risk/var/system-baskets`). Creating, editing and retiring one needs the permission **`var:system-baskets`**: a role that
 lists it (Admin → Roles → *Permissions*, or `permissions: [var:system-baskets]` of a configured role,
-[ACCESS_MODEL.md section 8](../architecture/ACCESS_MODEL.md#8-as-built-the-backend-phase-1-of-the-split)), or an administrator. It is
+[ACCESS_MODEL.md section 8](../architecture/KERNEL_AND_MODULES.md#8-as-built-the-backend-phase-1-of-the-split)), or an administrator. It is
 done in the basket sheet itself ([section 3.5](#35-construct-your-basket)): a holder of the permission sees **System basket** under the
 sheet, the basket's fields; *Edit a copy* on a system basket fills them with it. **Save system basket** saves a `basket` from the sheet's
 position and trade columns, a `hierarchy` from its node (or the one node the sheet holds) and a `rule` from its condition; the same id is
@@ -4121,7 +4121,7 @@ diversification  = Σ standalone VaRᵢ − VaR(v)
 (z·cov/σ alone adds up to z·σ). Parts that do not partition the scope (a selection) do not add up. For nodes and groups (no size) the
 marginal is shown *per +1% of the part*, `0.01 × component VaRᵢ`. The **correlation matrix** of up to `matrix-max-parts` (60) parts is
 `C = XᵀX` with X the centred N × k matrix (`X_ji = √w_j·(p_ij − μᵢ)`), one `dgemm` through the BLAS seam
-([HIGH_PERFORMANCE_NATIVE.md](../architecture/HIGH_PERFORMANCE_NATIVE.md)), `R_il = C_il / √(C_ii·C_ll)`, `σ² = Σ C` returned as a
+([HIGH_PERFORMANCE_NATIVE.md](../plans/HIGH_PERFORMANCE_NATIVE.md)), `R_il = C_il / √(C_ii·C_ll)`, `σ² = Σ C` returned as a
 check; beyond 60 parts the largest by |component VaR|, `truncated: true`. The components never come from the matrix: each is one `ddot` of
 its centred vector with the scope's, in index order, so the figures never depend on which BLAS answered.
 
@@ -4958,8 +4958,8 @@ add about 1.2 GB of `-Xmx` a further date kept open ([section 27.1](#271-bytes-p
 
 A Java 25 build will use accelerated implementations automatically (memory-mapped access through `MemorySegment`, SIMD sums, BLAS through
 OpenBLAS for many scopes at once) where their needs are met, and a Java 21 build today's code; a native mode setting (auto or off)
-chooses ([HIGH_PERFORMANCE_NATIVE.md section 2.8](../architecture/HIGH_PERFORMANCE_NATIVE.md#28-two-builds-one-code-base-the-baseline-and-the-accelerated-path-side-by-side)).
-Every faster path must give today's answers ([section 6.2 of that document](../architecture/HIGH_PERFORMANCE_NATIVE.md#62-precision-and-parity)):
+chooses ([HIGH_PERFORMANCE_NATIVE.md section 2.8](../plans/HIGH_PERFORMANCE_NATIVE.md#28-two-builds-one-code-base-the-baseline-and-the-accelerated-path-side-by-side)).
+Every faster path must give today's answers ([section 6.2 of that document](../plans/HIGH_PERFORMANCE_NATIVE.md#62-precision-and-parity)):
 
 - **SIMD sums: bit-exact** against a plain-Java twin that adds in the same order;
 - **BLAS:** each scenario total within a **relative 10⁻¹²** of today's (twelve significant digits; on a total of 100 million, a
@@ -7163,7 +7163,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `risk-store` | `data/delta/demo/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation` |
+| `risk-store` | `data/delta/demo/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | [`stress-scenario`](../contracts/packs/market-risk.md#example-market-risk-stress-scenario) ([contract](../contracts/packs/market-risk.md#scn-stress-scenario-stress-scenario)), [`stress-result`](../contracts/packs/market-risk.md#example-market-risk-stress-result) ([contract](../contracts/packs/market-risk.md#str-stress-result-stress-result)), [`frtb-sensitivity`](../contracts/packs/market-risk.md#example-market-risk-frtb-sensitivity) ([contract](../contracts/packs/market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity)), [`pnl-explain`](../contracts/packs/market-risk.md#example-market-risk-pnl-explain) ([contract](../contracts/packs/market-risk.md#pnl-pl-explain-pnl-explain)), `trade-valuation` |
 
 #### Value at risk: the VaR engine
 
@@ -7219,7 +7219,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 
 **Fields its Sutra reads:** `TRADE_ID`, `SOURCE_SYSTEM`, `MTM`, `PNL_1D`, `DV01`, `NOTIONAL`, `VALUATION_DATE`.
 
-**Links:** `TRADE_ID` → Trade (`trade`), `DESK` → Desk (`desk`), `NETTING_SET` → Netting set ([`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set))).
+**Links:** `TRADE_ID` → Trade (`trade`), `DESK` → Desk (`desk`), `NETTING_SET` → Netting set ([`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set))).
 
 ### Who can see it
 
@@ -7231,40 +7231,4 @@ Amounts at stake: `trade-valuation` by `$.MTM`.
 
 ### Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
-
-| Command | Kind | Origin | How it reaches Drishti |
-|---|---|---|---|
-| `SCN` | `stress-scenario` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/stress-scenario/` → `lake demo` → connector `risk-store` |
-| `STR` | `stress-result` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/stress-result/` → `lake demo` → connector `risk-store` |
-| `FRTB` | `frtb-sensitivity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/frtb-sensitivity/` → `lake demo` → connector `risk-store` |
-| `PNL` | `pnl-explain` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/pnl-explain/` → `lake demo` → connector `risk-store` |
-| `TVAL` | `trade-valuation` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/trade-valuation/` → `lake demo` → connector `risk-store` |
-| `POS` | `position` | computed by Drishti: (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/guides/VAR_GUIDE.md section 15.6); see the [VaR guide](VAR_GUIDE.md) (positions) | nothing to load: computed from its inputs when asked |
-| `PORT` | `system-basket` | computed by Drishti: (the basket store's system scope, var/system-baskets/, docs/guides/VAR_GUIDE.md section 5.7; the demo's from the market-risk pack's seed) | nothing to load: computed from its inputs when asked |
-| `PNLV` | `pnl-vector` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/pnl-vector/` → connector `risk-store` |
-| `SPV` | `scenario-pv` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/scenario-pv/` → `lake demo` → connector `risk-store` |
-| `FXS` | `fx-scenario` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/fx-scenario/` → `lake demo` → connector `risk-store` |
-| `SSET` | `scenario-set` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/scenario-set/` → `lake demo` → connector `risk-store` |
-| `VLIM` | `var-limit` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/var-limit/` → `lake demo` → connector `risk-store` |
-| `DPNL` | `desk-pnl` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/desk-pnl/` → `lake demo` → connector `risk-store` |
-| `PNLH` | `pnl-history` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/pnl-history/` → `lake demo` → connector `risk-store` |
-| `SENS` | `position-sensitivity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/position-sensitivity/` → `lake demo` → connector `risk-store` |
-| `RFAC` | `risk-factor` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/risk-factor/` → `lake demo` → connector `risk-store` |
-| `VRES` | `var-result` | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.banking.var.VarResultEngine); see the [VaR guide](VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
-| `VOFF` | `var-official` | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official; see the [VaR guide](VAR_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/var-official/` |
-| `SSPNL` | `stress-scenario-pnl` | computed by Drishti: the derived connector mr-derived over the kind stress-result | nothing to load: computed from its inputs when asked |
-
-#### Generators
-
-| Generator | Writes | Check |
-|---|---|---|
-| `python3 tools/testdata/make_testdata.py` | sixty business days of every dataset of the seven packs into data/testdata/<pack>/<kind>/ (the universe: tools/testdata/universe.py; deterministic, fictitious names) | `python3 tools/testdata/make_testdata.py --check` |
-| `python3 tools/packgen/banking/make_data.py` | the pack's few reference documents in samples/ (from the taxonomy, tools/packgen/banking/taxonomy.py) | `python3 tools/packgen/banking/make_data.py --check` |
-| `python3 tools/packgen/var/make_var_data.py` | the VaR engine's inputs into data/testdata/market-risk/<kind>/, as an upstream risk batch would deliver them, from the committed trades (VAR_GUIDE.md) | `python3 -m pytest -q tools/packgen/var/test_var_data.py` |
-
-#### Into the lake, checking, offline
-
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
-- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/banking/packs/market-risk/README.md#data-contracts) and [*Data retrieval*](../../modules/banking/packs/market-risk/README.md#data-retrieval).

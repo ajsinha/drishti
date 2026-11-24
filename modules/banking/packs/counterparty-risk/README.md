@@ -587,7 +587,7 @@ Screens (Sutras):
 |---|---|---|---|
 | Synthetic sample data (tools/packgen/banking) | Proprietary (part of Drishti); fictitious names and figures | no | every document in samples/ and the demo lake |
 
-Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/counterparty-risk.md](guides/counterparty-risk.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are below: *Data contracts* and *Data retrieval*.
 
 ## Enabling and dependencies
 
@@ -611,7 +611,67 @@ Settings (environment variables) its connectors read: `DRISHTI_CCR_DERIVED_ENABL
 
 The pack's files are written by `tools/packgen/banking/make_docs.py`; its `--check` fails when the committed files differ from what it would write.
 
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`modules/banking/packs/counterparty-risk/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/counterparty-risk.md](../../../../docs/contracts/packs/counterparty-risk.md) and each kind's example (a real record of the test data, every field explained) on [docs/contracts/packs](../../../../docs/contracts/packs/README.md); this README links them and copies neither. Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Contract | Example |
+|---|---|---|---|---|---|---|
+| `AGR` | `agreement` | fundamental | `AGREEMENT_ID` | One row per master agreement per business date, keyed by AGREEMENT_ID. | [AGR: Master agreement](../../../../docs/contracts/packs/counterparty-risk.md#agr-master-agreement-agreement) (`contracts/agreement.contract.yaml`) | [example](../../../../docs/contracts/packs/counterparty-risk.md#example-counterparty-risk-agreement) |
+| `CSA` | `csa` | fundamental | `CSA_ID` | One row per credit support annex per business date, keyed by CSA_ID. | [CSA: Credit support annex](../../../../docs/contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa) (`contracts/csa.contract.yaml`) | [example](../../../../docs/contracts/packs/counterparty-risk.md#example-counterparty-risk-csa) |
+| `NSET` | `netting-set` | fundamental | `NETTING_SET_ID` | One row per netting set per business date, keyed by NETTING_SET_ID. | [NSET: Netting set](../../../../docs/contracts/packs/counterparty-risk.md#nset-netting-set-netting-set) (`contracts/netting-set.contract.yaml`) | [example](../../../../docs/contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) |
+| `LIM` | `credit-limit` | fundamental | `LIMIT_ID` | One row per credit limit per business date, keyed by LIMIT_ID. | [LIM: Credit limit](../../../../docs/contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit) (`contracts/credit-limit.contract.yaml`) | [example](../../../../docs/contracts/packs/counterparty-risk.md#example-counterparty-risk-credit-limit) |
+| `CVA` | `cva` | fundamental | `RESULT_ID` | One row per cva / xva per business date, keyed by RESULT_ID. | [CVA: CVA / XVA](../../../../docs/contracts/packs/counterparty-risk.md#cva-cva--xva-cva) (`contracts/cva.contract.yaml`) | [example](../../../../docs/contracts/packs/counterparty-risk.md#example-counterparty-risk-cva) |
+| `SACCR` | `sa-ccr` | fundamental | `CALC_ID` | One row per sa-ccr exposure per business date, keyed by CALC_ID. | [SACCR: SA-CCR exposure](../../../../docs/contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr) (`contracts/sa-ccr.contract.yaml`) | [example](../../../../docs/contracts/packs/counterparty-risk.md#example-counterparty-risk-sa-ccr) |
+| `COLL` | `collateral-balance` | fundamental | `BALANCE_ID` | One row per collateral balance per business date, keyed by BALANCE_ID. | [COLL: Collateral balance](../../../../docs/contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance) (`contracts/collateral-balance.contract.yaml`) | [example](../../../../docs/contracts/packs/counterparty-risk.md#example-counterparty-risk-collateral-balance) |
+| `MC` | `margin-call` | fundamental | `CALL_ID` | One row per margin call per business date, keyed by CALL_ID. | [MC: Margin call](../../../../docs/contracts/packs/counterparty-risk.md#mc-margin-call-margin-call) (`contracts/margin-call.contract.yaml`) | [example](../../../../docs/contracts/packs/counterparty-risk.md#example-counterparty-risk-margin-call) |
+| `SIMM` | `simm` | fundamental | `CALC_ID` | One row per isda simm initial margin per business date, keyed by CALC_ID. | [SIMM: ISDA SIMM initial margin](../../../../docs/contracts/packs/counterparty-risk.md#simm-isda-simm-initial-margin-simm) (`contracts/simm.contract.yaml`) | [example](../../../../docs/contracts/packs/counterparty-risk.md#example-counterparty-risk-simm) |
+| `XRUN` | `simulation-run` | input | `RUN_ID` | One row per simulation run and business date, keyed by RUN_ID; the newest complete run of a date answers. | [XRUN: Exposure simulation run](../../../../docs/contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) (`contracts/simulation-run.contract.yaml`) | [example](../../../../docs/contracts/packs/counterparty-risk.md#example-counterparty-risk-simulation-run) |
+| `XPATH` | `exposure-path` | input | `PATH_ROW_ID` | One row per trade, grid date and run per business date, keyed by PATH_ROW_ID (<run>~<trade>~<grid index>); sparse by maturity. | [XPATH: Exposure path (a trade's MtM on every path at a grid date)](../../../../docs/contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) (`contracts/exposure-path.contract.yaml`) | [example](../../../../docs/contracts/packs/counterparty-risk.md#example-counterparty-risk-exposure-path) |
+| `EXP` | `exposure-result` | computed | — | One answer per question (the scope asked for, its parameters q, collateral and run, and the business date), computed when asked. | [EXP: Exposure profile of a scope (computed)](../../../../docs/contracts/packs/counterparty-risk.md#exp-exposure-profile-of-a-scope-computed-exposure-result) (`contracts/exposure-result.contract.yaml`) | — (computed when asked) |
+| `XOFC` | `exposure-official-cpty` | computed | `NODE_ID`, `RESULT_VERSION` | One row per scope (netting set, counterparty or group) per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | [XOFC: Exposure official results by netting set and counterparty (published)](../../../../docs/contracts/packs/counterparty-risk.md#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) (`contracts/exposure-official-cpty.contract.yaml`) | — (computed when asked) |
+| `NSMTM` | `nset-mtm` | computed | `NETTING_SET_ID` | One record per NETTING_SET_ID of the trade-valuation records, computed when asked. | [NSMTM: Netting-set MtM totals (derived from the trade valuations)](../../../../docs/contracts/packs/counterparty-risk.md#nsmtm-netting-set-mtm-totals-derived-from-the-trade-valuations-nset-mtm) (`contracts/nset-mtm.contract.yaml`) | — (computed when asked) |
+| `CPMTM` | `cpty-mtm` | computed | `COUNTERPARTY` | One record per COUNTERPARTY of the trade-valuation records, computed when asked. | [CPMTM: Counterparty MtM totals (derived from the trade valuations)](../../../../docs/contracts/packs/counterparty-risk.md#cpmtm-counterparty-mtm-totals-derived-from-the-trade-valuations-cpty-mtm) (`contracts/cpty-mtm.contract.yaml`) | — (computed when asked) |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `AGR` | `agreement` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/agreement/` → `lake demo` → connector `legal-store` |
+| `CSA` | `csa` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/csa/` → `lake demo` → connector `legal-store` |
+| `NSET` | `netting-set` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/netting-set/` → `lake demo` → connector `credit-store` |
+| `LIM` | `credit-limit` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/credit-limit/` → `lake demo` → connector `credit-store` |
+| `CVA` | `cva` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/cva/` → `lake demo` → connector `credit-store` |
+| `SACCR` | `sa-ccr` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/sa-ccr/` → `lake demo` → connector `credit-store` |
+| `COLL` | `collateral-balance` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/collateral-balance/` → `lake demo` → connector `collateral-store` |
+| `MC` | `margin-call` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/margin-call/` → `lake demo` → connector `collateral-store` |
+| `SIMM` | `simm` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/simm/` → `lake demo` → connector `collateral-store` |
+| `XRUN` | `simulation-run` | synthetic: `python3 tools/packgen/ccr/make_ccr_data.py` | `data/testdata/counterparty-risk/simulation-run/` → `lake demo` → connector `exposure-store` |
+| `XPATH` | `exposure-path` | synthetic: `python3 tools/packgen/ccr/make_ccr_data.py` | `data/testdata/counterparty-risk/exposure-path/` → `lake demo` → connector `exposure-store` |
+| `EXP` | `exposure-result` | computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.banking.exposure.ExposureResultEngine); see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `XOFC` | `exposure-official-cpty` | computed by Drishti: the official end-of-day exposure capture (ExposureOfficial), appended by ExposurePublisher to risk-results/exposure-official-cpty; see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/exposure-official-cpty/` |
+| `NSMTM` | `nset-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |
+| `CPMTM` | `cpty-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |
+
+### Generators
+
+| Generator | Writes | Check |
+|---|---|---|
+| `python3 tools/testdata/make_testdata.py` | sixty business days of every dataset of the seven packs into data/testdata/<pack>/<kind>/ (the universe: tools/testdata/universe.py; deterministic, fictitious names) | `python3 tools/testdata/make_testdata.py --check` |
+| `python3 tools/packgen/banking/make_data.py` | the pack's few reference documents in samples/ (from the taxonomy, tools/packgen/banking/taxonomy.py) | `python3 tools/packgen/banking/make_data.py --check` |
+| `python3 tools/packgen/ccr/make_ccr_data.py` | the exposure engine's inputs into data/testdata/counterparty-risk/<kind>/, as an upstream exposure simulator would deliver them, from the committed netting sets (EXPOSURE_GUIDE.md) | `python3 -m pytest -q tools/packgen/ccr/test_ccr_data.py` |
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
 ## See also
 
-- [Counterparty credit risk pack](guides/counterparty-risk.md): Netting sets, exposure, CVA, SA-CCR, collateral and margin.
+- [How to use the counterparty-risk pack](../../../../docs/guides/EXPOSURE_GUIDE.md#counterparty-credit-risk-pack): what it holds, its screens and a walk-through, in EXPOSURE_GUIDE.md.
 - [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

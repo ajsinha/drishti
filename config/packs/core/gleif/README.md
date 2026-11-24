@@ -288,7 +288,7 @@ The groups use the consolidation relationships only; fund management, sub-fund, 
 | GLEIF mapping files (BIC, ISIN, MIC, OpenCorporates to LEI) | CC0 1.0 (the BIC file with SWIFT, the ISIN file with ANNA) | no | the identifiers of the entities |
 | GLEIF golden copy, level 1 bulk file | CC0 1.0 | no | full-country pulls into the data folder only (golden-lei source; never committed, for its size) |
 
-Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, [guides/gleif.md](guides/gleif.md): *Data contracts* and *Data retrieval*.
+Every kind's links to its data contract and its example and where its data comes from (an external source and the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are below: *Data contracts* and *Data retrieval*.
 
 External data: GLEIF golden copy, level 2 (relationship records, reporting exceptions); GLEIF LEI API (lei-records, entity-legal-forms, countries, lei-issuers); GLEIF mapping files (BIC, ISIN, MIC, OpenCorporates to LEI); GLEIF golden copy, level 1 bulk file. Each source's URL, licence and data feed are on the External data help page, [docs/guides/WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md).
 
@@ -311,7 +311,60 @@ The data feed `gleif` (config/feeds/gleif.yaml) pulls `lei-entity`, `lei-relatio
 
 The pack's files are written by `tools/packgen/gleif/make.py`; its `--check` fails when the committed files differ from what it would write.
 
+## Data contracts
+
+Every kind of the pack has a data contract: a YAML file beside the pack (`config/packs/core/gleif/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/gleif.md](../../../../docs/contracts/packs/gleif.md) and each kind's example (a real record of the test data, every field explained) on [docs/contracts/packs](../../../../docs/contracts/packs/README.md); this README links them and copies neither. Check them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with `python3 tools/contracts.py show <MNEMONIC>`.
+
+| Command | Kind | Class | Key | Grain | Contract | Example |
+|---|---|---|---|---|---|---|
+| `LEI` | `lei-entity` | fundamental | `LEI` | One row per lei legal entity, keyed by LEI. | [LEI: LEI legal entity](../../../../docs/contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity) (`contracts/lei-entity.contract.yaml`) | [example](../../../../docs/contracts/packs/gleif.md#example-gleif-lei-entity) |
+| `LEIG` | `lei-group` | computed | `GROUP_ID` | One record per GROUP_ID of the lei-entity records, computed when asked. | [LEIG: LEI ownership group](../../../../docs/contracts/packs/gleif.md#leig-lei-ownership-group-lei-group) (`contracts/lei-group.contract.yaml`) | — (computed when asked) |
+| `LEIR` | `lei-relationship` | fundamental | `RELATIONSHIP_ID` | One row per lei parent relationship, keyed by RELATIONSHIP_ID. | [LEIR: LEI parent relationship](../../../../docs/contracts/packs/gleif.md#leir-lei-parent-relationship-lei-relationship) (`contracts/lei-relationship.contract.yaml`) | [example](../../../../docs/contracts/packs/gleif.md#example-gleif-lei-relationship) |
+| `LEIC` | `lei-country` | computed | `COUNTRY` | One record per COUNTRY of the lei-entity records, computed when asked. | [LEIC: LEI country](../../../../docs/contracts/packs/gleif.md#leic-lei-country-lei-country) (`contracts/lei-country.contract.yaml`) | — (computed when asked) |
+| `LEIM` | `lei-mapping` | fundamental | `IDENTIFIER` | One row per isin or bic to lei, keyed by IDENTIFIER. | [LEIM: ISIN or BIC to LEI](../../../../docs/contracts/packs/gleif.md#leim-isin-or-bic-to-lei-lei-mapping) (`contracts/lei-mapping.contract.yaml`) | [example](../../../../docs/contracts/packs/gleif.md#example-gleif-lei-mapping) |
+
+*Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
+
+## Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../../../../docs/guides/WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `LEI` | `lei-entity` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `drishti.py feed run gleif` | `data/testdata/gleif/lei-entity/` → `lake demo` → connector `gleif-store` |
+| `LEIG` | `lei-group` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../docs/guides/bi/README.md) | nothing to load: computed from its inputs when asked |
+| `LEIR` | `lei-relationship` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `drishti.py feed run gleif` | `data/testdata/gleif/lei-relationship/` → `lake demo` → connector `gleif-store` |
+| `LEIC` | `lei-country` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](../../../../docs/guides/bi/README.md) | nothing to load: computed from its inputs when asked |
+| `LEIM` | `lei-mapping` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `drishti.py feed run gleif` | `data/testdata/gleif/lei-mapping/` → `lake demo` → connector `gleif-store` |
+
+### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| GLEIF LEI API: LEI records, legal forms, countries, LEI issuers | https://api.gleif.org/api/v1 | CC0 1.0 (attribution appreciated) | no | `python3 tools/drishti.py feed run gleif -- api` |
+| GLEIF golden copy, level 2: relationship records and reporting exceptions | https://goldencopy.gleif.org | CC0 1.0 (attribution appreciated) | no | `python3 tools/drishti.py feed run gleif -- golden` |
+| GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI | https://mapping.gleif.org | CC0 1.0 | no | `python3 tools/drishti.py feed run gleif -- mapping` |
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status gleif                               # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run gleif --dry-run                        # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run gleif                                  # pull today's data and load it into the lake `referencelake` (what the daily schedule runs)
+python3 tools/drishti.py feed run gleif --snapshot                       # refresh the committed pack instead: data/testdata/gleif, samples/ and this guide, then make.py --check
+python3 tools/drishti.py feed run gleif --snapshot --offline             # the same from the download cache only
+python3 tools/drishti.py feed run gleif -- --scope NAME:allianz,CAP:200  # a widened pull of more entities
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run gleif` on Linux and macOS, `py tools\drishti.py feed run gleif` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+
+### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
 ## See also
 
-- [The gleif pack](guides/gleif.md): Legal Entity Identifiers from GLEIF (CC0): the ownership groups of the us-equities companies and of the large banks, insurers and asset managers, with parents, children, renewals, BICs and ISINs. Type LEI 8I5DZWZKVSZI1NUHU748, LEIG ALL, LEIC GB or LEIM with a BIC.
+- [How to use the gleif pack](../../../../docs/guides/WORLD_DATA_GUIDE.md#the-gleif-pack): what it holds, its screens and a walk-through, in WORLD_DATA_GUIDE.md.
 - [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

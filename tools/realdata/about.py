@@ -69,7 +69,18 @@ def kinds_text(pack: str, no_imf: bool) -> str:
 
 def render(pack: str, no_imf: bool = False) -> str:
     voc = yaml.safe_dump({"vocabulary": vocabulary(N.load_config(), PACKS[pack][1], no_imf)}, sort_keys=False, allow_unicode=True, width=WIDTH)
-    return f"{header()}\n\nabout: 1\n{voc}{kinds_text(pack, no_imf)}"
+    return f"{header()}\n\nabout: 1\n{voc}{kinds_text(pack, no_imf)}{_intro(pack)}"
+
+
+def _intro(pack: str) -> str:
+    """The pack's hand-written README intro (tools/packgen/<pack>/intro.yaml without its comment lines), the ``intro:`` of the about.yaml."""
+    f = ROOT / "tools" / "packgen" / pack / "intro.yaml"
+    if not f.is_file():
+        return ""
+    lines = f.read_text(encoding="utf-8").split("\n")
+    while lines and (lines[0].startswith("#") or not lines[0].strip()):
+        lines.pop(0)
+    return "\n".join(lines)
 
 
 def targets(out: Path | None = None) -> dict[str, Path]:

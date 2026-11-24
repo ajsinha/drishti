@@ -290,7 +290,7 @@ def generate(pack: str, pack_dir: Path, docs: dict[str, dict[str, dict]], text: 
         f.unlink()
     written = write(testdata, pack, docs)
     total = sum(f.stat().st_size for f in written if f.name.endswith(".gz"))
-    print(f"wrote {rel(Path(pack_dir))} (reference samples, guide, README) and {rel(Path(testdata))}/{pack}: "
+    print(f"wrote {rel(Path(pack_dir))} (reference samples, README) and {rel(Path(testdata))}/{pack}: "
           f"{ {k: len(v) for k, v in docs.items()} }; {len(written) - 1} snapshot files, {total / 1e6:.1f} MB")
     return 0
 

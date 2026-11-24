@@ -33,6 +33,7 @@ about.yaml a generator writes: the generator's own about source): ``summary``, `
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from collections import OrderedDict
@@ -44,6 +45,8 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT / "tools") not in sys.path:
     sys.path.insert(0, str(ROOT / "tools"))
 import resolved as PP  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import guide_data as GD  # noqa: E402  (the README's Data contracts and Data retrieval sections, and where the pack's story is)
 
 PACKGEN = ROOT / "tools" / "packgen"
 
@@ -560,11 +563,9 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     if sources:
         out += _table(["Source", "Licence", "Internal only", "Used for"], [[s.get("name", ""), s.get("licence", ""), "yes" if s.get("internal-only") else "no",
                                                                            s.get("used-for", "")] for s in sources])
-    guide_files = [g.get("file") for g in (yaml.safe_load(F.text("config/help.yaml") or "{}") or {}).get("guides") or [] if g.get("file")]
     if F.glob("contracts/*.contract.yaml"):
-        where = f"[{guide_files[0]}]({guide_files[0]})" if guide_files else "the pack's guide"
-        out += [f"Every kind's links to its data contract and its example and where its data comes from (an external source and "
-                f"the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are in the guide, {where}: *Data contracts* and "
+        out += ["Every kind's links to its data contract and its example and where its data comes from (an external source and "
+                "the data feed that pulls it, a generator of synthetic data, or a Drishti engine) are below: *Data contracts* and "
                 "*Data retrieval*.", ""]
     ext = [s for s in sources if (s.get("name") or "").strip() and not str(s.get("licence", "")).startswith("Proprietary")]
     if ext:
@@ -603,11 +604,15 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
                 + "`feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries "
                 "for Linux and Windows.", ""]
     out += [f"The pack's files are written by `{generator}`; its `--check` fails when the committed files differ from what it would write.", ""]
+    # -- the two generated data sections (tools/packgen/common/guide_data.py)
+    out += GD.readme_sections(pack_dir)
     # -- see also
     out += ["## See also", ""]
-    help_y = yaml.safe_load(F.text("config/help.yaml") or "{}") or {}
-    for g in help_y.get("guides") or []:
-        out.append(f"- [{g.get('title')}]({g.get('file')}): {g.get('summary', '')}".rstrip(": "))
+    home = GD.story(pack_dir)                                   # the pack's story: a section of a feature guide (i7k)
+    if home:
+        rel = os.path.relpath(ROOT / home[0], pack_dir.resolve()).replace(os.sep, "/")
+        out.append(f"- [How to use the {name} pack]({rel}{'#' + home[1] if home[1] else ''}): what it holds, its screens and a walk-through, "
+                   f"in {Path(home[0]).name}.")
     if isec.get("See also"):
         out.append(isec["See also"])
     out += ["- [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) "

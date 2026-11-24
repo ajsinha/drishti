@@ -14,7 +14,7 @@
 
 """Builds a generated domain pack from its kinds and its documents: pack.yaml (kinds, mnemonics, identifier patterns,
 link fields, data-domain connectors and routes, example commands), one Markdown Sutra per kind, the samples and
-catalogue, an overview guide for the help centre, and optionally the Delta Lake. The banking packs have their own
+catalogue, the README, and optionally the Delta Lake. The banking packs have their own
 generators; later packs (liquidity, climate, …) describe themselves with a PackSpec and call build().
 
 Checks before writing: every id field matches its document, every link resolves (to this pack's documents or the
@@ -43,8 +43,6 @@ def _lake_form(m: dict) -> dict:
     return packlake.lake_form(m)
 
 
-import make_docs as MD  # noqa: E402  (the banking guides' shared sections)
-import guide_data as GD  # noqa: E402  (a pack's Data contracts and Data retrieval sections, when it has contracts)
 import make_sutras as MS  # noqa: E402  (the Rachana writer the banking packs use)
 import packsamples as SAMPLES  # noqa: E402  (samples/<kind>.jsonl, one document a line)
 import packform as PF  # noqa: E402  (the form: section: query by form, FORM <pack>)
@@ -74,7 +72,7 @@ class PackSpec:
     # kind -> the fields its Delta table keeps as real columns (the connector's layout): what a BI dataset over the kind reads without
     # opening every document (the world-economics and region-economics models)
     layouts: dict[str, list[str]] = field(default_factory=dict)
-    overview: str = ""                              # prose for the overview guide
+    overview: str = ""                              # prose about the pack (no guide is written since i7k: the story is in the feature guide)
     external_ids: dict[str, set[str]] = field(default_factory=dict)   # kind -> ids that live in required packs
     compact_json: bool = False                      # write the sample documents without indentation (large generated packs)
     form_overrides: dict[str, dict[str, dict]] = field(default_factory=dict)   # kind -> field path -> {type:, label:} replacing the name-derived ones
@@ -174,34 +172,6 @@ def sutra(spec: PackSpec, k: Kind, sample: str | None = None) -> str:
     return MS.kind_doc(k, spec.fragments, sample).replace(MS.GENERATED, "# " + _generated(spec, "file"))
 
 
-def overview(spec: PackSpec, docs: dict) -> str:
-    t = MS.md_table
-    lines = [DOC_HEADER, "<!-- " + _generated(spec, "file") + " -->", f"# {spec.title} pack", "", spec.description, ""]
-    if spec.overview:
-        lines += [spec.overview.strip(), ""]
-    lines += [f"**Extends:** {', '.join(f'`{r}`' for r in spec.requires) or 'nothing'} · **Kinds:** {len(spec.kinds)}", "",
-              f"Enable it with `DRISHTI_PACKS={spec.name}` (the packs it extends come with it).", ""]
-    first = spec.kinds[0]
-    lines += MD.finding(first.mnemonic, first.label, first.prefix, pack=spec.name, code=spec.code)
-    lines += ["## Where the data comes from", ""]
-    lines += t(["Connector", "Folder", "Kinds"], [[f"`{d}-store`", f"`data/delta/demo/{d}/`", ", ".join(f"`{k.kind}`" for k in ks if k.kind not in spec.computed_kinds)]
-                                                  for d, ks in spec.domains.items()]
-               + [[f"`{n}`", "computed when asked (plugin `derived`)", ", ".join(f"`{k}`" for k in c["kinds"])] for n, c in spec.derived.items()])
-    lines += ["## Kinds", ""]
-    lines += t(["Kind", "Name", "Mnemonic", "Identifiers", "What it is"],
-               [[f"`{k.kind}`", k.label, f"`{k.mnemonic}`", f"`{k.prefix}…`", k.desc] for k in spec.kinds])
-    for k in spec.kinds:
-        fs = list(dict.fromkeys(PATH.findall(" ".join(s[1] for s in k.strip) + " " + " ".join(p.rows or "" for p in k.panels))))
-        lines += [f"### {k.label} (`{k.kind}`)", "", k.desc, "", "**Fields its Sutra reads:** " + ", ".join(f"`{f}`" for f in fs) + ".", ""]
-        if k.links:
-            lines += ["**Links:** " + ", ".join(f"`{f}` → {lab} (`{kind}`)" for f, (kind, lab) in k.links.items()) + ".", ""]
-    if spec.roles:
-        lines += ["## Who can see it", ""]
-        lines += [f"Role `{r}`: kinds {', '.join(f'`{x}`' for x in v['kinds'])}{', raw JSON' if v.get('raw') else ''}." for r, v in spec.roles.items()] + [""]
-    lines += GD.sections(pack_dir(spec))
-    return "\n".join(lines).rstrip() + "\n"
-
-
 def check(spec: PackSpec, docs: dict) -> list[str]:
     problems = []
     for k in spec.kinds:
@@ -240,11 +210,9 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     for name, text in SAMPLES.files({k.kind: docs.get(k.kind, {}) for k in spec.kinds if k.kind not in spec.computed_kinds}, catalog, SAMPLES.part_mb(sys.argv),
                                     None if spec.compact_json else 1).items():
         out[base / "samples" / name] = text
-    if not spec.retired:                                       # an example pack carries no guide (its pack.yaml and samples are the sample)
-        out[base / "guides" / f"{spec.name}.md"] = overview(spec, docs)
-    help_yaml = yaml.safe_dump({"guides": [] if spec.retired else [{"slug": spec.name, "category": "packs", "title": f"{spec.title} pack", "icon": "box-seam",
-                                            "file": f"guides/{spec.name}.md", "summary": spec.description}]}, sort_keys=False, allow_unicode=True)
-    out[base / "config" / "help.yaml"] = f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n{help_yaml}"
+    if spec.retired:                                           # an example pack: an empty Help entry (its pack.yaml and samples are the sample)
+        out[base / "config" / "help.yaml"] = f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n" + yaml.safe_dump({"guides": []}, sort_keys=False)
+    # a shipped pack has no guide since i7k: its facts are its README (below) and contracts, its story a section of a feature guide
     gen_dir = Path(os.environ["DRISHTI_ABOUT_DIR"]) / spec.name if os.environ.get("DRISHTI_ABOUT_DIR") else (ROOT / spec.generator).parent                  # hand-written about text: see docs/guides/RACHANA_REFERENCE.md
     for src in sorted(gen_dir.glob("about.yaml")) + sorted(gen_dir.glob("about.*.yaml")):
         lang = src.name[len("about."):-len(".yaml")] if src.name != "about.yaml" else ""

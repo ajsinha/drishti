@@ -2307,8 +2307,8 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
 | `legal-store` | `data/delta/demo/legal/` | Legal agreements: ISDA masters and credit support annexes | effective (a row when an entity changes) | `agreement`, `csa` |
-| `credit-store` | `data/delta/demo/credit/` | Counterparty-credit results: exposure, CVA, SA-CCR, limits | snapshot (every business date) | `netting-set`, `credit-limit`, `cva`, `sa-ccr` |
-| `collateral-store` | `data/delta/demo/collateral/` | Collateral and margin: balances, calls, SIMM | snapshot (every business date) | `collateral-balance`, `margin-call`, `simm` |
+| `credit-store` | `data/delta/demo/credit/` | Counterparty-credit results: exposure, CVA, SA-CCR, limits | snapshot (every business date) | `netting-set`, `credit-limit`, `cva`, [`sa-ccr`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-sa-ccr) ([contract](../contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr)) |
+| `collateral-store` | `data/delta/demo/collateral/` | Collateral and margin: balances, calls, SIMM | snapshot (every business date) | `collateral-balance`, [`margin-call`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-margin-call) ([contract](../contracts/packs/counterparty-risk.md#mc-margin-call-margin-call)), `simm` |
 
 #### Exposure: the exposure engine
 
@@ -2370,7 +2370,7 @@ Credit, debit and funding valuation adjustments with sensitivities.
 
 **Fields its Sutra reads:** `CVA`, `DVA`, `FVA`, `KVA`, `CS01`, `COMPONENTS`, `SENSITIVITIES`.
 
-**Links:** `NETTING_SET` → Netting set (`netting-set`), `CREDIT_CURVE` → Counterparty curve ([`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve))).
+**Links:** `NETTING_SET` → Netting set (`netting-set`), `CREDIT_CURVE` → Counterparty curve ([`credit-curve`](../contracts/packs/market-data.md#example-market-data-credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve))).
 
 #### SA-CCR exposure (`sa-ccr`)
 
@@ -2414,36 +2414,4 @@ Amounts at stake: `netting-set` by `$.NET_MTM`, `credit-limit` by `$.LIMIT`. Dep
 
 ### Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
-
-| Command | Kind | Origin | How it reaches Drishti |
-|---|---|---|---|
-| `AGR` | `agreement` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/agreement/` → `lake demo` → connector `legal-store` |
-| `CSA` | `csa` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/csa/` → `lake demo` → connector `legal-store` |
-| `NSET` | `netting-set` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/netting-set/` → `lake demo` → connector `credit-store` |
-| `LIM` | `credit-limit` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/credit-limit/` → `lake demo` → connector `credit-store` |
-| `CVA` | `cva` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/cva/` → `lake demo` → connector `credit-store` |
-| `SACCR` | `sa-ccr` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/sa-ccr/` → `lake demo` → connector `credit-store` |
-| `COLL` | `collateral-balance` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/collateral-balance/` → `lake demo` → connector `collateral-store` |
-| `MC` | `margin-call` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/margin-call/` → `lake demo` → connector `collateral-store` |
-| `SIMM` | `simm` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/simm/` → `lake demo` → connector `collateral-store` |
-| `XRUN` | `simulation-run` | synthetic: `python3 tools/packgen/ccr/make_ccr_data.py` | `data/testdata/counterparty-risk/simulation-run/` → `lake demo` → connector `exposure-store` |
-| `XPATH` | `exposure-path` | synthetic: `python3 tools/packgen/ccr/make_ccr_data.py` | `data/testdata/counterparty-risk/exposure-path/` → `lake demo` → connector `exposure-store` |
-| `EXP` | `exposure-result` | computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.banking.exposure.ExposureResultEngine); see the [Exposure guide](EXPOSURE_GUIDE.md) | nothing to load: computed from its inputs when asked |
-| `XOFC` | `exposure-official-cpty` | computed by Drishti: the official end-of-day exposure capture (ExposureOfficial), appended by ExposurePublisher to risk-results/exposure-official-cpty; see the [Exposure guide](EXPOSURE_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/exposure-official-cpty/` |
-| `NSMTM` | `nset-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |
-| `CPMTM` | `cpty-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |
-
-#### Generators
-
-| Generator | Writes | Check |
-|---|---|---|
-| `python3 tools/testdata/make_testdata.py` | sixty business days of every dataset of the seven packs into data/testdata/<pack>/<kind>/ (the universe: tools/testdata/universe.py; deterministic, fictitious names) | `python3 tools/testdata/make_testdata.py --check` |
-| `python3 tools/packgen/banking/make_data.py` | the pack's few reference documents in samples/ (from the taxonomy, tools/packgen/banking/taxonomy.py) | `python3 tools/packgen/banking/make_data.py --check` |
-| `python3 tools/packgen/ccr/make_ccr_data.py` | the exposure engine's inputs into data/testdata/counterparty-risk/<kind>/, as an upstream exposure simulator would deliver them, from the committed netting sets (EXPOSURE_GUIDE.md) | `python3 -m pytest -q tools/packgen/ccr/test_ccr_data.py` |
-
-#### Into the lake, checking, offline
-
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
-- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/banking/packs/counterparty-risk/README.md#data-contracts) and [*Data retrieval*](../../modules/banking/packs/counterparty-risk/README.md#data-retrieval).

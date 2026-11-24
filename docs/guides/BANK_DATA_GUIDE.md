@@ -40,7 +40,7 @@ space in quotes; the examples use `data/pvf/...`, which Windows also accepts.
 | (made by the run) | the date's 251 scenario days | **scenario-set** (`risk/scenario-set`), loaded first | `--date` |
 | `fx_YYYYMMDD.csv` (optional, yours) | scenario FX per currency ([pvf_fx_scenario.py](../../tools/mrloader/pvf_fx_scenario.py) `--help`: long or wide form) | **fx-scenario** (`risk/fx-scenario`), loaded between the set and the PVs | `--date` |
 
-The data contracts and sample records of the kinds: scenario-pv ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv), [sample](../contracts/samples/market-risk.md#scenario-pv)), scenario-set ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set), [sample](../contracts/samples/market-risk.md#scenario-set)) and fx-scenario ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario), [sample](../contracts/samples/market-risk.md#fx-scenario)).
+The data contracts and sample records of the kinds: scenario-pv ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv), [sample](../contracts/packs/market-risk.md#example-market-risk-scenario-pv)), scenario-set ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set), [sample](../contracts/packs/market-risk.md#example-market-risk-scenario-set)) and fx-scenario ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario), [sample](../contracts/packs/market-risk.md#example-market-risk-fx-scenario)).
 
 `path_pv_final.csv`, `path_pv_final.jsonl` and `bad_positions_audit.log` in `data/pvf` are the older single-script output: the loader does not
 read them. **The date is always the `--date` you type**, never the file name's digits (the name is only a convention); a file with no rows
@@ -306,7 +306,7 @@ Run it on a schedule with `lake maintain --daemon` or the console's schedules ([
 
 `tools/mrloader/csv_load.py` turns one dataset's CSV into checked records of its kind, written as the data inbox and `lake build` take
 them; it loads nothing itself. Every kind is a mapping file (`kinds/<kind>.yaml`: the CSV columns named as the contract's fields) and a
-generated page (`tools/mrloader/docs/<kind>.md`); the day's runbook is `tools/mrloader/docs/DAILY_RUNBOOK.md`.
+section of the one generated page [CSV_FORMATS.md](../contracts/CSV_FORMATS.md); the day's runbook is [The daily run](#the-daily-run-csv-extracts-to-var-and-exposure-inputs).
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29             # convert and check
@@ -323,13 +323,13 @@ python3 tools/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --d
 | `tools/mrloader/csv_load.py` | **one kind**: its CSV (and child files) to checked records; `--inbox`, `--load` |
 | `tools/mrloader/mr_run.py` | **one day**: every kind of the day's folder (a day file says which file is which), in dependency order (the scenario PVs through `pvf_run.py`), checked against each other (`links.py`), then handed over or loaded in that order; `--delete-plan` |
 | `tools/mrloader/validate.py` | any kind's files against its contract |
-| `tools/mrloader/kind_docs.py` | writes (`--check`: checks) the generated page of every kind, `docs/<kind>.md`, and the index `docs/README.md` |
+| `tools/mrloader/kind_docs.py` | writes (`--check`: checks) the generated page of every kind's CSV, `docs/contracts/CSV_FORMATS.md` |
 | `tools/mrloader/mr_gen.py` | a seeded synthetic day of every kind's CSV (the committed samples; `--with-pvf` adds the day's PVF extract) |
 
-The kinds shipped: wave 1 for VaR (`legal-entity`, `desk`, `book` and `book.pvf`, `risk-factor`, `var-limit`, `desk-pnl`,
-`position-sensitivity`; the scenario PVs, set and FX through the PVF scripts below) and wave 2 for exposure (`counterparty-group`,
-`counterparty`, `agreement`, `csa`, `netting-set`, `collateral-balance`, `credit-limit`, `trade-valuation`). Wave 3 (exposure paths,
-P&L vectors and history, trades from CSV) waits for the extracts' shapes. The pages: `tools/mrloader/docs/README.md`.
+The kinds shipped: wave 1 for VaR (`legal-entity`, `desk`, `book` and `book.pvf`, [`risk-factor`](../contracts/packs/market-risk.md#example-market-risk-risk-factor) ([contract](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor)), [`var-limit`](../contracts/packs/market-risk.md#example-market-risk-var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)), `desk-pnl`,
+[`position-sensitivity`](../contracts/packs/market-risk.md#example-market-risk-position-sensitivity) ([contract](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity)); the scenario PVs, set and FX through the PVF scripts below) and wave 2 for exposure (`counterparty-group`,
+`counterparty`, `agreement`, `csa`, `netting-set`, `collateral-balance`, `credit-limit`, [`trade-valuation`](../contracts/packs/market-risk.md#example-market-risk-trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation))). Wave 3 (exposure paths,
+P&L vectors and history, trades from CSV) waits for the extracts' shapes. The pages: [CSV_FORMATS.md](../contracts/CSV_FORMATS.md).
 
 It writes `<kind>.<date>.jsonl`, `<kind>.<date>.jsonl.gz` and its `.ready`, `<kind>.<date>.rejects.csv` and `<kind>.<date>.summary.json`
 under `<out>/mr-<date>/`. **The file's format is declared, never guessed**: the delimiter, encoding, decimal and thousands separators, the
@@ -338,7 +338,7 @@ row with a reason code (`BAD_DATE`, `BAD_NUMBER`, `EXCEL_NUMBER_ID`, `MISSING_RE
 refuses the whole kind (`on-reject: refuse`: fix the file and run again); the large kinds skip the row up to `max-rejects`. The shipped
 mappings read canonical columns; **a bank's own column names are a mapping file of its own, given by explicit path** (`--mapping FILE`,
 kept with the site's settings), never edited into the shipped ones. Kinds that are computed or another system's answer (`var-result`,
-`frtb-sensitivity`, `simm`, `portfolio` ...) are refused with the reason and what to load instead (`kinds/shared/never.yaml`).
+[`frtb-sensitivity`](../contracts/packs/market-risk.md#example-market-risk-frtb-sensitivity) ([contract](../contracts/packs/market-risk.md#frtb-frtb-sensitivities-frtb-sensitivity)), `simm`, `portfolio` ...) are refused with the reason and what to load instead (`kinds/shared/never.yaml`).
 
 ### The PVF loader
 
@@ -719,21 +719,21 @@ scratch folder, `lake status`, then remove with `--remove ... --yes --no-signal`
 
 | # | Kind | Wave | Pack | Inputs | Load first | Sources |
 |---|---|---|---|---|---|---|
-| 1 | [`legal-entity`](../../tools/mrloader/docs/legal-entity.md) | 1 | `core` | `--csv` | - | canonical |
-| 2 | [`desk`](../../tools/mrloader/docs/desk.md) | 1 | `core` | `--csv` | `legal-entity` | canonical |
-| 3 | [`book`](../../tools/mrloader/docs/book.md) | 1 | `core` | `--csv` | `desk` | canonical, pvf |
-| 4 | [`counterparty-group`](../../tools/mrloader/docs/counterparty-group.md) | 2 | `core` | `--csv` | `legal-entity` | canonical |
-| 5 | [`counterparty`](../../tools/mrloader/docs/counterparty.md) | 2 | `core` | `--csv` | `legal-entity`, `counterparty-group` | canonical |
-| 6 | [`agreement`](../../tools/mrloader/docs/agreement.md) | 2 | `counterparty-risk` | `--csv` | `counterparty` | canonical |
-| 7 | [`csa`](../../tools/mrloader/docs/csa.md) | 2 | `counterparty-risk` | `--csv`, `--child ELIGIBLE=` | `agreement` | canonical |
-| 8 | [`netting-set`](../../tools/mrloader/docs/netting-set.md) | 2 | `counterparty-risk` | `--csv` | `csa`, `counterparty`, `legal-entity` | canonical |
-| 9 | [`collateral-balance`](../../tools/mrloader/docs/collateral-balance.md) | 2 | `counterparty-risk` | `--csv`, `--child POSITIONS=` | `netting-set` | canonical |
-| 10 | [`credit-limit`](../../tools/mrloader/docs/credit-limit.md) | 2 | `counterparty-risk` | `--csv`, `--child BUCKETS=` | `counterparty` | canonical |
-| 11 | [`risk-factor`](../../tools/mrloader/docs/risk-factor.md) | 1 | `market-risk` | `--csv` | - | canonical |
-| 12 | [`var-limit`](../../tools/mrloader/docs/var-limit.md) | 1 | `market-risk` | `--csv` | `scenario-pv` | canonical |
-| 13 | [`position-sensitivity`](../../tools/mrloader/docs/position-sensitivity.md) | 1 | `market-risk` | `--csv`, `--child SENSITIVITIES=` | `risk-factor`, `scenario-pv` | canonical |
-| 14 | [`trade-valuation`](../../tools/mrloader/docs/trade-valuation.md) | 2 | `market-risk` | `--csv` | `netting-set`, `book`, `desk` | canonical |
-| 15 | [`desk-pnl`](../../tools/mrloader/docs/desk-pnl.md) | 1 | `market-risk` | `--csv` | `desk` | canonical |
+| 1 | [`legal-entity`](../contracts/CSV_FORMATS.md#legal-entity-bank-legal-entity-from-csv) | 1 | `core` | `--csv` | - | canonical |
+| 2 | [`desk`](../contracts/CSV_FORMATS.md#desk-desk-from-csv) | 1 | `core` | `--csv` | `legal-entity` | canonical |
+| 3 | [`book`](../contracts/CSV_FORMATS.md#book-book-from-csv) | 1 | `core` | `--csv` | `desk` | canonical, pvf |
+| 4 | [`counterparty-group`](../contracts/CSV_FORMATS.md#counterparty-group-counterparty-group-from-csv) | 2 | `core` | `--csv` | `legal-entity` | canonical |
+| 5 | [`counterparty`](../contracts/CSV_FORMATS.md#counterparty-counterparty-from-csv) | 2 | `core` | `--csv` | `legal-entity`, `counterparty-group` | canonical |
+| 6 | [`agreement`](../contracts/CSV_FORMATS.md#agreement-master-agreement-from-csv) | 2 | `counterparty-risk` | `--csv` | `counterparty` | canonical |
+| 7 | [`csa`](../contracts/CSV_FORMATS.md#csa-credit-support-annex-from-csv) | 2 | `counterparty-risk` | `--csv`, `--child ELIGIBLE=` | `agreement` | canonical |
+| 8 | [`netting-set`](../contracts/CSV_FORMATS.md#netting-set-netting-set-from-csv) | 2 | `counterparty-risk` | `--csv` | `csa`, `counterparty`, `legal-entity` | canonical |
+| 9 | [`collateral-balance`](../contracts/CSV_FORMATS.md#collateral-balance-collateral-balance-from-csv) | 2 | `counterparty-risk` | `--csv`, `--child POSITIONS=` | `netting-set` | canonical |
+| 10 | [`credit-limit`](../contracts/CSV_FORMATS.md#credit-limit-credit-limit-from-csv) | 2 | `counterparty-risk` | `--csv`, `--child BUCKETS=` | `counterparty` | canonical |
+| 11 | [`risk-factor`](../contracts/CSV_FORMATS.md#risk-factor-risk-factor-dictionary-from-csv) | 1 | `market-risk` | `--csv` | - | canonical |
+| 12 | [`var-limit`](../contracts/CSV_FORMATS.md#var-limit-var-limit-of-a-hierarchy-node-from-csv) | 1 | `market-risk` | `--csv` | `scenario-pv` | canonical |
+| 13 | [`position-sensitivity`](../contracts/CSV_FORMATS.md#position-sensitivity-position-sensitivities-from-csv) | 1 | `market-risk` | `--csv`, `--child SENSITIVITIES=` | `risk-factor`, `scenario-pv` | canonical |
+| 14 | [`trade-valuation`](../contracts/CSV_FORMATS.md#trade-valuation-trade-valuation-from-csv) | 2 | `market-risk` | `--csv` | `netting-set`, `book`, `desk` | canonical |
+| 15 | [`desk-pnl`](../contracts/CSV_FORMATS.md#desk-pnl-desk-pl-actual-and-hypothetical-daily-from-csv) | 1 | `market-risk` | `--csv` | `desk` | canonical |
 
 The scenario PVs, the scenario set and the scenario FX of the PVF source are written by `pvf_run.py`, `pvf_scenario_set.py` and `pvf_fx_scenario.py` (the [README](BANK_DATA_GUIDE.md)).
 
@@ -745,8 +745,8 @@ The scenario PVs, the scenario set and the scenario FX of the PVF source are wri
 | `simm` | an initial margin, another system's answer: the SIMM engine computes it from position-sensitivity (load that) |
 | `sa-ccr` | an exposure at default, another system's answer: computed from the trades, netting sets and collateral |
 | `cva` | a CVA, another system's answer: computed from the exposure paths and the credit curves |
-| `stress-result` | a stress P&L, another system's answer: computed from the stress scenarios and the positions |
-| `pnl-explain` | a P&L explain, another system's answer: computed from the sensitivities and the market moves |
+| [`stress-result`](../contracts/packs/market-risk.md#example-market-risk-stress-result) ([contract](../contracts/packs/market-risk.md#str-stress-result-stress-result)) | a stress P&L, another system's answer: computed from the stress scenarios and the positions |
+| [`pnl-explain`](../contracts/packs/market-risk.md#example-market-risk-pnl-explain) ([contract](../contracts/packs/market-risk.md#pnl-pl-explain-pnl-explain)) | a P&L explain, another system's answer: computed from the sensitivities and the market moves |
 | `portfolio` | Drishti has no portfolio kind: a booking portfolio is the book (load book), a reporting tree is built from the scenario-PV rows, a watched set of positions is a system basket kept in Drishti |
 | every kind of class `computed` or `drishti-owned` | Drishti computes or keeps it |
 
@@ -918,7 +918,7 @@ Every screen of the pack is built from fragments: the Drishti UI kit's (`config/
 
 #### Risk on every trade page
 
-Every deal screen (Endur, Calypso and Murex) has a **Risk** group, the UI kit's `risk-links@1` (panel code `RISK`): the trade's **P&L vector** (`PNLV PV-<trade>-HS-509`, the market-risk pack's [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector))), its **VaR** (`VRES TRD:<trade>`; `VAR TRD <trade>` opens it in the VaR explorer) and its **exposure** (`EXP TRD:<trade>`). They are real links: the VaR and exposure engines set `PNL_VECTOR_ID`, `VAR_RESULT_ID` and `EXPOSURE_RESULT_ID` on the view of the trade when the day's vectors and the exposure run hold it, so the linked entities list them too; when they do not, the row says why (*not live on <date>: its status is CANCELLED; no P&L vector*, *no exposure paths on <date>*). The Sutras get it from the generator (`tools/packgen/trades/sutras.py`); a picture is in the [VaR guide, section 3.7](VAR_GUIDE.md#37-the-portfolio-and-position-pages).
+Every deal screen (Endur, Calypso and Murex) has a **Risk** group, the UI kit's `risk-links@1` (panel code `RISK`): the trade's **P&L vector** (`PNLV PV-<trade>-HS-509`, the market-risk pack's [`pnl-vector`](../contracts/packs/market-risk.md#example-market-risk-pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector))), its **VaR** (`VRES TRD:<trade>`; `VAR TRD <trade>` opens it in the VaR explorer) and its **exposure** (`EXP TRD:<trade>`). They are real links: the VaR and exposure engines set `PNL_VECTOR_ID`, `VAR_RESULT_ID` and `EXPOSURE_RESULT_ID` on the view of the trade when the day's vectors and the exposure run hold it, so the linked entities list them too; when they do not, the row says why (*not live on <date>: its status is CANCELLED; no P&L vector*, *no exposure paths on <date>*). The Sutras get it from the generator (`tools/packgen/trades/sutras.py`); a picture is in the [VaR guide, section 3.7](VAR_GUIDE.md#37-the-portfolio-and-position-pages).
 
 Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, with the Python you run Drishti with (Windows `py -3.13`), run `python3 tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
@@ -943,7 +943,7 @@ EVENTS [{LEG_ID, EVENT_ID, EVENT_NUMBER, EVENT_TYPE, PAYMENT_TYPE, EVENT_DATE, A
 
 ### Who can see it
 
-Role `trader`: kinds `trade`, [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)), [`repo-curve`](../contracts/samples/market-data.md#repo-curve) ([contract](../contracts/packs/market-data.md#repo-repo-curve-repo-curve)), [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)), [`fx-forward-curve`](../contracts/samples/market-data.md#fx-forward-curve) ([contract](../contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)), [`fx-vol-surface`](../contracts/samples/market-data.md#fx-vol-surface) ([contract](../contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)), [`ir-vol-cube`](../contracts/samples/market-data.md#ir-vol-cube) ([contract](../contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)), [`cap-vol-surface`](../contracts/samples/market-data.md#cap-vol-surface) ([contract](../contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)), `equity`, [`equity-index`](../contracts/samples/market-data.md#equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)), [`dividend-curve`](../contracts/samples/market-data.md#dividend-curve) ([contract](../contracts/packs/market-data.md#div-dividend-curve-dividend-curve)), [`equity-vol-surface`](../contracts/samples/market-data.md#equity-vol-surface) ([contract](../contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)), [`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)), [`inflation-index`](../contracts/samples/market-data.md#inflation-index) ([contract](../contracts/packs/market-data.md#inf-inflation-index-inflation-index)), [`inflation-curve`](../contracts/samples/market-data.md#inflation-curve) ([contract](../contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)), `commodity`, [`commodity-curve`](../contracts/samples/market-data.md#commodity-curve) ([contract](../contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)), [`commodity-vol-surface`](../contracts/samples/market-data.md#commodity-vol-surface) ([contract](../contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)), [`rate-fixing`](../contracts/samples/market-data.md#rate-fixing) ([contract](../contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)), `bond`, [`correlation-matrix`](../contracts/samples/market-data.md#correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)), `counterparty`, [`counterparty-group`](../contracts/samples/core.md#counterparty-group) ([contract](../contracts/packs/core.md#grp-counterparty-group-counterparty-group)), `issuer`, `book`, `desk`, `trader`, [`legal-entity`](../contracts/samples/core.md#legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)), `calendar`, `agreement`, `csa`, `ccp`, [`clearing-account`](../contracts/samples/core.md#clearing-account) ([contract](../contracts/packs/core.md#clr-clearing-account-clearing-account)), [`desk-pnl`](../contracts/samples/market-risk.md#desk-pnl) ([contract](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)).
+Role `trader`: kinds `trade`, [`ir-curve`](../contracts/packs/market-data.md#example-market-data-ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)), [`repo-curve`](../contracts/packs/market-data.md#example-market-data-repo-curve) ([contract](../contracts/packs/market-data.md#repo-repo-curve-repo-curve)), [`fx-spot`](../contracts/packs/market-data.md#example-market-data-fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)), [`fx-forward-curve`](../contracts/packs/market-data.md#example-market-data-fx-forward-curve) ([contract](../contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)), [`fx-vol-surface`](../contracts/packs/market-data.md#example-market-data-fx-vol-surface) ([contract](../contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)), [`ir-vol-cube`](../contracts/packs/market-data.md#example-market-data-ir-vol-cube) ([contract](../contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)), [`cap-vol-surface`](../contracts/packs/market-data.md#example-market-data-cap-vol-surface) ([contract](../contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)), `equity`, [`equity-index`](../contracts/packs/market-data.md#example-market-data-equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)), [`dividend-curve`](../contracts/packs/market-data.md#example-market-data-dividend-curve) ([contract](../contracts/packs/market-data.md#div-dividend-curve-dividend-curve)), [`equity-vol-surface`](../contracts/packs/market-data.md#example-market-data-equity-vol-surface) ([contract](../contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)), [`credit-curve`](../contracts/packs/market-data.md#example-market-data-credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)), [`inflation-index`](../contracts/packs/market-data.md#example-market-data-inflation-index) ([contract](../contracts/packs/market-data.md#inf-inflation-index-inflation-index)), [`inflation-curve`](../contracts/packs/market-data.md#example-market-data-inflation-curve) ([contract](../contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)), `commodity`, [`commodity-curve`](../contracts/packs/market-data.md#example-market-data-commodity-curve) ([contract](../contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)), [`commodity-vol-surface`](../contracts/packs/market-data.md#example-market-data-commodity-vol-surface) ([contract](../contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)), [`rate-fixing`](../contracts/packs/market-data.md#example-market-data-rate-fixing) ([contract](../contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)), `bond`, [`correlation-matrix`](../contracts/packs/market-data.md#example-market-data-correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)), `counterparty`, [`counterparty-group`](../contracts/packs/core.md#example-core-counterparty-group) ([contract](../contracts/packs/core.md#grp-counterparty-group-counterparty-group)), `issuer`, `book`, `desk`, `trader`, [`legal-entity`](../contracts/packs/core.md#example-core-legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)), `calendar`, `agreement`, `csa`, `ccp`, [`clearing-account`](../contracts/packs/core.md#example-core-clearing-account) ([contract](../contracts/packs/core.md#clr-clearing-account-clearing-account)), [`desk-pnl`](../contracts/packs/market-risk.md#example-market-risk-desk-pnl) ([contract](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)).
 Role `trade-editor`: kinds `trade`.
 
 ### F8 impact
@@ -952,27 +952,7 @@ Amounts at stake: `trade` by `first($.LEGS).NOTIONAL`.
 
 ### Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
-
-| Command | Kind | Origin | How it reaches Drishti |
-|---|---|---|---|
-| `TRD` | `trade` | synthetic: `python3 tools/testdata/make_testdata.py` | `data/testdata/trades/endur/`, `data/testdata/trades/calypso/`, `data/testdata/trades/murex/`, `data/testdata/trades/wss/`, `data/testdata/trades/swapone/`, `data/testdata/trades/ici/` → `lake demo` → connector `trade-endur`, `trade-calypso`, `trade-murex`, `trade-wss`, `trade-swapone`, `trade-ici` |
-| `CTRD` | `counterparty-trades` | computed by Drishti: the derived connector trade-pages over the kind trade; see the derived connector's settings in the trading pack's pack.yaml (`trade-pages`) | nothing to load: computed from its inputs when asked |
-| `PTRD` | `portfolio-trades` | computed by Drishti: the derived connector trade-pages over the kind trade; see the derived connector's settings in the trading pack's pack.yaml (`trade-pages`) | nothing to load: computed from its inputs when asked |
-| `LTRD` | `legal-entity-trades` | computed by Drishti: the derived connector trade-pages over the kind trade; see the derived connector's settings in the trading pack's pack.yaml (`trade-pages`) | nothing to load: computed from its inputs when asked |
-| `ITRD` | `index-trades` | computed by Drishti: the derived connector trade-pages over the kind trade; see the derived connector's settings in the trading pack's pack.yaml (`trade-pages`) | nothing to load: computed from its inputs when asked |
-
-#### Generators
-
-| Generator | Writes | Check |
-|---|---|---|
-| `python3 tools/testdata/make_testdata.py` | 5,000 trades a booking system into data/testdata/trades/{endur,calypso,murex}/ in the common 47-attribute UPPER_SNAKE schema (tools/packgen/trades/schema.py) | `python3 tools/testdata/make_testdata.py --check` |
-
-#### Into the lake, checking, offline
-
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
-- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/banking/packs/trading/README.md#data-contracts) and [*Data retrieval*](../../modules/banking/packs/trading/README.md#data-retrieval).
 
 ## Trading products
 
@@ -995,27 +975,27 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
-| Interest rate swap (fixed/float) | `IRS_FIXFLOAT` | swap | cashflows | [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)), `ir-curve`, [`rate-fixing`](../contracts/samples/market-data.md#rate-fixing) ([contract](../contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) | DV01 |
+| Interest rate swap (fixed/float) | `IRS_FIXFLOAT` | swap | cashflows | [`ir-curve`](../contracts/packs/market-data.md#example-market-data-ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)), `ir-curve`, [`rate-fixing`](../contracts/packs/market-data.md#example-market-data-rate-fixing) ([contract](../contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) | DV01 |
 | Overnight index swap | `OIS` | swap | cashflows | `ir-curve`, `rate-fixing` | DV01 |
 | Basis swap (float/float) | `BASIS_SWAP` | swap | cashflows | `ir-curve`, `ir-curve`, `ir-curve` | DV01 |
-| Cross-currency swap (non-MtM) | `XCCY_SWAP` | swap | cashflows | `ir-curve`, `ir-curve`, `ir-curve`, [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | DV01, FX delta |
+| Cross-currency swap (non-MtM) | `XCCY_SWAP` | swap | cashflows | `ir-curve`, `ir-curve`, `ir-curve`, [`fx-spot`](../contracts/packs/market-data.md#example-market-data-fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | DV01, FX delta |
 | Cross-currency swap (MtM resetting) | `XCCY_SWAP_MTM` | swap | cashflows | `ir-curve`, `ir-curve`, `ir-curve`, `fx-spot` | DV01, FX delta |
 | Zero-coupon swap | `ZC_SWAP` | swap | cashflows | `ir-curve`, `ir-curve` | DV01 |
 | Amortising swap | `AMORT_SWAP` | swap | amortization | `ir-curve`, `ir-curve` | DV01 |
 | Accreting swap | `ACCRETING_SWAP` | swap | amortization | `ir-curve`, `ir-curve` | DV01 |
 | Forward-starting swap | `FWD_START_SWAP` | swap | cashflows | `ir-curve`, `ir-curve` | DV01 |
-| Constant maturity swap | `CMS_SWAP` | swap | cashflows | `ir-curve`, `ir-curve`, [`ir-vol-cube`](../contracts/samples/market-data.md#ir-vol-cube) ([contract](../contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) | DV01, Vega |
+| Constant maturity swap | `CMS_SWAP` | swap | cashflows | `ir-curve`, `ir-curve`, [`ir-vol-cube`](../contracts/packs/market-data.md#example-market-data-ir-vol-cube) ([contract](../contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) | DV01, Vega |
 | Forward rate agreement | `FRA` | linear | fixings | `ir-curve`, `ir-curve` | DV01 |
 | Short-term interest rate future | `STIR_FUTURE` | future | — | `ir-curve` | DV01 |
-| Government bond future | `BOND_FUTURE` | future | — | `ir-curve`, `bond`, [`repo-curve`](../contracts/samples/market-data.md#repo-curve) ([contract](../contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | DV01 |
-| Interest rate cap | `CAP` | option | fixings | `ir-curve`, `ir-curve`, [`cap-vol-surface`](../contracts/samples/market-data.md#cap-vol-surface) ([contract](../contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) | DV01, Vega |
+| Government bond future | `BOND_FUTURE` | future | — | `ir-curve`, `bond`, [`repo-curve`](../contracts/packs/market-data.md#example-market-data-repo-curve) ([contract](../contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | DV01 |
+| Interest rate cap | `CAP` | option | fixings | `ir-curve`, `ir-curve`, [`cap-vol-surface`](../contracts/packs/market-data.md#example-market-data-cap-vol-surface) ([contract](../contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) | DV01, Vega |
 | Interest rate floor | `FLOOR` | option | fixings | `ir-curve`, `ir-curve`, `cap-vol-surface` | DV01, Vega |
 | Interest rate collar | `COLLAR` | option | fixings | `ir-curve`, `ir-curve`, `cap-vol-surface` | DV01, Vega |
 | European swaption | `SWAPTION_EUR` | option | — | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
 | Bermudan swaption | `SWAPTION_BERM` | option | exercise | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
 | American swaption | `SWAPTION_AMER` | option | — | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
 | CMS cap / floor | `CMS_CAP` | option | fixings | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
-| CMS spread option | `CMS_SPREAD_OPT` | option | fixings | `ir-curve`, `ir-curve`, `ir-vol-cube`, [`correlation-matrix`](../contracts/samples/market-data.md#correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | DV01, Vega |
+| CMS spread option | `CMS_SPREAD_OPT` | option | fixings | `ir-curve`, `ir-curve`, `ir-vol-cube`, [`correlation-matrix`](../contracts/packs/market-data.md#example-market-data-correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | DV01, Vega |
 | STIR future option | `STIR_FUT_OPT` | option | — | `ir-curve`, `cap-vol-surface` | DV01, Vega |
 | Callable swap | `CALLABLE_SWAP` | exotic | exercise | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
 | Range accrual swap | `RANGE_ACCRUAL_SWAP` | exotic | observations | `ir-curve`, `ir-curve`, `ir-vol-cube` | DV01, Vega |
@@ -1079,10 +1059,10 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
 | FX spot | `FX_SPOT` | linear | — | `fx-spot` | FX delta |
-| FX forward | `FX_FORWARD` | linear | — | `fx-spot`, [`fx-forward-curve`](../contracts/samples/market-data.md#fx-forward-curve) ([contract](../contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)), `ir-curve` | FX delta, DV01 |
+| FX forward | `FX_FORWARD` | linear | — | `fx-spot`, [`fx-forward-curve`](../contracts/packs/market-data.md#example-market-data-fx-forward-curve) ([contract](../contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)), `ir-curve` | FX delta, DV01 |
 | Non-deliverable forward | `FX_NDF` | linear | — | `fx-spot`, `fx-forward-curve`, `ir-curve` | FX delta |
 | FX swap | `FX_SWAP` | swap | cashflows | `fx-spot`, `fx-forward-curve`, `ir-curve` | FX delta, DV01 |
-| FX vanilla option | `FX_OPTION` | option | — | `fx-spot`, `fx-forward-curve`, [`fx-vol-surface`](../contracts/samples/market-data.md#fx-vol-surface) ([contract](../contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)) | FX delta, Vega, Gamma |
+| FX vanilla option | `FX_OPTION` | option | — | `fx-spot`, `fx-forward-curve`, [`fx-vol-surface`](../contracts/packs/market-data.md#example-market-data-fx-vol-surface) ([contract](../contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)) | FX delta, Vega, Gamma |
 | FX digital option | `FX_DIGITAL` | option | — | `fx-spot`, `fx-vol-surface` | FX delta, Vega |
 | FX barrier option | `FX_BARRIER` | exotic | observations | `fx-spot`, `fx-vol-surface` | FX delta, Vega, Gamma |
 | FX double-barrier option | `FX_DOUBLE_BARRIER` | exotic | observations | `fx-spot`, `fx-vol-surface` | FX delta, Vega |
@@ -1125,7 +1105,7 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
-| Single-name CDS | `CDS_SINGLE` | cds | cashflows | [`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)), `ir-curve` | CS01, Jump to default |
+| Single-name CDS | `CDS_SINGLE` | cds | cashflows | [`credit-curve`](../contracts/packs/market-data.md#example-market-data-credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)), `ir-curve` | CS01, Jump to default |
 | CDS index (CDX / iTraxx) | `CDS_INDEX` | cds | cashflows | `credit-curve`, `ir-curve` | CS01, Jump to default |
 | Index tranche | `CDS_TRANCHE` | cds | cashflows | `credit-curve`, `ir-curve`, `correlation-matrix` | CS01, Jump to default |
 | CDS index option | `CDS_SWAPTION` | option | — | `credit-curve`, `ir-curve` | CS01, Vega |
@@ -1166,11 +1146,11 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
-| Equity position | `EQ_CASH` | position | — | `equity`, [`dividend-curve`](../contracts/samples/market-data.md#dividend-curve) ([contract](../contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | Delta |
+| Equity position | `EQ_CASH` | position | — | `equity`, [`dividend-curve`](../contracts/packs/market-data.md#example-market-data-dividend-curve) ([contract](../contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | Delta |
 | Equity forward | `EQ_FORWARD` | linear | — | `equity`, `dividend-curve`, `ir-curve` | Delta |
 | Single-stock future | `EQ_FUTURE_SINGLE` | future | — | `equity`, `dividend-curve` | Delta |
-| Equity index future | `EQ_INDEX_FUTURE` | future | — | [`equity-index`](../contracts/samples/market-data.md#equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)), `dividend-curve` | Delta |
-| Listed equity option | `EQ_OPTION_LISTED` | option | — | `equity`, [`equity-vol-surface`](../contracts/samples/market-data.md#equity-vol-surface) ([contract](../contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)), `dividend-curve` | Delta, Gamma, Vega, Theta |
+| Equity index future | `EQ_INDEX_FUTURE` | future | — | [`equity-index`](../contracts/packs/market-data.md#example-market-data-equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)), `dividend-curve` | Delta |
+| Listed equity option | `EQ_OPTION_LISTED` | option | — | `equity`, [`equity-vol-surface`](../contracts/packs/market-data.md#example-market-data-equity-vol-surface) ([contract](../contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)), `dividend-curve` | Delta, Gamma, Vega, Theta |
 | OTC equity option | `EQ_OPTION_OTC` | option | — | `equity`, `equity-vol-surface`, `dividend-curve`, `ir-curve` | Delta, Gamma, Vega, Theta |
 | Index option | `EQ_INDEX_OPTION` | option | — | `equity-index`, `equity-vol-surface` | Delta, Gamma, Vega, Theta |
 | Equity barrier option | `EQ_BARRIER` | exotic | observations | `equity`, `equity-vol-surface`, `dividend-curve` | Delta, Gamma, Vega |
@@ -1237,11 +1217,11 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
-| Commodity future | `CMD_FUTURE` | future | — | [`commodity-curve`](../contracts/samples/market-data.md#commodity-curve) ([contract](../contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | Delta |
+| Commodity future | `CMD_FUTURE` | future | — | [`commodity-curve`](../contracts/packs/market-data.md#example-market-data-commodity-curve) ([contract](../contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | Delta |
 | Commodity forward | `CMD_FORWARD` | linear | — | `commodity-curve`, `ir-curve` | Delta |
 | Commodity swap | `CMD_SWAP` | swap | cashflows | `commodity-curve`, `ir-curve` | Delta |
 | Commodity basis swap | `CMD_BASIS_SWAP` | swap | fixings | `commodity-curve`, `ir-curve` | Delta |
-| Option on commodity future | `CMD_FUT_OPTION` | option | — | `commodity-curve`, [`commodity-vol-surface`](../contracts/samples/market-data.md#commodity-vol-surface) ([contract](../contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)) | Delta, Gamma, Vega |
+| Option on commodity future | `CMD_FUT_OPTION` | option | — | `commodity-curve`, [`commodity-vol-surface`](../contracts/packs/market-data.md#example-market-data-commodity-vol-surface) ([contract](../contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)) | Delta, Gamma, Vega |
 | Average price option (APO) | `CMD_APO` | exotic | fixings | `commodity-curve`, `commodity-vol-surface` | Delta, Vega |
 | Commodity swaption | `CMD_SWAPTION` | option | — | `commodity-curve`, `commodity-vol-surface` | Delta, Vega |
 | Commodity spread option | `CMD_SPREAD_OPT` | exotic | — | `commodity-curve`, `commodity-vol-surface`, `correlation-matrix` | Delta, Vega |
@@ -1287,7 +1267,7 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
-| Zero-coupon inflation swap | `ZC_INFL_SWAP` | swap | cashflows | `ir-curve`, [`inflation-curve`](../contracts/samples/market-data.md#inflation-curve) ([contract](../contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)), [`inflation-index`](../contracts/samples/market-data.md#inflation-index) ([contract](../contracts/packs/market-data.md#inf-inflation-index-inflation-index)) | IE01, DV01 |
+| Zero-coupon inflation swap | `ZC_INFL_SWAP` | swap | cashflows | `ir-curve`, [`inflation-curve`](../contracts/packs/market-data.md#example-market-data-inflation-curve) ([contract](../contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)), [`inflation-index`](../contracts/packs/market-data.md#example-market-data-inflation-index) ([contract](../contracts/packs/market-data.md#inf-inflation-index-inflation-index)) | IE01, DV01 |
 | Year-on-year inflation swap | `YOY_INFL_SWAP` | swap | cashflows | `ir-curve`, `inflation-curve`, `inflation-index` | IE01, DV01 |
 | Inflation cap / floor | `INFL_CAP_FLOOR` | option | fixings | `ir-curve`, `inflation-curve`, `inflation-index` | IE01, Vega |
 | Inflation-linked bond | `INFL_LINKED_BOND` | bond | coupons | `ir-curve`, `inflation-curve`, `inflation-index` | IE01, DV01 |
@@ -1783,65 +1763,7 @@ No extra roles: any user assigned the pack (or a pack that extends it) can open 
 
 ### Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
-
-| Command | Kind | Origin | How it reaches Drishti |
-|---|---|---|---|
-| `CRV` | `ir-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: US Treasury daily par yield curve (public domain (US Government work)) (`drishti.py feed run market-data`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/ir-curve/` → `lake demo` → connector `market-store` |
-| `REPO` | `repo-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/repo-curve/` → `lake demo` → connector `market-store` |
-| `FX` | `fx-spot` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: ECB euro reference FX rates (ECB: free reuse with the source acknowledged) (`drishti.py feed run market-data`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/fx-spot/` → `lake demo` → connector `market-store` |
-| `FXF` | `fx-forward-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/fx-forward-curve/` → `lake demo` → connector `market-store` |
-| `FXV` | `fx-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/fx-vol-surface/` → `lake demo` → connector `market-store` |
-| `IRV` | `ir-vol-cube` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/ir-vol-cube/` → `lake demo` → connector `market-store` |
-| `CPV` | `cap-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/cap-vol-surface/` → `lake demo` → connector `market-store` |
-| `EQ` | `equity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/equity/` → `lake demo` → connector `market-store` |
-| `EQX` | `equity-index` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/equity-index/` → `lake demo` → connector `market-store` |
-| `DIV` | `dividend-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/dividend-curve/` → `lake demo` → connector `market-store` |
-| `EQV` | `equity-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/equity-vol-surface/` → `lake demo` → connector `market-store` |
-| `CDS` | `credit-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/credit-curve/` → `lake demo` → connector `market-store` |
-| `INF` | `inflation-index` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/inflation-index/` → `lake demo` → connector `market-store` |
-| `INFC` | `inflation-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/inflation-curve/` → `lake demo` → connector `market-store` |
-| `CMD` | `commodity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity/` → `lake demo` → connector `market-store` |
-| `CMDC` | `commodity-curve` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity-curve/` → `lake demo` → connector `market-store` |
-| `CMDV` | `commodity-vol-surface` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/commodity-vol-surface/` → `lake demo` → connector `market-store` |
-| `FIX` | `rate-fixing` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/); official public data optional: SOFR, Federal Reserve Bank of New York (NY Fed terms of use: reuse with attribution); Euro short-term rate (ECB) (ECB: free reuse with the source acknowledged) (`drishti.py feed run market-data`, to the data folder; read live by the feed connectors, off as shipped) | `data/testdata/market-data/rate-fixing/` → `lake demo` → connector `market-store` |
-| `BND` | `bond` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/bond/` → `lake demo` → connector `market-store` |
-| `CORR` | `correlation-matrix` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-data/correlation-matrix/` → `lake demo` → connector `market-store` |
-| `CORRC` | `correlation-result` | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.banking.compute.analytics.CorrelationEngine); see the [Groupings and analytics guide](bi/README.md) | nothing to load: computed from its inputs when asked |
-| `EQB` | `equity-beta` | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.banking.compute.analytics.BetaEngine); see the [Groupings and analytics guide](bi/README.md) | nothing to load: computed from its inputs when asked |
-
-#### External sources
-
-| Source | Where | Licence | Internal only | Refresh |
-|---|---|---|---|---|
-| US Treasury daily par yield curve | https://home.treasury.gov/resource-center/data-chart-center/interest-rates | public domain (US Government work) | no | `python3 tools/drishti.py feed run market-data -- us-treasury` |
-| ECB euro reference FX rates | https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip | ECB: free reuse with the source acknowledged | no | `python3 tools/drishti.py feed run market-data -- ecb-fx` |
-| SOFR, Federal Reserve Bank of New York | https://markets.newyorkfed.org/api/rates/secured/sofr | NY Fed terms of use: reuse with attribution | no | `python3 tools/drishti.py feed run market-data -- sofr` |
-| Euro short-term rate (ECB) | https://data-api.ecb.europa.eu/service/data/EST | ECB: free reuse with the source acknowledged | no | `python3 tools/drishti.py feed run market-data -- estr` |
-
-Run these from the Drishti folder (the repository root, or the install folder of a release).
-
-```bash
-python3 tools/drishti.py feed status market-data                                         # its last runs: last success, rows, failures (offline: the run ledger)
-python3 tools/drishti.py feed run market-data --dry-run                                  # what would be fetched and loaded; changes nothing
-python3 tools/drishti.py feed run market-data                                            # pull today's data and load it into the lake `capitalmarket` (what the daily schedule runs)
-python3 tools/drishti.py feed run market-data -- ecb-fx --years 5 --scope USDMXN,EURSEK  # more history and more pairs
-```
-
-The same with the Python you run Drishti with: `python3 tools/drishti.py feed run market-data` on Linux and macOS, `py -3.13 tools\drishti.py feed run market-data` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
-
-#### Generators
-
-| Generator | Writes | Check |
-|---|---|---|
-| `python3 tools/testdata/make_testdata.py` | sixty business days of every dataset of the seven packs into data/testdata/<pack>/<kind>/ (the universe: tools/testdata/universe.py; deterministic, fictitious names) | `python3 tools/testdata/make_testdata.py --check` |
-| `python3 tools/packgen/banking/make_data.py` | the pack's few reference documents in samples/ (from the taxonomy, tools/packgen/banking/taxonomy.py) | `python3 tools/packgen/banking/make_data.py --check` |
-
-#### Into the lake, checking, offline
-
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
-- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/market-data/packs/market-data/README.md#data-contracts) and [*Data retrieval*](../../modules/market-data/packs/market-data/README.md#data-retrieval).
 
 ## Market-data catalogue
 
@@ -2011,29 +1933,29 @@ A set of factors whose pairwise correlations basket, quanto and spread products 
 
 | Trade field | Kind | Selected by |
 |---|---|---|
-| `basisCurve` | [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) | `basis:{ccy}` |
+| `basisCurve` | [`ir-curve`](../contracts/packs/market-data.md#example-market-data-ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) | `basis:{ccy}` |
 | `benchmarkCurve` | `ir-curve` | `govt:{ccy}` |
-| `capVolSurface` | [`cap-vol-surface`](../contracts/samples/market-data.md#cap-vol-surface) ([contract](../contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) | `cap:{ccy}` |
-| `commodityCurve` | [`commodity-curve`](../contracts/samples/market-data.md#commodity-curve) ([contract](../contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | `{commodity}` |
-| `commodityVolSurface` | [`commodity-vol-surface`](../contracts/samples/market-data.md#commodity-vol-surface) ([contract](../contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)) | `{commodity}` |
-| `correlation` | [`correlation-matrix`](../contracts/samples/market-data.md#correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | `{corr}` |
-| `creditCurve` | [`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)) | `{issuer}` |
+| `capVolSurface` | [`cap-vol-surface`](../contracts/packs/market-data.md#example-market-data-cap-vol-surface) ([contract](../contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) | `cap:{ccy}` |
+| `commodityCurve` | [`commodity-curve`](../contracts/packs/market-data.md#example-market-data-commodity-curve) ([contract](../contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | `{commodity}` |
+| `commodityVolSurface` | [`commodity-vol-surface`](../contracts/packs/market-data.md#example-market-data-commodity-vol-surface) ([contract](../contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)) | `{commodity}` |
+| `correlation` | [`correlation-matrix`](../contracts/packs/market-data.md#example-market-data-correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | `{corr}` |
+| `creditCurve` | [`credit-curve`](../contracts/packs/market-data.md#example-market-data-credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)) | `{issuer}` |
 | `discountCurve` | `ir-curve` | `ois:{ccy}` |
-| `dividendCurve` | [`dividend-curve`](../contracts/samples/market-data.md#dividend-curve) ([contract](../contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | `{equity}` |
-| `equityVolSurface` | [`equity-vol-surface`](../contracts/samples/market-data.md#equity-vol-surface) ([contract](../contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)) | `{equity}` |
+| `dividendCurve` | [`dividend-curve`](../contracts/packs/market-data.md#example-market-data-dividend-curve) ([contract](../contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | `{equity}` |
+| `equityVolSurface` | [`equity-vol-surface`](../contracts/packs/market-data.md#example-market-data-equity-vol-surface) ([contract](../contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)) | `{equity}` |
 | `equityVolSurface` | `equity-vol-surface` | `{index}` |
-| `fixingIndex` | [`rate-fixing`](../contracts/samples/market-data.md#rate-fixing) ([contract](../contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) | `rfr:{ccy}` |
+| `fixingIndex` | [`rate-fixing`](../contracts/packs/market-data.md#example-market-data-rate-fixing) ([contract](../contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) | `rfr:{ccy}` |
 | `forwardCurve` | `ir-curve` | `proj:{ccy}` |
-| `fxForwardCurve` | [`fx-forward-curve`](../contracts/samples/market-data.md#fx-forward-curve) ([contract](../contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)) | `{pair}` |
-| `fxSpot` | [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | `{pair}` |
-| `fxVolSurface` | [`fx-vol-surface`](../contracts/samples/market-data.md#fx-vol-surface) ([contract](../contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)) | `{pair}` |
-| `inflationCurve` | [`inflation-curve`](../contracts/samples/market-data.md#inflation-curve) ([contract](../contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)) | `{infl}` |
-| `inflationIndex` | [`inflation-index`](../contracts/samples/market-data.md#inflation-index) ([contract](../contracts/packs/market-data.md#inf-inflation-index-inflation-index)) | `{infl}` |
-| `repoCurve` | [`repo-curve`](../contracts/samples/market-data.md#repo-curve) ([contract](../contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | `{ccy}` |
-| `swaptionVolCube` | [`ir-vol-cube`](../contracts/samples/market-data.md#ir-vol-cube) ([contract](../contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) | `swaption:{ccy}` |
+| `fxForwardCurve` | [`fx-forward-curve`](../contracts/packs/market-data.md#example-market-data-fx-forward-curve) ([contract](../contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)) | `{pair}` |
+| `fxSpot` | [`fx-spot`](../contracts/packs/market-data.md#example-market-data-fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | `{pair}` |
+| `fxVolSurface` | [`fx-vol-surface`](../contracts/packs/market-data.md#example-market-data-fx-vol-surface) ([contract](../contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)) | `{pair}` |
+| `inflationCurve` | [`inflation-curve`](../contracts/packs/market-data.md#example-market-data-inflation-curve) ([contract](../contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)) | `{infl}` |
+| `inflationIndex` | [`inflation-index`](../contracts/packs/market-data.md#example-market-data-inflation-index) ([contract](../contracts/packs/market-data.md#inf-inflation-index-inflation-index)) | `{infl}` |
+| `repoCurve` | [`repo-curve`](../contracts/packs/market-data.md#example-market-data-repo-curve) ([contract](../contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | `{ccy}` |
+| `swaptionVolCube` | [`ir-vol-cube`](../contracts/packs/market-data.md#example-market-data-ir-vol-cube) ([contract](../contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) | `swaption:{ccy}` |
 | `underlyingBond` | `bond` | `{bond}` |
 | `underlyingEquity` | `equity` | `{equity}` |
-| `underlyingIndex` | [`equity-index`](../contracts/samples/market-data.md#equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)) | `{index}` |
+| `underlyingIndex` | [`equity-index`](../contracts/packs/market-data.md#example-market-data-equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)) | `{index}` |
 
 ## Core pack
 
@@ -2087,7 +2009,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 
 **Fields its Sutra reads:** `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY_OF_RISK`, `UEN`, `TYPE`, `NET_MTM`, `EXPOSURE_ENGINE`, `NETTING_SETS`, `HIERARCHY`.
 
-**Links:** `GROUP` → Group (`counterparty-group`), `CREDIT_LIMIT` → Credit limit ([`credit-limit`](../contracts/samples/counterparty-risk.md#credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit))), `CREDIT_CURVE` → Credit curve ([`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve))).
+**Links:** `GROUP` → Group (`counterparty-group`), `CREDIT_LIMIT` → Credit limit ([`credit-limit`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit))), `CREDIT_CURVE` → Credit curve ([`credit-curve`](../contracts/packs/market-data.md#example-market-data-credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve))).
 
 #### Counterparty group (`counterparty-group`)
 
@@ -2159,33 +2081,7 @@ No extra roles: any user assigned the pack (or a pack that extends it) can open 
 
 ### Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
-
-| Command | Kind | Origin | How it reaches Drishti |
-|---|---|---|---|
-| `CPTY` | `counterparty` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/counterparty/` → `lake demo` → connector `reference-store` |
-| `GRP` | `counterparty-group` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/counterparty-group/` → `lake demo` → connector `reference-store` |
-| `ISS` | `issuer` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/issuer/` → `lake demo` → connector `reference-store` |
-| `CCP` | `ccp` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/ccp/` → `lake demo` → connector `reference-store` |
-| `LE` | `legal-entity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/legal-entity/` → `lake demo` → connector `reference-store` |
-| `BOOK` | `book` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/book/` → `lake demo` → connector `reference-store` |
-| `DESK` | `desk` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/desk/` → `lake demo` → connector `reference-store` |
-| `TRDR` | `trader` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/trader/` → `lake demo` → connector `reference-store` |
-| `CAL` | `calendar` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/calendar/` → `lake demo` → connector `reference-store` |
-| `CLR` | `clearing-account` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/core/clearing-account/` → `lake demo` → connector `reference-store` |
-
-#### Generators
-
-| Generator | Writes | Check |
-|---|---|---|
-| `python3 tools/testdata/make_testdata.py` | sixty business days of every dataset of the seven packs into data/testdata/<pack>/<kind>/ (the universe: tools/testdata/universe.py; deterministic, fictitious names) | `python3 tools/testdata/make_testdata.py --check` |
-| `python3 tools/packgen/banking/make_data.py` | the pack's few reference documents in samples/ (from the taxonomy, tools/packgen/banking/taxonomy.py) | `python3 tools/packgen/banking/make_data.py --check` |
-
-#### Into the lake, checking, offline
-
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
-- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../config/packs/core/core/README.md#data-contracts) and [*Data retrieval*](../../config/packs/core/core/README.md#data-retrieval).
 
 ## The banking data model
 
@@ -2205,52 +2101,52 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 | Field | Label | Opens kind | Pack | Data domain |
 |---|---|---|---|---|
 | `AGREEMENT` | Agreement | `agreement` | `counterparty-risk` | `legal` |
-| `BASIS_CURVE` | Basis curve | [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) | `market-data` | `market` |
+| `BASIS_CURVE` | Basis curve | [`ir-curve`](../contracts/packs/market-data.md#example-market-data-ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) | `market-data` | `market` |
 | `BENCHMARK_CURVE` | Benchmark curve | `ir-curve` | `market-data` | `market` |
 | `BOOK` | Book | `book` | `core` | `reference` |
 | `CALENDAR` | Calendar | `calendar` | `core` | `reference` |
-| `CAP_VOL_SURFACE` | Cap vol surface | [`cap-vol-surface`](../contracts/samples/market-data.md#cap-vol-surface) ([contract](../contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) | `market-data` | `market` |
+| `CAP_VOL_SURFACE` | Cap vol surface | [`cap-vol-surface`](../contracts/packs/market-data.md#example-market-data-cap-vol-surface) ([contract](../contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) | `market-data` | `market` |
 | `CCP` | CCP | `ccp` | `core` | `reference` |
-| `CLEARING_ACCOUNT` | Clearing account | [`clearing-account`](../contracts/samples/core.md#clearing-account) ([contract](../contracts/packs/core.md#clr-clearing-account-clearing-account)) | `core` | `reference` |
-| `COLLATERAL_BALANCE` | Collateral | [`collateral-balance`](../contracts/samples/counterparty-risk.md#collateral-balance) ([contract](../contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance)) | `counterparty-risk` | `collateral` |
+| `CLEARING_ACCOUNT` | Clearing account | [`clearing-account`](../contracts/packs/core.md#example-core-clearing-account) ([contract](../contracts/packs/core.md#clr-clearing-account-clearing-account)) | `core` | `reference` |
+| `COLLATERAL_BALANCE` | Collateral | [`collateral-balance`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-collateral-balance) ([contract](../contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance)) | `counterparty-risk` | `collateral` |
 | `COLLATERAL_BALANCES` | Collateral | `collateral-balance` | `counterparty-risk` | `collateral` |
-| `COMMODITY_CURVE` | Commodity curve | [`commodity-curve`](../contracts/samples/market-data.md#commodity-curve) ([contract](../contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | `market-data` | `market` |
+| `COMMODITY_CURVE` | Commodity curve | [`commodity-curve`](../contracts/packs/market-data.md#example-market-data-commodity-curve) ([contract](../contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | `market-data` | `market` |
 | `COMMODITY_REF` | Commodity | `commodity` | `market-data` | `market` |
-| `COMMODITY_VOL_SURFACE` | Commodity vol surface | [`commodity-vol-surface`](../contracts/samples/market-data.md#commodity-vol-surface) ([contract](../contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)) | `market-data` | `market` |
-| `CORRELATION` | Correlation | [`correlation-matrix`](../contracts/samples/market-data.md#correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | `market-data` | `market` |
+| `COMMODITY_VOL_SURFACE` | Commodity vol surface | [`commodity-vol-surface`](../contracts/packs/market-data.md#example-market-data-commodity-vol-surface) ([contract](../contracts/packs/market-data.md#cmdv-commodity-volatility-surface-commodity-vol-surface)) | `market-data` | `market` |
+| `CORRELATION` | Correlation | [`correlation-matrix`](../contracts/packs/market-data.md#example-market-data-correlation-matrix) ([contract](../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | `market-data` | `market` |
 | `COUNTERPARTY` | Counterparty | `counterparty` | `core` | `reference` |
-| `CREDIT_CURVE` | Credit curve | [`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)) | `market-data` | `market` |
-| `CREDIT_LIMIT` | Credit limit | [`credit-limit`](../contracts/samples/counterparty-risk.md#credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)) | `counterparty-risk` | `credit` |
+| `CREDIT_CURVE` | Credit curve | [`credit-curve`](../contracts/packs/market-data.md#example-market-data-credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)) | `market-data` | `market` |
+| `CREDIT_LIMIT` | Credit limit | [`credit-limit`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)) | `counterparty-risk` | `credit` |
 | `CSA` | CSA | `csa` | `counterparty-risk` | `legal` |
 | `CSAS` | CSA | `csa` | `counterparty-risk` | `legal` |
 | `CVA_RESULT` | CVA | `cva` | `counterparty-risk` | `credit` |
 | `DESK` | Desk | `desk` | `core` | `reference` |
 | `DISCOUNT_CURVE` | Discount curve | `ir-curve` | `market-data` | `market` |
-| `DIVIDEND_CURVE` | Dividend curve | [`dividend-curve`](../contracts/samples/market-data.md#dividend-curve) ([contract](../contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | `market-data` | `market` |
+| `DIVIDEND_CURVE` | Dividend curve | [`dividend-curve`](../contracts/packs/market-data.md#example-market-data-dividend-curve) ([contract](../contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | `market-data` | `market` |
 | `EQUITY` | Equity | `equity` | `market-data` | `market` |
 | `EQUITY_IDS` | Equity | `equity` | `market-data` | `market` |
-| `EQUITY_INDEX` | Index | [`equity-index`](../contracts/samples/market-data.md#equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)) | `market-data` | `market` |
-| `EQUITY_VOL_SURFACE` | Equity vol surface | [`equity-vol-surface`](../contracts/samples/market-data.md#equity-vol-surface) ([contract](../contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)) | `market-data` | `market` |
-| `FIXING_INDEX` | Fixing index | [`rate-fixing`](../contracts/samples/market-data.md#rate-fixing) ([contract](../contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) | `market-data` | `market` |
+| `EQUITY_INDEX` | Index | [`equity-index`](../contracts/packs/market-data.md#example-market-data-equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)) | `market-data` | `market` |
+| `EQUITY_VOL_SURFACE` | Equity vol surface | [`equity-vol-surface`](../contracts/packs/market-data.md#example-market-data-equity-vol-surface) ([contract](../contracts/packs/market-data.md#eqv-equity-volatility-surface-equity-vol-surface)) | `market-data` | `market` |
+| `FIXING_INDEX` | Fixing index | [`rate-fixing`](../contracts/packs/market-data.md#example-market-data-rate-fixing) ([contract](../contracts/packs/market-data.md#fix-rate-index-fixings-rate-fixing)) | `market-data` | `market` |
 | `FORWARD_CURVE` | Forward curve | `ir-curve` | `market-data` | `market` |
-| `FX_FORWARD_CURVE` | Fx forward curve | [`fx-forward-curve`](../contracts/samples/market-data.md#fx-forward-curve) ([contract](../contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)) | `market-data` | `market` |
-| `FX_IDS` | FX spot | [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | `market-data` | `market` |
+| `FX_FORWARD_CURVE` | Fx forward curve | [`fx-forward-curve`](../contracts/packs/market-data.md#example-market-data-fx-forward-curve) ([contract](../contracts/packs/market-data.md#fxf-fx-forward-curve-fx-forward-curve)) | `market-data` | `market` |
+| `FX_IDS` | FX spot | [`fx-spot`](../contracts/packs/market-data.md#example-market-data-fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | `market-data` | `market` |
 | `FX_SPOT` | Fx spot | `fx-spot` | `market-data` | `market` |
-| `FX_VOL_SURFACE` | Fx vol surface | [`fx-vol-surface`](../contracts/samples/market-data.md#fx-vol-surface) ([contract](../contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)) | `market-data` | `market` |
-| `GROUP` | Group | [`counterparty-group`](../contracts/samples/core.md#counterparty-group) ([contract](../contracts/packs/core.md#grp-counterparty-group-counterparty-group)) | `core` | `reference` |
-| `INFLATION_CURVE` | Inflation curve | [`inflation-curve`](../contracts/samples/market-data.md#inflation-curve) ([contract](../contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)) | `market-data` | `market` |
-| `INFLATION_INDEX` | Inflation index | [`inflation-index`](../contracts/samples/market-data.md#inflation-index) ([contract](../contracts/packs/market-data.md#inf-inflation-index-inflation-index)) | `market-data` | `market` |
+| `FX_VOL_SURFACE` | Fx vol surface | [`fx-vol-surface`](../contracts/packs/market-data.md#example-market-data-fx-vol-surface) ([contract](../contracts/packs/market-data.md#fxv-fx-volatility-surface-fx-vol-surface)) | `market-data` | `market` |
+| `GROUP` | Group | [`counterparty-group`](../contracts/packs/core.md#example-core-counterparty-group) ([contract](../contracts/packs/core.md#grp-counterparty-group-counterparty-group)) | `core` | `reference` |
+| `INFLATION_CURVE` | Inflation curve | [`inflation-curve`](../contracts/packs/market-data.md#example-market-data-inflation-curve) ([contract](../contracts/packs/market-data.md#infc-inflation-curve-inflation-curve)) | `market-data` | `market` |
+| `INFLATION_INDEX` | Inflation index | [`inflation-index`](../contracts/packs/market-data.md#example-market-data-inflation-index) ([contract](../contracts/packs/market-data.md#inf-inflation-index-inflation-index)) | `market-data` | `market` |
 | `ISSUER` | Reference entity | `issuer` | `core` | `reference` |
-| `LEGAL_ENTITY` | Legal entity | [`legal-entity`](../contracts/samples/core.md#legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)) | `core` | `reference` |
-| `NETTING_SET` | Netting set | [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) | `counterparty-risk` | `credit` |
+| `LEGAL_ENTITY` | Legal entity | [`legal-entity`](../contracts/packs/core.md#example-core-legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)) | `core` | `reference` |
+| `NETTING_SET` | Netting set | [`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) | `counterparty-risk` | `credit` |
 | `NETTING_SETS` | Netting set | `netting-set` | `counterparty-risk` | `credit` |
 | `ORIGINAL_COUNTERPARTY` | Original counterparty | `counterparty` | `core` | `reference` |
 | `PORTFOLIO` | Portfolio | `book` | `core` | `reference` |
-| `REPO_CURVE` | Repo curve | [`repo-curve`](../contracts/samples/market-data.md#repo-curve) ([contract](../contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | `market-data` | `market` |
-| `SACCR` | SA-CCR | [`sa-ccr`](../contracts/samples/counterparty-risk.md#sa-ccr) ([contract](../contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr)) | `counterparty-risk` | `credit` |
-| `SCENARIO` | Scenario | [`stress-scenario`](../contracts/samples/market-risk.md#stress-scenario) ([contract](../contracts/packs/market-risk.md#scn-stress-scenario-stress-scenario)) | `market-risk` | `risk` |
+| `REPO_CURVE` | Repo curve | [`repo-curve`](../contracts/packs/market-data.md#example-market-data-repo-curve) ([contract](../contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | `market-data` | `market` |
+| `SACCR` | SA-CCR | [`sa-ccr`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-sa-ccr) ([contract](../contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr)) | `counterparty-risk` | `credit` |
+| `SCENARIO` | Scenario | [`stress-scenario`](../contracts/packs/market-risk.md#example-market-risk-stress-scenario) ([contract](../contracts/packs/market-risk.md#scn-stress-scenario-stress-scenario)) | `market-risk` | `risk` |
 | `SIMM` | SIMM | `simm` | `counterparty-risk` | `collateral` |
-| `SWAPTION_VOL_CUBE` | Swaption vol cube | [`ir-vol-cube`](../contracts/samples/market-data.md#ir-vol-cube) ([contract](../contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) | `market-data` | `market` |
+| `SWAPTION_VOL_CUBE` | Swaption vol cube | [`ir-vol-cube`](../contracts/packs/market-data.md#example-market-data-ir-vol-cube) ([contract](../contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) | `market-data` | `market` |
 | `TRADER` | Trader | `trader` | `core` | `reference` |
 | `TRADER_ID` | Trader | `trader` | `core` | `reference` |
 | `TRADE_ID` | Trade | `trade` | `trading` | `trading` |

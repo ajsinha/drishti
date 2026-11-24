@@ -14,8 +14,8 @@
 
 """The text files of the two showcase packs, written from the kinds table (spec.py) and the generated documents (model.py):
 
-    pack.yaml, contracts/<kind>.contract.yaml, sutras/<kind>.v1.sutra.yaml, config/about.yaml, config/help.yaml, samples/ (a few
-    reference documents and the catalogue), guides/<pack>.md and README.md
+    pack.yaml, contracts/<kind>.contract.yaml, sutras/<kind>.v1.sutra.yaml, config/about.yaml, samples/ (a few
+    reference documents and the catalogue) and README.md (each pack's story is a section of modules/genomics/docs/guide.md since i7k)
 
 Nothing in them is edited by hand: change the table or this file, run make.py. Both packs belong to the genomics module
 (modules/genomics/packs/); their data is the committed snapshot data/testdata/<pack>/<kind>/ that `lake demo` builds into the demo lake
@@ -47,7 +47,6 @@ def _load(name: str, path: Path):
 
 
 README = _load("drishti_pack_readme", ROOT / "tools" / "packgen" / "common" / "readme.py")
-GD = _load("drishti_guide_data", ROOT / "tools" / "packgen" / "common" / "guide_data.py")
 CONTRACTS = _load("drishti_contracts", ROOT / "tools" / "contracts.py")    # the one way a contract's validation rules follow its fields
 
 MODULE_DIR = ROOT / "modules" / "genomics"
@@ -205,15 +204,6 @@ def about(pack: str) -> str:
             + dump({"intro": yaml.safe_load((HERE / "intros.yaml").read_text(encoding="utf-8"))[pack]["intro"]}))
 
 
-def help_yaml(pack: str) -> str:
-    p = PACKS[pack]
-    words = ", ".join(k.word for k in S.kinds_of(pack))
-    g = {"slug": f"{pack}-pack", "category": "data", "title": f"The {pack} pack", "kind": "guide", "icon": "diagram-2",
-         "file": f"guides/{pack}.md",
-         "summary": f"{p['description'].split('. ')[0]}. Words: {words}."}
-    return HEADER + f"\n# The {pack} pack's Help entries. Written by {GENERATOR}.\n" + dump({"guides": [g]})
-
-
 def pack_yaml(pack: str, story: dict) -> str:
     p = PACKS[pack]
     ks = S.kinds_of(pack)
@@ -283,99 +273,8 @@ def catalog(ref: dict) -> list:
     return out
 
 
-GUIDE_TEXT = {
-    S.GENOMICS: """# The genomics-showcase pack
-
-A synthetic cohort of 1,500 patients read against one invented gene, `HLXK7`. It is a pack of the **genomics module**
-(`modules/genomics/`), made to show Drishti outside finance: the same words, links, pages and Explain drill-down over genes, variants,
-samples and association tests instead of trades and curves. Every record is invented (the genes `HLX…`, the patients, the numbers) and
-every screen that shows it says *Synthetic*.
-
-## What is in it
-
-| Kind | Rows | One row is |
-|---|---|---|
-| `study-gene` | 2,000 | a gene; 24 are the planted drivers, `HLXK7` the strongest |
-| `study-sample` | 1,500 | a patient's sample of cohort ONC-1, with its clinical tracks, response and place on the map of samples |
-| `study-variant` | 12,000 | a variant site, with the amino acid change that joins it to the protein workbench's scan |
-| `variant-call` | 45,000 | a sample carrying a variant: genotype, allele fraction, depth |
-| `association` | 36,000 | a variant tested against a trait (RESPONSE, TOXICITY, RELAPSE) |
-| `cnv-segment` | 3,000 | an amplification, deletion, gain or loss in one sample |
-| `pathway-gene` | 500 | a gene in one of twelve pathways |
-
-The tests are **computed**, not painted: each association is a Wald test of the log odds ratio of the generated calls against the
-generated traits, so the peak on the association plot, the figures on a page and the records behind them agree by construction. The
-peaks are planted by the generator's model (an altered `HLXK7` cuts the response sharply; three more drivers move it less; one
-driver each moves toxicity and relapse), and the neighbours of each peak gene carry variants linked to its lead.
-
-## The words
-
-`ASSOC GWAS-RESPONSE-<variant>` opens one test; `SGENE HLXK7`, `SSAMPLE S0001`, `SVARIANT <id>`, `VCALL <id>`, `CNV <id>` and
-`PATHWAY <id>` open the other records. Each is a plain record page (the strip and a table of every field, linked fields opening their
-kinds). The showcase's own screens (the association plot, the cohort matrix, the map of samples, the variant lollipop) are drawn from
-the same kinds by the genomics module, opened by its own words GWAS, PROTEIN and DESIGNS.
-
-## The join to proteins
-
-`study-variant` carries the gene, the protein position and the amino acid after the change. With the gene as the protein's id, those
-three values are the key of a scan score in the [protein-engineering pack](../../protein-engineering/guides/protein-engineering.md): every variant of a gene that has a
-protein has a measured functional reading.
-
-## Making the data again
-
-`python3 tools/packgen/genomics_showcase/make.py` writes the committed data (`data/testdata/genomics-showcase/<kind>/`, gzipped JSON
-Lines) and this pack's contracts, Sutras, samples, README and guide from one seed (`--seed`, default 20261116). The same seed gives
-byte-identical files; `--check` fails when the committed files differ from what the generator would write.
-""",
-    S.PROTEIN: """# The protein-engineering pack
-
-Four invented proteins and the campaign that redesigned one of them: **Helixase-7**, the enzyme of gene `HLXK7` (312 amino acids). A
-pack of the **genomics module** (`modules/genomics/`), the other half of the showcase: genomics reads the changes nature made, protein
-engineering writes our own, and the join is the protein. Every record is invented and every screen that shows it says *Synthetic*.
-
-## What is in it
-
-| Kind | Rows | One row is |
-|---|---|---|
-| `protein` | 4 | a protein: sequence, family, active site (lengths 312, 248, 286, 350) |
-| `residue` | 1,196 | a position: fold, domain, burial, coordinates, the mean effect of changing it |
-| `residue-contact` | 5,952 | two positions close in space: the contact map's cells |
-| `dms-score` | 47,840 | a scan measurement: position, amino acid, assay (activity or stability) |
-| `design` | 12,000 | a designed variant of Helixase-7: eight rounds of 1,500 |
-| `design-mutation` | 33,000 | one amino acid change of one design |
-| `design-round` | 8 | a round: method, best and median activity, designs caught on the false peak |
-
-The fold's coordinates are generated (helices and strands laid on a grid and joined by loops); burial, contacts and the active site are
-**measured** from those coordinates. The scan comes from a small physical model: buried positions and the active site are intolerant, a
-like-for-like change is mild, proline breaks helices and strands, and 14 beneficial changes sit on the surface. The campaign's activity
-follows a fitness field with a summit, a false peak and a ridge; its stability follows the scan.
-
-## The words
-
-`PROT HLXK7` opens a protein; `DESIGN <id>` a design; `RESIDUE`, `DMS`, `CONTACT`, `DMUT` and `DROUND` the other records. Each is
-a plain record page, linked fields opening their kinds. The workbench's own screens (the scan heatmap, the structure, the design
-campaign with its rounds, the leaderboard) are drawn from the same kinds by the genomics module, opened by its own words GWAS, PROTEIN and DESIGNS.
-
-## The join to genomics
-
-The [genomics-showcase pack](../../genomics-showcase/guides/genomics-showcase.md)'s `study-variant` ([contract](../../../../../docs/contracts/packs/genomics-showcase.md#svariant-study-variant-study-variant),
-[example](../../../../../docs/contracts/packs/genomics-showcase.md#example-genomics-showcase-study-variant)) carries a gene, a protein position and an amino acid; with the gene
-as the protein's id they are the key of a `dms-score` row.
-
-## Making the data again
-
-One generator writes both packs: `python3 tools/packgen/genomics_showcase/make.py` (see the genomics-showcase guide).
-""",
-}
-
-
-def guide(pack: str, pack_dir: Path) -> str:
-    return (README.licence_comment().rstrip() + "\n" + GUIDE_TEXT[pack].rstrip() + "\n\n" + "\n".join(GD.sections(pack_dir)).rstrip()
-            + "\n")
-
-
-def pack_files(pack: str, docs: dict, story: dict, guide_sections: bool = True) -> dict:
-    """{path: text} of every text file of a pack (README last: it reads the others)."""
+def pack_files(pack: str, docs: dict, story: dict, readme: bool = True) -> dict:
+    """{path: text} of every text file of a pack (README last: it reads the others, its data sections the contracts on the disk)."""
     d = MODULE_DIR / "packs" / pack
     out = {d / "pack.yaml": pack_yaml(pack, story)}
     for k in S.kinds_of(pack):
@@ -383,11 +282,9 @@ def pack_files(pack: str, docs: dict, story: dict, guide_sections: bool = True) 
         ex = next(iter(reference(pack, docs, story)[k.kind]))
         out[d / "sutras" / f"{k.kind}.v1.sutra.yaml"] = sutra(k, ex)
     out[d / "config" / "about.yaml"] = about(pack)
-    out[d / "config" / "help.yaml"] = help_yaml(pack)
     ref = reference(pack, docs, story)
     for name, text in PSAMP.files(ref, [e for e in catalog(ref)], catalog_indent=None).items():
         out[d / "samples" / name] = text
-    if guide_sections:
-        out[d / "guides" / f"{pack}.md"] = guide(pack, d)
-    out[d / "README.md"] = README.render_pack(d, files=dict(out))
+    if readme:
+        out[d / "README.md"] = README.render_pack(d, files=dict(out))
     return out

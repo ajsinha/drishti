@@ -22,19 +22,20 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import org.yaml.snakeyaml.Yaml;
 
 /**
- * The text of a pack's guide for a kind, for Ask's prompt: the kind's {@code guide:} slug (about.yaml) looked up in the pack's
- * {@code config/help.yaml}, the markdown file read from the pack folder, and the section whose heading names the kind (else
- * the start of the guide). Files are read lazily and kept until they change. Never reads outside the pack's own folder.
+ * The text about a kind for Ask's prompt, from its pack's README (the README standard, generated from pack.yaml, the samples and the
+ * contracts: since i7k a pack has no guide of its own; its facts are its README and contracts, its story a section of a feature guide):
+ * the section whose heading is the kind ({@code ### `kind`} under Data structures), else one whose heading names the kind or its
+ * mnemonic, else the start of the README. Files are read lazily and kept until they change. Never reads outside the pack's own folder.
  */
 public final class PackGuides {
+
+    /** The pack's own documentation, at its root beside pack.yaml. */
+    static final String README = "README.md";
 
     private record Cached(long modified, String text) {}
 
@@ -47,10 +48,10 @@ public final class PackGuides {
         this.props = props;
     }
 
-    /** The guide section for the kind of the pack, or empty when the pack has none. */
+    /** The README section for the kind of the pack, or empty when the kind has no about entry or the pack no README. */
     public Optional<String> sectionFor(String pack, String kind, String mnemonic) {
         Optional<AboutText> about = catalog.forKind(kind);
-        if (about.isEmpty() || about.get().guide() == null || pack == null) {
+        if (about.isEmpty() || pack == null) {
             return Optional.empty();
         }
         Path root = catalog.sources().stream().filter(p -> p.name().equals(pack) && p.file() != null).map(p -> packRoot(Path.of(p.file()))).filter(java.util.Objects::nonNull)
@@ -58,15 +59,7 @@ public final class PackGuides {
         if (root == null) {
             return Optional.empty();
         }
-        String rel = guideFile(root, about.get().guide());
-        if (rel == null) {
-            return Optional.empty();
-        }
-        Path file = root.resolve(rel).normalize();
-        if (!file.startsWith(root)) {
-            return Optional.empty();                      // a guide file never reaches outside its pack
-        }
-        String text = read(file);
+        String text = read(root.resolve(README));
         return text == null ? Optional.empty() : Optional.of(section(text, kind, mnemonic));
     }
 
@@ -76,28 +69,6 @@ public final class PackGuides {
             if (Files.isRegularFile(p.resolve("pack.yaml"))) {
                 return p;
             }
-        }
-        return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    private String guideFile(Path root, String slug) {
-        Path help = root.resolve("config/help.yaml");
-        String text = read(help);
-        if (text == null) {
-            return null;
-        }
-        try {
-            Object doc = new Yaml().load(text);
-            if (doc instanceof Map<?, ?> m && m.get("guides") instanceof List<?> gs) {
-                for (Object g : gs) {
-                    if (g instanceof Map<?, ?> gm && slug.equals(String.valueOf(gm.get("slug"))) && gm.get("file") != null) {
-                        return String.valueOf(gm.get("file"));
-                    }
-                }
-            }
-        } catch (RuntimeException e) {
-            return null;
         }
         return null;
     }
@@ -117,27 +88,39 @@ public final class PackGuides {
         }
     }
 
-    /** The markdown section whose heading names the kind (or its mnemonic), up to the next heading of the same or a higher level; else the start. */
+    /**
+     * The markdown section of the kind, up to the next heading of the same or a higher level: the heading that is the kind in backticks
+     * (a README's Data structures), else the first heading naming the kind or its mnemonic as a word; else the whole text.
+     */
     static String section(String md, String kind, String mnemonic) {
         String[] lines = md.split("\n", -1);
         String k = kind == null ? "" : kind.toLowerCase(Locale.ROOT);
         String m = mnemonic == null ? "" : mnemonic.toLowerCase(Locale.ROOT);
-        for (int i = 0; i < lines.length; i++) {
-            int level = level(lines[i]);
-            String h = lines[i].toLowerCase(Locale.ROOT);
-            if (level > 0 && (!k.isEmpty() && h.matches(".*\\b" + java.util.regex.Pattern.quote(k) + "\\b.*") || !m.isEmpty() && h.matches(".*\\b" + java.util.regex.Pattern.quote(m) + "\\b.*"))) {
-                StringBuilder out = new StringBuilder();
-                for (int j = i; j < lines.length; j++) {
-                    int l = level(lines[j]);
-                    if (j > i && l > 0 && l <= level) {
-                        break;
-                    }
-                    out.append(lines[j]).append('\n');
-                }
-                return out.toString();
+        int at = -1;
+        for (int i = 0; i < lines.length && at < 0 && !k.isEmpty(); i++) {
+            if (level(lines[i]) > 0 && lines[i].substring(level(lines[i]) + 1).trim().toLowerCase(Locale.ROOT).equals("`" + k + "`")) {
+                at = i;
             }
         }
-        return md;
+        for (int i = 0; i < lines.length && at < 0; i++) {
+            String h = lines[i].toLowerCase(Locale.ROOT);
+            if (level(lines[i]) > 0 && (!k.isEmpty() && h.matches(".*\\b" + java.util.regex.Pattern.quote(k) + "\\b.*") || !m.isEmpty() && h.matches(".*\\b" + java.util.regex.Pattern.quote(m) + "\\b.*"))) {
+                at = i;
+            }
+        }
+        if (at < 0) {
+            return md;
+        }
+        int level = level(lines[at]);
+        StringBuilder out = new StringBuilder();
+        for (int j = at; j < lines.length; j++) {
+            int l = level(lines[j]);
+            if (j > at && l > 0 && l <= level) {
+                break;
+            }
+            out.append(lines[j]).append('\n');
+        }
+        return out.toString();
     }
 
     private static int level(String line) {

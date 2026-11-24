@@ -15,7 +15,6 @@
 -->
 # The Notebook and Python
 
-
 > Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
 
 Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](TABLES_AND_MODELS.md#models-and-datasets-for-reports) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · [Distribution, subscriptions and alerts](DISTRIBUTION_AND_ALERTS.md) · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · **The Notebook and Python** · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
@@ -1666,23 +1665,4 @@ A book's page asks both engines for the sum of its strips' paths: the Python eng
 
 ### Data retrieval
 
-Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
-
-| Command | Kind | Origin | How it reaches Drishti |
-|---|---|---|---|
-| `PBOOK` | `path-book` | synthetic: `python3 config/packs/core/compute-demo/tools/make_samples.py` | `config/packs/core/compute-demo/samples/` → `lake demo` → connector `compute-demo-store` |
-| `PSTRIP` | `path-strip` | synthetic: `python3 config/packs/core/compute-demo/tools/make_samples.py` | `config/packs/core/compute-demo/samples/` → `lake demo` → connector `compute-demo-store` |
-| `PSUM` | `path-sum` | computed by Drishti: the reactive connector path-sum-python (python engine); see the [reactive connectors](../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) | nothing to load: computed from its inputs when asked |
-| `PSUMJ` | `path-sum-java` | computed by Drishti: the reactive connector path-sum-java (java engine); see the [reactive connectors](../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) | nothing to load: computed from its inputs when asked |
-
-#### Generators
-
-| Generator | Writes | Check |
-|---|---|---|
-| `python3 config/packs/core/compute-demo/tools/make_samples.py` | synthetic P&L strips (a seeded random walk) into the pack's samples/ | — |
-
-#### Into the lake, checking, offline
-
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../CLI_REFERENCE.md)).
-- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../../config/packs/core/compute-demo/README.md#data-contracts) and [*Data retrieval*](../../../config/packs/core/compute-demo/README.md#data-retrieval).
