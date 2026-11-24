@@ -29,21 +29,36 @@ pytestmark = pytest.mark.static
 
 ROOT = Path(__file__).resolve().parents[1]
 
-#: (the reference, the generator's --check command from the repository root). The pack, module and connector READMEs are checked by
-#: tools/test_readmes.py, the function catalogue by FunctionCataloguePageTest (Java).
-CHECKS = [
-    ("docs/admin/CONFIGURATION.md", ["tools/settings_catalogue.py", "--check"]),
-    ("docs/admin/UNDER_CONSTRUCTION.md", ["tools/under_construction.py", "--check"]),
-    ("docs/guides/COMMAND_CATALOG.md", ["tools/command_catalog.py", "--check"]),
-    ("docs/contracts/packs/*.md", ["tools/contracts.py", "docs", "--check"]),
-    ("docs/contracts/CSV_FORMATS.md", ["tools/mrloader/kind_docs.py", "--check"]),
-    ("config/feeds/*.md", ["tools/feeds/feedreadme.py", "--check"]),
-    ("docs/README.md (the Help map)", ["tools/docs/help_map.py", "--check"]),
-    ("the guides' data sections", ["tools/docs/guide_data.py", "--check"]),
-]
+sys.path.insert(0, str(ROOT / "tools" / "docs"))
+import generate as G  # noqa: E402  (the one list of generators: `drishti.py docs generate`)
+
+CHECKS = [(what, chk) for what, _write, chk in G.GENERATORS]
 
 
 @pytest.mark.parametrize("what,cmd", CHECKS, ids=[c[0] for c in CHECKS])
 def test_a_generated_reference_is_current(what, cmd):
     r = subprocess.run([sys.executable, *cmd], cwd=ROOT, capture_output=True, text=True, timeout=600)
-    assert r.returncode == 0, f"{what} is stale: run  python3 {' '.join(c for c in cmd if c != '--check')}\n{(r.stdout + r.stderr)[-1500:]}"
+    assert r.returncode == 0, f"{what} is stale: run  python3 tools/drishti.py docs generate\n{(r.stdout + r.stderr)[-1500:]}"
+
+
+def test_every_generator_has_a_write_and_a_check_command():
+    for what, write, chk in G.GENERATORS:
+        assert (ROOT / chk[0]).is_file(), what
+        assert "--check" in chk, what
+    assert len({w for w, _, _ in G.GENERATORS}) == len(G.GENERATORS)
+
+
+def test_a_stale_reference_is_named_with_its_fix(monkeypatch, capsys):
+    import io
+    monkeypatch.setattr(G, "GENERATORS", [("x.md", ["tools/nope_a.py"], ["tools/nope_a.py", "--check"]), ("y.md", ["tools/knowledge.py"], ["tools/knowledge.py", "--check"])])
+    out = io.StringIO()
+    assert G.run(True, out=out) == 1
+    text = out.getvalue()
+    assert "STALE" in text and "x.md" in text and "fix with: python3 tools/nope_a.py" in text and "1 of 2" in text
+
+
+def test_only_narrows_and_a_clean_run_returns_zero(monkeypatch):
+    import io
+    monkeypatch.setattr(G, "GENERATORS", [("a", ["-c", "pass"], ["-c", "pass"]), ("b", ["-c", "raise SystemExit(1)"], ["-c", "raise SystemExit(1)"])])
+    out = io.StringIO()
+    assert G.run(True, only=["a"], out=out) == 0 and "1 generated references are current" in out.getvalue()
