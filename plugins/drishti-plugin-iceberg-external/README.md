@@ -72,6 +72,12 @@ Plugin `iceberg-external` (`plugins/drishti-plugin-iceberg-external`): Iceberg t
 Drishti Lake's Iceberg reader. A table is a kind, a row is a document, every primitive column is searchable without a pack declaring it. For
 tables Drishti's own loader writes use `iceberg`, which reads that layout faster.
 
+## Build and use
+
+- **Build.** The plugin is a Maven module (`drishti-plugin-iceberg-external`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-iceberg-external-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
+- **Enable.** A connector file in the site's `config/connectors/` with `plugin: iceberg-external` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
+- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
+
 ## What it reads
 
 Tables reached the way the `iceberg` connector reaches them: path-based under `root` (local disk or `s3://`), a REST catalog
@@ -280,7 +286,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 java -cp "$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-iceberg-external -Dmdep.outputFile=/dev/stdout):plugins/drishti-plugin-iceberg-external/target/classes" \
   com.ash.drishti.plugin.icebergext.StarterSchemas --out build/risk-mart-schemas \
   --set catalog=rest --set uri=https://polaris.example.com/api/catalog --set tables=auto --set namespace=risk_mart
-tools/drishti.py pack make --schema build/risk-mart-schemas --name risk-mart
+python3.13 tools/drishti.py pack make --schema build/risk-mart-schemas --name risk-mart
 ```
 
 ## Limits

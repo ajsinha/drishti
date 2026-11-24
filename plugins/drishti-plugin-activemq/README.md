@@ -60,6 +60,12 @@ local disk, with views that tick on every message.
 | state that should start empty each day (`state.reset-at`) | reverse lookups (*Linked entities*, impact with F8): not supported |
 | a desk that cannot run Kafka but has a broker | searches over promoted fields of millions of entities a day (it has no columns) |
 
+## Build and use
+
+- **Build.** The plugin is a Maven module (`drishti-plugin-activemq`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-activemq-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
+- **Enable.** A connector file in the site's `config/connectors/` with `plugin: activemq` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
+- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
+
 ## What it reads
 
 `destinations` lists queues and topics (`queue:<name>`, `topic:<name>`, or a bare name, a queue). One session in `CLIENT_ACKNOWLEDGE`

@@ -55,6 +55,12 @@ Plugin `s3` (`plugins/drishti-plugin-s3`): the `file` connector's file-per-entit
 already writes to object storage (stress results, reports, model outputs), a few thousand to a few tens of thousands of objects. For
 a book of millions a day in object storage use `delta` or `iceberg` on S3 instead.
 
+## Build and use
+
+- **Build.** The plugin is a Maven module (`drishti-plugin-s3`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-s3-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
+- **Enable.** A connector file in the site's `config/connectors/` with `plugin: s3` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
+- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
+
 ## What it reads
 
 Every `.json` object under `bucket`/`prefix`, listed at start and every `rescan-seconds`: the listing gives the date folders, kinds and

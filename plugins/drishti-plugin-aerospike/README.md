@@ -52,14 +52,20 @@ settings:
 - tls.*
 auth: Internal log-in (user + password as ${ENV} or file:), external (LDAP), or pki (the client certificate is the log-in); TLS through tls.* and tls-name (TLS needs Aerospike Enterprise Edition).
 licence: Aerospike Java client for JDK 21 (Apache-2.0), bundled; no native library.
-windows: Works the same on Windows (pure Java client); the server is yours to run, and python tools/drishti.py data load --store aerospike loads it from any system.
+windows: Works the same on Windows (pure Java client); the server is yours to run, and python3.13 tools/drishti.py data load --store aerospike loads it from any system.
 doc: plugins/drishti-plugin-aerospike/README.md
 ---
 # The aerospike connector
 
 Plugin `aerospike` (`plugins/drishti-plugin-aerospike`): single-entity reads in a few milliseconds, type-ahead from memory and searches
-over a day's promoted bins with a server-side filter, from a namespace that `python tools/drishti.py data load --store aerospike` (or any writer keeping the same
+over a day's promoted bins with a server-side filter, from a namespace that `python3.13 tools/drishti.py data load --store aerospike` (or any writer keeping the same
 layout) fills.
+
+## Build and use
+
+- **Build.** The plugin is a Maven module (`drishti-plugin-aerospike`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-aerospike-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
+- **Enable.** A connector file in the site's `config/connectors/` with `plugin: aerospike` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
+- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
 
 ## What it reads
 
@@ -167,8 +173,8 @@ Run these from the Drishti folder (the repository root, or the install folder of
 
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d aerospike
-python tools/drishti.py data load --store aerospike localhost:3000 test                                 # the samples x 10 business days
-python tools/drishti.py data load --store aerospike localhost:3000 test --trades 1000000 --days 3 --ttl-days 30   # and a book, with retention
+python3.13 tools/drishti.py data load --store aerospike localhost:3000 test                                 # the samples x 10 business days
+python3.13 tools/drishti.py data load --store aerospike localhost:3000 test --trades 1000000 --days 3 --ttl-days 30   # and a book, with retention
 cp config/connectors.examples/aerospike/*.yaml config/connectors/          # picked up without a restart
 ```
 
@@ -233,7 +239,7 @@ later ones read memory. A loader line looks like:
 
 ## Loading
 
-`python tools/drishti.py data load --store aerospike` loads the packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated book,
+`python3.13 tools/drishti.py data load --store aerospike` loads the packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated book,
 through `AerospikeLoader` (in the plugin). It prints `aerospike: <n> rows (<s> s)` every 100,000 rows and ends with
 `aerospike: loaded 3,000,000 rows into namespace test in 147 s`.
 

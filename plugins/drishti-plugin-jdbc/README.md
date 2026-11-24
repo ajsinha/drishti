@@ -73,8 +73,14 @@ doc: plugins/drishti-plugin-jdbc/README.md
 # The jdbc connector
 
 Plugin `jdbc` (`plugins/drishti-plugin-jdbc`): one plugin, two ways to read a database. **Table mode** (setting `table`) reads
-the layout `python tools/drishti.py data load --store postgres` writes, a monthly-partitioned table per data domain, and needs no SQL from you. **Query
+the layout `python3.13 tools/drishti.py data load --store postgres` writes, a monthly-partitioned table per data domain, and needs no SQL from you. **Query
 mode** (settings `query.<kind>`) reads your own schema as it is, with your own `SELECT` per kind.
+
+## Build and use
+
+- **Build.** The plugin is a Maven module (`drishti-plugin-jdbc`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-jdbc-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
+- **Enable.** A connector file in the site's `config/connectors/` with `plugin: jdbc` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
+- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
 
 ## What it reads
 
@@ -201,7 +207,7 @@ settings:
   query.counterparty: SELECT * FROM counterparties WHERE id = :id
 ```
 
-Load table mode with `python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti` (add `--trades N --days D` for a
+Load table mode with `python3.13 tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti` (add `--trades N --days D` for a
 generated book, `--keep-months N` for retention).
 
 ## Troubleshooting
@@ -209,7 +215,7 @@ generated book, `--keep-months N` for retention).
 - `DOWN: <driver message> (reconnecting)`: the database is unreachable or the credentials are wrong; check `url`, `user`,
   `password`. Connections reopen by themselves.
 - `UP (not laid out as the pack declares: trade (0 of 19 columns); searches read documents)`: the table lacks the promoted
-  columns; reload with `python tools/drishti.py data load --store postgres`.
+  columns; reload with `python3.13 tools/drishti.py data load --store postgres`.
 - `not a plain SQL identifier: ...`: `table` or a column name holds more than letters, digits, `_` and one `.`.
 - A view fails with `… its query query.<kind>.<part> failed (SQL state …)`, Health `DEGRADED: query.<kind>.<part> failed: …`:
   run that query in a client with the parameters filled in.
@@ -260,16 +266,16 @@ question becomes a scan: `LIKE` over every row for type-ahead, `MAX(business_dat
 
 ## Table mode: loading
 
-`python tools/drishti.py data load --store postgres` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large
+`python3.13 tools/drishti.py data load --store postgres` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large
 generated book, through `PostgresLoader` (in the plugin):
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti                               # samples: 1,791 documents x 10 days
-python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --trades 50000                # and 50,000 trades a day for 3 days
-python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --trades 1000000 --days 3     # the scale test
-python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --keep-months 84              # keep seven years
+python3.13 tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti                               # samples: 1,791 documents x 10 days
+python3.13 tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --trades 50000                # and 50,000 trades a day for 3 days
+python3.13 tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --trades 1000000 --days 3     # the scale test
+python3.13 tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --keep-months 84              # keep seven years
 ```
 
 - **Input:** loader rows, one JSON line per entity per day (`{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`),
@@ -627,7 +633,7 @@ for the whole load (it holds the advisory lock) and one per batch, never more th
 6. Use `tls.enabled: true` and a database user with `SELECT` only.
 7. Check Admin → Health, then measure on your data (`elapsedMs`, `scanned` and `partial` of a search).
 
-A quick start: `docker compose -f deploy/docker/compose.data.yaml up -d postgres`, `python tools/drishti.py data load --store postgres
+A quick start: `docker compose -f deploy/docker/compose.data.yaml up -d postgres`, `python3.13 tools/drishti.py data load --store postgres
 jdbc:postgresql://localhost:5432/drishti` (one table per banking domain, ten business days), copy
 `config/connectors.examples/postgres/*.yaml` into `config/connectors/`, start the server, then
 `curl -s "http://localhost:18480/api/v1/entities/trade/MX-20000001/raw?asOf=2026-09-29" | jq -c .provenance` shows
