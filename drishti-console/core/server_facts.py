@@ -158,7 +158,7 @@ class ServerFacts:
 
     async def get(self, url: str, headers: dict) -> tuple[int, dict | None]:
         """One GET (tests replace it): the status and the JSON body (None for a 304 or a body that is not JSON)."""
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(timeout=self.timeout, trust_env=False) as client:
             r = await client.get(url, headers=headers)
         if r.status_code != 200:
             return r.status_code, None

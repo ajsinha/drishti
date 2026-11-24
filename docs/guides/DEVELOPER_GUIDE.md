@@ -168,7 +168,7 @@ server nor Spring, and the Delta and Iceberg source plugins read the lake throug
 | `examples/packs/` | The retired packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`, `liquidity-risk`), kept as examples and as fixtures for tests written against them; loaded only with `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` |
 | `config/connectors/`, `config/connectors.examples/` | The site's connector files (written by the server at its first start from the packs' templates; not committed) and ready-made examples per store ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
 | `config/bi/` | Shipped BI files: datasets, models, reports, boards |
-| `run-configs/` | The IDE run configurations, one folder read by both IDEs (`Drishti-java` for IntelliJ, `Drishti-python` for PyCharm): [IDE_GUIDE.md](IDE_GUIDE.md) |
+| `.idea/runConfigurations/`, `drishti-console/.idea/runConfigurations/` | The IDE launchers, each project's own (IntelliJ opens `drishti`, PyCharm `drishti-console`), in folders by step; of `.idea` only these are committed: [IDE_GUIDE.md](IDE_GUIDE.md) |
 | `data/testdata/` | The committed test data: sixty business days of every dataset the seven packs read (5,000 trades a day per source system), `.jsonl.gz`, with `testdata.yaml` and a README ([data/testdata/README.md](../../data/testdata/README.md)) |
 | `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`, `bundle`, `verify`, `deploy`, `rollback`, `keygen`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `lake build|publish|scan|status|demo|maintain`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it. See [CLI_REFERENCE.md](CLI_REFERENCE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md) |
 | `tools/lake/` | the lake commands (`lake build|publish|scan|status|demo|maintain|undo|delete`): thin front ends that configure and start Drishti Lake's loader and upkeep (the writer is chosen by `--engine`, [CLI_REFERENCE.md section 7.6](CLI_REFERENCE.md#76-the-lake-writers---engine)) and add Drishti's parts (the data-load signal, the BI-store stamp, the lake files); the loading rules, guards, archives and maintenance are Lake's ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md)) |
@@ -515,7 +515,7 @@ kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/DISTRIBUTIONS
 |---|---|---|
 | JDK | 21 or newer (any vendor; Java 21 is the production target) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [CLUSTER_GUIDE.md](../architecture/ARCHITECTURE.md#14-concurrency-and-performance)). |
 | Python | 3.13 ([the minimum and why](OPERATIONS_GUIDE.md#21-prerequisites)) | The console and the tools. CI uses 3.13. |
-| The offline wheel pack | the release's | `python3 tools/drishti.py setup` installs the libraries from it (`~/drishti-wheels`, or `--wheels`): into `drishti-console/.venv` on Linux and macOS, into the Python you run Drishti with on Windows (never a `.venv` there). |
+| The offline wheel pack | the release's | `python3 tools/drishti.py setup` installs the libraries from it (`~/drishti-wheels`, or `--wheels`) into the Python you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself). |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, Cassandra, ScyllaDB, ActiveMQ, RabbitMQ, MinIO) and `deploy/docker/compose.yaml`. |
 
 Set `JAVA_HOME` in every terminal:
@@ -609,9 +609,9 @@ Docker before you merge a schema change ([§5.6](#56-add-a-table-to-the-identity
 ### 2.4 The console from source
 
 ```bash
-python3 tools/drishti.py setup                                     # drishti-console/.venv with the libraries (Linux, macOS)
-drishti-console/.venv/bin/python -m pip install -r drishti-console/requirements-test.txt    # plus pytest-xdist, Playwright and the test extras
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+python3 tools/drishti.py setup                                     # the libraries into this Python (yours: Drishti makes no environment)
+python3 -m pip install -r drishti-console/requirements-test.txt    # plus pytest-xdist, Playwright and the test extras
+python3 drishti-console/run_drishti_web.py
 ```
 
 You should see `Uvicorn running on http://0.0.0.0:17480` (`server.host` is every interface by default; `DRISHTI_CONSOLE_HOST=127.0.0.1`
@@ -657,7 +657,7 @@ Server settings follow the same precedence as the console: `kernel/drishti-serve
 `./application.local.yaml` (git-ignored; imported by `spring.config.import`), then environment variables, then `--key=value`
 arguments. For example `--drishti.live.frame=100ms` or `--server.port=18481`. The settings of each way of starting it (the demo, the
 built-in samples, the QA pair on its own ports and data folder) are the committed profiles `config/profiles/*.ini`, which the run
-configurations in `run-configs/` (generated from `tools/launch/launchers.yaml`) and `drishti.py --profile` name alike;
+configurations in `.idea/runConfigurations/` and `drishti-console/.idea/runConfigurations/` (generated from `tools/launch/launchers.yaml`) and `drishti.py --profile` name alike;
 [IDE_GUIDE.md](IDE_GUIDE.md) lists them.
 
 The development loop that works best:
@@ -702,7 +702,7 @@ or is a `help.yaml`, the drill runs in docs mode by itself; otherwise it runs in
 refused, with the files that are not documentation listed.
 
 **Before anything runs**, the drill refuses to start unless the current branch is `develop` (`drill: must be on develop`; not checked
-with `--no-push`), the working tree is clean (`drill: commit your changes first`) and the Python it runs the tests with (`DRISHTI_PYTHON`, else `drishti-console/.venv/bin/python`) holds `drishti-console/requirements-test.txt` at the lock's pins (the drill makes no environment).
+with `--no-push`), the working tree is clean (`drill: commit your changes first`) and the Python it runs the tests with (`DRISHTI_PYTHON`, passed in from outside, else `python3`) holds `drishti-console/requirements-test.txt` at the lock's pins (the drill makes no environment).
 
 **Stage 1, the gate** (a few minutes, all at once; the first failure stops the drill and prints the failed job's log):
 
@@ -814,7 +814,7 @@ Both kinds are listed here.
 ### 3.1 The copyright header
 
 Every file whose suffix is `.java`, `.py`, `.js`, `.css`, `.html`, `.yaml`, `.yml`, `.xml`, `.md`, `.properties` or `.sh` must contain
-`Copyright (c) 2026 Ashutosh Sinha` within its first 2000 characters. Build output, `.git`, `.venv`, `vendor`, `recorded`,
+`Copyright (c) 2026 Ashutosh Sinha` within its first 2000 characters. Build output, `.git`, a virtual environment of your own, `vendor`, `recorded`,
 `__pycache__`, `.mvn`, `.idea` and `docs/requirements` are skipped, as are `mvnw`, `mvnw.cmd` and `LICENSE`. JSON files cannot hold
 comments and are exempt. SQL files carry the header in `--` comments by convention.
 
@@ -1925,7 +1925,6 @@ Only names an external tool looks for by exactly that name keep the dot:
 | `.mvn/` | the Maven wrapper |
 | `.github/` | GitHub |
 | `.idea/` | the IDEs' settings ([IDE_GUIDE.md](IDE_GUIDE.md)) |
-| `.venv/` | git-ignored: `drishti-console/.venv`, which setup makes on Linux and macOS (never on Windows) |
 | `.claude/` | Claude Code |
 | `_rels/.rels` | the Excel file format (OOXML) names it so: a workbook template's package relationships (the Capacity and Playground templates) |
 

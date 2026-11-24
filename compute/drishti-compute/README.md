@@ -31,7 +31,7 @@ base VaR is additions and sorts over stored vectors, so it needs no worker; what
 | `…compute.sched` | `FairQueue` (classes in order, users in turn, per-user in-flight limit, batch share, bounded queues), `Latencies` |
 | `…compute.cluster` | `FanOut` (split, spread by load over this node and peers, gather in order), `PeerTransport` (the server implements it over Drishti*net) |
 | `…compute.arrow` | `ArrowTable` (int64, float64, bool, utf8, fixed-size vectors of float64), `ArrowIpc` (the IPC stream format from `arrow-format` alone) |
-| `…compute.env` | `Requires` (`requires:` of a connector), `LockFile` (pins and hashes), `Environments` (venv + `pip --require-hashes`, offline, manifest, read-only), `Manifest`, `JavaLibraries` (sha256, native-code scan, staging) |
+| `…compute.env` | `Requires` (`requires:` of a connector), `LockFile` (pins and hashes), `Environments` (a library folder per lock: `pip install --target --require-hashes` with the configured interpreter, offline, manifest, read-only; no virtual environment), `Manifest`, `JavaLibraries` (sha256, native-code scan, staging) |
 | `…compute.vector` | `VectorStore` (vectors of one width by ordinal, row-major `double[]` chunks under a memory budget, range and row sums, a permutation into hierarchy order), `OrdinalSet` (exact union, difference and intersection of row ordinals), `ParallelSums` (sums on a bounded pool, slices added in a fixed order) |
 | `…compute.var` | `VarBook` (one business date: trade vectors in hierarchy order, positions and books as runs, columnar attributes, node aggregates, a planner), `ScopeExpr` and `ScopeResolver` (the scope grammar to ordinals), `PositionRule` (rules over positions' columns), `VarMath` and `VarCalc` (VaR, ES, components, incremental and marginal VaR, histograms), `Backtest` (exceptions, Basel light, Kupiec, Christoffersen), `Columns`; `VarScaleBenchmark` in the tests (opt-in) |
 | `…compute.approval` | `Approvals` (request, approve, reject, revoke; four eyes; audit), `ApprovalStore` (memory, or the Drishti database's `drishti_compute_request` and `drishti_compute_approval`) |
@@ -82,5 +82,5 @@ Run these from the Drishti folder (the repository root, or the install folder of
 ./mvnw test -pl :drishti-compute -Dcompute.excluded.groups=none -Dgroups=load -Dtest=ComputeLoadTest -Ddrishti.compute.load.workers=32
 ```
 
-Tests that need a worker look for Python in `-Ddrishti.compute.test.python`, `DRISHTI_PYTHON`, the console's `.venv`, then `python3`;
-without one they skip. `EnvironmentTest` also needs `venv` with `ensurepip`. Fork-mode tests skip on Windows.
+Tests that need a worker look for Python in `-Ddrishti.compute.test.python`, `DRISHTI_PYTHON`, then `python3` on the PATH;
+without one they skip. `EnvironmentTest` also needs `pip` in that interpreter. Fork-mode tests skip on Windows.

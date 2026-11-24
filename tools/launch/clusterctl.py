@@ -539,7 +539,7 @@ def token(user: str, secret: str, ttl: int = 300) -> str:
 
 def get_json(url: str, headers: dict | None = None):
     try:
-        with urllib.request.urlopen(urllib.request.Request(url, headers=headers or {}), timeout=5) as r:
+        with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(urllib.request.Request(url, headers=headers or {}), timeout=5) as r:   # no proxy for Drishti itself
             return json.load(r)
     except (OSError, urllib.error.URLError, ValueError):
         return None

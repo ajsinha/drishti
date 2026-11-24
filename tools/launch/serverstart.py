@@ -168,7 +168,7 @@ def check_modules(a, modules: Path, jar: Path) -> str:
     problems = modulesbuild.missing_report(modules) or modulesbuild.fresh_report(modules, jar)
     if problems:
         raise LaunchError("the modules beside the jar are not current:\n  " + "\n  ".join(problems)
-                          + "\n(python tools/drishti.py build all builds the jar and every module; build modules <id> rebuilds one, then start again)")
+                          + "\n(" + procs.command("build", "all") + " builds the jar and every module; build modules <id> rebuilds one, then start again)")
     if not dmods:
         return f"modules: none ({modules} holds no .dmod: the server starts with no module)"
     return f"modules: {len(dmods)} package(s) in {modules}: {', '.join(p.name.removesuffix(modulesbuild.PACKAGE) for p in dmods)}"
@@ -185,6 +185,20 @@ def profiled(a) -> tuple:
     return settings or "", keys
 
 
+def require_set_up(data: Path, why: str = "") -> None:
+    """The data folder exists with its layout (setup makes it): else one [FAIL] with the setup line; start makes no root."""
+    if not (data / "run").is_dir():
+        raise LaunchError(procs.fail("this checkout is not set up", f"the data folder {data}{f' ({why})' if why else ''} has no run/ folder",
+                                     procs.setup_line(javacmd.settings()[0] or None) + (f" --data-dir {data}" if why.startswith("--data") else "")), 1)
+
+
+def demo_lake_ready(data: Path, env: dict, given=None) -> None:
+    """--demo needs the demo lake: one [FAIL] with the lake line when it is not built (never an empty answer shown as a figure)."""
+    root = Path(given or env.get(lakeconfig.DEMO_ROOT_ENV) or lakeconfig.default_root("demo", data)).expanduser()
+    if not any(root.glob("*/*/_delta_log")):
+        raise LaunchError(procs.fail("the demo lake is not built", f"{root} holds no table", procs.command("lake", "demo", "--engine", "java")), 1)
+
+
 def start(a, env: dict | None = None) -> int:
     """Starts one server (or a cluster node) from the options of ``drishti.py start server``; the exit code."""
     env = dict(os.environ if env is None else env)
@@ -197,9 +211,14 @@ def start(a, env: dict | None = None) -> int:
     roots = javacmd.launch_roots(getattr(a, "home", None), a.data_dir, env, keys)
     home = roots["home"][0]
     data = roots["data"][0]
-    data.mkdir(parents=True, exist_ok=True)
+    require_set_up(data, roots["data"][1])           # start makes no data root: only setup does (another clone's folder is never made)
     server_data = Path(a.node_data).resolve() if a.node_data else data
-    server_data.mkdir(parents=True, exist_ok=True)
+    if a.node_data and not server_data.is_dir():
+        if not settingsfile.inside(server_data, data):
+            raise LaunchError(procs.fail("the node's data folder", f"{server_data} does not exist", f"make it, or give one under {data}"), 2)
+        server_data.mkdir(parents=True, exist_ok=True)   # a node's own folder under the data folder (its run/, logs/ follow)
+    if a.demo:
+        demo_lake_ready(data, env, getattr(a, "lake_root", None))
     env["DRISHTI_DATA_DIR"] = str(server_data)
     # the launch roots, absolute (docs/admin/CONFIGURATION.md, "Launch roots"): the server takes no root from its working folder
     env["DRISHTI_HOME"] = str(home)

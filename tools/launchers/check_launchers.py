@@ -5,8 +5,9 @@
 
     python3 tools/launchers/check_launchers.py        (exit 1 with every problem listed)
 
-Every IDE launcher of this repository lives in run-configs/ (the Java ones: IntelliJ IDEA opens the repository, folder Drishti-java) or
-drishti-console/run-configs/ (the Python ones: PyCharm opens drishti-console, folder Drishti-python, $PROJECT_DIR$ being drishti-console),
+Every IDE launcher of this repository lives in its project's .idea/runConfigurations/: the Java ones in the repository's (IntelliJ IDEA
+opens it; folders Drishti-java 1 Build, 2 Run, 3 Test), the Python ones in drishti-console's (PyCharm opens it, $PROJECT_DIR$ being
+drishti-console; folders Drishti-python 1 Setup, 2 Data, 3 Run, 4 Check); no launcher file anywhere else,
 parses, is named "<Product>: <verb> <what>" with its file named the same without the colon, points only at files that exist, uses no shell script (Python, Java and Maven
 only), and has a VS Code task or launch of the same name in the code-workspace file (and the other way round). Copied from Drishti Lake's check; this copy
 reads the workspace drishti.code-workspace and accepts a JarApplication (a server launcher)."""
@@ -17,8 +18,10 @@ from xml.etree import ElementTree as ET
 ROOT = Path(__file__).resolve().parents[2]
 VERBS = ("build", "test", "check", "install", "run", "lint", "bundle", "maintain", "bench", "setup")
 #: the launcher folders: (folder, the project the IDE opens, the IntelliJ/PyCharm folder name, the configuration types allowed)
-FOLDERS = ((ROOT / "run-configs", ROOT, "Drishti-java", {"MavenRunConfiguration", "JarApplication", "Application"}),
-           (ROOT / "drishti-console" / "run-configs", ROOT / "drishti-console", "Drishti-python", {"PythonConfigurationType"}))
+JAVA_GROUPS = ("Drishti-java 1 Build", "Drishti-java 2 Run", "Drishti-java 3 Test")
+PYTHON_GROUPS = ("Drishti-python 1 Setup", "Drishti-python 2 Data", "Drishti-python 3 Run", "Drishti-python 4 Check")
+FOLDERS = ((ROOT / ".idea" / "runConfigurations", ROOT, JAVA_GROUPS, {"MavenRunConfiguration", "JarApplication", "Application"}),
+           (ROOT / "drishti-console" / ".idea" / "runConfigurations", ROOT / "drishti-console", PYTHON_GROUPS, {"PythonConfigurationType"}))
 SHELL = re.compile(r"\.(sh|cmd|ps1|bat)\b", re.I)
 
 
@@ -42,13 +45,16 @@ def check():
     errs = []
     ws, prod = product()
     allowed = {f[0] for f in FOLDERS}
-    for d in ROOT.rglob("run-configs"):
+    for d in [*ROOT.rglob("runConfigurations"), *ROOT.rglob("run-configs")]:
         parts = d.relative_to(ROOT).parts
         if d.is_dir() and d not in allowed and not {"node_modules", ".git", "target", "vendor"} & set(parts):
-            errs.append(f"{d.relative_to(ROOT)}: launchers live in run-configs/ and drishti-console/run-configs/ only")
-    files = [(f, project, folder, types) for rc, project, folder, types in FOLDERS for f in (sorted(rc.glob("*.run.xml")) if rc.is_dir() else [])]
+            errs.append(f"{d.relative_to(ROOT)}: launchers live in .idea/runConfigurations/ and drishti-console/.idea/runConfigurations/ only")
+    for f in ROOT.rglob("*.run.xml"):
+        if not {"node_modules", ".git", "target", "vendor"} & set(f.relative_to(ROOT).parts):
+            errs.append(f"{f.relative_to(ROOT)}: a launcher file outside a project's .idea/runConfigurations/ (another IDE would pick it up)")
+    files = [(f, project, folder, types) for rc, project, folder, types in FOLDERS for f in (sorted(rc.glob("*.xml")) if rc.is_dir() else [])]
     for rc, _, _, _ in FOLDERS:
-        if not any(rc.glob("*.run.xml")):
+        if not any(rc.glob("*.xml")):
             errs.append(f"{rc.relative_to(ROOT)}/ has no launcher")
     names = {}
     for f, project, folder, types in files:
@@ -63,15 +69,15 @@ def check():
         names[n] = f
         if not re.fullmatch(prod + r": (" + "|".join(VERBS) + r")( [^:]+)?", n):
             errs.append(f"{f.name}: name '{n}' is not '{prod}: <verb> [<what>]' (verbs: {', '.join(VERBS)})")
-        if f.name != n.replace(":", "") + ".run.xml":
-            errs.append(f"{f.name}: the file is named after the launcher without the colon ('{n.replace(':', '')}.run.xml')")
-        if cfg.get("folderName") != folder:
-            errs.append(f"{f.name}: folderName is '{cfg.get('folderName')}', not '{folder}'")
+        if f.name != n.replace(":", "") + ".xml":
+            errs.append(f"{f.name}: the file is named after the launcher without the colon ('{n.replace(':', '')}.xml')")
+        if cfg.get("folderName") not in folder:
+            errs.append(f"{f.name}: folderName is '{cfg.get('folderName')}', not one of {', '.join(folder)}")
         t = cfg.get("type")
         if t not in types:
             errs.append(f"{f.relative_to(ROOT)}: a {t} does not belong in {f.parent.relative_to(ROOT)}/ (Java launchers in run-configs/, Python ones in drishti-console/run-configs/)")
-        if ".venv" in f.read_text(encoding="utf-8"):
-            errs.append(f"{f.relative_to(ROOT)}: names a .venv (every launcher runs on the project interpreter)")
+        if 'name="SDK_HOME" value=""' not in f.read_text(encoding="utf-8") and t == "PythonConfigurationType":
+            errs.append(f"{f.relative_to(ROOT)}: names an interpreter (every Python launcher runs on the project interpreter)")
         if t == "MavenRunConfiguration":
             wd = resolve_here(opt(cfg, "workingDirPath") or "$PROJECT_DIR$")
             pom = wd / (opt(cfg, "pomFileName") or "pom.xml")
@@ -121,15 +127,15 @@ def check():
     launches = {c["name"] for c in d.get("launch", {}).get("configurations", [])}
     for n in sorted(labels | launches):
         if n not in names:
-            errs.append(f"{ws.name}: '{n}' has no run-configs launcher of that name")
+            errs.append(f"{ws.name}: '{n}' has no launcher of that name in a project's .idea/runConfigurations/")
     for n in sorted(names):
         if n not in labels | launches:
             errs.append(f"{ws.name}: the launcher '{n}' has no VS Code task or launch of that name")
     if (ROOT / "java" / "pom.xml").is_file() and "JavaSE-21" not in text:
         errs.append(f"{ws.name}: JavaSE-21 is not configured (JDK 21)")
     rd = (ROOT / "README.md").read_text(encoding="utf-8")
-    if "Build and run in the IDE" not in rd or "run-configs/" not in rd:
-        errs.append("README.md: the section 'Build and run in the IDE' naming run-configs/ is missing")
+    if "Build and run in the IDE" not in rd or "runConfigurations" not in rd:
+        errs.append("README.md: the section 'Build and run in the IDE' naming .idea/runConfigurations/ is missing")
     return errs
 
 

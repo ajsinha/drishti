@@ -36,6 +36,12 @@ ROOT = D.ROOT
 def run(*argv, env=None):
     """main(argv) -> (exit code, stdout, stderr); the environment is restored afterwards."""
     out, err = io.StringIO(), io.StringIO()
+    tmp_root = (env or {}).get("DRISHTI_TMP_DIR")
+    if tmp_root and "--settings" not in [str(a) for a in argv]:
+        # the trust rule (FIRST_RUN_ROBUSTNESS.md R5): a folder variable outside this checkout counts only with a settings file named
+        ini = pathlib.Path(tmp_root).parent / "named.ini"
+        ini.write_text(f"drishti.home={ROOT.as_posix()}\n", encoding="utf-8")
+        argv = ("--settings", ini, *argv)
     saved = {k: os.environ.get(k) for k in (env or {})}
     os.environ.update(env or {})
     try:
@@ -110,7 +116,8 @@ class Tools(unittest.TestCase):
         code, _, _ = run("sutra", "lint", self.pack, "--strict", *self.jvm(), env=self.env)
         self.assertEqual(0, code)
         # -Djava.io.tmpdir= first (tools/javacmd.py): the server's temp base, here DRISHTI_TMP_DIR, made before java starts
-        self.assertEqual([f"-Djava.io.tmpdir={(self.tmp / 'jvm').resolve()} -Djdk.nio.maxCachedBufferSize=262144 -jar {self.jar} sutra lint {self.pack} --strict"],
+        named = f" -Ddrishti.settings.file={self.tmp / 'named.ini'}"          # the settings file named for the trust rule, handed on
+        self.assertEqual([f"-Djava.io.tmpdir={(self.tmp / 'jvm').resolve()}{named} -Djdk.nio.maxCachedBufferSize=262144 -jar {self.jar} sutra lint {self.pack} --strict"],
                          self.calls())
         self.assertTrue((self.tmp / "jvm").is_dir())
         self.assertEqual(1, run("sutra", "test", self.pack, "--junit", self.tmp / "t.xml", *self.jvm(), env={**self.env, "FAKE_EXIT": "1"})[0])

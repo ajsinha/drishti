@@ -12,71 +12,69 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Guard (owner rule, i7g): only setup makes a virtual environment, and only on Linux and macOS (drishti-console/.venv); on Windows
-Drishti never makes one (the Python you run it with). start, the console and every other tool make none, anywhere; no launcher and no
-generated IDE file names a .venv. (The server's compute environments, made under the data folder for an approved lock, are a server
-feature of their own and outside this rule's code scope: compute/.)"""
+"""Guard (owner rule, i7g): on every system Drishti never MAKES a virtual environment and never NAMES one. The one Python is
+DRISHTI_PYTHON, else drishti.python of the settings file, else the Python running the tool; a user who wants a virtual environment makes
+it and runs Drishti with it, or names it in drishti.python. Outside the documents, no tracked file holds the dot-venv folder name, except
+as an IGNORE pattern (a user's own environment in the tree is never packed or scanned) whose line, or the line before it, says so, and
+the two ignore files. No code runs ``-m venv``, ``uv venv``, virtualenv or venv.create, the server's compute environments included."""
 from __future__ import annotations
 
 import re
 import subprocess
 from pathlib import Path
 
-import pytest
-
-pytestmark = pytest.mark.static
-
 ROOT = Path(__file__).resolve().parents[1]
-MAKES_A_VENV = re.compile(r"-m\s+venv\b|\buv\s+venv\b|virtualenv|venv\.create|EnvBuilder|[\"']-m[\"'],\s*[\"']venv[\"']|make_venv")
+NAME = "." + "venv"                                    # spelled so: this guard holds no such literal itself
+MAKES = re.compile(r"-m\s+" + "venv" + r"\b|\buv\s+" + "venv" + r"\b|(?<![-\w])virtual" + "env\\b|venv" + r"\.create|EnvBuilder|"
+                   r"[\"']-m[\"'],\s*[\"']" + "venv" + r"[\"']|make_" + "venv")
+IGNORE_FILES = {".gitignore", ".dockerignore"}
+TEXT = (".py", ".sh", ".ps1", ".cmd", ".bat", ".java", ".yaml", ".yml", ".ini", ".xml", ".json", ".toml", ".cfg", ".txt", ".js",
+        ".code-workspace", ".properties")
 
 
-def tracked(*paths: str) -> list[Path]:
-    out = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-z", *paths], capture_output=True, text=True).stdout.split("\0")
+def tracked() -> list[Path]:
+    out = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-z"], capture_output=True, text=True).stdout.split("\0")
     return [ROOT / f for f in out if f]
 
 
-def code_files() -> list[Path]:
-    files = tracked("tools", "drishti-console", "deploy")
-    return [f for f in files if f.suffix in (".py", ".sh", ".ps1", ".cmd", ".bat") or "Dockerfile" in f.name
-            if "tests" not in f.relative_to(ROOT).parts and not f.name.startswith("test_") and f.is_file()]
+def files() -> list[Path]:
+    return [f for f in tracked() if f.is_file() and (f.suffix in TEXT or "Dockerfile" in f.name or f.name in IGNORE_FILES)
+            and "vendor" not in f.parts and "testdata" not in f.parts]
 
 
-SETUP = "tools/launch/envsetup.py"          # the one place a venv is made (Linux, macOS)
+def test_no_file_names_a_virtual_environment_but_as_an_ignore_pattern():
+    found = []
+    for f in files():
+        if f.name in IGNORE_FILES:
+            continue
+        lines = f.read_text(encoding="utf-8", errors="replace").splitlines()
+        for n, line in enumerate(lines):
+            if NAME in line and "IGNORE pattern" not in line and (n == 0 or "IGNORE pattern" not in lines[n - 1]):
+                found.append(f"{f.relative_to(ROOT)}:{n + 1}: {line.strip()[:120]}")
+    assert found == [], "Drishti names no virtual environment (an ignore pattern says so on its line):\n" + "\n".join(found)
 
 
-def test_no_code_but_setup_makes_a_venv():
-    found = [f"{f.relative_to(ROOT)}:{n}: {line.strip()}" for f in code_files() if f.relative_to(ROOT).as_posix() != SETUP
-             for n, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1)
-             if MAKES_A_VENV.search(line) and "def make_venv" not in line]
-    assert found == [], "only setup makes a virtual environment:\n" + "\n".join(found)
+def test_no_code_makes_a_virtual_environment():
+    found = [f"{f.relative_to(ROOT)}:{n}: {line.strip()[:120]}" for f in files() if f.name != Path(__file__).name
+             for n, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1) if MAKES.search(line)]
+    assert found == [], "Drishti makes no virtual environment:\n" + "\n".join(found)
 
 
-def test_on_windows_setup_never_makes_a_venv(tmp_path, monkeypatch):
+def test_setup_and_start_hold_no_environment_machinery():
     import sys
     sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "tools" / "launch")]
-    import argparse
     import envsetup
     import procs
-    monkeypatch.setattr(procs, "windows", lambda: True)
-    with pytest.raises(procs.LaunchError, match="Windows uses the Python you run Drishti with; no .venv"):
-        envsetup.make_venv(tmp_path, "python", run=lambda *a, **k: 1 / 0)
-    for kw in (dict(part="venv"), dict(part=None, reinstall=True)):
-        a = argparse.Namespace(**{"part": None, "system": False, "check": False, "reinstall": False, "skip_venv": False, "python": None,
-                                  "wheels": None, "index": False, "data_dir": None, "envs_dir": str(tmp_path / "e"), "java_home": None, **kw})
-        with pytest.raises(procs.LaunchError, match="no .venv"):
-            envsetup.setup(a, {})
-    assert envsetup.system_mode(argparse.Namespace(system=False)) is True, "plain setup on Windows is the system-Python mode"
-    assert not (tmp_path / "drishti-console").exists()
-
-
-def test_no_launcher_and_no_generated_ide_file_names_a_venv():
-    files = [*tracked("run-configs"), *tracked("drishti-console/run-configs"), ROOT / "drishti.code-workspace"]
-    named = [str(f.relative_to(ROOT)) for f in files if f.is_file() and ".venv" in f.read_text(encoding="utf-8")]
-    assert files and named == []
-
-
-def test_start_never_makes_or_installs():
-    """setup prepares, start starts: the start and console code holds no venv making and no pip install."""
+    assert not hasattr(envsetup, "make_" + "venv") and not hasattr(procs, "venv_python") and not hasattr(procs, "old_venv")
     for rel in ("tools/launch/consolestart.py", "tools/launch/serverstart.py", "tools/launch/clusterctl.py", "drishti-console/run_drishti_web.py"):
         text = (ROOT / rel).read_text(encoding="utf-8")
-        assert "make_venv" not in text and "pylibs.install" not in text and '"pip", "install"' not in text, rel
+        assert "pylibs.install" not in text and '"pip", "install"' not in text, rel
+
+
+def test_no_launcher_names_an_interpreter():
+    launchers = [f for f in tracked() if f.suffix == ".xml" and f.parent.name == "runConfigurations"] + [ROOT / "drishti.code-workspace"]
+    assert launchers and [str(f.relative_to(ROOT)) for f in launchers if NAME in f.read_text(encoding="utf-8")] == []
+    for f in launchers:
+        text = f.read_text(encoding="utf-8")
+        if "PythonConfigurationType" in text:
+            assert 'name="SDK_HOME" value=""' in text, f"{f.name}: the project interpreter the user chooses, no SDK path"

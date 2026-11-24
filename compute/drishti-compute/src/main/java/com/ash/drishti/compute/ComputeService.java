@@ -246,26 +246,26 @@ public final class ComputeService implements AutoCloseable {
     }
 
     private WorkerProcess.Spec spec(PoolSettings p, int n) {
-        String python;
-        if (p.systemEnvironment()) {
-            python = settings.interpreter();
-        } else {
+        String python = settings.interpreter();                          // the one Python (compute.python, else drishti.python); never a venv
+        Path site = null;
+        if (!p.systemEnvironment()) {
             Optional<String> why = ready(p);
             if (why.isPresent()) {
                 throw new ComputeException(ComputeException.Code.REFUSED, "compute pool " + p.name() + ": " + why.get());
             }
-            python = environments.verifiedPython(Environments.id(p.locked().version(), lock(p))).toString();
+            site = environments.verifiedSite(Environments.id(p.locked().version(), lock(p)));   // the lock's libraries, first on the path
         }
         PoolSettings.Mode mode = p.mode().resolved();
         String id = node + "/" + p.name() + "#" + n;
         List<String> cmd = new ArrayList<>(List.of(python, "-s", "-B", "-m", "drishti_compute.worker", "--engines", String.join(",", p.engines()),
                 "--mode", mode == PoolSettings.Mode.FORK ? "fork" : "warm", "--memory", Long.toString(p.memory()), "--cpu-seconds",
                 Integer.toString(p.cpuSeconds()), "--worker", id, "--isolate", p.isolation()));
-        return new WorkerProcess.Spec(id, cmd, workerEnv(p), settings.work(), p.startTimeout(), mode == PoolSettings.Mode.WARM);
+        return new WorkerProcess.Spec(id, cmd, workerEnv(p, site), settings.work(), p.startTimeout(), mode == PoolSettings.Mode.WARM);
     }
 
-    /** The worker's whole environment: nothing inherited but the system path; no tokens, no credentials; temp files under the data folder. */
-    private Map<String, String> workerEnv(PoolSettings p) {
+    /** The worker's whole environment: nothing inherited but the system path; no tokens, no credentials; temp files under the data folder.
+     *  {@code site}: a locked environment's library folder, first on the path (null: the interpreter's own libraries). */
+    private Map<String, String> workerEnv(PoolSettings p, Path site) {
         Map<String, String> env = new LinkedHashMap<>();
         for (String k : List.of("PATH", "SYSTEMROOT", "WINDIR", "LANG", "LC_ALL")) {
             String v = System.getenv(k);
@@ -274,6 +274,9 @@ public final class ComputeService implements AutoCloseable {
             }
         }
         List<String> path = new ArrayList<>();
+        if (site != null) {
+            path.add(site.toString());
+        }
         path.add(sdk.toString());
         p.pythonPath().forEach(x -> path.add(Path.of(x).toAbsolutePath().toString()));
         env.put("PYTHONPATH", String.join(java.io.File.pathSeparator, path));

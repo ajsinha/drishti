@@ -63,7 +63,7 @@ def violates(text: str, suffix: str) -> bool:
 def _tracked(*names: str) -> list[Path]:
     # a walk of the folders (a static test starts no process); build output and environments are not scripts of the product
     files = [p for d in SCRIPT_DIRS for p in (ROOT / d).rglob("*") if p.is_file()]
-    skip = ("node_modules", ".venv", "/testdata/", "/fixtures/", "/target/", "/__pycache__/", "/cache/")
+    skip = ("node_modules", ".venv", "/testdata/", "/fixtures/", "/target/", "/__pycache__/", "/cache/")  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
     return [p for p in files if p.is_file() and not any(s in p.as_posix() for s in skip) and any(p.name.endswith(x) for x in names)]
 
 

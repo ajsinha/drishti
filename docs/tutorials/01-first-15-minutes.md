@@ -146,11 +146,10 @@ cd drishti
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64     # your Java 21 or newer
 export PATH="$JAVA_HOME/bin:$PATH"
 ./mvnw -q package -DskipTests -pl :drishti-app -am
-python3 tools/drishti.py setup        # drishti-console/.venv with the libraries (from ~/drishti-wheels when there)
+python3 tools/drishti.py setup        # the libraries into this Python (from ~/drishti-wheels)
 ```
 
-(On Linux and macOS `setup` makes `drishti-console/.venv`; `--system` puts the libraries into the Python you run it with instead, as
-Windows always does.)
+(The Python is yours: the system's, a dedicated one, or a virtual environment you made yourself; Drishti makes none.)
 
 Then build the demo lakes, sixty business days ending on today's business date, so that past dates and **Compare** work in Part B. The lake tool also tells a
 running server that the data changed (here none is running yet, so it leaves a note the server reads at its first start):

@@ -34,8 +34,8 @@ a stranger).
 
 ## Run it
 
-Three processes, on ports that are free. The commands are from the repository root; the console needs the libraries (`python3 tools/drishti.py setup`
-makes `drishti-console/.venv` with them).
+Three processes, on ports that are free. The commands are from the repository root; the console needs the libraries in the Python you run it with
+(`python3 tools/drishti.py setup` installs them).
 
 ```bash
 # 1. the Drishti server: security on, embedding on, the trading, counterparty-risk and market-risk packs, a scratch folder for ./data
@@ -54,7 +54,7 @@ DRISHTI_PUBLIC_URL=http://127.0.0.1:18969 DRISHTI_CONSOLE_URL=http://127.0.0.1:1
 # 3. the console, with embedding on
 cd <repo>/drishti-console
 DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 DRISHTI_EMBED_ENABLED=true \
-  .venv/bin/python run_drishti_web.py --server.port=17969 --backend.url=http://127.0.0.1:18969 &
+  python3 run_drishti_web.py --server.port=17969 --backend.url=http://127.0.0.1:18969 &
 
 # 4. the host application, on its own origin
 cd <repo>

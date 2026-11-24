@@ -61,7 +61,7 @@ tests. Maven is not needed: every repository carries its own (`./mvnw`, `mvnw.cm
 | | Linux (Ubuntu, Debian) | macOS | Windows (PowerShell) |
 |---|---|---|---|
 | JDK 21 | `sudo apt install openjdk-21-jdk` | `brew install openjdk@21` | the Temurin 21 MSI or ZIP (a ZIP needs no installer) |
-| Python 3.13 (Windows: the one Python Drishti runs with, never a `.venv`; Linux, macOS: setup makes `drishti-console/.venv` from it) | the system's `python3.13` | `brew install python@3.13` | python.org's installer or its embeddable ZIP |
+| Python 3.13 (the one Python Drishti runs with: the system's, a dedicated one, or a virtual environment you made yourself) | the system's `python3.13` | `brew install python@3.13` | python.org's installer or its embeddable ZIP |
 | uv (only to build the Lake wheel, section 2) | the installer script from astral.sh (`install.sh`) | `brew install uv` | optional |
 | Node (Elements tests) | `sudo apt install nodejs` | `brew install node` | optional: the Node tests skip without it |
 | `JAVA_HOME` | `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64` | `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` | `$env:JAVA_HOME = 'C:\jdk-21'` |
@@ -104,9 +104,9 @@ From the `drishti` folder (every command below runs from it):
 cd ~/IdeaProjects/drishti-platform/drishti
 uv build --wheel ../drishti-lake/python --out-dir lib/wheels           # the Lake wheel first (section 2 explains it): the requirements name it
 python tools/lake/lakewheel.py                                         # exit 0 and (ok): lib/wheels holds exactly the pinned wheel
-python3 tools/drishti.py setup              # drishti-console/.venv with the libraries (from ~/drishti-wheels when there)
-drishti-console/.venv/bin/python -m pip install -r drishti-console/requirements-test.txt   # a developer's test extras
-drishti-console/.venv/bin/python -m playwright install chromium        # the browser tests' Chromium, once
+python3 tools/drishti.py setup              # the libraries into this Python (from ~/drishti-wheels; --index: your package index)
+python3 -m pip install -r drishti-console/requirements-test.txt   # a developer's test extras, into the same Python
+python3 -m playwright install chromium        # the browser tests' Chromium, once
 python3 tools/drishti.py doctor
 ```
 
@@ -187,11 +187,12 @@ pack (built for Python 3.13) into `%USERPROFILE%\drishti-wheels` (`~/drishti-whe
 |---|---|---|
 | 1. Build everything (the products, then Drishti's jar and modules; no tests) | `py -3.13 build_all.py --bundle . --skip-tests` | `python3 build_all.py --bundle . --skip-tests` |
 | ... or Drishti alone (the products already in `~/.m2`) | `cd drishti` then `mvnw.cmd -B clean package -DskipTests -Dspotless.check.skip=true` | `cd drishti && ./mvnw -B clean package -DskipTests -Dspotless.check.skip=true` |
-| 2. Prepare the machine (settings file, data folder, the libraries from the wheel pack: Windows into THIS Python, never a `.venv`; Linux, macOS into `drishti-console/.venv`) | `cd drishti` then `py -3.13 tools\drishti.py setup` | `cd drishti && python3 tools/drishti.py setup` |
+| 2. Prepare the machine (settings file, data folder, the libraries of THIS Python from the wheel pack) | `cd drishti` then `py -3.13 tools\drishti.py setup` | `cd drishti && python3 tools/drishti.py setup` |
 | 3. The demo lake (about 15 minutes, 3.4 GB) | `py -3.13 tools\drishti.py lake demo --engine java` | `python3 tools/drishti.py lake demo --engine java` |
 | 4. Start the server and the console | `py -3.13 tools\drishti.py start all --demo` | `python3 tools/drishti.py start all --demo` |
 | ... see them, stop them | `py -3.13 tools\drishti.py status`, `py -3.13 tools\drishti.py stop all` | `python3 tools/drishti.py status`, `python3 tools/drishti.py stop all` |
 | 5. Use it | open `http://localhost:17480`, sign in as `drishti-dev-admin` / `drishti-dev-admin123`, type `VAR BANK` and press Enter | the same |
+| ... or prove it on the command line | `py -3.13 tools\drishti.py doctor --acceptance` | `python3 tools/drishti.py doctor --acceptance` |
 
 **You should see** in step 2 `[made] libraries` (or `[  ok]`), `drishti.python=<this Python>` and, as the last next step,
 `start all --demo`: while a `[FAIL]` remains the next steps name the fix instead (a missing wheel pack: `setup --wheels <folder>`). Step
@@ -276,7 +277,7 @@ capitalmarkets, economy, market-data, trading and one module per trading system 
 | `config/` (the rest) | `modules/`, `lenses/<module>/`, `lakes/`, `engines/`, `tables/`, `bi/`, `feeds/`: the site's switches and files ([CONFIGURATION.md](admin/CONFIGURATION.md)) |
 | `bin/` | a README only: every command is `tools/drishti.py` (a node's drain: `drishti.py node drain`, [CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md)) |
 | `tools/` | `drishti.py` (the command line: `setup`, `build jar`, `start`, `stop`, `status` and the rest), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill) |
-| `run-configs/`, `drishti.code-workspace` | the IntelliJ and PyCharm launchers and the VS Code workspace ([IDE_GUIDE.md](guides/IDE_GUIDE.md), [IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code)) |
+| `.idea/runConfigurations/`, `drishti-console/.idea/runConfigurations/`, `drishti.code-workspace` | the IntelliJ launchers (project `drishti`), the PyCharm launchers (project `drishti-console`) and the VS Code workspace ([IDE_GUIDE.md](guides/IDE_GUIDE.md), [IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code)) |
 | `docs/` | `guides/`, `tutorials/`, `admin/`, `architecture/`, `contracts/`; the index is [docs/README.md](README.md) |
 | `drishti-it`, `drishti-benchmarks` | the architecture and repository rule tests; the JMH benchmarks |
 

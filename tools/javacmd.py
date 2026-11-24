@@ -220,7 +220,7 @@ def find_home(explicit=None, env=None, keys=None) -> tuple:
                 if name == "DRISHTI_HOME" and str(home) not in _WARNED:   # the settings file's case is said once by drishti.py itself
                     _WARNED.add(str(home))
                     print(f"WARNING: DRISHTI_HOME={home} names another folder than these tools ({REPO}): ignored, the install is {REPO}; "
-                          "you may delete the variable (run python tools/drishti.py setup: it lists every such variable)", file=sys.stderr)
+                          "you may delete the variable (" + _cmd("setup") + " lists every such variable)", file=sys.stderr)
                 return REPO.resolve(), f"the folder holding tools/drishti.py ({name} names {home}: ignored)"
             return home, name
     return REPO.resolve(), "the folder holding tools/drishti.py"
@@ -240,6 +240,15 @@ class JarError(RuntimeError):
     """No server jar where the install keeps it: said in words, with the command that makes one."""
 
 
+def _cmd(*args: str) -> str:
+    """A pasteable tools/drishti.py command for this system (tools/launch/procs.py command(): the running interpreter, quoted)."""
+    launch = str(Path(__file__).resolve().parent / "launch")
+    if launch not in sys.path:
+        sys.path.insert(0, launch)
+    import procs
+    return procs.command(*args)
+
+
 def lib_dir(home=None) -> Path:
     """<home>/lib: where every tool finds Drishti's own jars (the install root from :func:`find_home`)."""
     return (Path(home) if home else find_home()[0]) / LIB
@@ -257,13 +266,13 @@ def server_jar(explicit=None, home=None) -> Path:
     lib = lib_dir(home)
     jars = sorted(lib.glob(JAR_GLOB))
     if not jars:
-        raise JarError(f"no server jar in {lib}: run  python tools/drishti.py build jar  (it builds the jar and copies it there)")
+        raise JarError(f"no server jar in {lib}: run  {_cmd('build', 'jar')}  (it builds the jar and copies it there)")
     if len(jars) > 1:
         raise JarError(f"{lib} holds {len(jars)} server jars ({', '.join(j.name for j in jars)}): an upgrade replaces the old one; remove "
                        "all but the version to run (your own jars belong in lib/ext and are never touched)")
     version = _version_of(home)
     if version and jars[0].name != f"drishti-server-{version}-exec.jar":
-        raise JarError(f"lib/ holds {jars[0].name} but this checkout is {version}: run  python tools/drishti.py build jar  "
+        raise JarError(f"lib/ holds {jars[0].name} but this checkout is {version}: run  {_cmd('build', 'jar')}  "
                        "(it replaces the old jar; your own jars in lib/ext are never touched)")
     return jars[0]
 
@@ -306,7 +315,7 @@ def launch_roots(home=None, data_dir=None, env=None, keys=None) -> dict:
     out["config"] = (h / "config", "<home>/config")
     jars = sorted((h / LIB).glob(JAR_GLOB))
     out["jar"] = (jars[0] if len(jars) == 1 else None, "<home>/lib/" + JAR_GLOB if len(jars) == 1 else
-                  "none in <home>/lib yet: python tools/drishti.py build jar" if not jars else f"{len(jars)} server jars in <home>/lib: keep one")
+                  "none in <home>/lib yet: " + _cmd("build", "jar") if not jars else f"{len(jars)} server jars in <home>/lib: keep one")
     out["ext"] = (h / LIB / "ext", "<home>/lib/ext: your jars (drishti.lib.path)")
     return out
 

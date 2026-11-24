@@ -386,6 +386,12 @@ def build_parser(h) -> argparse.ArgumentParser:
                            description="Green/yellow/red lines with a fix for each; exit 1 on any red. Nothing is changed or stopped.",
                            parents=[srv], formatter_class=argparse.RawDescriptionHelpFormatter, epilog="examples:\n  drishti.py doctor\n  drishti.py doctor --server http://localhost:18480 --token-file ~/.drishti-token")
     dr.add_argument("--java", help="the java binary to check (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+    dr.add_argument("--acceptance", action="store_true", help="the end-to-end check: sign in to the console as the development administrator, ask "
+                    "VAR BANK through it and compare both figures with the release's (exit 0 only when they agree)")
+    dr.add_argument("--console", metavar="URL", help="--acceptance: the console (default http://127.0.0.1:<console.server.port of the settings files, else 17480>)")
+    dr.add_argument("--wait", type=int, default=0, metavar="SECONDS", help="--acceptance: wait up to this long for the console to answer")
+    dr.add_argument("--expect-var", type=int, default=None, metavar="N", help="--acceptance: the VaR to find (default the release's demo figure)")
+    dr.add_argument("--expect-es", type=int, default=None, metavar="N", help="--acceptance: the ES to find (default the release's demo figure)")
     dr.set_defaults(func=h.cmd_doctor, cmd=None)
     # bi (Rupaka phase 1) ------------------------------------------------------------------------------------
     bi = group("bi", "Business intelligence (Rupaka) over REST: workspaces and the catalogue, as the token's user sees them (a write needs the bi:write scope)")

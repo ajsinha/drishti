@@ -131,12 +131,11 @@ elif [[ "$MODE" == docs && -n "$non_docs" ]]; then
 fi
 echo "drill: mode = $MODE$([[ $GATE_ONLY == 1 ]] && echo ' (gate only)')$([[ $PUSH == 0 ]] && echo ' (no push)')$([[ $KEEP_GOING == 1 ]] && echo ' (keep going)')"
 
-# the Python of the tests: DRISHTI_PYTHON (any interpreter with drishti-console/requirements-test.txt), else the console's environment
-# setup made (Linux); the drill never makes one
-PY="${DRISHTI_PYTHON:-drishti-console/.venv/bin/python}"
+# the Python of the tests: DRISHTI_PYTHON (passed in from outside: any interpreter with drishti-console/requirements-test.txt), else
+# python3 on the PATH; the drill makes no environment and names none
+PY="${DRISHTI_PYTHON:-python3}"
 if ! command -v "$PY" >/dev/null; then
-  echo "drill: no Python at $PY: set DRISHTI_PYTHON to a Python with drishti-console/requirements-test.txt installed, or run" >&2
-  echo "       python3 tools/drishti.py setup (it makes drishti-console/.venv), then install drishti-console/requirements-test.txt into it" >&2
+  echo "drill: no Python at $PY: set DRISHTI_PYTHON to a Python with drishti-console/requirements-test.txt installed" >&2
   exit 1
 fi
 # the test servers run the compute pool `python` in this interpreter: a library at another version than the lock refuses every Python run
@@ -423,6 +422,7 @@ gate_java() {
 # benchmarks) with three long command tests (schema to pack, the sample pages, the generators). The gate built the exec jar: the tests that start the Java loader run.
 tool_test_files() {   # lane (a or b): its test files and folders
   local f all=()
+  # .venv here is an IGNORE pattern only: a user's own virtual environment inside the tree is never scanned
   mapfile -t all < <(find tools \( -name .venv -o -name cache -o -name node_modules \) -prune -o -name 'test_*.py' -print | grep -v '/tests/' | sort)
   local gate; gate=" $(python3 "$PLAN" static --kind tools | tr '\n' ' ') "   # the quick file checks: the gate ran them
   for f in "${all[@]}"; do
@@ -433,6 +433,7 @@ tool_test_files() {   # lane (a or b): its test files and folders
       *) [[ $1 == b ]] && echo "$f" ;;
     esac
   done
+  # .venv below: an IGNORE pattern only (a user's own virtual environment is never scanned)
   if [[ $1 == b ]]; then find tools \( -name .venv -o -name cache \) -prune -o -type d -name tests -print | sort; fi
 }
 run_tool_tests() {   # files and folders: each in its own pytest process; returns 1 when any failed

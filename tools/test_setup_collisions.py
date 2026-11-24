@@ -224,7 +224,7 @@ def test_data_dir_then_plain_setup_keeps_the_file_and_makes_nothing_outside(tmp_
     assert (envs / "dev.ini").read_text(encoding="utf-8") == kept and not list(envs.glob("replaced-*"))
     assert f"drishti.data.dir={target.as_posix()}  (from your dev.ini: kept" in out and not target.exists()
     assert rc == 0 or f"setup --data-dir {target}" in out
-    assert f"python tools/drishti.py setup --data-dir {target}" in out
+    assert f"setup --data-dir {target}" in out
 
 
 def test_launchers_machine_moves_a_differing_file_and_warns_of_an_old_dev_ini(tmp_path, capsys):

@@ -122,7 +122,7 @@ class BackendClient:
         # carried never rides on the next person's call; who calls is said by each call's own headers
         self._client = httpx.AsyncClient(
             base_url=base_url.rstrip("/"), timeout=timeout, cookies=CookieJar(policy=DefaultCookiePolicy(allowed_domains=[])),
-            limits=httpx.Limits(max_connections=pool, max_keepalive_connections=pool))
+            limits=httpx.Limits(max_connections=pool, max_keepalive_connections=pool), trust_env=False)   # Drishti to itself: never through a proxy
         self._servers = servers
 
     def _base(self) -> str:

@@ -242,7 +242,7 @@ def pack_roots_all() -> tuple[str, ...]:
 
 def ignored(paths: list[str]) -> set[str]:
     """The paths git ignores: files a person or the running system makes (config/connectors/*.yaml, config/net/,
-    application.local.yaml, .venv), which a document names on purpose although the repository has none."""
+    application.local.yaml), which a document names on purpose although the repository has none."""
     if not paths:
         return set()
     r = subprocess.run(["git", "check-ignore", "--no-index", "--stdin"], cwd=ROOT, input="\n".join(p for path in paths for p in (path, path + "/")), capture_output=True, text=True)

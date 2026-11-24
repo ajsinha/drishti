@@ -1,7 +1,7 @@
 // Project Drishti. Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Proprietary: see LICENSE.
 //
 // Drishti in VS Code: File, Open Workspace from File. The tasks and launch configurations carry the SAME names as the JetBrains run
-// configurations in run-configs/ (the launcher standard: docs/plans/LAUNCHER_STANDARD.md). Generated from tools/launch/launchers.yaml by
+// configurations in .idea/runConfigurations/ (the launcher standard: docs/plans/LAUNCHER_STANDARD.md). Generated from tools/launch/launchers.yaml by
 // python tools/drishti.py launchers: never edit this file, edit the table. Paths use ${userHome}; Python is py -3.13 on Windows and
 // python3 elsewhere; Java is the JDK 21 of JAVA_HOME (no machine path here).
 // Build and run in the IDE: README.md#build-and-run-in-the-ide.
@@ -230,6 +230,24 @@
         "problemMatcher": []
       },
       {
+        "label": "Drishti: check setup",
+        "type": "shell",
+        "command": "python3 tools/drishti.py setup --check",
+        "windows": {
+          "command": "py -3.13 tools/drishti.py setup --check"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py setup --check"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py setup --check"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
         "label": "Drishti: build demo lakes",
         "type": "shell",
         "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" lake demo --engine java",
@@ -259,6 +277,24 @@
         },
         "osx": {
           "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" lake build --from \"${input:file}\" --kind trade --mode overwrite-dates --lake demo"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: check acceptance",
+        "type": "shell",
+        "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor --acceptance",
+        "windows": {
+          "command": "py -3.13 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor --acceptance"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor --acceptance"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor --acceptance"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -396,6 +432,18 @@
         ]
       },
       {
+        "name": "Drishti: check setup",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "setup",
+          "--check"
+        ]
+      },
+      {
         "name": "Drishti: build demo lakes",
         "type": "debugpy",
         "request": "launch",
@@ -431,6 +479,22 @@
           "overwrite-dates",
           "--lake",
           "demo"
+        ]
+      },
+      {
+        "name": "Drishti: check acceptance",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "--settings",
+          "${userHome}/drishti-envs/dev.ini",
+          "--profile",
+          "demo",
+          "doctor",
+          "--acceptance"
         ]
       },
       {

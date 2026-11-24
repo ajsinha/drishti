@@ -120,7 +120,10 @@ def test_a_settings_file_naming_another_checkout_is_a_warning(tmp_path):
     spec = importlib.util.spec_from_file_location("run_drishti_web_t", here / "drishti-console" / "run_drishti_web.py")
     web = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(web)
-    cw = web.warn_other_home(["--settings", str(ini), "--profile", "demo"])
-    assert cw and cw.startswith("WARNING:") and str(other) in cw
+    argv = ["--settings", str(ini), "--profile", "demo"]
+    assert web.foreign_settings(argv) == str(ini)                       # another checkout's file: none of its roots followed (R6)
+    assert web.drop_settings(argv) == ["--profile", "demo"]
     ini.write_text(f"drishti.home={here}\n", encoding="utf-8")
-    assert web.warn_other_home([f"--settings={ini}"]) is None
+    assert web.foreign_settings([f"--settings={ini}"]) is None
+    assert sf.names_home({"drishti.home": str(here)}, here) and not sf.names_home({"drishti.home": str(other)}, here)
+    assert not sf.names_home({}, here), "a file naming no home is not this checkout's"

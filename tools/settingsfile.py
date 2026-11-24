@@ -36,6 +36,7 @@ SettingsError = _INI.SettingsError
 check, files, read, read_all = _INI.check, _INI.files, _INI.read, _INI.read_all
 profile_path, pop_profile, with_profiles, home_value = _INI.profile_path, _INI.pop_profile, _INI.with_profiles, _INI.home_value
 server_url = _INI.server_url
+names_home = _INI.names_home   # the one test of "this settings file is this checkout's" (the tools and the console)
 
 
 def resolve(named, explicit: dict[str, str] | None = None) -> dict[str, str]:

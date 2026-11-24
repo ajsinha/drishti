@@ -4550,7 +4550,7 @@ code works. Find them all:
 
 ```bash
 grep -rniE "twenty|twenty-two|[^0-9]20 (panel )?kinds|hasSize\(2[01]\)|== 2[01]" --include=*.java --include=*.py --include=*.js \
-  --include=*.html --include=*.md --include=*.yaml . | grep -v "\.venv\|target/\|docs/qa/\|CHANGELOG\|RELEASE_NOTES"
+  --include=*.html --include=*.md --include=*.yaml . | grep -v "target/\|docs/qa/\|CHANGELOG\|RELEASE_NOTES"
 ```
 
 What it found for `metric`: `PanelKind`'s Javadoc, `StudioTest` (`hasSize(22)` on the schema's kind enum),

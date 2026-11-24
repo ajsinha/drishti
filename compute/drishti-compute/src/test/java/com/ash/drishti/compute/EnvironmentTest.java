@@ -61,9 +61,9 @@ class EnvironmentTest {
     void python() throws Exception {
         String py = TestCompute.python();
         assumeTrue(py != null, "no Python 3.10+ interpreter");
-        Process p = new ProcessBuilder(py, "-c", "import ensurepip, venv, sys; print('%d.%d' % sys.version_info[:2])").redirectErrorStream(true).start();
+        Process p = new ProcessBuilder(py, "-c", "import pip, sys; print('%d.%d' % sys.version_info[:2])").redirectErrorStream(true).start();
         String out = new String(p.getInputStream().readAllBytes()).strip();
-        assumeTrue(p.waitFor(30, TimeUnit.SECONDS) && p.exitValue() == 0, "the interpreter has no venv/ensurepip: " + out);
+        assumeTrue(p.waitFor(30, TimeUnit.SECONDS) && p.exitValue() == 0, "the interpreter has no pip: " + out);
         version = out;
     }
 

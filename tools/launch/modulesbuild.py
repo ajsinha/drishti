@@ -128,7 +128,7 @@ def session_refusal(root: Path) -> str | None:
 def missing_report(modules: Path) -> list[str]:
     """The same for a folder with no module sources: nothing is judged; for one with sources and no package at all, one line."""
     if module_folders(modules) and not packages(modules):
-        return [f"{modules} holds module sources and no .dmod: run  python tools/drishti.py build modules"]
+        return [f"{modules} holds module sources and no .dmod: run  " + procs.command("build", "modules")]
     return []
 
 
@@ -176,7 +176,7 @@ def build(a, what: str, env: dict | None = None) -> int:
         if unknown:
             raise LaunchError(f"no module {', '.join(unknown)} under {modules} (modules: {', '.join(known)})", 2)
     if what == "modules" and roots["jar"][0] is None and not a.dry_run:
-        raise LaunchError("no server jar in <home>/lib to stamp the modules for: run  python tools/drishti.py build all  (or build jar first)")
+        raise LaunchError("no server jar in <home>/lib to stamp the modules for: run  " + procs.command("build", "all") + "  (or build jar first)")
     java = javacmd.find_java(None, a.java_home, env)
     env["JAVA_HOME"] = javacmd.java_home_of(java)
     tmp = roots["data"][0] / "tmp" / "maven"                 # Maven's own temp files in the data folder (the install is read only)
@@ -204,7 +204,7 @@ def build(a, what: str, env: dict | None = None) -> int:
             say("the modules are not beside this jar (a module is a package in the modules folder, never inside the jar):")
             for p in problems:
                 say("  " + p)
-            say("python tools/drishti.py build modules   builds them for this jar (build all does the jar and the modules)")
+            say(procs.command("build", "modules") + "   builds them for this jar (build all does the jar and the modules)")
         elif module_folders(modules):
             say(f"the modules in {modules} are current for this jar")
         return 0

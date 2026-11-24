@@ -35,7 +35,7 @@ NAMED = re.compile(r"\bdrishti-(?:%s) (\d+\.\d+\.\d+)" % LIBS)
 RENDER_PATH = re.compile(r"render/(\d+\.\d+\.\d+)/")
 PINNED_PATH = re.compile(r"vendor/drishti-elements/(\d+\.\d+\.\d+)/")
 SCANNED = ("drishti-console/web", "drishti-console/tests", "drishti-console/core", "drishti-console/routes", "tools", "docs/guides", "docs/architecture/ELEMENTS_IN_DRISHTI.md", "modules", "pom.xml", "compute/drishti-rachana/pom.xml")
-SKIPPED = ("drishti-console/tests/test_elements_version.py", "node_modules", "static/vendor/", ".venv",
+SKIPPED = ("drishti-console/tests/test_elements_version.py", "node_modules", "static/vendor/", ".venv",  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
            "docs/architecture/mockups")
 
 

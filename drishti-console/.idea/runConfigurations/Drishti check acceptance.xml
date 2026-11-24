@@ -1,0 +1,46 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Drishti: check acceptance: the end-to-end check: signs in to the console on 17480 as the development administrator, asks VAR BANK through it and compares both figures with the release's.
+  Use it when: after **Drishti: run server (demo)** and **Drishti: run console** are up.
+  PyCharm: open drishti/drishti-console as the project (the install folder is $PROJECT_DIR$/..); it runs on the project
+  interpreter you choose (Settings, Project, Python Interpreter), the one setup prepared.
+  The profile config/profiles/demo.ini (after your dev.ini) holds its settings.
+  Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
+-->
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Drishti: check acceptance" type="PythonConfigurationType" factoryName="Python" folderName="Drishti-python 4 Check">
+    <module name="drishti-console" />
+    <option name="ENV_FILES" value="" />
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="PARENT_ENVS" value="true" />
+    <envs>
+      <env name="PYTHONUNBUFFERED" value="1" />
+    </envs>
+    <option name="SDK_HOME" value="" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
+    <option name="IS_MODULE_SDK" value="false" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
+    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; --profile demo doctor --acceptance" />
+    <option name="SHOW_COMMAND_LINE" value="false" />
+    <option name="EMULATE_TERMINAL" value="false" />
+    <option name="MODULE_MODE" value="false" />
+    <option name="REDIRECT_INPUT" value="false" />
+    <option name="INPUT_FILE" value="" />
+    <method v="2" />
+  </configuration>
+</component>

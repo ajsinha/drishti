@@ -527,7 +527,7 @@ def code_env() -> dict[str, str]:
             if p.suffix not in (".java", ".py") or not p.is_file():
                 continue
             parts = p.relative_to(ROOT).parts
-            if any(x in ("test", "tests", "target", ".venv", "node_modules") for x in parts) or p.name.startswith("test_"):
+            if any(x in ("test", "tests", "target", ".venv", "node_modules") for x in parts) or p.name.startswith("test_"):  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
                 continue
             for name in _CODE_ENV.findall(p.read_text(encoding="utf-8", errors="replace")):
                 out.setdefault(name, _rel(p))

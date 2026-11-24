@@ -13,8 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """``drishti.py start console`` and ``stop console``: the Drishti console (the web front end), pointed at a server or at the entry nodes of
-a cluster. Its Python is DRISHTI_PYTHON, else ``drishti.python`` of --settings, else (Linux, macOS) a drishti-console/.venv setup made, else
-the Python running drishti.py. Start
+a cluster. Its Python is DRISHTI_PYTHON, else ``drishti.python`` of --settings, else the Python running drishti.py. Start
 never makes an environment and never installs anything (setup prepares, start only starts): a Python lacking the console's libraries is
 refused with the ``drishti.py setup`` line that prepares it."""
 from __future__ import annotations
@@ -33,23 +32,21 @@ import settingsfile  # noqa: E402 - tools/ is on the path through procs
 
 def setup_line(settings: str | None = None) -> str:
     """The one line that prepares the console's Python (start never does: setup prepares, start only starts)."""
-    return (f"python tools/drishti.py{' --settings ' + settings if settings else ''} setup   (it prepares the console's Python: on Windows the "
-            f"Python you run Drishti with, on Linux and macOS drishti-console/.venv; from the offline wheel pack in ~/drishti-wheels when there)")
+    return procs.setup_line(settings)
 
 
 def console_python(env: dict, keys: dict, home: Path, settings: str | None = None, verify=None) -> str:
-    """The console's Python: :func:`procs.tools_python` (DRISHTI_PYTHON, drishti.python, on Linux and macOS a drishti-console/.venv setup
-    made, else this one). Never makes a venv
+    """The console's Python: :func:`procs.tools_python` (DRISHTI_PYTHON, drishti.python, else this one). Never makes an environment
     and never installs anything: a Python that is not there, or lacks the console's libraries (pylibs.verify), is a LaunchError naming
     what is missing and the setup line that fixes it."""
     import pylibs
     chosen, why = procs.tools_python(env, keys)
     if not (Path(chosen).exists() or shutil.which(chosen)):
-        raise LaunchError(f"the console's Python {chosen} (from {why}) is not there: install it, or run  {setup_line(settings)}")
+        raise LaunchError(procs.fail("the console's Python", f"{chosen} (from {why}) is not there", setup_line(settings)))
     bad = verify(chosen, home) if verify else pylibs.verify(chosen, home, lock=False)     # the console's own requirements
     if bad:
-        raise LaunchError(f"the console's Python {chosen} (from {why}) lacks libraries the console needs:\n  " + "\n  ".join(bad)
-                          + f"\nstart installs nothing: run  {setup_line(settings)}")
+        raise LaunchError(procs.fail("the console's Python", f"{chosen} (from {why}) lacks libraries the console needs (start installs nothing):\n  "
+                                     + "\n  ".join(bad) + "\n", setup_line(settings)))
     return chosen
 
 
@@ -57,7 +54,7 @@ def prepared_python(a, env: dict | None = None, keys: dict | None = None, home: 
     """The console's prepared Python for the options of ``start console`` (``start all`` asks before the server starts); never makes one."""
     if getattr(a, "python", None) or getattr(a, "reinstall", False):
         raise LaunchError("start never makes a Python environment and installs nothing: run start with the Python you run Drishti with, "
-                          "or name it in drishti.python of your settings file; python tools/drishti.py setup checks its libraries", 2)
+                          "or name it in drishti.python of your settings file; " + procs.setup_line() + " checks its libraries", 2)
     env = dict(os.environ if env is None else env)
     if keys is None or home is None:
         if getattr(a, "env_file", None):
@@ -76,7 +73,7 @@ def start(a, env: dict | None = None) -> int:
     roots = javacmd.launch_roots(getattr(a, "home", None), a.data_dir, env, keys)
     home, data = roots["home"][0], roots["data"][0]
     py = prepared_python(a, env, keys, home)          # before anything is made: an unprepared Python is refused with the setup line
-    data.mkdir(parents=True, exist_ok=True)
+    serverstart.require_set_up(data, roots["data"][1])  # start makes no data root: only setup does
     env["DRISHTI_DATA_DIR"] = str(data)
     env["DRISHTI_HOME"] = str(home)
     port = int(a.port or env.get("DRISHTI_CONSOLE_PORT") or (keys.get("console.server.port") or "").strip() or procs.DEFAULT_CONSOLE_PORT)

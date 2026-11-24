@@ -24,7 +24,7 @@ Commands are written for **Linux** and **Windows**. `PY` stands for the Python s
 
 | | `PY` is | a path looks like |
 |---|---|---|
-| Linux | `drishti-console/.venv/bin/python` | `tools/mrloader/pvf_run.py` |
+| Linux | `python3` (the Python setup prepared) | `tools/mrloader/pvf_run.py` |
 | Windows (PowerShell, no `.exe` of ours) | `py` | `tools\mrloader\pvf_run.py` |
 
 Run every command from the install folder (the one holding `tools/`). On Windows write your own paths with `\` and put a path that has a

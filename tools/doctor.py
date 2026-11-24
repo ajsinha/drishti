@@ -96,11 +96,6 @@ def python_check() -> list[dict]:
 def layout_check(root: pathlib.Path) -> list[dict]:
     out = [item("ok" if (root / "config" / "packs").is_dir() else "fail", "repo config/packs/", str(root / "config" / "packs"),
                 "" if (root / "config" / "packs").is_dir() else "run from a Drishti checkout (config/packs/ holds the shipped packs)")]
-    venv = root / "drishti-console" / ".venv"
-    if venv.is_dir() and os.name == "nt":          # Windows uses the Python you run Drishti with: never a venv
-        out.append(item("warn", "drishti-console/.venv", f"{venv}: not used on Windows", "you may delete it: Drishti uses the Python you run it with (drishti.python)"))
-    elif venv.is_dir():                            # Linux and macOS: setup's environment
-        out.append(item("ok", "console venv", str(venv)))
     return out
 
 
@@ -129,7 +124,7 @@ def dir_check(env) -> list[dict]:
 def probe(port: int, timeout: float = 1.5) -> tuple[str, str]:
     """(state, detail) for localhost:port: free, drishti, other. Only a GET of /actuator/health."""
     try:
-        with urllib.request.urlopen(f"http://localhost:{port}/actuator/health", timeout=timeout) as r:     # noqa: S310
+        with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(f"http://localhost:{port}/actuator/health", timeout=timeout) as r:     # noqa: S310
             body = r.read(2000)
     except urllib.error.HTTPError as e:
         if e.code == 404:
@@ -224,3 +219,61 @@ def render(results: list[dict], say=print) -> None:
             say(f"       {'':<24}fix: {r['fix']}")
     bad, warn = sum(r["level"] == "fail" for r in results), sum(r["level"] == "warn" for r in results)
     say(f"doctor: {'all clear' if not bad and not warn else f'{bad} red, {warn} yellow'}")
+
+
+# ---- the acceptance check: the end-to-end proof a person (or the release workflow) runs after the demo stack is up ------------------
+
+#: the release's figures for the demo lake (docs/DEPLOYMENT_AND_QA_GUIDE.md 9.6, QUICKSTART_DEVELOPERS.md 3.1)
+ACCEPT_VAR, ACCEPT_ES = 167_372_692, 210_131_972
+ACCEPT_USER = "drishti-dev-admin"
+
+
+def _opener():
+    """An HTTP opener for Drishti's own addresses: a cookie jar, and NO proxy (a company proxy never sits between Drishti and itself)."""
+    import http.cookiejar
+    return urllib.request.build_opener(urllib.request.ProxyHandler({}), urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+
+
+def acceptance(console: str, password: str, expect_var: int = ACCEPT_VAR, expect_es: int = ACCEPT_ES, wait: int = 0, opener=None) -> list[dict]:
+    """Signs in to the console as the development administrator, asks ``VAR BANK`` through it (so the console and the server are proved
+    to share their secrets) and finds the release's two figures on the page; one result line each step."""
+    import time
+    from urllib.parse import quote, urlencode
+    base = console.rstrip("/")
+    op = opener or _opener()
+    out = []
+    deadline = time.time() + max(0, wait)
+    while True:
+        try:
+            with op.open(base + "/healthz", timeout=5) as r:
+                r.read()
+            break
+        except OSError as e:
+            if time.time() >= deadline:
+                return [item("fail", "console", f"{base}: {e}", "start it: drishti.py start all --demo (or the launcher Drishti: run console)")]
+            time.sleep(3)
+    out.append(item("ok", "console", f"{base} answers"))
+    try:
+        with op.open(base + "/login", data=urlencode({"user": ACCEPT_USER, "password": password, "next": "/t"}).encode(), timeout=60) as r:
+            page = r.read().decode("utf-8", "replace")
+            landed = r.geturl()
+    except urllib.error.HTTPError as e:
+        return out + [item("fail", "sign-in", f"{ACCEPT_USER}: HTTP {e.code}", "start the server and the console with the same settings (drishti.py start all --demo)")]
+    except OSError as e:
+        return out + [item("fail", "sign-in", f"{e}", "is the server up? drishti.py status")]
+    if "/login" in landed and "password" in page.lower():
+        return out + [item("fail", "sign-in", f"{ACCEPT_USER} was refused", "the demo's development administrator: start with --demo")]
+    out.append(item("ok", "sign-in", f"{ACCEPT_USER} signed in to the console"))
+    try:
+        with op.open(base + "/go?q=" + quote("VAR BANK"), timeout=300) as r:       # the command a person types: the VaR screen opens
+            r.read()
+        with op.open(base + "/api/var/scope?scope=BANK", timeout=300) as r:       # its figures, as the screen asks for them, through the console
+            doc = json.loads(r.read().decode("utf-8", "replace"))
+    except (urllib.error.HTTPError, OSError, ValueError) as e:
+        return out + [item("fail", "VAR BANK", f"{e}", "drishti.py status; the server's log under <data>/logs")]
+    for name, key, want in (("VaR 99%", "var", expect_var), ("ES 97.5%", "es", expect_es)):
+        got = doc.get(key)
+        good = isinstance(got, (int, float)) and round(got) == want
+        out.append(item("ok" if good else "fail", f"VAR BANK {name}", f"{got:,.0f}" if isinstance(got, (int, float)) else str(got),
+                        "" if good else f"the release's figure is {want:,}: is the demo lake built? drishti.py lake demo --engine java"))
+    return out

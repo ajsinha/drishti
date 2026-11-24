@@ -204,8 +204,10 @@ words, menus, Home cards, Help pages and the catalogue the AI reads (*DRS-4023 V
 
 ## Build and run in the IDE
 
-Open the repository root as the one project in IntelliJ IDEA or PyCharm: the launchers are in `run-configs/` (one folder, named
-`Drishti: <verb> <what>`: `build all`, `test`, `run server (demo)`, `run console`, `build demo lakes`, `check environment`) and VS Code opens
+IntelliJ IDEA opens `drishti` (its launchers in `.idea/runConfigurations/`: folders **Drishti-java 1 Build**, **2 Run**, **3 Test**);
+PyCharm opens `drishti\drishti-console` (its launchers in `drishti-console/.idea/runConfigurations/`: **Drishti-python 1 Setup**, **2 Data**,
+**3 Run**, **4 Check**), each named `Drishti: <verb> <what>` (`build all`, `run server (demo)`, `setup`, `build demo lakes`, `run console`,
+`check acceptance`); of `.idea` only `runConfigurations/` is committed. VS Code opens
 `drishti.code-workspace`, whose tasks and launches carry the same names. All of them are generated from `tools/launch/launchers.yaml` by
 `python tools/drishti.py launchers`; every one is named, with what it is and when to use it, in
 [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md).
@@ -357,7 +359,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 
 ## Run it
 
-With a 64-bit Java 21 (JDK) and Python 3.11+ with Drishti's libraries (`setup` installs them, from the offline wheel pack when there is one: on Windows into the Python you run Drishti with (never a `.venv`), on Linux and macOS into `drishti-console/.venv`, which setup makes (`--system`: into the Python you run it with); Maven ships with the repository), from the
+With a 64-bit Java 21 (JDK) and Python 3.11+ with Drishti's libraries (the Python you run Drishti with: the system's, a dedicated one, or a virtual environment you made yourself; `setup` installs what is missing into it from the offline wheel pack; Maven ships with the repository), from the
 repository root ([OPERATIONS_GUIDE.md section 2](docs/guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) has every step):
 
 Get the code first: unpack the platform's source bundle, or clone `drishti-platform/drishti-platform` and run its `clone_all.py`, then `build_all.py`
@@ -366,7 +368,7 @@ Get the code first: unpack the platform's source bundle, or clone `drishti-platf
 folder (that checkout, or the install folder of a release).
 
 ```bash
-# 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini (with the IDE launchers' JVM options), and the libraries (Windows: into this Python, never a .venv; Linux, macOS: drishti-console/.venv)
+# 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini (with the IDE launchers' JVM options), and the libraries of this Python (from the offline wheel pack)
 python tools/drishti.py setup
 
 # 2. Build the runnable server and its modules: the kernel's jar goes to ./lib, each first-party module is a .dmod package in ./modules (the jar holds none)

@@ -15,41 +15,48 @@
 # The IDE launchers, one row each (docs/plans/LAUNCHER_REVIEW.md 4.2): `python tools/drishti.py launchers` writes them, the VS Code workspace
 # drishti.code-workspace (both kinds) and the tables of docs/guides/IDE_GUIDE.md section 4 from this table, and `launchers --check` (a quick
 # file check of the drill's gate) fails when a committed file differs. The section says which project a row belongs to: `intellij` rows go
-# into run-configs/ (IntelliJ IDEA opens `drishti`: only the Java launchers, folder Drishti-java), `pycharm` rows into
-# drishti-console/run-configs/ (PyCharm opens `drishti/drishti-console`: only the Python launchers, folder Drishti-python, the install
-# folder as $PROJECT_DIR$/..). A launcher carries what to run and which profile
+# into .idea/runConfigurations/ (IntelliJ IDEA opens `drishti`: only the Java launchers), `pycharm` rows into
+# drishti-console/.idea/runConfigurations/ (PyCharm opens `drishti/drishti-console`: only the Python launchers, the install folder as
+# $PROJECT_DIR$/..). `group` is the run-configuration folder, by step: Drishti-java 1 Build, 2 Run, 3 Test; Drishti-python 1 Setup,
+# 2 Data, 3 Run, 4 Check (launchers.GROUPS; the check refuses any other). A launcher carries what to run and which profile
 # (config/profiles/<profile>.ini) only: every setting with a config home is in the profile, the server's JVM options are the one function
 # drishti.py start server runs (serverstart.jvm_flags), written per machine into ~/drishti-envs/jvm-<profile>.args by setup.
 # kind: maven (goals), server (profile), console (profile, args), tool (command, profile optional; prompt: true asks for the file when the launcher runs).
-# Every Python launcher runs on the project interpreter (the one Python, drishti.python): no launcher names a .venv.
+# Every Python launcher runs on the project interpreter the user chooses: no launcher names an environment or an interpreter path.
 
 intellij:
   - name: "Drishti: build all"
+    group: "Drishti-java 1 Build"
     kind: maven
     goals: clean package -DskipTests -pl :drishti-app,:drishti-modules -am
     what: the server jar into `lib/` and every module's package with `first-party.yaml` into `modules/`, stamped for that jar
     when: after a clone or a pull (the one to click)
   - name: "Drishti: test"
+    group: "Drishti-java 1 Build"
     kind: maven
     goals: clean verify
     what: the whole Maven test run of the server, the engines and the modules (long, tens of minutes; each test class also has its own targeted run in the IDE)
     when: before a release, or after a change that crosses modules
   - name: "Drishti: build modules"
+    group: "Drishti-java 1 Build"
     kind: maven
     goals: clean package -DskipTests -pl :drishti-modules -am -Pmodules-only
     what: the module packages only, stamped for the jar already in `lib/`
     when: you changed only module code
   - name: "Drishti: run server (demo)"
+    group: "Drishti-java 2 Run"
     kind: server
     profile: demo
     what: the demo lakes, offline, sign-in on, the data inbox on
     when: "the normal run, after **Drishti: build demo lakes**"
   - name: "Drishti: run server (built-in samples)"
+    group: "Drishti-java 2 Run"
     kind: server
     profile: samples
     what: the packs' small built-in samples (generated, ticking), sign-in on
     when: a first look before any lake is built
   - name: "Drishti: run server (QA, port 18580)"
+    group: "Drishti-java 2 Run"
     kind: server
     profile: qa
     what: the samples on its own port and data folder (`data/qa/data`), sign-in on
@@ -57,57 +64,81 @@ intellij:
 
 pycharm:
   - name: "Drishti: run console"
+    group: "Drishti-python 3 Run"
     kind: console
     profile: demo
     what: the console on 17480 for the server on 18480, sign-in on
     when: with either 18480 server
   - name: "Drishti: run console (QA, port 17580)"
+    group: "Drishti-python 3 Run"
     kind: console
     profile: qa
     what: the console on 17580 for the QA server on 18580
     when: "with **Drishti: run server (QA, port 18580)**"
   - name: "Drishti: run console (Risk)"
+    group: "Drishti-python 3 Run"
     kind: console
     profile: demo
     args: [--distribution=risk]
     what: the Risk distribution's console on 17480 (temp folder `<data>/tmp/console-risk`)
     when: "Drishti Risk, with **Drishti: run server (demo)**"
   - name: "Drishti: run console (Finance)"
+    group: "Drishti-python 3 Run"
     kind: console
     profile: demo
     args: [--distribution=finance, --server.port=17481]
     what: the Finance distribution's console on 17481 (temp folder `<data>/tmp/console-finance`)
     when: Drishti Finance, beside the Risk console
   - name: "Drishti: setup"
+    group: "Drishti-python 1 Setup"
     kind: tool
     settings: false
     command: setup
-    what: "prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): checked, what is missing installed offline from the wheel pack in `~/drishti-wheels`; never a venv (it makes `dev.ini`, so it names none)"
+    what: "prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): checked, what is missing installed offline from the wheel pack in `~/drishti-wheels` (it makes `dev.ini`, so it names none)"
     when: after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing
   - name: "Drishti: setup (package index)"
+    group: "Drishti-python 1 Setup"
     kind: tool
     settings: false
     command: setup --index
     what: "the same, installing what is missing from your configured package index instead of the wheel pack"
     when: no wheel pack, and pip may reach your package index
+  - name: "Drishti: check setup"
+    group: "Drishti-python 1 Setup"
+    kind: tool
+    settings: false
+    command: setup --check
+    what: "what setup would do, changing nothing: the settings file, the data folder and the libraries of the project interpreter, name by name"
+    when: before setup, or to see why a launcher refuses
   - name: "Drishti: build demo lakes"
+    group: "Drishti-python 2 Data"
     kind: tool
     command: lake demo --engine java
     what: the demo lakes with the Java loader of the jar in `lib/`
     when: after a build, with the server stopped
   - name: "Drishti: run loader (file into the lake)"
+    group: "Drishti-python 2 Data"
     kind: tool
     prompt: true
     command: lake build --from $Prompt$ --kind trade --mode overwrite-dates --lake demo
     what: one file of yours into the demo lake, by its kind (it asks for the file when it runs)
     when: you hold a file of your own (never committed; the launcher asks for its path)
+  - name: "Drishti: check acceptance"
+    group: "Drishti-python 4 Check"
+    kind: tool
+    profile: demo
+    command: doctor --acceptance
+    what: "the end-to-end check: signs in to the console on 17480 as the development administrator, asks VAR BANK through it and compares both figures with the release's"
+    when: "after **Drishti: run server (demo)** and **Drishti: run console** are up"
   - name: "Drishti: check environment"
+    group: "Drishti-python 4 Check"
     kind: tool
     profile: demo
     command: doctor
     what: this machine and the server on 18480 (without a token it says how to make one)
     when: something does not start or answer
   - name: "Drishti: check environment (QA)"
+    group: "Drishti-python 4 Check"
     kind: tool
     profile: qa
     command: doctor

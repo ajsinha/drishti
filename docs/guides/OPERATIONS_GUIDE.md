@@ -144,18 +144,18 @@ stops with `Drishti needs Java 21 or newer … Maven is running on Java …`, `J
 
 ### 2.3 The console's Python
 
-**One Python.** One Python serves the console, the command-line tools (`tools/drishti.py`) and the lake builder: on Linux and macOS
-`drishti-console/.venv`, which `setup` makes and fills (from the offline wheel pack when there; `--system` uses the Python you run it with,
-from the wheel pack only); on Windows the Python you run Drishti with, never a `.venv`:
+**One Python, yours.** One Python serves the console, the command-line tools (`tools/drishti.py`) and the lake builder: the Python
+you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself). `setup` checks its libraries and installs what is missing into it from the offline wheel pack (no
+package index unless `--index`); Drishti makes no virtual environment:
 
 ```bash
 unzip drishti-wheels-*.zip -d ~/drishti-wheels      # once: the release's wheel pack (setup finds ~/drishti-wheels by itself)
 python3 tools/drishti.py setup                      # or: setup --wheels /path/to/wheels; setup --index uses your package index
-drishti-console/.venv/bin/python -c "import drishti_lake, pyarrow, yaml, fastapi; print('ok')"
+python3 -c "import drishti_lake, pyarrow, yaml, fastapi; print('ok')"
 ```
 
 You should see `ok`. Setup writes this Python's full path into `~/drishti-envs/dev.ini` as `drishti.python`: `start console`, the
-cluster and the feed schedules run it (`DRISHTI_PYTHON` overrides). Only setup makes the venv; `start` never makes one, never installs anything and
+cluster and the feed schedules run it (`DRISHTI_PYTHON` overrides). `start` never makes an environment, never installs anything and
 refuses a Python that lacks a library, naming it and the `setup` line. Developers install `drishti-console/requirements-test.txt` the same way.
 
 - **Python in BI** (python visuals, Python-driven tables, the Notebook's Python cells) runs on the **server's compute pool** `python`, in a
@@ -344,7 +344,7 @@ Nothing Drishti writes is hidden (no dot-folders of its own), and everything it 
 
 The repository itself holds code and configuration: `modules/` (each module's packs, connector templates, Sutras, help), `config/` (the
 kernel's packs, lakes, module switches, lenses, engines, BI files, the example settings files; `config/connectors/` only for a site's own
-overrides), `bin/`, `run-configs/` (the IDE run configurations), `docs/`, `tools/`, `external_lib/`.
+overrides), `bin/`, `.idea/runConfigurations/` (the IDE launchers), `docs/`, `tools/`, `external_lib/`.
 
 ## 3. Other ways to build and run: Maven, IntelliJ IDEA and PyCharm
 

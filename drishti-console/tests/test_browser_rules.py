@@ -233,7 +233,7 @@ def static_violations(path: Path) -> list[str]:
 
 def static_files() -> list[Path]:
     root = TESTS.parents[1]
-    tools = [p for p in (root / "tools").rglob("test_*.py") if not {".venv", "cache", "node_modules"} & set(p.parts)]
+    tools = [p for p in (root / "tools").rglob("test_*.py") if not {".venv", "cache", "node_modules"} & set(p.parts)]  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
     return sorted(TESTS.glob("test_*.py")) + sorted(tools)
 
 

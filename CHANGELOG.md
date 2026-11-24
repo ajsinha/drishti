@@ -18,25 +18,30 @@
 
 ## 2.9.11.i7g (2026-11-23)
 
-- **Windows never gets a `.venv`**: there `setup` is the system-Python mode (`--system` kept), `setup venv` and `--reinstall` refused in one
-  line, `make_venv` refuses; the libraries come from a wheel pack (`--wheels`, `DRISHTI_WHEELS`, else `%USERPROFILE%\drishti-wheels` when it
-  holds wheels, said in one line) or with `--index`, else a `[FAIL]` with the fix. **Linux and macOS** keep `drishti-console/.venv` from
-  setup as before; `--system`/`libs` there: PEP 668 (*EXTERNALLY-MANAGED*) and a pack for another Python version are one `[FAIL]` line each.
-- **`start console` / `start all` / `run_drishti_web.py` never make or install anything**: the Python (`procs.tools_python`: `DRISHTI_PYTHON`,
-  `drishti.python`, the Linux/macOS `.venv`, the running Python) is verified before anything is made; `start all` checks it before the
-  server starts. Setup's next steps name `start` only when no `[FAIL]`/`[todo]` remains.
-- `drishti.python` written into the settings file `--settings` names (production `/etc/drishti/prod.ini`; no `dev.ini` made then);
-  `tools/drishti.py` takes `~/drishti-envs/dev.ini` naming this checkout by itself and re-runs in the prepared Python when this one lacks
-  the libraries.
-- **Launchers by project**: Java launchers in `run-configs/` (IntelliJ opens `drishti`), Python ones in `drishti-console/run-configs/`
-  (PyCharm opens `drishti/drishti-console`; `$PROJECT_DIR$/..`, the project interpreter); **Drishti: setup (package index)** replaces the two
+- **Drishti makes and names no virtual environment, on every system.** `setup` = the libraries of the running Python (from a wheel pack:
+  `--wheels`, `DRISHTI_WHEELS`, else `~/drishti-wheels` when it holds wheels, said in one line; `--index` only if asked), else a `[FAIL]` with
+  the fix; PEP 668 and a pack for another Python version are one `[FAIL]` line each. `make_venv`, `setup venv`, `--reinstall`, `--skip-venv`
+  removed; `--system` a no-op. `drishti.python` written whenever setup runs, into the `--settings` file when one is named.
+- **`start console` / `start all` / `run_drishti_web.py` never make or install anything**: the one Python (`procs.tools_python`:
+  `DRISHTI_PYTHON`, `drishti.python`, the running Python) is verified before anything is made. Next steps name `start` only when nothing
+  is left to fix. `tools/drishti.py` takes `~/drishti-envs/dev.ini` naming this checkout by itself.
+- **Compute environments**: a library folder per lock (`pip install --target`, hashes, read-only) used by workers of the configured
+  interpreter; no `python -m venv`.
+- **Launchers by project, by step**: each project's `.idea/runConfigurations/` (only that folder of `.idea` committed): IntelliJ `drishti`
+  (Drishti-java 1 Build, 2 Run, 3 Test), PyCharm `drishti/drishti-console` (Drishti-python 1 Setup, 2 Data, 3 Run, 4 Check; `$PROJECT_DIR$/..`,
+  the project interpreter); new **Drishti: check setup**, **Drishti: check acceptance**; no `*.run.xml` anywhere else; **Drishti: setup (package index)** replaces the two
   system-Python setup launchers; `tools/launchers/check_launchers.py` follows the two folders.
-- **The console run bare** takes `~/drishti-envs/dev.ini`, `--profile demo` and the development secrets (`tools/launch/devsecrets.py`, the one
-  source, shared with `serverstart`); a 401 on the installation answer is logged once and backed off (5 s to 5 min); a missing library exits
-  at once with the setup line.
-- Feed schedules, AWS wrappers, the ECS loader image and the server's feeds use the one Python; the drill: `DRISHTI_PYTHON`, else the `.venv`.
-- Guard `tools/test_no_venv.py`; tests for each change. Docs: Windows instructions without `.venv`, the command-line path (QUICKSTART 3.1,
-  IDE_GUIDE 11), IDE_GUIDE 2.3/4/8, CLI_REFERENCE, DEPLOYMENT, OPERATIONS; CONFIGURATION.md regenerated; version 2.9.11.i7g.
+- **The console run bare** takes `~/drishti-envs/dev.ini`, `--profile demo` and the development secrets (`tools/launch/devsecrets.py`, one
+  source with `serverstart`); a 401 on the installation answer is logged once and backed off; a missing library exits at once.
+- Feed schedules, AWS wrappers, the ECS loader image, the server's feeds, the drill and the Java tests use the one Python, passed in from
+  outside. Guard `tools/test_no_venv.py`. PRODUCTION_DEPLOYMENT.md merged and made true for i7g.
+- First run (FIRST_RUN_ROBUSTNESS.md D): the trust rule for `DRISHTI_*` folder variables; `start` makes no data root (setup line), the
+  `--demo` lake preflight, both ports before either starts, the loopback console address; one `[FAIL] ... Fix:` funnel with
+  `procs.command` (pasteable, `py -3.13` on Windows; an unexpected error goes to a log file); no proxy for Drishti's own calls; pip
+  `--isolated` from the pack; the pack zip found in Downloads or the platform folder; setup's verdict line, a second run changes nothing;
+  the bare console and the launchers never follow another checkout's settings file; `doctor --acceptance`; `tools/test_first_run.py`.
+- Docs: no virtual-environment instructions; the command-line path (QUICKSTART 3.1, IDE_GUIDE 11); CONFIGURATION.md regenerated;
+  version 2.9.11.i7g.
 
 ## 2.9.11.i7f (2026-11-23)
 

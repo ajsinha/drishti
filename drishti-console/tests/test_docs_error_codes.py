@@ -102,7 +102,7 @@ def _raised_anywhere() -> set[str]:
     found: set[str] = set()
     for pattern in ("*/src/main/**/*.java", "*/*/src/main/**/*.java", "modules/*/java/*/src/main/**/*.java", "drishti-console/core/**/*.py", "drishti-console/routes/**/*.py", "drishti-console/web/static/js/**/*.js"):
         for path in ROOT.glob(pattern):
-            if ".venv" in path.parts or "target" in path.parts:
+            if ".venv" in path.parts or "target" in path.parts:  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
                 continue
             found |= set(CODE.findall(path.read_text(encoding="utf-8", errors="ignore")))
     return found

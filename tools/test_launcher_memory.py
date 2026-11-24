@@ -75,7 +75,7 @@ class LauncherMemory(unittest.TestCase):
         flags = serverstart.jvm_flags(Path("/d"), "2g")
         for f in (*FLAGS, *[d for d in DIAGNOSTICS]):
             self.assertTrue(any(f.split("=")[0] in x for x in flags), f)
-        for f in sorted((ROOT / "run-configs").glob("Drishti run server*.run.xml")):
+        for f in sorted((ROOT / ".idea" / "runConfigurations").glob("Drishti run server*.xml")):
             text = f.read_text(encoding="utf-8")
             with self.subTest(f.name):
                 self.assertIn("@$USER_HOME$/drishti-envs/jvm-", text)

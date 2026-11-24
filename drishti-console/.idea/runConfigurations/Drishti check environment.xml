@@ -13,14 +13,15 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Drishti: setup (package index): the same, installing what is missing from your configured package index instead of the wheel pack.
-  Use it when: no wheel pack, and pip may reach your package index.
+  Drishti: check environment: this machine and the server on 18480 (without a token it says how to make one).
+  Use it when: something does not start or answer.
   PyCharm: open drishti/drishti-console as the project (the install folder is $PROJECT_DIR$/..); it runs on the project
-  interpreter, the one Python Drishti runs with (never a venv).
+  interpreter you choose (Settings, Project, Python Interpreter), the one setup prepared.
+  The profile config/profiles/demo.ini (after your dev.ini) holds its settings.
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti: setup (package index)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti-python">
+  <configuration default="false" name="Drishti: check environment" type="PythonConfigurationType" factoryName="Python" folderName="Drishti-python 4 Check">
     <module name="drishti-console" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
@@ -34,7 +35,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
-    <option name="PARAMETERS" value="setup --index" />
+    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; --profile demo doctor" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

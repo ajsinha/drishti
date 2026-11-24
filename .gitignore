@@ -2,7 +2,9 @@
 target/
 *.class
 *.log
-.idea/
+# of an IDE's project folder only the launchers are committed (each project's .idea/runConfigurations/, generated: tools/launch/launchers.py)
+.idea/*
+!.idea/runConfigurations/
 *.iml
 .vscode/
 .DS_Store

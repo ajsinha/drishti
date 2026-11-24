@@ -282,7 +282,7 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 The program uses only the standard library plus PyYAML. It imports `deltalake` and `pyarrow` **only** when a command writes
 a Delta lake, so a machine without them runs everything else.
 
-**The one Python.** `setup` checks the libraries and installs what is missing, on Windows into the Python you run Drishti with (never a `.venv`), on Linux and macOS into `drishti-console/.venv`, which setup makes (`--system`: into the Python you run it with), from the offline wheel pack (unzip it into `~/drishti-wheels`, Windows `%USERPROFILE%\drishti-wheels`,
+**The one Python.** `setup` checks the libraries and installs what is missing into the Python you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself; Drishti makes none), from the offline wheel pack (unzip it into `~/drishti-wheels`, Windows `%USERPROFILE%\drishti-wheels`,
 or pass `--wheels <folder>`; `--index` lets pip use your package index instead). The IDE launchers use the project interpreter, the same
 Python ([Running the tools from PyCharm](#running-the-tools-from-pycharm-and-the-java-sutra-from-intellij)):
 
@@ -2576,9 +2576,15 @@ smoke: passed
 
 ### `doctor`: is this machine ready
 
+**`doctor --acceptance`** is the end-to-end proof the release workflow and the launcher **Drishti: check acceptance** run once the demo
+stack is up: it signs in to the console (`--console URL`, default `http://127.0.0.1:<console.server.port, else 17480>`) as the development
+administrator, types `VAR BANK` and asks the VaR screen's figures through the console (so the console and the server are proved to share
+their secrets), and compares them with the release's demo figures, VaR 167,372,692 and ES 210,131,972 (`--expect-var`, `--expect-es` for
+others); `--wait SECONDS` waits for the console; exit 0 only when both agree. Its calls never go through a proxy.
+
 Green, yellow and red lines, each with a fix; exit 1 on any red. It checks Java (on `JAVA_HOME` or the PATH, 21 or newer, vendor),
 the server jar (and its version), Python and the optional libraries (`pyyaml`, `deltalake`, `pyarrow`, with install hints), the
-repository layout (`config/packs/`; an old `drishti-console/.venv` is reported as no longer used), the directories you configured (`DRISHTI_DELTA_ROOT`, `DRISHTI_FILES_ROOT`,
+repository layout (`config/packs/`), the directories you configured (`DRISHTI_DELTA_ROOT`, `DRISHTI_FILES_ROOT`,
 `DRISHTI_PACKS_INSTALLED`, `DRISHTI_PACKS_DIR`: readable, writable), and ports 18480 and 17480 (override with `DRISHTI_DOCTOR_PORTS=18971:server,17971:console` to check other ports instead; free, or in use by Drishti; only a
 GET of `/actuator/health` on localhost, nothing is killed or changed). With `--server` it also checks reachability, the version
 and whether the token is accepted, with the exact id, scopes and expiry of the token the call used (`GET /api/v1/me/token`; a signed-in session has none).
@@ -2689,7 +2695,14 @@ settings file goes **before** the command: `python tools/drishti.py --settings ~
 file names this checkout as `drishti.home` (another copy's file is never taken), so `python tools/drishti.py start all --demo` is enough. A
 **profile** goes before the command too: `--profile NAME` adds the install's `config/profiles/<NAME>.ini` (`demo`, `samples`, `qa`) after the settings files, so it
 wins over them (`python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa start all`: the QA pair on 18580 and 17580;
-`--demo` is `--profile demo`). The tools' `--server` default follows the files too (`console.backend.url`, else a profile's `server.port`).
+`--demo` is `--profile demo`). **The trust rule**: with no `--settings`, a `DRISHTI_HOME`, `DRISHTI_DATA_DIR`, `DRISHTI_MODULES_HOME`,
+`DRISHTI_LIB_PATH` or `DRISHTI_TMP_DIR` naming a folder outside this checkout (an old `setx`) is ignored by every command, in one `[WARN]`
+line; a settings file named with `--settings` may point anywhere. **`start` makes no data folder**: before setup it stops with
+`[FAIL] this checkout is not set up ... Fix: <the setup line>`; `--demo` with no demo lake built stops with the `lake demo` line; `start
+all` checks the console's Python and both ports before the server starts, and gives the console the server's loopback address. Every
+failure is one `[FAIL] <what>: <why>. Fix: <command>` line (an unexpected one names a log file with the details; no traceback), and every
+printed command is pasteable: the running interpreter (`py -3.13` on Windows), quoted paths. Setup ends with `Drishti is ready.` or
+`Drishti is NOT ready: N to fix (above).`. The tools' `--server` default follows the files too (`console.backend.url`, else a profile's `server.port`).
 
 **The roots.** One order for every root, as on the Java side: an explicit option, else the settings file, else the environment, else this
 checkout. The install folder (`DRISHTI_HOME`) is `--home`, else `drishti.home` of the settings file, else `DRISHTI_HOME`, else the
@@ -2703,19 +2716,17 @@ folder is refused, a settings file or `DRISHTI_HOME` naming one is a WARNING and
 
 | Command | What it does |
 |---|---|
-| `setup` | `setup drishti`, then `setup libs` on Windows (never a `.venv` there), `setup venv` on Linux and macOS |
+| `setup` | `setup drishti`, then `setup libs` |
 | `setup drishti` | the Drishti part only: checks Python 3.11+ and Java 21+, makes the data folder's layout (`run/ logs/ tmp/ dumps/ delta/ dataload/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths filled in (one whose `drishti.home` names this checkout is kept as it is, also when its data folder is elsewhere: setup then makes nothing there unless `--data-dir` is passed; one whose `drishti.home` names another folder, or that names none and a folder outside this checkout, is moved into a dated folder, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one written; `--check` says what it would move), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`; one that differs is moved into the same dated folder: setup never overwrites a file (it adds only `drishti.python`, once, to a kept `dev.ini`) and makes no folder outside this checkout, the settings folder and an explicit `--data-dir`; a `DRISHTI_*` folder variable naming another folder is a WARNING and never used), checks the server jar and the modules |
-| `setup venv` | Linux and macOS: makes or checks `drishti-console/.venv` (uv when installed, else the Python's own `venv` and pip; the wheel pack when there, else the package index), `--reinstall` remakes it; refused on Windows in one line |
-| `setup --system` | `setup drishti` + `setup libs` (Linux and macOS; what plain `setup` is on Windows) |
-| `setup libs` | the libraries of the Python running setup (no venv): the pinned Lake wheel first, then `drishti-console/requirements.txt`, checked name by name; what is missing installed from the offline wheel pack |
+| `setup libs` | the libraries of the Python running setup: the pinned Lake wheel first, then `drishti-console/requirements.txt`, checked name by name; what is missing installed from the offline wheel pack |
 | `--wheels <folder or .zip>` (`DRISHTI_WHEELS`; neither: `~/drishti-wheels`, Windows `%USERPROFILE%\drishti-wheels`, when it holds `.whl` files, said in one line) | installs **only** from that folder (`pip --no-index --find-links`, the Lake wheel first); names a wheel the folder lacks and installs nothing |
 | `--index` | lets pip install what is missing from your configured package index instead; without it setup never touches a network |
 
-Only setup makes a venv, and never on Windows (`setup venv` and `--reinstall` are refused there: *Windows uses the Python you run Drishti
-with; no .venv*); `start` never makes one and never installs anything. Into the current Python (Windows, `--system`, `libs`), with no
-wheel pack and no `--index`, a missing library is a `[FAIL]` line and the next step is the command that fixes it (`setup --wheels
-<folder>`). `--skip-venv` is `setup drishti`. An operating system's own Python (PEP 668, *EXTERNALLY-MANAGED*, as Debian's and
-Ubuntu's `python3`) is one `[FAIL]` line, *this Python is managed by the operating system: use a dedicated Python 3.13 for Drishti*, and pip
+Drishti never makes a virtual environment: the Python is yours (the system's, a dedicated one, or a virtual environment you made yourself; run setup with it, or name it in `drishti.python`).
+`--system` is accepted and changes nothing; `start` never makes an environment and never installs anything. With no wheel pack and no
+`--index`, a missing library is a `[FAIL]` line and the next step is the command that fixes it (`setup --wheels <folder>`). An operating system's own Python (PEP 668, *EXTERNALLY-MANAGED*, as Debian's and
+Ubuntu's `python3`) is one `[FAIL]` line, *this Python is managed by the operating system: run setup with a Python you prepared for Drishti ... your own
+virtual environment is fine*, and pip
 never runs (never `--break-system-packages`); a wheel pack built for another Python version (`cp313` wheels on a 3.14) is one `[FAIL]` line
 naming both versions. The **next steps** list `start` only when no `[FAIL]` or `[todo]` remains: until then the
 fixes come first, then `setup` again.
@@ -2725,9 +2736,8 @@ says why in one sentence (index login rejected 401/403, index not reachable or c
 pip's own output, and prints the missing list as one `py -m pip install name==ver ...` line.
 
 `--check` changes nothing; it verifies the libraries name by name (every requirement's installed version against its
-spec, the Lake wheel against `lib/lake-wheel.pin`) and names what is missing or wrong (exit 1). The Python setup installed into (the `.venv`'s, or the one it ran
-with) is written into the settings file as `drishti.python` (`dev.ini`; with `--settings <file>` that file, and no `dev.ini` is made;
-a value naming another Python that is there is kept; one naming a missing file, or a `.venv` on Windows, is replaced, and setup says so): `start console`, the cluster and the feed schedules run it, and the server uses it for its Python
+spec, the Lake wheel against `lib/lake-wheel.pin`) and names what is missing or wrong (exit 1). The Python setup ran with is written into the settings file as `drishti.python` (`dev.ini`; with `--settings <file>` that file, and no `dev.ini` is made;
+a value naming another Python that is there is kept; one naming a missing file is replaced, and setup says so): `start console`, the cluster and the feed schedules run it, and the server uses it for its Python
 work wherever that work's own setting is blank ([CONFIGURATION.md](../admin/CONFIGURATION.md): `drishti.python`; `DRISHTI_PYTHON` overrides it). On
 Windows pip uses the Windows certificate store (pip's `truststore`), so it works behind a company proxy as Maven does.
 
@@ -2780,7 +2790,7 @@ Options of `start server`, `start console` and `start all`:
 | `--wait SECONDS` | how long to wait for the health answer (server 300, console 90) |
 | `--node NODE`, `--node-dir DIR`, `--node-data DIR`, `--seed HOST:PORT`, `--advertise IP` | a cluster node: its id (pid, log and temp folder are named after it), its Drishti\*net folder, its own data folder, a member to join through, the address it advertises (default this machine's real address, never a loopback one) |
 | `--server URLS` | `start console`: the server, or a cluster's entry nodes, comma-separated (default `DRISHTI_SERVER_URL`, else `console.backend.url` or a profile's `server.port`) |
-| `--name NAME` | `start console`: a name when several consoles run from one data folder (`run/console-<name>.pid`) (`--python` and `--reinstall` are refused: start makes no environment; `setup` checks the libraries) |
+| `--name NAME` | `start console`: a name when several consoles run from one data folder (`run/console-<name>.pid`) (start makes no environment; `setup` checks the libraries) |
 
 `stop` takes `--data-dir`, `--env-file` and `--timeout SECONDS`; `stop server` takes `--node NODE` and `--all-nodes` (every server pid
 file of the data folder), `stop console` takes `--name NAME`, `stop all` takes `--all-nodes`, `stop cluster` takes `--cluster FILE` and node
@@ -2792,7 +2802,7 @@ command line, its port from the settings files it names; `--cluster FILE` adds t
 `--env-file`, `--cluster`. Exit 0 when every process found runs and answers (or none was started), 1 when one is not running or not
 answering.
 
-**`drishti.py launchers`** writes the IDE launchers (the one folder `run-configs/`, read by both IDEs: Maven and JAR Application launchers grouped `Drishti-java`, Python ones `Drishti-python`; and `drishti-console/run-configs/`, the Python ones PyCharm needs when it opens `drishti-console` alone, named `Console project: ...`; every Python launcher runs on the project interpreter, none names a `.venv`) and the tables of IDE_GUIDE section 4
+**`drishti.py launchers`** writes the IDE launchers (into each project's own `.idea/runConfigurations/`: IntelliJ's (`drishti`: the Maven and JAR Application launchers, folders `Drishti-java 1 Build`, `2 Run`, `3 Test`) and PyCharm's (`drishti-console/.idea/runConfigurations/`: the Python ones, `Drishti-python 1 Setup`, `2 Data`, `3 Run`, `4 Check`); of `.idea` only these are committed; every Python launcher runs on the project interpreter you choose) and the tables of IDE_GUIDE section 4
 from one table, `tools/launch/launchers.yaml`; the files are committed. `launchers --check` changes nothing and exits 1 naming each file
 that differs (the drill's gate runs it). `launchers --machine` writes this machine's `~/drishti-envs/jvm-<profile>.args`, the JVM options
 of the server launchers: `serverstart.jvm_flags`, the function `start server` runs, with the data folder of `dev.ini` and the profile.

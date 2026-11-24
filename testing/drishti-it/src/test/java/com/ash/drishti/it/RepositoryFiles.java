@@ -27,7 +27,7 @@ import java.util.Set;
 final class RepositoryFiles {
 
     static final Set<String> SKIP_DIRS =
-            Set.of("target", ".git", ".claude", ".venv", "vendor", "recorded", "__pycache__", ".mvn", ".idea", ".pytest_cache", "requirements",
+            Set.of("target", ".git", ".claude", ".venv", "vendor", "recorded", "__pycache__", ".mvn", ".idea", ".pytest_cache", "requirements",  // IGNORE pattern: a user's own virtual environment in the tree is never scanned
                     "connector-upgrade", // byte-exact copies of a past release's generated connector files (ConnectorUpgradeTest)
                     "archetype-resources"); // the Module SDK's templates: a generated module carries its own publisher's header
     static final Set<String> SKIP_FILES = Set.of("mvnw", "mvnw.cmd", "LICENSE",

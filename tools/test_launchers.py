@@ -38,7 +38,7 @@ import procs  # noqa: E402
 import serverstart  # noqa: E402
 import settingsfile  # noqa: E402
 
-LAUNCHERS = sorted((ROOT / "run-configs").glob("*.run.xml")) + sorted((ROOT / launchers.FOLDERS["pycharm"]).glob("*.run.xml"))
+LAUNCHERS = sorted((ROOT / launchers.FOLDERS["intellij"]).glob("*.xml")) + sorted((ROOT / launchers.FOLDERS["pycharm"]).glob("*.xml"))
 
 
 def conf(f: Path) -> ET.Element:
@@ -46,7 +46,7 @@ def conf(f: Path) -> ET.Element:
 
 
 def test_g1_the_committed_launchers_are_what_the_table_generates():
-    """Any hand edit of a .run.xml or of IDE_GUIDE section 4 fails here: change tools/launch/launchers.yaml, then
+    """Any hand edit of a launcher file or of IDE_GUIDE section 4 fails here: change tools/launch/launchers.yaml, then
     python tools/drishti.py launchers."""
     assert launchers.check(ROOT) == []
 
@@ -90,7 +90,7 @@ def test_g6_start_server_demo_and_the_demo_launcher_start_the_same_server(tmp_pa
                    encoding="utf-8")
     monkeypatch.delenv("DRISHTI_DATA_DIR", raising=False)
     launchers.machine(ROOT, envs, dev)
-    ide, ide_env = launchers.argv(ROOT / "run-configs" / "Drishti run server (demo).run.xml", ROOT, tmp_path)
+    ide, ide_env = launchers.argv(ROOT / ".idea" / "runConfigurations" / "Drishti run server (demo).xml", ROOT, tmp_path)
     vm = ide[1:ide.index("-jar")]
     assert vm[0] == f"@{envs.as_posix()}/jvm-demo.args"
     ide_flags = _flags_of(Path(vm[0][1:])) + vm[1:]
@@ -109,6 +109,8 @@ def test_g6_start_server_demo_and_the_demo_launcher_start_the_same_server(tmp_pa
     monkeypatch.setattr(serverstart, "find_jar", lambda given, home: ROOT / "lib" / "drishti-server-exec.jar")
     monkeypatch.setattr(serverstart, "check_modules", lambda a, m, j: "modules: test")
     monkeypatch.setattr(procs, "port_in_use", lambda p: False)
+    (data / "run").mkdir(parents=True)                                   # setup made the data folder (start makes no root)
+    monkeypatch.setattr(serverstart, "demo_lake_ready", lambda *a, **k: None)
     monkeypatch.setattr(procs, "spawn", lambda cmd, cwd, env, **k: seen.update(cmd=cmd, env=env) or Proc())
     monkeypatch.setattr(procs, "write_pid", lambda *a, **k: None)
     monkeypatch.setattr(procs, "run_foreground", lambda proc, pid_file, up: 0)
@@ -143,9 +145,9 @@ def test_g7_paths_follow_the_data_folder_and_are_quoted():
         text = ET.tostring(c, encoding="unicode")
         if c.get("type") == "PythonConfigurationType":
             assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$/..", f.name        # PyCharm's project is drishti-console: the root is its parent
-            assert f.parent == ROOT / "drishti-console" / "run-configs", f"{f.name}: a Python launcher is PyCharm's (drishti-console/run-configs)"
+            assert f.parent == ROOT / "drishti-console" / ".idea" / "runConfigurations", f"{f.name}: a Python launcher is PyCharm's (drishti-console/.idea/runConfigurations)"
         else:
-            assert f.parent == ROOT / "run-configs", f"{f.name}: a Java launcher is IntelliJ's (run-configs)"
+            assert f.parent == ROOT / ".idea" / "runConfigurations", f"{f.name}: a Java launcher is IntelliJ's (.idea/runConfigurations)"
         if c.get("type") == "JarApplication":
             assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$", f.name
         for value in (o.get("VM_PARAMETERS", ""), o.get("PARAMETERS", "")):
@@ -155,7 +157,7 @@ def test_g7_paths_follow_the_data_folder_and_are_quoted():
 
 
 def test_the_argv_helper_turns_a_python_launcher_into_its_command_line(tmp_path):
-    cmd, env = launchers.argv(ROOT / "drishti-console" / "run-configs" / "Drishti run console (QA, port 17580).run.xml", ROOT, tmp_path)
+    cmd, env = launchers.argv(ROOT / "drishti-console" / ".idea" / "runConfigurations" / "Drishti run console (QA, port 17580).xml", ROOT, tmp_path)
     assert Path(cmd[1]).resolve() == (ROOT / "drishti-console" / "run_drishti_web.py").resolve()
     assert cmd[2:] == ["--settings", f"{tmp_path.as_posix()}/drishti-envs/dev.ini", "--profile", "qa"]
     assert env["PYTHONUNBUFFERED"] == "1"

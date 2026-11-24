@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""``drishti.py setup`` split: the subcommands (drishti, venv, libs, --system, --skip-venv), the library verification of --check, the pinned
+"""``drishti.py setup`` split: the subcommands (drishti, libs, --system), the library verification of --check, the pinned
 Lake wheel installed first, the Windows certificate store for pip, and the write-once drishti.python line of dev.ini. Temp folders only;
 pip is never run (a recording stand-in), nothing touches a network."""
 from __future__ import annotations
@@ -139,6 +139,7 @@ def test_drishti_python_is_written_once_and_never_over_a_value(tmp_path):
 def no_home_wheel_pack(tmp_path, monkeypatch):
     """~/drishti-wheels of this machine is never read by a test: setup's default wheel folder is a folder that is not there."""
     monkeypatch.setattr(envsetup, "default_wheels", lambda: tmp_path / "no-home-wheels")
+    monkeypatch.setattr(envsetup, "pack_places", lambda: [])
 
 
 def ns(tmp: Path, part=None, **kw) -> argparse.Namespace:
@@ -168,15 +169,8 @@ def test_setup_drishti_does_only_the_drishti_part(tmp_path, libs, capsys):
     envsetup.setup(ns(tmp_path, "drishti"), quiet())
     out = capsys.readouterr().out
     assert (tmp_path / "envs" / "dev.ini").is_file() and (tmp_path / "data" / "run").is_dir()
-    assert "] libraries" not in out and "console .venv" not in out and libs["installed"] == []
-    if not __import__("procs").windows():                    # Linux, macOS: setup drishti leaves the libraries (and drishti.python) to venv/libs
-        assert "\ndrishti.python=" not in (tmp_path / "envs" / "dev.ini").read_text()
-
-
-def test_skip_venv_is_setup_drishti(tmp_path, libs, capsys):
-    envsetup.setup(ns(tmp_path, None, skip_venv=True), quiet())
-    out = capsys.readouterr().out
-    assert (tmp_path / "envs" / "dev.ini").is_file() and "] libraries" not in out and libs["installed"] == []
+    assert "] libraries" not in out and libs["installed"] == []
+    assert f"drishti.python={Path(sys.executable).as_posix()}" in (tmp_path / "envs" / "dev.ini").read_text(), "the one Python, whenever setup runs"
 
 
 def test_setup_libs_installs_into_the_current_python_and_writes_drishti_python_once(tmp_path, libs, capsys):
@@ -195,37 +189,17 @@ def test_setup_libs_installs_into_the_current_python_and_writes_drishti_python_o
     assert (envs / "dev.ini").read_text() == f"drishti.python={mine.as_posix()}\n"
 
 
-def test_on_windows_plain_setup_is_the_system_mode_and_never_a_venv(tmp_path, libs, capsys, monkeypatch):
+def test_setup_is_drishti_plus_libs_on_every_system_and_system_changes_nothing(tmp_path, libs, capsys, monkeypatch):
     import procs
-    monkeypatch.setattr(procs, "windows", lambda: True)
-    with mock.patch.object(envsetup, "make_venv") as mv:
-        for system in (False, True):                  # --system: accepted, the same run on Windows
+    for windows in (True, False):
+        monkeypatch.setattr(procs, "windows", lambda w=windows: w)
+        for system in (False, True):                  # --system: accepted for old commands, the same run
             libs["bad"], libs["installed"] = ["alpha is not installed"], []
             rc = envsetup.setup(ns(tmp_path, None, system=system, index=True), quiet())
-            out = capsys.readouterr().out
-            assert (tmp_path / "envs" / "dev.ini").is_file() and libs["installed"] == [sys.executable] and "console .venv" not in out
+            capsys.readouterr()
+            assert (tmp_path / "envs" / "dev.ini").is_file() and libs["installed"] == [sys.executable]
             assert f"drishti.python={Path(sys.executable).as_posix()}" in (tmp_path / "envs" / "dev.ini").read_text() and rc in (0, 1)
-        for kw in (dict(part="venv"), dict(reinstall=True)):
-            with pytest.raises(LaunchError, match="Windows uses the Python you run Drishti with; no .venv"):
-                envsetup.setup(ns(tmp_path, **kw), quiet())
-    assert not mv.called
-
-
-def test_on_linux_plain_setup_makes_the_console_venv_as_before(tmp_path, libs, capsys, monkeypatch):
-    import procs
-    monkeypatch.setattr(procs, "windows", lambda: False)
-    venv_py = tmp_path / "venv" / "bin" / "python"
-    monkeypatch.setattr(procs, "venv_python", lambda root=None: venv_py)
-
-    def make(home, base, reinstall=False, **kw):
-        venv_py.parent.mkdir(parents=True, exist_ok=True)
-        venv_py.write_text("")
-        return venv_py
-    with mock.patch.object(envsetup, "make_venv", side_effect=make) as mv:
-        rc = envsetup.setup(ns(tmp_path, None), quiet())
-    out = capsys.readouterr().out
-    assert mv.called and "[made] console .venv" in out.replace("[ made]", "[made]") and libs["installed"] == []
-    assert f"drishti.python={venv_py.as_posix()}" in (tmp_path / "envs" / "dev.ini").read_text() and rc in (0, 1)
+    assert not hasattr(envsetup, "make_" + "venv") and not hasattr(procs, "venv_python")
 
 
 def test_without_a_wheel_pack_or_index_nothing_is_installed_and_the_fix_comes_first(tmp_path, libs, capsys):
@@ -233,25 +207,20 @@ def test_without_a_wheel_pack_or_index_nothing_is_installed_and_the_fix_comes_fi
     out = capsys.readouterr().out
     assert rc == 1 and libs["installed"] == [] and "[FAIL] libraries" in out and "no wheel pack found and no --index" in out
     first = out.split("Next steps", 1)[1].splitlines()[1]
-    assert "setup --wheels <folder>" in first and "start all" not in out.split("Next steps", 1)[1]
+    assert "setup --wheels" in first and "start all" not in out.split("Next steps", 1)[1]
+    assert out.rstrip().splitlines()[-1].startswith("Drishti is NOT ready:"), "the verdict is the last line (S9)"
     assert f"drishti.python={Path(sys.executable).as_posix()}" in (tmp_path / "envs" / "dev.ini").read_text()
 
 
-def test_on_windows_an_old_venv_is_said_once_never_used_and_a_venv_drishti_python_is_replaced(tmp_path, libs, capsys, monkeypatch):
-    import procs
-    monkeypatch.setattr(procs, "windows", lambda: True)
+def test_a_drishti_python_that_is_not_there_is_replaced_and_one_that_is_kept(tmp_path, libs, capsys):
     libs["bad"] = []
     envs = tmp_path / "envs"
     envs.mkdir()
-    (envs / "dev.ini").write_text("drishti.python=/old/drishti-console/.venv/bin/python\n", encoding="utf-8")
+    (envs / "dev.ini").write_text("drishti.python=/gone/bin/python\n", encoding="utf-8")
     envsetup.setup(ns(tmp_path, "libs"), quiet())
     out = capsys.readouterr().out
-    assert (envs / "dev.ini").read_text() == f"drishti.python={Path(sys.executable).as_posix()}\n" and "a .venv is no longer used" in out
-    monkeypatch.setattr(procs, "old_venv", lambda root=None: tmp_path)        # an old drishti-console/.venv: said, never deleted
-    envsetup.setup(ns(tmp_path, "libs"), quiet())
-    assert "not used on Windows" in capsys.readouterr().out and tmp_path.is_dir()
-    assert pylibs.stale_python("/x/drishti-console/.venv/bin/python", windows=False) is True     # missing: replaced anywhere
-    assert pylibs.stale_python(sys.executable, windows=False) is False
+    assert (envs / "dev.ini").read_text() == f"drishti.python={Path(sys.executable).as_posix()}\n" and "no such Python" in out
+    assert pylibs.stale_python("/gone/bin/python") is True and pylibs.stale_python(sys.executable) is False
 
 
 def test_check_reports_the_libraries_by_name_and_changes_nothing(tmp_path, libs, capsys):
@@ -265,24 +234,17 @@ def test_check_reports_the_libraries_by_name_and_changes_nothing(tmp_path, libs,
     assert "every requirement" in capsys.readouterr().out
 
 
-def test_setup_venv_check_on_linux_reports_the_venv_and_makes_nothing(tmp_path, libs, capsys, monkeypatch):
-    import procs
-    monkeypatch.setattr(procs, "windows", lambda: False)
-    monkeypatch.setattr(procs, "venv_python", lambda root=None: tmp_path / "no-venv" / "bin" / "python")
-    rc = envsetup.setup(ns(tmp_path, "venv", check=True), quiet())
-    assert rc == 1 and "console .venv" in capsys.readouterr().out and not (tmp_path / "data").exists() and not (tmp_path / "no-venv").exists()
-
-
 def test_the_parser_takes_the_subcommands():
     import launchcli
     top = argparse.ArgumentParser()
     launchcli.register(top.add_subparsers(), lambda *a, **k: None)
-    for argv, part, system in ((["setup"], None, False), (["setup", "drishti"], "drishti", False), (["setup", "venv", "--reinstall"], "venv", False),
+    for argv, part, system in ((["setup"], None, False), (["setup", "drishti"], "drishti", False),
                                (["setup", "libs", "--check"], "libs", False), (["setup", "--system"], None, True)):
         a = top.parse_args(argv)
         assert a.part == part and a.system is system
-    with pytest.raises(SystemExit):
-        top.parse_args(["setup", "bogus"])
+    for gone in (["setup", "bogus"], ["setup", "venv"], ["setup", "--reinstall"], ["setup", "--skip-venv"]):
+        with pytest.raises(SystemExit):
+            top.parse_args(gone)
 
 
 def test_the_console_runs_the_one_python_and_makes_no_venv(tmp_path):
@@ -292,10 +254,7 @@ def test_the_console_runs_the_one_python_and_makes_no_venv(tmp_path):
     ok = lambda p, home: []
     assert cs.console_python({}, {"drishti.python": str(py)}, tmp_path, verify=ok) == str(py)
     assert cs.console_python({"DRISHTI_PYTHON": str(py)}, {"drishti.python": "/nope"}, tmp_path, verify=ok) == str(py)
-    venv = tmp_path / "drishti-console" / ".venv" / "bin" / "python"
-    venv.parent.mkdir(parents=True)
-    venv.write_text("")
-    assert cs.console_python({}, {}, tmp_path, verify=ok) == sys.executable                  # no setting: this Python, never a .venv there
+    assert cs.console_python({}, {}, tmp_path, verify=ok) == sys.executable                  # no setting: this Python
 
 
 def test_start_console_refuses_an_unprepared_python_with_the_setup_line_and_makes_nothing(tmp_path):
@@ -304,7 +263,7 @@ def test_start_console_refuses_an_unprepared_python_with_the_setup_line_and_make
         with pytest.raises(LaunchError, match="is not there") as e:
             cs.console_python({}, {"drishti.python": str(tmp_path / "no-python")}, tmp_path, settings="C:/u/drishti-envs/dev.ini", verify=lambda p, h: [])
         assert "--settings C:/u/drishti-envs/dev.ini setup" in str(e.value)
-        with pytest.raises(LaunchError, match=r"lacks libraries(.|\n)*alpha>=1.2 is not installed(.|\n)*installs nothing: run  python tools/drishti.py setup "):
+        with pytest.raises(LaunchError, match=r"^\[FAIL\] (.|\n)*lacks libraries(.|\n)*installs nothing(.|\n)*alpha>=1.2 is not installed(.|\n)*Fix: .*drishti\.py setup$"):
             cs.console_python({}, {"drishti.python": sys.executable}, tmp_path, verify=lambda p, h: ["alpha>=1.2 is not installed"])
     assert not mv.called and not inst.called and list(tmp_path.iterdir()) == []
 
@@ -314,7 +273,7 @@ def test_start_python_and_reinstall_point_at_setup():
     import consolestart as cs
     for kw, moved in ((dict(python="/x/python"), "drishti.py setup"), (dict(reinstall=True), "drishti.py setup")):
         with pytest.raises(LaunchError, match=moved):
-            cs.prepared_python(ap.Namespace(**{"python": None, "reinstall": False, **kw}), {}, {}, Path("."))
+            cs.prepared_python(ap.Namespace(**{"python": None, "reinstall": False, **kw}), {}, {}, TOOLS.parent)
 
 
 # ---- a Python with only the standard library (the company Python of a machine that allows no venv) ---------------------------------
@@ -358,17 +317,7 @@ def test_bootstrap_system_without_an_install_source_goes_on(tmp_path):
     home = fake_home(tmp_path)
     with mock.patch.object(pylibs, "install") as inst:
         assert envsetup.bootstrap(_args(system=True), home, {}, ["/x/drishti.py", "setup"], lambda cmd, **kw: 1 / 0, lambda: False) is None
-    assert not inst.called and not (home / "drishti-console" / ".venv").exists()
-
-
-def test_bootstrap_default_on_linux_makes_the_venv_and_reruns_under_it(tmp_path, monkeypatch):
-    import procs
-    monkeypatch.setattr(procs, "windows", lambda: False)
-    home = fake_home(tmp_path)
-    calls = []
-    with mock.patch.object(envsetup, "make_venv", return_value=tmp_path / "v" / "python") as mv:
-        rc = envsetup.bootstrap(_args(), home, {}, ["/x/drishti.py", "setup"], lambda cmd, **kw: calls.append(cmd) or subprocess.CompletedProcess(cmd, 0), lambda: False)
-    assert rc == 0 and mv.called and calls[-1][0] == str(tmp_path / "v" / "python") and calls[-1][-1] == "setup"
+    assert not inst.called
 
 
 def test_bootstrap_is_skipped_with_yaml_or_check_and_never_loops(tmp_path):
@@ -452,7 +401,7 @@ def test_wheels_folder_installs_only_from_it_lake_first(tmp_path):
     a, b = pips(run)
     assert a[-1].endswith("drishti_lake-0.9.1-py3-none-any.whl") and b[-2] == "-r"
     for c in (a, b):
-        assert "--no-index" in c and c[c.index("--find-links") + 1] == str(wheels) and "--use-feature=truststore" not in c
+        assert "--no-index" in c and "--isolated" in c and c[c.index("--find-links") + 1] == str(wheels) and "--use-feature=truststore" not in c
 
 
 def test_a_pack_unzipped_one_folder_deep_gives_pip_the_folder_with_the_wheels(tmp_path):
@@ -647,14 +596,14 @@ def test_next_steps_never_say_start_while_a_library_step_failed(tmp_path, capsys
         rc = envsetup.setup(ns(tmp_path, None, system=True, index=True), quiet())
     out = capsys.readouterr().out
     steps = out.split("Next steps", 1)[1].splitlines()[1:]
-    assert rc == 1 and "setup --wheels <folder>" in steps[0] and "rejected the login" in out.split("Next steps", 1)[1]
+    assert rc == 1 and "setup --wheels" in steps[0] and "rejected the login" in out.split("Next steps", 1)[1]
     assert "start all" not in out.split("Next steps", 1)[1] and "lake demo" not in out.split("Next steps", 1)[1]
 
 
 def test_next_steps_say_start_when_all_is_ready(tmp_path, libs, capsys):
     libs["bad"] = []
     rc = envsetup.setup(ns(tmp_path, None, system=True), quiet())
-    steps = [l for l in capsys.readouterr().out.split("Next steps", 1)[1].splitlines()[1:] if l.strip()]
+    steps = [l for l in capsys.readouterr().out.split("Next steps", 1)[1].splitlines()[1:] if l.strip() and not l.startswith("Drishti is")]
     if any("start all --demo" in l for l in steps):       # only when nothing else is left: the demo lake, then start
         assert len(steps) == 2 and "lake demo" in steps[0] and rc == 0
     else:                                                 # e.g. no server jar in this checkout: the fixes, then setup again
@@ -672,7 +621,7 @@ def test_setup_system_uses_the_home_wheel_folder_when_none_is_named(tmp_path, ca
     with mock.patch.object(pylibs, "verify", lambda *a, **k: ["alpha is not installed"]), mock.patch.object(pylibs, "install", install), \
             mock.patch.object(envsetup, "default_wheels", lambda: pack):
         envsetup.setup(ns(tmp_path, "libs"), quiet())
-        assert seen == [pack] and f"using the wheel pack in {pack}" in capsys.readouterr().out
+        assert seen == [pack] and f"using the wheel pack {pack}" in capsys.readouterr().out
         seen.clear()
         envsetup.setup(ns(tmp_path, None, system=True), quiet())                     # setup --system finds it too
         assert seen == [pack]
@@ -721,7 +670,7 @@ def test_an_operating_system_python_is_one_fail_line_and_pip_never_runs(tmp_path
         rc = envsetup.setup(ns(tmp_path, "libs", wheels=str(pack)), quiet())
     out = capsys.readouterr().out
     assert rc == 1 and not inst.called and out.count(pylibs.MANAGED) >= 1 and "[FAIL] libraries" in out
-    assert "break-system-packages" not in out and not (TOOLS.parent / "drishti-console" / ".venv").exists() or True
+    assert "break-system-packages" not in out
 
 
 def test_externally_managed_reads_the_marker_of_a_python_outside_a_venv(tmp_path):
@@ -766,3 +715,31 @@ def test_a_settings_file_named_by_settings_gets_drishti_python_and_no_dev_ini_is
     assert f"drishti.python={Path(sys.executable).as_posix()}" in prod.read_text() and "named by --settings" in out
     assert not (tmp_path / "envs").exists(), "no developer settings folder, dev.ini or JVM options"
     assert prod.read_text().startswith(f"drishti.home={TOOLS.parent.as_posix()}") and rc in (0, 1)
+
+
+
+def test_a_pack_zip_in_downloads_is_found_without_help_and_the_right_one_of_two(tmp_path, monkeypatch, capsys):
+    """FIRST_RUN_ROBUSTNESS.md rows 22, 24, 29: the zip left in Downloads (not unzipped) is found; of two packs the one for this system,
+    Python and release is taken; a pack for another Python is not."""
+    downloads = tmp_path / "Downloads"
+    downloads.mkdir()
+    py = f"py{sys.version_info[0]}{sys.version_info[1]}"
+    sys_tag = envsetup.system_tag()
+    import zipfile
+    for name in (f"drishti-platform-i7f-wheels-{sys_tag}-x64-{py}.zip", f"drishti-platform-i7g-wheels-{sys_tag}-x64-{py}.zip",
+                 f"drishti-platform-i7g-wheels-{sys_tag}-x64-py399.zip"):
+        with zipfile.ZipFile(downloads / name, "w") as z:
+            z.writestr("alpha-1.2-py3-none-any.whl", b"w")
+    monkeypatch.setattr(envsetup, "pack_places", lambda: [downloads])
+    monkeypatch.setattr(envsetup.javacmd, "_version_of", lambda home=None: "2.9.11.i7g")
+    found, looked = envsetup.find_pack()
+    assert found and found.endswith(f"i7g-wheels-{sys_tag}-x64-{py}.zip") and str(downloads) in looked
+    seen = []
+    with mock.patch.object(pylibs, "verify", lambda *a, **k: ["alpha is not installed"]), \
+            mock.patch.object(pylibs, "install", lambda py, home, *a, wheels=None, **k: seen.append((wheels / "alpha-1.2-py3-none-any.whl").is_file())):
+        envsetup.setup(ns(tmp_path, "libs"), quiet())
+    assert seen == [True], "the zip, unzipped for pip (and removed after)"
+    assert "using the wheel pack" in capsys.readouterr().out
+    monkeypatch.setattr(envsetup, "pack_places", lambda: [tmp_path / "nothing"])
+    monkeypatch.setattr(envsetup, "default_wheels", lambda: tmp_path / "nothing-either")
+    assert envsetup.find_pack()[0] is None

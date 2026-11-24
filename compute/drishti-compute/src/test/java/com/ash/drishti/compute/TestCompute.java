@@ -42,7 +42,7 @@ public final class TestCompute {
     private TestCompute() {}
 
     /**
-     * A Python 3.10+ interpreter: {@code -Ddrishti.compute.test.python}, {@code DRISHTI_PYTHON}, the console's venv, then
+     * A Python 3.10+ interpreter: {@code -Ddrishti.compute.test.python}, {@code DRISHTI_PYTHON}, then
      * {@code python3}/{@code python} on the path. Null when none answers.
      */
     public static synchronized String python() {
@@ -57,10 +57,6 @@ public final class TestCompute {
         String e = System.getenv("DRISHTI_PYTHON");
         if (e != null && !e.isBlank()) {
             candidates.add(e);
-        }
-        Path console = Path.of(TestRoots.repo(), "drishti-console", ".venv",  WINDOWS ? "Scripts" : "bin", WINDOWS ? "python.exe" : "python");
-        if (Files.exists(console)) {
-            candidates.add(console.toAbsolutePath().toString());
         }
         candidates.add(WINDOWS ? "python" : "python3");
         candidates.add("python");

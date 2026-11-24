@@ -13,8 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The Python half of ``drishti.py setup``: the libraries of drishti-console/requirements.txt (the pinned Lake wheel first) installed into one
-interpreter, the one you run Drishti with (never a venv), verified name by name and version by version, and the one ``drishti.python`` line
-of the settings file that tells the server and ``start console`` which interpreter that is (written when absent; a value naming a .venv
+interpreter, the one you run Drishti with (Drishti never makes a virtual environment), verified name by name and version by version, and the
+one ``drishti.python`` line of the settings file that tells the server and ``start console`` which interpreter that is (written when absent; a value naming a
 or a missing file is replaced, any other is kept).
 
 No network is needed to *check*; pip is the only thing that touches one (setup runs it offline from a wheel pack, or on the package index
@@ -311,7 +311,7 @@ def pack_mismatch(py: str, folder: Path, run=subprocess.run, windows: bool | Non
     want = "/".join(f"{a}.{b}" for a, b in sorted(packs))
     first = f"{sorted(packs)[0][0]}.{sorted(packs)[0][1]}"
     how = (f"`py -{first} tools\\drishti.py setup`" if (procs.windows() if windows is None else windows)
-           else f"a dedicated Python {first} (e.g. /opt/python{first}/bin/python{first} tools/drishti.py setup)")
+           else f"a Python {first} you prepared for Drishti (a dedicated /opt/python{first}, or your own virtual environment is fine)")
     return f"the wheel pack is for Python {want}; this Python is {have[0]}.{have[1]}: run setup with {how}, or use the pack for Python {have[0]}.{have[1]}"
 
 
@@ -324,13 +324,13 @@ def check_pack_python(py: str, folder: Path, run=subprocess.run, windows: bool |
 
 _MANAGED = ("import os, sys, sysconfig; print('MANAGED', int(sys.prefix == sys.base_prefix and "
             "os.path.isfile(os.path.join(sysconfig.get_path('stdlib'), 'EXTERNALLY-MANAGED'))))")
-#: what setup says for an operating system's own Python (PEP 668): never --break-system-packages, never a venv
-MANAGED = ("this Python is managed by the operating system: use a dedicated Python 3.13 for Drishti (e.g. /opt/python3.13, see "
-           "PRODUCTION_DEPLOYMENT.md) and run setup with it")
+#: what setup says for an operating system's own Python (PEP 668): never --break-system-packages; Drishti makes no environment itself
+MANAGED = ("this Python is managed by the operating system: run setup with a Python you prepared for Drishti (a dedicated Python 3.13, "
+           "e.g. /opt/python3.13, see PRODUCTION_DEPLOYMENT.md; your own virtual environment is fine)")
 
 
 def externally_managed(py: str, run=subprocess.run) -> bool:
-    """``py`` is an operating system's Python that refuses pip (PEP 668: EXTERNALLY-MANAGED in its standard library, not a venv)."""
+    """``py`` is an operating system's Python that refuses pip (PEP 668: EXTERNALLY-MANAGED in its standard library, its own prefix)."""
     r = run([py, "-c", _MANAGED], capture_output=True, text=True, cwd=tempfile.gettempdir())
     return "MANAGED 1" in (r.stdout or "") and not r.returncode
 
@@ -381,7 +381,9 @@ def install(py: str, home: Path, windows: bool | None = None, run=subprocess.run
         check_pack_python(py, wheels, run, win)
     dirs = wheel_dirs(wheels) if wheels else []
     extra = [] if wheels else pip_extra(py, win, run)
-    off = ["--no-index", *[x for d in dirs for x in ("--find-links", str(d))]] if wheels else []
+    # offline from the pack: --isolated, so a company pip.ini or PIP_* (index, require-virtualenv, user, target) plays no part (S5)
+    off = ["--isolated", "--no-input", "--disable-pip-version-check", "--no-index",
+           *[x for d in dirs for x in ("--find-links", str(d))]] if wheels else []
     req = plain_requirements(home / "drishti-console" / "requirements.txt")
     steps = ([["install", "-q", *extra, *off, str(wheel)]] if wheel else []) + ([["install", "-q", *extra, *off, "-r", str(req)]] if from_req else []) \
         + ([["install", "-q", *extra, *off, "-r", str(home / LOCK)]] if from_lock else [])
@@ -399,16 +401,9 @@ def install(py: str, home: Path, windows: bool | None = None, run=subprocess.run
             raise LaunchError(why + ("" if wheels else "\nthen install what is missing by hand:  " + pip_line(py, by_hand)))
 
 
-def in_venv(py: str) -> bool:
-    """``py`` lies in a virtual environment (a pyvenv.cfg beside its folder, or a .venv folder on its path)."""
-    p = Path(py)
-    return ".venv" in p.parts or (p.parent.parent / "pyvenv.cfg").is_file()
-
-
-def stale_python(py: str, windows: bool | None = None) -> bool:
-    """A drishti.python setup replaces: a file that is not there, or, on Windows, a .venv's Python (Windows uses none)."""
-    win = procs.windows() if windows is None else windows
-    return (win and in_venv(py)) or not (Path(py).is_file() or shutil.which(py))
+def stale_python(py: str) -> bool:
+    """A drishti.python setup replaces: a file that is not there."""
+    return not (Path(py).is_file() or shutil.which(py))
 
 
 def ensure_setting(ini: Path, py: str, check: bool = False) -> tuple[str, str]:
@@ -423,10 +418,10 @@ def ensure_setting(ini: Path, py: str, check: bool = False) -> tuple[str, str]:
         if not stale_python(v):
             return "ok", f"{v}  (kept as it is; setup used {py})"
         if check:
-            return "todo", f"{v} is {'a .venv Python' if in_venv(v) else 'not there'}: setup writes {Path(py).as_posix()}"
+            return "todo", f"{v} is not there: setup writes {Path(py).as_posix()}"
         line = f"{SETTING}={Path(py).as_posix()}"
         ini.write_text(text[:m.start()] + line + text[m.end():], encoding="utf-8")
-        return "made", f"{line}  (was {v}: {'a .venv is no longer used' if in_venv(v) else 'no such Python'})"
+        return "made", f"{line}  (was {v}: no such Python)"
     if check or not ini.is_file():
         return "todo", f"{SETTING} is not in {ini}: setup writes {Path(py).as_posix()}"
     line = f"{SETTING}={Path(py).as_posix()}"

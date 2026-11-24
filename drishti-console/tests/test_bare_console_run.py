@@ -33,7 +33,7 @@ spec.loader.exec_module(web)
 def test_a_bare_run_takes_the_default_settings_file_the_demo_profile_and_the_one_dev_secrets(tmp_path):
     (tmp_path / "drishti-envs").mkdir()
     ini = tmp_path / "drishti-envs" / "dev.ini"
-    ini.write_text("drishti.home=/x\n", encoding="utf-8")
+    ini.write_text(f"drishti.home={CONSOLE.parent.as_posix()}\n", encoding="utf-8")
     env = {}
     argv, said = web.bare_defaults([], env, home=tmp_path)
     assert argv == ["--settings", str(ini), "--profile", "demo"] and str(ini) in said[0]
@@ -62,4 +62,12 @@ def test_any_other_run_is_left_as_it_is(tmp_path, argv, env):
 def test_a_python_without_the_libraries_stops_at_once_with_the_setup_line():
     assert web.missing_libraries(lambda m: None if m == "drishti_lake" else object()) == ["drishti-lake"]
     r = subprocess.run([sys.executable, "-S", "-B", str(CONSOLE / "run_drishti_web.py")], capture_output=True, text=True, timeout=60)
-    assert r.returncode == 1 and "lacks" in r.stderr and "python tools/drishti.py setup" in r.stderr and "Traceback" not in r.stderr
+    assert r.returncode == 1 and r.stderr.startswith("[FAIL]") and "lacks" in r.stderr and "drishti.py setup" in r.stderr and "Traceback" not in r.stderr
+
+
+def test_a_bare_run_never_follows_another_checkouts_settings_file(tmp_path):
+    """FIRST_RUN_ROBUSTNESS.md rows 11 and 65: ~/drishti-envs/dev.ini of another clone is said and not used (none of its roots)."""
+    (tmp_path / "drishti-envs").mkdir()
+    (tmp_path / "drishti-envs" / "dev.ini").write_text("drishti.home=/an/old/clone\n", encoding="utf-8")
+    argv, said = web.bare_defaults([], {"DRISHTI_TOKEN_SECRET": "x", "DRISHTI_SESSION_SECRET": "y"}, home=tmp_path)
+    assert argv == ["--profile", "demo"] and said[0].startswith("[WARN]") and "another checkout" in said[0]

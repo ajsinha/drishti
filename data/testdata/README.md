@@ -60,7 +60,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
 
 1. **Clone** the repository (`git clone …`, then `cd drishti`; the product repositories sit side by side under `~/IdeaProjects/drishti-platform/`, each cloned from `github.com/drishti-platform/<repo>`).
 2. **Install** once: the libraries into the Python you run Drishti with (PyYAML, the Drishti Lake wheel and pyarrow among them),
-   `python3 tools/drishti.py setup` (Linux and macOS: into `drishti-console/.venv`, which it makes),
+   `python3 tools/drishti.py setup` (into the Python you run it with, from the offline wheel pack),
    and the server jar in `lib/`: the run configuration **Drishti: build all** (or `python tools/drishti.py build all`).
 3. **Build the demo lakes**: the run configuration **Drishti: build demo lakes**, or
 

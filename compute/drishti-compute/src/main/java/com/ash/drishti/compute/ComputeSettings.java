@@ -85,7 +85,7 @@ public record ComputeSettings(boolean enabled, String python, Path root, Path sc
         return root.resolve("jars");
     }
 
-    /** A temporary folder for pip and venv during a build: under the data folder, never the machine's {@code /tmp}. */
+    /** A temporary folder for pip during a build: under the data folder, never the machine's {@code /tmp}. */
     public Path work() {
         return root.resolve("work");
     }

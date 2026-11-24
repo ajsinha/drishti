@@ -15,15 +15,15 @@
 -->
 # IntelliJ IDEA, PyCharm and VS Code: build and run Drishti
 
-VS Code is section 10. All three IDEs use the platform's one launcher standard: launchers are named `<Product>: <verb> [<what>]` (`Drishti: build all`, `Drishti: run server (demo)`), live in the `run-configs/` folder of the project the IDE opens, and use only Java, Python and Maven (no `.exe`, no shell script). The other repositories of the platform (Rachana, Elements, Lake, Tools) follow the same standard, so what you learn here applies to each: section 9 opens them together.
+VS Code is section 10; the command line without an IDE, section 11. All three IDEs use the platform's one launcher standard: launchers are named `<Product>: <verb> [<what>]` (`Drishti: build all`, `Drishti: run server (demo)`), live in `.idea/runConfigurations/` of the project the IDE opens (of `.idea` only that folder is committed), and use only Java, Python and Maven (no `.exe`, no shell script). The other repositories of the platform (Rachana, Elements, Lake, Tools) follow the same standard, so what you learn here applies to each: section 9 opens them together.
 
 For developers and testers who build and run Drishti from the two IDEs. **IntelliJ IDEA builds Drishti and runs the server with Java
 only**: Maven builds the server jar and the modules and installs them, and the server launchers run that jar (IntelliJ **JAR
 Application** configurations on `lib/`); IntelliJ needs no Python and no Python plugin. **PyCharm, separately, runs the console and the command-line tools**, and prepares the data (the demo
 lakes). The repository carries the run configurations of both as files, so nothing is installed and no `.exe` is added. **Two IDEs, two
-projects:** IntelliJ IDEA opens `drishti` (its `pom.xml`) and shows only the Java launchers, `run-configs/`, folder **Drishti-java** (the
-Maven builds and the servers); PyCharm opens `drishti\drishti-console` and shows only the Python launchers, `drishti-console/run-configs/`,
-folder **Drishti-python** (the consoles, setup, the demo lakes and the tools; the install folder is `$PROJECT_DIR$/..`, the interpreter the
+projects:** IntelliJ IDEA opens `drishti` (its `pom.xml`) and shows only the Java launchers, `.idea/runConfigurations/`, in the folders **Drishti-java 1 Build**, **2 Run**,
+**3 Test** (the Maven builds and the servers); PyCharm opens `drishti\drishti-console` and shows only the Python launchers, `drishti-console/.idea/runConfigurations/`,
+in the folders **Drishti-python 1 Setup**, **2 Data**, **3 Run**, **4 Check** (setup, the demo lakes, the consoles, the checks; the install folder is `$PROJECT_DIR$/..`, the interpreter the
 project's: the Python you choose, the one setup prepared). Every configuration uses only `$PROJECT_DIR$` and `$USER_HOME$` paths, so
 the same files work on Linux and Windows.
 
@@ -44,7 +44,7 @@ The three parts follow that order: [1. Build](#1-build-intellij-idea-java-only),
 | **A JDK 21** | Linux `/usr/lib/jvm/java-21-openjdk-amd64`, Windows `C:\jdk-21`, macOS `/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home`. Production runs on 21. |
 | **IntelliJ IDEA** (Community or Ultimate) | its bundled Maven builds everything; the repository's `mvnw` is the same Maven for a terminal. |
 
-No Python, no Python plugin and no settings file are needed to build: the Maven launchers start no Drishti process. IntelliJ opens `drishti` (its `run-configs/`: the Java launchers); PyCharm opens `drishti\drishti-console` (section 2.3). If IntelliJ loses the Maven
+No Python, no Python plugin and no settings file are needed to build: the Maven launchers start no Drishti process. IntelliJ opens `drishti` (its `.idea/runConfigurations/`: the Java launchers); PyCharm opens `drishti\drishti-console` (section 2.3). If IntelliJ loses the Maven
 modules (*module not specified*), close it, delete the root's `.idea/` (IDE settings only) and reopen.
 
 ### 1.2 Open the root `pom.xml` in IntelliJ IDEA
@@ -52,8 +52,8 @@ modules (*module not specified*), close it, delete the root's `.idea/` (IDE sett
 1. **File → Open**, choose the root `pom.xml`, **Open as Project**. Wait for the Maven import and the indexing; the Maven tool window lists `drishti-app`.
 2. **File → Project Structure → Project → SDK**: **Add SDK → JDK…**, choose the JDK 21 folder; **Language level** *SDK default*.
 3. **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → JRE**: *Use Project JDK*. Maven in the IDE ignores your shell's `JAVA_HOME`.
-4. The drop-down at the top right lists the configurations of `run-configs/`, the folder **Drishti-java**: the three Maven builds and the
-   server launchers (section 4). The Python launchers are PyCharm's, in `drishti-console/run-configs/` (section 2.3); no Python plugin is needed.
+4. The drop-down at the top right lists the configurations of `.idea/runConfigurations/`, in the folders **Drishti-java 1 Build** (the Maven builds) and
+   **Drishti-java 2 Run** (the servers) (section 4). The Python launchers are PyCharm's, in `drishti-console/.idea/runConfigurations/` (section 2.3); no Python plugin is needed.
 
 ### 1.3 The Maven build launchers
 
@@ -148,13 +148,13 @@ A later plain `setup` keeps that `dev.ini` (its `drishti.home` is this clone) an
 2. `python3 tools/drishti.py setup` makes it from `config/settings.examples/dev.ini` with this machine's paths filled in, makes the data
    folder, writes the JVM arguments files, and checks the libraries of **the Python it runs with**, installing what is missing into that
    Python from the offline wheel pack (`~/drishti-wheels`, Windows `%USERPROFILE%\drishti-wheels`, found by itself; or `--wheels <folder>`).
-   (On Linux and macOS setup makes `drishti-console/.venv` instead, unless `--system`; on Windows never.) It is two parts that also run alone: `setup drishti` (the settings, data folder and JVM
+   Drishti makes no virtual environment: the Python is yours. It is two parts that also run alone: `setup drishti` (the settings, data folder and JVM
    files; no Python libraries) and `setup libs` ([2.2](#22-python-for-the-console-and-the-tools-pycharm)). `--check` works for all of them.
    In PyCharm, no terminal is needed: **Drishti: setup** (section 4.3) runs it on the project interpreter. You should see `[made] settings file …/drishti-envs/dev.ini`,
    `[made] JVM options … jvm-demo.args, jvm-qa.args, jvm-samples.args`, `[made] libraries …` (or `[  ok]`) and `drishti.python=<that Python>`;
    while a `[FAIL]` or `[todo]` remains, the next steps name the fix first and never `start`. A `dev.ini` already there that names
    this checkout is kept as it is (your own lines too, and a data folder elsewhere), and setup never overwrites a file (it writes only
-   `drishti.python`: when absent, or when it names a `.venv` or a missing Python). **An old `dev.ini` of another folder** (its `drishti.home` names another copy) and a
+   `drishti.python`: when absent, or when it names a missing Python). **An old `dev.ini` of another folder** (its `drishti.home` names another copy) and a
    JVM arguments file that differs: setup **moves** them into a dated folder of the settings folder and writes fresh ones for this
    checkout, in one line: *`[move] old settings  dev.ini moved to …\drishti-envs\replaced-2026-11-23-1630  (it named drishti.home=…)`*.
    Nothing is lost and nothing is made in the other folder; there is nothing to rename or delete by hand. `--check` says what it would
@@ -194,9 +194,8 @@ What each key does and the other ways to make it: [DEPLOYMENT_AND_QA_GUIDE.md �
 
 ### 2.2 Python for the console and the tools (PyCharm)
 
-The console and `tools/drishti.py` need Python 3.11 or later with Drishti's packages. On Windows **no virtual environment**: the
-Python you run Drishti with must have the libraries; setup checks them and installs from the offline wheel pack (on Linux and macOS setup
-makes `drishti-console/.venv`, or `--system`).
+The console and `tools/drishti.py` need Python 3.11 or later with Drishti's packages. **One Python, yours**: the Python you run Drishti with
+(the system's, a dedicated one, or a virtual environment you made yourself) must have the libraries; setup checks them and installs from the offline wheel pack. Drishti makes no virtual environment.
 
 Any Python 3.11 or later on the machine works as the interpreter: a python.org install, a company-packaged Python, conda, or the
 one your team already uses. Drishti needs only its packages installed in it.
@@ -213,7 +212,7 @@ one your team already uses. Drishti needs only its packages installed in it.
 
    `setup` is `setup drishti` + `setup libs` (`--system` is accepted for old commands and changes nothing). The Python needs nothing
    installed beforehand, not even PyYAML: with a wheel pack setup installs the libraries first, then runs itself again in that Python.
-   Setup writes the Python it ran with as `drishti.python` in `dev.ini` (when absent, or when it names a `.venv` or a missing Python;
+   Setup writes the Python it ran with as `drishti.python` in `dev.ini` (when absent, or when it names a missing Python;
    another Python you named is kept), so `start console`, the cluster, the feed schedules and the server's Python work (the data
    feeds' Run now, the compute pool, the pivot Python functions) run in the same Python; `DRISHTI_PYTHON` overrides it. On Windows pip uses
    the Windows certificate store, so it works behind a company proxy (a company package index goes in `%APPDATA%\pip\pip.ini`, Linux
@@ -235,10 +234,10 @@ or later with Polars, NumPy and PyYAML) in their own run configuration. The deta
 ### 2.3 PyCharm: open `drishti\drishti-console`
 
 1. **File → Open**, choose the `drishti-console` folder of the clone (`C:\Users\you\IdeaProjects\drishti-platform\drishti\drishti-console`):
-   its launchers are in `drishti-console/run-configs/` and reach the install folder as `$PROJECT_DIR$/..`.
+   its launchers are in `drishti-console/.idea/runConfigurations/` and reach the install folder as `$PROJECT_DIR$/..`.
 2. **Settings → Project → Python Interpreter**: choose your Python, the one setup prepared (**Add Interpreter → Add Local Interpreter →
-   System Interpreter**: Windows `C:\Users\you\AppData\Local\Programs\Python\Python313\python.exe`; Linux and macOS
-   `…/drishti/drishti-console/.venv/bin/python` when setup made it). When PyCharm offers to create a virtual environment, **Cancel**: the
+   System Interpreter**, or an environment you made yourself: Windows `C:\Users\you\AppData\Local\Programs\Python\Python313\python.exe`,
+   Linux `/opt/python3.13/bin/python3.13`). When PyCharm offers to create a virtual environment, **Cancel**: the
    launchers use whatever interpreter you choose here and name none of their own. Run **Drishti: setup** (or `py tools\drishti.py setup`), which makes the settings and installs the libraries
    (the Lake wheel first) into that interpreter from `%USERPROFILE%\drishti-wheels`. PyCharm's *Package requirement ... is not satisfied*
    banner means the same thing: run **Drishti: setup**. An old `dev.ini` or JVM arguments file from another copy is moved into a dated
@@ -250,8 +249,8 @@ or later with Polars, NumPy and PyYAML) in their own run configuration. The deta
    secrets of `drishti.py start all --demo`, each said in one line.
 3. **Project Structure → + Add Content Root**: `../tools`, marked **Sources** (for reading and completion; the run configurations work without it).
 4. Right-click `tests/` → **Mark Directory as → Test Sources Root**.
-5. The drop-down lists the configurations of `drishti-console/run-configs/`, the folder **Drishti-python**: the consoles (the
-   distributions' consoles included), the setup, the data preparation and the tools (section 4). PyCharm builds nothing: building is IntelliJ's
+5. The drop-down lists the configurations of `drishti-console/.idea/runConfigurations/`, by step: **Drishti-python 1 Setup** (setup, check setup), **2 Data** (the demo
+   lakes, your own file), **3 Run** (the consoles, the distributions' included), **4 Check** (the acceptance check, the environment) (section 4). PyCharm builds nothing: building is IntelliJ's
    (section 1) or the terminal's.
 
 ### 2.4 The demo lakes and your own data with the Java loader (PyCharm)
@@ -402,7 +401,17 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 
 <!-- generated: launchers begin (python tools/drishti.py launchers) -->
 
-### 4.1 Servers (IntelliJ)
+### 4.1 IntelliJ IDEA: open `drishti` (`.idea/runConfigurations/`)
+
+**Drishti-java 1 Build**
+
+| Name | What it runs | What it is | Use it when |
+|---|---|---|---|
+| **Drishti: build all** | Maven `clean package -DskipTests -pl :drishti-app,:drishti-modules -am` | the server jar into `lib/` and every module's package with `first-party.yaml` into `modules/`, stamped for that jar | after a clone or a pull (the one to click) |
+| **Drishti: test** | Maven `clean verify` | the whole Maven test run of the server, the engines and the modules (long, tens of minutes; each test class also has its own targeted run in the IDE) | before a release, or after a change that crosses modules |
+| **Drishti: build modules** | Maven `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` | the module packages only, stamped for the jar already in `lib/` | you changed only module code |
+
+**Drishti-java 2 Run**
 
 | Name | What it runs | What it is | Use it when |
 |---|---|---|---|
@@ -410,7 +419,24 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 | **Drishti: run server (built-in samples)** | the jar, profile `samples.ini` | the packs' small built-in samples (generated, ticking), sign-in on | a first look before any lake is built |
 | **Drishti: run server (QA, port 18580)** | the jar, profile `qa.ini` | the samples on its own port and data folder (`data/qa/data`), sign-in on | QA, or a second server beside the first |
 
-### 4.2 Consoles (PyCharm)
+### 4.2 PyCharm: open `drishti\drishti-console` (`drishti-console/.idea/runConfigurations/`)
+
+**Drishti-python 1 Setup**
+
+| Name | What it runs | What it is | Use it when |
+|---|---|---|---|
+| **Drishti: setup** | `drishti.py setup`, `dev.ini` only | prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): checked, what is missing installed offline from the wheel pack in `~/drishti-wheels` (it makes `dev.ini`, so it names none) | after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing |
+| **Drishti: setup (package index)** | `drishti.py setup --index`, `dev.ini` only | the same, installing what is missing from your configured package index instead of the wheel pack | no wheel pack, and pip may reach your package index |
+| **Drishti: check setup** | `drishti.py setup --check`, `dev.ini` only | what setup would do, changing nothing: the settings file, the data folder and the libraries of the project interpreter, name by name | before setup, or to see why a launcher refuses |
+
+**Drishti-python 2 Data**
+
+| Name | What it runs | What it is | Use it when |
+|---|---|---|---|
+| **Drishti: build demo lakes** | `drishti.py lake demo --engine java`, `dev.ini` only | the demo lakes with the Java loader of the jar in `lib/` | after a build, with the server stopped |
+| **Drishti: run loader (file into the lake)** | `drishti.py lake build`, `dev.ini` only | one file of yours into the demo lake, by its kind (it asks for the file when it runs) | you hold a file of your own (never committed; the launcher asks for its path) |
+
+**Drishti-python 3 Run**
 
 | Name | What it runs | What it is | Use it when |
 |---|---|---|---|
@@ -419,19 +445,13 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 | **Drishti: run console (Risk)** | `run_drishti_web.py`, profile `demo.ini`, `--distribution=risk` | the Risk distribution's console on 17480 (temp folder `<data>/tmp/console-risk`) | Drishti Risk, with **Drishti: run server (demo)** |
 | **Drishti: run console (Finance)** | `run_drishti_web.py`, profile `demo.ini`, `--distribution=finance --server.port=17481` | the Finance distribution's console on 17481 (temp folder `<data>/tmp/console-finance`) | Drishti Finance, beside the Risk console |
 
-### 4.3 Build (IntelliJ) and tools (PyCharm)
+**Drishti-python 4 Check**
 
-| IDE | Name | What it runs | What it is | Use it when |
-|---|---|---|---|---|
-| IntelliJ | **Drishti: build all** | Maven `clean package -DskipTests -pl :drishti-app,:drishti-modules -am` | the server jar into `lib/` and every module's package with `first-party.yaml` into `modules/`, stamped for that jar | after a clone or a pull (the one to click) |
-| IntelliJ | **Drishti: test** | Maven `clean verify` | the whole Maven test run of the server, the engines and the modules (long, tens of minutes; each test class also has its own targeted run in the IDE) | before a release, or after a change that crosses modules |
-| IntelliJ | **Drishti: build modules** | Maven `clean package -DskipTests -pl :drishti-modules -am -Pmodules-only` | the module packages only, stamped for the jar already in `lib/` | you changed only module code |
-| PyCharm | **Drishti: setup** | `drishti.py setup`, `dev.ini` only | prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): checked, what is missing installed offline from the wheel pack in `~/drishti-wheels`; never a venv (it makes `dev.ini`, so it names none) | after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing |
-| PyCharm | **Drishti: setup (package index)** | `drishti.py setup --index`, `dev.ini` only | the same, installing what is missing from your configured package index instead of the wheel pack | no wheel pack, and pip may reach your package index |
-| PyCharm | **Drishti: build demo lakes** | `drishti.py lake demo --engine java`, `dev.ini` only | the demo lakes with the Java loader of the jar in `lib/` | after a build, with the server stopped |
-| PyCharm | **Drishti: run loader (file into the lake)** | `drishti.py lake build`, `dev.ini` only | one file of yours into the demo lake, by its kind (it asks for the file when it runs) | you hold a file of your own (never committed; the launcher asks for its path) |
-| PyCharm | **Drishti: check environment** | `drishti.py doctor`, profile `demo.ini` | this machine and the server on 18480 (without a token it says how to make one) | something does not start or answer |
-| PyCharm | **Drishti: check environment (QA)** | `drishti.py doctor`, profile `qa.ini` | the same for the QA server on 18580 | with the QA pair |
+| Name | What it runs | What it is | Use it when |
+|---|---|---|---|
+| **Drishti: check acceptance** | `drishti.py doctor --acceptance`, profile `demo.ini` | the end-to-end check: signs in to the console on 17480 as the development administrator, asks VAR BANK through it and compares both figures with the release's | after **Drishti: run server (demo)** and **Drishti: run console** are up |
+| **Drishti: check environment** | `drishti.py doctor`, profile `demo.ini` | this machine and the server on 18480 (without a token it says how to make one) | something does not start or answer |
+| **Drishti: check environment (QA)** | `drishti.py doctor`, profile `qa.ini` | the same for the QA server on 18580 | with the QA pair |
 
 <!-- generated: launchers end -->
 
@@ -470,7 +490,7 @@ Two servers must never share a data folder.
 | `GET /api/v1/risk/var/…` (or VAR BANK in the console) answers **404** | banking is not loaded: Admin → Modules says why (stale: recipe A; missing: recipe B). |
 | Maven fails with *invalid target release* or *release version 21 not supported* | the wrong JDK: set the Project SDK (section 1.2 step 2) and **Maven → Runner → JRE** to *Use Project JDK*; the shell's `JAVA_HOME` does not count in the IDE. |
 | Maven: *Could not transfer artifact … from/to central … PKIX path building failed* | the company network re-signs HTTPS: on Windows add `-Djavax.net.ssl.trustStoreType=Windows-ROOT` to Maven's Runner and Importer VM options (recipe C; section 1.4: or the mirror, or the root certificate in the JDK) |
-| IntelliJ shows *Unknown configuration type* for a launcher, asks for the Python plugin, or a PyCharm launcher is missing in IntelliJ | the consoles and the Python tools are PyCharm's (`drishti-console/run-configs/`, the project `drishti\drishti-console`); IntelliJ does not run them: recipe D. |
+| IntelliJ shows *Unknown configuration type* for a launcher, asks for the Python plugin, or a PyCharm launcher is missing in IntelliJ | the consoles and the Python tools are PyCharm's (`drishti-console/.idea/runConfigurations/`, the project `drishti\drishti-console`); IntelliJ does not run them: recipe D. |
 | Maven: *module pack … refused:* followed by a reason | the packer refused a module folder (a jar `module.yaml` names is missing, a `content.yaml` that leaves out what a pack serves, a file outside the layout): the line names the module and the file; fix it and build again |
 | A Python configuration says *Python interpreter is not configured* | PyCharm: choose the interpreter (section 2.3, step 2). |
 | `lake demo` says the jar is missing | run **Drishti: build all** first; `lake demo --engine java` reads the jar in `lib/`. |
@@ -518,9 +538,9 @@ The terminal does the same: `python3 tools/drishti.py start server` always runs 
 3. **Apply**; run **Drishti: build all** again. A terminal: `setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"`, then a new
    terminal. Details and the other ways: section 1.4.
 
-**Recipe D: *Unknown configuration type*, or IntelliJ asks for the Python plugin.** IntelliJ runs the Maven builds and the server JAR Applications of `run-configs/`;
+**Recipe D: *Unknown configuration type*, or IntelliJ asks for the Python plugin.** IntelliJ runs the Maven builds and the server JAR Applications of `.idea/runConfigurations/`;
 every Python launcher (the folder **Drishti-python**: the consoles, **Drishti: build demo lakes**, the tools) is PyCharm's, in
-`drishti-console/run-configs/`.
+`drishti-console/.idea/runConfigurations/`.
 
 1. In IntelliJ, delete any Python configuration you copied there (**Edit Configurations**, select, **−**); no plugin is needed.
 2. Open `drishti\drishti-console` in PyCharm (section 2.3); choose the interpreter (section 2.3, step 2).
@@ -593,7 +613,7 @@ Python Exception Breakpoints → Any exception**. The Java `sutra` command that 
 ### 7.3 Share a configuration with the team
 
 A configuration lives in `.idea/workspace.xml` (personal) unless you tick **Store as project file** in **Edit Configurations**: PyCharm, opened on `drishti-console`,
-then writes `run-configs/<name>.run.xml` there, which can be committed (a name of the standard has no colon in its file name); add it as a row of
+then writes `.idea/runConfigurations/<name>.xml` there, which can be committed (a name of the standard has no colon in its file name); add it as a row of
 `tools/launch/launchers.yaml` to keep it. Keep a shared file portable: `$PROJECT_DIR$` is `drishti-console` (`$PROJECT_DIR$/..` the install folder) on every machine; an empty `SDK_HOME` (*Project Default* interpreter) leaves nobody's interpreter path in the file; use `$USER_HOME$` for anything personal and put no
 token and no home-directory path in it (`tools/test_run_configs.py` guards the shipped files). Reload with **File → Reload All from Disk** if the project was open already.
 
@@ -624,7 +644,7 @@ wrong. Each step says what you should see; if you do not, the row of section 6 i
    launchers). *You should see* `dev.ini` with `drishti.home` naming this clone, `drishti.data.dir` `<clone>/data`, `drishti.modules.home`
    `<clone>/modules`, and `drishti.java.home` a JDK 21 folder (forward slashes), and beside it `jvm-demo.args`, `jvm-samples.args` and
    `jvm-qa.args`, and `drishti.python` naming the Python you ran setup with; setup's `libraries` line is `[  ok]` or `[made]` (the
-   libraries from `C:\Users\you\drishti-wheels`; on Windows no `.venv` is made), and its next steps end with `start all --demo`. A `[FAIL] libraries`
+   libraries from `C:\Users\you\drishti-wheels`; no virtual environment is made), and its next steps end with `start all --demo`. A `[FAIL] libraries`
    line: unzip the wheel pack into `C:\Users\you\drishti-wheels` and run setup again. Only the arguments files missing or naming an old data folder: `py tools\drishti.py --settings
    C:\Users\you\drishti-envs\dev.ini launchers --machine` writes them again. *If not:* recipe F; for the Java line, recipe E; a server
    launcher that says *could not open …jvm-demo.args*: recipe G.
@@ -676,7 +696,7 @@ To search, navigate and refactor across repositories, open Drishti and attach th
 3. A change in an attached repository is compiled in the IDE, but Drishti's build reads the product's jar from `~/.m2` (the installed tag), so to run
    Drishti against such a change build the product with its own `build all` launcher into a scratch repository
    (`-Dmaven.repo.local=<folder>`, the product's `BUILD_AND_IDE.md`), never install a branch into `~/.m2`.
-4. Each attached repository keeps its own launchers: add its `run-configs/` by opening that repository in a second window (9.1) when you need to run
+4. Each attached repository keeps its own launchers: add its launchers by opening that repository in a second window (9.1) when you need to run
    them, or copy the launcher (Ctrl+D) into this project.
 
 ### 9.3 The same in PyCharm
@@ -727,7 +747,7 @@ then run the tasks **Drishti: build demo lakes**, **Drishti: run server (demo)**
    `JAVA_HOME` (set it, or choose it in the Java extension's settings). The Python tasks run `python3` on Linux and macOS and `py -3.13` on
    Windows. **Drishti: run loader (file into the lake)** asks for the file's path in a box. A copy of the workspace file for yourself is fine;
    the shipped one is overwritten by a pull.
-3. Choose the Python setup prepared: **Python: Select Interpreter** (Windows the system Python 3.13; Linux, macOS `drishti-console/.venv` when setup made it).
+3. Choose the Python setup prepared: **Python: Select Interpreter** (the Python 3.13 setup prepared: yours).
 4. Wait for the Java extension to import the Maven project (the first import downloads libraries). Behind a company network that re-signs
    HTTPS the import and the build stop with `PKIX path building failed`: put `-Djavax.net.ssl.trustStoreType=Windows-ROOT` in the environment
    variable `MAVEN_OPTS` (`setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"`, then a new terminal) and in the Java extension's

@@ -40,9 +40,11 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Locked Python environments (docs/guides/bi/README.md section 5): one per lock, its id the sha256 of (interpreter version,
- * platform, lock text), built under {@code <data dir>/compute/envs/<id>/} with {@code python -m venv} and
- * {@code pip install --require-hashes --no-deps --only-binary=:all:} from the approved source only (no resolution, no source builds, no
- * index but the one named), then recorded in a manifest of hashes and made read-only. Never changed in place: a new lock is a new
+ * platform, lock text): a library folder {@code <data dir>/compute/envs/<id>/site/} filled by the configured interpreter
+ * ({@code compute.python}, else {@code drishti.python}) with {@code pip install --target <site> --require-hashes --no-deps
+ * --only-binary=:all:} from the approved source only (no resolution, no source builds, no index but the one named), then recorded in a
+ * manifest of hashes and made read-only. No virtual environment is made: a worker runs that same interpreter with the folder first on its
+ * {@code PYTHONPATH}. Never changed in place: a new lock is a new
  * environment. A build that fails leaves nothing behind and names the wheel in its message. pip's temporary files go under
  * {@code <data dir>/compute/work/}, never the machine's temporary folder.
  */
@@ -83,9 +85,9 @@ public final class Environments {
         return settings.envs().resolve(id);
     }
 
-    /** The interpreter inside an environment. */
-    public static Path python(Path envDir) {
-        return WINDOWS ? envDir.resolve("Scripts").resolve("python.exe") : envDir.resolve("bin").resolve("python");
+    /** The library folder of an environment (pip's {@code --target}): first on a worker's {@code PYTHONPATH}. */
+    public static Path site(Path envDir) {
+        return envDir.resolve("site");
     }
 
     /** True when the environment is built (its manifest exists). */
@@ -94,15 +96,15 @@ public final class Environments {
     }
 
     /**
-     * The interpreter of a built environment, after checking every file against the manifest; refused (with the file named) when the
+     * The library folder of a built environment, after checking every file against the manifest; refused (with the file named) when the
      * environment is missing or changed.
      */
-    public Path verifiedPython(String id) {
+    public Path verifiedSite(String id) {
         Optional<String> problem = Manifest.verify(dir(id));
         if (problem.isPresent()) {
             throw new ComputeException(ComputeException.Code.REFUSED, "environment " + id + ": " + problem.get());
         }
-        return python(dir(id));
+        return site(dir(id));
     }
 
     /** Why the last build of an environment failed, if it did. */
@@ -150,13 +152,10 @@ public final class Environments {
             if (!have.equals(py.version())) {
                 throw fail(id, "the lock wants Python " + py.version() + ", compute.python is " + have);
             }
-            Run venv = run(List.of(python, "-m", "venv", dir.toString()), work, log);
-            if (venv.exit != 0) {
-                throw fail(id, "python -m venv failed: " + venv.last());
-            }
+            Files.createDirectories(site(dir));                            // the libraries only: no virtual environment
             Path lockCopy = work.resolve("requirements.lock");
             Files.writeString(lockCopy, lock.text());
-            List<String> pip = new ArrayList<>(List.of(python(dir).toString(), "-m", "pip", "install", "--require-hashes", "--no-deps",
+            List<String> pip = new ArrayList<>(List.of(python, "-m", "pip", "install", "--target", site(dir).toString(), "--require-hashes", "--no-deps",
                     "--only-binary=:all:", "--no-cache-dir", "--disable-pip-version-check", "--no-input", "--isolated", "--no-warn-script-location"));
             pip.addAll(source(py.index()));
             pip.add("-r");

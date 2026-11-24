@@ -152,3 +152,20 @@ def server_url(entries: dict, host: str = "127.0.0.1") -> str | None:
         return url.rstrip("/")
     port = str(entries.get("server.port") or "").strip()
     return f"http://{host}:{port}" if port.isdigit() else None
+
+
+def names_home(entries: dict, home) -> bool:
+    """True when a settings file's ``drishti.home`` names ``home`` (this checkout): the ONE test of "is this file mine", for the tools'
+    default settings file, the bare console and a launcher's file (FIRST_RUN_ROBUSTNESS.md F4, R6). A file naming another folder, or none,
+    is not this checkout's: its roots are never followed."""
+    import os
+    named = (entries.get("drishti.home") or "").strip()
+    if not named:
+        return False
+    norm = lambda p: os.path.normcase(os.path.normpath(str(Path(p).expanduser().absolute()))).rstrip("\\/")
+    try:
+        if Path(named).exists() and os.path.samefile(named, home):
+            return True
+    except OSError:
+        pass
+    return norm(named) == norm(home)

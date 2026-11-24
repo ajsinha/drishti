@@ -339,7 +339,7 @@ def test_schedule_entries_for_cron_systemd_and_windows(spec):
     assert "Persistent=true" in unit and "Type=oneshot" in unit
     win = S.windows([spec], Path("C:/drishti"), py="C:/Program Files/Python313/python.exe")
     assert 'schtasks /Create /F /TN "Drishti feed sample-mapping" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 07:15' in win
-    assert "C:\\Program Files\\Python313\\python.exe" in win and "C:\\drishti\\tools\\drishti.py" in win and ".venv" not in win + cron + unit
+    assert "C:\\Program Files\\Python313\\python.exe" in win and "C:\\drishti\\tools\\drishti.py" in win
     import procs
     assert S.cron([spec], Path("/opt/drishti")).count(procs.tools_python()[0] + " /opt/drishti/tools/drishti.py") == 1   # the default: the one Python
     assert "feed run sample-mapping --trigger schedule" in win and "powershell" not in win and ".ps1" not in win

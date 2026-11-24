@@ -169,7 +169,7 @@ def test_the_server_jar_is_found_in_home_lib_only(tmp_path):
     home = tmp_path / "home"
     (home / "kernel" / "drishti-server" / "target").mkdir(parents=True)
     (home / "kernel" / "drishti-server" / "target" / "drishti-server-1-exec.jar").write_bytes(b"x")   # Maven's output: never looked at
-    with pytest.raises(javacmd.JarError, match=r"no server jar in .*lib: run  python tools/drishti.py build jar"):
+    with pytest.raises(javacmd.JarError, match=r"no server jar in .*lib: run  .*drishti\.py build jar"):
         javacmd.server_jar(None, home)
     (home / "lib").mkdir()
     (home / "lib" / "drishti-server-2-exec.jar").write_bytes(b"x")
@@ -190,7 +190,7 @@ def test_a_jar_of_another_version_than_the_checkout_is_refused(tmp_path):
     (home / ".mvn").mkdir()
     (home / ".mvn" / "maven.config").write_text("-Drevision=2.9.11.z9\n", encoding="utf-8")
     (home / "lib" / "drishti-server-2.9.11.g-exec.jar").write_bytes(b"x")
-    with pytest.raises(javacmd.JarError, match=r"lib/ holds drishti-server-2.9.11.g-exec.jar but this checkout is 2.9.11.z9: run  python tools/drishti.py build jar"):
+    with pytest.raises(javacmd.JarError, match=r"lib/ holds drishti-server-2.9.11.g-exec.jar but this checkout is 2.9.11.z9: run  .*drishti\.py build jar"):
         javacmd.server_jar(None, home)
     (home / "lib" / "drishti-server-2.9.11.g-exec.jar").unlink()
     (home / "lib" / "drishti-server-2.9.11.z9-exec.jar").write_bytes(b"x")
@@ -295,7 +295,7 @@ def test_windows_stop_asks_over_http_first_then_forces_after_the_timeout(tmp_pat
     procs.write_pid(f, 4242, port=18999, data="d")                                  # no key (an older launcher): forced at once on Windows
     with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs, "alive", return_value=True), \
             mock.patch.object(procs, "running", return_value=True), mock.patch.object(procs.subprocess, "run", return_value=_cp("")) as run, \
-            mock.patch.object(procs.time, "sleep"), mock.patch.object(procs.urllib.request, "urlopen") as http:
+            mock.patch.object(procs.time, "sleep"), mock.patch.object(procs, "no_proxy_opener") as http:
         procs.stop_pid_file(f, "server", procs.SERVER_MARK, 5)
     http.assert_not_called()
     assert run.call_args[0][0] == ["taskkill", "/F", "/PID", "4242"]
@@ -316,7 +316,9 @@ def test_the_stop_request_carries_the_pid_files_key_to_this_machine_only(tmp_pat
     def urlopen(req, timeout):
         seen.update(url=req.full_url, method=req.get_method(), key=req.get_header(procs.STOP_HEADER.capitalize()))
         return Answer()
-    with mock.patch.object(procs.urllib.request, "urlopen", urlopen):
+    class Opener:                                   # Drishti's own address: the no-proxy opener (G5)
+        open = staticmethod(urlopen)
+    with mock.patch.object(procs, "no_proxy_opener", lambda: Opener()):
         assert procs.ask_to_stop({"port": "18480", "stop": "k3y"})
     assert seen == {"url": "http://127.0.0.1:18480/launcher/stop", "method": "POST", "key": "k3y"}
     assert not procs.ask_to_stop({"port": "18480"}) and not procs.ask_to_stop({"stop": "k"})
@@ -356,7 +358,7 @@ def test_wrong_options_exit_2():
     assert run("start", "server", "--seed", "10.0.0.1:18480").returncode == 2
     assert run("stop", "server", "--node", "a", "--all-nodes").returncode == 2
     r = run("status", env=env_of(DRISHTI_HOME="/somewhere/else"))
-    assert r.returncode != 2 and "WARNING: DRISHTI_HOME=/somewhere/else names another folder" in r.stderr, "warn, never refuse"
+    assert r.returncode != 2 and "DRISHTI_HOME=/somewhere/else names" in r.stderr, "warn, never refuse"
 
 
 def test_status_shows_the_roots_and_a_stale_pid(tmp_path):
@@ -368,9 +370,9 @@ def test_status_shows_the_roots_and_a_stale_pid(tmp_path):
 
 def test_setup_check_changes_nothing_and_setup_is_idempotent(tmp_path):
     data, envs = tmp_path / "data", tmp_path / "envs"
-    r = run("setup", "--check", "--data-dir", str(data), "--envs-dir", str(envs), "--skip-venv")
+    r = run("setup", "drishti", "--check", "--data-dir", str(data), "--envs-dir", str(envs))
     assert r.returncode == 1 and not data.exists() and not envs.exists(), r.stdout
-    r = run("setup", "--data-dir", str(data), "--envs-dir", str(envs), "--skip-venv")
+    r = run("setup", "drishti", "--data-dir", str(data), "--envs-dir", str(envs))
     assert all((data / d).is_dir() for d in ("run", "logs", "tmp", "delta")), r.stdout + r.stderr
     assert not (data / "modules").exists(), "the modules are packages in <home>/modules, not a folder of the data folder"
     assert not (data / "lib").exists(), "every jar is under the home (lib, lib/ext), never the data folder"
@@ -379,7 +381,7 @@ def test_setup_check_changes_nothing_and_setup_is_idempotent(tmp_path):
     assert "/path/to/drishti" not in ini
     mine = ini + "# mine\n"                                        # this checkout's file with the user's own line: kept as it is
     (envs / "dev.ini").write_text(mine, encoding="utf-8")
-    r = run("setup", "--data-dir", str(data), "--envs-dir", str(envs), "--skip-venv")
+    r = run("setup", "drishti", "--data-dir", str(data), "--envs-dir", str(envs))
     assert (envs / "dev.ini").read_text(encoding="utf-8") == mine and "kept as it is" in r.stdout
     assert not list(envs.glob("replaced-*")), "identical files and this checkout's dev.ini: nothing moved"
     assert "Environment variables seen" in r.stdout and "Next steps" in r.stdout
