@@ -105,7 +105,7 @@ From a clean clone the whole install takes about 15 minutes on a laptop, most of
 |---|---|---|---|
 | OpenJDK | **21** or newer, 64-bit, a JDK (not only a JRE); production runs 21, 25 is also tested | builds and runs the server | `java -version`, `javac -version` |
 | Python | **3.13** (what CI tests and the images run); the floor is **3.10** (`drishti.py doctor` fails below it; 3.10 to 3.12 are not tested). This row is the one statement of the Python version | the console and the command-line tools | `python3 --version` |
-| The offline wheel pack | the release's (`drishti-wheels-*.zip`), unzipped into `~/drishti-wheels` (Windows `%USERPROFILE%\drishti-wheels`) | `setup` installs the libraries from it into the Python you run Drishti with, with no package index | `python tools/drishti.py setup --check` |
+| The offline wheel pack | the release's (`drishti-wheels-*.zip`), unzipped into `~/drishti-wheels` (Windows `%USERPROFILE%\drishti-wheels`) | you install the libraries from it into the Python you run Drishti with (`python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt` in `drishti-console`), with no package index; `setup` only checks them | `python tools/drishti.py setup --check` |
 | git | any | downloads the code | `git --version` |
 | Docker | optional | containers, the PostgreSQL/Kafka/Aerospike extras, some tests | `docker --version` |
 | Disk | a few GB, plus the lakes (the demo lakes: 3.4 GB), each Kafka disk cache (up to `disk-cache.max-gb`, 10 GB) and each ActiveMQ or RabbitMQ state store (`state.max-gb`, 10 GB; plan about twice that, on an SSD) | | |
@@ -145,22 +145,22 @@ stops with `Drishti needs Java 21 or newer … Maven is running on Java …`, `J
 ### 2.3 The console's Python
 
 **One Python, yours.** One Python serves the console, the command-line tools (`tools/drishti.py`) and the lake builder: the Python
-you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself). `setup` checks its libraries and installs what is missing into it from the offline wheel pack (no
-package index unless `--index`); Drishti makes no virtual environment:
+you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself). you install its libraries from the offline wheel pack with pip, and `setup` only checks them (Drishti never runs pip, and makes no virtual environment):
 
 ```bash
 unzip drishti-wheels-*.zip -d ~/drishti-wheels      # once: the release's wheel pack (setup finds ~/drishti-wheels by itself)
-python3 tools/drishti.py setup                      # or: setup --wheels /path/to/wheels; setup --index uses your package index
+(cd drishti-console && python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt)   # your command, once
+python3 tools/drishti.py setup                      # checks the libraries: "Drishti is ready."
 python3 -c "import drishti_lake, pyarrow, yaml, fastapi; print('ok')"
 ```
 
 You should see `ok`. Setup writes this Python's full path into `~/drishti-envs/dev.ini` as `drishti.python`: `start console`, the
 cluster and the feed schedules run it (`DRISHTI_PYTHON` overrides). `start` never makes an environment, never installs anything and
-refuses a Python that lacks a library, naming it and the `setup` line. Developers install `drishti-console/requirements-test.txt` the same way.
+refuses a Python that lacks a library, naming it and the pip command. Developers install `drishti-console/requirements-test.txt` the same way.
 
 - **Python in BI** (python visuals, Python-driven tables, the Notebook's Python cells) runs on the **server's compute pool** `python`, in a
   strict sandbox (Linux only), never in the console. The interpreter must carry exactly the libraries of
-  `config/compute/locks/python.lock`; `setup` checks and installs the lock too, so the one Python can be it:
+  `config/compute/locks/python.lock`; `setup` checks the lock too (you install it with pip, never Drishti), so the one Python can be it:
 
   ```bash
   python3 tools/drishti.py setup --check                       # the lock's libraries, name by name
@@ -390,7 +390,7 @@ server on `windows-latest`. No `.exe` beyond Java and Python is needed.
 |---|---|---|
 | JDK 21 or newer (Temurin or any OpenJDK) | `winget install EclipseAdoptium.Temurin.21.JDK`, or the MSI from adoptium.net | `java -version` |
 | Python 3.13 | `winget install Python.Python.3.13`, or python.org (tick *Add python.exe to PATH*) | `python --version` |
-| the offline wheel pack | unzip the release's `drishti-wheels-*.zip` into `%USERPROFILE%\drishti-wheels` | `py -3.13 tools\drishti.py setup --check` |
+| the offline wheel pack | unzip the release's `drishti-wheels-*.zip` into `%USERPROFILE%\drishti-wheels`; then `cd "<drishti>\drishti-console"` and `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt` | `py -3.13 tools\drishti.py setup --check` |
 | git (to build from source) | `winget install Git.Git` | `git --version` |
 
 The Java Drishti runs with need not be the default one: `tools\drishti.py` takes its folder as `--java-home`, or from `DRISHTI_JAVA_HOME`, then `JAVA_HOME`, then `java` on the `PATH`:
@@ -420,7 +420,7 @@ its `lib\` (one jar there; `py -3.13 tools\drishti.py build jar` puts a freshly 
 ### 4.3 The demo lakes, the server and the console
 
 ```powershell
-py -3.13 tools\drishti.py setup                                                 # Java 21+, the data folder, dev.ini, this Python's libraries (from %USERPROFILE%\drishti-wheels)
+py -3.13 tools\drishti.py setup                                                 # Java 21+, the data folder, dev.ini; checks this Python's libraries (installed by your pip command above)
 py -3.13 tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
 py -3.13 tools\drishti.py start server --packs market-risk --background
 py -3.13 tools\drishti.py start console --background
@@ -430,8 +430,8 @@ py -3.13 tools\drishti.py stop all
 
 `lake demo` writes the same tables as on Linux, with Drishti's Java loader (no Hadoop, no `.exe`). The one command `tools\drishti.py` is the same on Windows, Linux and macOS
 (`py` here, `python` there): `start server` checks that Java is 21 or newer, adds
-`-XX:+UseCompactObjectHeaders` only on Java 25, and `--demo` sets the demo's settings with its development secrets; `setup` installs
-the libraries into the Python you run it with (from the wheel pack) and `start console` runs that Python, never making an environment.
+`-XX:+UseCompactObjectHeaders` only on Java 25, and `--demo` sets the demo's settings with its development secrets; `setup` checks
+the libraries of the Python you run it with (you install them from the wheel pack with pip) and `start console` runs that Python, never making an environment or installing anything.
 Every option ([CLI_REFERENCE.md](CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)), where the pid, log and
 temporary files go, the exit codes and the errors: [DEPLOYMENT_AND_QA_GUIDE.md › section 7](../DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
 Admin → Health then lists each lake connector as `UP (engine: native)`. From IntelliJ IDEA
@@ -470,7 +470,8 @@ sudo cp -r bin modules config drishti-console docs tools /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
 cd /opt/drishti
-sudo -u drishti python3.13 tools/drishti.py setup --wheels /opt/drishti-wheels   # the libraries into the machine's Python 3.13, offline; no venv
+(cd drishti-console && sudo python3.13 -m pip install --no-index --find-links /opt/drishti-wheels -r requirements.txt)   # you install the libraries into the machine's Python 3.13, offline; no venv
+sudo -u drishti python3.13 tools/drishti.py setup   # checks them
 ```
 
 ```
@@ -1094,7 +1095,7 @@ one way out, audited.
 
 Everything you build for Drishti (a pack, a Sutra, an about file, a lake) is a **plain file or folder**, so getting it onto a server is a
 **copy**: no server API, no token, no running server. The commands are `tools/drishti.py`'s ([CLI_REFERENCE.md](CLI_REFERENCE.md)); the machine that
-builds and verifies needs Python 3.10+ and PyYAML (`python tools/drishti.py setup` installs it), the target only a shell (`tar` and
+builds and verifies needs Python 3.10+ and PyYAML (install it with pip; `python tools/drishti.py setup` checks it), the target only a shell (`tar` and
 `cp` do by hand what `pack deploy` does). With a running server and an administrator's login, [section 9](#9-admin--packs-deploy-an-archive-history-and-roll-back)
 does the same from the browser, with checks on the server and automatic undo.
 
@@ -2484,9 +2485,7 @@ Sources are `shipped` (`<data>/compute/shipped/`), a named index of `compute.ind
 `native: true` is refused). **Approval**: a connector or pool whose items are not all approved **stays off** (Admin → Connectors shows *waiting for
 approval*); an administrator other than the one who asked approves or rejects with a reason (`compute.approval.roles` can narrow approvers); every
 decision is audited, approvals live in the Drishti database so every node sees them, and **Revoke** stops the connectors that need the items at
-once. **Environments**: one per lock; **Build** (or `compute.build: on-approval`) runs `pip install --target` (a library folder, no virtual environment) with `--require-hashes --no-deps
---only-binary=:all:` from the named source only, writes a manifest of every file's sha256 and makes the folder read-only; every worker start checks
-it. A new lock is a new environment.
+once. **Environments**: one per lock; the Python libraries are **not installed by Drishti**: workers run with `drishti.python` as it is, the pool checks its interpreter against the lock, and a missing or different library is an error naming it and the pip command for the operator (`python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt` or `python3 -m pip install --require-hashes --no-deps -r config/compute/locks/python.lock`). A new lock is a new approval.
 
 ### 15.5 Admin → Compute, reactive connectors, and when something is wrong
 
@@ -2508,8 +2507,7 @@ The `compute-demo` pack brings two samples ([tutorial 19, Part C](../tutorials/1
 |---|---|
 | `DRS-9201` compute is off | switch it on (15.1) |
 | a pool *not ready: waiting for approval*; a connector *waiting for approval* | approve in Admin → Compute (another administrator than the one who asked) |
-| *approved but not built* | **Build**, or `compute.build: on-approval` |
-| a build fails *pip refused the lock* | a wheel's hash differs or none for this platform: fix the source or regenerate the lock (nothing was left behind) |
+| *the pool's Python lacks a library* | install it into `drishti.python` with the pip command the error names; Drishti installs nothing |
 | *a file of the environment was changed after it was built* | treat it as tampering: remove the environment folder and build again |
 | `DRS-9203` busy; `DRS-9204` over its time budget | wait, raise `workers.max` or the queue, add a node; raise the budget or split the work |
 | `failed: ... sandbox refused` | the engine opened a socket, started a process or wrote outside its scratch: it must not |
@@ -2847,7 +2845,7 @@ Run it from cron as the `drishti` user (`30 1 * * * /opt/drishti/backup.sh`) and
 4. **Stop** both: `sudo systemctl stop drishti-console drishti-server` (or `python tools/drishti.py stop all`; Windows `py -3.13 tools\drishti.py stop all`).
 5. **Replace** the jar, `bin/`, `modules/`, `config/` (keep your own files in it: overrides in `config/connectors/`, module switches you
    changed), `drishti-console/`, `tools/` and `docs/` (keep your settings files and your local files), then
-   `python3 tools/drishti.py setup --wheels <the new release's wheel pack>` in case the libraries changed (it installs only what is missing).
+   your pip command with the new release's wheel pack in case the libraries changed (`python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt` in `drishti-console`), then `python3 tools/drishti.py setup`, which only checks.
    **Coming from a release that generated connector files or installed modules into the data folder**, move that state aside first: the
    list and the commands are in [DEPLOYMENT_AND_QA_GUIDE.md › Upgrading an older install](../DEPLOYMENT_AND_QA_GUIDE.md#41-upgrading-an-older-install-start-from-clean-state).
 6. **Start** the server, then the console: servers before consoles, always (a console newer than its server cannot sign anyone in).

@@ -71,12 +71,12 @@ sudo make altinstall                        # altinstall: it never replaces the 
 /opt/python3.13/bin/python3.13 --version    # Python 3.13.<n>
 ```
 
-**Never** use `--break-system-packages`. `setup` refuses an operating system's own Python in one line and never runs pip into it:
+**Never** use `--break-system-packages`. **Drishti never installs Python packages**: you install the libraries yourself with the pip command below, and `setup` only checks them. `setup` also refuses an operating system's own Python in one line:
 *this Python is managed by the operating system: run setup with a Python you prepared for Drishti (a dedicated Python 3.13, e.g.
 /opt/python3.13, see PRODUCTION_DEPLOYMENT.md; your own virtual environment is fine)*; a wheel pack for another Python version is one line
 naming both versions. **Drishti never makes a virtual environment**: the Python is yours. The recommended one is the dedicated Python
 above (a Python in its own prefix carries no `EXTERNALLY-MANAGED` marker); a virtual environment you make yourself from it works the same
-(use its `python` wherever this guide says `/opt/python3.13/bin/python3.13`). Setup installs the libraries into that Python, and both services
+(use its `python` wherever this guide says `/opt/python3.13/bin/python3.13`). You install the libraries into that Python (section 3), `setup` checks them, and both services
 run it, owned by root and read-only to the service user.
 
 **Sizing.** Before a large deployment, plan it: `python3 tools/sizing_planner.py --out <folder>` writes the single-node planner workbook (the
@@ -138,21 +138,24 @@ cd /opt/drishti/<release> && sudo /opt/python3.13/bin/python3.13 build_all.py --
 ls /opt/drishti/<release>/drishti/lib/drishti-server-*-exec.jar
 ls /opt/drishti/<release>/drishti/modules/*.dmod | head -3          # the module packages (a release carries them, never stale)
 
-# 3. the Python libraries, from the wheel pack only, into the Python 3.13 you prepared; write /etc/drishti/prod.ini first (4.1):
-#    setup adds drishti.python to it (and writes no developer ~/drishti-envs when --settings names your file)
+# 3. the Python libraries: YOU install them, from the wheel pack unzipped into /root/drishti-wheels, into the Python 3.13 you prepared
+#    (Drishti runs no pip: not setup, not start, not the server's compute environments)
 PY=/opt/python3.13/bin/python3.13
-PACK=/root/drishti-platform-<release>-wheels-linux-x64-py313.zip
-sudo $PY /opt/drishti/<release>/drishti/tools/drishti.py --settings /etc/drishti/prod.ini setup libs --wheels $PACK --check   # what is missing; changes nothing
-sudo $PY /opt/drishti/<release>/drishti/tools/drishti.py --settings /etc/drishti/prod.ini setup libs --wheels $PACK
+cd /opt/drishti/<release>/drishti/drishti-console
+sudo $PY -m pip install --no-index --find-links /root/drishti-wheels -r requirements.txt
+#    then write /etc/drishti/prod.ini (4.1) and let setup CHECK the libraries (it prints "Drishti is ready." when all is in order, else the exact pip command above)
+sudo $PY /opt/drishti/<release>/drishti/tools/drishti.py --settings /etc/drishti/prod.ini setup
 
 # 4. the install is root-owned and not writable by the service user
 sudo chown -R root:root /opt/drishti/<release> && sudo chmod -R go-w /opt/drishti/<release>
 ```
 
-`setup libs` installs the pinned Lake wheel and `drishti-console/requirements.txt` into the Python that runs it **only from the wheel pack**
-(`pip --no-index --find-links`). It installs only what is missing or at the wrong version (and never calls pip when all is in order), and
-names a wheel the pack lacks without installing anything. The pack may be an unpacked folder or its `.zip`; `DRISHTI_WHEELS` names it
-instead of the option. `--check` names every library and exits 1 when something is missing. The Python is shared by every release on the
+The wheel pack (`drishti-platform-<release>-wheels-linux-x64-py313.zip`) is unzipped into `/root/drishti-wheels`; `requirements.txt` lists the
+pinned Lake wheel and every library of the console and of the server's Python work, and `--no-index` keeps pip off the network. `setup`
+**only checks** the libraries of the Python that runs it: when something is missing it prints the pip command above for that Python and
+changes nothing; when all is in order it says "Drishti is ready." It still writes the settings file, `drishti.python` and the JVM argument
+files. The server's compute environments run with `drishti.python` as it is: a missing library is a clear error naming it and the pip
+command, never an automatic install. The Python is shared by every release on the
 machine, so a release whose pins differ changes it for the others: keep one release per machine, or give each release its own Python (a
 second prefix, or a virtual environment you make yourself) and name it in that release's `drishti.python`. Never run setup with the
 operating system's own Python (it refuses in one line).
@@ -184,7 +187,7 @@ url=http://127.0.0.1:18480
 under the same interpreter ([6.2](#62-the-console-unit)). Check the libraries against the file, without starting anything:
 
 ```bash
-sudo /opt/python3.13/bin/python3.13 /opt/drishti/<release>/drishti/tools/drishti.py --settings /etc/drishti/prod.ini setup libs --check
+sudo /opt/python3.13/bin/python3.13 /opt/drishti/<release>/drishti/tools/drishti.py --settings /etc/drishti/prod.ini setup
 ```
 
 Both services read the file (`-Ddrishti.settings.file=` on the server, `--settings` on the console, which takes only the keys under
@@ -657,16 +660,17 @@ value in `secrets.env` on every machine and restart all servers and consoles tog
 
 ## 11. Upgrade
 
-The install folder is replaced, never edited; the settings, the secrets and the data folder are kept. **Run `setup libs` again** with the
-new release's wheel pack: it installs into the Python only what the new pins need.
+The install folder is replaced, never edited; the settings, the secrets and the data folder are kept. **Run the pip command again** with the
+new release's wheel pack (it changes only what the new pins need), then `setup` to check.
 
 ```bash
 # 1. read RELEASE_NOTES.md and CHANGELOG.md of the new release; back up (10.3) and note the running release
-# 2. unpack and build the new release beside the old one; its libraries from its wheel pack (section 3)
+# 2. unpack and build the new release beside the old one; its libraries: your pip command with its wheel pack (section 3)
 sudo mkdir -p /opt/drishti/<new> && sudo unzip -q /root/drishti-platform-<new>-source.zip -d /opt/drishti/<new>
 cd /opt/drishti/<new> && sudo /opt/python3.13/bin/python3.13 build_all.py --bundle . --skip-tests
 PY=/opt/python3.13/bin/python3.13
-sudo $PY /opt/drishti/<new>/drishti/tools/drishti.py --settings /etc/drishti/prod.ini setup libs --wheels /root/drishti-platform-<new>-wheels-linux-x64-py313.zip
+cd /opt/drishti/<new>/drishti/drishti-console && sudo $PY -m pip install --no-index --find-links /root/drishti-wheels-<new> -r requirements.txt   # the new pack, unzipped
+sudo $PY /opt/drishti/<new>/drishti/tools/drishti.py --settings /etc/drishti/prod.ini setup     # checks
 sudo chown -R root:root /opt/drishti/<new> && sudo chmod -R go-w /opt/drishti/<new>
 
 # 3. carry over what the site added: your jars, and the site's changed config files (compare the two config folders)
@@ -716,7 +720,7 @@ Work through it before anyone else uses the machine. Detail: [OPERATIONS_GUIDE.m
 | the start names two server jars | `lib/` holds more than one `drishti-server-*-exec.jar` | keep exactly one in `lib/` (your jars are in `lib/ext`) |
 | `setup`: the wheel folder has no wheel for X | wrong or incomplete pack | use the release's `linux-x64-py313` pack with a Python 3.13 base; the message names the wheel |
 | setup says *this Python is managed by the operating system* | setup ran with the operating system's Python | run it with the Python you prepared for Drishti (the dedicated `/opt/python3.13`, or a virtual environment you made yourself); never `--break-system-packages` |
-| the console unit fails: *this Python lacks ...* | the Python the unit names lacks the new release's libraries | run `setup libs` with that Python and the new pack ([3](#3-install-a-release)) |
+| the console unit fails: *this Python lacks ...* | the Python the unit names lacks the new release's libraries | run the pip command of section 3 with that Python and the new pack ([3](#3-install-a-release)) |
 | sign-in is impossible, no administrator exists | the first start ran without `DRISHTI_SEED_USERNAME` and `DRISHTI_SEED_PASSWORD`, or with `DRISHTI_SEED_ADMIN=false`, on an empty store | set the two variables on a store with no users and restart |
 | signed-in people are refused (401) between console and server | the two processes have different `DRISHTI_TOKEN_SECRET` | the same value on both (and every node); restart both |
 | the console loads but live panels never tick | the proxy buffers or times out the event stream | `proxy_buffering off`, `proxy_read_timeout 1h`, HTTP/1.1 |

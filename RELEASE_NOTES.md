@@ -23,24 +23,24 @@ Everything else is as in i7f.
 - **One Python, yours, on every system.** Drishti never makes a virtual environment and names none: it runs with `DRISHTI_PYTHON`, else
   `drishti.python` of the settings file, else the Python running the tool. That Python may be the system's, a dedicated one (Linux:
   `/opt/python3.13`), or a virtual environment you made yourself and run Drishti with (or name in `drishti.python`).
-- **`setup` checks the libraries of the Python running it and installs what is missing into it**, from the offline wheel pack: unzip it into
-  `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`) and run `py tools\drishti.py setup`; it finds the folder by itself and says so in one
-  line (`--wheels <folder or .zip>` or `DRISHTI_WHEELS` name another). It touches no network unless you pass `--index`. A missing library
-  is a `[FAIL]` line and the first next step is the fix; an operating system's own Python (PEP 668, *EXTERNALLY-MANAGED*) and a pack for
-  another Python version are one `[FAIL]` line each (*run setup with a Python you prepared for Drishti ... your own virtual environment is
-  fine*), never `--break-system-packages`. `setup venv`, `--reinstall` and `--skip-venv` are gone; `--system` is accepted and changes nothing.
+- **Drishti never installs Python packages** (not `setup`, not `start`, not the server's compute environments). You install the libraries
+  yourself, once: unzip the offline wheel pack into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`), then Windows `cd "<drishti>\drishti-console"` and
+  `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt`; Linux and macOS the same with `python3.13` and `/`
+  (or your own Python). **`setup` only checks** the libraries of the Python running it: it prints that exact command when something is missing
+  and "Drishti is ready." when all is in order, and writes the settings file, `drishti.python` and the JVM argument files either way. An operating
+  system's own Python (PEP 668, *EXTERNALLY-MANAGED*) and a pack for another Python version are one `[FAIL]` line each, never `--break-system-packages`.
 - **`setup` writes `drishti.python`** (the Python it ran with) into the settings file: `~/drishti-envs/dev.ini`, or the file `--settings`
   names (a production `/etc/drishti/prod.ini`; then no developer `dev.ini` and no IDE JVM options are made). A value naming a missing
   Python is replaced and said; another Python you named is kept.
 - **`start` only starts.** `start console`, `start all`, `stop`, `status` and `run_drishti_web.py` never make an environment and never
-  install: the Python is checked first and a missing library is refused at once with the list and the `setup` line, before anything is
+  install: the Python is checked first and a missing library is refused at once with the list and the pip command, before anything is
   made (`start all` asks before the server starts). The owner's Windows case (the server started, then the console went to the company
   index and got a 401) cannot recur.
 - **Setup's next steps never say `start` while a `[FAIL]` or `[todo]` remains**: the fixes come first, then `setup` again.
 - **No `--settings` needed.** Every `tools/drishti.py` command but `setup` takes `~/drishti-envs/dev.ini` by itself when it names this
   folder as `drishti.home`; a command run with a Python that lacks the libraries runs again in the one `drishti.python` names.
-- **The server's compute environments make no virtual environment either**: a locked environment is a library folder
-  (`<data>/compute/envs/<id>/site`, `pip install --target`, hashes, read-only) that workers of the configured interpreter put first on their path.
+- **The server's compute environments install nothing and make no virtual environment**: the workers run with `drishti.python` as it is; a
+  library missing or differing from the lock is a clear error naming it and the pip command for the operator.
 - **The console run bare** (`run_drishti_web.py` with no arguments, PyCharm's *Run current file*) is the launcher **Drishti: run
   console**: `~/drishti-envs/dev.ini` with the demo profile and the development secrets `drishti.py start all --demo` gives the server,
   each said in one line (*DEVELOPMENT secrets in use (NOT FOR PRODUCTION)*). The development secrets have one source,
@@ -69,7 +69,7 @@ Everything else is as in i7f.
   reach the install folder as `$PROJECT_DIR$/..` and run on the project interpreter you choose (*Settings → Project → Python Interpreter*:
   the Python setup prepared; Cancel PyCharm's offer to create a virtual environment). No launcher names an interpreter path. VS Code keeps
   one workspace with both.
-- The PyCharm setup launchers are **Drishti: setup** and **Drishti: setup (package index)**; the two *system Python* ones are gone.
+- The PyCharm setup launcher is **Drishti: setup** (it checks the libraries and installs nothing); the two *system Python* ones and the *package index* one are gone.
 - **Without an IDE**: every step on the command line, Windows and Linux, in QUICKSTART_DEVELOPERS.md section 3.1 and IDE_GUIDE.md section 11.
 
 ## What changes for developers

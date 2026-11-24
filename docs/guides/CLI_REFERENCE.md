@@ -282,8 +282,7 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 The program uses only the standard library plus PyYAML. It imports `deltalake` and `pyarrow` **only** when a command writes
 a Delta lake, so a machine without them runs everything else.
 
-**The one Python.** `setup` checks the libraries and installs what is missing into the Python you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself; Drishti makes none), from the offline wheel pack (unzip it into `~/drishti-wheels`, Windows `%USERPROFILE%\drishti-wheels`,
-or pass `--wheels <folder>`; `--index` lets pip use your package index instead). The IDE launchers use the project interpreter, the same
+**The one Python.** `setup` only CHECKS the libraries of the Python you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself; Drishti makes none) and installs nothing: you install them yourself with `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt` from `drishti-console` (Linux and macOS `python3.13` and `/`), from the offline wheel pack unzipped into `~/drishti-wheels` (Windows `%USERPROFILE%\drishti-wheels`). The IDE launchers use the project interpreter, the same
 Python ([Running the tools from PyCharm](#running-the-tools-from-pycharm-and-the-java-sutra-from-intellij)):
 
 ```bash
@@ -2596,9 +2595,9 @@ GREEN  server jar              ~/drishti/lib/drishti-server-<version>-exec.jar (
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
-                               fix: python tools/drishti.py setup   (installs what is missing into this Python from the offline wheel pack: ~/drishti-wheels, or --wheels <folder>)
+                               fix: python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt   (in drishti-console; Drishti installs nothing)
 YELLOW python pyarrow          not installed (needed for data ingest --store delta)
-                               fix: python tools/drishti.py setup   (installs what is missing into this Python from the offline wheel pack: ~/drishti-wheels, or --wheels <folder>)
+                               fix: python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt   (in drishti-console; Drishti installs nothing)
 GREEN  repo config/packs/             ~/drishti/packs
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18971              in use by Drishti: status UP
@@ -2716,24 +2715,19 @@ folder is refused, a settings file or `DRISHTI_HOME` naming one is a WARNING and
 
 | Command | What it does |
 |---|---|
-| `setup` | `setup drishti`, then `setup libs` |
-| `setup drishti` | the Drishti part only: checks Python 3.11+ and Java 21+, makes the data folder's layout (`run/ logs/ tmp/ dumps/ delta/ dataload/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths filled in (one whose `drishti.home` names this checkout is kept as it is, also when its data folder is elsewhere: setup then makes nothing there unless `--data-dir` is passed; one whose `drishti.home` names another folder, or that names none and a folder outside this checkout, is moved into a dated folder, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one written; `--check` says what it would move), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`; one that differs is moved into the same dated folder: setup never overwrites a file (it adds only `drishti.python`, once, to a kept `dev.ini`) and makes no folder outside this checkout, the settings folder and an explicit `--data-dir`; a `DRISHTI_*` folder variable naming another folder is a WARNING and never used), checks the server jar and the modules |
-| `setup libs` | the libraries of the Python running setup: the pinned Lake wheel first, then `drishti-console/requirements.txt`, checked name by name; what is missing installed from the offline wheel pack |
-| `--wheels <folder or .zip>` (`DRISHTI_WHEELS`; neither: `~/drishti-wheels`, Windows `%USERPROFILE%\drishti-wheels`, when it holds `.whl` files, said in one line) | installs **only** from that folder (`pip --no-index --find-links`, the Lake wheel first); names a wheel the folder lacks and installs nothing |
-| `--index` | lets pip install what is missing from your configured package index instead; without it setup never touches a network |
+| `setup` | the Drishti part, then the check of the libraries of the Python running it |
+| the Drishti part | checks Python 3.11+ and Java 21+, makes the data folder's layout (`run/ logs/ tmp/ dumps/ delta/ dataload/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths filled in (one whose `drishti.home` names this checkout is kept as it is, also when its data folder is elsewhere: setup then makes nothing there unless `--data-dir` is passed; one whose `drishti.home` names another folder, or that names none and a folder outside this checkout, is moved into a dated folder, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one written; `--check` says what it would move), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`; one that differs is moved into the same dated folder: setup never overwrites a file (it adds only `drishti.python`, once, to a kept `dev.ini`) and makes no folder outside this checkout, the settings folder and an explicit `--data-dir`; a `DRISHTI_*` folder variable naming another folder is a WARNING and never used), checks the server jar and the modules |
+| the library check | the libraries of the Python running setup: the pinned Lake wheel first, then `drishti-console/requirements.txt` and `config/compute/locks/python.lock`, checked name by name; **nothing is installed**. Missing or wrong: one `[FAIL] libraries` line naming them and the pip command to run (exit 1); all in order: `[  ok] libraries` and the closing line "Drishti is ready." |
 
 Drishti never makes a virtual environment: the Python is yours (the system's, a dedicated one, or a virtual environment you made yourself; run setup with it, or name it in `drishti.python`).
-`--system` is accepted and changes nothing; `start` never makes an environment and never installs anything. With no wheel pack and no
-`--index`, a missing library is a `[FAIL]` line and the next step is the command that fixes it (`setup --wheels <folder>`). An operating system's own Python (PEP 668, *EXTERNALLY-MANAGED*, as Debian's and
+**Drishti never installs Python packages**: not `setup`, not `start`, not the server's compute environments (they run with `drishti.python` as it is; a missing library is an error naming it and the pip command). The command is yours: you install them yourself with `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt` from `drishti-console` (Linux and macOS `python3.13` and `/`). The settings file, `drishti.python` and the JVM argument files are written in either case. An operating system's own Python (PEP 668, *EXTERNALLY-MANAGED*, as Debian's and
 Ubuntu's `python3`) is one `[FAIL]` line, *this Python is managed by the operating system: run setup with a Python you prepared for Drishti ... your own
 virtual environment is fine*, and pip
 never runs (never `--break-system-packages`); a wheel pack built for another Python version (`cp313` wheels on a 3.14) is one `[FAIL]` line
 naming both versions. The **next steps** list `start` only when no `[FAIL]` or `[todo]` remains: until then the
 fixes come first, then `setup` again.
 
-Setup installs and `--check` verifies both `drishti-console/requirements.txt` and `config/compute/locks/python.lock` (the server's compute pool checks its interpreter against the lock; a missing pin names its file; the two files must agree on every pin). Setup installs only the libraries that are missing or at the wrong version and never calls pip when all are in order. When pip fails it
-says why in one sentence (index login rejected 401/403, index not reachable or certificate not trusted, index lacks `name==ver`), shows
-pip's own output, and prints the missing list as one `py -3.13 -m pip install name==ver ...` line.
+The check covers both `drishti-console/requirements.txt` and `config/compute/locks/python.lock` (the server's compute pool checks its interpreter against the lock; a missing pin names its file; the two files must agree on every pin) and prints the missing list as one `py -3.13 -m pip install name==ver ...` line.
 
 `--check` changes nothing; it verifies the libraries name by name (every requirement's installed version against its
 spec, the Lake wheel against `lib/lake-wheel.pin`) and names what is missing or wrong (exit 1). The Python setup ran with is written into the settings file as `drishti.python` (`dev.ini`; with `--settings <file>` that file, and no `dev.ini` is made;
@@ -2744,9 +2738,6 @@ Windows pip uses the Windows certificate store (pip's `truststore`), so it works
 | Option | Meaning |
 |---|---|
 | `--check` | only report, change nothing; exit 1 when something needs doing |
-| `--index` | the libraries from your package index (default: offline, the wheel pack only) |
-| `--wheels FOLDER` | the offline wheel pack (default `DRISHTI_WHEELS`, else `~/drishti-wheels` when it holds wheels) |
-| `--system` | accepted for old commands; changes nothing |
 | `--home HOME`, `--data-dir DIR` | the install and data folders to use |
 | `--envs-dir DIR` | the settings folder (default `~/drishti-envs`; Windows `%USERPROFILE%\drishti-envs`) |
 | `--java-home DIR` | the JDK to check |
@@ -2767,7 +2758,7 @@ says which modules are missing or stale for the new jar.
 | Command | What it does |
 |---|---|
 | `start server` | the server, alone or as a cluster node: temp folder, memory settings and logs under the data folder, waits for health, prints the LAN address |
-| `start console` | the console on the one Python (`DRISHTI_PYTHON`, else `drishti.python` of the settings file, else the Python running `drishti.py`), pointed at `--server`; waits for `/healthz`. It never makes an environment or installs anything: a Python lacking the console's libraries is refused with the list and the `setup` line, before anything is made (`start all` asks before the server starts) |
+| `start console` | the console on the one Python (`DRISHTI_PYTHON`, else `drishti.python` of the settings file, else the Python running `drishti.py`), pointed at `--server`; waits for `/healthz`. It never makes an environment or installs anything: a Python lacking the console's libraries is refused with the list and the pip command, before anything is made (`start all` asks before the server starts) |
 | `start all` | one server and one console on this machine, in the background |
 | `start cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `deploy/stack/stack.yaml`): the nodes, then the console; or only the nodes named (`console` names the console) |
 | `stop server`, `stop console`, `stop all`, `stop cluster` | stop by the pid file only, never by name: graceful first, forced after `--timeout` |
@@ -4388,7 +4379,7 @@ Some commands add codes of their own, each named in its section:
 | `no server jar in <home>/lib: run python tools/drishti.py build jar` | the Java commands need the exec jar | `python tools/drishti.py build jar` |
 | `drishti: jar not found: ...` | `--jar` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set drishti.java.home in the settings file` | no JDK found | set `drishti.java.home` in your settings file (or `JAVA_HOME`) to a JDK 21+ |
-| `drishti: PyYAML is not installed ...` | the Python you run Drishti with lacks its libraries | `python tools/drishti.py setup` (installs them from the offline wheel pack; `--wheels <folder>`) |
+| `drishti: PyYAML is not installed ...` | the Python you run Drishti with lacks its libraries | the pip command above for that Python (`setup` then checks; Drishti installs nothing) |
 | `drishti: deltalake is not installed in this Python ...` | a Delta write needs them | `python tools/drishti.py setup` (from the offline wheel pack), or `--store files` |
 | `drishti: cannot reach http://localhost:18480: [Errno 111] Connection refused; is the server running?` | nothing listens there | start the server; check `--server` / `DRISHTI_SERVER`; the port is `DRISHTI_PORT` |
 | `drishti: the server said 401 ...: (no or bad token: set DRISHTI_TOKEN or --token-file)` | sign-in is on and the token is missing, expired or unsigned | send a signed token ([section 3](#3-connecting-to-a-server-url-tokens-and-permissions)) |
