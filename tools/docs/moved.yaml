@@ -4,8 +4,6 @@
 moved:
   - {from: 'bin/README.md', to: 'docs/guides/OPERATIONS_GUIDE.md', how: merge}
   - {from: 'compute/drishti-compute/README.md', to: 'docs/guides/DEVELOPER_GUIDE.md', how: merge}
-  - {from: 'config/bi/python/README.md', to: 'config/bi/README.md', how: merge}
-  - {from: 'config/bi/reports/README.md', to: 'config/bi/README.md', how: merge}
   - {from: 'config/packs/core/compute-demo/guides/compute-demo.md', to: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md', how: merge}
   - {from: 'config/packs/core/core/guides/banking-data-model.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
   - {from: 'config/packs/core/core/guides/core.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
@@ -119,8 +117,6 @@ moved:
   - {from: 'docs/strategy/COMPETITIVE_LANDSCAPE.md', to: 'docs/strategy/COMPETITIVE_ANALYSIS.md', how: merge}
   - {from: 'drishti-console/web/guides/developer.md', to: 'docs/guides/API_REFERENCE.md', how: merge}
   - {from: 'drishti-console/web/guides/sharing-and-discussion.md', to: 'docs/guides/USER_GUIDE.md', how: merge}
-  - {from: 'examples/clients/excel/README.md', to: 'examples/clients/README.md', how: merge}
-  - {from: 'examples/clients/java/README.md', to: 'examples/clients/README.md', how: merge}
   - {from: 'examples/packs/climate-risk/guides/climate-risk.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'examples/packs/finance/guides/write-your-first-sutra.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'examples/packs/genomics/guides/genomics.md', to: '', how: delete, note: 'deleted outright'}
@@ -128,8 +124,6 @@ moved:
   - {from: 'examples/packs/logistics/guides/logistics.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'examples/packs/operational-risk/guides/operational-risk.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'examples/packs/retail-banking/guides/retail-banking.md', to: '', how: delete, note: 'deleted outright'}
-  - {from: 'external_lib/python/README.md', to: 'external_lib/README.md', how: merge}
-  - {from: 'lib/ext/README.md', to: 'lib/README.md', how: merge}
   - {from: 'modules/banking/packs/counterparty-risk/guides/counterparty-risk.md', to: 'docs/guides/EXPOSURE_GUIDE.md', how: merge}
   - {from: 'modules/banking/packs/market-risk/guides/market-risk.md', to: 'docs/guides/VAR_GUIDE.md', how: merge}
   - {from: 'modules/banking/packs/trading/guides/trading-products.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
@@ -177,23 +171,10 @@ moved:
   - {from: 'tools/mrloader/docs/trade-valuation.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
   - {from: 'tools/mrloader/docs/var-limit.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
   - {from: 'tools/mrloader/samples/README.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
-  - {from: 'tools/packgen/banking/readme/core.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/banking/readme/counterparty-risk.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/banking/readme/market-data.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/banking/readme/market-risk.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/banking/readme/trading.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/funds/readme/funds.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/genomics_showcase/readme/genomics-showcase.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/genomics_showcase/readme/protein-engineering.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/gleif/readme/gleif.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/intros/compute-demo.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/intros/news-and-markets.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/publicsector/readme/central-banks.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/publicsector/readme/gdelt-events.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/publicsector/readme/national-statistics.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/publicsector/readme/oecd.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/publicsector/readme/official-news.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/publicsector/readme/world-development.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/us_equities/readme/us-equities.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
-  - {from: 'tools/packgen/world/readme/world-economy.intro.md', to: 'config/about.yaml of the pack (intro:)', how: merge}
   # --- lane rows below (appended by hand; kept by --write) ---
+  # lane C (READMEs under the README standard)
+  - {from: 'plugins/drishti-plugin-redis/README.md#loading (input, business dates)', to: 'plugins/drishti-plugin-jdbc/README.md#table-mode-loading', how: merge, note: 'the loader-row and business-date bullets of redis, aerospike, cassandra and mongodb are one text, kept in the jdbc README; the rules themselves stay in DATA_LAKE_GUIDE section 5'}
+  - {from: 'plugins/drishti-plugin-*/README.md#build-and-use', to: 'docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors', how: merge, note: 'the same three bullets in 13 plugin READMEs became one paragraph and a link'}
+  - {from: 'config/connectors.examples/*/README.md', to: 'tools/connector_readmes/<template>.yaml (body) via tools/connector_readmes.py', how: rename, note: 'the 12 template READMEs are generated whole; the hand text is the source file beside the tool'}
+  - {from: 'modules/*/docs/README.md', to: 'modules/<module>/docs/about.yaml (front, body) via tools/packgen/module_readme.py', how: rename, note: 'the 12 module READMEs are generated whole from module.yaml and their about.yaml'}
+  - {from: 'examples/packs/*/guides/*.md', to: '', how: delete, note: 'the generators (tools/packgen/common/packbuild.py) write no guide for an example pack; help.yaml lists none'}
