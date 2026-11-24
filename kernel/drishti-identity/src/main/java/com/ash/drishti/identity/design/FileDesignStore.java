@@ -86,7 +86,7 @@ public final class FileDesignStore implements DesignStore {
             return Optional.empty();
         }
         try {
-            return Optional.of(json.readValue(f.toFile(), StoredDesign.class));
+            return Optional.of(json.readValue(java.nio.file.Files.readAllBytes(f), StoredDesign.class));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

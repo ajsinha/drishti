@@ -51,7 +51,7 @@ public final class FileUserStore implements UserStore {
         this.file = file.toAbsolutePath().normalize();
         if (Files.exists(this.file)) {
             try {
-                List<User> loaded = json.readValue(this.file.toFile(), new TypeReference<List<User>>() {});
+                List<User> loaded = json.readValue(java.nio.file.Files.readAllBytes(this.file), new TypeReference<List<User>>() {});
                 loaded.forEach(u -> users.put(u.username(), u));
             } catch (IOException e) {
                 throw new UncheckedIOException("cannot read users from " + this.file, e);

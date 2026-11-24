@@ -66,7 +66,7 @@ public final class FilePreferenceStore implements PreferenceStore {
     private ObjectNode load(String user) {
         Path f = file(user);
         try {
-            return Files.exists(f) ? (ObjectNode) json.readTree(f.toFile()) : json.createObjectNode();
+            return Files.exists(f) ? (ObjectNode) json.readTree(java.nio.file.Files.readAllBytes(f)) : json.createObjectNode();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
