@@ -148,6 +148,16 @@ class PackReloaderTest {
         until("the test packs to be gone", () -> names().equals(List.of("alpha")));
     }
 
+    /** A folder no pack is edited in (Python's byte-code cache, git's) is matched by name, whatever the separator of the operating system. */
+    @Test
+    void cacheAndGitFoldersAreNoPartOfAPacksFingerprint() {
+        assertThat(PackReloader.ignored(Path.of("scripts", "__pycache__", "make.cpython-313.pyc"))).isTrue();
+        assertThat(PackReloader.ignored(Path.of("scripts", "__pycache__"))).isTrue();
+        assertThat(PackReloader.ignored(Path.of(".git", "HEAD"))).isTrue();
+        assertThat(PackReloader.ignored(Path.of("scripts", "make.py"))).isFalse();
+        assertThat(PackReloader.ignored(Path.of("sutras", "my__pycache__notes.sutra.yaml"))).isFalse();
+    }
+
     @Test
     void aNewPackFolderIsLoadedEditedAndRemovedWithoutARestart() throws Exception {
         assertThat(names()).containsExactly("alpha");

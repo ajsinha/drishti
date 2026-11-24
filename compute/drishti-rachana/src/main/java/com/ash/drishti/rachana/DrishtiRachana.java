@@ -59,6 +59,36 @@ public final class DrishtiRachana {
         return BLOCKS;
     }
 
+    /** The block folders of each Sutra registry of this JVM, in the order they first loaded (see {@link #loadBlocks}). */
+    private static final Map<Object, List<java.nio.file.Path>> BLOCK_DIRS = new LinkedHashMap<>();
+
+    /**
+     * Reads the blocks of {@code owner}'s folders (most general first) into {@link #blocks()}, together with the folders every other
+     * registry of this JVM named: the library is one per JVM, so one server's reload never drops the blocks another server in the same
+     * JVM reads (a test's two contexts, an in-JVM cluster). With one registry, as in a server, it is exactly that registry's folders.
+     */
+    public static List<com.ash.rachana.SutraProblem> loadBlocks(Object owner, List<java.nio.file.Path> dirs) {
+        synchronized (BLOCK_DIRS) {
+            BLOCK_DIRS.put(owner, List.copyOf(dirs));
+            return BLOCKS.load(blockDirs());
+        }
+    }
+
+    /** {@code owner} has closed: its folders no longer count, and the library is read again from the others' (if any). */
+    public static void releaseBlocks(Object owner) {
+        synchronized (BLOCK_DIRS) {
+            if (BLOCK_DIRS.remove(owner) != null && !BLOCK_DIRS.isEmpty()) {
+                BLOCKS.load(blockDirs());
+            }
+        }
+    }
+
+    private static List<java.nio.file.Path> blockDirs() {
+        java.util.LinkedHashSet<java.nio.file.Path> all = new java.util.LinkedHashSet<>();
+        BLOCK_DIRS.values().forEach(all::addAll);
+        return List.copyOf(all);
+    }
+
     /** The instance now: Core, the {@code drishti} profile, the functions registered so far. */
     public static Rachana current() {
         Rachana r = current;
