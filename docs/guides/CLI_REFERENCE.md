@@ -2579,7 +2579,7 @@ smoke: passed
 stack is up: it signs in to the console (`--console URL`, default `http://127.0.0.1:<console.server.port, else 17480>`) as the development
 administrator, types `VAR BANK` and asks the VaR screen's figures through the console (so the console and the server are proved to share
 their secrets), and compares them with the release's demo figures, VaR 167,372,692 and ES 210,131,972 (`--expect-var`, `--expect-es` for
-others); `--wait SECONDS` waits for the console; exit 0 only when both agree. Its calls never go through a proxy.
+others); `--wait SECONDS` waits for the console; exit 0 only when both agree. `--server URL` names the server it checks (default the settings files' `server.port`, else 18480). It signs in as the development administrator only on a demo stack: `--profile demo`, or a server whose `/public/about` says `"profile": "demo"` (started with `--demo`); otherwise it stops with one `[FAIL]` and the command that fixes it. Its calls never go through a proxy.
 
 Green, yellow and red lines, each with a fix; exit 1 on any red. It checks Java (on `JAVA_HOME` or the PATH, 21 or newer, vendor),
 the server jar (and its version), Python and the optional libraries (`pyyaml`, `deltalake`, `pyarrow`, with install hints), the
@@ -2757,7 +2757,7 @@ says which modules are missing or stale for the new jar.
 
 | Command | What it does |
 |---|---|
-| `start server` | the server, alone or as a cluster node: temp folder, memory settings and logs under the data folder, waits for health, prints the LAN address |
+| `start server` | the server, alone or as a cluster node (with no settings file, neither `--settings` nor `~/drishti-envs/dev.ini` of this checkout, and no `--data-dir`, it refuses with the `setup` line, even when a data folder is there): temp folder, memory settings and logs under the data folder, waits for health, prints the LAN address |
 | `start console` | the console on the one Python (`DRISHTI_PYTHON`, else `drishti.python` of the settings file, else the Python running `drishti.py`), pointed at `--server`; waits for `/healthz`. It never makes an environment or installs anything: a Python lacking the console's libraries is refused with the list and the pip command, before anything is made (`start all` asks before the server starts) |
 | `start all` | one server and one console on this machine, in the background |
 | `start cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `deploy/stack/stack.yaml`): the nodes, then the console; or only the nodes named (`console` names the console) |

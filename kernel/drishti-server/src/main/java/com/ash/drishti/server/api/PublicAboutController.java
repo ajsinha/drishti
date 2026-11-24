@@ -38,6 +38,8 @@ public class PublicAboutController {
     private final Optional<BuildProperties> build;
     private final SecurityProperties security;
     private final ObjectProvider<OidcProperties> oidc;
+    /** The committed profile this server was started with (config/profiles/demo.ini says {@code demo}); empty without one. */
+    private final String profile;
 
     private final com.ash.drishti.server.edition.EditionContext edition;
     private final ObjectProvider<com.ash.drishti.server.engines.EngineCluster> cluster;
@@ -50,7 +52,8 @@ public class PublicAboutController {
             ObjectProvider<com.ash.drishti.server.engines.EngineCluster> cluster,
             ObjectProvider<com.ash.drishti.server.modules.ModuleConfiguration.Started> modules,
             ObjectProvider<com.ash.drishti.server.modules.ModuleNode> node,
-            ObjectProvider<com.ash.drishti.server.console.ConsoleAnswers> answers) {
+            ObjectProvider<com.ash.drishti.server.console.ConsoleAnswers> answers, org.springframework.core.env.Environment env) {
+        this.profile = env.getProperty("drishti.profile", "").strip();
         this.node = node;
         this.answers = answers;
         this.edition = edition;
@@ -69,6 +72,9 @@ public class PublicAboutController {
         m.put("version", build.map(BuildProperties::getVersion).orElse("dev"));
         m.put("notice", branding.notice());
         m.put("tagline", branding.tagline());
+        if (!profile.isEmpty()) {
+            m.put("profile", profile);                          // doctor --acceptance signs in as the development administrator only on "demo"
+        }
         m.put("edition", edition.instance().about());       // the console learns the edition here (LENSES.md › The design)
         m.put("lenses", edition.lensNames());               // the editions a person may open as a lens (none with an edition)
         com.ash.drishti.server.engines.EngineCluster c = cluster.getIfAvailable();   // what the console shows or hides (ADMIN_GUIDE.md 5.2)

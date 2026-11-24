@@ -1108,7 +1108,7 @@ def cmd_doctor(a, extra) -> int:
         import devsecrets
         password = (os.environ.get("DRISHTI_SEED_PASSWORD") or "").strip() or devsecrets.DEV["DRISHTI_SEED_PASSWORD"]
         results = doctor.acceptance(a.console or f"http://127.0.0.1:{port}", password, a.expect_var or doctor.ACCEPT_VAR,
-                                    a.expect_es or doctor.ACCEPT_ES, a.wait)
+                                    a.expect_es or doctor.ACCEPT_ES, a.wait, server=(a.server or os.environ.get("DRISHTI_SERVER") or "").split(",")[0].strip() or None)
         say_json({"ok": doctor.exit_code(results) == 0, "checks": results}) if a.json else doctor.render(results)
         return doctor.exit_code(results)
     api = Api.from_args(a) if a.server or os.environ.get("DRISHTI_SERVER") or settingsfile.server_url(javacmd.settings()[1]) else None

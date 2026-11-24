@@ -92,6 +92,8 @@ STORES_PY = ROOT / "tools" / "lake" / "stores.py"
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
 import stores  # noqa: E402  (tools/lake/stores.py: Delta or Iceberg per source system)
 import feedroute  # noqa: E402  (tools/lake/feedroute.py: the data files' extensions)
+sys.path.insert(0, str(ROOT / "tools" / "launch"))
+import procs as _procs  # noqa: E402  (tools/launch/procs.py: the pasteable command line of this system)
 import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
 from drishti_lake import filedate  # noqa: E402  (tools/lake/filedate.py: the load rules' names and tar layout)
 REPLACE = "overwrite-dates"                      # the load rules' mode replace (lake build --mode): each date loaded replaced
@@ -541,7 +543,7 @@ def closing(a, system: str, files: list[tuple[str, Path]], outcomes: list[str] |
     elif a.files_only:
         out.append("  A running server reads the replaced table by itself within about 10 s (its refresh-seconds): no restart is needed.")
     else:
-        out.append("  Next: start the server (Drishti: run server (demo), or python tools/drishti.py start all --demo; on Windows py tools\\drishti.py start all --demo) and the console.")
+        out.append(f"  Next: start the server (Drishti: run server (demo), or {_procs.command('start', 'all', '--demo')}) and the console.")
         out.append("  A server already running picks the new tables up by itself at its next refresh; restart it to be sure, or pass --server next time.")
     trade = (first_trade(files[-1][1]) if files else None) or SAMPLE_TRADE.get(system, SAMPLE_TRADE["endur"])
     if a.files_only:

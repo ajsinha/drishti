@@ -35,7 +35,7 @@ import pylibs  # noqa: E402
 from procs import LaunchError  # noqa: E402
 
 ME = ("linux", "x64", "313")
-REL = "i7g"
+REL = "i7h"
 
 
 def make_zip(folder: Path, name: str, wheels=("alpha-1.2-py3-none-any.whl",), sums: bool = True, nested: str = "") -> Path:
@@ -104,9 +104,9 @@ def test_row22_the_zip_in_downloads_is_found_never_unzipped_and_is_one_fail_sayi
 
 def test_row29_of_two_packs_the_one_for_this_release_is_taken_never_the_newest(tmp_path):
     dl = tmp_path / "John Smith" / "Downloads"
-    make_zip(dl, name("i7f"))
-    mine = make_zip(dl, name("i7g"))
-    newer = make_zip(dl, name("i7h"))
+    make_zip(dl, name("i7g"))
+    mine = make_zip(dl, name("i7h"))
+    newer = make_zip(dl, name("i7i"))
     newer.touch()
     assert find(tmp_path).path == mine
 
@@ -167,9 +167,9 @@ def test_rows25_26_a_pack_for_another_machine_is_one_fail_naming_both(tmp_path, 
 
 
 def test_row27_a_pack_of_another_release_is_refused_naming_both(tmp_path):
-    make_zip(tmp_path / "John Smith" / "Downloads", name("i7f"))
+    make_zip(tmp_path / "John Smith" / "Downloads", name("i7g"))
     found = find(tmp_path)
-    assert found.path is None and "is of release i7f; this checkout is i7g" in found.problem
+    assert found.path is None and "is of release i7g; this checkout is i7h" in found.problem
 
 
 def test_row25_a_wrong_zip_named_with_wheels_is_refused_and_never_unzipped(tmp_path, monkeypatch):

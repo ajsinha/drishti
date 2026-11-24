@@ -263,6 +263,19 @@ def demo_profile(settings: str) -> bool:
                for f in (settings or "").split(",") if f.strip())
 
 
+def server_says_demo(op, server: str) -> bool:
+    """The server at ``server`` tells in /public/about that it runs the demo profile (``"profile": "demo"``): a demo stack started in
+    another window, with no --profile demo on this command."""
+    code, body = _get(op, server.rstrip("/") + "/public/about")
+    if code != 200:
+        return False
+    try:
+        doc = json.loads(body.decode("utf-8", "replace"))
+    except ValueError:
+        return False
+    return isinstance(doc, dict) and str(doc.get("profile") or "").strip().lower() == "demo"
+
+
 def own_settings(settings: str) -> str | None:
     """The person's own settings file(s) of ``settings``: the committed profiles taken out (a fix line names them by --profile)."""
     mine = [f for f in (settings or "").split(",") if f.strip() and pathlib.PurePath(f.strip()).parent.name != "profiles"]
@@ -306,7 +319,8 @@ def acceptance(console: str, password: str | None = None, expect_var: int = ACCE
     base = console.rstrip("/")
     srv = (server or f"http://127.0.0.1:{(keys.get('server.port') or '').strip() or env.get('DRISHTI_PORT') or 18480}").rstrip("/")
     explicit = (env.get("DRISHTI_SEED_PASSWORD") or "").strip()
-    if not demo_profile(settings) and not explicit:
+    op = opener or _opener()
+    if not demo_profile(settings) and not explicit and not server_says_demo(op, srv):
         return [_a("fail", "demo profile", "the development administrator signs in only under the demo profile, and this run names none "
                    "(nor DRISHTI_SEED_PASSWORD for another administrator)", cmd("--profile", "demo", "doctor", "--acceptance"))]
     user = ((env.get("DRISHTI_SEED_USERNAME") or "").strip() or ACCEPT_USER) if explicit else ACCEPT_USER
@@ -315,7 +329,6 @@ def acceptance(console: str, password: str | None = None, expect_var: int = ACCE
         sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent / "launch"))
         import devsecrets
         password = devsecrets.DEV["DRISHTI_SEED_PASSWORD"]
-    op = opener or _opener()
     out = []
     deadline = time.time() + max(0, wait)
     while True:                                    # both health checks, waiting up to --wait for them together

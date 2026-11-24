@@ -59,7 +59,8 @@ def free_port() -> int:
 class Stand:
     """A stand-in server (/actuator/health) and console (/healthz, /readyz, /login, /go, /api/var/scope) on two loopback ports."""
 
-    def __init__(self, var=doctor.ACCEPT_VAR, es=doctor.ACCEPT_ES, server_up=True, ready=True, password=PASSWORD, var_status=200):
+    def __init__(self, var=doctor.ACCEPT_VAR, es=doctor.ACCEPT_ES, server_up=True, ready=True, password=PASSWORD, var_status=200, profile=None):
+        self.profile = profile
         self.var, self.es, self.server_up, self.ready, self.password, self.var_status = var, es, server_up, ready, password, var_status
         self.seen = []
         stand = self
@@ -81,6 +82,8 @@ class Stand:
                 u = urlparse(self.path)
                 stand.seen.append(("GET", self.server.server_port, u.path))
                 signed = "session=ok" in (self.headers.get("Cookie") or "")
+                if self.server.server_port == stand.sport and u.path == "/public/about":
+                    return self.send(200, json.dumps({"product": "Drishti", **({"profile": stand.profile} if stand.profile else {})}).encode())
                 if self.server.server_port == stand.sport:
                     return self.send(200 if stand.server_up else 503, json.dumps({"status": "UP" if stand.server_up else "DOWN"}).encode())
                 if u.path == "/healthz":
@@ -334,3 +337,13 @@ def test_e2e_first_run_on_linux():
     system_after = mo.system_python_state()
     assert system_after == system_before, {k: (system_before.get(k), v) for k, v in system_after.items() if system_before.get(k) != v}
     print(f"system Python untouched: {', '.join(system_before)}")
+
+
+def test_a_demo_stack_started_elsewhere_passes_without_the_demo_profile_when_the_server_says_demo(stand):
+    """D9: no --profile demo on this command, but the server's /public/about says profile demo (and --server names it): sign in; else the clear [FAIL]."""
+    s = stand(profile="demo")
+    res = s.check(settings="/home/x/dev.ini")
+    assert doctor.exit_code(res) == 0 and lines(res)[0].startswith("PASS")
+    other = stand()
+    res = other.check(settings="/home/x/dev.ini")
+    assert doctor.exit_code(res) == 1 and "demo profile" in lines(res)[0] and not [x for x in other.seen if x[0] == "POST"]

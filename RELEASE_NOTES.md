@@ -13,6 +13,28 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7h: release notes
+
+*A point release on i7g: a missing capacity template no longer stops the server, `start` before `setup` refuses, and three messages say the right command.*
+Everything else is as in i7g.
+
+## What changes for administrators
+
+- **The capacity planner is read when first used.** A missing part of its template stops only Admin → Capacity (`DRS-1032`, "the capacity template is
+  missing <part>"); the server starts. The template's root relationships part is kept in the source as `_rels/root.rels.xml` (no hidden file) and
+  written into the downloaded workbook as `_rels/.rels`, as Excel requires: the workbook is unchanged.
+- **`start server` with no settings file refuses.** With neither `--settings` nor `~/drishti-envs/dev.ini` of this checkout, and no `--data-dir`,
+  it prints one `[FAIL] ... Fix: <the setup command>` instead of starting because a `data/run` folder happens to exist. `--data-dir` still works.
+- **Messages.** The demo-lake "Next" text prints the command for your system (`py -3.13 tools\drishti.py ...` on Windows, the running Python
+  elsewhere).
+- **`doctor --acceptance`** checks the server named by `--server` (it used the default port), and works on a demo stack started in another window
+  without `--profile demo`: a demo server says `"profile": "demo"` in `/public/about` (`config/profiles/demo.ini`).
+- Drishti Tools 1.1.1 (settings-file BOM fix).
+
+## Known limits
+
+Carried from i7g. On macOS the demo lake may report "locked by another run" and fall back to the Python loader.
+
 # Drishti 2.9.11.i7g: release notes
 
 *A point release on i7f: Drishti makes and names no virtual environment, `start` never installs anything, each IDE opens its own project.*

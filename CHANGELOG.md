@@ -16,6 +16,14 @@
 # Changelog
 
 
+## 2.9.11.i7h (2026-11-24)
+
+- **Capacity planner template read on first use**: a missing part answers `DRS-1032` on the planner's endpoints only; the server starts.
+  `_rels/.rels` kept as `_rels/root.rels.xml` in the source (`template.json` "files"), written into the workbook under Excel's name.
+- **`start server` with no settings file and no `--data-dir` refuses** with one `[FAIL] ... Fix: <setup command>` (matrix row 04).
+- Demo-lake "Next" text uses the system's command spelling; `doctor --acceptance` honours `--server` and accepts a demo stack without
+  `--profile demo` (`/public/about` says `profile: demo`). Drishti Tools 1.1.1. Version 2.9.11.i7h.
+
 ## 2.9.11.i7g (2026-11-23)
 
 - **Drishti makes no virtual environment and installs no Python package, on every system.** You install the libraries (`py -3.13 -m pip install

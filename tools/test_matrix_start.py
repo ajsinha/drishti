@@ -76,6 +76,15 @@ def test_row04_start_before_setup_is_one_fail_with_the_setup_line_and_makes_noth
     assert not mo.output_problems(r.text) and not person.clean()
 
 
+def test_row04_start_with_no_settings_file_is_one_fail_with_the_setup_line_though_a_data_run_folder_exists(person):
+    """D2: no --settings, no ~/drishti-envs/dev.ini of this checkout, no --data-dir: one [FAIL] ... Fix: <setup>; a data/run folder is not a set-up checkout."""
+    before = mo.snapshot(person.tmp, skip=("/oracle/",))
+    r = person("start", "server", "--port", str(PORT))
+    assert r.returncode != 0 and "[FAIL] this checkout is not set up" in r.text and "no settings file" in r.text and " setup" in r.text, r.text[-2000:]
+    assert "--data-dir" not in r.text.split("Fix:")[-1] and mo.changed(before, mo.snapshot(person.tmp, skip=("/oracle/",))) == []
+    assert not mo.output_problems(r.text) and not person.clean()
+
+
 # ---- row 05: no server jar ---------------------------------------------------------------------------------------------------------------
 
 def test_row05_no_server_jar_is_one_fail_with_the_build_line(tmp_path):

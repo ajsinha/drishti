@@ -192,6 +192,14 @@ def require_set_up(data: Path, why: str = "") -> None:
                                      procs.setup_line(javacmd.settings()[0] or None) + (f" --data-dir {data}" if why.startswith("--data") else "")), 1)
 
 
+def require_settings(a) -> None:
+    """No settings file (no --settings, no ~/drishti-envs/dev.ini naming this checkout) and no --data-dir: one [FAIL] with the setup line
+    (a data folder that happens to be there is never taken for a set-up checkout); an explicit --data-dir still works."""
+    if not (getattr(a, "data_dir", None) or javacmd.settings()[0]):
+        raise LaunchError(procs.fail("this checkout is not set up", "there is no settings file (--settings, or ~/drishti-envs/dev.ini of this checkout)",
+                                     procs.setup_line()), 1)
+
+
 def demo_lake_ready(data: Path, env: dict, given=None) -> None:
     """--demo needs the demo lake: one [FAIL] with the lake line when it is not built (never an empty answer shown as a figure)."""
     root = Path(given or env.get(lakeconfig.DEMO_ROOT_ENV) or lakeconfig.default_root("demo", data)).expanduser()
@@ -207,6 +215,7 @@ def start(a, env: dict | None = None) -> int:
         procs.load_env_file(a.env_file, env)
     if a.distribution:
         env["DRISHTI_DISTRIBUTION"] = a.distribution         # the server reads it as drishti.distribution
+    require_settings(a)
     settings, keys = profiled(a)
     roots = javacmd.launch_roots(getattr(a, "home", None), a.data_dir, env, keys)
     home = roots["home"][0]
