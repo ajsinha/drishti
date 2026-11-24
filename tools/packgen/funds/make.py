@@ -199,12 +199,20 @@ def guide(docs: dict[str, dict[str, dict]]) -> str:
                         types=", ".join(f"{t} {n}" for t, n in types.most_common()), size=f"{size / 1e6:.1f} MB")
 
 
+def _intro() -> str:
+    """The pack's hand-written README intro (tools/packgen/funds/intro.yaml, without its comment lines): the ``intro:`` of the about.yaml."""
+    lines = (HERE / "intro.yaml").read_text(encoding="utf-8").split("\n")
+    while lines and (lines[0].startswith("#") or not lines[0].strip()):
+        lines.pop(0)
+    return "\n".join(lines)
+
+
 def files(docs: dict[str, dict[str, dict]]) -> dict[Path, str]:
     ref = SNAP.reference(NAME, docs)                     # a few reference documents: the data itself is in data/testdata
     out = {PACK / "samples" / name: text for name, text in PS.files(ref, catalog(ref), catalog_indent=None).items()}
-    out[PACK / "config" / "about.yaml"] = GLOSSARY.about_yaml(HEADER)
+    out[PACK / "config" / "about.yaml"] = GLOSSARY.about_yaml(HEADER, _intro())
     out[PACK / "guides" / "funds.md"] = guide(docs).rstrip() + "\n\n" + "\n".join(GD.sections(PACK)).rstrip() + "\n"
-    out[PACK / "README.md"] = README.render_pack(PACK, files=out, intro=HERE / "readme" / "funds.intro.md")
+    out[PACK / "README.md"] = README.render_pack(PACK, files=out)
     return out
 
 

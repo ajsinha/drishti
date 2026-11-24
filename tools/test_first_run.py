@@ -222,3 +222,12 @@ def test_row56_drishtis_own_calls_ignore_the_proxy():
     for rel in ("core/backend.py", "core/server_facts.py", "core/cluster.py", "core/backend_watch.py", "core/servers.py"):
         text = (ROOT / "drishti-console" / rel).read_text(encoding="utf-8")
         assert text.count("httpx.AsyncClient(") == text.count("trust_env=False"), rel
+
+
+def test_setup_makes_the_data_inbox_and_lake_folders_so_no_placeholder_file_is_kept_in_git():
+    """The inbox's five folders and the lakes' parent are in the layout setup makes in an empty data folder (a run of setup in a scratch
+    home made them, 2026-11-24); the nine-line README.md placeholders that once kept them in a clone are gone, and so is their copier."""
+    for rel in ("dataload/inbox", "dataload/inprocess", "dataload/outbox", "dataload/failed", "dataload/ledger", "delta"):
+        assert rel in envsetup.DATA_LAYOUT
+    assert not hasattr(envsetup, "copy_readmes")
+    assert not (ROOT / "data" / "dataload" / "README.md").exists() and not (ROOT / "data" / "delta" / "demo" / "README.md").exists()

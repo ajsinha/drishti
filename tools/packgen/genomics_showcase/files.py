@@ -57,7 +57,7 @@ SOURCE = ("synthetic: the seeded generator " + GENERATOR + " (nothing real: the 
 
 PACKS = {
     S.GENOMICS: {
-        "code": "GENOMICS", "title": "Genomics showcase", "intro": "tools/packgen/genomics_showcase/readme/genomics-showcase.intro.md",
+        "code": "GENOMICS", "title": "Genomics showcase",
         "description": ("A synthetic cohort of 1,500 patients read against one invented gene, HLXK7: 2,000 genes, 12,000 variant sites, 45,000 "
                         "variant calls, copy-number segments and pathways, and 36,000 association tests of three traits computed from "
                         "the calls. The words ASSOC (a variant's test against a trait), SGENE, SSAMPLE, SVARIANT, VCALL, CNV and PATHWAY "
@@ -67,9 +67,9 @@ PACKS = {
                      ("SVARIANT {lead_variant}", "The variant at the first hotspot of HLXK7, with its amino acid change and carriers"),
                      ("SSAMPLE S0001", "One patient: the clinical tracks, the response and the cluster"),
                      ("VCALL {lead_call}", "One call: sample, variant, genotype, allele fraction and depth")],
-        "about": "tools/packgen/genomics_showcase/readme/genomics-showcase.intro.md"},
+        },
     S.PROTEIN: {
-        "code": "PROTENG", "title": "Protein engineering showcase", "intro": "tools/packgen/genomics_showcase/readme/protein-engineering.intro.md",
+        "code": "PROTENG", "title": "Protein engineering showcase",
         "description": ("Four invented proteins and the campaign that redesigned one of them, Helixase-7 (gene HLXK7, 312 amino acids): every "
                         "position and every amino acid measured in two assays (47,840 scan scores), the fold with its coordinates, burial "
                         "and contacts, and eight rounds of 1,500 designs that climb to about fifteen times the natural activity. The words "
@@ -80,7 +80,7 @@ PACKS = {
                      ("DMS {lead_score}", "One scan score: what changing one position to one amino acid did to the activity"),
                      ("RESIDUE {lead_residue}", "The active site's centre: fold, burial, coordinates and mean effects"),
                      ("DROUND {lead_round}", "The round of the lead design: method, best and median activity")],
-        "about": "tools/packgen/genomics_showcase/readme/protein-engineering.intro.md"},
+        },
 }
 PACK_OF_CODE = {"GENOMICS": S.GENOMICS, "PROTENG": S.PROTEIN}
 
@@ -201,7 +201,8 @@ def about(pack: str) -> str:
         kinds[k.kind] = {"title": k.title, "about": ABOUT[k.kind], "guide": pack, "glossary": gl}
     return (HEADER + f"\n# About this page: what the {pack} pack's kinds and fields mean (the README, the contracts and the About card read it).\n"
             "# Written by " + GENERATOR + " from tools/packgen/genomics_showcase/spec.py.\n"
-            + dump({"about": 1, "vocabulary": {}, "kinds": kinds}))
+            + dump({"about": 1, "vocabulary": {}, "kinds": kinds})
+            + dump({"intro": yaml.safe_load((HERE / "intros.yaml").read_text(encoding="utf-8"))[pack]["intro"]}))
 
 
 def help_yaml(pack: str) -> str:
@@ -388,5 +389,5 @@ def pack_files(pack: str, docs: dict, story: dict, guide_sections: bool = True) 
         out[d / "samples" / name] = text
     if guide_sections:
         out[d / "guides" / f"{pack}.md"] = guide(pack, d)
-    out[d / "README.md"] = README.render_pack(d, files=dict(out), intro=ROOT / PACKS[pack]["intro"])
+    out[d / "README.md"] = README.render_pack(d, files=dict(out))
     return out

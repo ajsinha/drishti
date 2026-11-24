@@ -21,7 +21,7 @@ def test_examples_starters_and_guides_come_from_packs(client, backend):
     starters = client.get("/w").text
     assert "Credit desk" in starters and "Shipment tracker" in starters
     assert client.get("/help/getting-started").status_code == 200
-    assert client.get("/help/logistics-pack").status_code == 200
+    assert client.get("/help/logistics-pack").status_code == 404       # an example pack carries no guide: its pack.yaml and samples are the sample
     # the packs page is Part V of the pack developer guide: listed; the old address is gone
     assert "/help/build-guide" in client.get("/help").text and client.get("/help/build-guide").status_code == 200
     assert client.get("/help/packs", follow_redirects=False).status_code == 404       # a retired page has no alias: its content is the pack developer guide

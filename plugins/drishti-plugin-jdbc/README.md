@@ -78,9 +78,7 @@ mode** (settings `query.<kind>`) reads your own schema as it is, with your own `
 
 ## Build and use
 
-- **Build.** The plugin is a Maven module (`drishti-plugin-jdbc`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-jdbc-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
-- **Enable.** A connector file in the site's `config/connectors/` with `plugin: jdbc` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
-- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
+The plugin is a module of the platform build (`drishti-plugin-jdbc`), packed into the server jar with nothing to copy; a driver of your own goes into `lib/ext/`. A connector file in `config/connectors/` with `plugin: jdbc` turns it on (ready-made: `config/connectors.examples/`). Build, enabling and commands: [DATA_GUIDE.md, section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors). Below, `drishti.py` stands for `python3.13 tools/drishti.py` (Windows `py -3.13 tools\drishti.py`).
 
 ## What it reads
 
@@ -305,7 +303,7 @@ python3.13 tools/drishti.py data load --store postgres jdbc:postgresql://localho
 
 Options: `--user`, `--password` (default `DRISHTI_PG_USER`/`DRISHTI_PG_PASSWORD`, else `drishti`), `--writers` (8), `--batch`
 (2,000), `--pool-size N` (20, or `DRISHTI_DB_POOL_SIZE`; `--writers` is capped at one less), `--recreate`, `--keep-months N`,
-`--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar), `--future-days N` (1), `--zone Z` (`LAKE_BUSINESS_ZONE`,
+the options every loader takes: `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar), `--future-days N` (1), `--zone Z` (`LAKE_BUSINESS_ZONE`,
 else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`.
 
 **Your own loader** (an ETL job, a Kafka consumer) writes the same rows. For one business day:

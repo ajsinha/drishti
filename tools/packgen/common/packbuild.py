@@ -240,8 +240,9 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     for name, text in SAMPLES.files({k.kind: docs.get(k.kind, {}) for k in spec.kinds if k.kind not in spec.computed_kinds}, catalog, SAMPLES.part_mb(sys.argv),
                                     None if spec.compact_json else 1).items():
         out[base / "samples" / name] = text
-    out[base / "guides" / f"{spec.name}.md"] = overview(spec, docs)
-    help_yaml = yaml.safe_dump({"guides": [{"slug": spec.name, "category": "packs", "title": f"{spec.title} pack", "icon": "box-seam",
+    if not spec.retired:                                       # an example pack carries no guide (its pack.yaml and samples are the sample)
+        out[base / "guides" / f"{spec.name}.md"] = overview(spec, docs)
+    help_yaml = yaml.safe_dump({"guides": [] if spec.retired else [{"slug": spec.name, "category": "packs", "title": f"{spec.title} pack", "icon": "box-seam",
                                             "file": f"guides/{spec.name}.md", "summary": spec.description}]}, sort_keys=False, allow_unicode=True)
     out[base / "config" / "help.yaml"] = f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n{help_yaml}"
     gen_dir = Path(os.environ["DRISHTI_ABOUT_DIR"]) / spec.name if os.environ.get("DRISHTI_ABOUT_DIR") else (ROOT / spec.generator).parent                  # hand-written about text: see docs/guides/RACHANA_REFERENCE.md

@@ -63,9 +63,7 @@ layout) fills.
 
 ## Build and use
 
-- **Build.** The plugin is a Maven module (`drishti-plugin-aerospike`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-aerospike-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
-- **Enable.** A connector file in the site's `config/connectors/` with `plugin: aerospike` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
-- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
+The plugin is a module of the platform build (`drishti-plugin-aerospike`), packed into the server jar with nothing to copy; a driver of your own goes into `lib/ext/`. A connector file in `config/connectors/` with `plugin: aerospike` turns it on (ready-made: `config/connectors.examples/`). Build, enabling and commands: [DATA_GUIDE.md, section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors). Below, `drishti.py` stands for `python3.13 tools/drishti.py` (Windows `py -3.13 tools\drishti.py`).
 
 ## What it reads
 
@@ -243,13 +241,8 @@ later ones read memory. A loader line looks like:
 through `AerospikeLoader` (in the plugin). It prints `aerospike: <n> rows (<s> s)` every 100,000 rows and ends with
 `aerospike: loaded 3,000,000 rows into namespace test in 147 s`.
 
-- **Input:** loader rows, one JSON line per entity per day (`{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`):
-  `make_data.py --jsonl FILE.tar` writes the samples and `bulk_trades.py --jsonl FILE.tar` a generated book, each a tar of
-  `<kind>/<YYYY-MM-DD>/rows.jsonl` folders. A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it.
-- **Business dates come from outside the row**, by the load rules every loader shares
-  ([DATA_LAKE_GUIDE.md, section 5](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): a tar's
-  folder date; for a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input), `--as-of`, else its `.ready` file, else
-  the date in its name, else the business today. A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar.
+- **Input:** loader rows, one JSON line per entity per day, in the same files and folders as for every loader: [Table mode: loading](../drishti-plugin-jdbc/README.md#table-mode-loading).
+- **Business dates come from outside the row**, by the same rules for every loader: [the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) and [the PostgreSQL loader's list](../drishti-plugin-jdbc/README.md#table-mode-loading).
 - **Each line becomes two writes:** the day's record (a put of all its bins) and the entity's index record (an operation that sets
   `kind` and `id` and appends the date to `dates`, sorted and unique). Each kind's dates record is written once at the end. Writes are
   idempotent: loading a day again replaces its records.

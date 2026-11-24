@@ -538,7 +538,7 @@ def files(docs: dict[str, dict[str, dict]]) -> dict[Path, str]:
     ref = SNAP.reference("us-equities", docs)                     # a few reference documents: the data itself is in data/testdata
     out = {PACK / "samples" / name: text for name, text in PS.files(ref, catalog(ref), catalog_indent=None).items()}
     out[PACK / "guides" / "us-equities.md"] = guide(docs).rstrip() + "\n\n" + "\n".join(GD.sections(PACK)).rstrip() + "\n"
-    out[PACK / "README.md"] = README.render_pack(PACK, files=out, intro=HERE / "readme" / "us-equities.intro.md")
+    out[PACK / "README.md"] = README.render_pack(PACK, files=out)
     return out
 
 

@@ -37,8 +37,7 @@ python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r ../config/
 python3.13 ../tools/drishti.py setup        # checks them, name by name, and installs nothing
 ```
 
-`requirements.txt` holds the console's runtime libraries (and the pinned Drishti Lake wheel); `requirements-test.txt` adds pytest,
-pytest-xdist and Playwright for a developer (`python3.13 -m playwright install chromium` once, for the browser tests).
+`requirements.txt` holds the runtime libraries; `requirements-test.txt` adds pytest, pytest-xdist and Playwright (`python3.13 -m playwright install chromium` once).
 
 ## What is here
 
@@ -46,9 +45,7 @@ pytest-xdist and Playwright for a developer (`python3.13 -m playwright install c
 |---|---|
 | `core/`, `routes/`, `web/` | the console's code, its routes, its templates and static files |
 | `config/` | the console's own configuration (Help map, pages) |
-| `plugins/` | the console's plugins |
-| `run-configs/` | the PyCharm launchers: PyCharm-console-setup, -data, -run and -check |
-| `tests/` | the console's tests |
+| `plugins/`, `run-configs/`, `tests/` | the console's plugins, its PyCharm launchers (PyCharm-console-setup, -data, -run, -check), its tests |
 
 ## Tests
 
@@ -59,6 +56,5 @@ python3.13 -m pytest drishti-console/tests/test_docs_rot.py drishti-console/test
 python3.13 -m pytest drishti-console/tests -m "not static" -n 8     # the wider run (browser tests need Chromium)
 ```
 
-`pytest.ini` at the repository root holds the markers. The tools' own tests are separate: `python3.13 -m pytest tools`. A test that
-says the server jar is unbuilt needs `./mvnw -B clean package -DskipTests` first. More: [TEST_HARNESS.md](../docs/architecture/TEST_HARNESS.md),
-[IDE_GUIDE.md](../docs/guides/IDE_GUIDE.md).
+The tools' own tests are separate (`python3.13 -m pytest tools`); a test that says the server jar is unbuilt needs `./mvnw -B clean package -DskipTests`
+first. More: [TEST_HARNESS.md](../docs/architecture/TEST_HARNESS.md), [IDE_GUIDE.md](../docs/guides/IDE_GUIDE.md).

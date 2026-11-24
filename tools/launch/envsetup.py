@@ -61,18 +61,6 @@ MIN_PYTHON = (3, 11)
 PLACEHOLDER = "/path/to/drishti"
 
 
-def copy_readmes(home: Path, data: Path) -> None:
-    """The data inbox folders' README.md files (kept in the clone's data/dataload/) into a data folder elsewhere, when missing."""
-    src = home / "data" / "dataload"
-    if src.resolve() == (data / "dataload").resolve() or not src.is_dir():
-        return
-    for rel in ("", "inbox", "inprocess", "outbox", "failed", "ledger"):
-        f, to = src / rel / "README.md", data / "dataload" / rel / "README.md"
-        if f.is_file() and not to.exists():
-            to.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(f, to)
-
-
 def envs_dir(env=None) -> Path:
     """The settings folder: ~/drishti-envs (Windows %USERPROFILE%\\drishti-envs)."""
     env = os.environ if env is None else env
@@ -285,7 +273,6 @@ def _setup(a, env: dict, argv: list | None, run, pack: "pylibs.Pack | None", rea
             try:
                 for d in DATA_LAYOUT:
                     (data / d).mkdir(parents=True, exist_ok=True)
-                copy_readmes(home, data)
                 line("made", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}): made {', '.join(missing)}")
             except PermissionError as e:             # a folder this account may not write: named, with the fix (never the catch-all)
                 folder = Path(e.filename).parent if e.filename else data

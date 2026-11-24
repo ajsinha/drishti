@@ -80,5 +80,5 @@ it with `Esc`. *How this view was built* names:
 - the source and generation.
 
 !!! note "What next"
-    [Using the terminal](../../../../docs/guides/USER_GUIDE.md) lists every key. [The VaR tutorial](write-your-first-sutra.md) shows how
+    [Using the terminal](../../../../docs/guides/USER_GUIDE.md) lists every key. The Sutra reference ([RACHANA_REFERENCE.md](../../../../docs/guides/RACHANA_REFERENCE.md)) shows how
     a layout like this one is written.

@@ -61,9 +61,7 @@ documents. `python3.13 tools/drishti.py data load --store mongodb` (or any write
 
 ## Build and use
 
-- **Build.** The plugin is a Maven module (`drishti-plugin-mongodb`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-mongodb-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
-- **Enable.** A connector file in the site's `config/connectors/` with `plugin: mongodb` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
-- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
+The plugin is a module of the platform build (`drishti-plugin-mongodb`), packed into the server jar with nothing to copy; a driver of your own goes into `lib/ext/`. A connector file in `config/connectors/` with `plugin: mongodb` turns it on (ready-made: `config/connectors.examples/`). Build, enabling and commands: [DATA_GUIDE.md, section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors). Below, `drishti.py` stands for `python3.13 tools/drishti.py` (Windows `py -3.13 tools\drishti.py`).
 
 ## What it reads
 
@@ -205,15 +203,8 @@ python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 
 python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --ttl-days 130             # documents expire 130 days after their date
 ```
 
-- **Input:** loader rows, one JSON line per entity per day (`{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`),
-  as `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write them: tars of `<kind>/<YYYY-MM-DD>/rows.jsonl`
-  folders; `-` reads standard input (one kind on one date). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and
-  `.jsonl.gz` in it, in name order.
-- **Business dates come from outside the row** ([the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
-  a tar's folder names the date; a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-`) is one kind on one date: `--as-of`, else
-  its `.ready` file's `business-date:`, else the date in its name, else the business today. Rows whose own `date` differs are loaded
-  under the file's date and counted; a plain file of two kinds, or `--as-of` with a tar, is refused. A row dated after tomorrow in
-  the business zone is not loaded and the load ends with an error.
+- **Input:** loader rows, one JSON line per entity per day, in the same files and folders as for every loader: [Table mode: loading](../drishti-plugin-jdbc/README.md#table-mode-loading).
+- **Business dates come from outside the row**, by the same rules for every loader: [the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) and [the PostgreSQL loader's list](../drishti-plugin-jdbc/README.md#table-mode-loading).
 - **Each line is a replace-or-insert by `_id`** in the domain's collection and, with promoted fields, another in `<domain>_columns`,
   in unordered bulk writes of `--batch` operations, at most `--in-flight` batches at once on virtual threads. Loading the same rows
   again changes nothing; a restated entity replaces its document of the day. Nothing is deleted: an entity the stream no longer
@@ -227,8 +218,8 @@ python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 
   by the source of the rows rather than by the writes.
 
 Options: `--keep-days N`, `--ttl-days N`, `--doc-format string|bson` (`string`), `--batch N` (1000), `--in-flight N` (16),
-`--pool-size N` (20), `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar), `--future-days N` (1), `--zone Z`
-(`LAKE_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--trades N --days D` (the script only).
+`--pool-size N` (20), `--trades N --days D` (the script only), and the options every loader takes (`--as-of`, `--future-days`, `--zone`,
+`--max-drop-share`, `--force-drop`: [Table mode: loading](../drishti-plugin-jdbc/README.md#table-mode-loading)).
 
 **Your own writer** (a Kafka consumer, a batch job) writes the same documents: `MongoLayout.record(...)` builds the domain document,
 `MongoLayout.columnsRecord(record)` its narrow copy and `MongoLayout.prepare(db, collection, ttl)` the collections and indexes. Any
