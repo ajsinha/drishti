@@ -12,20 +12,24 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Python half of ``drishti.py setup``: the libraries of drishti-console/requirements.txt (the pinned Lake wheel first) installed into one
-interpreter, the one you run Drishti with (Drishti never makes a virtual environment), verified name by name and version by version, and the
-one ``drishti.python`` line of the settings file that tells the server and ``start console`` which interpreter that is (written when absent; a value naming a
-or a missing file is replaced, any other is kept).
+"""The Python half of ``drishti.py setup``: the libraries of drishti-console/requirements.txt (the pinned Lake wheel among them) CHECKED in
+one interpreter, the one you run Drishti with, name by name and version by version, and the one ``drishti.python`` line of the settings
+file that tells the server and ``start console`` which interpreter that is (written when absent; a value naming a missing file is
+replaced, any other is kept).
 
-No network is needed to *check*; pip is the only thing that touches one (setup runs it offline from a wheel pack, or on the package index
-only with ``setup --index``), and on Windows it is told to use the Windows certificate store
-(pip's truststore), so a company proxy that re-signs TLS works as it does for Maven."""
+Drishti never installs a Python library and never makes a virtual environment (owner rule, 2026-11-23: an automatic install can corrupt an
+environment). When something is missing, setup prints the one command the owner may run himself (:func:`install_commands`): offline from
+the wheel pack when one is found (:func:`find_pack`), else, as the second option, from the package index. Nothing here runs pip."""
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import json
+import os
+import platform
 import re
 import shutil
+import sys
 import subprocess
 import tempfile
 import zipfile
@@ -34,9 +38,6 @@ from pathlib import Path
 import procs
 from procs import LaunchError, say
 
-#: pip with truststore on by default (the Windows certificate store); earlier ones need --use-feature=truststore, and before 23.1 cannot
-TRUSTSTORE_DEFAULT = (24, 2)
-TRUSTSTORE_MIN = (23, 1)
 SETTING = "drishti.python"
 _REQ = re.compile(r"^([A-Za-z0-9][A-Za-z0-9_.\-]*)\s*(\[[^\]]*\])?\s*([^;#]*)")
 
@@ -185,23 +186,6 @@ def verify(py: str, home: Path, run=subprocess.run, lock: bool = True) -> list[s
     return bad
 
 
-def pip_version(py: str, run=subprocess.run) -> tuple[int, ...]:
-    r = run([py, "-m", "pip", "--version"], capture_output=True, text=True)
-    m = re.match(r"pip\s+(\d+(?:\.\d+)*)", r.stdout or "")
-    return _ver(m.group(1)) if m else ()
-
-
-def pip_extra(py: str, windows: bool | None = None, run=subprocess.run) -> list[str]:
-    """pip's options for the machine: on Windows the certificate store (truststore) is on, by the flag for a pip before 24.2 (default after)."""
-    if not (procs.windows() if windows is None else windows):
-        return []
-    v = pip_version(py, run)
-    if v and v < TRUSTSTORE_MIN:
-        say(f"  note: pip {'.'.join(map(str, v))} cannot use the Windows certificate store; upgrade it (python -m pip install --upgrade pip) behind a company proxy")
-        return []
-    return ["--use-feature=truststore"] if v and v < TRUSTSTORE_DEFAULT else []
-
-
 def missing(py: str, home: Path, run=subprocess.run) -> list[tuple[str, str, str]]:
     """(name, spec, file) of every requirement ``py`` lacks or has at the wrong version (the Lake wheel's pin counts); empty: nothing to install."""
     reqs = all_requirements(home)
@@ -216,55 +200,212 @@ def missing(py: str, home: Path, run=subprocess.run) -> list[tuple[str, str, str
     return list({norm(n): (n, sp, f) for n, sp, f in out}.values())     # one entry a library (the lock's exact pin wins)
 
 
-def _q(t: str) -> str:
-    return f'"{t}"' if re.search(r"[<>|&\s]", t) else t
+# ---- the wheel pack: where it is found without help (FIRST_RUN_ROBUSTNESS.md S4, rows 21 to 29) ------------------------------------------
+
+WHEELS_ENV = "DRISHTI_WHEELS"
+WHEELS_DIR = "drishti-wheels"
+#: the name make_wheels.py gives a pack: drishti-platform-<release>-wheels-<system>-<arch>-py<XY>.zip
+PACK_ZIP = re.compile(r"^drishti-platform-(?P<release>.+?)-wheels-(?P<system>windows|linux|macos)-(?P<arch>[A-Za-z0-9_]+)-py(?P<py>\d{2,3})\.zip$", re.I)
 
 
-def pip_line(py: str, items: list[str]) -> str:
-    """One ready-to-copy ``<python> -m pip install name==ver ...`` line (a spec with < or > is quoted; Windows: ``py``)."""
-    return f"{'py' if procs.windows() else _q(py)} -m pip install " + " ".join(_q(i) for i in items)
+def user_home(env: dict | None = None, windows: bool | None = None) -> Path:
+    """The person's home folder: %USERPROFILE% on Windows, $HOME elsewhere (read from ``env``, so a scratch home is honoured)."""
+    env = os.environ if env is None else env
+    win = procs.windows() if windows is None else windows
+    given = (env.get("USERPROFILE") if win else env.get("HOME")) or env.get("HOME") or env.get("USERPROFILE")
+    return Path(given) if given else Path.home()
 
 
-def explain_pip_failure(output: str) -> str:
-    """One plain sentence for the commonest pip failures (the index refused the login, could not be reached, lacks a package); '' when unknown."""
-    lines = output.splitlines()
-    hot = [l for l in lines if re.search(r"\b(401|403)\b|Max retries|HTTPSConnectionPool|host=", l)] or lines
-    m = re.search(r"https?://(?:[^/@\s]*@)?([^/\s:'\"]+)", "\n".join(hot))
-    host = m.group(1) if m else "the configured package index"
-    if re.search(r"\b(401|403)\b", output):
-        return f"your package index ({host}) rejected the login: fix its credentials in pip.ini, or install offline with --wheels <folder>"
-    if re.search(r"CERTIFICATE_VERIFY_FAILED|SSLError|certificate verify", output, re.I):
-        return f"your package index ({host}) could not be reached: its certificate was not trusted; fix the certificate in pip.ini, or install offline with --wheels <folder>"
-    if re.search(r"Max retries exceeded|Failed to establish|Name or service not known|getaddrinfo|ConnectionError|ProxyError|Connection (?:timed out|refused|reset)|Temporary failure|ReadTimeout|ConnectTimeout", output, re.I):
-        return f"your package index ({host}) could not be reached: check the network, proxy and pip.ini, or install offline with --wheels <folder>"
-    m = re.search(r"No matching distribution found for (\S+)|Could not find a version that satisfies the requirement (\S+)", output)
-    if m:
-        return f"your package index lacks {(m.group(1) or m.group(2)).strip()}: use an index that has it, or install offline with --wheels <folder>"
+def wheels_home(env: dict | None = None) -> Path:
+    """~/drishti-wheels (Windows %USERPROFILE%\\drishti-wheels): where START_HERE puts the pack, and where a pack zip is unzipped."""
+    return user_home(env) / WHEELS_DIR
+
+
+def machine(windows: bool | None = None, platform_machine: str | None = None, version=None) -> tuple[str, str, str]:
+    """(system, arch, python) of this machine as a pack's name spells them, e.g. ``("linux", "x64", "313")``."""
+    win = procs.windows() if windows is None else windows
+    system = "windows" if win else "macos" if sys.platform == "darwin" else "linux"
+    m = (platform_machine if platform_machine is not None else platform.machine()).lower()
+    arch = "x64" if m in ("amd64", "x86_64", "x64") else "arm64" if m in ("arm64", "aarch64") else m
+    v = version or sys.version_info
+    return system, arch, f"{v[0]}{v[1]}"
+
+
+def pack_zip_name(release: str, system: str, arch: str, py: str) -> str:
+    return f"drishti-platform-{release}-wheels-{system}-{arch}-py{py}.zip"
+
+
+def checkout_release(home: Path | None = None) -> str:
+    """This checkout's release as a pack names it (``i7g`` of ``2.9.11.i7g``); "" when it cannot be read (then it is not checked)."""
+    try:
+        import javacmd
+        v = javacmd._version_of(home) if home is not None else javacmd._version_of()
+    except Exception:                                   # noqa: BLE001 - no pom or no javacmd: the release is not checked
+        return ""
+    return (v or "").rsplit(".", 1)[-1]
+
+
+def _py_words(py: str) -> str:
+    return f"Python {py[0]}.{py[1:]}"
+
+
+def zip_problem(z: Path, me: tuple[str, str, str], release: str = "") -> str:
+    """Why the pack zip ``z`` does not fit this machine, naming both sides; "" when it fits (or is not named like a pack)."""
+    m = PACK_ZIP.match(z.name)
+    if not m:
+        return ""
+    system, arch, py = me
+    if (m["system"].lower(), m["arch"].lower(), m["py"]) != (system, arch, py):
+        return (f"the wheel pack {z.name} is for {m['system'].lower()}-{m['arch'].lower()}, {_py_words(m['py'])}; "
+                f"this machine is {system}-{arch}, {_py_words(py)}")
+    if release and m["release"].lower() != release.lower():
+        return f"the wheel pack {z.name} is of release {m['release']}; this checkout is {release}"
     return ""
 
 
+def holds_wheels(folder: Path, depth: int = 2) -> bool:
+    """``folder`` holds .whl files, directly or up to ``depth - 1`` folders deep (Explorer's "Extract All" adds one)."""
+    if not folder.is_dir():
+        return False
+    if any(folder.glob("*.whl")):
+        return True
+    return depth > 1 and any(holds_wheels(d, depth - 1) for d in sorted(folder.iterdir()) if d.is_dir())
+
+
+def pack_zips_in(folder: Path, depth: int = 0) -> list[Path]:
+    """The pack-named zips in ``folder`` (and ``depth`` folders below it)."""
+    if not folder.is_dir():
+        return []
+    out = [z for z in sorted(folder.glob("*.zip")) if PACK_ZIP.match(z.name)]
+    if depth > 0:
+        for d in sorted(folder.iterdir()):
+            if d.is_dir():
+                out += pack_zips_in(d, depth - 1)
+    return out
+
+
+class Pack:
+    """What discovery found: ``path`` (a folder or a pack zip; None: none), ``how`` it was found, the places ``looked`` in, a ``problem``
+    (one sentence: a pack is there but for another system, arch, Python or release: pip must not run) and the zip name ``wanted``."""
+
+    def __init__(self, path: Path | None, how: str, looked: list[Path], problem: str = "", wanted: str = ""):
+        self.path, self.how, self.looked, self.problem, self.wanted = path, how, looked, problem, wanted
+
+    def fail(self, fix: str) -> str:
+        """The one [FAIL] line for a pack that does not fit, or for none found."""
+        if self.problem:
+            return procs.fail("wheel pack", self.problem, f"fetch {self.wanted} and run {fix}")
+        return procs.fail("libraries", "no wheel pack found (looked in " + ", ".join(map(str, self.looked)) + ")",
+                          f"put {self.wanted} in {self.looked[0]} or your Downloads folder, then {fix}")
+
+    def __repr__(self) -> str:
+        return f"Pack({self.path!r}, {self.how!r}, problem={self.problem!r})"
+
+
+def find_pack(wheels: str | None = None, env: dict | None = None, places: list[Path] | None = None,
+              me: tuple[str, str, str] | None = None, release: str | None = None) -> Pack:
+    """The offline wheel pack, found without help: ``--wheels`` (a folder or a zip), else DRISHTI_WHEELS, else ~/drishti-wheels (unzipped
+    flat, one folder deep, or the pack zip in it or one folder below), else the pack zip for this system, arch and Python in ``places``
+    (default: the platform folder that holds this checkout, then ~/Downloads). Of several fitting zips the one of this release is taken;
+    a zip for another system, arch, Python or release is never taken, and when only such zips are there ``problem`` names both sides."""
+    env = os.environ if env is None else env
+    me = me or machine()
+    release = checkout_release() if release is None else release
+    wanted = pack_zip_name(release or "<release>", *me)
+    named, how = (wheels or "").strip() or None, "--wheels"
+    if not named and (env.get(WHEELS_ENV) or "").strip():
+        named, how = env[WHEELS_ENV].strip(), WHEELS_ENV
+    if named:
+        p = Path(named).expanduser()
+        if not p.exists():
+            return Pack(None, how, [p], f"{how} names {p}, which is not there", wanted)
+        problem = zip_problem(p, me, release) if p.is_file() else ""
+        return Pack(None if problem else p, how, [p], problem, wanted)
+    home = wheels_home(env)
+    places = [procs.ROOT.parent, user_home(env) / "Downloads"] if places is None else places
+    looked = [home, *places]
+    if holds_wheels(home):
+        return Pack(home, WHEELS_DIR, looked, "", wanted)
+    zips = pack_zips_in(home, 1) + [z for place in places for z in pack_zips_in(place, 0)]
+    fits = [z for z in zips if not zip_problem(z, me, release)]
+    if fits:
+        return Pack(fits[0], "found", looked, "", wanted)
+    if zips:
+        right_machine = [z for z in zips if not zip_problem(z, me, "")]
+        return Pack(None, "found", looked, zip_problem((right_machine or zips)[0], me, release), wanted)
+    return Pack(None, "", looked, "", wanted)
+
+
+def sums_problem(folder: Path) -> str:
+    """An unzipped pack checked against its SHA256SUMS: one sentence naming the first file missing or different; "" when all agree (or
+    the pack has no SHA256SUMS)."""
+    sums = folder / "SHA256SUMS"
+    if not sums.is_file():
+        return ""
+    for line in sums.read_text(encoding="utf-8", errors="replace").splitlines():
+        parts = line.split()
+        if len(parts) < 2:
+            continue
+        digest, name = parts[0].lower(), parts[-1].lstrip("*")
+        f = folder / name
+        if not f.is_file():
+            return f"the wheel pack {folder} lacks {name} (named in its SHA256SUMS)"
+        if hashlib.sha256(f.read_bytes()).hexdigest() != digest:
+            return f"the wheel pack {folder} has a damaged {name} (its SHA-256 differs from SHA256SUMS)"
+    return ""
+
+
+def unzip_pack(z: Path, dest: Path | None = None) -> Path:
+    """The pack zip ``z`` unzipped into ~/drishti-wheels/<its name> without a question, kept for the next run; a folder already there with
+    its wheels is used as it is (a second setup changes nothing). Whole or not at all: a sibling folder first, then a rename."""
+    base = wheels_home() if dest is None else dest
+    target = base / z.name[:-4]
+    if holds_wheels(target, 1):
+        return target
+    part = base / (z.name[:-4] + "-unzipping")
+    shutil.rmtree(part, ignore_errors=True)
+    try:
+        part.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        raise LaunchError(procs.fail("wheel pack", f"{base} could not be made ({e.strerror or e})",
+                                     f"unzip {z} into a folder of your own and run setup with --wheels <that folder>")) from None
+    try:
+        with zipfile.ZipFile(z) as f:
+            bad = f.testzip()
+            if bad:
+                raise zipfile.BadZipFile(f"{bad} is damaged")
+            f.extractall(part)
+    except (zipfile.BadZipFile, EOFError, OSError) as e:
+        shutil.rmtree(part, ignore_errors=True)
+        raise LaunchError(procs.fail("wheel pack", f"{z} is not a readable .zip file (cut off or damaged: {e})", f"fetch {z.name} again")) from None
+    if target.exists():
+        shutil.rmtree(target, ignore_errors=True)
+    part.rename(target)
+    return target
+
+
 @contextlib.contextmanager
-def wheel_folder(spec: str | None):
-    """The folder ``--wheels`` names (a folder, or the wheel-pack .zip itself, unzipped to a temporary folder that is removed afterwards); None stays None."""
+def wheel_folder(spec: str | None, dest: Path | None = None):
+    """The folder ``--wheels`` names: a folder as it is, or a pack .zip unzipped into ~/drishti-wheels (:func:`unzip_pack`); a pack that
+    carries SHA256SUMS is checked against it first (a missing or damaged wheel: one [FAIL], pip never runs). None stays None."""
     if not spec:
         yield None
         return
     path = Path(spec).expanduser()
     if path.is_dir():
-        yield path
+        folder = path
     elif path.is_file() and path.suffix.lower() == ".zip":
-        tmp = tempfile.mkdtemp(prefix="drishti-wheels-")
-        try:
-            try:
-                with zipfile.ZipFile(path) as z:
-                    z.extractall(tmp)
-            except zipfile.BadZipFile:
-                raise LaunchError(f"--wheels {path} is not a readable .zip file") from None
-            yield Path(tmp)
-        finally:
-            shutil.rmtree(tmp, ignore_errors=True)
+        problem = zip_problem(path, machine())
+        if problem:
+            raise LaunchError(procs.fail("wheel pack", problem, f"fetch {pack_zip_name(PACK_ZIP.match(path.name)['release'], *machine())}"))
+        folder = unzip_pack(path, dest)
     else:
         raise LaunchError(f"--wheels {path}: no such folder or .zip file (unzip the wheel pack into a folder, e.g. ~/drishti-wheels, and name it)")
+    for d in wheel_dirs(folder):
+        said = sums_problem(d)
+        if said:
+            raise LaunchError(procs.fail("wheel pack", said, "fetch the pack again"))
+    yield folder
 
 
 def wheel_names(folder: Path) -> dict[str, Path]:
@@ -315,13 +456,6 @@ def pack_mismatch(py: str, folder: Path, run=subprocess.run, windows: bool | Non
     return f"the wheel pack is for Python {want}; this Python is {have[0]}.{have[1]}: run setup with {how}, or use the pack for Python {have[0]}.{have[1]}"
 
 
-def check_pack_python(py: str, folder: Path, run=subprocess.run, windows: bool | None = None) -> None:
-    """Refuses, in one sentence, a pack of cpNN wheels for another Python than ``py`` (``py`` on Windows starts the newest one)."""
-    said = pack_mismatch(py, folder, run, windows)
-    if said:
-        raise LaunchError(said)
-
-
 _MANAGED = ("import os, sys, sysconfig; print('MANAGED', int(sys.prefix == sys.base_prefix and "
             "os.path.isfile(os.path.join(sysconfig.get_path('stdlib'), 'EXTERNALLY-MANAGED'))))")
 #: what setup says for an operating system's own Python (PEP 668): never --break-system-packages; Drishti makes no environment itself
@@ -335,70 +469,41 @@ def externally_managed(py: str, run=subprocess.run) -> bool:
     return "MANAGED 1" in (r.stdout or "") and not r.returncode
 
 
-def offline_failure(output: str, dirs: list[Path], wanted: list[str]) -> str:
-    """One sentence for a pip failure under ``--wheels``: names the wheel(s) missing from the folder, never the package index."""
-    m = re.search(r"No matching distribution found for (\S+)|Could not find a version that satisfies the requirement (\S+)", output)
-    what = (m.group(1) or m.group(2)) if m else ", ".join(wanted)
-    return f"pip could not install {what} from the wheel folder {', '.join(map(str, dirs))}: the folder lacks a wheel for it or one for this Python version and system; add it (pip download on a machine with an index) and run setup again"
+# ---- Drishti never installs a Python library (owner rule, 2026-11-23): it checks, and prints the one command the owner may run -----------
+
+def _word(text: str, win: bool) -> str:
+    """One word of a printed command, quoted when it holds a space or a shell character."""
+    return procs._q(text, win)
 
 
-def plain_requirements(req: Path) -> Path:
-    """requirements.txt without its ``--find-links``/``-f`` lines: they name ``../lib/wheels`` relative to drishti-console/, which pip
-    resolves against the current folder and warns about once per package; setup installs the Lake wheel itself, first, so the line
-    adds nothing here. The copy lives in the temporary folder and is what pip reads."""
-    import tempfile
-    lines = [l for l in req.read_text(encoding="utf-8").splitlines()
-             if not l.strip().startswith(("--find-links", "-f ", "-f\t"))]
-    out = Path(tempfile.mkdtemp(prefix="drishti-setup-")) / "requirements.txt"
-    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+def interpreter_words(py: str, win: bool | None = None, version=None) -> str:
+    """How the owner starts the Python setup checked: ``py -3.13`` on Windows, else that interpreter's own path (quoted when needed)."""
+    win = procs.windows() if win is None else win
+    if win:
+        v = version or python_version(py) or sys.version_info[:2]
+        return f"py -{v[0]}.{v[1]}"
+    return _word(py, False)
+
+
+def install_commands(py: str, home: Path, pack: Path | None = None, win: bool | None = None, version=None,
+                     what: str = "requirements.txt") -> list[str]:
+    """The command(s) the owner may run himself to put the libraries into ``py`` (Drishti never runs them), in the form START_HERE teaches:
+    from ``drishti-console`` (so requirements.txt's own ``--find-links ../lib/wheels`` finds the Lake wheel). With a wheel ``pack``: offline
+    (``--no-index --find-links <pack>``); always also the form that uses your package index, as the second option. ``what``: the
+    requirements file relative to drishti-console (``../config/compute/locks/python.lock`` for the compute pool's pins)."""
+    win = procs.windows() if win is None else win
+    sep = "\\" if win else "/"
+    folder = str(home / "drishti-console") if not win else str(home).rstrip("\\/") + "\\drishti-console"
+    req = what.replace("/", sep)
+    cd = f"cd {_word(folder, win)}"
+    pip = f"{interpreter_words(py, win, version)} -m pip install"
+    out = []
+    if pack is not None:
+        dirs = wheel_dirs(pack) if pack.is_dir() else [pack]
+        links = " ".join(f"--find-links {_word(str(d), win)}" for d in dirs)
+        out.append(f"{cd}   then   {pip} --no-index {links} -r {req}")
+    out.append(f"{cd}   then   {pip} -r {req}   (uses your package index)")
     return out
-
-
-def install(py: str, home: Path, windows: bool | None = None, run=subprocess.run, wheels: Path | None = None) -> None:
-    """Installs only what ``py`` is missing: the Lake wheel first (the requirements name it and no index has it), then
-    drishti-console/requirements.txt. Everything satisfied: says so and never calls pip. ``wheels`` (a folder): only from there
-    (``--no-index --find-links``), the Lake wheel from it or from lib/wheels; a wheel the folder lacks is named and nothing is run."""
-    win = procs.windows() if windows is None else windows
-    need = missing(py, home, run)
-    if not need:
-        say(f"  every requirement is already installed in {py}: pip is not run")
-        return
-    others = [(n, sp) for n, sp, _ in need if norm(n) != "drishti-lake"]
-    from_lock = [(n, sp) for n, sp, f in need if f == LOCK.as_posix() and norm(n) != "drishti-lake"]
-    from_req = [x for x in others if x not in from_lock]
-    wheel = None
-    if len(others) != len(need):
-        found = wheel_names(wheels) if wheels else {}
-        wheel = found.get("drishti-lake") or lake_wheel(home)
-        if wheel is None:
-            raise LaunchError(f"the pinned Lake wheel is not in {wheels if wheels else home / 'lib' / 'wheels'}: build it as lib/lake-wheel.pin says (version {lake_pin(home).get('version', '?')}), then run setup again")
-    if wheels:
-        found = wheel_names(wheels)
-        lacking = [n for n, _ in others if norm(n) not in found]
-        if lacking:
-            raise LaunchError(f"the wheel folder {wheels} has no wheel for {', '.join(lacking)}: add it (on a machine with a working index: pip download {' '.join(n + sp for n, sp in others)} -d <folder>) and run setup again")
-    if wheels:
-        check_pack_python(py, wheels, run, win)
-    dirs = wheel_dirs(wheels) if wheels else []
-    extra = [] if wheels else pip_extra(py, win, run)
-    # offline from the pack: --isolated, so a company pip.ini or PIP_* (index, require-virtualenv, user, target) plays no part (S5)
-    off = ["--isolated", "--no-input", "--disable-pip-version-check", "--no-index",
-           *[x for d in dirs for x in ("--find-links", str(d))]] if wheels else []
-    req = plain_requirements(home / "drishti-console" / "requirements.txt")
-    steps = ([["install", "-q", *extra, *off, str(wheel)]] if wheel else []) + ([["install", "-q", *extra, *off, "-r", str(req)]] if from_req else []) \
-        + ([["install", "-q", *extra, *off, "-r", str(home / LOCK)]] if from_lock else [])
-    for args in steps:
-        say(f"  pip {' '.join(args[:2] + args[-1:])} ...")
-        r = run([py, "-m", "pip", *args], capture_output=True, text=True)
-        out = (r.stdout or "") + (r.stderr or "")
-        if out.strip():
-            say(out.rstrip())                      # pip's own output is always shown
-        if r.returncode:
-            if wheels:
-                raise LaunchError(offline_failure(out, dirs, [n + sp for n, sp in others]))
-            why = explain_pip_failure(out) or f"pip failed in {py}: read its message above"
-            by_hand = ([str(wheel)] if wheel else []) + [n + sp for n, sp in others]
-            raise LaunchError(why + ("" if wheels else "\nthen install what is missing by hand:  " + pip_line(py, by_hand)))
 
 
 def stale_python(py: str) -> bool:

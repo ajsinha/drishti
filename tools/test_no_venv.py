@@ -68,7 +68,7 @@ def test_setup_and_start_hold_no_environment_machinery():
     assert not hasattr(envsetup, "make_" + "venv") and not hasattr(procs, "venv_python") and not hasattr(procs, "old_venv")
     for rel in ("tools/launch/consolestart.py", "tools/launch/serverstart.py", "tools/launch/clusterctl.py", "drishti-console/run_drishti_web.py"):
         text = (ROOT / rel).read_text(encoding="utf-8")
-        assert "pylibs.install" not in text and '"pip", "install"' not in text, rel
+        assert "pylibs.install(" not in text and '"pip", "install"' not in text, rel
 
 
 def test_no_launcher_names_an_interpreter():

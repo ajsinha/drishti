@@ -22,17 +22,17 @@ naming another folder, a JVM arguments file of another data folder) is MOVED int
 overwritten or edited, and a fresh one is written; a dev.ini naming this checkout is kept as it is. Nothing is made outside this checkout,
 the settings folder and an explicit ``--data-dir``; a ``DRISHTI_*`` folder variable naming another folder is reported and never used.
 ``setup libs``: the libraries (the pinned Lake wheel first, then drishti-console/requirements.txt) of the Python that runs setup,
-checked name by name, and what is missing installed into THAT Python. ``setup`` alone = drishti, then libs, on every system. Drishti never
-makes a virtual environment: the Python is yours (the system's, a dedicated one, or a virtual environment you made yourself and run
-setup with); ``--system`` is accepted and changes nothing. The libraries come from the offline wheel pack: ``--wheels <folder or .zip>``,
-else DRISHTI_WHEELS, else ~/drishti-wheels (Windows %USERPROFILE%\\drishti-wheels) when it holds .whl files (said in one line); nothing
-is fetched from a package index unless ``--index``. A missing library is a [FAIL] line with the command that fixes it; an operating
-system's own Python (PEP 668, EXTERNALLY-MANAGED) and a pack for another Python version are one [FAIL] line each and pip never runs
-(never --break-system-packages). The Python setup ran with is written as drishti.python into the settings file (~/drishti-envs/dev.ini,
-or the file --settings names): the Python of ``start console``, the cluster, the feed schedules and the server's Python work;
-DRISHTI_PYTHON overrides. ``start`` never makes an environment and never installs anything. The next steps never say ``start`` while a
-[FAIL] or [todo] remains: the fixes come first.
-On Windows pip uses the Windows certificate store (a company proxy). Idempotent, on Linux, macOS and Windows alike; lists the environment
+checked name by name; NEVER installed (owner rule, 2026-11-23: an automatic install can corrupt an environment). ``setup`` alone =
+drishti, then libs, on every system. Drishti never makes a virtual environment and never runs pip: the Python is yours (a dedicated one,
+or a virtual environment you made yourself and run setup with); ``--system`` is accepted and changes nothing. A missing library is a
+[FAIL] line and the pip command you may run yourself, from drishti-console: offline from the wheel pack when one is found (``--wheels
+<folder or .zip>``, else DRISHTI_WHEELS, else ~/drishti-wheels, else the pack zip in Downloads, unzipped into ~/drishti-wheels), and
+from your package index as the second option. An operating system's own Python (PEP 668, EXTERNALLY-MANAGED) and a pack for another
+Python version are one [FAIL] line each. The Python setup ran with is written as drishti.python into the settings file
+(~/drishti-envs/dev.ini, or the file --settings names): the Python of ``start console``, the cluster, the feed schedules and the server's
+Python work; DRISHTI_PYTHON overrides. ``start`` never makes an environment and never installs anything. The next steps never say
+``start`` while a [FAIL] or [todo] remains: the fixes come first.
+Idempotent, on Linux, macOS and Windows alike; lists the environment
 variables it sees and prints the next steps. ``--check`` changes nothing and only reports, the libraries name by name (exit 1 when something
 needs doing)."""
 from __future__ import annotations
@@ -93,7 +93,6 @@ def dev_ini_text(home: Path, data: Path, modules: Path, java: Path | None = None
     return text
 
 
-REEXEC_ENV = "DRISHTI_SETUP_REEXEC"
 def ini_collision(ini: Path, home, explicit_data=None, flavour=None) -> list[str]:
     """Why an existing dev.ini is not this checkout's, so setup moves it: its ``drishti.home`` names another folder; or it names no
     ``drishti.home`` and a root outside ``home`` (``drishti.data.dir``, ``drishti.modules.home``, ``drishti.lib.path``); or its
@@ -140,100 +139,37 @@ def have_yaml() -> bool:
     return importlib.util.find_spec("yaml") is not None
 
 
-def bootstrap(a, home: Path, env: dict, argv: list | None = None, run=subprocess.run, yaml_here=have_yaml, wheels: Path | None = None) -> int | None:
-    """Setup on a Python that has only the standard library and an install source (the wheel pack, or --index): installs the libraries
-    into THIS Python first, then runs the same command again in a fresh process that sees them (a user-site folder pip made is not on this
-    process's path). None: nothing to do (PyYAML is there, --check, setup drishti, or no install source: setup goes on and the library
-    step reports what is missing). Never a virtual environment."""
-    part = getattr(a, "part", None)
-    if part == "drishti" or a.check or yaml_here() or not (wheels or getattr(a, "index", False)):
-        return None                                      # no install source: setup goes on and the library step says what is missing
-    if env.get(REEXEC_ENV):
-        raise LaunchError("PyYAML is still not importable after the libraries were installed: run  " + procs.command("setup", "--check"))
-    target = sys.executable
-    say(f"installing the Lake wheel and drishti-console/requirements.txt into {target}" + (f" from {wheels}" if wheels else " from your package index (--index)")
-        + ": setup reads PyYAML (and Drishti needs the rest) and this Python has not got them")
-    pylibs.install(target, home, run=run, wheels=wheels)
-    argv = list(sys.argv if argv is None else argv)
-    say(f"running setup again with {target} ...")
-    return run([target, str(Path(argv[0]).resolve()), *argv[1:]], env={**env, REEXEC_ENV: "1"}).returncode
-
-
-def default_wheels() -> Path:
-    """Where START_HERE puts the offline wheel pack: ~/drishti-wheels (Windows %USERPROFILE%\\drishti-wheels)."""
-    return Path.home() / "drishti-wheels"
-
-
-def system_tag() -> str:
-    """The system part of a wheel pack's name: windows, linux or macos."""
-    return "windows" if procs.windows() else "macos" if sys.platform == "darwin" else "linux"
-
-
-def pack_zips(folder: Path) -> list[Path]:
-    """The wheel-pack zips in ``folder`` for this system and this Python (``drishti-platform-<release>-wheels-<system>-<arch>-py<XY>.zip``),
-    this release's first, then the newest."""
-    if not folder.is_dir():
-        return []
-    py = f"py{sys.version_info[0]}{sys.version_info[1]}"
-    zips = [z for z in folder.glob("*wheels*.zip") if system_tag() in z.name.lower() and py in z.name.lower()]
-    release = javacmd._version_of().rsplit(".", 1)[-1] if hasattr(javacmd, "_version_of") else ""
-    return sorted(zips, key=lambda z: (release not in z.name, -z.stat().st_mtime))
-
-
-def pack_places() -> list[Path]:
-    """Where a downloaded pack zip is looked for besides ~/drishti-wheels: the platform folder (the one holding drishti/) and Downloads."""
-    return [javacmd.REPO.parent, Path.home() / "Downloads"]
-
-
-def find_pack() -> tuple[str | None, str]:
-    """The offline wheel pack when none is named: ~/drishti-wheels (unzipped, any depth, or a pack zip in it), then a pack zip for this
-    system and Python in the platform folder or the Downloads folder (FIRST_RUN_ROBUSTNESS.md S4). (its path, the places looked in)."""
-    home = default_wheels()
-    if home.is_dir() and any(home.rglob("*.whl")):
-        return str(home), str(home)
-    places = [home, *pack_places()]
-    for place in places:
-        zips = pack_zips(place)
-        if zips:
-            return str(zips[0]), ", ".join(map(str, places))
-    return None, ", ".join(map(str, places))
-
-
-def pack_name() -> str:
-    """The pack zip this machine needs, as the release publishes it."""
-    arch = "x64" if __import__("platform").machine().lower() in ("amd64", "x86_64") else __import__("platform").machine().lower()
-    return f"drishti-platform-<release>-wheels-{system_tag()}-{arch}-py{sys.version_info[0]}{sys.version_info[1]}.zip"
-
-
-def fix_libs(settings: str | None = None) -> str:
-    """The fix when libraries are missing and no pack was found (no network unless --index)."""
-    return (procs.command("setup", "--wheels", "<folder or zip>", settings=settings) + f"   (the offline wheel pack, {pack_name()}: put it in "
-            f"{default_wheels()} or your Downloads folder and plain setup finds it; or --index to use your package index)")
+def fix_libs(py: str, home: Path, pack: "pylibs.Pack | None" = None, what: str = "requirements.txt") -> str:
+    """The command(s) the owner may run himself to put the missing libraries into ``py``: offline from the wheel pack when one was found,
+    else (and always as the second option) from his package index. Drishti never runs them."""
+    folder = pack.path if pack is not None and pack.path is not None else None
+    if folder is not None and folder.is_file():                 # a zip setup did not unzip (--check): where setup unzips it
+        folder = pylibs.wheels_home() / folder.name[:-4]
+    cmds = pylibs.install_commands(py, home, folder, what=what)
+    if folder is None:
+        cmds[0] += f"; or offline: put {pack.wanted if pack is not None else 'the wheel pack zip'} in your Downloads folder and run setup again"
+    return "   or   ".join(cmds) + "   (Drishti never installs libraries itself)"
 
 
 def setup(a, env: dict | None = None, argv: list | None = None, run=subprocess.run) -> int:
-    """setup; the libraries come from ``--wheels <folder or .zip>``, else DRISHTI_WHEELS, else ~/drishti-wheels when it holds wheels
-    (offline); ``--index`` alone lets pip use the configured package index. Neither: missing libraries are reported, nothing installed."""
+    """setup. It never installs a library (owner rule): it finds the offline wheel pack (``--wheels <folder or .zip>``, else DRISHTI_WHEELS,
+    else ~/drishti-wheels, else the pack zip in Downloads; a zip is unzipped into ~/drishti-wheels) only to name it in the command it prints
+    for missing libraries."""
     real = env is None
     env = dict(os.environ if env is None else env)
-    spec = (getattr(a, "wheels", None) or env.get("DRISHTI_WHEELS") or "").strip() or None
-    if spec and getattr(a, "check", False):
-        spec = None                                  # --check changes nothing and installs nothing
-    if not spec and not getattr(a, "check", False) and a.part != "drishti":
-        found, _ = find_pack()
-        if found:
-            spec = found
-            say(f"using the wheel pack {found} (no --wheels given, DRISHTI_WHEELS unset): the libraries are installed offline from it")
+    pack = pylibs.find_pack(getattr(a, "wheels", None), env) if a.part != "drishti" else None
+    spec = str(pack.path) if pack is not None and pack.path is not None and not getattr(a, "check", False) else None
     with pylibs.wheel_folder(spec) as wheels:
-        return _setup(a, env, argv, run, wheels, real)
+        if wheels is not None:
+            pack.path = wheels
+        return _setup(a, env, argv, run, pack, real)
 
 
-def _setup(a, env: dict, argv: list | None, run, wheels: Path | None, real: bool = False) -> int:
+def _setup(a, env: dict, argv: list | None, run, pack: "pylibs.Pack | None", real: bool = False) -> int:
     check = a.check
     part = getattr(a, "part", None)
     do_drishti = part in (None, "drishti")
     do_libs = part in (None, "libs")
-    index = getattr(a, "index", False)
     todo: list[str] = []
     problems: list[str] = []
 
@@ -269,9 +205,6 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None, real: bool
         ini = Path(named).expanduser()
     explicit = Path(a.data_dir).expanduser().resolve() if a.data_dir else None
     j = {"ok": False, "java": "", "problem": ""}
-    rc = bootstrap(a, home, original, argv, run, wheels=wheels)
-    if rc is not None:
-        return rc
     # the settings file: this checkout's (kept as it is), else moved to a dated folder and a fresh one written (never edited in place)
     stale = ini_collision(ini, home, explicit) if do_drishti and ini.is_file() and not custom else []
     fresh = {"drishti.home": home.as_posix(), "drishti.data.dir": (explicit or home / "data").as_posix(),
@@ -370,8 +303,8 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None, real: bool
         if custom:
             line("skip", "JVM options", f"the IDE server launchers' files are written only with ~/drishti-envs/dev.ini (not with --settings {ini.name})")
         elif not yaml_ok:
-            line("todo", "JVM options", "needs PyYAML, which this Python has not got: " + procs.command("setup", "--wheels", "<folder>"))
-            todo.append(fix_libs(javacmd.settings()[0]) + "; then setup writes the JVM options and the rest")
+            line("todo", "JVM options", "needs PyYAML, which this Python has not got (the libraries step below names the command)")
+            todo.append(fix_libs(sys.executable, home, pack) + "; then run setup again: it writes the JVM options and the rest")
         else:
             import launchers
             try:
@@ -407,34 +340,32 @@ def _setup(a, env: dict, argv: list | None, run, wheels: Path | None, real: bool
     target = sys.executable
     py_used = target
     if do_libs:
+        # CHECKED, never installed (owner rule): what is missing is one [FAIL] line and the command the owner may run himself
         try:
-            bad = pylibs.verify(target, home)
-            made = False
-            # an operating system's Python (PEP 668) and a pack for another Python version: one [FAIL] line each, pip never runs
-            refused = [m for m in ((pylibs.MANAGED if bad and pylibs.externally_managed(target, run) else ""),
-                                   (pylibs.pack_mismatch(target, wheels, run) if bad and wheels else "")) if m]
-            for m in refused:
-                line("FAIL", "libraries", m)
-                problems.append(m)
-            if refused:
-                bad = []                              # said above; nothing is installed
-            elif bad and not check and (wheels or index):
-                pylibs.install(target, home, run=run, wheels=wheels)
-                bad = pylibs.verify(target, home)
-                made = not bad
-            if made:
-                line("made", "libraries", f"{target}: what was missing installed " + (f"from {wheels}" if wheels else "from your package index (--index)") + " (the Lake wheel first)")
-            elif not bad and not refused:
-                line("ok", "libraries", f"{target}: every requirement of drishti-console/requirements.txt, the Lake wheel at its pin")
-            elif check:
-                line("todo", "libraries", f"{target}: " + "; ".join(bad))
-                todo.append(fix_libs(settings))
-            else:
-                line("FAIL", "libraries", f"{target}: " + "; ".join(bad) + ("" if (wheels or index) else "  (no wheel pack found and no --index: nothing installed)"))
-                problems.append(fix_libs(settings) if not wheels else f"add what {wheels} lacks to the wheel pack, then run setup again: " + "; ".join(bad))
+            every = pylibs.verify(target, home)
+            bad = [b for b in every if f"[{pylibs.LOCK.as_posix()}]" not in b]
+            compute = [b for b in every if b not in bad]
         except LaunchError as e:
-            line("FAIL", "libraries", str(e))
-            problems.append(str(e) if wheels else fix_libs(settings) + "\n     (" + str(e).splitlines()[0] + ")")
+            every, bad, compute = [str(e)], [str(e)], []
+        folder = pack.path if pack is not None and pack.path is not None and pack.path.is_dir() else None
+        if not bad:
+            line("ok", "libraries", f"{target}: every requirement of drishti-console/requirements.txt, the Lake wheel at its pin")
+        elif pylibs.externally_managed(target, run):
+            line("FAIL", "libraries", pylibs.MANAGED)             # an operating system's Python (PEP 668): no install command at all
+            problems.append(pylibs.MANAGED)
+        elif pack is not None and pack.problem:
+            line("FAIL", "libraries", f"{target}: " + "; ".join(bad))
+            line("FAIL", "wheel pack", pack.problem)
+            problems.append(pack.fail(procs.command("setup", settings=settings)))
+        elif folder is not None and pylibs.pack_mismatch(target, folder, run):
+            line("FAIL", "libraries", pylibs.pack_mismatch(target, folder, run))
+            problems.append(pylibs.pack_mismatch(target, folder, run))
+        else:
+            line("todo" if check else "FAIL", "libraries", f"{target}: " + "; ".join(bad) + "  (Drishti installs nothing: the command is below)")
+            (todo if check else problems).append(fix_libs(target, home, pack))
+        if compute and not bad:
+            line("WARN", "compute libraries", f"{target}: " + "; ".join(compute) + "  (only the server's Python work needs them: "
+                 + fix_libs(target, home, pack, what="../config/compute/locks/python.lock") + ")")
     if custom:                                         # a named file: only one naming another drishti.home is another copy's
         other = (settingsfile.read_all(str(ini)).get("drishti.home") or "").strip() if ini.is_file() else ""
         foreign_ini = bool(other) and not (settingsfile.inside(other, home) and settingsfile.inside(home, other))

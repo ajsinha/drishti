@@ -253,7 +253,8 @@ public final class ComputeService implements AutoCloseable {
             if (why.isPresent()) {
                 throw new ComputeException(ComputeException.Code.REFUSED, "compute pool " + p.name() + ": " + why.get());
             }
-            site = environments.verifiedSite(Environments.id(p.locked().version(), lock(p)));   // the lock's libraries, first on the path
+            environments.verifiedSite(Environments.id(p.locked().version(), lock(p)));   // its record unchanged since the check
+            environments.verifyLibraries(p.locked(), lock(p));                         // the interpreter has the lock's libraries (never installed)
         }
         PoolSettings.Mode mode = p.mode().resolved();
         String id = node + "/" + p.name() + "#" + n;

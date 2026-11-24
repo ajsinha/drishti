@@ -131,11 +131,10 @@ def test_row49_start_all_checks_the_console_port_before_the_server(tmp_path, mon
 # ---- S8, S9: setup is idempotent and ends with its verdict (row 02) -------------------------------------------------------------------
 
 def test_row02_setup_a_second_time_changes_no_byte_and_runs_no_pip(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr(envsetup, "default_wheels", lambda: tmp_path / "none")
-    monkeypatch.setattr(envsetup, "pack_places", lambda: [])
-    installed = []
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
+    installed = []                                     # Drishti installs nothing: there is no install to record
     monkeypatch.setattr(pylibs, "verify", lambda *a, **k: [])
-    monkeypatch.setattr(pylibs, "install", lambda *a, **k: installed.append(a))
     a = argparse.Namespace(part=None, system=False, check=False, home=None, data_dir=str(tmp_path / "data"), envs_dir=str(tmp_path / "envs"),
                            java_home=None, python=None, skip_venv=False, reinstall=False, index=False, wheels=None)
     envsetup.setup(a, {"DRISHTI_HOME": str(ROOT)})
@@ -157,28 +156,6 @@ def test_row03_setup_check_changes_no_byte(tmp_path, monkeypatch):
 
 
 # ---- S5: pip is never bent by the company's configuration (row 69) ------------------------------------------------------------------
-
-def test_row69_pip_from_the_pack_is_isolated_and_offline(tmp_path):
-    calls = []
-
-    def run(cmd, **kw):
-        calls.append(cmd)
-        if cmd[1] == "-c":
-            import json
-            return subprocess.CompletedProcess(cmd, 0, json.dumps({n: None for n in cmd[3:]}) + "\n", "")
-        return subprocess.CompletedProcess(cmd, 0, "", "")
-    home = tmp_path / "h"
-    (home / "drishti-console").mkdir(parents=True)
-    (home / "drishti-console" / "requirements.txt").write_text("alpha>=1\n", encoding="utf-8")
-    (home / "lib").mkdir()
-    (home / "lib" / "lake-wheel.pin").write_text("version=0.9.1\n", encoding="utf-8")
-    pack = tmp_path / "pack"
-    pack.mkdir()
-    (pack / "alpha-1.2-py3-none-any.whl").write_bytes(b"w")
-    pylibs.install(sys.executable, home, windows=False, run=run, wheels=pack)
-    pips = [c for c in calls if c[1:3] == ["-m", "pip"] and "install" in c]
-    assert pips and all("--isolated" in c and "--no-index" in c and "--no-input" in c for c in pips)
-
 
 # ---- P4: a named Python that is not there is a [FAIL], never a fall-through (row 13) ---------------------------------------------------
 

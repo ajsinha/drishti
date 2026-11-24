@@ -53,7 +53,17 @@ def check_libraries() -> None:
     """Stops at once, with the setup line, when this Python lacks a library the console needs (never a traceback minutes later)."""
     lacking = missing_libraries()
     if lacking:
-        raise SystemExit(f"[FAIL] the console's Python: {sys.executable} lacks {', '.join(lacking)}. Fix: {setup_line()}")
+        raise SystemExit(f"[FAIL] the console's Python: {sys.executable} lacks {', '.join(lacking)} (Drishti installs nothing). Fix: {pip_line()}")
+
+
+def pip_line() -> str:
+    """The command the owner may run himself (Drishti never installs a library), as setup prints it: from drishti-console, offline from
+    ~/drishti-wheels when it holds wheels, else from the package index."""
+    q = lambda w: f'"{w}"' if " " in w else w                      # noqa: E731
+    py = f"py -{sys.version_info[0]}.{sys.version_info[1]}" if os.name == "nt" else q(sys.executable)
+    pack = Path(os.environ.get("USERPROFILE" if os.name == "nt" else "HOME") or Path.home()) / "drishti-wheels"
+    offline = f"--no-index --find-links {q(str(pack))} " if pack.is_dir() and any(pack.rglob("*.whl")) else ""
+    return f"cd {q(str(HERE))}   then   {py} -m pip install {offline}-r requirements.txt   (or {setup_line()}, which checks every library)"
 
 
 if __name__ == "__main__":

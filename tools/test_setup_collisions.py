@@ -49,7 +49,7 @@ def ns(tmp: Path, **kw) -> argparse.Namespace:
 
 @pytest.fixture(autouse=True)
 def no_pip():
-    with mock.patch.object(pylibs, "verify", lambda *a, **k: []), mock.patch.object(pylibs, "install", lambda *a, **k: None):
+    with mock.patch.object(pylibs, "verify", lambda *a, **k: []):        # the libraries: checked only (Drishti installs nothing)
         yield
 
 
