@@ -43,3 +43,4 @@ modules/source-wss/docs/guide.md | Bind it | docs/guides/BANK_DATA_GUIDE.md, the
 modules/source-wss/docs/guide.md | Load a file | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
 modules/source-wss/docs/guide.md | # config/connectors/trade-wss.yaml (from connectors/delta.yaml) | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
 modules/source-wss/docs/guide.md | cp wss-2026-11-03.jsonl.gz data/dataload/inbox/ | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
+docs/guides/PVF_LOADING.md | Load your scenario PV and portfolio files into the Delta lake, and remove older scenario PV dates | docs/guides/BANK_DATA_GUIDE.md, the document's title (it is renamed and its title now names the whole guide: Bank data: what a bank sends each day and how it is loaded)

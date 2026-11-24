@@ -88,20 +88,6 @@ limit; the form's Set writes the quantity into the screen's `state`; the live pa
 `label`, `value`, `color` (treemap); `value`, `lower`, `upper` (bullet); `form:` and `on: { submit }` (form); `data:` and `rows: $.<name>` (live).
 
 <!-- example: map -->
-<!--
-  Project Drishti · Any data. Any domain. One grammar.
-
-  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
-  All rights reserved.
-
-  PROPRIETARY AND CONFIDENTIAL.
-
-  This file is the confidential and proprietary property of Ashutosh Sinha.
-  Unauthorised copying, use, modification, distribution or disclosure of this
-  file, via any medium, is strictly prohibited except with the express prior
-  written permission of the copyright holder.
-
-  See the LICENSE file in the root of this repository for the full terms.
 ## Map
 
 A country on the map: the world with the country highlighted, and the same country's regions (states, provinces, counties) beside it.

@@ -856,20 +856,6 @@ Export from the source system; do not round-trip a file through Excel. When a fi
 Excel silently turns long ids into numbers, drops leading zeros, rewrites dates to the machine's locale and rounds numbers beyond 15
 digits. The loader refuses what it can detect (`EXCEL_NUMBER_ID`, `EXCEL_ERROR`, `FORMULA`, `BAD_DATE`); rounding it cannot see.
 
-<!--
-  Project Drishti · Any data. Any domain. One grammar.
-
-  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
-  All rights reserved.
-
-  PROPRIETARY AND CONFIDENTIAL.
-
-  This file is the confidential and proprietary property of Ashutosh Sinha.
-  Unauthorised copying, use, modification, distribution or disclosure of this
-  file, via any medium, is strictly prohibited except with the express prior
-  written permission of the copyright holder.
-
-  See the LICENSE file in the root of this repository for the full terms.
 ## Samples
 
 **Synthetic.** Made up for trying the scripts; not market data and not anyone's extract (the owner's real files live in the git-ignored
@@ -1641,7 +1627,7 @@ Load real data into each domain's folder, or point a domain at a database instea
 | `commodity-vol-surface` | Commodity volatility surface | `CMDV` | `CMDV-…` | `SURFACE_ID` | Implied vols by delivery month and moneyness. |
 | `rate-fixing` | Rate index fixings | `FIX` | `FIX-…` | `INDEX_ID` | Published overnight and term rate fixings (SOFR, €STR, SONIA…). |
 | `bond` | Bond (security master) | `BND` | `BND-…` | `ISIN` | A listed bond: terms, price, yield, spreads and analytics. |
-| `correlation-matrix` | Correlation matrix | `CORR` | `CORR-…` | `MATRIX_ID` | A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked (since 2.9.2). |
+| `correlation-matrix` | Correlation matrix | `CORR` | `CORR-…` | `MATRIX_ID` | A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked. |
 
 #### Interest rate curve (`ir-curve`)
 
@@ -1785,7 +1771,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 
 #### Correlation matrix (`correlation-matrix`)
 
-A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked (since 2.9.2).
+A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked.
 
 **Fields its Sutra reads:** `NAME`, `FACTORS`.
 
@@ -2015,7 +2001,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 
 ### Correlation matrix (`correlation-matrix`)
 
-A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked (since 2.9.2).
+A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked.
 
 **Mnemonic:** `CORR` · **Identifiers:** `CORR-…` · **Id field:** `MATRIX_ID`
 
