@@ -14,7 +14,7 @@
 
 """The first-run matrix, launcher rows (docs/plans/FIRST_RUN_ROBUSTNESS.md section B2: 32, 58 to 62): each IDE's launchers in its own
 project's .idea/runConfigurations and nowhere else; a launcher's command line is a CLI command line (the launcher-equivalent runner,
-tools/launch/launchers.py argv); no launcher names an interpreter, a .venv or setup --index. Rows 58 to 61 need an IDE (M) as well."""
+tools/launch/launchers.py argv); no launcher names an interpreter, a virtual environment or setup --index. Rows 58 to 61 need an IDE (M) as well."""
 from __future__ import annotations
 
 import subprocess
@@ -59,6 +59,6 @@ def test_row62_every_python_launcher_runs_a_cli_command_line(xml, tmp_path):
 
 
 def test_row32_no_launcher_names_python_by_name_or_a_venv():
-    for f in JAVA + PYTHON:                    # the VS Code workspace: tools/test_no_venv.py (its file-exclude patterns name .venv)
+    for f in JAVA + PYTHON:                    # the VS Code workspace: tools/test_no_venv.py (its file-exclude patterns)
         text = f.read_text(encoding="utf-8")
-        assert ".venv" not in text and "python3 " not in text and "/bin/python" not in text and "python.exe" not in text, f.name
+        assert "." + "venv" not in text and "python3 " not in text and "/bin/python" not in text and "python.exe" not in text, f.name

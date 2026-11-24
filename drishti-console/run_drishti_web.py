@@ -63,7 +63,9 @@ def pip_line() -> str:
     py = f"py -{sys.version_info[0]}.{sys.version_info[1]}" if os.name == "nt" else q(sys.executable)
     pack = Path(os.environ.get("USERPROFILE" if os.name == "nt" else "HOME") or Path.home()) / "drishti-wheels"
     offline = f"--no-index --find-links {q(str(pack))} " if pack.is_dir() and any(pack.rglob("*.whl")) else ""
-    return f"cd {q(str(HERE))}   then   {py} -m pip install {offline}-r requirements.txt   (or {setup_line()}, which checks every library)"
+    lock = "..\\config\\compute\\locks\\python.lock" if os.name == "nt" else "../config/compute/locks/python.lock"
+    return (f"cd {q(str(HERE))}   then   {py} -m pip install {offline}-r requirements.txt   then   {py} -m pip install {offline}-r {lock}"
+            f"   (or {setup_line()}, which checks every library)")
 
 
 if __name__ == "__main__":

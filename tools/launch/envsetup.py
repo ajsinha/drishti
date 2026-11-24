@@ -139,7 +139,8 @@ def have_yaml() -> bool:
     return importlib.util.find_spec("yaml") is not None
 
 
-def fix_libs(py: str, home: Path, pack: "pylibs.Pack | None" = None, what: str = "requirements.txt") -> str:
+def fix_libs(py: str, home: Path, pack: "pylibs.Pack | None" = None,
+             what: tuple = ("requirements.txt", "../config/compute/locks/python.lock")) -> str:
     """The command(s) the owner may run himself to put the missing libraries into ``py``: offline from the wheel pack when one was found,
     else (and always as the second option) from his package index. Drishti never runs them."""
     folder = pack.path if pack is not None and pack.path is not None else None
@@ -341,15 +342,14 @@ def _setup(a, env: dict, argv: list | None, run, pack: "pylibs.Pack | None", rea
     py_used = target
     if do_libs:
         # CHECKED, never installed (owner rule): what is missing is one [FAIL] line and the command the owner may run himself
-        try:
-            every = pylibs.verify(target, home)
-            bad = [b for b in every if f"[{pylibs.LOCK.as_posix()}]" not in b]
-            compute = [b for b in every if b not in bad]
+        try:                                              # requirements.txt AND python.lock: both checked, neither installed
+            bad = pylibs.verify(target, home)
         except LaunchError as e:
-            every, bad, compute = [str(e)], [str(e)], []
+            bad = [str(e)]
         folder = pack.path if pack is not None and pack.path is not None and pack.path.is_dir() else None
         if not bad:
-            line("ok", "libraries", f"{target}: every requirement of drishti-console/requirements.txt, the Lake wheel at its pin")
+            line("ok", "libraries", f"{target}: every requirement of drishti-console/requirements.txt and {pylibs.LOCK.as_posix()}, "
+                 "the Lake wheel at its pin")
         elif pylibs.externally_managed(target, run):
             line("FAIL", "libraries", pylibs.MANAGED)             # an operating system's Python (PEP 668): no install command at all
             problems.append(pylibs.MANAGED)
@@ -363,9 +363,6 @@ def _setup(a, env: dict, argv: list | None, run, pack: "pylibs.Pack | None", rea
         else:
             line("todo" if check else "FAIL", "libraries", f"{target}: " + "; ".join(bad) + "  (Drishti installs nothing: the command is below)")
             (todo if check else problems).append(fix_libs(target, home, pack))
-        if compute and not bad:
-            line("WARN", "compute libraries", f"{target}: " + "; ".join(compute) + "  (only the server's Python work needs them: "
-                 + fix_libs(target, home, pack, what="../config/compute/locks/python.lock") + ")")
     if custom:                                         # a named file: only one naming another drishti.home is another copy's
         other = (settingsfile.read_all(str(ini)).get("drishti.home") or "").strip() if ini.is_file() else ""
         foreign_ini = bool(other) and not (settingsfile.inside(other, home) and settingsfile.inside(home, other))

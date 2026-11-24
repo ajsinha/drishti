@@ -97,16 +97,19 @@ def test_no_java_code_starts_pip():
 def test_the_printed_command_is_the_one_start_here_teaches():
     home = Path("/home/John Smith/drishti-platform (1)/drishti")
     pack = Path("/home/John Smith/drishti-wheels")
+    # requirements.txt and python.lock: one pip run each (python.lock has --hash lines; one run with both is refused by pip's hash mode)
     lin = pylibs.install_commands("/opt/py 3.13/bin/python3", home, None, win=False)
-    assert lin == [f"cd '{home}/drishti-console'   then   '/opt/py 3.13/bin/python3' -m pip install -r requirements.txt   (uses your package index)"]
+    p = "'/opt/py 3.13/bin/python3' -m pip install"
+    assert lin == [f"cd '{home}/drishti-console'   then   {p} -r requirements.txt   then   {p} -r ../config/compute/locks/python.lock"
+                   "   (uses your package index)"]
     off = pylibs.install_commands("/usr/bin/python3.13", home, pack, win=False)
-    assert off[0] == f"cd '{home}/drishti-console'   then   /usr/bin/python3.13 -m pip install --no-index --find-links '{pack}' -r requirements.txt"
+    p = f"/usr/bin/python3.13 -m pip install --no-index --find-links '{pack}'"
+    assert off[0] == f"cd '{home}/drishti-console'   then   {p} -r requirements.txt   then   {p} -r ../config/compute/locks/python.lock"
     win = pylibs.install_commands("C:/Python313/python.exe", Path("C:/Users/John Smith/drishti"), Path("C:/Users/John Smith/drishti-wheels"),
                                   win=True, version=(3, 13))
     assert win[0].startswith('cd "C:') and "drishti-console\"   then   py -3.13 -m pip install --no-index --find-links \"C:" in win[0]
-    assert win[0].endswith("-r requirements.txt") and "--user" not in " ".join(win) and "--break-system-packages" not in " ".join(win)
-    assert pylibs.install_commands("py", home, None, win=False, what="../config/compute/locks/python.lock")[0].endswith(
-        "-r ../config/compute/locks/python.lock   (uses your package index)")
+    assert win[0].endswith("-r ..\\config\\compute\\locks\\python.lock") and "-r requirements.txt   then" in win[0]
+    assert "--user" not in " ".join(win) and "--break-system-packages" not in " ".join(win)
 
 
 # ---- 2. setup against an EXTERNALLY-MANAGED interpreter: one [FAIL], no pip at all ---------------------------------------------------------

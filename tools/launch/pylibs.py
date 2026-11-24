@@ -486,23 +486,24 @@ def interpreter_words(py: str, win: bool | None = None, version=None) -> str:
 
 
 def install_commands(py: str, home: Path, pack: Path | None = None, win: bool | None = None, version=None,
-                     what: str = "requirements.txt") -> list[str]:
+                     what: tuple[str, ...] = ("requirements.txt", "../config/compute/locks/python.lock")) -> list[str]:
     """The command(s) the owner may run himself to put the libraries into ``py`` (Drishti never runs them), in the form START_HERE teaches:
     from ``drishti-console`` (so requirements.txt's own ``--find-links ../lib/wheels`` finds the Lake wheel). With a wheel ``pack``: offline
     (``--no-index --find-links <pack>``); always also the form that uses your package index, as the second option. ``what``: the
-    requirements file relative to drishti-console (``../config/compute/locks/python.lock`` for the compute pool's pins)."""
+    requirements files relative to drishti-console, one pip run EACH: python.lock carries --hash lines, and pip in hash mode refuses the
+    unpinned lines of requirements.txt in the same run (checked: "all requirements must have their versions pinned with ==")."""
     win = procs.windows() if win is None else win
     sep = "\\" if win else "/"
     folder = str(home / "drishti-console") if not win else str(home).rstrip("\\/") + "\\drishti-console"
-    req = what.replace("/", sep)
+    files = (what,) if isinstance(what, str) else tuple(what)
     cd = f"cd {_word(folder, win)}"
     pip = f"{interpreter_words(py, win, version)} -m pip install"
     out = []
     if pack is not None:
         dirs = wheel_dirs(pack) if pack.is_dir() else [pack]
         links = " ".join(f"--find-links {_word(str(d), win)}" for d in dirs)
-        out.append(f"{cd}   then   {pip} --no-index {links} -r {req}")
-    out.append(f"{cd}   then   {pip} -r {req}   (uses your package index)")
+        out.append(f"{cd}   then   " + "   then   ".join(f"{pip} --no-index {links} -r {f.replace('/', sep)}" for f in files))
+    out.append(f"{cd}   then   " + "   then   ".join(f"{pip} -r {f.replace('/', sep)}" for f in files) + "   (uses your package index)")
     return out
 
 

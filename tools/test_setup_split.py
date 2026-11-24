@@ -179,7 +179,8 @@ def test_without_a_wheel_pack_nothing_is_installed_and_the_owners_command_comes_
     out = capsys.readouterr().out
     assert rc == 1 and libs["installed"] == [] and "[FAIL] libraries" in out and "Drishti installs nothing" in out
     first = out.split("Next steps", 1)[1].splitlines()[1]
-    assert "drishti-console" in first and "-m pip install -r requirements.txt   (uses your package index)" in first
+    assert "drishti-console" in first and "-m pip install -r requirements.txt   then   " in first
+    assert "-m pip install -r ../config/compute/locks/python.lock   (uses your package index)" in first
     assert "wheel pack zip in your Downloads folder" in first or "Downloads folder" in first
     assert "start all" not in out.split("Next steps", 1)[1]
     assert out.rstrip().splitlines()[-1].startswith("Drishti is NOT ready:"), "the verdict is the last line (S9)"

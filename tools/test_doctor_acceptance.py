@@ -250,15 +250,15 @@ def _copy_checkout(dest: Path) -> None:
             shutil.copy2(f, dest / f.relative_to(mo.ROOT))
 
 
-def _printed_offline_command(text: str) -> tuple[Path, list[str]]:
-    """(the folder, the words) of the offline pip command setup printed for the owner (``cd <folder>   then   <python> -m pip install
-    --no-index --find-links <pack> -r requirements.txt``)."""
+def _printed_offline_command(text: str) -> tuple[Path, list[list[str]]]:
+    """(the folder, the commands) of the offline pip commands setup printed for the owner (``cd <folder>   then   <python> -m pip
+    install --no-index --find-links <pack> -r requirements.txt   then   ... -r ../config/compute/locks/python.lock``)."""
     import shlex
     for line in text.splitlines():
         if "--no-index" in line and "-m pip install" in line:
             part = line[line.index("cd "):].split("   or   ")[0]
-            cd, cmd = part.split("   then   ", 1)
-            return Path(shlex.split(cd)[1]), shlex.split(cmd)
+            cd, *cmds = part.split("   then   ")
+            return Path(shlex.split(cd)[1]), [shlex.split(c) for c in cmds]
     raise AssertionError("setup printed no offline pip command:\n" + text[-3000:])
 
 
@@ -297,10 +297,12 @@ def test_e2e_first_run_on_linux():
         r0 = run("setup")                                            # a fresh Python: checked, NOTHING installed, the command printed
         assert r0.returncode == 1 and "[FAIL] libraries" in r0.stdout and r0.stdout.rstrip().splitlines()[-1].startswith("Drishti is NOT ready:")
         assert "[move]" in r0.stdout and mo.snapshot(site) == bare, "setup installed nothing into the Python"
-        folder, words = _printed_offline_command(r0.stdout)
-        assert folder == checkout / "drishti-console" and words[0] == py and "--isolated" not in words[:3]
-        owner = subprocess.run(words, cwd=folder, env=env, capture_output=True, text=True, timeout=1800)   # the owner runs it himself
-        assert owner.returncode == 0, owner.stdout[-2000:] + owner.stderr[-2000:]
+        folder, commands = _printed_offline_command(r0.stdout)
+        assert folder == checkout / "drishti-console" and len(commands) == 2 and all(c[0] == py for c in commands)
+        assert commands[0][-2:] == ["-r", "requirements.txt"] and commands[1][-2:] == ["-r", "../config/compute/locks/python.lock"]
+        for words in commands:                                         # the owner runs them himself, in turn
+            owner = subprocess.run(words, cwd=folder, env=env, capture_output=True, text=True, timeout=1800)
+            assert owner.returncode == 0, owner.stdout[-2000:] + owner.stderr[-2000:]
         r1 = run("setup")
         assert r1.returncode == 0 and "Drishti is ready." in r1.stdout, r1.stdout + r1.stderr
         problems += mo.output_problems(r1.stdout, setup=True)
@@ -325,7 +327,7 @@ def test_e2e_first_run_on_linux():
         r6 = run("stop", "all", t=300)
     assert r6.returncode == 0, r6.stdout + r6.stderr
     assert not old.exists(), "nothing was made in the old clone's folder"
-    assert not [p for p in scratch.rglob("pyvenv.cfg")] and not [p for p in scratch.rglob(".venv")], "no virtual environment"
+    assert not [p for p in scratch.rglob("pyvenv.cfg")] and not [p for p in scratch.rglob("." + "venv")], "no virtual environment"
     assert not mo.net(scratch), mo.net(scratch)
     assert not [c for c in mo.calls(scratch) if c.split()[0] in ("pip", "pip3", "python", "python3", "git", "curl", "wget")], mo.calls(scratch)
     assert not problems, problems

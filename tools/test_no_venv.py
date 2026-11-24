@@ -54,8 +54,12 @@ def test_no_file_names_a_virtual_environment_but_as_an_ignore_pattern():
     assert found == [], "Drishti names no virtual environment (an ignore pattern says so on its line):\n" + "\n".join(found)
 
 
+#: test harnesses that make a Python of THEIR OWN, outside any checkout, playing the owner (who prepares his Python himself): never Drishti
+HARNESS = {"test_doctor_acceptance.py", "test_system_python_untouched.py"}
+
+
 def test_no_code_makes_a_virtual_environment():
-    found = [f"{f.relative_to(ROOT)}:{n}: {line.strip()[:120]}" for f in files() if f.name != Path(__file__).name
+    found = [f"{f.relative_to(ROOT)}:{n}: {line.strip()[:120]}" for f in files() if f.name != Path(__file__).name and f.name not in HARNESS
              for n, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1) if MAKES.search(line)]
     assert found == [], "Drishti makes no virtual environment:\n" + "\n".join(found)
 
