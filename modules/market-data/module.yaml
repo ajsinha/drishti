@@ -249,8 +249,8 @@ docs:
   help: docs/help.yaml
   domains: []
   guides:
-  - packs/market-data/guides/market-data-catalogue.md
-  - packs/market-data/guides/market-data.md
+  - guides/BANK_DATA_GUIDE.md
+  - guides/GROUPINGS_AND_ANALYTICS.md
   tutorials:
   - guides/GROUPINGS_AND_ANALYTICS.md
 resources:

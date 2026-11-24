@@ -116,10 +116,10 @@ position and amino acid (`dms-score`). Each pack's README lists every kind's fie
 ## The design of the showcase
 
 **Status: built** (module `genomics`, packs `genomics` and `protein`); the design the build followed: A showcase for the genomics module
-(the `drishti.genomics` distribution, [DISTRIBUTIONS.md section 4](../../../docs/architecture/KERNEL_AND_MODULES.md#4-drishti-genomics-sample)) that helps sell the
+(the `drishti.genomics` distribution, `docs/architecture/KERNEL_AND_MODULES.md` section 4) that helps sell the
 system outside finance: two hero screens, one for **genomics** and one for **protein engineering**, joined by one story, on about
 **200,000 rows** of synthetic, seeded data that load on a laptop with no network. The mock-ups are in
-[mockups/genomics-showcase/](../../../docs/architecture/mockups/genomics-showcase/index.html); the questions for the owner are in section 12.
+`docs/architecture/mockups/genomics-showcase/index.html`; the questions for the owner are in section 12.
 
 ### 1. The idea in one paragraph
 
@@ -426,8 +426,7 @@ campaign with its rounds, the leaderboard) are drawn from the same kinds by the 
 
 ### The join to genomics
 
-The [genomics-showcase pack](guide.md)'s `study-variant` ([contract](../../../docs/contracts/packs/genomics-showcase.md#svariant-study-variant-study-variant),
-[example](../../../docs/contracts/packs/genomics-showcase.md#example-genomics-showcase-study-variant)) carries a gene, a protein position and an amino acid; with the gene
+The [genomics-showcase pack](#the-genomics-showcase-pack)'s `study-variant` (contract and example: `docs/contracts/packs/genomics-showcase.md`) carries a gene, a protein position and an amino acid; with the gene
 as the protein's id they are the key of a `dms-score` row.
 
 ### Making the data again

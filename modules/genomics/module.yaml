@@ -47,6 +47,6 @@ docs:
   readme: docs/README.md
   help: docs/help.yaml
   guides: [docs/guide.md]
-  tutorials: [docs/tutorial.md]
+  tutorials: [docs/guide.md]
   domains: [genomics]
 resources: {memory-mb: 64}

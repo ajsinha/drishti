@@ -32,4 +32,4 @@ and the plugin API only, and it carries no finance: Drishti Genomics boots the k
 | `cohort` | `COHORT_ID` | SAMPLES, MEMBERS, VARIANTS, GENES |
 
 The contracts are in `packs/genomics/contracts/`. Every sample and variant shipped is synthetic. Read the [guide](guide.md), then the
-[tutorial](tutorial.md).
+[tutorial](guide.md).

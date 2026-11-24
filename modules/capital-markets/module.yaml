@@ -123,8 +123,7 @@ docs:
   domains:
   - capitalmarkets
   guides:
-  - packs/us-equities/guides/us-equities.md
-  - packs/funds/guides/funds.md
+  - guides/WORLD_DATA_GUIDE.md
   tutorials:
   - guides/WORLD_DATA_GUIDE.md
 resources:

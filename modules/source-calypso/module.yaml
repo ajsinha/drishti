@@ -47,8 +47,8 @@ docs:
   readme: docs/README.md
   help: docs/help.yaml
   guides:
-  - docs/guide.md
+  - guides/BANK_DATA_GUIDE.md
   tutorials:
-  - docs/guide.md
+  - guides/BANK_DATA_GUIDE.md
 resources:
   memory-mb: 16

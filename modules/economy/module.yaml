@@ -182,14 +182,7 @@ docs:
   domains:
   - economy
   guides:
-  - packs/world-economy/guides/world-economy.md
-  - packs/news-and-markets/guides/news-and-markets.md
-  - packs/world-development/guides/world-development.md
-  - packs/central-banks/guides/central-banks.md
-  - packs/national-statistics/guides/national-statistics.md
-  - packs/oecd/guides/oecd.md
-  - packs/official-news/guides/official-news.md
-  - packs/gdelt-events/guides/gdelt-events.md
+  - guides/WORLD_DATA_GUIDE.md
   tutorials:
   - guides/WORLD_DATA_GUIDE.md
 resources:

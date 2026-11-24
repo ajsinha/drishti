@@ -510,10 +510,11 @@ docs:
   domains:
   - banking
   guides:
-  - packs/trading/guides/trading-products.md
-  - packs/trading/guides/trading.md
-  - packs/market-risk/guides/market-risk.md
-  - packs/counterparty-risk/guides/counterparty-risk.md
+  - guides/BANK_DATA_GUIDE.md
+  - guides/VAR_GUIDE.md
+  - guides/EXPOSURE_GUIDE.md
+  - guides/FRTB_SA_GUIDE.md
+  - guides/SIMM_GUIDE.md
   tutorials:
   - guides/VAR_GUIDE.md
   - guides/EXPOSURE_GUIDE.md
