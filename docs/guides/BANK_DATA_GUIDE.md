@@ -15,10 +15,26 @@
 -->
 # Bank data: what a bank sends each day and how it is loaded (PVF files, CSV datasets, trade products, market data, source systems)
 
-This is the short, step-by-step way for the PVF files: a day's per-path PV file, the positions file and the portfolio file become the
-**scenario PVs** the VaR engine reads, in a Delta lake. Every figure below is made up; your files stay on your machine and are never
-committed. The columns of every kind and the mapping rules are in [tools/mrloader/README.md](#mrloader-market-risk-loaders-the-csv-datasets-of-var-and-exposure-pvf-scenario-pvs-scenario-sets-scenario-fx); the same
-loader inside a whole day of CSV extracts (limits, desks, exposure) is [the daily runbook](#the-daily-run-csv-extracts-to-var-and-exposure-inputs).
+This guide is everything about the data a bank brings to Drishti: what its systems send each day, how that is loaded into the lake, and what the
+banking, trading and market-data modules do with it. Every figure in it is made up; your files stay on your machine and are never committed.
+
+**Contents**
+
+- **The PVF files, step by step** (sections 1 to 6 below): a day's per-path PV file, the positions file and the portfolio file become the
+  **scenario PVs** the VaR engine reads, in a Delta lake.
+  1. [What each file is and where it goes](#1-what-each-file-is-and-where-it-goes), 2. [One-time setup](#2-one-time-setup),
+  3. [Check a day's files](#3-check-a-days-files-before-anything-is-loaded), 4. [Load one day, then several days](#4-load-one-day-then-several-days-in-order),
+  5. [Remove older scenario PV dates](#5-remove-older-scenario-pv-dates), 6. [When something goes wrong](#6-when-something-goes-wrong)
+- **The loaders**: [the market-risk loaders](#mrloader-market-risk-loaders-the-csv-datasets-of-var-and-exposure-pvf-scenario-pvs-scenario-sets-scenario-fx) (the columns of every kind
+  and the mapping rules), [the kinds the CSV loaders write](#the-csv-loaders-kinds) and [the daily run](#the-daily-run-csv-extracts-to-var-and-exposure-inputs)
+  from a whole day of CSV extracts (limits, desks, exposure) to VaR and exposure inputs; [samples](#samples)
+- **Trading**: [the trading pack](#trading-pack) (its commands, kinds and contracts are generated into its README),
+  [the trading products](#trading-products) by asset class, [the trading module](#the-trading-module) and [source systems](#source-systems) (Endur, Calypso, Murex, WSS, SwapOne, ICI)
+- **Market data**: [the market-data pack](#market-data-pack) and [the market-data catalogue](#market-data-catalogue)
+- **Reference data**: [the core pack](#core-pack) and [the banking data model](#the-banking-data-model)
+
+The columns of every kind and the mapping rules are in [the market-risk loaders](#mrloader-market-risk-loaders-the-csv-datasets-of-var-and-exposure-pvf-scenario-pvs-scenario-sets-scenario-fx);
+the same loader inside a whole day of CSV extracts is [the daily run](#the-daily-run-csv-extracts-to-var-and-exposure-inputs).
 
 Commands are written for **Linux** and **Windows**. `PY` stands for the Python setup prepared (`drishti.python`):
 

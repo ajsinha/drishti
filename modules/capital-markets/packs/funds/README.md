@@ -216,7 +216,7 @@ Fields, from 1 sample document:
 | `AVG_WEIGHT` | number | `5.425` | Its average weight in the funds holding it. Source: computed. (% of net assets) |
 | `MAX_WEIGHT` | number | `14.5683` | Its largest weight in a fund. Source: computed. (% of net assets) |
 | `TOP_HOLDER` | string | `VTI` | The fund holding the most, by value. Source: computed. |
-| `HOLDERS` | list of objects |  | Each fund with the company's weight |
+| `HOLDERS` | list of objects |  | Each fund with the company's weight, value and shares |
 | `TOP_WEIGHTS` | list of objects |  | The ten largest weights in a fund |
 | `PROVENANCE` | object |  | Nested: see below |
 
@@ -244,7 +244,7 @@ Fields, from 1 sample document:
 | `ETFS` | integer | `2` | How many of them are ETFs. Source: computed. (funds) |
 | `TOTAL_NET_ASSETS` | number | `587254661099.0` | Their net assets added up. Source: computed from N-PORT NET_ASSETS. (USD) |
 | `LARGEST` | string | `QQQ` | The largest tracking fund. Source: computed. |
-| `ROWS` | list of objects |  | The funds with net assets |
+| `ROWS` | list of objects |  | The funds with net assets, expense ratio, members held and active share |
 | `PROVENANCE` | object |  | Nested: see below |
 
 Nested structures:

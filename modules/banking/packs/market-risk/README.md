@@ -133,7 +133,7 @@ Fields, from 8 sample documents:
 | `NAME` | string | `COVID-19 March 2020` | Name |
 | `TYPE` | string | `Historical` | A historical scenario replays the moves of a past episode; a hypothetical one is a designed set of moves that need not have happened. |
 | `SEVERITY` | string | `Severe` | The rating the risk function gives the scenario, which decides how it is used in limits and reporting. |
-| `SHOCKS` | list of objects |  | The shocks applied |
+| `SHOCKS` | list of objects |  | The shocks applied, by risk factor |
 | `HORIZON` | string | `10 days` | Horizon of the scenario |
 
 Nested structures:
@@ -188,7 +188,7 @@ Fields, from 30 sample documents:
 | `TOTAL` | integer | `16165538` | The sum of the delta, vega and curvature charges of the book. The full standardised charge adds the default-risk and residual-risk add-ons. (USD) |
 | `SENSITIVITIES` | list of objects |  | Sensitivities by risk factor |
 | `BY_CLASS` | list of objects |  | Capital by risk class |
-| `APPROACH` | string | `FRTB standardised (SBM)` | The FRTB approach |
+| `APPROACH` | string | `FRTB standardised (SBM)` | The FRTB approach, e.g. standardised (SBM) |
 
 Nested structures:
 

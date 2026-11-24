@@ -45,7 +45,7 @@ public final class AboutParser {
     public static final String BAD_USE = "DRS-2043";
     public static final String TOO_LONG = "DRS-2044";
 
-    private static final Set<String> FILE_KEYS = Set.of("about", "vocabulary", "kinds");
+    private static final Set<String> FILE_KEYS = Set.of("about", "vocabulary", "kinds", "intro");   // intro: the pack README's documentation text, read by the docs tools, ignored here
     private static final Set<String> KIND_KEYS = Set.of("title", "about", "guide", "glossary", "panels");
     private static final Set<String> ENTRY_KEYS = Set.of("term", "means", "unit", "sign", "note", "formula", "values");
     private static final Pattern NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
@@ -115,7 +115,7 @@ public final class AboutParser {
             Map<String, PNode> m = root.map();
             m.forEach((k, v) -> {
                 if (!FILE_KEYS.contains(k)) {
-                    problem(BAD_FILE, "unknown key '" + k + "' (expected about, vocabulary or kinds)", v);
+                    problem(BAD_FILE, "unknown key '" + k + "' (expected about, vocabulary, kinds or intro)", v);
                 }
             });
             PNode version = m.get("about");

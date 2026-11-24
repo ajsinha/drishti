@@ -362,5 +362,7 @@ async def about(request: Request):
     except BackendError as e:
         info = {"error": drs_message(e.code, e.detail, " ")}
     lib = await library(request)
+    from core import modules
+    names = [(modules.plugin(m).title if modules.plugin(m) else m) for m in modules.modules_for_page()]   # the installed, enabled modules: the distribution's own list
     return render(request, "help/about.html", info=info, notices=lib.guides.get("third-party-notices"), screen="about",
-                  competitive=_competitive(request, lib))
+                  competitive=_competitive(request, lib), module_names=names)

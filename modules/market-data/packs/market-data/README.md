@@ -276,7 +276,7 @@ Fields, from 7 sample documents:
 | `MODEL` | string | `Normal (Bachelier), SABR smile` | Model |
 | `V_1Y_10Y` | number | `137.22` | 1Y×10Y |
 | `V_5Y_5Y` | number | `132.72` | 5Y×5Y |
-| `GRID` | list of objects |  | Volatilities by expiry |
+| `GRID` | list of objects |  | Volatilities by expiry, tenor and strike |
 
 Nested structures:
 
@@ -518,7 +518,7 @@ Fields, from 8 sample documents:
 | `UNIT` | string | `USD/bbl` | Unit |
 | `EXCHANGE` | string | `ICE` | Exchange |
 | `SECTOR` | string | `Energy` | Sector |
-| `OHLC` | list of objects |  | Open |
+| `OHLC` | list of objects |  | Open, high, low and close bars |
 | `SPEC` | object |  | Contract specification |
 | `COMMODITY_CURVE` | string | `CMDC-BRENT` | link to `commodity-curve` |
 | `COMMODITY_VOL_SURFACE` | string | `CMDV-BRENT` | link to `commodity-vol-surface` |
@@ -596,7 +596,7 @@ Fields, from 7 sample documents:
 | `ADMINISTRATOR` | string | `RBA` | Administrator |
 | `TENOR` | string | `Overnight` | Tenor |
 | `CURRENCY` | string | `AUD` | Currency |
-| `FIXINGS` | list of objects |  | Daily fixings (date |
+| `FIXINGS` | list of objects |  | Daily fixings (date, rate) |
 
 Nested structures:
 

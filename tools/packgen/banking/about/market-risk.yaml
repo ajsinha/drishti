@@ -434,8 +434,7 @@ intro:
     used-for: every document in samples/ and the demo lake
   fields:
     stress-scenario:
-      SHOCKS: The shocks applied
-      by risk factor: null
+      SHOCKS: The shocks applied, by risk factor
       HORIZON: Horizon of the scenario
     stress-result:
       BY_BOOK: Stress P&L by book
@@ -443,8 +442,7 @@ intro:
     frtb-sensitivity:
       SENSITIVITIES: Sensitivities by risk factor
       BY_CLASS: Capital by risk class
-      APPROACH: The FRTB approach
-      e.g. standardised (SBM): null
+      APPROACH: The FRTB approach, e.g. standardised (SBM)
     pnl-explain:
       ATTRIBUTION: P&L by risk factor
       EXPLAIN_STEPS: The explain steps in order

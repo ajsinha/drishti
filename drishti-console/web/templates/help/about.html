@@ -24,7 +24,7 @@
   <h1>{{ PRODUCT }}{% if PRODUCT_NATIVE %} <span class="lp-grad">{{ PRODUCT_NATIVE }}</span>{% endif %}</h1>
   {% if HEADLINE %}<p class="about-headline">{{ HEADLINE }}</p>{% endif %}
   <p class="about-tag">{{ TAGLINE }}</p>
-  <p>A platform for any domain: live, explainable analytics on the data you already have. Any record from any system as a dense, linked, ticking view, BI-style dashboards written in one grammar, and every figure explained down to the data it came from. Each field (banking risk, capital markets, economic data, genomics) is a module.</p>
+  <p>A platform for any domain: live, explainable analytics on the data you already have. Any record from any system as a dense, linked, ticking view, BI-style dashboards written in one grammar, and every figure explained down to the data it came from. {% if module_names %}Each field is a module; this installation has {{ module_names|join(', ') }}.{% else %}Each field is a module.{% endif %}</p>
   {% set sv_version = (info.version if info and info.version else server_about().version) %}{% if sv_version %}<p><span class="ab-ver mono" data-version>Version {{ sv_version }}</span></p>{% endif %}
   <div class="ab-cta">
     {% if AUTH_ENABLED and not me %}<a class="btn-pill btn-accent" href="{{ BASE }}/login"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Sign in</a>
@@ -36,10 +36,10 @@
   <section class="ab-sec" id="what"><h2>What is {{ PRODUCT }}</h2>
     <p>{{ PRODUCT }} ({{ PRODUCT_NATIVE or 'दृष्टि' }}, Sanskrit for <em>sight</em>) lets a person see a trade, a counterparty, a fund or an economy the same way: one live page, linked to what it relates to, showing only what that person may see.
        A short screen grammar called <b>Rachana</b> describes a view, a <b>Sutra</b> is a screen written in it, and <b>inference</b> completes whatever a Sutra leaves out.
-       Everything specific to a field comes as a module. In the banking module, {{ PRODUCT }} computes risk when it is asked (value at risk, expected shortfall and counterparty exposure) for any set of trades you can describe, and never stores a computed figure as a summary.</p></section>
+       Everything specific to a field comes as a module: its data shapes, measures, screens and rules{% if module_names %} (here: {{ module_names|join(', ') }}){% endif %}. A new field is a new module, not a new product.</p></section>
   <section class="ab-sec" id="problem"><h2>The problem it solves</h2>
-    <p>Every system has its own screens, built one by one, with their own access rules. Risk is published overnight for the hierarchy it was set up with, so a new question waits for a batch. Figures rarely say what they mean, where they came from or whether they were delivered or computed.
-       {{ PRODUCT }} replaces the per-product screen with a grammar, computes risk for the scope you ask about from the trade-level inputs your engines already produce, and gives every command a data contract, so you can see what your data has not told you yet.</p></section>
+    <p>Live, explainable analytics on the data you already have. {{ PRODUCT }} connects to data where it lives and aggregates it on demand for any scope, from everything down to a hand-picked handful of rows, and explains every figure: where it came from, how it was calculated and why it moved. Screens, reports and dashboards are described, not coded, in one grammar, and served to many users at once with roles, masks, four eyes and an audit trail.
+       {{ PRODUCT }} never invents a number: it shows what its sources supply and says exactly what is missing.</p></section>
   <section class="ab-sec" id="features"><h2>Key features</h2>
   <div class="ab-cards">
     <article class="ab-card"><i class="bi bi-terminal" aria-hidden="true"></i><h3>The command line</h3><p>Type a mnemonic and a key (TRD MX-20000001, CPTY CP-ALDERSHOT) with suggestions as you type, or plain words; any entity over time (TRD 1000015 30). <code>FUNC</code> lists every command you can use; <code>WHAT &lt;term&gt;</code> explains a term.</p></article>
