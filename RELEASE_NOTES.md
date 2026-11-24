@@ -15,22 +15,42 @@
 -->
 # Drishti 2.9.11.i7k: release notes
 
-*A documentation release on i7j: the corpus is consolidated, one home per fact.* No product behaviour changes.
+*On i7j: the documentation consolidated (one home per fact, generated wherever it can be), the platform described first, and Drishti
+fixed and tested on Windows.*
 
-## What changes for readers and developers
+## What changes for readers
 
-- **The documentation shrinks from 400 tracked Markdown files to a target of 215** (224,475 lines before): hand-written documents 282 to 84 files, 187 files merged or
-  removed, 82 generated references kept whole. Packs, modules, connector templates and contracts describe themselves in YAML and their page is generated; each
-  feature has one guide that absorbs its pack, module and tool pages; a folder carries a note, never a procedure.
-- **The plan** (kept on the products branch; the owner approved its six defaults). Step 0 adds the tools that keep it honest:
-  `config/docs-corpus.yaml` (every tracked `*.md` with its class), `tools/docs/moved.yaml` and `moved.py` (old path to new home for the 194 files that go, the sweep of code
-  comments and its comment-only proof), `tools/docs/dup_check.py` (the same procedure or text in two documents; report mode first) and `tools/docs/merge_audit.py`
-  (every heading and fenced block of a merged document is in its new home or logged).
-- **Help and About** follow the documents (in the lanes): pages that merge keep their address through the old-address redirects, and the context-help sections are not renumbered.
+- **400 tracked Markdown files become 214:** 117 hand-written, 82 generated, 169 merged into their new homes or removed; nothing a
+  reader needs was lost (every heading and code block of the 108 merged documents is in its new home). Architecture is 9 documents and
+  one `DECISIONS.md`; each feature has one guide that took in its pack, module and tool pages (`PVF_LOADING` is now `BANK_DATA_GUIDE`).
+- **Generated, never hand-edited:** pack, module and connector-template READMEs, the contract pages (one real example per kind),
+  `CSV_FORMATS.md`, `CONFIGURATION.md`, the launcher tables. `python tools/drishti.py docs generate` writes them all; `--check`
+  names each stale file.
+- **Help and About follow:** every Help page resolves, old addresses redirect, the About drawer links the real guide pages, and About
+  lists the installed modules. Ask reads a pack's kind section from its README.
+- **Drishti is described as a platform for any domain**, banking risk its first module (README, How it fits, About, the decks); the
+  embedding guide links Rachana's new guides for Flask/FastAPI apps and GenUI (Rachana `v1.0.1-ide3`).
+
+## What changes for developers
+
+- **GitHub checks work:** `fast` builds Tools, Rachana and Lake from their tags (nothing from a public registry), packages Drishti,
+  runs `docs generate --check`, the licence headers, the docs, Help and About tests on every push and pull request; `windows` runs the
+  lake, connector and server suites and the identity tests on Windows.
+
+## Fixed (found by the Windows suite; most matter on every OS)
+
+- Sutra paths are shown to clients in one portable form; Studio's design blocks no longer vanish when another context reloads its Sutras.
+- Alerts: pausing, resuming or saving an alert takes the alert's lock, so a running evaluation cannot write the old rule back.
+- BI: a stop waits for a running refresh (at most 10 s) so its result is saved.
+- Cluster: a peer whose connection times out is unreachable (the next holder is asked, `DRS-5052`), not a slow answer.
+- Windows: a file being read can be replaced (`FileReplace`, retried only on Windows); preferences, design store (owner-only),
+  the pack registry signing, feeds and compute use one Python setting (macOS feeds now `python3`).
 
 ## Known limits
 
-As in i7j. This entry is written at the start of the release; the counts above are the targets, and the final figures replace them at the tag.
+- On Windows, the `drishti-api` module's tests are not yet in the Windows check; two of them show a memory-mapped file cannot be
+  replaced while mapped (next release). Disk-cache "lock" warnings on Windows are harmless.
+- The 125-product catalogue in `BANK_DATA_GUIDE` is still written by hand (a generator next release).
 
 # Drishti 2.9.11.i7j: release notes
 
