@@ -438,7 +438,7 @@ and the command line cannot drift apart.
 
 | Name | What it runs | What it is | Use it when |
 |---|---|---|---|
-| **Drishti: test** | Maven `clean verify` | the whole Maven test run of the server, the engines and the modules (long, tens of minutes; each test class also has its own targeted run in the IDE). From a terminal: `./mvnw -B clean verify` (`launchers --run "Drishti: test"`) | before a release, or after a change that crosses modules |
+| **Drishti: test** | Maven `clean verify` | the whole Maven test run of the server, the engines and the modules (long, tens of minutes; each test class also has its own targeted run in the IDE) | before a release, or after a change that crosses modules |
 
 ### 4.2 PyCharm: open `drishti\drishti-console` (`drishti-console/run-configs/`)
 
