@@ -168,7 +168,7 @@ server nor Spring, and the Delta and Iceberg source plugins read the lake throug
 | `examples/packs/` | The retired packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`, `liquidity-risk`), kept as examples and as fixtures for tests written against them; loaded only with `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` |
 | `config/connectors/`, `config/connectors.examples/` | The site's connector files (written by the server at its first start from the packs' templates; not committed) and ready-made examples per store ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
 | `config/bi/` | Shipped BI files: datasets, models, reports, boards |
-| `.idea/runConfigurations/`, `drishti-console/.idea/runConfigurations/` | The IDE launchers, each project's own (IntelliJ opens `drishti`, PyCharm `drishti-console`), in folders by step; of `.idea` only these are committed: [IDE_GUIDE.md](IDE_GUIDE.md) |
+| `run-configs/`, `drishti-console/run-configs/` | The IDE launchers, each project's own (IntelliJ opens `drishti`, PyCharm `drishti-console`), in the folders **IntelliJ-drishti-build/-run/-test** and **PyCharm-console-setup/-data/-run/-check**; as ordinary `*.run.xml` files, no `.idea` in the source: [IDE_GUIDE.md](IDE_GUIDE.md) |
 | `data/testdata/` | The committed test data: sixty business days of every dataset the seven packs read (5,000 trades a day per source system), `.jsonl.gz`, with `testdata.yaml` and a README ([data/testdata/README.md](../../data/testdata/README.md)) |
 | `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`, `bundle`, `verify`, `deploy`, `rollback`, `keygen`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `lake build|publish|scan|status|demo|maintain`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it. See [CLI_REFERENCE.md](CLI_REFERENCE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md) |
 | `tools/lake/` | the lake commands (`lake build|publish|scan|status|demo|maintain|undo|delete`): thin front ends that configure and start Drishti Lake's loader and upkeep (the writer is chosen by `--engine`, [CLI_REFERENCE.md section 7.6](CLI_REFERENCE.md#76-the-lake-writers---engine)) and add Drishti's parts (the data-load signal, the BI-store stamp, the lake files); the loading rules, guards, archives and maintenance are Lake's ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md)) |
@@ -658,7 +658,7 @@ Server settings follow the same precedence as the console: `kernel/drishti-serve
 `./application.local.yaml` (git-ignored; imported by `spring.config.import`), then environment variables, then `--key=value`
 arguments. For example `--drishti.live.frame=100ms` or `--server.port=18481`. The settings of each way of starting it (the demo, the
 built-in samples, the QA pair on its own ports and data folder) are the committed profiles `config/profiles/*.ini`, which the run
-configurations in `.idea/runConfigurations/` and `drishti-console/.idea/runConfigurations/` (generated from `tools/launch/launchers.yaml`) and `drishti.py --profile` name alike;
+configurations in `run-configs/` and `drishti-console/run-configs/` (generated from `tools/launch/launchers.yaml`) and `drishti.py --profile` name alike;
 [IDE_GUIDE.md](IDE_GUIDE.md) lists them.
 
 The development loop that works best:
@@ -1925,7 +1925,7 @@ Only names an external tool looks for by exactly that name keep the dot:
 | `.java-version` | version managers (jenv, SDKMAN) |
 | `.mvn/` | the Maven wrapper |
 | `.github/` | GitHub |
-| `.idea/` | the IDEs' settings ([IDE_GUIDE.md](IDE_GUIDE.md)) |
+| `.idea/` | your own IDE settings (git-ignored, never committed; the launchers are in `run-configs/`: [IDE_GUIDE.md](IDE_GUIDE.md)) |
 | `.claude/` | Claude Code |
 | `_rels/.rels` | the Excel file format (OOXML) names it so: a workbook template's package relationships (the Capacity and Playground templates) |
 

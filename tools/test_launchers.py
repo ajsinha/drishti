@@ -38,7 +38,7 @@ import procs  # noqa: E402
 import serverstart  # noqa: E402
 import settingsfile  # noqa: E402
 
-LAUNCHERS = sorted((ROOT / launchers.FOLDERS["intellij"]).glob("*.xml")) + sorted((ROOT / launchers.FOLDERS["pycharm"]).glob("*.xml"))
+LAUNCHERS = sorted((ROOT / launchers.FOLDERS["intellij"]).glob("*.run.xml")) + sorted((ROOT / launchers.FOLDERS["pycharm"]).glob("*.run.xml"))
 
 
 def conf(f: Path) -> ET.Element:
@@ -52,13 +52,13 @@ def test_g1_the_committed_launchers_are_what_the_table_generates():
 
 
 def test_every_folder_of_the_owner_holds_a_launcher_and_the_tests_are_in_3_test():
-    """i7g gate F4: the owner's folders Drishti-java 1 Build / 2 Run / 3 Test (and the Python four) each hold a launcher; Drishti: test
-    is in Drishti-java 3 Test."""
+    """i7g gate F4: the owner's folders IntelliJ-drishti-build/-run/-test and PyCharm-console-setup/-data/-run/-check each hold a launcher; Drishti: test
+    is in IntelliJ-drishti-test."""
     doc = launchers.table(ROOT)
     for ide, groups in launchers.GROUPS.items():
         used = {row["group"] for row in doc[ide]}
         assert used == set(groups), f"{ide}: empty folders {set(groups) - used}"
-    assert {row["name"]: row["group"] for row in doc["intellij"]}["Drishti: test"] == "Drishti-java 3 Test"
+    assert {row["name"]: row["group"] for row in doc["intellij"]}["Drishti: test"] == "IntelliJ-drishti-test"
 
 
 # G2: what a launcher may carry. Everything else with a config home lives in a profile (config/profiles/*.ini).
@@ -100,7 +100,7 @@ def test_g6_start_server_demo_and_the_demo_launcher_start_the_same_server(tmp_pa
                    encoding="utf-8")
     monkeypatch.delenv("DRISHTI_DATA_DIR", raising=False)
     launchers.machine(ROOT, envs, dev)
-    ide, ide_env = launchers.argv(ROOT / ".idea" / "runConfigurations" / "Drishti run server (demo).xml", ROOT, tmp_path)
+    ide, ide_env = launchers.argv(ROOT / "run-configs" / "Drishti run server (demo).run.xml", ROOT, tmp_path)
     vm = ide[1:ide.index("-jar")]
     assert vm[0] == f"@{envs.as_posix()}/jvm-demo.args"
     ide_flags = _flags_of(Path(vm[0][1:])) + vm[1:]
@@ -155,9 +155,9 @@ def test_g7_paths_follow_the_data_folder_and_are_quoted():
         text = ET.tostring(c, encoding="unicode")
         if c.get("type") == "PythonConfigurationType":
             assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$/..", f.name        # PyCharm's project is drishti-console: the root is its parent
-            assert f.parent == ROOT / "drishti-console" / ".idea" / "runConfigurations", f"{f.name}: a Python launcher is PyCharm's (drishti-console/.idea/runConfigurations)"
+            assert f.parent == ROOT / "drishti-console" / "run-configs", f"{f.name}: a Python launcher is PyCharm's (drishti-console/run-configs)"
         else:
-            assert f.parent == ROOT / ".idea" / "runConfigurations", f"{f.name}: a Java launcher is IntelliJ's (.idea/runConfigurations)"
+            assert f.parent == ROOT / "run-configs", f"{f.name}: a Java launcher is IntelliJ's (run-configs)"
         if c.get("type") == "JarApplication":
             assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$", f.name
         for value in (o.get("VM_PARAMETERS", ""), o.get("PARAMETERS", "")):
@@ -167,7 +167,7 @@ def test_g7_paths_follow_the_data_folder_and_are_quoted():
 
 
 def test_the_argv_helper_turns_a_python_launcher_into_its_command_line(tmp_path):
-    cmd, env = launchers.argv(ROOT / "drishti-console" / ".idea" / "runConfigurations" / "Drishti run console (QA, port 17580).xml", ROOT, tmp_path)
+    cmd, env = launchers.argv(ROOT / "drishti-console" / "run-configs" / "Drishti run console (QA, port 17580).run.xml", ROOT, tmp_path)
     assert Path(cmd[1]).resolve() == (ROOT / "drishti-console" / "run_drishti_web.py").resolve()
     assert cmd[2:] == ["--settings", f"{tmp_path.as_posix()}/drishti-envs/dev.ini", "--profile", "qa"]
     assert env["PYTHONUNBUFFERED"] == "1"
@@ -248,7 +248,7 @@ def test_g4_every_setting_a_launcher_profile_or_cluster_file_names_is_documented
              *sorted((ROOT / "deploy" / "stack").glob("*.ini")), ROOT / "deploy" / "systemd" / "drishti-server.service"]
     for f in files:
         code = "\n".join(line for line in f.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith("#"))
-        if f.suffix == ".xml":
+        if f.name.endswith(".run.xml"):
             code = ET.tostring(conf(f), encoding="unicode")
         for name in sorted(n for n in set(NAME.findall(code)) if not n.endswith((".env", ".ini", ".yaml", ".service", ".args"))):
             if name in ("drishti.home", "drishti.settings.file"):
@@ -343,3 +343,4 @@ def test_workspace_is_portable():
         if t["command"].startswith("python3"):
             assert t["windows"]["command"].startswith("py -3.13 tools/") or t["windows"]["command"].startswith("py -3.13 drishti-console/"), t["label"]
             assert "linux" in t and "osx" in t, t["label"]
+

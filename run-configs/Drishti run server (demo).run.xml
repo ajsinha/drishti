@@ -13,17 +13,17 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Drishti: run server (built-in samples): the packs' small built-in samples (generated, ticking), sign-in on.
-  Use it when: a first look before any lake is built.
-  The profile config/profiles/samples.ini holds its settings; ~/drishti-envs/jvm-samples.args its JVM options
+  Drishti: run server (demo): the demo lakes, offline, sign-in on, the data inbox on.
+  Use it when: the normal run, after **Drishti: build demo lakes**.
+  The profile config/profiles/demo.ini holds its settings; ~/drishti-envs/jvm-demo.args its JVM options
   (python tools/drishti.py setup writes it, from the function drishti.py start server runs).
   The server jar Drishti build all installed (lib/drishti-server-exec.jar): the jar the modules are stamped for; nothing is built before launch.
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti: run server (built-in samples)" type="JarApplication" folderName="Drishti-java 2 Run">
+  <configuration default="false" name="Drishti: run server (demo)" type="JarApplication" folderName="IntelliJ-drishti-run">
     <option name="JAR_PATH" value="$PROJECT_DIR$/lib/drishti-server-exec.jar" />
-    <option name="VM_PARAMETERS" value="&quot;@$USER_HOME$/drishti-envs/jvm-samples.args&quot; &quot;-Ddrishti.home=$PROJECT_DIR$&quot; &quot;-Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini,$PROJECT_DIR$/config/profiles/samples.ini&quot;" />
+    <option name="VM_PARAMETERS" value="&quot;@$USER_HOME$/drishti-envs/jvm-demo.args&quot; &quot;-Ddrishti.home=$PROJECT_DIR$&quot; &quot;-Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini,$PROJECT_DIR$/config/profiles/demo.ini&quot;" />
     <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH" />

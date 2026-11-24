@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The first-run matrix, launcher rows (docs/plans/FIRST_RUN_ROBUSTNESS.md section B2: 32, 58 to 62): each IDE's launchers in its own
-project's .idea/runConfigurations and nowhere else; a launcher's command line is a CLI command line (the launcher-equivalent runner,
+project's run-configs and nowhere else; a launcher's command line is a CLI command line (the launcher-equivalent runner,
 tools/launch/launchers.py argv); no launcher names an interpreter, a virtual environment or setup --index. Rows 58 to 61 need an IDE (M) as well."""
 from __future__ import annotations
 
@@ -30,8 +30,8 @@ for p in (str(TOOLS), str(TOOLS / "launch")):
         sys.path.insert(0, p)
 import launchers  # noqa: E402
 
-JAVA = sorted((ROOT / ".idea" / "runConfigurations").glob("*.xml"))
-PYTHON = sorted((ROOT / "drishti-console" / ".idea" / "runConfigurations").glob("*.xml"))
+JAVA = sorted((ROOT / "run-configs").glob("*.run.xml"))
+PYTHON = sorted((ROOT / "drishti-console" / "run-configs").glob("*.run.xml"))
 
 
 def tracked() -> list[str]:
@@ -42,7 +42,8 @@ def test_rows58_59_60_each_ide_has_its_own_launchers_and_no_run_xml_elsewhere():
     assert JAVA and PYTHON
     assert all("JarApplication" in f.read_text(encoding="utf-8") or "MavenRunConfiguration" in f.read_text(encoding="utf-8") for f in JAVA)
     assert all("PythonConfigurationType" in f.read_text(encoding="utf-8") for f in PYTHON)
-    assert not [f for f in tracked() if f.endswith(".run.xml")], "no *.run.xml anywhere (an IDE would show it in the other's project)"
+    assert not [f for f in tracked() if f.endswith(".run.xml") and not f.startswith(("run-configs/", "drishti-console/run-configs/"))], "a *.run.xml outside the two run-configs/ folders"
+    assert not [f for f in tracked() if "/.idea/" in "/" + f], "no .idea in the source"
 
 
 @pytest.mark.parametrize("xml", PYTHON, ids=lambda p: p.stem)

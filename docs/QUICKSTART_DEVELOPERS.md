@@ -278,7 +278,7 @@ capitalmarkets, economy, market-data, trading and one module per trading system 
 | `config/` (the rest) | `modules/`, `lenses/<module>/`, `lakes/`, `engines/`, `tables/`, `bi/`, `feeds/`: the site's switches and files ([CONFIGURATION.md](admin/CONFIGURATION.md)) |
 | `bin/` | a README only: every command is `tools/drishti.py` (a node's drain: `drishti.py node drain`, [CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md)) |
 | `tools/` | `drishti.py` (the command line: `setup`, `build jar`, `start`, `stop`, `status` and the rest), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill) |
-| `.idea/runConfigurations/`, `drishti-console/.idea/runConfigurations/`, `drishti.code-workspace` | the IntelliJ launchers (project `drishti`), the PyCharm launchers (project `drishti-console`) and the VS Code workspace ([IDE_GUIDE.md](guides/IDE_GUIDE.md), [IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code)) |
+| `run-configs/`, `drishti-console/run-configs/`, `drishti.code-workspace` | the IntelliJ launchers (project `drishti`), the PyCharm launchers (project `drishti-console`) and the VS Code workspace ([IDE_GUIDE.md](guides/IDE_GUIDE.md), [IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code)) |
 | `docs/` | `guides/`, `tutorials/`, `admin/`, `architecture/`, `contracts/`; the index is [docs/README.md](README.md) |
 | `drishti-it`, `drishti-benchmarks` | the architecture and repository rule tests; the JMH benchmarks |
 

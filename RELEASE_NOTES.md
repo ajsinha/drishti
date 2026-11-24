@@ -13,6 +13,15 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7i: release notes
+
+## What changes in the IDEs
+
+- **The launchers are back in `run-configs/` folders (no `.idea` in the source), grouped by IDE, component and purpose: IntelliJ-drishti-build/-run/-test, PyCharm-console-setup/-data/-run/-check;
+  the platform's is IntelliJ-platform.** IntelliJ IDEA opens `drishti` and reads `run-configs/*.run.xml` (folders **IntelliJ-drishti-build**, **-run**, **-test**); PyCharm opens
+  `drishti\drishti-console` and reads `drishti-console/run-configs/*.run.xml` (folders **PyCharm-console-setup**, **-data**, **-run**, **-check**). No step numbers; Nothing else changes: the same launchers,
+  the project interpreter, no fixed SDK path. `.idea/` is git-ignored entirely (your own IDE files).
+
 # Drishti 2.9.11.i7h: release notes
 
 *A point release on i7g: a missing capacity template no longer stops the server, `start` before `setup` refuses, and three messages say the right command.*

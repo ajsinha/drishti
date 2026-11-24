@@ -12,7 +12,7 @@
 
 *Your data is a treasury;* **Drishti is its sentinel.**
 
-**Release i7h: Drishti is one of five.** Each module is a verified `.dmod` package in `<home>/modules`, beside one server jar; the language, the lake, the screens' libraries and the shared utilities are products of their own, built once and used here as jars and bundles ([The platform](#the-platform)).
+**Release i7i: Drishti is one of five.** Each module is a verified `.dmod` package in `<home>/modules`, beside one server jar; the language, the lake, the screens' libraries and the shared utilities are products of their own, built once and used here as jars and bundles ([The platform](#the-platform)).
 
 Drishti looks at data, analyses it and explains it. It is built from **three blocks**: a domain-free **kernel** (connectors and lakes,
 screens written as short YAML **Sutras** in one grammar, **Rachana**, the pivot and BI engines, the cluster), a **console** in front of
@@ -204,10 +204,9 @@ words, menus, Home cards, Help pages and the catalogue the AI reads (*DRS-4023 V
 
 ## Build and run in the IDE
 
-IntelliJ IDEA opens `drishti` (its launchers in `.idea/runConfigurations/`: folders **Drishti-java 1 Build**, **2 Run**, **3 Test**);
-PyCharm opens `drishti\drishti-console` (its launchers in `drishti-console/.idea/runConfigurations/`: **Drishti-python 1 Setup**, **2 Data**,
-**3 Run**, **4 Check**), each named `Drishti: <verb> <what>` (`build all`, `run server (demo)`, `setup`, `build demo lakes`, `run console`,
-`check acceptance`); of `.idea` only `runConfigurations/` is committed. VS Code opens
+IntelliJ IDEA opens `drishti` (its launchers in `run-configs/`: folders **IntelliJ-drishti-build**, **-run**, **-test**);
+PyCharm opens `drishti\drishti-console` (its launchers in `drishti-console/run-configs/`: **PyCharm-console-setup**, **-data**, **-run**, **-check**), each named `Drishti: <verb> <what>` (`build all`, `run server (demo)`, `setup`, `build demo lakes`, `run console`,
+`check acceptance`); no `.idea` is in the source (the launchers are ordinary `*.run.xml` files). VS Code opens
 `drishti.code-workspace`, whose tasks and launches carry the same names. All of them are generated from `tools/launch/launchers.yaml` by
 `python tools/drishti.py launchers`; every one is named, with what it is and when to use it, in
 [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md).

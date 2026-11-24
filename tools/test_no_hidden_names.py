@@ -27,7 +27,7 @@ import unittest
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 # Names an external tool requires; also listed in docs/guides/BUILD_GUIDE.md ("Why these few names start with a dot").
-ALLOWED = {".gitignore", ".dockerignore", ".editorconfig", ".java-version", ".mvn", ".github", ".idea", ".venv", ".claude",  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
+ALLOWED = {".gitignore", ".dockerignore", ".editorconfig", ".java-version", ".mvn", ".github", ".venv", ".claude",  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
            ".git", ".pytest_cache", "__pycache__", ".DS_Store", ".well-known", ".gitattributes", ".vscode", ".gitmodules"}
 
 # Hidden names only READ so an earlier build's data is migrated once to the visible name (never written).
@@ -128,13 +128,11 @@ if __name__ == "__main__":
     unittest.main()
 
 
-class OnlyTheLaunchersOfIdea(unittest.TestCase):
-    """Of an IDE's .idea folder only the launchers are committed, in exactly two places (the owner's rule, i7g F1): IntelliJ's project
-    `drishti` (.idea/runConfigurations/) and PyCharm's project `drishti-console` (drishti-console/.idea/runConfigurations/)."""
+class NoIdeaInTheSource(unittest.TestCase):
+    """No .idea folder is committed anywhere (the owner's rule, i7i): the launchers are visible run-configs/*.run.xml files."""
 
-    def test_idea_holds_only_the_two_launcher_folders(self):
+    def test_no_idea_file_is_tracked(self):
         files = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
-        idea = [f for f in files if "/.idea/" in "/" + f]
-        allowed = (".idea/runConfigurations/", "drishti-console/.idea/runConfigurations/")
-        self.assertEqual([f for f in idea if not f.startswith(allowed) or not f.endswith(".xml")], [])
-        self.assertTrue(any(f.startswith(allowed[0]) for f in idea) and any(f.startswith(allowed[1]) for f in idea))
+        self.assertEqual([f for f in files if "/.idea/" in "/" + f], [])
+        self.assertTrue(any(f.startswith("run-configs/") and f.endswith(".run.xml") for f in files))
+        self.assertTrue(any(f.startswith("drishti-console/run-configs/") and f.endswith(".run.xml") for f in files))

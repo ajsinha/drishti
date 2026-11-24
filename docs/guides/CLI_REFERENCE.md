@@ -2793,7 +2793,7 @@ command line, its port from the settings files it names; `--cluster FILE` adds t
 `--env-file`, `--cluster`. Exit 0 when every process found runs and answers (or none was started), 1 when one is not running or not
 answering.
 
-**`drishti.py launchers`** writes the IDE launchers (into each project's own `.idea/runConfigurations/`: IntelliJ's (`drishti`: the Maven and JAR Application launchers, folders `Drishti-java 1 Build`, `2 Run`, `3 Test`) and PyCharm's (`drishti-console/.idea/runConfigurations/`: the Python ones, `Drishti-python 1 Setup`, `2 Data`, `3 Run`, `4 Check`); of `.idea` only these are committed; every Python launcher runs on the project interpreter you choose) and the tables of IDE_GUIDE section 4
+**`drishti.py launchers`** writes the IDE launchers (into each project's own `run-configs/`: IntelliJ's (`drishti`: the Maven and JAR Application launchers, folders `IntelliJ-drishti-build`, `-run`, `-test`) and PyCharm's (`drishti-console/run-configs/`: the Python ones, `PyCharm-console-setup`, `-data`, `-run`, `-check`); no `.idea` is in the source; every Python launcher runs on the project interpreter you choose) and the tables of IDE_GUIDE section 4
 from one table, `tools/launch/launchers.yaml`; the files are committed. `launchers --check` changes nothing and exits 1 naming each file
 that differs (the drill's gate runs it). `launchers --machine` writes this machine's `~/drishti-envs/jvm-<profile>.args`, the JVM options
 of the server launchers: `serverstart.jvm_flags`, the function `start server` runs, with the data folder of `dev.ini` and the profile.

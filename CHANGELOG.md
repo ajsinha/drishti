@@ -16,6 +16,12 @@
 # Changelog
 
 
+## 2.9.11.i7i (2026-11-24)
+
+- **Launchers back in `run-configs/`, no `.idea` in the source**: `run-configs/*.run.xml` (IntelliJ, `drishti`) and `drishti-console/run-configs/*.run.xml`
+  (PyCharm, `drishti-console`), folders IntelliJ-drishti-build/-run/-test and PyCharm-console-setup/-data/-run/-check (IDE-component-purpose); `.idea/` fully
+  git-ignored; generator, `launchers --check`, `check_launchers.py`, guards, tests and docs follow.
+
 ## 2.9.11.i7h (2026-11-24)
 
 - **Capacity planner template read on first use**: a missing part answers `DRS-1032` on the planner's endpoints only; the server starts.

@@ -13,15 +13,14 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Drishti: check environment: this machine and the server on 18480 (without a token it says how to make one).
-  Use it when: something does not start or answer.
+  Drishti: setup: prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): CHECKED, never installed; what is missing is one [FAIL] with the pip command you may run yourself (it makes `dev.ini`, so it names none).
+  Use it when: after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing.
   PyCharm: open drishti/drishti-console as the project (the install folder is $PROJECT_DIR$/..); it runs on the project
   interpreter you choose (Settings, Project, Python Interpreter), the one setup prepared.
-  The profile config/profiles/demo.ini (after your dev.ini) holds its settings.
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti: check environment" type="PythonConfigurationType" factoryName="Python" folderName="Drishti-python 4 Check">
+  <configuration default="false" name="Drishti: setup" type="PythonConfigurationType" factoryName="Python" folderName="PyCharm-console-setup">
     <module name="drishti-console" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
@@ -35,7 +34,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
-    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; --profile demo doctor" />
+    <option name="PARAMETERS" value="setup" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

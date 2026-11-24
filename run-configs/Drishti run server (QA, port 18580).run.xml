@@ -13,17 +13,17 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Drishti: run server (demo): the demo lakes, offline, sign-in on, the data inbox on.
-  Use it when: the normal run, after **Drishti: build demo lakes**.
-  The profile config/profiles/demo.ini holds its settings; ~/drishti-envs/jvm-demo.args its JVM options
+  Drishti: run server (QA, port 18580): the samples on its own port and data folder (`data/qa/data`), sign-in on.
+  Use it when: QA, or a second server beside the first.
+  The profile config/profiles/qa.ini holds its settings; ~/drishti-envs/jvm-qa.args its JVM options
   (python tools/drishti.py setup writes it, from the function drishti.py start server runs).
   The server jar Drishti build all installed (lib/drishti-server-exec.jar): the jar the modules are stamped for; nothing is built before launch.
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti: run server (demo)" type="JarApplication" folderName="Drishti-java 2 Run">
+  <configuration default="false" name="Drishti: run server (QA, port 18580)" type="JarApplication" folderName="IntelliJ-drishti-run">
     <option name="JAR_PATH" value="$PROJECT_DIR$/lib/drishti-server-exec.jar" />
-    <option name="VM_PARAMETERS" value="&quot;@$USER_HOME$/drishti-envs/jvm-demo.args&quot; &quot;-Ddrishti.home=$PROJECT_DIR$&quot; &quot;-Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini,$PROJECT_DIR$/config/profiles/demo.ini&quot;" />
+    <option name="VM_PARAMETERS" value="&quot;@$USER_HOME$/drishti-envs/jvm-qa.args&quot; &quot;-Ddrishti.home=$PROJECT_DIR$&quot; &quot;-Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini,$PROJECT_DIR$/config/profiles/qa.ini&quot;" />
     <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH" />

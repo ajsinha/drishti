@@ -13,12 +13,12 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Drishti: build all: the server jar into `lib/` and every module's package with `first-party.yaml` into `modules/`, stamped for that jar.
-  Use it when: after a clone or a pull (the one to click).
+  Drishti: test: the whole Maven test run of the server, the engines and the modules (long, tens of minutes; each test class also has its own targeted run in the IDE).
+  Use it when: before a release, or after a change that crosses modules.
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti: build all" type="MavenRunConfiguration" factoryName="Maven" folderName="Drishti-java 1 Build">
+  <configuration default="false" name="Drishti: test" type="MavenRunConfiguration" factoryName="Maven" folderName="IntelliJ-drishti-test">
     <MavenSettings>
       <option name="myGeneralSettings" />
       <option name="myRunnerSettings" />
@@ -30,11 +30,7 @@
           <option name="goals">
             <list>
               <option value="clean" />
-              <option value="package" />
-              <option value="-DskipTests" />
-              <option value="-pl" />
-              <option value=":drishti-app,:drishti-modules" />
-              <option value="-am" />
+              <option value="verify" />
             </list>
           </option>
           <option name="pomFileName" />

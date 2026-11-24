@@ -14,17 +14,17 @@
 
 """``drishti.py launchers``: the IDE launchers generated from one table, ``tools/launch/launchers.yaml`` (LAUNCHER_REVIEW.md 4.2).
 
-* ``launchers`` writes the Java launchers into ``.idea/runConfigurations/*.xml`` (IntelliJ IDEA opens ``drishti``), the Python ones into
-  ``drishti-console/.idea/runConfigurations/*.xml`` (PyCharm opens ``drishti/drishti-console``), the VS Code workspace
-  ``drishti.code-workspace`` (both kinds) and the tables of ``docs/guides/IDE_GUIDE.md`` section 4; the files are committed (of ``.idea``
-  only ``runConfigurations/``), never made only locally.
+* ``launchers`` writes the Java launchers into ``run-configs/*.run.xml`` (IntelliJ IDEA opens ``drishti``), the Python ones into
+  ``drishti-console/run-configs/*.run.xml`` (PyCharm opens ``drishti/drishti-console``), the VS Code workspace
+  ``drishti.code-workspace`` (both kinds) and the tables of ``docs/guides/IDE_GUIDE.md`` section 4; the files are committed (no ``.idea`` is ever
+  in the source), never made only locally.
 * ``launchers --check`` changes nothing and fails (exit 1) naming each committed file that differs from the table, a launcher file the
   table does not name, or a stale IDE_GUIDE section 4.
 * ``launchers --machine`` writes this machine's JVM arguments files, ``<settings folder>/jvm-<profile>.args``, which every server launcher
   names (``@…/jvm-demo.args``): the one function ``drishti.py start server`` runs (``serverstart.jvm_flags``), with this machine's data
   folder (from ``dev.ini`` and the profile), so the temp folder, heap dumps and GC log follow a moved data folder. ``setup`` runs it.
 
-Each IDE opens its own project and sees only its own launchers, read from that project's own ``.idea/runConfigurations/`` (the IDE's
+Each IDE opens its own project and sees only its own launchers, read from that project's own ``run-configs/`` (the IDE's
 place, so no project picks up another's): IntelliJ IDEA the Java ones (Maven, JAR Application); PyCharm, opening ``drishti-console``, the
 Python ones, their paths from ``$PROJECT_DIR$/..`` (the install folder) and their interpreter the project's (the one the user chooses):
 none names an environment or an interpreter path. Each launcher sits in the run-configuration folder of its step (``group`` of its row):
@@ -51,13 +51,13 @@ import javacmd  # noqa: E402
 TABLE = HERE / "launchers.yaml"
 GUIDE = "docs/guides/IDE_GUIDE.md"   # under the install folder (home / GUIDE)
 BEGIN, END = "<!-- generated: launchers begin (python tools/drishti.py launchers) -->", "<!-- generated: launchers end -->"
-#: under the install folder: IntelliJ IDEA opens `drishti` and reads .idea/runConfigurations/; PyCharm opens `drishti/drishti-console` and
-#: reads drishti-console/.idea/runConfigurations/ (its install folder is $PROJECT_DIR$/..). Nothing else of .idea is committed.
-FOLDERS = {"intellij": ".idea/runConfigurations", "pycharm": "drishti-console/.idea/runConfigurations"}
-#: the run-configuration folders (folderName), by step and numbered, per project: a row's ``group`` must be one of its project's
-GROUPS = {"intellij": ("Drishti-java 1 Build", "Drishti-java 2 Run", "Drishti-java 3 Test"),
-          "pycharm": ("Drishti-python 1 Setup", "Drishti-python 2 Data", "Drishti-python 3 Run", "Drishti-python 4 Check")}
-SUFFIX = ".xml"
+#: under the install folder: IntelliJ IDEA opens `drishti` and reads run-configs/; PyCharm opens `drishti/drishti-console` and
+#: reads drishti-console/run-configs/ (its install folder is $PROJECT_DIR$/..). No .idea is ever committed.
+FOLDERS = {"intellij": "run-configs", "pycharm": "drishti-console/run-configs"}
+#: the run-configuration folders (folderName), one per IDE and component, no step numbers: a row's ``group`` must be one of its project's
+GROUPS = {"intellij": ("IntelliJ-drishti-build", "IntelliJ-drishti-run", "IntelliJ-drishti-test"),
+          "pycharm": ("PyCharm-console-setup", "PyCharm-console-data", "PyCharm-console-run", "PyCharm-console-check")}
+SUFFIX = ".run.xml"
 WORKSPACE = "drishti.code-workspace"                                     # VS Code: a task or launch of every launcher's name
 DEV_INI = "$USER_HOME$/drishti-envs/dev.ini"
 ENVS = "$USER_HOME$/drishti-envs"
@@ -214,7 +214,7 @@ def workspace(doc: dict) -> str:
                                  "program": "${workspaceFolder}/" + args[0], "args": args[1:]})
     head = ("// Project Drishti. Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved. Proprietary: see LICENSE.\n"
             "//\n// Drishti in VS Code: File, Open Workspace from File. The tasks and launch configurations carry the SAME names as the JetBrains run\n"
-            "// configurations in .idea/runConfigurations/ (the launcher standard: docs/plans/LAUNCHER_STANDARD.md). Generated from tools/launch/launchers.yaml by\n"
+            "// configurations in run-configs/ (the launcher standard: docs/plans/LAUNCHER_STANDARD.md). Generated from tools/launch/launchers.yaml by\n"
             "// python tools/drishti.py launchers: never edit this file, edit the table. Paths use ${userHome}; Python is py -3.13 on Windows and\n"
             "// python3 elsewhere; Java is the JDK 21 of JAVA_HOME (no machine path here).\n"
             "// Build and run in the IDE: README.md#build-and-run-in-the-ide.\n")
@@ -243,8 +243,8 @@ def guide_section(doc: dict) -> str:
             return "`run_drishti_web.py`, " + p + (", `" + " ".join(r["args"]) + "`" if r.get("args") else "")
         return f"`drishti.py {r['command'].split(' --from')[0]}`, " + p
     out = [BEGIN]
-    for n, (ide, title) in enumerate((("intellij", "IntelliJ IDEA: open `drishti` (`.idea/runConfigurations/`)"),
-                                      ("pycharm", "PyCharm: open `drishti\\drishti-console` (`drishti-console/.idea/runConfigurations/`)")), 1):
+    for n, (ide, title) in enumerate((("intellij", "IntelliJ IDEA: open `drishti` (`run-configs/`)"),
+                                      ("pycharm", "PyCharm: open `drishti\\drishti-console` (`drishti-console/run-configs/`)")), 1):
         out += ["", f"### 4.{n} {title}"]
         for group in GROUPS[ide]:
             members = [r for r in doc.get(ide) or [] if r.get("group") == group]
@@ -374,7 +374,7 @@ def argv(xml: Path, home: Path, user_home: Path) -> tuple[list[str], dict]:
     conf = ET.parse(xml).getroot().find("configuration")
     o = {e.get("name"): e.get("value") for e in conf.findall("option")}
     env = {e.get("name"): e.get("value") for e in conf.iter("env")}
-    # the project the IDE opened: the repository root (IntelliJ), or drishti-console (PyCharm, its launchers in drishti-console/.idea)
+    # the project the IDE opened: the repository root (IntelliJ), or drishti-console (PyCharm, its launchers in drishti-console/run-configs)
     project = home / "drishti-console" if xml.resolve().parent == (home / FOLDERS["pycharm"]).resolve() else home
 
     def expand(s: str) -> str:
