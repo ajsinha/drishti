@@ -44,9 +44,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "drishti-console"))
 from core.guides import GithubSlugger  # noqa: E402  (the help centre's heading anchors, so a link inside the PDF lands where Help's does)
 
-PDFS = [ROOT / "docs" / "DEPLOYMENT_AND_QA_GUIDE.md", ROOT / "docs" / "QUICKSTART_DEVELOPERS.md", ROOT / "docs" / "guides" / "CLUSTER_GUIDE.md",
-        ROOT / "docs" / "architecture" / "KERNEL_AND_MODULES.md", ROOT / "docs" / "architecture" / "DISTRIBUTIONS.md",
-        ROOT / "HOW_IT_FITS.md", ROOT / "docs" / "PRODUCTION_DEPLOYMENT.md"]   # generated and checked together (a PDF beside a Markdown file is one of these: --check keeps it current)
+PDFS = [ROOT / "docs" / "DEPLOYMENT_AND_QA_GUIDE.md", ROOT / "docs" / "QUICKSTART_DEVELOPERS.md", ROOT / "HOW_IT_FITS.md"]
+# a PDF exists only for a document handed to someone who has no running Drishti yet; --check keeps these current; any other file: md_to_pdf.py docs/X.md out.pdf
 PICTURE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 MARK = "source "                                                    # the PDF's title ends with "source <fingerprint>"
 COMMENT = re.compile(r"<!--.*?-->", re.S)

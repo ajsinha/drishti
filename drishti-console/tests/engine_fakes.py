@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The tests' stand-in for the core client's one engine call (``BackendClient.engine``, DOMAIN_MODULES.md C7): a test writes its fake per
+"""The tests' stand-in for the core client's one engine call (``BackendClient.engine``, KERNEL_AND_MODULES.md C7): a test writes its fake per
 engine, as the engine sees the path (``var(method, "/scope", ident, **params)``), and this hands each call of the module's API
 (``/risk/var/scope``) to it. ``patch`` puts the call on a real backend; ``method`` is the call for a fake backend class
 (``engine = engine_fakes.method``)."""

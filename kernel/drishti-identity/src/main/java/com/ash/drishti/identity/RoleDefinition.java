@@ -44,7 +44,7 @@ public record RoleDefinition(String name, String description, List<String> kinds
         java.util.Set<String> bi, boolean edit, java.util.Set<String> permissions) {
 
     /**
-     * The module permissions a role may hold (docs/architecture/ACCESS_MODEL.md section 8): {@code var:system-baskets} creates, edits and
+     * The module permissions a role may hold (docs/architecture/KERNEL_AND_MODULES.md section 8): {@code var:system-baskets} creates, edits and
      * retires the VaR engine's system baskets and imports them (VAR_GUIDE.md section 5.7).
      */
     public static final List<String> PERMISSIONS = List.of("var:system-baskets");

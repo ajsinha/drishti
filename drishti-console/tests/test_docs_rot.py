@@ -58,11 +58,7 @@ NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-connectors/sr
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
 HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md",
            # the configuration-resolution working paper: an inventory of the code at one commit (its paths and line numbers are of then)
-           "docs/architecture/pack-resolution-inventory.md",
-           # the Elements separation runbook, carried out in i6: its paths are of the source tree before the split
-           "docs/plans/ELEMENTS_SPLIT_RUNBOOK.md",
-           # the i7a plan and its impact analysis name files the release builds (deleted with it at the release)
-           "docs/plans/I7A_BUILD_PLAN.md", "docs/plans/I7A_IMPACT.md")
+           "docs/architecture/pack-resolution-inventory.md")
 
 
 @functools.lru_cache(maxsize=None)
@@ -717,7 +713,7 @@ def test_obsolete_designs_are_deleted_not_archived():
 
 def test_the_corpus_is_the_whole_documentation():
     docs = documents()
-    assert "README.md" in docs and "deploy/stack/README.md" in docs
+    assert "README.md" in docs and "docs/guides/CLUSTER_GUIDE.md" in docs
     assert any("/packs/" in d and d.endswith("/README.md") for d in docs)
     assert any(d.startswith("plugins/") for d in docs) and any(d.startswith("docs/tutorials/") for d in docs)
     assert len(docs) > 200

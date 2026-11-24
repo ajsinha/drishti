@@ -16,7 +16,7 @@
 # Creates, checks and removes the S3 Tables connector's AWS resources (table bucket, namespace, IAM policy): runs s3_tables.py beside it with the Python you run
 # Drishti with: DRISHTI_PYTHON, else python3. Needs boto3 (and pyarrow for check); no AWS CLI.
 # Every argument is passed on: create | check | remove | policy, --region, --profile, --env FILE, --dry-run, --yes; --help for the rest.
-# Guide: deploy/aws/s3-tables/README.md.
+# Guide: docs/guides/CLUSTER_GUIDE.md.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "$here/../../.." && pwd)"

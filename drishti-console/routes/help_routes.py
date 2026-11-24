@@ -50,7 +50,7 @@ def shown(edition, guide) -> bool:
     if not guide.listed and edition.refuse_unlisted:
         return False
     domains = edition.help_domains() if hasattr(edition, "help_domains") else None
-    if domains is not None and not guide.packs:                  # a distribution: its modules' guides and the kernel's (DISTRIBUTIONS.md)
+    if domains is not None and not guide.packs:                  # a distribution: its modules' guides and the kernel's (KERNEL_AND_MODULES.md)
         module = _guide_module(guide)
         if module and module != "core" and module not in domains:
             return False
@@ -74,7 +74,7 @@ def visible(request, guide) -> bool:
 
 
 def _module_on(guide) -> bool:
-    """A guide of a domain module that is off for the person is not shown (ACCESS_MODEL.md: Help too): its module is its engine's
+    """A guide of a domain module that is off for the person is not shown (KERNEL_AND_MODULES.md: Help too): its module is its engine's
     (help.yaml ``engine:``, the module's plugin.yaml ``engines:``), else its own (help.yaml ``domain:``), else its Help section's
     (sitemap.yaml ``help-sections[].domain``, a module's section: the module)."""
     from core import modules

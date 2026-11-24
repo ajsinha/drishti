@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The two optional hooks that end a run, after every file is written and checked (docs/plans/CSV_LOADERS.md section 6.5). Neither is a
+"""The two optional hooks that end a run, after every file is written and checked (docs/guides/BANK_DATA_GUIDE.md section 6.5). Neither is a
 loader: the data inbox, or Drishti's own ``tools/drishti.py lake build``, does the load.
 
   --inbox [DIR]        hand the files to the data inbox: every data file first (copied under a visible temporary name, renamed into

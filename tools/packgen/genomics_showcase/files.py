@@ -358,7 +358,7 @@ campaign with its rounds, the leaderboard) are drawn from the same kinds by the 
 ## The join to genomics
 
 The [genomics-showcase pack](../../genomics-showcase/guides/genomics-showcase.md)'s `study-variant` ([contract](../../../../../docs/contracts/packs/genomics-showcase.md#svariant-study-variant-study-variant),
-[example](../../../../../docs/contracts/samples/genomics-showcase.md#study-variant)) carries a gene, a protein position and an amino acid; with the gene
+[example](../../../../../docs/contracts/packs/genomics-showcase.md#example-genomics-showcase-study-variant)) carries a gene, a protein position and an amino acid; with the gene
 as the protein's id they are the key of a `dms-score` row.
 
 ## Making the data again

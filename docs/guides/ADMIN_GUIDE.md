@@ -103,7 +103,7 @@ Go to **Admin → Roles** and click **New role**. Fill in:
 |---|---|
 | Name | `credit-analyst` |
 | Description | `Reads counterparties and credit curves` |
-| Kinds it opens | `counterparty` and [`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)) (one per line) |
+| Kinds it opens | `counterparty` and [`credit-curve`](../contracts/packs/market-data.md#example-market-data-credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)) (one per line) |
 | Powers | leave them unticked |
 
 Click **Save**. You should see *Created credit-analyst.* The row shows the two kinds, *0* users, and who changed it and when. Instead of
@@ -1484,10 +1484,10 @@ itself, that is the site's choice and nothing moves.
 
 ## 23. Data bindings
 
-A module says which **kinds** it needs (banking: `trade`, [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv))
-or [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)),
-[`scenario-set`](../contracts/samples/market-risk.md#scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)),
-[`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) …); the site decides
+A module says which **kinds** it needs (banking: `trade`, [`scenario-pv`](../contracts/packs/market-risk.md#example-market-risk-scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv))
+or [`pnl-vector`](../contracts/packs/market-risk.md#example-market-risk-pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)),
+[`scenario-set`](../contracts/packs/market-risk.md#example-market-risk-scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)),
+[`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) …); the site decides
 which connector or lake table serves each one. That decision is the **binding**, one per kind, shared by every module that needs the kind,
 kept in `config/bindings.yaml` (`drishti.bindings.file` names another place). A binding names connectors and lakes only; hosts, URLs and
 credentials stay in the connector files and the secret store, and no module ever sees them. The file's format and examples:

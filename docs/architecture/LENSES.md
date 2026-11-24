@@ -389,7 +389,7 @@ the VaR explorer: the baskets leave the left-hand column for two drop-downs, and
 | L3 | + New basket | the basket's sheet (`drishti_var-basket.js`) | Alt+B | **Built** |
 | L4 | The hierarchy tree | `/api/var/tree` | ▸ opens, click shows the node's VaR | **Built** |
 | L5 | Keys strip | — | the keys | **Built** |
-| L6 | How calculated › | — | **H** | **Folded** into the one **Explain ›**, key **E** ([SHARED_SCREENS.md](THIN_CONSOLE_DESIGN.md)) |
+| L6 | How calculated › | — | **H** | **Folded** into the one **Explain ›**, key **E** ([the shared screens part](THIN_CONSOLE_DESIGN.md#shared-screens-one-build-home-one-approvals-queue-one-explain-the-trader-home-the-controls-screens-and-the-editors)) |
 | L7 | The drawer | the scope's `provenance` | Esc, ✕ | **Folded** into the Explain drawer, tab Inputs & lineage |
 | L8 | Phone (700 px and below) | — | tap | **Built** (full-width drop-downs, the drawer a bottom sheet) |
 
@@ -4317,7 +4317,7 @@ code change. The administrator's view of the same mechanism (the two uses, the s
   module's console plugin (`drishti-console/plugins/banking/`: `trading_landing.py`, `market_landing.py`, `routes/trading_routes.py`;
   `drishti-console/plugins/economy/`), each with its `home/<lens>_landing.html`, `drishti_<lens>-landing.js` and `.css`.
 - **Who sees a lens.** `lens.roles` in the console's configuration is read and is the hook for role-based access; grants and denials of
-  lenses per role belong to the access model ([ACCESS_MODEL.md](KERNEL_AND_MODULES.md), [DOMAIN_MODULES.md](KERNEL_AND_MODULES.md) section 8).
+  lenses per role belong to the access model ([the access model](KERNEL_AND_MODULES.md#the-access-model-licence-module-lens-function-permission), [the domain modules part](KERNEL_AND_MODULES.md#domain-modules-the-boundary-between-the-core-and-banking) section 8).
 - **A lens file extending another** (`extends: risk`, so shared command lists do not drift) is decided for the Oversight lens
   ([section 5.5](#55-the-oversight-lens-design)) and not built.
 

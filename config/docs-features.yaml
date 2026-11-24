@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The documentation's feature register (docs/architecture/DOCS_PLAN.md section 5): every major feature of the product with its ONE guide
+# The documentation's feature register (docs/architecture/TEST_HARNESS.md section 10): every major feature of the product with its ONE guide
 # and its ONE tutorial (paths under docs/), its domain module (core, banking, capitalmarkets, economy), the lenses whose Help shows it
 # (all: every lens) and the line budgets of both. drishti-console/tests/test_docs_gates.py holds the files to it:
 #   - every guide and tutorial named here exists, and every guide under docs/guides/ and tutorial under docs/tutorials/ is named here
@@ -33,7 +33,7 @@ features:
   - { id: R2, name: Counterparty exposure, domain: banking, lenses: [risk], guide: guides/EXPOSURE_GUIDE.md, budget: 2300, tutorial: none }
   - { id: R3, name: FRTB-SA, domain: banking, lenses: [risk], guide: guides/FRTB_SA_GUIDE.md, budget: 800, tutorial: none }
   - { id: R4, name: SIMM, domain: banking, lenses: [risk], guide: guides/SIMM_GUIDE.md, budget: 800, tutorial: none }
-  - { id: R6, name: "The bank's data", domain: banking, lenses: [risk, trading, market], guide: guides/PVF_LOADING.md, budget: 1200, tutorial: tutorials/12-a-day-of-bank-data.md, tutorial-budget: 400 }
+  - { id: R6, name: "The bank's data", domain: banking, lenses: [risk, trading, market], guide: guides/BANK_DATA_GUIDE.md, budget: 1200, tutorial: tutorials/12-a-day-of-bank-data.md, tutorial-budget: 400 }
   # World and public data
   - { id: W1, name: "World and public data", domain: capitalmarkets, lenses: [world], guide: guides/WORLD_DATA_GUIDE.md, budget: 3500, tutorial: none }
   # Data in and out, build (core)

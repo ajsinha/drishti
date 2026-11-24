@@ -789,7 +789,7 @@ official records) is in the [VaR guide](VAR_GUIDE.md); the operator's facts are 
 
 | Data | Placement | Size at 2.3M (1,518 values) |
 |---|---|---|
-| trade and position rows ([`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)), [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)), a trade never split from its PVs) | **sharded** by `[LEGAL_ENTITY, DESK]`, a desk never split; `replicas` 2 | 16.3 GB a date hot; 5.4 GB an owner of 6 |
+| trade and position rows ([`scenario-pv`](../contracts/packs/market-risk.md#example-market-risk-scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)), [`pnl-vector`](../contracts/packs/market-risk.md#example-market-risk-pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)), a trade never split from its PVs) | **sharded** by `[LEGAL_ENTITY, DESK]`, a desk never split; `replicas` 2 | 16.3 GB a date hot; 5.4 GB an owner of 6 |
 | the **skeleton** (ids, columns, positions, books, nodes and their aggregates) | **copied to every member**, owners and coordinators | 2.23 GB a date on the heap |
 | hierarchies, scenario sets, FX scenarios; the system baskets (from the basket store) | read whole by every member | MB |
 | the intraday layer | every member, from the lake on its own signal | thousands of rows |

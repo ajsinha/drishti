@@ -1376,7 +1376,7 @@ SP       := whitespace (or, before an operator, a closing ')'; after it, an open
 | Rules and positions | `WHERE:` and `POS:` take whole positions; `TRD:` takes single trades (a position held in part is a *partial* part) |
 | Entitlements | the resolved set is intersected with the trades the viewer may see; the rest are counted (`hidden`). A scope that names `POS`, `TRD`, `CPTY`, `WHERE`, `BASKET`, `CAPTURE` or a `PORT:` of a basket-type system basket is refused (`403 DRS-5002`) unless every resolved trade is at `positions` level for the viewer; `CPTY:` is refused to a viewer who sees `COUNTERPARTY` masked |
 | Warnings | data-quality findings about what was resolved, in `provenance.warnings`: a legal entity's trades outside its `LEGAL` node, a `LEGAL` node holding another entity's trades ([section 5.5](#55-scope-words-by-a-trades-attribute)) |
-| Kind of a scope | `node` (exactly one node term, `LE:` included when its `LEGAL` node exists, a configured word's node too), `position`, `trade` (exactly one id), `portfolio`, `basket`, `capture`, `rule`, `counterparty`, [`legal-entity`](../contracts/samples/core.md#legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)) (one term of that word), else `adhoc` |
+| Kind of a scope | `node` (exactly one node term, `LE:` included when its `LEGAL` node exists, a configured word's node too), `position`, `trade` (exactly one id), `portfolio`, `basket`, `capture`, `rule`, `counterparty`, [`legal-entity`](../contracts/packs/core.md#example-core-legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)) (one term of that word), else `adhoc` |
 | Date | resolved on the request's date: a `CAPTURE:` or a basket of trades holds ids; trades the date does not have are `unknown` |
 
 **Aggregate-only access** ([section 9](#9-who-sees-what-entitlements-and-audit)): a scope that is a node or a hierarchy or rule system basket
@@ -1415,8 +1415,8 @@ Membership of a rule is evaluated per date against that date's positions: the sa
 |---|---|---|
 | `LE:<id>` | **the bank's legal entity (decided 2026-10-25, open question 14):** the trades whose booking `LEGAL_ENTITY` is the entity (`LE:NY` is `LE-NY` too). The `LEGAL` hierarchy rolls up by books; when its node `LEGAL~<id>` misses some of the entity's trades or holds another entity's, the answer is still the trades' entity and the difference is a data-quality warning in `provenance.warnings`. The node, when it exists, gives the scope its children, limit and official history | `LEGAL_ENTITY` of the trade vectors |
 | `CPTY:<id>[,<id>…]` | the trades with that counterparty, across books and positions (compared ignoring case); refused to an aggregate-only viewer and to a viewer who sees `COUNTERPARTY` masked | `COUNTERPARTY` of the trade vectors |
-| `GROUP:<id>` | **PARKED** (product owner, 2026-10-25: fundamentals and VaR only): the trades with any member of a connected group (GLEIF parents) | `counterparty`, [`lei-entity`](../contracts/samples/gleif.md#lei-entity) ([contract](../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity)) |
-| `NSET:<id>` | **PARKED**: the trades of a netting set | [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) (`TRADE_IDS`) |
+| `GROUP:<id>` | **PARKED** (product owner, 2026-10-25: fundamentals and VaR only): the trades with any member of a connected group (GLEIF parents) | `counterparty`, [`lei-entity`](../contracts/packs/gleif.md#example-gleif-lei-entity) ([contract](../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity)) |
+| `NSET:<id>` | **PARKED**: the trades of a netting set | [`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) (`TRADE_IDS`) |
 
 ### 5.6 Examples on the test data
 
@@ -2620,12 +2620,12 @@ promotes, and every field's type, is its data contract (each section below links
 
 | Kind | `drishti.var.kinds` key (default) | Lake key (`id`) | Promoted columns (pack.yaml) | Vector columns |
 |---|---|---|---|---|
-| [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)) | `vector` (`pnl-vector`) | `VECTOR_ID` | 23 ([section 15.2](#152-pnl-vector-one-pl-vector-per-trade)) | `PNL` |
-| [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)) | `scenario-pv` (`scenario-pv`) | `SCENARIO_PV_ID` | 24 ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | `SCENARIO_PV` |
-| [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) | `fx-scenario` (`fx-scenario`) | `FX_SCENARIO_ID` | `CURRENCY`, `RATE`, `SCENARIO_SET_ID` | none (`RATES` stays in the document) |
-| [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) (market-data pack, read for derived FX) | `fx-spot` (`fx-spot`) | `PAIR` | (the market-data pack's) | none |
-| [`scenario-set`](../contracts/samples/market-risk.md#scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)) | `scenario-set` (`scenario-set`) | `SCENARIO_SET_ID` | none | none |
-| [`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)) | `limit` (`var-limit`) | `LIMIT_ID` | `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY` | none |
+| [`pnl-vector`](../contracts/packs/market-risk.md#example-market-risk-pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)) | `vector` (`pnl-vector`) | `VECTOR_ID` | 23 ([section 15.2](#152-pnl-vector-one-pl-vector-per-trade)) | `PNL` |
+| [`scenario-pv`](../contracts/packs/market-risk.md#example-market-risk-scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)) | `scenario-pv` (`scenario-pv`) | `SCENARIO_PV_ID` | 24 ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | `SCENARIO_PV` |
+| [`fx-scenario`](../contracts/packs/market-risk.md#example-market-risk-fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) | `fx-scenario` (`fx-scenario`) | `FX_SCENARIO_ID` | `CURRENCY`, `RATE`, `SCENARIO_SET_ID` | none (`RATES` stays in the document) |
+| [`fx-spot`](../contracts/packs/market-data.md#example-market-data-fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) (market-data pack, read for derived FX) | `fx-spot` (`fx-spot`) | `PAIR` | (the market-data pack's) | none |
+| [`scenario-set`](../contracts/packs/market-risk.md#example-market-risk-scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)) | `scenario-set` (`scenario-set`) | `SCENARIO_SET_ID` | none | none |
+| [`var-limit`](../contracts/packs/market-risk.md#example-market-risk-var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)) | `limit` (`var-limit`) | `LIMIT_ID` | `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY` | none |
 | `position` (served, not stored) | `position` (`position`) | `POSITION_ID` | (the `var-positions` connector) | none |
 
 The connector's layout in the market-risk pack (`modules/banking/packs/market-risk/pack.yaml`):
@@ -2675,7 +2675,7 @@ positions may send one row per position, its `TRADE_ID` the position's id (an OT
 The engine reads a field as a column when the table keeps it promoted (`LEGAL_ENTITY`, `DESK` and `TT_BOOK` must be, or the load
 fails); some it reads only for the checks of section 20; the rest are kept for people, links and audit.
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`pnl-vector.contract.yaml`](../../modules/banking/packs/market-risk/contracts/pnl-vector.contract.yaml), published as [PNLV: `pnl-vector`](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#pnl-vector).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`pnl-vector.contract.yaml`](../../modules/banking/packs/market-risk/contracts/pnl-vector.contract.yaml), published as [PNLV: `pnl-vector`](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector); a real record of the test data with every field explained is its [example](../contracts/packs/market-risk.md#example-market-risk-pnl-vector).
 
 `POSITION_ID` and `INSTRUMENT_ID` are not delivered: the engine derives them; an upstream value is not read. A per-risk-class
 split (`PNL_BY_RISK_CLASS`, `{IR, FX, CR, EQ, CO}` vectors adding up to `PNL`) is designed and not built.
@@ -2710,7 +2710,7 @@ sets refuse the stress set alone.
 
 **The page.** `SSET HS-509` shows the set's facts (business date, number of days, window, horizon, revaluation, batch), a paged grid of every scenario day with its index *i* (0 is the oldest: the position in every vector of the date), a note that every vector of the date is in this order, and the FX scenarios of the set as links.
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`scenario-set.contract.yaml`](../../modules/banking/packs/market-risk/contracts/scenario-set.contract.yaml), published as [SSET: `scenario-set`](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#scenario-set).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`scenario-set.contract.yaml`](../../modules/banking/packs/market-risk/contracts/scenario-set.contract.yaml), published as [SSET: `scenario-set`](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set); a real record of the test data with every field explained is its [example](../contracts/packs/market-risk.md#example-market-risk-scenario-set).
 
 Scenario days are business days of the USNY calendar (`tools/packgen/var/make_var_data.py`, `business_days`). The set is itself dated,
 so the meaning of index *i* is never ambiguous: each date moves the window by one day (the oldest scenario day drops out, the newest
@@ -2898,7 +2898,7 @@ plus `CURRENCY`, `BASE_PV` and the valuation dates.
 
 **The page.** `SPV <id>` shows the position or trade (linked), its currency, base PV and scenario set, a chart of the P&L (PV minus base PV, in the position's own currency) and one of the PV under each scenario day, and a paged grid (index *i*, scenario day, PV, P&L); the links lead to the scenario set and the position.
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`scenario-pv.contract.yaml`](../../modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml), published as [SPV: `scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#scenario-pv).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`scenario-pv.contract.yaml`](../../modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml), published as [SPV: `scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv); a real record of the test data with every field explained is its [example](../contracts/packs/market-risk.md#example-market-risk-scenario-pv).
 
 **What the load checks** (each a rejected row, counted and listed in `provenance.rejections`, never padded): a `null` or `NaN` in
 `SCENARIO_PV` is a **scenario that failed to price**: `DRS-5206 <trade>: 1 scenario failed to price: 312 (2025-11-21); the trade is not
@@ -2923,7 +2923,7 @@ read when a date loads, not watched.
 
 **The page.** `FXS FXS-EUR-HS-509` shows the currency, quote and today's rate, a chart of the rate under each scenario day (the x axis is the scenario set's `SCENARIO_DATES`, read through the set's link), a paged grid (index *i*, scenario day, rate, change against today's rate in percent) and a link to its scenario set.
 
-**Fields and example of `fx-scenario`.** Every field is its data contract, [`fx-scenario.contract.yaml`](../../modules/banking/packs/market-risk/contracts/fx-scenario.contract.yaml), published as [FXS: `fx-scenario`](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#fx-scenario).
+**Fields and example of `fx-scenario`.** Every field is its data contract, [`fx-scenario.contract.yaml`](../../modules/banking/packs/market-risk/contracts/fx-scenario.contract.yaml), published as [FXS: `fx-scenario`](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario); a real record of the test data with every field explained is its [example](../contracts/packs/market-risk.md#example-market-risk-fx-scenario).
 
 **On the test data.** The Endur trades (1,339: 1,089 USD, 246 EUR, 4 CAD) come as scenario PVs: a factor-model move,
 valued in the trade's currency (`tools/packgen/var/scenario_fx.py`). A USD trade's P&L from its scenario PVs is its P&L
@@ -3327,7 +3327,7 @@ server; `VarHierarchyApiTest` a fourth tree, the words and the limits.
 [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-computed-and-derived-attributes)). Read for the hierarchies whose `limits` names the kind
 (`drishti.var.kinds.limit`, `var-limit`) and for the system baskets (`HIERARCHY` `PORTFOLIO`); JSON Lines, one row a line.
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`var-limit.contract.yaml`](../../modules/banking/packs/market-risk/contracts/var-limit.contract.yaml), published as [VLIM: `var-limit`](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#var-limit).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`var-limit.contract.yaml`](../../modules/banking/packs/market-risk/contracts/var-limit.contract.yaml), published as [VLIM: `var-limit`](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit); a real record of the test data with every field explained is its [example](../contracts/packs/market-risk.md#example-market-risk-var-limit).
 
 **A row and its node.** `NODE_ID` is the id the engine builds from the promoted columns (`MGMT~DESK-RATES`, `LL~LL-0003/DESK-RATES`):
 the bank's own desk, legal-entity or letter code, one to one. A row whose node is not on the date is told apart:
@@ -3353,7 +3353,7 @@ not this kind: it is the risk model's P&L, shown beside these two as the **risk-
 **Grain:** one row per desk (and its legal entity) per business date. **Key:** `DESK_PNL_ID` = `DPNL-<DESK_ID>-<BUSINESS_DATE>`.
 **Row count:** 2,600 in the test data (10 desks × 260 business days to 2026-09-30). JSON Lines, one row a line.
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`desk-pnl.contract.yaml`](../../modules/banking/packs/market-risk/contracts/desk-pnl.contract.yaml), published as [DPNL: `desk-pnl`](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl); a real record of the test data with every field explained is its [example](../contracts/samples/market-risk.md#desk-pnl).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`desk-pnl.contract.yaml`](../../modules/banking/packs/market-risk/contracts/desk-pnl.contract.yaml), published as [DPNL: `desk-pnl`](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl); a real record of the test data with every field explained is its [example](../contracts/packs/market-risk.md#example-market-risk-desk-pnl).
 
 **On the test data** (`tools/packgen/var/desk_pnl.py`, generated by `make_var_data.py`): a desk's risk-theoretical P&L of a date is its
 scenario P&L of the scenario day before it (today's trades under that day's move: the official record's convention); the hypothetical
@@ -3373,10 +3373,10 @@ those columns. Positions are derived from those rows, not from the trade master:
 | `trade` (ENDUR, CALYPSO, MUREX connectors; TRD) | `TRADE_ID` | the generator (the batch's copy of each trade); the pages' links | live trades, status, maturity, book, signed quantity, product and currency, version; the security id a bank's batch copies |
 | `desk` (core pack; DESK) | `DESK_ID`, `BOOKS[].ID` | generator | book → desk, desk → legal entity, desk names; the hierarchies |
 | `book` (BOOK) | `TT_BOOK` | pages (links) | |
-| [`legal-entity`](../contracts/samples/core.md#legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)) (LE) | `LEGAL_ENTITY` | generator (via desks); pages | `LE:` reads the trades' own `LEGAL_ENTITY` ([section 5.5](#55-scope-words-by-a-trades-attribute)) |
-| [`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)) (TVAL) | `VALUATION_ID` = `TVAL-<TRADE_ID>` | generator | `MTM` → `PV` |
+| [`legal-entity`](../contracts/packs/core.md#example-core-legal-entity) ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)) (LE) | `LEGAL_ENTITY` | generator (via desks); pages | `LE:` reads the trades' own `LEGAL_ENTITY` ([section 5.5](#55-scope-words-by-a-trades-attribute)) |
+| [`trade-valuation`](../contracts/packs/market-risk.md#example-market-risk-trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)) (TVAL) | `VALUATION_ID` = `TVAL-<TRADE_ID>` | generator | `MTM` → `PV` |
 | `counterparty` (CPTY) | `COUNTERPARTY` | pages (links) | `CPTY:` reads the trades' own `COUNTERPARTY` |
-| [`lei-entity`](../contracts/samples/gleif.md#lei-entity) ([contract](../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity)) (LEI), `netting-set` (NSET) | `LEI`, `NETTING_SET` | `GROUP:` and `NSET:` scopes (parked) | |
+| [`lei-entity`](../contracts/packs/gleif.md#example-gleif-lei-entity) ([contract](../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity)) (LEI), `netting-set` (NSET) | `LEI`, `NETTING_SET` | `GROUP:` and `NSET:` scopes (parked) | |
 
 Positions link to trades (`graph.fields.TRADE_IDS` → `trade`); the explorer links each trade row to `TRD:<id>` and each node to its
 `NODE:` scope.
@@ -3638,10 +3638,10 @@ through the same feed and the same contracts as the normal set ([section 15](#15
 
 | Input | The normal set | The stress set |
 |---|---|---|
-| [`scenario-set`](../contracts/samples/market-risk.md#scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)) | one row, e.g. `HS-509`: the date's recent days | one more row, its own `SCENARIO_SET_ID` (`HS-STRESS-2008`), **`SET_TYPE: STRESS`**, `SCENARIO_DATES` the stress period's days in date order; optionally `SYNTHETIC: true` and a `DESCRIPTION` |
-| [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)) (preferred) | each trade's (or position's) PVs under the normal scenarios, in its own currency, with its base PV | the same trade's PVs under the **stress** scenarios, the **same base PV** (one valuation today), `SCENARIO_SET_ID` the stress set's |
-| [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)) (accepted) | each trade's P&L vector in USD | its P&L vector under the stress scenarios, `SCENARIO_SET_ID` the stress set's |
-| [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) | each currency's rate today and under each normal scenario | each currency's rates under each **stress** scenario, `SCENARIO_SET_ID` the stress set's |
+| [`scenario-set`](../contracts/packs/market-risk.md#example-market-risk-scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)) | one row, e.g. `HS-509`: the date's recent days | one more row, its own `SCENARIO_SET_ID` (`HS-STRESS-2008`), **`SET_TYPE: STRESS`**, `SCENARIO_DATES` the stress period's days in date order; optionally `SYNTHETIC: true` and a `DESCRIPTION` |
+| [`scenario-pv`](../contracts/packs/market-risk.md#example-market-risk-scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)) (preferred) | each trade's (or position's) PVs under the normal scenarios, in its own currency, with its base PV | the same trade's PVs under the **stress** scenarios, the **same base PV** (one valuation today), `SCENARIO_SET_ID` the stress set's |
+| [`pnl-vector`](../contracts/packs/market-risk.md#example-market-risk-pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)) (accepted) | each trade's P&L vector in USD | its P&L vector under the stress scenarios, `SCENARIO_SET_ID` the stress set's |
+| [`fx-scenario`](../contracts/packs/market-risk.md#example-market-risk-fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) | each currency's rate today and under each normal scenario | each currency's rates under each **stress** scenario, `SCENARIO_SET_ID` the stress set's |
 
 The rows sit in the same tables: the engine tells them apart by `SCENARIO_SET_ID` (so the connector must promote that column, as the
 market-risk pack does), and a set is the stress set when its `SET_TYPE` is `STRESS` or, when it does not say, when its id starts with
@@ -4443,12 +4443,12 @@ The kinds, on the newest date (each of the other two dates has the same files):
 
 | Kind | Folder files | Dated | Documents on 2026-09-30 | Bytes (gzip), 2026-09-30 |
 |---|---|---|---|---|
-| [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)) | `pnl-vector-<date>.tar`: `pnl-vector/<date>/cob.part-001.jsonl.gz` … `part-010` | 2026-09-28 to 2026-09-30 | **8,233** trades (CALYPSO 4,155, MUREX 4,078; all `ok`), every vector 509 values (the Endur trades moved to `scenario-pv`) | 13,451,636 |
-| [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)) | `scenario-pv-<date>.tar`: `scenario-pv/<date>/cob.part-001.jsonl.gz` … `part-003` | 2026-09-28 to 2026-09-30 | **1,339** Endur trades (USD 1,089, EUR 246, CAD 4), 509 scenario PVs and a base PV each, in cents of the trade's currency ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | 2,770,923 |
-| [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) | `fx-scenario.tar`: `fx-scenario/<date>/cob.jsonl.gz` | 2026-09-28 to 2026-09-30 | 6 currencies (AUD, CAD, CHF, EUR, GBP, JPY): today's `fx-spot` mid and 509 scenario rates moved by the factor model's FX factors | 16,315 |
-| [`scenario-set`](../contracts/samples/market-risk.md#scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)) | `scenario-set.tar`: `scenario-set/<date>/cob.jsonl.gz` | 2026-09-28 to 2026-09-30 | 1 (`HS-509`, 2024-09-17 to 2026-09-29) | 1,399 |
+| [`pnl-vector`](../contracts/packs/market-risk.md#example-market-risk-pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)) | `pnl-vector-<date>.tar`: `pnl-vector/<date>/cob.part-001.jsonl.gz` … `part-010` | 2026-09-28 to 2026-09-30 | **8,233** trades (CALYPSO 4,155, MUREX 4,078; all `ok`), every vector 509 values (the Endur trades moved to `scenario-pv`) | 13,451,636 |
+| [`scenario-pv`](../contracts/packs/market-risk.md#example-market-risk-scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)) | `scenario-pv-<date>.tar`: `scenario-pv/<date>/cob.part-001.jsonl.gz` … `part-003` | 2026-09-28 to 2026-09-30 | **1,339** Endur trades (USD 1,089, EUR 246, CAD 4), 509 scenario PVs and a base PV each, in cents of the trade's currency ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | 2,770,923 |
+| [`fx-scenario`](../contracts/packs/market-risk.md#example-market-risk-fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) | `fx-scenario.tar`: `fx-scenario/<date>/cob.jsonl.gz` | 2026-09-28 to 2026-09-30 | 6 currencies (AUD, CAD, CHF, EUR, GBP, JPY): today's `fx-spot` mid and 509 scenario rates moved by the factor model's FX factors | 16,315 |
+| [`scenario-set`](../contracts/packs/market-risk.md#example-market-risk-scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)) | `scenario-set.tar`: `scenario-set/<date>/cob.jsonl.gz` | 2026-09-28 to 2026-09-30 | 1 (`HS-509`, 2024-09-17 to 2026-09-29) | 1,399 |
 | `portfolio` | `portfolio.<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **28** definitions | 1,643 |
-| [`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)) | `var-limit.<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **157** limits | 1,858 |
+| [`var-limit`](../contracts/packs/market-risk.md#example-market-risk-var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)) | `var-limit.<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **157** limits | 1,858 |
 
 The data's 30 books hold every live trade of the date (9,572; open question 1), over 10 desks and 4 legal entities (`LE-FRA`, `LE-LDN`,
 `LE-NY`, `LE-TKY`). The rules derive 7,984 positions. The 28 portfolios: one HIERARCHY portfolio per desk (`PF-<DESK>-DESK`, 10)
@@ -5471,7 +5471,7 @@ the loaders ([section 7](../admin/BENCHMARK.md#7-the-loaders)); and the extrapol
 
 ## 36. VaR data: every dataset the engine reads
 
-Every dataset historical VaR uses, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/samples/README.md)). This guide copies neither. The engine itself, its computations and its
+Every dataset historical VaR uses, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/packs/README.md)). This guide copies neither. The engine itself, its computations and its
 screens are in the sections above; how files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
@@ -5507,7 +5507,7 @@ length (509 in the sample); the engine uses the newest `drishti.module.banking.v
 - **`SCENARIO_DATES`:** strictly increasing; the newest N are the window. Every vector names its set in `SCENARIO_SET_ID`.
 
 - **Data contract:** [`scenario-set`](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set) (SSET), key `SCENARIO_SET_ID`; 13 fields, 10 required; the file [`scenario-set.contract.yaml`](../../modules/banking/packs/market-risk/contracts/scenario-set.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#scenario-set) (files `data/testdata/market-risk/scenario-set/scenario-set.tar`).
+- **Example:** [a real record of the test data](../contracts/packs/market-risk.md#example-market-risk-scenario-set) (files `data/testdata/market-risk/scenario-set/scenario-set.tar`).
 
 ### 36.3 `scenario-pv`: scenario PVs per trade (preferred)
 
@@ -5521,7 +5521,7 @@ so a trade's position is known without reading the trade itself.
 - **`BATCH_ID`, `RESTATEMENT`, `RUN_KIND`:** which run produced it; a restatement replaces the earlier row.
 
 - **Data contract:** [`scenario-pv`](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv) (SPV), key `SCENARIO_PV_ID`; 40 fields, 28 required; the file [`scenario-pv.contract.yaml`](../../modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#scenario-pv) (files `data/testdata/market-risk/scenario-pv/scenario-pv-*.tar`).
+- **Example:** [a real record of the test data](../contracts/packs/market-risk.md#example-market-risk-scenario-pv) (files `data/testdata/market-risk/scenario-pv/scenario-pv-*.tar`).
 
 ### 36.4 `pnl-vector`: P&L vectors per trade (accepted)
 
@@ -5543,7 +5543,7 @@ One row per currency per business date: the currency's rate (`QUOTE`, USD per on
 derives the same rates from `fx-spot` history of each scenario day.
 
 - **Data contract:** [`fx-scenario`](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario) (FXS), key `FX_SCENARIO_ID`; 9 fields, 9 required; the file [`fx-scenario.contract.yaml`](../../modules/banking/packs/market-risk/contracts/fx-scenario.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#fx-scenario) (files `data/testdata/market-risk/fx-scenario/fx-scenario.tar`).
+- **Example:** [a real record of the test data](../contracts/packs/market-risk.md#example-market-risk-fx-scenario) (files `data/testdata/market-risk/fx-scenario/fx-scenario.tar`).
 
 ### 36.6 `fx-spot`: FX history
 
@@ -5552,7 +5552,7 @@ Reporting currency picker), for today's conversion, and to derive scenario FX wh
 watched: a change during the day does not recompute VaR.
 
 - **Data contract:** [`fx-spot`](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required; the file [`fx-spot.contract.yaml`](../../modules/market-data/packs/market-data/contracts/fx-spot.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-data.md#fx-spot) (files `data/testdata/market-data/fx-spot/fx-spot.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../contracts/packs/market-data.md#example-market-data-fx-spot) (files `data/testdata/market-data/fx-spot/fx-spot.*.jsonl.gz`).
 
 ### 36.7 `var-limit`: VaR limits
 
@@ -5561,7 +5561,7 @@ own horizon and confidence (the screen says *not comparable* otherwise). A syste
 whose `NODE_ID` is the basket's id ([5.7](#57-system-baskets)): the system baskets themselves are kept in Drishti, not data.
 
 - **Data contract:** [`var-limit`](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) (VLIM), key `LIMIT_ID`; 10 fields, 7 required; the file [`var-limit.contract.yaml`](../../modules/banking/packs/market-risk/contracts/var-limit.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#var-limit) (files `data/testdata/market-risk/var-limit/var-limit.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../contracts/packs/market-risk.md#example-market-risk-var-limit) (files `data/testdata/market-risk/var-limit/var-limit.*.jsonl.gz`).
 
 ### 36.8 `desk-pnl`: actual and hypothetical P&L for backtesting
 
@@ -5569,7 +5569,7 @@ Each desk's real P&L per day, from finance: **actual** (with intraday trading an
 and fees. The backtest compares each day's VaR with these to count exceptions and set the traffic-light zone (Backtest ›).
 
 - **Data contract:** [`desk-pnl`](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) (DPNL), key `DESK_PNL_ID`; 10 fields, 8 required; the file [`desk-pnl.contract.yaml`](../../modules/banking/packs/market-risk/contracts/desk-pnl.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#desk-pnl) (files `data/testdata/market-risk/desk-pnl/desk-pnl.tar`).
+- **Example:** [a real record of the test data](../contracts/packs/market-risk.md#example-market-risk-desk-pnl) (files `data/testdata/market-risk/desk-pnl/desk-pnl.tar`).
 
 ### 36.9 `pnl-history`: the long history of each node
 
@@ -5577,7 +5577,7 @@ A node's P&L over many years (`HISTORY_DATES`, `PNL`), e.g. from 2007, so a stre
 drawn. The sample's history is synthetic (`SYNTHETIC: true`), anchored to the stress set and HS-509.
 
 - **Data contract:** [`pnl-history`](../contracts/packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) (PNLH), key `HISTORY_ID`; 16 fields, 10 required; the file [`pnl-history.contract.yaml`](../../modules/banking/packs/market-risk/contracts/pnl-history.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#pnl-history) (files `data/testdata/market-risk/pnl-history/pnl-history.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../contracts/packs/market-risk.md#example-market-risk-pnl-history) (files `data/testdata/market-risk/pnl-history/pnl-history.*.jsonl.gz`).
 
 ### 36.10 `trade-valuation`: each trade's value today
 
@@ -5585,7 +5585,7 @@ The trade's MTM today with its attributes (desk, portfolio, counterparty, nettin
 What-if; not needed for the VaR number itself, which comes from the vectors.
 
 - **Data contract:** [`trade-valuation`](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation) (TVAL), key `VALUATION_ID`; 21 fields, 17 required; the file [`trade-valuation.contract.yaml`](../../modules/banking/packs/market-risk/contracts/trade-valuation.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/market-risk.md#trade-valuation) (files `data/testdata/market-risk/trade-valuation/trade-valuation.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../contracts/packs/market-risk.md#example-market-risk-trade-valuation) (files `data/testdata/market-risk/trade-valuation/trade-valuation.*.jsonl.gz`).
 
 ### 36.11 The trades: `trade_murex`, `trade_endur`, `trade_calypso`
 
@@ -5595,7 +5595,7 @@ columns), but every position links to its trade, and hierarchies may be built fr
 fields; a real trade also carries its `LEGS` and `EVENTS` (cash flows, fixings).
 
 - **Data contract:** [`trade`](../contracts/packs/trading.md#trd-trade-trade) (TRD), key `TRADE_ID`; 48 fields, 25 required; the file [`trade.contract.yaml`](../../modules/banking/packs/trading/contracts/trade.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/trades.md#murex) (files `data/testdata/trades/murex/trade_murex.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../contracts/packs/trading.md#example-trades-murex) (files `data/testdata/trades/murex/trade_murex.*.jsonl.gz`).
 <!-- guide-data:end -->
 
 ### 36.14 From an input row to a position
@@ -5746,9 +5746,9 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
 
 ![VAR BANK: the hierarchy with every node's VaR and limit bar, the six tiles, the P&L path](../tutorials/img/t25/01-bank.jpg)
 
-**What it reads.** The market-risk pack's connector `risk-store` keeps the P&L vector as a `list<double>` column of the [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector))
+**What it reads.** The market-risk pack's connector `risk-store` keeps the P&L vector as a `list<double>` column of the [`pnl-vector`](../contracts/packs/market-risk.md#example-market-risk-pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector))
 table, and the trades a batch sends as **scenario PVs** in their own currency as the `list<double>` column `SCENARIO_PV` of
-the [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)) table, with each currency's scenario FX in [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) (`modules/banking/packs/market-risk/pack.yaml`):
+the [`scenario-pv`](../contracts/packs/market-risk.md#example-market-risk-scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)) table, with each currency's scenario FX in [`fx-scenario`](../contracts/packs/market-risk.md#example-market-risk-fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) (`modules/banking/packs/market-risk/pack.yaml`):
 
 ```yaml
 connectors:
@@ -6122,7 +6122,7 @@ VAR PORT:PF-RATES-TOP3  ·  Rates top three  ·  portfolio  ·  2026-09-30
 Without the permission the import answers `403` *… does not hold the permission var:system-baskets*.
 
 **In YAML.** There is no YAML home for system baskets: the file above is only a way in (and `export` a way out). Their VaR limit is a
-row of [`var-limit`](../contracts/samples/market-risk.md#var-limit) of hierarchy `PORTFOLIO` whose `NODE_ID` is the basket's id; the
+row of [`var-limit`](../contracts/packs/market-risk.md#example-market-risk-var-limit) of hierarchy `PORTFOLIO` whose `NODE_ID` is the basket's id; the
 permission is a role's `permissions:` list:
 
 ```yaml
@@ -6449,7 +6449,7 @@ hierarchies:
 
 A node is every distinct path of the rows' values (`MGMT~DESK-RATES`, `LL~LL-0011`, `LL~LL-0011/DESK-RATES`), named by its reference
 entity when there is one (the desk `DESK-RATES` is *Rates · Swaps and options*), its limit a row of
-[`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit))
+[`var-limit`](../contracts/packs/market-risk.md#example-market-risk-var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit))
 (one row per node, USD), and LL's word names a node in any scope (`LL:LL-0011`). Every VaR limit lives in `var-limit`, with its
 currency: MGMT's, LEGAL's, LL's and each system basket's (a row of hierarchy `PORTFOLIO`).
 
@@ -7125,7 +7125,7 @@ connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --lo
 | *no P&L vectors in any connector* | build the lake (step 1); is the market-risk pack loaded? |
 | other numbers than these | you built the lake with `--as-of today`: trades matured since 2026-09-30 drop out; rebuild with `--as-of data` |
 | *no P&L vectors in any connector*, and the lake has no `scenario-pv` table | built without it, or `--only` without it: rebuild with the `--only` list of step 1 |
-| `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
+| `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in [`fx-spot`](../contracts/packs/market-data.md#example-market-data-fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
 | `PORT <id>` says *no system basket …* | the page opens on the newest date the engine holds; a basket valid only before or after it (its *Valid from*, *Valid to*) is not there: `PORT <GO>` lists the ones that are |
 | *System basket* is not under the sheet | your roles do not hold `var:system-baskets`: an administrator gives it (Admin → Roles → Permissions) |
 | an import answers `403` | the same: the permission `var:system-baskets` |

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The files of one kind and one business date, as the data inbox and ``lake build`` take them (docs/plans/CSV_LOADERS.md section 6.4):
+"""The files of one kind and one business date, as the data inbox and ``lake build`` take them (docs/guides/BANK_DATA_GUIDE.md section 6.4):
 
   <kind>.<date>.jsonl            the records, plain JSON Lines (to read and to diff; left out with plain=False)
   <kind>.<date>.jsonl.gz         the same records, deterministic gzip: the file that is loaded

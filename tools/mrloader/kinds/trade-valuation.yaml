@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Each trade's valuation today (docs/plans/CSV_LOADERS.md section 3.2): its netting set, status and MtM, which is how the exposure
+# Each trade's valuation today (docs/guides/BANK_DATA_GUIDE.md section 3.2): its netting set, status and MtM, which is how the exposure
 # engine knows a set's members. Supplied figures only: Drishti never prices. A large kind: bad rows are listed and the rest loads.
 format: 1
 kind: trade-valuation

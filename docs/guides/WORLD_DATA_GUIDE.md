@@ -253,7 +253,7 @@ The contracts are `modules/capital-markets/packs/funds/contracts/<kind>.contract
 [docs/contracts/packs/funds.md](../contracts/packs/funds.md)); each column's meaning is the pack's glossary,
 `modules/capital-markets/packs/funds/config/about.yaml`, written by `tools/packgen/funds/make.py` from `tools/packgen/funds/fundsglossary.py`. Every column's
 type, key, meaning (with its unit) and source is the contract; a real record of the snapshot with every field explained is the kind's
-example on [docs/contracts/samples/funds.md](../contracts/samples/funds.md). The sources are the SEC data sets' tables and columns:
+example on [docs/contracts/packs/funds.md](../contracts/packs/funds.md). The sources are the SEC data sets' tables and columns:
 **N-PORT** `FUND_REPORTED_INFO`, `FUND_REPORTED_HOLDING`, `IDENTIFIERS`, `MONTHLY_TOTAL_RETURN`, the derivative tables of part C.11;
 **N-CEN** `FUND_REPORTED_INFO`, `ETF`, `ADVISER`, `CUSTODIAN`, `AUTHORIZED_PARTICIPANT` ...; the **risk/return summary**'s XBRL tags
 in `num.tsv`.
@@ -266,7 +266,7 @@ search form and the type-ahead read them; the type-ahead also `NAME` and `TICKER
 (us-company), `FUND` to another `FUND`, `LEI`, `ADVISER_LEI`, `CUSTODIAN_LEI` and a counterparty's `CPTY_LEI` to `LEI` (gleif's
 lei-entity), `INDEX_ID` to `IDX` (index-membership).
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund.contract.yaml), published as [FUND: `fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#fund).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund.contract.yaml), published as [FUND: `fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund); a real record of the test data with every field explained is its [example](../contracts/packs/funds.md#example-funds-fund).
 
 ### 9. fund-holder
 
@@ -275,13 +275,13 @@ from every holding of every fund (not only those a fund page keeps): a holding i
 (an equity) when its CUSIP is one some fund filed with the company's ticker, its issuer LEI is the company's, or its issuer name is the
 company's (legal suffixes and punctuation aside).
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund-holder.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund-holder.contract.yaml), published as [HELD: `fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#fund-holder).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund-holder.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund-holder.contract.yaml), published as [HELD: `fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder); a real record of the test data with every field explained is its [example](../contracts/packs/funds.md#example-funds-fund-holder).
 
 ### 10. index-funds
 
 One document per us-equities index that at least one fund tracks, keyed by `INDEX` (command `TRACK`): SP500, NDX, DJIA.
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`index-funds.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/index-funds.contract.yaml), published as [TRACK: `index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds); a real record of the test data with every field explained is its [example](../contracts/samples/funds.md#index-funds).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`index-funds.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/index-funds.contract.yaml), published as [TRACK: `index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds); a real record of the test data with every field explained is its [example](../contracts/packs/funds.md#example-funds-index-funds).
 
 ### 11. Validation and conventions
 
@@ -433,7 +433,7 @@ samples, README, glossary and guide).
 
 ### 18. Funds data: every dataset the pages read
 
-Every dataset the funds pages reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
+Every dataset the funds pages reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/packs/README.md)). This guide copies neither. How files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
@@ -451,21 +451,21 @@ Every dataset the funds pages reads, what it is for, whether it is required, whe
 One document per fund: its identity, share classes, fees, returns and its holdings, the FUND page and the Look-through holdings tab.
 
 - **Data contract:** [`fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund) (FUND), key `TICKER`; 88 fields, 60 required; the file [`fund.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/funds.md#fund) (files `data/testdata/funds/fund/fund.tar`).
+- **Example:** [a real record of the test data](../contracts/packs/funds.md#example-funds-fund) (files `data/testdata/funds/fund/fund.tar`).
 
 ### 18.3 `fund-holder`: who holds a company
 
 One row per held company: the funds that hold it and how much, read by HELD and the company page's Held by funds panel.
 
 - **Data contract:** [`fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder) (HELD), key `TICKER`; 16 fields, 14 required; the file [`fund-holder.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund-holder.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/funds.md#fund-holder) (files `data/testdata/funds/fund-holder/fund-holder.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../contracts/packs/funds.md#example-funds-fund-holder) (files `data/testdata/funds/fund-holder/fund-holder.*.jsonl.gz`).
 
 ### 18.4 `index-funds`: funds tracking an index
 
 One row per index: the funds that track it, read by TRACK and the index page.
 
 - **Data contract:** [`index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds) (TRACK), key `INDEX`; 8 fields, 8 required; the file [`index-funds.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/index-funds.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../contracts/samples/funds.md#index-funds) (files `data/testdata/funds/index-funds/index-funds.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../contracts/packs/funds.md#example-funds-index-funds) (files `data/testdata/funds/index-funds/index-funds.*.jsonl.gz`).
 <!-- guide-data:end -->
 
 ## External data feeds
@@ -1086,7 +1086,7 @@ Each pack built on external data: its sources, what its feed writes and where, h
 #### world-economy
 
 **Sources:** `worldbank` (World Bank WGI and country list from the API; WDI read from the world-development feed's latest output, which must have run first; CC BY 4.0), `imf` (IMF WEO, **internal only**), `undp` (UNDP HDI, CC BY 3.0 IGO),
-`factbook` (CIA World Factbook, public domain). The regional figures of [`region-economy`](../contracts/samples/world-economy.md#region-economy) ([contract](../contracts/packs/world-economy.md#rege-region-economy-region-economy)) are typed into the generator by hand from US
+`factbook` (CIA World Factbook, public domain). The regional figures of [`region-economy`](../contracts/packs/world-economy.md#example-world-economy-region-economy) ([contract](../contracts/packs/world-economy.md#rege-region-economy-region-economy)) are typed into the generator by hand from US
 Census Bureau and BEA figures (illustrative, rounded): there is no fetch for them.
 
 `drishti.py feed run world-economy` wraps `tools/realdata/` (see [the world-economy data in detail](#the-world-economy-data-in-detail)): the fetcher's downloads go
@@ -1137,7 +1137,7 @@ the two halves keep their names below.)
 The data is fetched and normalised by a repeatable tool, `tools/realdata/`, and committed to git as a small normalised dataset (`tools/realdata/dataset/`, 2.4 MB) plus the
 generated pack documents. The raw downloads are cached outside the repository and are never committed.
 
-> **Licence note: IMF data is for internal demonstration only.** The IMF World Economic Outlook data in this pack (the [`economic-forecast`](../contracts/samples/world-economy.md#economic-forecast) ([contract](../contracts/packs/world-economy.md#fcst-economic-forecast-economic-forecast)) documents, and the
+> **Licence note: IMF data is for internal demonstration only.** The IMF World Economic Outlook data in this pack (the [`economic-forecast`](../contracts/packs/world-economy.md#example-world-economy-economic-forecast) ([contract](../contracts/packs/world-economy.md#fcst-economic-forecast-economic-forecast)) documents, and the
 > `debt` and `net_lending` series that feed each economy's debt ratio and fiscal position) is kept for **internal demos only**. The IMF's terms allow reuse with
 > attribution but require its **permission for commercial use** (copyright@imf.org). Before the pack is shown to a client, shipped, sold or used commercially,
 > either obtain that permission or build without the IMF: `python3 tools/realdata/realdata.py write --no-imf` (see [Building without the IMF](#building-without-the-imf)).
@@ -1177,18 +1177,18 @@ credits; the *About this series* panel shows the World Bank code to look it up.
 | Half of world-economy | Kind | Mnemonic | Documents | One document is |
 |---|---|---|---|---|
 | economics | `economy` | `ECON` | 213 | a country: GDP, growth, inflation, unemployment, debt, current account, sectors, links to its region, income group, labour market, fiscal position, IMF forecast and 16 indicators |
-| economics | [`macro-indicator`](../contracts/samples/world-economy.md#macro-indicator) ([contract](../contracts/packs/world-economy.md#macro-macro-indicator-macro-indicator)) | `MACRO` | 3,119 | one headline statistic of one country: history 2015 to the latest year, rank among countries, definition |
+| economics | [`macro-indicator`](../contracts/packs/world-economy.md#example-world-economy-macro-indicator) ([contract](../contracts/packs/world-economy.md#macro-macro-indicator-macro-indicator)) | `MACRO` | 3,119 | one headline statistic of one country: history 2015 to the latest year, rank among countries, definition |
 | economics | `economic-forecast` | `FCST` | 192 | the IMF WEO series 2015 to 2031 (growth, inflation, unemployment, current account, debt, net lending, GDP), outturn and projections |
-| economics | [`labour-market`](../contracts/samples/world-economy.md#labour-market) ([contract](../contracts/packs/world-economy.md#labr-labour-market-labour-market)) | `LABR` | 185 | unemployment, participation, youth and female labour, jobs and output by sector |
-| economics | [`fiscal-position`](../contracts/samples/world-economy.md#fiscal-position) ([contract](../contracts/packs/world-economy.md#fisc-fiscal-position-fiscal-position)) | `FISC` | 192 | IMF debt and net lending, World Bank revenue, expense, military spending |
+| economics | [`labour-market`](../contracts/packs/world-economy.md#example-world-economy-labour-market) ([contract](../contracts/packs/world-economy.md#labr-labour-market-labour-market)) | `LABR` | 185 | unemployment, participation, youth and female labour, jobs and output by sector |
+| economics | [`fiscal-position`](../contracts/packs/world-economy.md#example-world-economy-fiscal-position) ([contract](../contracts/packs/world-economy.md#fisc-fiscal-position-fiscal-position)) | `FISC` | 192 | IMF debt and net lending, World Bank revenue, expense, military spending |
 | economics | `country-group` | `ECG` | 12 | a World Bank region, income group or the world, computed from its member economies when asked ([README.md](bi/README.md)): output, growth, inflation and its largest economies |
 | economics | `region-economy` | `REGE` | 59 | a state or territory (ISO 3166-2, `AU-NSW`, `US-CA`) with population and GDP: an **illustrative sample, rounded from public figures, not for reporting** (`tools/realdata/dataset/regions.json`, not fetched), behind the BI sample report *Region economics* |
 | politics | `jurisdiction` | `JUR` | 216 | a country: government type, capital, legislature seats by party, indicators, links to office holders, elections, parties and region |
-| politics | [`office-holder`](../contracts/samples/world-economy.md#office-holder) ([contract](../contracts/packs/world-economy.md#offc-office-holder-office-holder)) | `OFFC` | 430 | the chief of state and head of government as the Factbook publishes them |
+| politics | [`office-holder`](../contracts/packs/world-economy.md#example-world-economy-office-holder) ([contract](../contracts/packs/world-economy.md#offc-office-holder-office-holder)) | `OFFC` | 430 | the chief of state and head of government as the Factbook publishes them |
 | politics | `election` | `ELEC` | 378 | the most recent lower-chamber, upper-chamber and executive election: system, term, seats by party, next election |
 | politics | `party` | `PARTY` | 282 | a party that won seats in the lower chamber at the most recent election, with the chamber's full result |
 | politics | `region` | `REGN` | 7 | a World Bank region: countries, population, life expectancy, government types |
-| politics | [`social-indicator`](../contracts/samples/world-economy.md#social-indicator) ([contract](../contracts/packs/world-economy.md#soci-social-indicator-social-indicator)) | `SOCI` | 4,297 | one social or governance statistic of one country with a regional comparison |
+| politics | [`social-indicator`](../contracts/packs/world-economy.md#example-world-economy-social-indicator) ([contract](../contracts/packs/world-economy.md#soci-social-indicator-social-indicator)) | `SOCI` | 4,297 | one social or governance statistic of one country with a regional comparison |
 
 Removed because no open, global dataset backs them: central-bank decisions, trade flows (bilateral), price baskets, opinion polls, bills and candidates. The old
 fictional polities (Valdoria, Kestria) and the invented economies are gone.
@@ -1645,12 +1645,12 @@ committed but a few sample documents (from the feeds' recorded fixtures). The gu
 
 | Feed (pack) | Sources | Key | Writes |
 |---|---|---|---|
-| `world-development` | World Bank WDI (its one fetcher; world-economy reads this output) | none | [`development-profile`](../contracts/samples/world-development.md#development-profile) ([contract](../contracts/packs/world-development.md#wdi-development-profile-development-profile)), [`development-series`](../contracts/samples/world-development.md#development-series) ([contract](../contracts/packs/world-development.md#wdis-development-indicator-series-development-series)) into worldlake |
-| `central-banks` | FRED; Bank of Canada Valet | `DRISHTI_FRED_API_KEY` (FRED only: without it the Bank of Canada's series still load) | [`central-bank`](../contracts/samples/central-banks.md#central-bank) ([contract](../contracts/packs/central-banks.md#cbank-central-bank-central-bank)), [`rate-series`](../contracts/samples/central-banks.md#rate-series) ([contract](../contracts/packs/central-banks.md#cbser-central-bank-series-rate-series)) into worldlake |
-| `national-statistics` | Statistics Canada WDS | none | [`statistics-series`](../contracts/samples/national-statistics.md#statistics-series) ([contract](../contracts/packs/national-statistics.md#nstat-national-statistic-statistics-series)) into worldlake |
-| `oecd` | OECD Data Explorer (SDMX) | none | [`oecd-country`](../contracts/samples/oecd.md#oecd-country) ([contract](../contracts/packs/oecd.md#oecd-oecd-country-oecd-country)), [`oecd-series`](../contracts/samples/oecd.md#oecd-series) ([contract](../contracts/packs/oecd.md#oecds-oecd-series-oecd-series)) into worldlake |
-| `official-news` | the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, Federal Register, Canada Gazette | none | [`release-source`](../contracts/samples/official-news.md#release-source) ([contract](../contracts/packs/official-news.md#press-official-press-releases-release-source)), [`press-release`](../contracts/samples/official-news.md#press-release) ([contract](../contracts/packs/official-news.md#prel-press-release-press-release)) into newslake |
-| `gdelt-events` | GDELT 1.0 daily event files | none | [`event-country`](../contracts/samples/gdelt-events.md#event-country) ([contract](../contracts/packs/gdelt-events.md#gdelt-world-events-by-country-event-country)) into newslake |
+| `world-development` | World Bank WDI (its one fetcher; world-economy reads this output) | none | [`development-profile`](../contracts/packs/world-development.md#example-world-development-development-profile) ([contract](../contracts/packs/world-development.md#wdi-development-profile-development-profile)), [`development-series`](../contracts/packs/world-development.md#example-world-development-development-series) ([contract](../contracts/packs/world-development.md#wdis-development-indicator-series-development-series)) into worldlake |
+| `central-banks` | FRED; Bank of Canada Valet | `DRISHTI_FRED_API_KEY` (FRED only: without it the Bank of Canada's series still load) | [`central-bank`](../contracts/packs/central-banks.md#example-central-banks-central-bank) ([contract](../contracts/packs/central-banks.md#cbank-central-bank-central-bank)), [`rate-series`](../contracts/packs/central-banks.md#example-central-banks-rate-series) ([contract](../contracts/packs/central-banks.md#cbser-central-bank-series-rate-series)) into worldlake |
+| `national-statistics` | Statistics Canada WDS | none | [`statistics-series`](../contracts/packs/national-statistics.md#example-national-statistics-statistics-series) ([contract](../contracts/packs/national-statistics.md#nstat-national-statistic-statistics-series)) into worldlake |
+| `oecd` | OECD Data Explorer (SDMX) | none | [`oecd-country`](../contracts/packs/oecd.md#example-oecd-oecd-country) ([contract](../contracts/packs/oecd.md#oecd-oecd-country-oecd-country)), [`oecd-series`](../contracts/packs/oecd.md#example-oecd-oecd-series) ([contract](../contracts/packs/oecd.md#oecds-oecd-series-oecd-series)) into worldlake |
+| `official-news` | the Fed, ECB, Bank of Canada, Bank of England, SEC, OSFI, Federal Register, Canada Gazette | none | [`release-source`](../contracts/packs/official-news.md#example-official-news-release-source) ([contract](../contracts/packs/official-news.md#press-official-press-releases-release-source)), [`press-release`](../contracts/packs/official-news.md#example-official-news-press-release) ([contract](../contracts/packs/official-news.md#prel-press-release-press-release)) into newslake |
+| `gdelt-events` | GDELT 1.0 daily event files | none | [`event-country`](../contracts/packs/gdelt-events.md#example-gdelt-events-event-country) ([contract](../contracts/packs/gdelt-events.md#gdelt-world-events-by-country-event-country)) into newslake |
 
 ```bash
 python3 tools/drishti.py feed run world-development --dry-run    # what it would ask; nothing changes
@@ -1711,16 +1711,16 @@ The functions (command words), each owned by the economy module and gated by the
 
 | Word | Kind | Opens |
 |---|---|---|
-| `WDI` | [`development-profile`](../contracts/samples/world-development.md#development-profile) ([contract](../contracts/packs/world-development.md#wdi-development-profile-development-profile)) | a country's development profile (World Bank) |
-| `WDIS` | [`development-series`](../contracts/samples/world-development.md#development-series) ([contract](../contracts/packs/world-development.md#wdis-development-indicator-series-development-series)) | one World Bank indicator of one country by year |
-| `CBANK` | [`central-bank`](../contracts/samples/central-banks.md#central-bank) ([contract](../contracts/packs/central-banks.md#cbank-central-bank-central-bank)) | a central bank: policy rate, last move, series |
-| `CBSER` | [`rate-series`](../contracts/samples/central-banks.md#rate-series) ([contract](../contracts/packs/central-banks.md#cbser-central-bank-series-rate-series)) | one central-bank or market series (FRED, Bank of Canada) |
-| `NSTAT` | [`statistics-series`](../contracts/samples/national-statistics.md#statistics-series) ([contract](../contracts/packs/national-statistics.md#nstat-national-statistic-statistics-series)) | one Statistics Canada series by vector |
-| `OECD` | [`oecd-country`](../contracts/samples/oecd.md#oecd-country) ([contract](../contracts/packs/oecd.md#oecd-oecd-country-oecd-country)) | an OECD member's latest measures, the members on a map |
-| `OECDS` | [`oecd-series`](../contracts/samples/oecd.md#oecd-series) ([contract](../contracts/packs/oecd.md#oecds-oecd-series-oecd-series)) | one OECD measure of one member by period |
-| `PRESS` | [`release-source`](../contracts/samples/official-news.md#release-source) ([contract](../contracts/packs/official-news.md#press-official-press-releases-release-source)) | a publisher's latest press releases, each a link |
-| `PREL` | [`press-release`](../contracts/samples/official-news.md#press-release) ([contract](../contracts/packs/official-news.md#prel-press-release-press-release)) | one press release |
-| `GDELT` | [`event-country`](../contracts/samples/gdelt-events.md#event-country) ([contract](../contracts/packs/gdelt-events.md#gdelt-world-events-by-country-event-country)) | a country's day in the world's news |
+| `WDI` | [`development-profile`](../contracts/packs/world-development.md#example-world-development-development-profile) ([contract](../contracts/packs/world-development.md#wdi-development-profile-development-profile)) | a country's development profile (World Bank) |
+| `WDIS` | [`development-series`](../contracts/packs/world-development.md#example-world-development-development-series) ([contract](../contracts/packs/world-development.md#wdis-development-indicator-series-development-series)) | one World Bank indicator of one country by year |
+| `CBANK` | [`central-bank`](../contracts/packs/central-banks.md#example-central-banks-central-bank) ([contract](../contracts/packs/central-banks.md#cbank-central-bank-central-bank)) | a central bank: policy rate, last move, series |
+| `CBSER` | [`rate-series`](../contracts/packs/central-banks.md#example-central-banks-rate-series) ([contract](../contracts/packs/central-banks.md#cbser-central-bank-series-rate-series)) | one central-bank or market series (FRED, Bank of Canada) |
+| `NSTAT` | [`statistics-series`](../contracts/packs/national-statistics.md#example-national-statistics-statistics-series) ([contract](../contracts/packs/national-statistics.md#nstat-national-statistic-statistics-series)) | one Statistics Canada series by vector |
+| `OECD` | [`oecd-country`](../contracts/packs/oecd.md#example-oecd-oecd-country) ([contract](../contracts/packs/oecd.md#oecd-oecd-country-oecd-country)) | an OECD member's latest measures, the members on a map |
+| `OECDS` | [`oecd-series`](../contracts/packs/oecd.md#example-oecd-oecd-series) ([contract](../contracts/packs/oecd.md#oecds-oecd-series-oecd-series)) | one OECD measure of one member by period |
+| `PRESS` | [`release-source`](../contracts/packs/official-news.md#example-official-news-release-source) ([contract](../contracts/packs/official-news.md#press-official-press-releases-release-source)) | a publisher's latest press releases, each a link |
+| `PREL` | [`press-release`](../contracts/packs/official-news.md#example-official-news-press-release) ([contract](../contracts/packs/official-news.md#prel-press-release-press-release)) | one press release |
+| `GDELT` | [`event-country`](../contracts/packs/gdelt-events.md#example-gdelt-events-event-country) ([contract](../contracts/packs/gdelt-events.md#gdelt-world-events-by-country-event-country)) | a country's day in the world's news |
 
 The packs' own codes open their overviews: `WDEV`, `CBNK`, `STCAN`, `OECDP`, `ONEWS`, `GDLT`.
 
@@ -1766,16 +1766,16 @@ drishti-grid). No screen has code of its own. A web address in a cell is a link 
 Every kind has a data contract (`config/packs/<pack>/contracts/<kind>.contract.yaml`): its key, its grain, its storage (connector,
 lake table), its cadence (daily, the feed's schedule) and every field with its type, presence, unit, an example and its meaning. The
 contracts are the one place for the data; the pages below are generated from them (`tools/contracts.py docs`), and each kind's worked
-example (a real record as JSON, every field explained) is under [docs/contracts/samples](../contracts/samples/README.md).
+example (a real record as JSON, every field explained) is under [docs/contracts/samples](../contracts/packs/README.md).
 
 | Pack | Kinds (each: its example and its contract) | Contracts | Lake table |
 |---|---|---|---|
-| `world-development` | [`development-profile`](../contracts/samples/world-development.md#development-profile) ([contract](../contracts/packs/world-development.md#wdi-development-profile-development-profile)) (key `PROFILE_ID`, `WDI-<ISO3>`), [`development-series`](../contracts/samples/world-development.md#development-series) ([contract](../contracts/packs/world-development.md#wdis-development-indicator-series-development-series)) (`SERIES_ID`, `WDIS-<ISO3>-<code>`) | [world-development.md](../contracts/packs/world-development.md) | `worldlake/development/<kind>` |
-| `central-banks` | [`central-bank`](../contracts/samples/central-banks.md#central-bank) ([contract](../contracts/packs/central-banks.md#cbank-central-bank-central-bank)) (`BANK_ID`, `CBANK-<id>`), [`rate-series`](../contracts/samples/central-banks.md#rate-series) ([contract](../contracts/packs/central-banks.md#cbser-central-bank-series-rate-series)) (`SERIES_ID`, `CBSER-<FRED or BOC>-<code>`) | [central-banks.md](../contracts/packs/central-banks.md) | `worldlake/centralbank/<kind>` |
-| `national-statistics` | [`statistics-series`](../contracts/samples/national-statistics.md#statistics-series) ([contract](../contracts/packs/national-statistics.md#nstat-national-statistic-statistics-series)) (`SERIES_ID`, `NSTAT-V<vector>`) | [national-statistics.md](../contracts/packs/national-statistics.md) | `worldlake/statistics/<kind>` |
-| `oecd` | [`oecd-country`](../contracts/samples/oecd.md#oecd-country) ([contract](../contracts/packs/oecd.md#oecd-oecd-country-oecd-country)) (`COUNTRY_ID`, `OECD-<ISO3>`), [`oecd-series`](../contracts/samples/oecd.md#oecd-series) ([contract](../contracts/packs/oecd.md#oecds-oecd-series-oecd-series)) (`SERIES_ID`, `OECDS-<ISO3>-<measure>`) | [oecd.md](../contracts/packs/oecd.md) | `worldlake/oecd/<kind>` |
-| `official-news` | [`release-source`](../contracts/samples/official-news.md#release-source) ([contract](../contracts/packs/official-news.md#press-official-press-releases-release-source)) (`SOURCE_ID`, `PRESS-<publisher>`), [`press-release`](../contracts/samples/official-news.md#press-release) ([contract](../contracts/packs/official-news.md#prel-press-release-press-release)) (`RELEASE_ID`, `PREL-<publisher>-<hash>`) | [official-news.md](../contracts/packs/official-news.md) | `newslake/officialnews/<kind>` |
-| `gdelt-events` | [`event-country`](../contracts/samples/gdelt-events.md#event-country) ([contract](../contracts/packs/gdelt-events.md#gdelt-world-events-by-country-event-country)) (`EVENT_COUNTRY_ID`, `GDELT-<ISO3>`) | [gdelt-events.md](../contracts/packs/gdelt-events.md) | `newslake/gdelt/<kind>` |
+| `world-development` | [`development-profile`](../contracts/packs/world-development.md#example-world-development-development-profile) ([contract](../contracts/packs/world-development.md#wdi-development-profile-development-profile)) (key `PROFILE_ID`, `WDI-<ISO3>`), [`development-series`](../contracts/packs/world-development.md#example-world-development-development-series) ([contract](../contracts/packs/world-development.md#wdis-development-indicator-series-development-series)) (`SERIES_ID`, `WDIS-<ISO3>-<code>`) | [world-development.md](../contracts/packs/world-development.md) | `worldlake/development/<kind>` |
+| `central-banks` | [`central-bank`](../contracts/packs/central-banks.md#example-central-banks-central-bank) ([contract](../contracts/packs/central-banks.md#cbank-central-bank-central-bank)) (`BANK_ID`, `CBANK-<id>`), [`rate-series`](../contracts/packs/central-banks.md#example-central-banks-rate-series) ([contract](../contracts/packs/central-banks.md#cbser-central-bank-series-rate-series)) (`SERIES_ID`, `CBSER-<FRED or BOC>-<code>`) | [central-banks.md](../contracts/packs/central-banks.md) | `worldlake/centralbank/<kind>` |
+| `national-statistics` | [`statistics-series`](../contracts/packs/national-statistics.md#example-national-statistics-statistics-series) ([contract](../contracts/packs/national-statistics.md#nstat-national-statistic-statistics-series)) (`SERIES_ID`, `NSTAT-V<vector>`) | [national-statistics.md](../contracts/packs/national-statistics.md) | `worldlake/statistics/<kind>` |
+| `oecd` | [`oecd-country`](../contracts/packs/oecd.md#example-oecd-oecd-country) ([contract](../contracts/packs/oecd.md#oecd-oecd-country-oecd-country)) (`COUNTRY_ID`, `OECD-<ISO3>`), [`oecd-series`](../contracts/packs/oecd.md#example-oecd-oecd-series) ([contract](../contracts/packs/oecd.md#oecds-oecd-series-oecd-series)) (`SERIES_ID`, `OECDS-<ISO3>-<measure>`) | [oecd.md](../contracts/packs/oecd.md) | `worldlake/oecd/<kind>` |
+| `official-news` | [`release-source`](../contracts/packs/official-news.md#example-official-news-release-source) ([contract](../contracts/packs/official-news.md#press-official-press-releases-release-source)) (`SOURCE_ID`, `PRESS-<publisher>`), [`press-release`](../contracts/packs/official-news.md#example-official-news-press-release) ([contract](../contracts/packs/official-news.md#prel-press-release-press-release)) (`RELEASE_ID`, `PREL-<publisher>-<hash>`) | [official-news.md](../contracts/packs/official-news.md) | `newslake/officialnews/<kind>` |
+| `gdelt-events` | [`event-country`](../contracts/packs/gdelt-events.md#example-gdelt-events-event-country) ([contract](../contracts/packs/gdelt-events.md#gdelt-world-events-by-country-event-country)) (`EVENT_COUNTRY_ID`, `GDELT-<ISO3>`) | [gdelt-events.md](../contracts/packs/gdelt-events.md) | `newslake/gdelt/<kind>` |
 
 Every document carries `PROVENANCE`: the source, the dataset and its vintage, the retrieval date, the licence, the attribution, the
 address and `INTERNAL_ONLY`. Each pack's README (`config/packs/<pack>/README.md`) lists its kinds' data structures; its guide
@@ -2026,7 +2026,7 @@ mnemonics:
     label: Economic forecast
 ```
 
-A counterparty's `ECONOMY` is a link column of its data contract ([`config/packs/core/core/contracts/counterparty.contract.yaml`](../contracts/packs/core.md#cpty-counterparty-counterparty) ([example](../contracts/samples/core.md#counterparty)),
+A counterparty's `ECONOMY` is a link column of its data contract ([`config/packs/core/core/contracts/counterparty.contract.yaml`](../contracts/packs/core.md#cpty-counterparty-counterparty) ([example](../contracts/packs/core.md#example-core-counterparty)),
 `ECONOMY → economy`): the link follows the country of risk, which may differ from where the counterparty is registered.
 
 **You should see** the UK's figures:

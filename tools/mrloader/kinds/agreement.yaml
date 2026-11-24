@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The master agreements (docs/plans/CSV_LOADERS.md section 3.2): the canonical CSV. Whether close-out netting holds; the elections are a
+# The master agreements (docs/guides/BANK_DATA_GUIDE.md section 3.2): the canonical CSV. Whether close-out netting holds; the elections are a
 # nested record from their own columns. A CSA names its agreement: the agreement's list of CSAs is derived.
 format: 1
 kind: agreement

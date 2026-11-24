@@ -84,7 +84,7 @@ public final class CapacityLive {
 
         Map<String, Object> inputs = new LinkedHashMap<>();
         inputs.put("JavaVersion", Runtime.version().feature());
-        for (CapacityFigures f : figures()) {                     // each module's engine, under its own key (DOMAIN_MODULES.md J3)
+        for (CapacityFigures f : figures()) {                     // each module's engine, under its own key (KERNEL_AND_MODULES.md J3)
             out.put(f.key(), f.figures(p, inputs));
         }
 

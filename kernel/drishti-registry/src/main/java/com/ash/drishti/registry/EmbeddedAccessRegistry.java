@@ -30,7 +30,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
 /**
- * The registry in process (ACCESS_MODEL.md section 5): decides over an {@link AccessStore} and keeps the decisions as one immutable
+ * The registry in process (KERNEL_AND_MODULES.md section 5): decides over an {@link AccessStore} and keeps the decisions as one immutable
  * snapshot, recomputed when the store's model changes ({@link #refresh()}, or the store's watch). Thread-safe: readers see one snapshot.
  * Per-person questions keep nothing per person (session isolation).
  */

@@ -569,7 +569,7 @@ and deletes what it replaces.
 The screens of the controls a risk function runs every day, chosen by the product owner from mock-ups (2026-11-05), built in 2.9.11.f
 (trust, RBAC, security and controls; the security rules themselves are settled in that release's design discussion). The mock-ups are
 in [mockups/controls/](mockups/controls); people, roles and API keys are in [EDITORS.md](#7-the-editors-one-pattern-for-every-object-people-author) sections 5 and 6; the Approvals
-queue and the Explain drawer they use are in [SHARED_SCREENS.md](THIN_CONSOLE_DESIGN.md).
+queue and the Explain drawer they use are in [the shared screens part](THIN_CONSOLE_DESIGN.md#shared-screens-one-build-home-one-approvals-queue-one-explain-the-trader-home-the-controls-screens-and-the-editors).
 
 #### 6.1 Run status and sign-off
 

@@ -808,7 +808,7 @@ async def health(request: Request, partial: int = 0):
 
 
 def _console_distribution(app) -> dict:
-    """This console's distribution for Health (docs/architecture/DISTRIBUTIONS.md) and the old keys it still reads."""
+    """This console's distribution for Health (docs/architecture/KERNEL_AND_MODULES.md) and the old keys it still reads."""
     d = app.state.editions.distribution
     return {**d.about(), "own": app.state.editions.own_distribution}
 
@@ -947,7 +947,7 @@ async def act(request: Request, username: str, action: str):
     return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)
 
 
-# -- Admin → White label (docs/guides/ADMIN_GUIDE.md, "White label"; DISTRIBUTIONS.md; mock-up white-label A) ------------------------------
+# -- Admin → White label (docs/guides/ADMIN_GUIDE.md, "White label"; KERNEL_AND_MODULES.md; mock-up white-label A) ------------------------------
 
 @router.get("/white-label")
 async def white_label_page(request: Request):

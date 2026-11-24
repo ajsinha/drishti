@@ -613,7 +613,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_PORT` | `server.port` | `18480` | The server's HTTP port. |
 | `DRISHTI_HTTP2` | `server.http2.enabled` | `true` | HTTP/2 on the server's port as well as HTTP/1.1: Drishti*net peers multiplex their forwarded reads over one connection (`h2c` by the upgrade on plain HTTP, ALPN on TLS; up to 1,000 streams per connection), and browsers over TLS get it too. `false`: HTTP/1.1 only; peers then fall back to it on the same call ([OPERATIONS_GUIDE.md › Drishti*net: running several servers as one, section 7](../guides/CLUSTER_GUIDE.md#17-where-a-request-goes)). |
 | `DRISHTI_PRODUCT` | `drishti.branding.product` | `Drishti` | The product name shown in pages and messages. |
-| `DRISHTI_DISTRIBUTION` | `drishti.distribution` | empty | The distribution the server runs ([DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md)): `risk`, `finance`, `genomics` or `all`, or the path of a site's own file; empty is Drishti All. Every member of a cluster sets the same; the console learns it from the server. A restart applies it. |
+| `DRISHTI_DISTRIBUTION` | `drishti.distribution` | empty | The distribution the server runs ([the distributions part](../architecture/KERNEL_AND_MODULES.md)): `risk`, `finance`, `genomics` or `all`, or the path of a site's own file; empty is Drishti All. Every member of a cluster sets the same; the console learns it from the server. A restart applies it. |
 | `DRISHTI_DISTRIBUTIONS_DIR` | `drishti.distributions-dir` | `<config>/distributions` | The folder of the distribution files (`drishti.<name>.yaml`) and `kernel.yaml` (the kernel's packs, words and feature presets). |
 | `DRISHTI_LENSES` | `drishti.lenses` | `default` | The lenses a person may open; `default`: every lens of the modules that are on (`risk`, `world`, `market`, `trading`, and `research` while genomics is on); a list names them; empty: no lens link. A lens arranges Home and the menus and hides nothing; a name that cannot be offered is left out with an ERROR and a red line on Health. |
 | `DRISHTI_HTTP_PROXY_URL` | `drishti.http.proxy.url` | empty | The site's outbound HTTP proxy (`http://host:port`); empty: none. See [`drishti.http.proxy`](#drishtihttpproxy--the-sites-outbound-http-proxy). |
@@ -1302,7 +1302,7 @@ message writes the name in code, and `BrandingLiteralTest` (drishti-it) fails on
 
 ### `drishti.distribution` — distributions and lenses
 
-Switches come in three layers ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), [DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md)):
+Switches come in three layers ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), [the distributions part](../architecture/KERNEL_AND_MODULES.md)):
 the **distribution** says what exists, a **module switch** whether a module is on at this site, an **engine switch** whether a compute
 runs on this server. A distribution presets an engine off (its module is not in it), never on; such an engine does not exist there and shows *not installed*. The distribution file is a layer under
 the site's configuration: every key below it can still be set by the site. A **lens** is a workspace: it arranges the starting Home, the
@@ -3064,7 +3064,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.distribution` | string | empty | `DRISHTI_DISTRIBUTION` | server | The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names config/distributions/drishti.&lt;name&gt;.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank: Drishti All, exactly as before. Also --distribution=&lt;name&gt; on the command line (drishti.py start server --distribution &lt;name&gt;). | restart |  | admin |
+| `drishti.distribution` | string | empty | `DRISHTI_DISTRIBUTION` | server | The distribution (docs/architecture/KERNEL\_AND\_MODULES.md): risk, finance, genomics or all, or the path of a site's own file; it names config/distributions/drishti.&lt;name&gt;.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank: Drishti All, exactly as before. Also --distribution=&lt;name&gt; on the command line (drishti.py start server --distribution &lt;name&gt;). | restart |  | admin |
 | `drishti.distributions-dir` | string | `<config>/distributions` | `DRISHTI_DISTRIBUTIONS_DIR` | server | the distribution files and kernel.yaml (the kernel's packs and words) | restart |  | admin |
 | `drishti.lenses` | string | `default` | `DRISHTI_LENSES` | server | Lenses (LENSES.md): workspaces a person may open ("Open Drishti Risk"), for their own session: each arranges Home and the menus for a role and never hides anything (what exists is the distribution's). default: every lens of the modules that are on (a lens file under config/lenses not marked offered-by-default: false); a list names them (it may hold the word default); DRISHTI\_LENSES= (empty) offers none. A lens named that cannot be offered is left out, with an ERROR in the log and a red line on Admin -&gt; Health; the start goes on. | restart |  | everyday |
 | `drishti.python` | string | empty | `DRISHTI_PYTHON` | server | the ONE Python (the console, the tools and the server's Python work: yours, Drishti makes no virtual environment), as an absolute path (tools/drishti.py setup writes the Python it ran with into the settings file; a value naming a missing file is replaced): used where the work's own setting (drishti.feeds.python, compute.python) is blank; DRISHTI\_PYTHON beats every setting; blank: the work's own default (python3, python on Windows) | restart |  | admin |
@@ -4548,9 +4548,9 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 ### Modules: `config/modules/*.yaml`
 
-One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of its own (banking) its name, so a server without the jar knows it and leaves it off as not installed; the module's manifest ships in its jar and the access registry reads both ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module is on when installed, licensed and enabled; a change takes effect at the next start.
+One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of its own (banking) its name, so a server without the jar knows it and leaves it off as not installed; the module's manifest ships in its jar and the access registry reads both ([KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md), [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module is on when installed, licensed and enabled; a change takes effect at the next start.
 
-#### A module's switch: `config/modules/<module>.yaml` (docs/architecture/ACCESS_MODEL.md)
+#### A module's switch: `config/modules/<module>.yaml` (docs/architecture/KERNEL_AND_MODULES.md)
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
@@ -4578,7 +4578,7 @@ One file per module (banking, capitalmarkets, economy), `config/modules/<module>
 |---|---|---|---|---|---|---|---|---|
 | `tmp_dir` | string | empty | `DRISHTI_CONSOLE_TMP_DIR` | console | base of the console's temp folder drishti-console-&lt;pid&gt; (blank: DRISHTI\_TMP\_DIR, then &lt;data dir&gt;/tmp/console when started by run\_drishti\_web.py); removed on exit; left-over ones are listed on Health, never deleted automatically | restart |  | admin |
 | `external_lib` | string | empty | `DRISHTI_EXTERNAL_LIB` | console | base of the external library folder (blank: external\_lib in the repository root); &lt;base&gt;/python is importable, &lt;base&gt;/java is the server's | restart |  | admin |
-| `distribution` | string | empty | `DRISHTI_DISTRIBUTION` | console | The distribution this console shows (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics, all, or a path to a site's own file. Blank: the server's (learned from its about answer), else Drishti All, exactly as before distributions. drishti.py start console --distribution &lt;name&gt; sets it; a stack file's consoles: list gives each console its own (Risk on 17480, Finance on 17481). | restart |  | admin |
+| `distribution` | string | empty | `DRISHTI_DISTRIBUTION` | console | The distribution this console shows (docs/architecture/KERNEL\_AND\_MODULES.md): risk, finance, genomics, all, or a path to a site's own file. Blank: the server's (learned from its about answer), else Drishti All, exactly as before distributions. drishti.py start console --distribution &lt;name&gt; sets it; a stack file's consoles: list gives each console its own (Risk on 17480, Finance on 17481). | restart |  | admin |
 
 #### `backend`
 
@@ -5660,7 +5660,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `pack` | string | none |  | the pack | Required: the pack's name, equal to its folder's name (else the pack is refused) | live |  | admin |
 | `version` | string | `0` |  | the pack | X.Y.Z, shown in About, Admin -&gt; Health and Admin -&gt; Packs and checked by deploys and the registry | live |  | admin |
 | `code` | string | `none` |  | the pack | The pack's short code: typed alone it opens the pack's overview (/p/&lt;pack&gt;); must not equal a mnemonic | live |  | admin |
-| `domain` | string | `core` |  | the pack | The domain it serves (core, banking, economy, capitalmarkets): a pack of a domain loads only while a module of that domain is on (docs/architecture/ACCESS\_MODEL.md) | live |  | admin |
+| `domain` | string | `core` |  | the pack | The domain it serves (core, banking, economy, capitalmarkets): a pack of a domain loads only while a module of that domain is on (docs/architecture/KERNEL\_AND\_MODULES.md) | live |  | admin |
 | `title` | string | `the pack's name` |  | the pack | Its name in menus, help and admin pages | live |  | admin |
 | `description` | string | empty |  | the pack | One paragraph for About and the help centre | live |  | admin |
 | `sample` | boolean | `false` |  | the pack | A demonstration pack: drishti.packs.samples can hide it from business users | live |  | admin |
@@ -6500,7 +6500,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | server | Packs new users get until an admin says otherwise (empty: every installed pack). |
 | `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), the demo lake's root (config/lakes/demo.yaml) | `${lake.data.dir}/delta` | engine, packs | a folder or s3://bucket/prefix |
 | `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled`, `drishti.module.banking.var.system-baskets.seed` (engine) | `true` | engine, server | run the demo source (the packs' sample data) |
-| `DRISHTI_DISTRIBUTION` | `drishti.distribution`, `distribution` | empty | console, server | The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names config/distributions/drishti.&lt;name&gt;.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank: Drishti All, exactly as before. Also --distribution=&lt;name&gt; on the command line (drishti.py start server --distribution &lt;name&gt;). |
+| `DRISHTI_DISTRIBUTION` | `drishti.distribution`, `distribution` | empty | console, server | The distribution (docs/architecture/KERNEL\_AND\_MODULES.md): risk, finance, genomics or all, or the path of a site's own file; it names config/distributions/drishti.&lt;name&gt;.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank: Drishti All, exactly as before. Also --distribution=&lt;name&gt; on the command line (drishti.py start server --distribution &lt;name&gt;). |
 | `DRISHTI_DISTRIBUTIONS_DIR` | `drishti.distributions-dir` | `<config>/distributions` | server | the distribution files and kernel.yaml (the kernel's packs and words) |
 | `DRISHTI_DOCTOR_PORTS` | drishti.py doctor | none | tools | The ports doctor checks |
 | `DRISHTI_DRAIN_ON_STOP` | `drishti.node.drain.on-stop` | `true` | server | the server drains itself when stopped (SIGTERM: a service stop, docker stop, Ctrl+C), then shuts down gracefully |

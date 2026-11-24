@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The launcher guards of docs/plans/LAUNCHER_REVIEW.md section 5: the committed launchers are what tools/launch/launchers.yaml generates
+"""The launcher guards of docs/guides/IDE_GUIDE.md section 5: the committed launchers are what tools/launch/launchers.yaml generates
 (G1), carry only what has no config home (G2), start the server the terminal starts (G6), and name their paths so that a moved data
 folder and a user folder with a space work (G7). Quick file checks: the drill's gate runs them; G6 starts nothing."""
 from __future__ import annotations

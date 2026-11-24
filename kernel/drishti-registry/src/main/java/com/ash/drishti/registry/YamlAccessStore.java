@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * The access model in YAML files (ACCESS_MODEL.md section 4):
+ * The access model in YAML files (KERNEL_AND_MODULES.md section 4):
  *
  * <ul>
  *   <li>each module's manifest, shipped in its jar as {@value #MANIFEST} (found on the class path: installed exactly when present);</li>
@@ -181,7 +181,7 @@ public final class YamlAccessStore implements AccessStore {
         try {
             Files.createDirectories(modulesDir);
             List<String> lines = Files.isRegularFile(f) ? new ArrayList<>(Files.readAllLines(f, StandardCharsets.UTF_8)) : new ArrayList<>(List.of(
-                    "# The module '" + id + "' at this site (docs/architecture/ACCESS_MODEL.md): the administrator's switch. POST /api/v1/admin/modules",
+                    "# The module '" + id + "' at this site (docs/architecture/KERNEL_AND_MODULES.md): the administrator's switch. POST /api/v1/admin/modules",
                     "# writes it; a change takes effect when the server restarts (a module's beans, engines, jobs and API are loaded at start)."));
             boolean replaced = false;
             for (int i = 0; i < lines.size(); i++) {

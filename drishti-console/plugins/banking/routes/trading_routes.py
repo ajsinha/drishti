@@ -24,7 +24,7 @@ trader's desk. ``POST /api/home/trading/check``. Each for a signed-in person who
 (``tradingView``) when the server says they may pick; ``as=`` empty forgets it.
 
 ``GET /api/home/market/{desk,moves,quality}``: Drishti Market's figures, for a person whose edition shows the curves (``CRV``). The trading
-role's landing rule asks the server for the person's trading role (core/plugins.py, DOMAIN_MODULES.md C6)."""
+role's landing rule asks the server for the person's trading role (core/plugins.py, KERNEL_AND_MODULES.md C6)."""
 from __future__ import annotations
 
 import re

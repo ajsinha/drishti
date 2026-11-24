@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The Elements gallery's wiring in the console (docs/architecture/ELEMENTS_IN_DRISHTI.md): /elements and /elements/gallery open the
+"""The Elements gallery's wiring in the console (docs/architecture/THIN_CONSOLE_DESIGN.md): /elements and /elements/gallery open the
 vendored release tree's gallery page with the query kept and the hosted modules' visuals asked for, the page is a Build page (the edition
 gate's build feature, Build -> Learn's menu item), and every file the page loads is there. The gallery itself is tested in the Drishti
 Elements project."""

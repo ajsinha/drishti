@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * An engine's live figures for "today against the plan" (Admin → Capacity, docs/architecture/DOMAIN_MODULES.md, the cycles: J3): a module's
+ * An engine's live figures for "today against the plan" (Admin → Capacity, docs/architecture/KERNEL_AND_MODULES.md, the cycles: J3): a module's
  * engine contributes them as a bean, under its own key of the live answer; the core names no module's engine.
  */
 public interface CapacityFigures {

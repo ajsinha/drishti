@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Endur source module's manifest (modules/trading/docs/guide.md, "Source systems"; docs/architecture/KERNEL_AND_MODULES.md section 3.3): content
+# The Endur source module's manifest (docs/guides/BANK_DATA_GUIDE.md, "Source systems"; docs/architecture/KERNEL_AND_MODULES.md section 3.3): content
 # only, no code. One module a trading system, feeding the one canonical `trade` kind (SOURCE_SYSTEM = ENDUR). It ships the connector
 # templates (connectors/: read from Delta, Iceberg and files, a Kafka live stream with its write-back), the mapping of the native
 # fields to the canonical ones (mappings/endur-trade.yaml) and the inbox routing rules (dataload.yaml). Switch it on or off on its own

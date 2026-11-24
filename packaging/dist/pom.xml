@@ -27,7 +27,7 @@
   <artifactId>drishti-modules</artifactId>
   <packaging>pom</packaging>
   <name>drishti-modules</name>
-  <description>The product's first-party modules as packages (docs/architecture/KERNEL_AND_MODULES.md section 3.3, DISTRIBUTIONS.md): all twelve
+  <description>The product's first-party modules as packages (docs/architecture/KERNEL_AND_MODULES.md section 3.3, KERNEL_AND_MODULES.md): all twelve
     modules (banking with its code and its kernel-internals allowance, stamped with the kernel build of this build; market-data, trading and
     genomics with their jars; capital-markets, economy and the six source-system modules from their folders), each packed by the one packer
     (ModuleCli module pack, Java) into target/dmod/ID-VERSION.dmod, and first-party.yaml (their ids and hash-list hashes).

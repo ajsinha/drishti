@@ -166,7 +166,7 @@ DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 def explain_command(words: list[str], user: str) -> str | None:
     """Where ``VAR EXPLAIN <scope> [from] [to]`` (or ``VAR <scope> EXPLAIN [from] [to]``, or ``VAR <scope> EXPLAIN vs <date>``) goes: the one Explain's page of the scope's VaR
-    (``/explain?kind=var``, SHARED_SCREENS.md section 3) at **Why it moved** (VAR_GUIDE.md section 3.11), the dates in the link (``from``,
+    (``/explain?kind=var``, THIN_CONSOLE_DESIGN.md section 3) at **Why it moved** (VAR_GUIDE.md section 3.11), the dates in the link (``from``,
     ``to``); no scope: the bank. None when the command does not ask for the explanation."""
     w = [x for x in words if x.upper() != "<GO>"]
     if len(w) < 2 or w[0].upper() != "VAR":
@@ -514,7 +514,7 @@ async def scopes(request: Request, owner: str = ""):
     return render(request, "admin/scopes.html", rows=rows, owner=owner, error=error, viewer=me.user)
 
 
-# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2 and C3) ---------------------------------------------------------------
+# ---- the core's hooks (core/plugins.py, KERNEL_AND_MODULES.md C2 and C3) ---------------------------------------------------------------
 _plugins.command(redirect_for, needs=("VAR",), user=True)                     # VAR DESK RATES: the VaR explorer
 _plugins.retired(retired_link)                                                # a retired stored VaR record (VAR-COMM): the explorer at its scope
 _plugins.hints(r"^\s*var\s+\S", var_suggestions, needs=("VAR",))             # a VAR command's horizons and confidences once a scope is typed

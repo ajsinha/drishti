@@ -32,7 +32,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
-/** The distribution files (docs/architecture/DISTRIBUTIONS.md): each boots from its file alone, and each shows only its modules. */
+/** The distribution files (docs/architecture/KERNEL_AND_MODULES.md): each boots from its file alone, and each shows only its modules. */
 class DistributionsTest {
 
     static final Path DIR = Path.of(TestRoots.repo(), "config", "distributions");

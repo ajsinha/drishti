@@ -26,7 +26,7 @@ bucket and prefix default to DRISHTI_DELTA_S3_BUCKET and DRISHTI_DELTA_S3_PREFIX
 `check` reads one table end to end the way Drishti does: the Delta log (the last checkpoint, then the commits after it), the live files,
 and the first one's Parquet footer and first row group, with ranged GETs. A production lake's bucket (KMS, VPC endpoint, lifecycle, access
 logs) is made by deploy/aws/delta-lake/setup-buckets.sh; this script makes a plain, private, encrypted one for the connector.
-Exit: 0 done (or the check passed), 1 a step failed (named), 2 usage. Guide: deploy/aws/delta-s3/README.md."""
+Exit: 0 done (or the check passed), 1 a step failed (named), 2 usage. Guide: docs/guides/CLUSTER_GUIDE.md."""
 from __future__ import annotations
 
 import argparse

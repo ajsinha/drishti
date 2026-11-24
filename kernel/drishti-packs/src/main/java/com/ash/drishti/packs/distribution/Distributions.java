@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 import org.springframework.core.env.Environment;
 
 /**
- * Reads distribution files (docs/architecture/DISTRIBUTIONS.md): {@code config/distributions/drishti.<name>.yaml}, chosen by
+ * Reads distribution files (docs/architecture/KERNEL_AND_MODULES.md): {@code config/distributions/drishti.<name>.yaml}, chosen by
  * {@code --distribution <name|path>} ({@code distribution}), {@code DRISHTI_DISTRIBUTION} or {@code drishti.distribution}. Nothing named:
  * Drishti All, so behaviour is unchanged. The console reads none of them: it draws from the compiled answer the server sends (THIN_CONSOLE_DESIGN.md 3.2).
  *
@@ -128,7 +128,7 @@ public final class Distributions {
     }
 
     /**
-     * The packs a server turns on when nothing names them (docs/architecture/DISTRIBUTIONS.md, "The default packs"): the kernel's
+     * The packs a server turns on when nothing names them (docs/architecture/KERNEL_AND_MODULES.md, "The default packs"): the kernel's
      * ({@code kernel.yaml}'s {@code kernel.packs}; {@code core} without the file), then each module's, in requirement order, without the
      * packs its manifest marks {@code off-by-default}. A module that is off brings none: the pack loader leaves out the packs of a module
      * that is off. No pack list is written anywhere else.

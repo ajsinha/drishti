@@ -68,7 +68,7 @@ class PackSpec:
     roles: dict = field(default_factory=dict)
     columns: dict[str, list[str]] = field(default_factory=dict)
     sample: bool = False                            # a demonstration pack (pack.yaml sample: true): see drishti.packs.samples
-    domain: str = ""                                # the domain it serves (pack.yaml domain:, docs/architecture/ACCESS_MODEL.md); "" writes none (core)
+    domain: str = ""                                # the domain it serves (pack.yaml domain:, docs/architecture/KERNEL_AND_MODULES.md); "" writes none (core)
     code: str = ""                                  # typed alone, opens the pack's overview (pack.yaml code:)   # kind -> key fields shown in pick lists (pack.yaml columns:)
     impact: dict | None = None
     # kind -> the fields its Delta table keeps as real columns (the connector's layout): what a BI dataset over the kind reads without

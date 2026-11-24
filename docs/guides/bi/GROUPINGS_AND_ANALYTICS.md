@@ -264,10 +264,10 @@ where the inferred layout had rounded them to whole numbers ("0").
 | `SIC <code>`, `/v/sic-sector/<code>`, `SIC ALL` | the same ids, computed from the companies |
 | `ECG ECG-<code>`, `/v/country-group/ECG-<code>` | the same ids, computed from the economies |
 | `CORR CORR-<set>`, `/v/correlation-matrix/CORR-<set>` | the same ids: the set's definition, its correlations computed (`CORRC CORR-<set>`) |
-| [`us-company`](../../contracts/samples/us-equities.md#us-company) ([contract](../../contracts/packs/us-equities.md#useq-us-company-us-company)) fields `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN` | removed from the records; the pages compute them (a saved search on `NET_MARGIN` finds nothing) |
-| [`correlation-matrix`](../../contracts/samples/market-data.md#correlation-matrix) ([contract](../../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) fields `AVERAGE`, `PAIRS`, `WINDOW`, `ESTIMATOR` | removed; `correlation-result` answers them |
-| [`financial-fact`](../../contracts/samples/us-equities.md#financial-fact) ([contract](../../contracts/packs/us-equities.md#fact-financial-fact-financial-fact)) `CHANGE_PCT`, `HISTORY[].CHANGE_PCT` | removed; the page computes the change |
-| [`index-membership`](../../contracts/samples/us-equities.md#index-membership) ([contract](../../contracts/packs/us-equities.md#idx-index-members-index-membership)) `SECTORS`, `REVENUE`, `NET_INCOME`, `BY_SECTOR` | removed; the page sums the members' rows (the membership and `MEMBERS` stay) |
+| [`us-company`](../../contracts/packs/us-equities.md#example-us-equities-us-company) ([contract](../../contracts/packs/us-equities.md#useq-us-company-us-company)) fields `NET_MARGIN`, `REVENUE_GROWTH`, `FINANCIALS[].NET_MARGIN`; `index-membership` `ROWS[].NET_MARGIN` | removed from the records; the pages compute them (a saved search on `NET_MARGIN` finds nothing) |
+| [`correlation-matrix`](../../contracts/packs/market-data.md#example-market-data-correlation-matrix) ([contract](../../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) fields `AVERAGE`, `PAIRS`, `WINDOW`, `ESTIMATOR` | removed; `correlation-result` answers them |
+| [`financial-fact`](../../contracts/packs/us-equities.md#example-us-equities-financial-fact) ([contract](../../contracts/packs/us-equities.md#fact-financial-fact-financial-fact)) `CHANGE_PCT`, `HISTORY[].CHANGE_PCT` | removed; the page computes the change |
+| [`index-membership`](../../contracts/packs/us-equities.md#example-us-equities-index-membership) ([contract](../../contracts/packs/us-equities.md#idx-index-members-index-membership)) `SECTORS`, `REVENUE`, `NET_INCOME`, `BY_SECTOR` | removed; the page sums the members' rows (the membership and `MEMBERS` stay) |
 | `equity` `BETA` | removed; `EQB <ticker>` and the equity page's Beta panel compute it |
 | the search form of `lei-group` (`FORM gleif`) | gone: the type-ahead finds a group by its name, and the `LEIG ALL` search finds entities |
 
@@ -286,7 +286,7 @@ its inputs. The machine-readable contracts are `modules/<module>/packs/<pack>/co
 | `lei-group` | LEIG | `gleif-groupings` (derived) | `GROUP_ID`: an ultimate parent's LEI, or `ALL` | `lei-entity` | the business date asked (the entities' date) |
 | `lei-country` | LEIC | `gleif-groupings` (derived) | `COUNTRY`: an ISO 3166 code, or `ALL` | `lei-entity` | as above |
 | `sic-sector` | SIC | `us-equities-groupings` (derived) | `SIC`: a four-digit code, or `ALL` | `us-company` | as above |
-| `country-group` | ECG | `macro-groupings` (derived) | `GROUP_ID`: `ECG-<World Bank code>` | [`economy`](../../contracts/samples/world-economy.md#economy) | as above |
+| `country-group` | ECG | `macro-groupings` (derived) | `GROUP_ID`: `ECG-<World Bank code>` | [`economy`](../../contracts/packs/world-economy.md#example-world-economy-economy) | as above |
 | `correlation-result` | CORRC | `correlation-engine` (reactive, Java) | the set's id, `~window=`, `~estimator=` | `correlation-matrix`, `equity`, `fx-spot` | the request |
 | USEQ ratios | USEQ | none: the `us-company` page | `TICKER` | `us-company` | the company record's |
 | PXH analytics | PXH | `us-equities-prices` (yfinance) | `PX-<ticker>` | the price history read live | the request (live only) |
@@ -502,7 +502,7 @@ On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's
 | `lei-country` | 133 countries + ALL | every count on every country | the stored page listed the first 400 entities of the six largest countries; the computed one lists all |
 | `sic-sector` | 194 codes + ALL | companies, revenue and net income on every code (USD reporters); ALL 586 companies, 18,430,213,107,000 revenue, 2,340,128,705,000 net income | none |
 | `country-group` | 12 groups | members on every group | the stored figures were the **World Bank's own aggregates** for 2025, which estimate members that have not reported; the computed ones add up the members, each at its latest year. GDP within 3% (ECG-EAS 32,711 against 33,657: three members' latest GDP is from 2022), population within 2.1%, growth within 0.32 points (ECG-MEA 3.06 against 2.75), inflation as the median within 0.5 points (ECG-LCN 2.58 against 2.08). The four income groups had no stored figures; they have computed ones now |
-| [`correlation-matrix`](../../contracts/samples/market-data.md#correlation-matrix) ([contract](../../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | 3 sets | the factors | the stored pairs were **synthetic**: drawn at random between 0.15 and 0.78 and labelled *2 years, Ledoit-Wolf*, with no price history behind them. Computed from the lake's 29 daily returns to 2026-09-30, Pearson: CORR-EU-EQ average 0.096 (stored 0.385), CORR-G10FX −0.012 (0.512), CORR-US-EQ 0.092 (0.406) |
+| [`correlation-matrix`](../../contracts/packs/market-data.md#example-market-data-correlation-matrix) ([contract](../../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix)) | 3 sets | the factors | the stored pairs were **synthetic**: drawn at random between 0.15 and 0.78 and labelled *2 years, Ledoit-Wolf*, with no price history behind them. Computed from the lake's 29 daily returns to 2026-09-30, Pearson: CORR-EU-EQ average 0.096 (stored 0.385), CORR-G10FX −0.012 (0.512), CORR-US-EQ 0.092 (0.406) |
 | USEQ ratios | 586 companies | net margin on the 563 that report revenue and net income, and every year of the financials; revenue growth on 560 | **3 companies** whose previous fiscal year is missing from the financials (SNA, SWK and TXT: 2023, 2024, 2026): the stored growth compared with the last year reported (two years earlier); the computed growth is against the previous fiscal year only, and empty when it is missing |
 | PXH analytics | live only | nothing was stored | new |
 | FACT changes | 4,026 facts, 38,632 yearly rows | every change, on every row and every strip | none |
@@ -645,7 +645,7 @@ few megabytes, built in about a second from the 9,937 entities.
 
 ### 25. Groupings and analytics data: every input dataset
 
-Every dataset a grouping or an analytic reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../../contracts/samples/README.md)). This guide copies neither. How files are named, dated and loaded is
+Every dataset a grouping or an analytic reads, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../../contracts/packs/README.md)). This guide copies neither. How files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](../DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 <!-- The block below is generated by tools/docs/guide_data.py from tools/docs/guide_data.yaml: edit the spec, not the block. -->
@@ -673,14 +673,14 @@ GLEIF's legal entities: `LEI_GROUP`, `DIRECT_PARENT`, `LEI_COUNTRY`, `RENEWAL_LA
 the ownership groups (LEIG) and the country pages (LEIC).
 
 - **Data contract:** [`lei-entity`](../../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity) (LEI), key `LEI`; 43 fields, 16 required; the file [`lei-entity.contract.yaml`](../../../config/packs/core/gleif/contracts/lei-entity.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../../contracts/samples/gleif.md#lei-entity) (files `data/testdata/gleif/lei-entity/lei-entity.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../../contracts/packs/gleif.md#example-gleif-lei-entity) (files `data/testdata/gleif/lei-entity/lei-entity.*.jsonl.gz`).
 
 ### 25.3 `us-company`: the US companies
 
 SEC EDGAR's companies: `SIC` makes the sectors (SIC); the financials (`REVENUE`, `NET_INCOME`, `FINANCIALS[]`) make the USEQ ratios.
 
 - **Data contract:** [`us-company`](../../contracts/packs/us-equities.md#useq-us-company-us-company) (USEQ), key `TICKER`; 46 fields, 23 required; the file [`us-company.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/us-company.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../../contracts/samples/us-equities.md#us-company) (files `data/testdata/us-equities/us-company/us-company.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../../contracts/packs/us-equities.md#example-us-equities-us-company) (files `data/testdata/us-equities/us-company/us-company.*.jsonl.gz`).
 
 ### 25.4 `economy`: the economies
 
@@ -695,42 +695,42 @@ SEC EDGAR's companies: `SIC` makes the sectors (SIC); the financials (`REVENUE`,
 A correlation set's factors; the correlations themselves are computed from the factors' price histories.
 
 - **Data contract:** [`correlation-matrix`](../../contracts/packs/market-data.md#corr-correlation-matrix-correlation-matrix) (CORR), key `MATRIX_ID`; 5 fields, 5 required; the file [`correlation-matrix.contract.yaml`](../../../modules/market-data/packs/market-data/contracts/correlation-matrix.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-data.md#correlation-matrix) (files `data/testdata/market-data/correlation-matrix/correlation-matrix.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../../contracts/packs/market-data.md#example-market-data-correlation-matrix) (files `data/testdata/market-data/correlation-matrix/correlation-matrix.*.jsonl.gz`).
 
 ### 25.6 `equity`: the equities' price history
 
 An equity's quote and its history (`HISTORY[]`): the returns of CORR and the beta of EQB.
 
 - **Data contract:** [`equity`](../../contracts/packs/market-data.md#eq-equity-equity) (EQ), key `TICKER`; 15 fields, 14 required; the file [`equity.contract.yaml`](../../../modules/market-data/packs/market-data/contracts/equity.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-data.md#equity) (files `data/testdata/market-data/equity/equity.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../../contracts/packs/market-data.md#example-market-data-equity) (files `data/testdata/market-data/equity/equity.*.jsonl.gz`).
 
 ### 25.7 `equity-index`: the indices' price history
 
 An index's level and history: the market leg of an equity's beta (EQB).
 
 - **Data contract:** [`equity-index`](../../contracts/packs/market-data.md#eqx-equity-index-equity-index) (EQX), key `INDEX_ID`; 10 fields, 10 required; the file [`equity-index.contract.yaml`](../../../modules/market-data/packs/market-data/contracts/equity-index.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-data.md#equity-index) (files `data/testdata/market-data/equity-index/equity-index.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../../contracts/packs/market-data.md#example-market-data-equity-index) (files `data/testdata/market-data/equity-index/equity-index.*.jsonl.gz`).
 
 ### 25.8 `fx-spot`: FX history
 
 A currency pair's quote and history: FX factors in a correlation set.
 
 - **Data contract:** [`fx-spot`](../../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot) (FX), key `PAIR`; 11 fields, 11 required; the file [`fx-spot.contract.yaml`](../../../modules/market-data/packs/market-data/contracts/fx-spot.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../../contracts/samples/market-data.md#fx-spot) (files `data/testdata/market-data/fx-spot/fx-spot.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../../contracts/packs/market-data.md#example-market-data-fx-spot) (files `data/testdata/market-data/fx-spot/fx-spot.*.jsonl.gz`).
 
 ### 25.9 `financial-fact`: the reported facts
 
 One reported figure of one company with its `HISTORY[]`: the FACT page's changes.
 
 - **Data contract:** [`financial-fact`](../../contracts/packs/us-equities.md#fact-financial-fact-financial-fact) (FACT), key `FACT_ID`; 12 fields, 12 required; the file [`financial-fact.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/financial-fact.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../../contracts/samples/us-equities.md#financial-fact) (files `data/testdata/us-equities/financial-fact/financial-fact.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../../contracts/packs/us-equities.md#example-us-equities-financial-fact) (files `data/testdata/us-equities/financial-fact/financial-fact.*.jsonl.gz`).
 
 ### 25.10 `index-membership`: the index members
 
 An index's members (`ROWS[]`): the IDX page's totals.
 
 - **Data contract:** [`index-membership`](../../contracts/packs/us-equities.md#idx-index-members-index-membership) (IDX), key `INDEX`; 5 fields, 5 required; the file [`index-membership.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/index-membership.contract.yaml).
-- **Example:** [a real record of the test data, every field explained](../../contracts/samples/us-equities.md#index-membership) (files `data/testdata/us-equities/index-membership/index-membership.*.jsonl.gz`).
+- **Example:** [a real record of the test data](../../contracts/packs/us-equities.md#example-us-equities-index-membership) (files `data/testdata/us-equities/index-membership/index-membership.*.jsonl.gz`).
 
 ### 25.11 `price-history`: live price history
 

@@ -12,9 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The VaR limits of one business date (docs/plans/CSV_LOADERS.md section 8.2): the canonical CSV, its columns named as the contract's
+# The VaR limits of one business date (docs/guides/BANK_DATA_GUIDE.md section 8.2): the canonical CSV, its columns named as the contract's
 # fields. A site's own column names are a mapping of its own, given by explicit path (--mapping FILE). The page:
-# tools/mrloader/docs/var-limit.md (generated from this file and the contract).
+# docs/contracts/CSV_FORMATS.md (generated from this file and the contract).
 format: 1
 kind: var-limit
 source: canonical

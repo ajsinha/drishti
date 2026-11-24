@@ -78,7 +78,7 @@ public class EngineConfiguration {
 
     @Bean(destroyMethod = "close")
     public SourceRegistry sourceRegistry(SourcesProperties props, JsonCodec codec, org.springframework.core.env.Environment env) {
-        // a connector plugin of a module that is off is not offered (docs/architecture/ACCESS_MODEL.md: module off = gone everywhere)
+        // a connector plugin of a module that is off is not offered (docs/architecture/KERNEL_AND_MODULES.md: module off = gone everywhere)
         java.lang.ref.WeakReference<org.springframework.core.env.Environment> ref = new java.lang.ref.WeakReference<>(env);
         com.ash.drishti.registry.AccessRegistry access = com.ash.drishti.registry.AccessRegistries.shared(env, k -> {
             org.springframework.core.env.Environment e = ref.get();

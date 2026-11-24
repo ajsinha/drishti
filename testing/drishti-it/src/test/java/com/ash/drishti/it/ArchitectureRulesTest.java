@@ -218,16 +218,16 @@ class ArchitectureRulesTest {
             .should().beAnnotatedWith("org.springframework.web.bind.annotation.RestController")
             .allowEmptyShould(true);
 
-    // ------------------------------------------------------------------------------------------------ domain modules (DOMAIN_MODULES.md section 4)
+    // ------------------------------------------------------------------------------------------------ domain modules (KERNEL_AND_MODULES.md section 4)
 
     /** The core never imports a domain: nothing outside a domain's packages depends on one inside them (the SPIs go the other way). */
     @ArchTest
     static final ArchRule coreNeverImportsADomain = noClasses()
             .that().resideOutsideOfPackages("com.ash.drishti.banking..", "com.ash.drishti.economy..")
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.banking..", "com.ash.drishti.economy..")
-            .because("the core knows no industry: a domain registers with the core through its SPIs (docs/architecture/DOMAIN_MODULES.md)");
+            .because("the core knows no industry: a domain registers with the core through its SPIs (docs/architecture/KERNEL_AND_MODULES.md)");
 
-    /** Only drishti-registry reads the access model (ACCESS_MODEL.md section 6): every other class asks the AccessRegistry. */
+    /** Only drishti-registry reads the access model (KERNEL_AND_MODULES.md section 6): every other class asks the AccessRegistry. */
     @ArchTest
     static final ArchRule onlyTheRegistryReadsTheAccessModel = noClasses()
             .that().resideOutsideOfPackage("com.ash.drishti.registry..")
@@ -285,7 +285,7 @@ class ArchitectureRulesTest {
                     com.tngtech.archunit.base.DescribedPredicate.describe("is MessageDigest.getInstance",
                             (com.tngtech.archunit.core.domain.AccessTarget.CodeUnitCallTarget t) ->
                                     t.getOwner().isEquivalentTo(java.security.MessageDigest.class) && t.getName().equals("getInstance"))))
-            .because("a digest is tools-codec's Hashes (docs/plans/G4_REHEARSAL.md, Gate 4 fixes: F9)");
+            .because("a digest is tools-codec's Hashes (docs/architecture/TEST_HARNESS.md, Gate 4 fixes: F9)");
 
     /** Every HTTP client starts in {@code DrishtiTools.httpBuilder}: the site proxy and the TLS settings are applied in that one place. */
     @ArchTest

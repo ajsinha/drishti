@@ -293,7 +293,7 @@ def test_on_a_phone_nothing_scrolls_sideways_and_the_verdict_comes_first(browser
 
 
 def test_with_banking_off_the_check_is_gone(backend, monkeypatch):
-    """The module rule (ACCESS_MODEL.md section 6): banking off, the page, its API, its word and its script are gone."""
+    """The module rule (KERNEL_AND_MODULES.md section 6): banking off, the page, its API, its word and its script are gone."""
     from test_modules_off import BANKING_OFF, _answer, _client, _console
 
     c = _client(_console(backend, monkeypatch, BANKING_OFF, _answer(off_modules=("banking",))))

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The PDF copies of the guides (tools/docs/md_to_pdf.py: the Deployment and QA guide, the developer quickstart, the cluster guide) are
+"""The PDF copies of the guides (tools/docs/md_to_pdf.py: the Deployment and QA guide, the developer quickstart, How it fits) are
 current: each PDF's title carries the fingerprint of its Markdown and pictures, so a guide changed without its PDF regenerated fails here,
 with the command that fixes it. No browser is started."""
 import importlib.util

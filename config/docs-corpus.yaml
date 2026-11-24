@@ -72,6 +72,7 @@ files:
   - {path: 'docs/architecture/ARCHITECTURE.md', class: keep, lane: B}
   - {path: 'docs/architecture/COUNTERPARTY_ENGINES.md', class: move, lane: B}
   - {path: 'docs/architecture/DATA_ARCHITECTURE.md', class: keep, lane: B}
+  - {path: 'docs/architecture/DECISIONS.md', class: keep, lane: B}
   - {path: 'docs/architecture/DISTRIBUTIONS.md', class: merge, lane: B}
   - {path: 'docs/architecture/DOCS_PLAN.md', class: delete, lane: B}
   - {path: 'docs/architecture/DOMAIN_MODULES.md', class: merge, lane: B}
@@ -124,6 +125,7 @@ files:
   - {path: 'docs/connectors/types/rest/README.md', class: connector, lane: C}
   - {path: 'docs/connectors/types/yfinance/README.md', class: connector, lane: C}
   - {path: 'docs/contracts/COLL.md', class: keep, lane: B}
+  - {path: 'docs/contracts/CSV_FORMATS.md', class: generate, lane: B, tool: 'tools/mrloader/kind_docs.py'}
   - {path: 'docs/contracts/CVA.md', class: keep, lane: B}
   - {path: 'docs/contracts/FRTB.md', class: keep, lane: B}
   - {path: 'docs/contracts/GRP.md', class: keep, lane: B}
@@ -242,12 +244,17 @@ files:
   - {path: 'docs/lenses/mockups/ready-upload/README.md', class: merge, lane: B}
   - {path: 'docs/lenses/mockups/trading-blotter/README.md', class: merge, lane: B}
   - {path: 'docs/lenses/mockups/var-matured/README.md', class: merge, lane: B}
+  - {path: 'docs/plans/COUNTERPARTY_ENGINES.md', class: keep, lane: B}
   - {path: 'docs/plans/CSV_LOADERS.md', class: delete, lane: B}
   - {path: 'docs/plans/ELEMENTS_SPLIT_RUNBOOK.md', class: delete, lane: B}
+  - {path: 'docs/plans/FIGMA_INTEGRATION.md', class: keep, lane: B}
+  - {path: 'docs/plans/FINANCIAL_CRIME.md', class: keep, lane: B}
   - {path: 'docs/plans/G4_REHEARSAL.md', class: delete, lane: B}
+  - {path: 'docs/plans/HIGH_PERFORMANCE_NATIVE.md', class: keep, lane: B}
   - {path: 'docs/plans/I7A_BUILD_PLAN.md', class: delete, lane: B}
   - {path: 'docs/plans/I7A_IMPACT.md', class: delete, lane: B}
   - {path: 'docs/plans/I7A_PREDRILL_REVIEW.md', class: delete, lane: B}
+  - {path: 'docs/plans/IFRS9_ECL.md', class: keep, lane: B}
   - {path: 'docs/plans/LAUNCHER_REVIEW.md', class: delete, lane: B}
   - {path: 'docs/strategy/BI_AND_POWER_BI.md', class: merge, lane: A}
   - {path: 'docs/strategy/COMPETITIVE_ANALYSIS.md', class: keep, lane: A}

@@ -227,7 +227,7 @@ def entity_target(kind: str, id_: str) -> str | None:
     return id_ if kind in LINKED_KINDS and id_ else None
 
 
-# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2 and C3) ---------------------------------------------------------------
+# ---- the core's hooks (core/plugins.py, KERNEL_AND_MODULES.md C2 and C3) ---------------------------------------------------------------
 def _type_ahead(request, m) -> list[dict]:
     """SMAT <id> [N]: the scenario matrix's own line in the type-ahead."""
     w = (m.group(1) or "").strip()

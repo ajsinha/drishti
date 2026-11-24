@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The approved credit limits per counterparty (docs/plans/CSV_LOADERS.md section 3.2): the limit and its measure, with optional tenor
+# The approved credit limits per counterparty (docs/guides/BANK_DATA_GUIDE.md section 3.2): the limit and its measure, with optional tenor
 # buckets from a child file. Usage, utilisation and status are computed by the exposure engine.
 format: 1
 kind: credit-limit
