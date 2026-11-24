@@ -41,7 +41,6 @@ One country's World Development Indicators: the latest of each, the world map sh
 | Cadence | daily (due: the world-development feed's schedule (30 6 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `development.development-profile`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-development/samples |
-| Worked example | [world-development/development-profile](../samples/world-development.md#development-profile) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -111,6 +110,64 @@ One country's World Development Indicators: the latest of each, the world map sh
 - Stored in the worldlake lake (config/lakes/worldlake.yaml), table <data>/delta/worldlake/development/development-profile/, one JSONL.gz a business date loaded with mode replace (a rerun of a day is idempotent).
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
 
+<a id="example-world-development-development-profile"></a>
+**Example: `modules/economy/packs/world-development/samples/development-profile.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CAPITAL": "Canberra",
+  "CENTRAL_GOVERNMENT_DEBT": 57.8834285733848,
+  "COUNTRY_NAME": "Australia",
+  "DATA_YEAR": "2025",
+  "ELECTRICITY_ACCESS": 100.0,
+  "GDP_GROWTH": 1.35039785076631,
+  "GDP_PER_CAPITA": 65129.7227990563,
+  "INCOME_GROUP": "High income",
+  "INDICATORS": [
+    {
+      "CODE": "SP.POP.TOTL",
+      "INDICATOR": "Population, total",
+      "LATEST": 27614411.0,
+      "UNIT": "persons",
+      "WDI_SERIES": "WDIS-AUS-SP_POP_TOTL",
+      "YEAR": "2025"
+    },
+    {
+      "CODE": "NY.GDP.PCAP.CD",
+      "INDICATOR": "GDP per capita (current US$)",
+      "LATEST": 65129.7227990563,
+      "UNIT": "current USD",
+      "WDI_SERIES": "WDIS-AUS-NY_GDP_PCAP_CD",
+      "YEAR": "2025"
+    },
+    "… 8 more elements of the same shape"
+  ],
+  "INDICATOR_COUNT": 10,
+  "INFLATION": 2.87403791660173,
+  "INTERNET_USERS": 96.13140106,
+  "ISO2": "AU",
+  "ISO3": "AUS",
+  "LIFE_EXPECTANCY": 83.0512195121951,
+  "NAME": "Australia",
+  "POPULATION": 27614411.0,
+  "POVERTY_HEADCOUNT": 0.9,
+  "PROFILE_ID": "WDI-AUS",
+  "PROVENANCE": {
+    "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0).",
+    "DATASET": "World Development Indicators (updated 2026-10-08)",
+    "INTERNAL_ONLY": false,
+    "LICENCE": "CC BY 4.0",
+    "RETRIEVED_AT": "2026-11-06",
+    "SOURCE": "World Bank, World Development Indicators",
+    "URL": "https://data.worldbank.org/country/AU"
+  },
+  "REGION": "East Asia & Pacific",
+  "UNEMPLOYMENT": 4.09
+}
+```
+
 ## WDIS: Development indicator series (`development-series`)
 
 One World Development Indicator of one country by year: the history, the latest value and the change.
@@ -128,7 +185,6 @@ One World Development Indicator of one country by year: the history, the latest 
 | Cadence | daily (due: the world-development feed's schedule (30 6 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `development.development-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-development/samples |
-| Worked example | [world-development/development-series](../samples/world-development.md#development-series) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -183,3 +239,47 @@ One World Development Indicator of one country by year: the history, the latest 
 
 - Stored in the worldlake lake (config/lakes/worldlake.yaml), table <data>/delta/worldlake/development/development-series/, one JSONL.gz a business date loaded with mode replace (a rerun of a day is idempotent).
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
+
+<a id="example-world-development-development-series"></a>
+**Example: `modules/economy/packs/world-development/samples/development-series.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CHANGE": 0.0,
+  "COUNTRY_NAME": "Canada",
+  "DEFINITION": "Access to electricity is the percentage of population with access to electricity. Electrification data are collected from industry, national surveys and international sources.",
+  "HISTORY": [
+    {
+      "VALUE": 100.0,
+      "YEAR": "2019"
+    },
+    {
+      "VALUE": 100.0,
+      "YEAR": "2020"
+    },
+    "… 4 more elements of the same shape"
+  ],
+  "INDICATOR": "Access to electricity (% of population)",
+  "INDICATOR_CODE": "EG.ELC.ACCS.ZS",
+  "ISO3": "CAN",
+  "LATEST": 100.0,
+  "LATEST_YEAR": "2024",
+  "NAME": "Canada · Access to electricity (% of population)",
+  "PREVIOUS": 100.0,
+  "PREVIOUS_YEAR": "2023",
+  "PROVENANCE": {
+    "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0).",
+    "DATASET": "World Development Indicators (updated 2026-10-08)",
+    "INTERNAL_ONLY": false,
+    "LICENCE": "CC BY 4.0",
+    "RETRIEVED_AT": "2026-11-06",
+    "SOURCE": "World Bank, World Development Indicators",
+    "URL": "https://data.worldbank.org/indicator/EG.ELC.ACCS.ZS?locations=CA"
+  },
+  "SERIES_ID": "WDIS-CAN-EG_ELC_ACCS_ZS",
+  "UNIT": "% of population",
+  "WDI_PROFILE": "WDI-CAN"
+}
+```

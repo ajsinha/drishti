@@ -40,7 +40,6 @@ What the world's news reported about one country yesterday (GDELT): events, tone
 | Cadence | daily (due: the gdelt-events feed's schedule (30 8 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `gdelt.event-country`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/gdelt-events/samples |
-| Worked example | [gdelt-events/event-country](../samples/gdelt-events.md#event-country) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -113,3 +112,77 @@ What the world's news reported about one country yesterday (GDELT): events, tone
 
 - Stored in the newslake lake (config/lakes/newslake.yaml), table <data>/delta/newslake/gdelt/event-country/, one JSONL.gz a business date loaded with mode replace (a rerun of a day is idempotent).
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
+
+<a id="example-gdelt-events-event-country"></a>
+**Example: `modules/economy/packs/gdelt-events/samples/event-country.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "AVG_GOLDSTEIN": 1.0946,
+  "AVG_TONE": -2.8054,
+  "AVG_TONE_WINDOW": -2.2956,
+  "BY_CATEGORY": [
+    {
+      "AVG_TONE": -1.9561,
+      "CATEGORY": "Consult",
+      "CODE": "04",
+      "EVENTS": 23
+    },
+    {
+      "AVG_TONE": -2.608,
+      "CATEGORY": "Make public statement",
+      "CODE": "01",
+      "EVENTS": 15
+    },
+    "… 13 more elements of the same shape"
+  ],
+  "CONFLICT_SHARE": 25.0,
+  "COOPERATION_SHARE": 75.0,
+  "COUNTRY_NAME": "Australia",
+  "DATE": "2026-11-05",
+  "EVENTS": 92,
+  "EVENTS_WINDOW": 160,
+  "EVENT_COUNTRY_ID": "GDELT-AUS",
+  "HISTORY": [
+    {
+      "AVG_TONE": -1.4378,
+      "DATE": "2026-11-04",
+      "EVENTS": 68
+    },
+    {
+      "AVG_TONE": -2.8054,
+      "DATE": "2026-11-05",
+      "EVENTS": 92
+    }
+  ],
+  "ISO3": "AUS",
+  "MENTIONS": 4410,
+  "NAME": "Australia",
+  "PROVENANCE": {
+    "ATTRIBUTION": "Source: The GDELT Project (https://www.gdeltproject.org/).",
+    "DATASET": "GDELT 1.0 daily events 2026-11-05",
+    "INTERNAL_ONLY": false,
+    "LICENCE": "GDELT terms of use: free and open for any use, commercial included, with a citation of the GDELT Project and a link to it",
+    "RETRIEVED_AT": "2026-11-06",
+    "SOURCE": "The GDELT Project",
+    "URL": "https://www.gdeltproject.org/data.html"
+  },
+  "TONE_CHANGE": -0.5098,
+  "TOP_STORIES": [
+    {
+      "CATEGORY": "Consult",
+      "MENTIONS": 1211,
+      "URL": "https://www.bandt.com.au/melbourne-confidential-tiffany-damm/"
+    },
+    {
+      "CATEGORY": "Appeal",
+      "MENTIONS": 620,
+      "URL": "https://www.aol.co.uk/articles/scare-campaigns-victoria-major-parties-230046000.html"
+    },
+    "… 3 more elements of the same shape"
+  ],
+  "WINDOW_DAYS": 2
+}
+```

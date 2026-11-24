@@ -53,7 +53,6 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 | Binding hint | lake table `macro.economy`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `NAME`, `ISO3`, `REGION_NAME`, `INCOME_NAME`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `GROWTH`, `INFLATION`, `UNEMPLOYMENT`, `POPULATION_M` |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/economy](../samples/world-economy.md#economy) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -146,6 +145,96 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 - number types decided by the field's name: RESERVES_USD_BN amount, TRADE_SHARE rate: confirm amount, rate or integer.
 - no unit stated for the amounts RESERVES_USD_BN, POPULATION_M (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-world-economy-economy"></a>
+**Example: `modules/economy/packs/world-economy/samples/economy.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "ECONOMY_ID": "ECON-AFG",
+  "NAME": "Afghanistan",
+  "ISO3": "AFG",
+  "REGION_NAME": "Middle East, North Africa, Afghanistan & Pakistan",
+  "INCOME_NAME": "Low income",
+  "CURRENCY": "AFA",
+  "CAPITAL": "Kabul",
+  "YEAR": "2024",
+  "GDP_USD_BN": 17.7785,
+  "GDP_PER_CAPITA": 416.871,
+  "GROWTH": 1.87319,
+  "INFLATION": -6.60119,
+  "UNEMPLOYMENT": 13.351,
+  "DEBT_TO_GDP": 8,
+  "CURRENT_ACCOUNT": -15.7183,
+  "RESERVES_USD_BN": 9.74895,
+  "TRADE_SHARE": 83.763,
+  "POPULATION_M": 43.8441,
+  "GROWTH_PATH": [
+    {
+      "YEAR": "2015",
+      "GROWTH": 1.45131
+    },
+    {
+      "YEAR": "2016",
+      "GROWTH": 2.26031
+    },
+    "… 8 more elements of the same shape"
+  ],
+  "GDP_PATH": [
+    {
+      "YEAR": "2015",
+      "GDP": 19.1342
+    },
+    {
+      "YEAR": "2016",
+      "GDP": 18.1166
+    },
+    "… 8 more elements of the same shape"
+  ],
+  "SECTORS": [
+    {
+      "SECTOR": "Services",
+      "SHARE": 45.1615
+    },
+    {
+      "SECTOR": "Industry",
+      "SHARE": 14.5204
+    },
+    {
+      "SECTOR": "Agriculture",
+      "SHARE": 34.2931
+    }
+  ],
+  "REGION_GROUP": "ECG-MEA",
+  "INCOME_GROUP": "ECG-LIC",
+  "LABOUR": "LABR-AFG",
+  "FISCAL": "FISC-AFG",
+  "OUTLOOK": "FCST-AFG-WEO",
+  "INDICATORS": [
+    "MACRO-AFG-GDP",
+    "MACRO-AFG-GDP-PC",
+    "MACRO-AFG-GDP-GROWTH",
+    "… 13 more strings"
+  ],
+  "PROVENANCE": {
+    "SOURCE": "World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper); CIA, The World Factbook (factbook.json mirror, CC0)",
+    "DATASET": "World Development Indicators (updated 2026-10-08); World Economic Outlook (April 2026 edition); The World Factbook (mirror commit 144d6977b2)",
+    "RETRIEVED_AT": "2026-10-10",
+    "LICENCE": "CC BY 4.0; IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission; Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
+    "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0). Source: International Monetary Fund, World Economic Outlook database, https://www.imf.org/external/datamapper. Central Intelligence Agency, The World Factbook (public domain).",
+    "URL": "https://databank.worldbank.org/source/world-development-indicators"
+  },
+  "_meta": {
+    "source": "World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper); CIA, The World Factbook (factbook.json mirror, CC0)",
+    "dataset": "World Development Indicators (updated 2026-10-08); World Economic Outlook (April 2026 edition); The World Factbook (mirror commit 144d6977b2)",
+    "retrievedAt": "2026-10-10",
+    "licence": "CC BY 4.0; IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission; Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
+    "generation": 1
+  }
+}
+```
+
 ## MACRO: Macro indicator (`macro-indicator`)
 
 One headline statistic of one economy: the series, the latest value, the change and the rank among economies.
@@ -163,7 +252,6 @@ One headline statistic of one economy: the series, the latest value, the change 
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.macro-indicator`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/macro-indicator](../samples/world-economy.md#macro-indicator) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -235,6 +323,62 @@ One headline statistic of one economy: the series, the latest value, the change 
 - number types decided by the field's name: HISTORY[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, PREVIOUS, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-world-economy-macro-indicator"></a>
+**Example: `modules/economy/packs/world-economy/samples/macro-indicator.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "INDICATOR_ID": "MACRO-ABW-AGRICULTURE",
+  "NAME": "Aruba · Agriculture, value added",
+  "INDICATOR": "Agriculture, value added",
+  "COUNTRY_NAME": "Aruba",
+  "UNIT": "% of GDP",
+  "DEFINITION": "Value added of agriculture, forestry and fishing as a share of GDP.",
+  "LATEST": 0.0395295,
+  "LATEST_YEAR": "2023",
+  "PREVIOUS": 0.0341749,
+  "PREVIOUS_YEAR": "2022",
+  "RANK": 193,
+  "OF_COUNT": 196,
+  "HISTORY": [
+    {
+      "YEAR": "2015",
+      "VALUE": 0.0125198
+    },
+    {
+      "YEAR": "2016",
+      "VALUE": 0.0186118
+    },
+    "… 7 more elements of the same shape"
+  ],
+  "FACTS": {
+    "INDICATOR": "Agriculture, value added",
+    "UNIT": "% of GDP",
+    "LATEST_YEAR": "2023",
+    "RANK": "193 of 196",
+    "WORLD_BANK_CODE": "NV.AGR.TOTL.ZS"
+  },
+  "ECONOMY": "ECON-ABW",
+  "PROVENANCE": {
+    "SOURCE": "World Bank, World Development Indicators",
+    "DATASET": "World Development Indicators (updated 2026-10-08)",
+    "RETRIEVED_AT": "2026-10-10",
+    "LICENCE": "CC BY 4.0",
+    "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0).",
+    "URL": "https://databank.worldbank.org/source/world-development-indicators"
+  },
+  "_meta": {
+    "source": "World Bank, World Development Indicators",
+    "dataset": "World Development Indicators (updated 2026-10-08)",
+    "retrievedAt": "2026-10-10",
+    "licence": "CC BY 4.0",
+    "generation": 1
+  }
+}
+```
+
 ## FCST: Economic forecast (`economic-forecast`)
 
 The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031.
@@ -252,7 +396,6 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.economic-forecast`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/economic-forecast](../samples/world-economy.md#economic-forecast) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -318,6 +461,74 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 - a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: PROJECTIONS[].BASIS: confirm they are closed lists.
 
+<a id="example-world-economy-economic-forecast"></a>
+**Example: `modules/economy/packs/world-economy/samples/economic-forecast.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "FORECAST_ID": "FCST-ABW-WEO",
+  "ECONOMY_NAME": "Aruba",
+  "VINTAGE": "IMF World Economic Outlook, April 2026 edition",
+  "GROWTH_2027": 2,
+  "INFLATION_2027": 2,
+  "DEBT_2030": 50.3,
+  "PROJECTIONS": [
+    {
+      "YEAR": "2015",
+      "GROWTH": 3.6,
+      "INFLATION": 0.5,
+      "UNEMPLOYMENT": 7.3,
+      "CURRENT_ACCOUNT": 3.9,
+      "DEBT": 74.2,
+      "NET_LENDING": -1.5,
+      "GDP": 2.963,
+      "BASIS": "Outturn or estimate"
+    },
+    {
+      "YEAR": "2016",
+      "GROWTH": 1.2,
+      "INFLATION": -0.9,
+      "UNEMPLOYMENT": 7.7,
+      "CURRENT_ACCOUNT": 4.6,
+      "DEBT": 75.4,
+      "NET_LENDING": -1.5,
+      "GDP": 2.984,
+      "BASIS": "Outturn or estimate"
+    },
+    "… 15 more elements of the same shape"
+  ],
+  "PATH": [
+    {
+      "YEAR": "2015",
+      "GROWTH": 3.6
+    },
+    {
+      "YEAR": "2016",
+      "GROWTH": 1.2
+    },
+    "… 15 more elements of the same shape"
+  ],
+  "ECONOMY": "ECON-ABW",
+  "PROVENANCE": {
+    "SOURCE": "International Monetary Fund, World Economic Outlook (DataMapper)",
+    "DATASET": "World Economic Outlook (April 2026 edition)",
+    "RETRIEVED_AT": "2026-10-10",
+    "LICENCE": "IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission",
+    "ATTRIBUTION": "Source: International Monetary Fund, World Economic Outlook database, https://www.imf.org/external/datamapper.",
+    "URL": "https://www.imf.org/external/datamapper"
+  },
+  "_meta": {
+    "source": "International Monetary Fund, World Economic Outlook (DataMapper)",
+    "dataset": "World Economic Outlook (April 2026 edition)",
+    "retrievedAt": "2026-10-10",
+    "licence": "IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission",
+    "generation": 1
+  }
+}
+```
+
 ## LABR: Labour market (`labour-market`)
 
 Unemployment, participation, youth and female labour, and employment and output by sector.
@@ -335,7 +546,6 @@ Unemployment, participation, youth and female labour, and employment and output 
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.labour-market`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/labour-market](../samples/world-economy.md#labour-market) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -399,6 +609,69 @@ Unemployment, participation, youth and female labour, and employment and output 
 - enum values inferred from the data, not from a glossary: BY_SECTOR[].SECTOR: confirm they are closed lists.
 - no unit stated for the amounts VULNERABLE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-world-economy-labour-market"></a>
+**Example: `modules/economy/packs/world-economy/samples/labour-market.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "LABOUR_ID": "LABR-AFG",
+  "ECONOMY_NAME": "Afghanistan",
+  "YEAR": "2025",
+  "UNEMPLOYMENT": 13.351,
+  "PARTICIPATION": 37.457,
+  "YOUTH_UNEMPLOYMENT": 16.785,
+  "EMPLOYMENT_RATIO": 32.457,
+  "FEMALE_PARTICIPATION": 5.086,
+  "VULNERABLE": 81.7702,
+  "UNEMPLOYMENT_PATH": [
+    {
+      "YEAR": "2015",
+      "RATE": 9.032
+    },
+    {
+      "YEAR": "2016",
+      "RATE": 10.116
+    },
+    "… 9 more elements of the same shape"
+  ],
+  "BY_SECTOR": [
+    {
+      "SECTOR": "Agriculture",
+      "EMPLOYMENT_SHARE": 51.629,
+      "VALUE_ADDED_SHARE": 34.2931
+    },
+    {
+      "SECTOR": "Industry",
+      "EMPLOYMENT_SHARE": 18.8991,
+      "VALUE_ADDED_SHARE": 14.5204
+    },
+    {
+      "SECTOR": "Services",
+      "EMPLOYMENT_SHARE": 29.4719,
+      "VALUE_ADDED_SHARE": 45.1615
+    }
+  ],
+  "ECONOMY": "ECON-AFG",
+  "PROVENANCE": {
+    "SOURCE": "World Bank, World Development Indicators",
+    "DATASET": "World Development Indicators (updated 2026-10-08)",
+    "RETRIEVED_AT": "2026-10-10",
+    "LICENCE": "CC BY 4.0",
+    "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0).",
+    "URL": "https://databank.worldbank.org/source/world-development-indicators"
+  },
+  "_meta": {
+    "source": "World Bank, World Development Indicators",
+    "dataset": "World Development Indicators (updated 2026-10-08)",
+    "retrievedAt": "2026-10-10",
+    "licence": "CC BY 4.0",
+    "generation": 1
+  }
+}
+```
+
 ## FISC: Fiscal position (`fiscal-position`)
 
 Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP.
@@ -416,7 +689,6 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.fiscal-position`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/fiscal-position](../samples/world-economy.md#fiscal-position) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -484,6 +756,73 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 - key FISCAL_ID is the field holding the sample catalogue's id (FISC-ABW): confirm it is the business key.
 - a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: RATIOS[].ITEM: confirm they are closed lists.
+
+<a id="example-world-economy-fiscal-position"></a>
+**Example: `modules/economy/packs/world-economy/samples/fiscal-position.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "FISCAL_ID": "FISC-AFG",
+  "ECONOMY_NAME": "Afghanistan",
+  "YEAR": "2025",
+  "DEBT": 8,
+  "BALANCE": -0.9,
+  "REVENUE": 13.0393,
+  "SPENDING": 39.2201,
+  "MILITARY": 1.82793,
+  "RATIOS": [
+    {
+      "ITEM": "Tax revenue",
+      "VALUE": 9.89845
+    },
+    {
+      "ITEM": "Revenue (excl. grants)",
+      "VALUE": 13.0393
+    },
+    "… 2 more elements of the same shape"
+  ],
+  "DEBT_PATH": [
+    {
+      "YEAR": "2015",
+      "DEBT": 9.2
+    },
+    {
+      "YEAR": "2016",
+      "DEBT": 8.4
+    },
+    "… 9 more elements of the same shape"
+  ],
+  "BALANCE_PATH": [
+    {
+      "YEAR": "2015",
+      "BALANCE": -1.4
+    },
+    {
+      "YEAR": "2016",
+      "BALANCE": 0.1
+    },
+    "… 9 more elements of the same shape"
+  ],
+  "ECONOMY": "ECON-AFG",
+  "PROVENANCE": {
+    "SOURCE": "World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper)",
+    "DATASET": "World Development Indicators (updated 2026-10-08); World Economic Outlook (April 2026 edition)",
+    "RETRIEVED_AT": "2026-10-10",
+    "LICENCE": "CC BY 4.0; IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission",
+    "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0). Source: International Monetary Fund, World Economic Outlook database, https://www.imf.org/external/datamapper.",
+    "URL": "https://databank.worldbank.org/source/world-development-indicators"
+  },
+  "_meta": {
+    "source": "World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper)",
+    "dataset": "World Development Indicators (updated 2026-10-08); World Economic Outlook (April 2026 edition)",
+    "retrievedAt": "2026-10-10",
+    "licence": "CC BY 4.0; IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission",
+    "generation": 1
+  }
+}
+```
 
 ## ECG: Country group (`country-group`)
 
@@ -577,7 +916,6 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 | Binding hint | lake table `macro.region-economy`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `ISO3`, `COUNTRY_NAME`, `REGION_CODE`, `NAME`, `POPULATION`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `YEAR`, `SOURCE` |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/region-economy](../samples/world-economy.md#region-economy) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -638,6 +976,49 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 - a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ISO3, COUNTRY_NAME, SOURCE, PROVENANCE.SOURCE: confirm they are closed lists.
 
+<a id="example-world-economy-region-economy"></a>
+**Example: `modules/economy/packs/world-economy/samples/region-economy.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "REGION_ID": "REGE-AU-ACT",
+  "NAME": "Australian Capital Territory",
+  "REGION_CODE": "AU-ACT",
+  "ISO3": "AUS",
+  "COUNTRY_NAME": "Australia",
+  "YEAR": "2023",
+  "POPULATION_M": 0.46,
+  "POPULATION": 460000,
+  "GDP_USD_BN": 33,
+  "GDP_PER_CAPITA": 71739,
+  "SOURCE": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting",
+  "FACTS": {
+    "STATUS": "Illustrative, rounded from public figures, not for reporting",
+    "REGION_CODE": "AU-ACT",
+    "POPULATION": "to the nearest 10,000",
+    "GDP": "to the nearest US$ billion"
+  },
+  "ECONOMY": "ECON-AUS",
+  "PROVENANCE": {
+    "SOURCE": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting",
+    "DATASET": "Region economics (illustrative sample)",
+    "RETRIEVED_AT": "2026-10-12",
+    "LICENCE": "Illustrative, rounded from public figures; not for reporting",
+    "ATTRIBUTION": "Illustrative, rounded from public figures, not for reporting. Population to the nearest 10,000, GDP to the nearest US$ billion. Australian GDP is shown in US dollars at a rounded rate. Replace with a fetched series (ABS, US Census Bureau, BEA) before any reporting use.",
+    "URL": ""
+  },
+  "_meta": {
+    "source": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting",
+    "dataset": "Region economics (illustrative sample)",
+    "retrievedAt": "2026-10-12",
+    "licence": "Illustrative, rounded from public figures; not for reporting",
+    "generation": 1
+  }
+}
+```
+
 ## JUR: Jurisdiction (`jurisdiction`)
 
 A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP.
@@ -655,7 +1036,6 @@ A country: government type, capital, legislature and seats by party, office hold
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.jurisdiction`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/jurisdiction](../samples/world-economy.md#jurisdiction) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -762,6 +1142,110 @@ A country: government type, capital, legislature and seats by party, office hold
 - number types decided by the field's name: INDICATORS[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts INDICATORS[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-world-economy-jurisdiction"></a>
+**Example: `modules/economy/packs/world-economy/samples/jurisdiction.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "JURISDICTION_ID": "JUR-ARG",
+  "NAME": "Argentina",
+  "ISO3": "ARG",
+  "OFFICIAL_NAME": "Argentine Republic",
+  "CAPITAL": "Buenos Aires",
+  "REGION_NAME": "Latin America & Caribbean",
+  "POPULATION_M": 45.8514,
+  "AREA_KM2": 2780400.0,
+  "GOVERNMENT_TYPE": "presidential republic",
+  "CURRENCY": "ARS",
+  "INDEPENDENCE": "9 July 1816 (from Spain)",
+  "LEGISLATURE_NAME": "National Congress (Congreso de la nación)",
+  "LEGISLATURE_STRUCTURE": "bicameral",
+  "LEGISLATURE": [
+    {
+      "PARTY": "Union for the Homeland (UP)",
+      "SEATS": 48
+    },
+    {
+      "PARTY": "Freedom Advances (LLA)",
+      "SEATS": 28
+    },
+    "… 2 more elements of the same shape"
+  ],
+  "INDICATORS": [
+    {
+      "INDICATOR": "Human Development Index",
+      "VALUE": 0.865,
+      "YEAR": "2023",
+      "UNIT": "index 0-1"
+    },
+    {
+      "INDICATOR": "Life expectancy at birth",
+      "VALUE": 77.543,
+      "YEAR": "2024",
+      "UNIT": "years"
+    },
+    "… 11 more elements of the same shape"
+  ],
+  "PARTIES_LISTED": [
+    {
+      "PARTY": "Avanza Libertad or AL"
+    },
+    {
+      "PARTY": "Civic Coalition ARI or CC-ARI"
+    },
+    "… 25 more elements of the same shape"
+  ],
+  "PROFILE": {
+    "OFFICIAL_NAME": "Argentine Republic",
+    "LANGUAGES": "Spanish (official), Italian, English, German, French, indigenous (Quechua, Guarani, Mapudungun)",
+    "RELIGIONS": "Roman Catholic 62.9%, Evangelical 15.3% (Pentecostal 13%, other Evangelical 2.3%), Jehovah's Witness and Church of Jesus Christ 1.4%, other 1.2% (includes Muslim, Jewish), none 18.9% (includes agnostic and atheist), unspecified 0.3% (2019 est.)",
+    "LEGAL_SYSTEM": "civil law system based on Western European legal systems",
+    "SUFFRAGE": "18-70 years of age; universal and compulsory; 16-17 years of age: optional for national elections",
+    "INDEPENDENCE": "9 July 1816 (from Spain)",
+    "NATIONAL_HOLIDAY": "Revolution Day (May Revolution Day), 25 May (1810)",
+    "LOCATION": "Southern South America, bordering the South Atlantic Ocean, between Chile and Uruguay",
+    "CURRENCY_TEXT": "Argentine pesos (ARS) per US dollar -"
+  },
+  "REGION": "REGN-LCN",
+  "CHIEF_OF_STATE": "OFFC-ARG-COS",
+  "HEAD_OF_GOVERNMENT": "OFFC-ARG-HOG",
+  "LAST_ELECTION": "ELEC-ARG-LOW",
+  "ELECTIONS": [
+    "ELEC-ARG-LOW",
+    "ELEC-ARG-UPP",
+    "ELEC-ARG-EXE"
+  ],
+  "PARTIES": [
+    "PARTY-ARG-01",
+    "PARTY-ARG-02",
+    "PARTY-ARG-03"
+  ],
+  "SOCIAL_INDICATORS": [
+    "SOCI-ARG-LIFE-EXPECTANCY",
+    "SOCI-ARG-HDI",
+    "SOCI-ARG-FERTILITY",
+    "… 19 more strings"
+  ],
+  "PROVENANCE": {
+    "SOURCE": "CIA, The World Factbook (factbook.json mirror, CC0); World Bank, World Development Indicators; World Bank, Worldwide Governance Indicators; UNDP, Human Development Report: composite indices time series",
+    "DATASET": "The World Factbook (mirror commit 144d6977b2); World Development Indicators (updated 2026-10-08); Worldwide Governance Indicators (updated 2026-09-25); Human Development Index time series (2025 report)",
+    "RETRIEVED_AT": "2026-10-10",
+    "LICENCE": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0; CC BY 4.0; CC BY 3.0 IGO",
+    "ATTRIBUTION": "Central Intelligence Agency, The World Factbook (public domain). The World Bank: World Development Indicators (CC BY 4.0). The World Bank: Worldwide Governance Indicators (CC BY 4.0). UNDP, Human Development Report 2025 data (CC BY 3.0 IGO).",
+    "URL": "https://www.cia.gov/the-world-factbook/"
+  },
+  "_meta": {
+    "source": "CIA, The World Factbook (factbook.json mirror, CC0); World Bank, World Development Indicators; World Bank, Worldwide Governance Indicators; UNDP, Human Development Report: composite indices time series",
+    "dataset": "The World Factbook (mirror commit 144d6977b2); World Development Indicators (updated 2026-10-08); Worldwide Governance Indicators (updated 2026-09-25); Human Development Index time series (2025 report)",
+    "retrievedAt": "2026-10-10",
+    "licence": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0; CC BY 4.0; CC BY 3.0 IGO",
+    "generation": 1
+  }
+}
+```
+
 ## PARTY: Party (`party`)
 
 A political party that won seats in the lower chamber at the most recent election, with the chamber's full result.
@@ -779,7 +1263,6 @@ A political party that won seats in the lower chamber at the most recent electio
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.party`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/party](../samples/world-economy.md#party) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -836,6 +1319,55 @@ A political party that won seats in the lower chamber at the most recent electio
 - number types decided by the field's name: TOTAL_SEATS amount, RESULTS[].SHARE rate: confirm amount, rate or integer.
 - no unit stated for the amounts TOTAL_SEATS (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-world-economy-party"></a>
+**Example: `modules/economy/packs/world-economy/samples/party.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "PARTY_ID": "PARTY-ARG-01",
+  "NAME": "Union for the Homeland (UP)",
+  "COUNTRY_NAME": "Argentina",
+  "SEATS": 48,
+  "SEAT_SHARE": 37.5,
+  "CHAMBER": "Chamber of Deputies (Cámara de Diputados)",
+  "RANK": 1,
+  "TOTAL_SEATS": 128,
+  "ELECTION_DATE": "10/22/2023",
+  "RESULTS": [
+    {
+      "PARTY": "Union for the Homeland (UP)",
+      "SEATS": 48,
+      "SHARE": 37.5
+    },
+    {
+      "PARTY": "Freedom Advances (LLA)",
+      "SEATS": 28,
+      "SHARE": 21.9
+    },
+    "… 2 more elements of the same shape"
+  ],
+  "ELECTION": "ELEC-ARG-LOW",
+  "JURISDICTION": "JUR-ARG",
+  "PROVENANCE": {
+    "SOURCE": "CIA, The World Factbook (factbook.json mirror, CC0)",
+    "DATASET": "The World Factbook (mirror commit 144d6977b2)",
+    "RETRIEVED_AT": "2026-10-10",
+    "LICENCE": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
+    "ATTRIBUTION": "Central Intelligence Agency, The World Factbook (public domain).",
+    "URL": "https://www.cia.gov/the-world-factbook/"
+  },
+  "_meta": {
+    "source": "CIA, The World Factbook (factbook.json mirror, CC0)",
+    "dataset": "The World Factbook (mirror commit 144d6977b2)",
+    "retrievedAt": "2026-10-10",
+    "licence": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
+    "generation": 1
+  }
+}
+```
+
 ## OFFC: Office holder (`office-holder`)
 
 The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled.
@@ -853,7 +1385,6 @@ The chief of state or head of government of a country as the CIA World Factbook 
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.office-holder`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/office-holder](../samples/world-economy.md#office-holder) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -914,6 +1445,52 @@ The chief of state or head of government of a country as the CIA World Factbook 
 - a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ROLE: confirm they are closed lists.
 
+<a id="example-world-economy-office-holder"></a>
+**Example: `modules/economy/packs/world-economy/samples/office-holder.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "OFFICE_ID": "OFFC-ABW-COS",
+  "COUNTRY_NAME": "Aruba",
+  "ROLE": "Chief of state",
+  "HOLDER": "King WILLEM-ALEXANDER of the Netherlands; represented by Governor General Alfonso BOEKHOUDT (since 1 January 2017)",
+  "SINCE": "30 April 2013",
+  "PUBLISHED": "King WILLEM-ALEXANDER of the Netherlands (since 30 April 2013); represented by Governor General Alfonso BOEKHOUDT (since 1 January 2017)",
+  "PROCESS": "the monarchy is hereditary; governor general appointed by the monarch for a 6-year term; prime minister and deputy prime minister indirectly elected by the Staten for 4-year term",
+  "ELECTION_HELD": "6 December 2024",
+  "NEXT_ELECTION": "by December 2028",
+  "RESULTS": "Mike EMAN (AVP) elected prime minister; percent of Staten vote - NA",
+  "GOVERNMENT_TYPE": "parliamentary democracy; part of the Kingdom of the Netherlands",
+  "CABINET": "Council of Ministers elected by the Legislature (Staten)",
+  "JURISDICTION": "JUR-ABW",
+  "PROVENANCE": {
+    "SOURCE": "CIA, The World Factbook (factbook.json mirror, CC0)",
+    "DATASET": "The World Factbook (mirror commit 144d6977b2)",
+    "RETRIEVED_AT": "2026-10-10",
+    "LICENCE": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
+    "ATTRIBUTION": "Central Intelligence Agency, The World Factbook (public domain).",
+    "URL": "https://www.cia.gov/the-world-factbook/"
+  },
+  "_meta": {
+    "source": "CIA, The World Factbook (factbook.json mirror, CC0)",
+    "dataset": "The World Factbook (mirror commit 144d6977b2)",
+    "retrievedAt": "2026-10-10",
+    "licence": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
+    "generation": 1
+  },
+  "MANDATE": {
+    "SELECTION": "the monarchy is hereditary; governor general appointed by the monarch for a 6-year term; prime minister and deputy prime minister indirectly elected by the Staten for 4-year term",
+    "HELD_ON": "6 December 2024",
+    "NEXT_ELECTION": "by December 2028",
+    "RESULTS": "Mike EMAN (AVP) elected prime minister; percent of Staten vote - NA",
+    "AS_PUBLISHED": "King WILLEM-ALEXANDER of the Netherlands (since 30 April 2013); represented by Governor General Alfonso BOEKHOUDT (since 1 January 2017)",
+    "CABINET": "Council of Ministers elected by the Legislature (Staten)"
+  }
+}
+```
+
 ## ELEC: Election (`election`)
 
 The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one.
@@ -931,7 +1508,6 @@ The most recent election to a chamber or to the executive, with the system, term
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.election`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/election](../samples/world-economy.md#election) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1004,6 +1580,66 @@ The most recent election to a chamber or to the executive, with the system, term
 - a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: SUMMARY.ELECTORAL_SYSTEM: confirm they are closed lists.
 
+<a id="example-world-economy-election"></a>
+**Example: `modules/economy/packs/world-economy/samples/election.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "ELECTION_ID": "ELEC-ARG-LOW",
+  "TITLE": "Argentina · Chamber of Deputies (Cámara de Diputados)",
+  "COUNTRY_NAME": "Argentina",
+  "CHAMBER": "Chamber of Deputies (Cámara de Diputados)",
+  "DATE": "2023-10-22",
+  "DATE_TEXT": "10/22/2023",
+  "SYSTEM": "proportional representation",
+  "TERM": "4 years",
+  "WINNER": "Union for the Homeland (UP)",
+  "NEXT_ELECTION": "October 2025",
+  "WOMEN": "42.4%",
+  "SEATS_TEXT": "257 (all directly elected)",
+  "RESULTS": [
+    {
+      "PARTY": "Union for the Homeland (UP)",
+      "SEATS": 48,
+      "SHARE": 37.5
+    },
+    {
+      "PARTY": "Freedom Advances (LLA)",
+      "SEATS": 28,
+      "SHARE": 21.9
+    },
+    "… 2 more elements of the same shape"
+  ],
+  "SUMMARY": {
+    "CHAMBER": "Chamber of Deputies (Cámara de Diputados)",
+    "SEATS": "257 (all directly elected)",
+    "ELECTORAL_SYSTEM": "proportional representation",
+    "TERM": "4 years",
+    "HELD_ON": "10/22/2023",
+    "NEXT_ELECTION": "October 2025",
+    "WOMEN": "42.4%"
+  },
+  "JURISDICTION": "JUR-ARG",
+  "PROVENANCE": {
+    "SOURCE": "CIA, The World Factbook (factbook.json mirror, CC0)",
+    "DATASET": "The World Factbook (mirror commit 144d6977b2)",
+    "RETRIEVED_AT": "2026-10-10",
+    "LICENCE": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
+    "ATTRIBUTION": "Central Intelligence Agency, The World Factbook (public domain).",
+    "URL": "https://www.cia.gov/the-world-factbook/"
+  },
+  "_meta": {
+    "source": "CIA, The World Factbook (factbook.json mirror, CC0)",
+    "dataset": "The World Factbook (mirror commit 144d6977b2)",
+    "retrievedAt": "2026-10-10",
+    "licence": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
+    "generation": 1
+  }
+}
+```
+
 ## REGN: World region (`region`)
 
 A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it.
@@ -1021,7 +1657,6 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.region`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/region](../samples/world-economy.md#region) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1091,6 +1726,79 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 - a snapshot refreshed when the world-economy data feed runs: confirm the refresh cadence.
 - no unit stated for the amounts URBAN (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-world-economy-region"></a>
+**Example: `modules/economy/packs/world-economy/samples/region.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "REGION_ID": "REGN-EAS",
+  "NAME": "East Asia & Pacific",
+  "COUNTRIES": 37,
+  "POPULATION_M": 2390.87,
+  "LIFE_EXPECTANCY": 76.7379,
+  "YEAR": "2024",
+  "INTERNET": 88.4,
+  "WOMEN_PARLIAMENT": 23.3498,
+  "URBAN": 64.771,
+  "LIFE_TREND": [
+    {
+      "YEAR": "2015",
+      "VALUE": 75.7926
+    },
+    {
+      "YEAR": "2016",
+      "VALUE": 75.987
+    },
+    "… 8 more elements of the same shape"
+  ],
+  "INTERNET_TREND": [
+    {
+      "YEAR": "2015",
+      "VALUE": 48.3
+    },
+    {
+      "YEAR": "2016",
+      "VALUE": 53.9
+    },
+    "… 9 more elements of the same shape"
+  ],
+  "GOVERNMENT_TYPES": [
+    {
+      "TYPE": "parliamentary republic",
+      "COUNT": 5
+    },
+    {
+      "TYPE": "parliamentary democracy under a constitutional monarchy; a Commonwealth realm",
+      "COUNT": 4
+    },
+    "… 10 more elements of the same shape"
+  ],
+  "MEMBER_STATES": [
+    "JUR-ASM",
+    "JUR-AUS",
+    "JUR-BRN",
+    "… 34 more strings"
+  ],
+  "PROVENANCE": {
+    "SOURCE": "World Bank, World Development Indicators; CIA, The World Factbook (factbook.json mirror, CC0)",
+    "DATASET": "World Development Indicators (updated 2026-10-08); The World Factbook (mirror commit 144d6977b2)",
+    "RETRIEVED_AT": "2026-10-10",
+    "LICENCE": "CC BY 4.0; Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
+    "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0). Central Intelligence Agency, The World Factbook (public domain).",
+    "URL": "https://databank.worldbank.org/source/world-development-indicators"
+  },
+  "_meta": {
+    "source": "World Bank, World Development Indicators; CIA, The World Factbook (factbook.json mirror, CC0)",
+    "dataset": "World Development Indicators (updated 2026-10-08); The World Factbook (mirror commit 144d6977b2)",
+    "retrievedAt": "2026-10-10",
+    "licence": "CC BY 4.0; Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
+    "generation": 1
+  }
+}
+```
+
 ## SOCI: Social indicator (`social-indicator`)
 
 A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law.
@@ -1108,7 +1816,6 @@ A social or governance statistic of one country over time, with the regional com
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.social-indicator`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/world-economy/samples |
-| Worked example | [world-economy/social-indicator](../samples/world-economy.md#social-indicator) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1192,3 +1899,69 @@ A social or governance statistic of one country over time, with the regional com
 - enum values inferred from the data, not from a glossary: THEME, SOURCE_NAME, REGION_NAME, PROVENANCE.SOURCE, PROVENANCE.DATASET, PROVENANCE.LICENCE, PROVENANCE.ATTRIBUTION, PROVENANCE.URL, MEANING.COMPARED_WITH: confirm they are closed lists.
 - number types decided by the field's name: SERIES[].VALUE amount, BY_REGION[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, CHANGE_5Y, SERIES[].VALUE, BY_REGION[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+
+<a id="example-world-economy-social-indicator"></a>
+**Example: `modules/economy/packs/world-economy/samples/social-indicator.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "INDICATOR_ID": "SOCI-ABW-EDUCATION-SPEND",
+  "NAME": "Aruba · Government expenditure on education",
+  "INDICATOR": "Government expenditure on education",
+  "COUNTRY_NAME": "Aruba",
+  "THEME": "Society",
+  "LATEST": 3.61856,
+  "LATEST_YEAR": "2021",
+  "UNIT": "% of GDP",
+  "CHANGE_5Y": -1.8728,
+  "SOURCE_NAME": "World Bank, World Development Indicators",
+  "DEFINITION": "General government spending on education, as a share of GDP.",
+  "SERIES": [
+    {
+      "YEAR": "2015",
+      "VALUE": 5.88827
+    },
+    {
+      "YEAR": "2016",
+      "VALUE": 5.49136
+    },
+    "… 4 more elements of the same shape"
+  ],
+  "BY_REGION": [
+    {
+      "COUNTRY": "Cuba",
+      "VALUE": 8.44086
+    },
+    {
+      "COUNTRY": "Bolivia",
+      "VALUE": 7.5398
+    },
+    "… 8 more elements of the same shape"
+  ],
+  "REGION_NAME": "Latin America & Caribbean",
+  "JURISDICTION": "JUR-ABW",
+  "PROVENANCE": {
+    "SOURCE": "World Bank, World Development Indicators",
+    "DATASET": "World Development Indicators (updated 2026-10-08)",
+    "RETRIEVED_AT": "2026-10-10",
+    "LICENCE": "CC BY 4.0",
+    "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0).",
+    "URL": "https://databank.worldbank.org/source/world-development-indicators"
+  },
+  "_meta": {
+    "source": "World Bank, World Development Indicators",
+    "dataset": "World Development Indicators (updated 2026-10-08)",
+    "retrievedAt": "2026-10-10",
+    "licence": "CC BY 4.0",
+    "generation": 1
+  },
+  "MEANING": {
+    "INDICATOR": "Government expenditure on education",
+    "UNIT": "% of GDP",
+    "DEFINITION": "General government spending on education, as a share of GDP.",
+    "COMPARED_WITH": "countries of Latin America & Caribbean (latest value, 2022 or later)"
+  }
+}
+```

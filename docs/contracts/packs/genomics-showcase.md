@@ -47,7 +47,6 @@ One gene of the synthetic genome: where it sits, what it does, how long its prot
 | Binding hint | lake table `genomics-showcase.study-gene`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `GENE`, `CHROM`, `START`, `END`, `ROLE`, `PROTEIN_LENGTH`, `DRIVER`, `ALTERED_SAMPLES` |
 | Test data | data/testdata/genomics-showcase/study-gene |
-| Worked example | [genomics-showcase/study-gene](../samples/genomics-showcase.md#study-gene) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -76,6 +75,27 @@ One gene of the synthetic genome: where it sits, what it does, how long its prot
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-genomics-showcase-study-gene"></a>
+**Example: `data/testdata/genomics-showcase/study-gene`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "GENE": "HLXHF75",
+  "CHROM": "1",
+  "START": 2707381,
+  "END": 2774115,
+  "STRAND": "-",
+  "ROLE": "GTPase",
+  "PROTEIN_LENGTH": 872,
+  "DRIVER": false,
+  "VARIANTS": 5,
+  "ALTERED_SAMPLES": 8,
+  "ALTERED_FRACTION": 0.0053
+}
+```
+
 ## SSAMPLE: Study sample (`study-sample`)
 
 One patient's sample of the 1,500 of cohort ONC-1: the clinical tracks, the response to therapy, the cluster it belongs to and its place on the two-dimensional map of samples (precomputed, never projected at view time).
@@ -94,7 +114,6 @@ One patient's sample of the 1,500 of cohort ONC-1: the clinical tracks, the resp
 | Binding hint | lake table `genomics-showcase.study-sample`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `SAMPLE_ID`, `COHORT`, `TUMOUR_TYPE`, `STAGE`, `RESPONSE`, `TOXICITY`, `RELAPSE`, `CLUSTER` |
 | Test data | data/testdata/genomics-showcase/study-sample |
-| Worked example | [genomics-showcase/study-sample](../samples/genomics-showcase.md#study-sample) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -130,6 +149,28 @@ One patient's sample of the 1,500 of cohort ONC-1: the clinical tracks, the resp
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-genomics-showcase-study-sample"></a>
+**Example: `data/testdata/genomics-showcase/study-sample`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SAMPLE_ID": "S0001",
+  "COHORT": "ONC-1",
+  "TUMOUR_TYPE": "Breast",
+  "STAGE": "III",
+  "AGE_BAND": "60-69",
+  "RESPONSE": "non-responder",
+  "TOXICITY": "severe",
+  "RELAPSE": "relapsed",
+  "CLUSTER": "C2 basal-like",
+  "EMB_X": 0.6187,
+  "EMB_Y": 0.038,
+  "MUTATION_COUNT": 18
+}
+```
+
 ## SVARIANT: Study variant (`study-variant`)
 
 One variant site of the synthetic genome: its place, the change it makes to the gene's protein (the amino acids before and after, the key into the protein workbench's scan) and how many samples carry it.
@@ -148,7 +189,6 @@ One variant site of the synthetic genome: its place, the change it makes to the 
 | Binding hint | lake table `genomics-showcase.study-variant`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `VARIANT_ID`, `GENE`, `CHROM`, `POS`, `CONSEQUENCE`, `IMPACT`, `PROTEIN_POS`, `CARRIERS` |
 | Test data | data/testdata/genomics-showcase/study-variant |
-| Worked example | [genomics-showcase/study-variant](../samples/genomics-showcase.md#study-variant) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -182,6 +222,28 @@ One variant site of the synthetic genome: its place, the change it makes to the 
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-genomics-showcase-study-variant"></a>
+**Example: `data/testdata/genomics-showcase/study-variant`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "VARIANT_ID": "HX-000001",
+  "CHROM": "1",
+  "POS": 2711819,
+  "REF": "C",
+  "ALT": "T",
+  "GENE": "HLXHF75",
+  "CONSEQUENCE": "stop_gained",
+  "IMPACT": "HIGH",
+  "PROTEIN_POS": 59,
+  "AA_REF": "S",
+  "AA_ALT": "*",
+  "CARRIERS": 1
+}
+```
+
 ## VCALL: Variant call (`variant-call`)
 
 One sample carrying one variant: the genotype, the fraction of reads that show it and the read depth. 45,000 calls over 1,500 samples; the association tests are computed from them.
@@ -200,7 +262,6 @@ One sample carrying one variant: the genotype, the fraction of reads that show i
 | Binding hint | lake table `genomics-showcase.variant-call`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `CALL_ID`, `SAMPLE_ID`, `VARIANT_ID`, `GENE`, `GENOTYPE`, `VAF` |
 | Test data | data/testdata/genomics-showcase/variant-call |
-| Worked example | [genomics-showcase/variant-call](../samples/genomics-showcase.md#variant-call) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -230,6 +291,23 @@ One sample carrying one variant: the genotype, the fraction of reads that show i
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-genomics-showcase-variant-call"></a>
+**Example: `data/testdata/genomics-showcase/variant-call`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CALL_ID": "CALL-000001",
+  "SAMPLE_ID": "S0001",
+  "VARIANT_ID": "HX-000413",
+  "GENE": "HLXQW89",
+  "GENOTYPE": "0/1",
+  "VAF": 0.271,
+  "DEPTH": 185
+}
+```
+
 ## ASSOC: Association of a variant with a trait (`association`)
 
 One variant tested against one trait: the p-value, its negative log, the effect and its error and how strongly the variant is linked to the peak's lead. Three traits over 12,000 sites: 36,000 tests, each computed from the calls and the samples' traits (a Wald test on the log odds ratio), never painted.
@@ -248,7 +326,6 @@ One variant tested against one trait: the p-value, its negative log, the effect 
 | Binding hint | lake table `genomics-showcase.association`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `TRAIT`, `CHROM`, `VARIANT_ID`, `GENE`, `NEG_LOG10_P`, `BETA` |
 | Test data | data/testdata/genomics-showcase/association |
-| Worked example | [genomics-showcase/association](../samples/genomics-showcase.md#association) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -281,6 +358,27 @@ One variant tested against one trait: the p-value, its negative log, the effect 
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-genomics-showcase-association"></a>
+**Example: `data/testdata/genomics-showcase/association`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "ASSOC_ID": "GWAS-RESPONSE-HX-000001",
+  "TRAIT": "RESPONSE",
+  "VARIANT_ID": "HX-000001",
+  "CHROM": "1",
+  "POS": 2711819,
+  "GENE": "HLXHF75",
+  "P": 0.3498,
+  "NEG_LOG10_P": 0.456,
+  "BETA": 1.528,
+  "SE": 1.634,
+  "R2_LEAD": 0.0
+}
+```
+
 ## CNV: Copy-number segment (`cnv-segment`)
 
 One stretch of a sample's genome with a copy number other than two: an amplification or a deletion over a driver gene, or a broad gain or loss.
@@ -299,7 +397,6 @@ One stretch of a sample's genome with a copy number other than two: an amplifica
 | Binding hint | lake table `genomics-showcase.cnv-segment`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `SEGMENT_ID`, `SAMPLE_ID`, `CHROM`, `CALL`, `GENE` |
 | Test data | data/testdata/genomics-showcase/cnv-segment |
-| Worked example | [genomics-showcase/cnv-segment](../samples/genomics-showcase.md#cnv-segment) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -329,6 +426,24 @@ One stretch of a sample's genome with a copy number other than two: an amplifica
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-genomics-showcase-cnv-segment"></a>
+**Example: `data/testdata/genomics-showcase/cnv-segment`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SEGMENT_ID": "CNV-00009",
+  "SAMPLE_ID": "S0006",
+  "CHROM": "3",
+  "START": 131403609,
+  "END": 132394433,
+  "COPY_NUMBER": 5,
+  "CALL": "amplification",
+  "GENE": "HLXR3"
+}
+```
+
 ## PATHWAY: Pathway membership (`pathway-gene`)
 
 One gene in one biological pathway and the part it plays there. Twelve invented pathways, 500 memberships.
@@ -347,7 +462,6 @@ One gene in one biological pathway and the part it plays there. Twelve invented 
 | Binding hint | lake table `genomics-showcase.pathway-gene`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `PATHWAY_GENE_ID`, `PATHWAY`, `GENE`, `ROLE_IN_PATHWAY` |
 | Test data | data/testdata/genomics-showcase/pathway-gene |
-| Worked example | [genomics-showcase/pathway-gene](../samples/genomics-showcase.md#pathway-gene) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -371,3 +485,17 @@ One gene in one biological pathway and the part it plays there. Twelve invented 
 
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
+
+<a id="example-genomics-showcase-pathway-gene"></a>
+**Example: `data/testdata/genomics-showcase/pathway-gene`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "PATHWAY_GENE_ID": "PWG-0001",
+  "PATHWAY": "Growth signalling",
+  "GENE": "HLXAN97",
+  "ROLE_IN_PATHWAY": "regulator"
+}
+```

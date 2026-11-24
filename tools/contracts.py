@@ -1043,9 +1043,24 @@ def _v(x) -> str:
     return str(x)
 
 
+def example_anchor(name: str) -> str:
+    """The anchor of a data type's example on its pack's page: example-<folder with / as ->, for a link from a guide."""
+    return "example-" + name.replace("/", "-")
+
+
+@functools.lru_cache(maxsize=1)
+def EXAMPLES() -> dict:
+    """data type name -> {pack, kind, record, source} (tools/testdata/sample_docs.py examples())."""
+    spec = importlib.util.spec_from_file_location("drishti_sample_examples", ROOT / "tools" / "testdata" / "sample_docs.py")
+    m = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = m
+    spec.loader.exec_module(m)
+    return m.examples()
+
+
 def sample_pages(c: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) -> list[str]:
-    """The data-sample pages of a contract's kind (sections of docs/contracts/samples/<domain>.md, written by tools/testdata/sample_docs.py): one per
-    test-data folder of the kind, else one from the pack's samples for a kind a bank or a public source produces."""
+    """The data types of a contract's kind (an example each on its pack's page): one per test-data folder of the kind, else one from the
+    pack's samples for a kind a bank or a public source produces."""
     folders = [d["folder"] for d in testdata_sets(c["pack"], c["kind"], testdata) if d.get("folder")]
     if folders:
         return folders
@@ -1090,10 +1105,6 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
         rows.append(["Partitioned by", _v(st["partition"])])
     if st.get("test-data"):
         rows.append(["Test data", ", ".join(st["test-data"])])
-    worked = sample_pages(c)
-    if worked:
-        rows.append(["Worked example", " · ".join(f"[{name}](../samples/{name.split('/', 1)[0]}.md#{name.split('/', 1)[1]})" for name in worked)
-                     + " (a real record, every field explained, for the production query; tools/testdata/sample_docs.py)"])
     out += R._table(["", ""], rows)
 
     def ftable(fs: list[dict]) -> list[str]:
@@ -1119,6 +1130,13 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
         out += ["**Notes**", ""] + [f"- {n}" for n in c["notes"]] + [""]
     if c.get("review"):
         out += [f"**To review ({len(c['review'])})**", ""] + [f"- {n}" for n in c["review"]] + [""]
+    for name in sample_pages(c):
+        e = EXAMPLES().get(name)
+        if e:
+            out += [f'<a id="{example_anchor(name)}"></a>', f"**Example: `{e['source']}`**", "",
+                    "A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string "
+                    "such as `\"… 506 more numbers\"` inside an array marks a fold: it stands for the elements left out and is not part of the data.",
+                    "", "```json", json.dumps(e["record"], indent=2, ensure_ascii=False), "```", ""]
     return out
 
 

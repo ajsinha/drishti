@@ -15,8 +15,8 @@
 """Guides and tutorials link a data input's two homes and never copy them.
 
 An input's fields have one home, its data contract (modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml, published on
-docs/contracts/packs/<pack>.md); its JSON example has one home, its data sample (docs/contracts/samples/<domain>.md#<kind>, written by
-tools/testdata/sample_docs.py from the committed synthetic test data). A guide or tutorial (docs/guides/*.md, docs/tutorials/*.md) only
+docs/contracts/packs/<pack>.md); its JSON example has one home, its example on the same page (docs/contracts/packs/<pack>.md#example-<domain>-<kind>, written by
+tools/contracts.py docs from the committed synthetic test data). A guide or tutorial (docs/guides/*.md, docs/tutorials/*.md) only
 links them:
 
 1. a page that names a kind with a sample, by its contract file (`<kind>.contract.yaml`, or `{a,b}.contract.yaml`) or in backticks
@@ -39,14 +39,14 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SAMPLES = ROOT / "docs" / "contracts" / "samples"
+PACKS_DOCS = ROOT / "docs" / "contracts" / "packs"
 PAGES = ("docs/guides/*.md", "docs/tutorials/*.md", "config/packs/*/*/guides/*.md", "modules/*/packs/*/guides/*.md", "modules/banking/packs/*/guides/*.md")
 FENCE = re.compile(r"^```.*?^```[ \t]*$", re.S | re.M)
 JSON_BLOCK = re.compile(r"^```jsonc?[ \t]*\n(.*?)^```", re.S | re.M)
 KEY = re.compile(r'"([A-Za-z_][A-Za-z0-9_]*)"\s*:')
 CONTRACT_FILE = re.compile(r"(?:\{([a-z0-9,\- ]+)\}|([a-z][a-z0-9-]*))\.contract\.yaml")
 TICKED = re.compile(r"`([a-z][a-z0-9]*(?:-[a-z0-9]+)+)`")
-SAMPLE_LINK = re.compile(r"contracts/samples/([a-z0-9-]+)\.md#([a-z0-9_-]+)\)")
+SAMPLE_LINK = re.compile(r"contracts/packs/([a-z0-9-]+)\.md#example-([a-z0-9]+)-([a-z0-9_-]+)\)")
 
 _spec = importlib.util.spec_from_file_location("drishti_guide_data_for_links", ROOT / "tools" / "docs" / "guide_data.py")
 GD = importlib.util.module_from_spec(_spec)
@@ -63,12 +63,13 @@ ALLOWED: dict[tuple[str, str], str] = {
 }
 
 
-def anchors() -> dict[str, str]:
-    """kind -> its samples page (docs/contracts/samples/<domain>.md), from the pages' <a id="<kind>"></a>."""
-    out: dict[str, str] = {}
-    for page in sorted(SAMPLES.glob("*.md")):
-        for a in re.findall(r'<a id="([^"]+)"></a>', page.read_text(encoding="utf-8")):
-            out.setdefault(a, page.stem)
+def anchors() -> dict[str, tuple[str, str]]:
+    """kind (the test-data folder's table name) -> (its pack page's stem, its example's <domain>-<table> anchor suffix), from the pages'
+    <a id="example-<domain>-<table>"></a>."""
+    out: dict[str, tuple[str, str]] = {}
+    for page in sorted(PACKS_DOCS.glob("*.md")):
+        for a in re.findall(r'<a id="example-([a-z0-9]+-[^"]+)"></a>', page.read_text(encoding="utf-8")):
+            out.setdefault(a.split("-", 1)[1], (page.stem, a))
     return out
 
 
@@ -86,7 +87,7 @@ def pages() -> list[Path]:
     return sorted(p for g in PAGES for p in ROOT.glob(g))
 
 
-def named_kinds(text: str, known: dict[str, str]) -> set[str]:
+def named_kinds(text: str, known: dict) -> set[str]:
     """The kinds with a sample a page names: by contract file (anywhere) or in backticks (outside code blocks)."""
     out: set[str] = set()
     for braces, one in CONTRACT_FILE.findall(text):
@@ -95,19 +96,19 @@ def named_kinds(text: str, known: dict[str, str]) -> set[str]:
     return {k for k in out if k in known}
 
 
-def missing_links(path: Path, known: dict[str, str], cons: dict[str, dict]) -> list[str]:
+def missing_links(path: Path, known: dict, cons: dict[str, dict]) -> list[str]:
     text, rel = path.read_text(encoding="utf-8"), path.relative_to(ROOT)
-    linked = set(SAMPLE_LINK.findall(text))
+    linked = {(page, f"{d}-{k}") for page, d, k in SAMPLE_LINK.findall(text)}
     targets = set(re.findall(r"\]\(([^)\s]+)\)", text))
     probs = []
     for k in sorted(named_kinds(text, known)):
-        if (known[k], k) not in linked:
-            probs.append(f"{rel}: names `{k}` but does not link its sample (docs/contracts/samples/{known[k]}.md#{k})")
+        if known[k] not in linked:
+            probs.append(f"{rel}: names `{k}` but does not link its example (docs/contracts/packs/{known[k][0]}.md#example-{known[k][1]})")
         if k in cons:
             section, yaml_file = contract_targets(cons[k])
             if not any(t.endswith(section) or t.endswith(yaml_file) for t in targets):
                 probs.append(f"{rel}: names `{k}` but does not link its contract (docs/{section} or {yaml_file})")
-    probs += [f"{rel}: links samples/{d}.md#{k}, which is not a sample section" for d, k in sorted(linked) if known.get(k) != d]
+    probs += [f"{rel}: links packs/{d}.md#example-{k}, which is not an example" for d, k in sorted(linked - set(known.values()))]
     return probs
 
 
@@ -123,7 +124,7 @@ def copied_records(rel: str, text: str, fields: dict[str, set[str]]) -> list[str
         if n >= 3 and 2 * n >= len(keys):
             line = text[:m.start()].count("\n") + 1
             probs.append(f"{rel}:{line}: a ```json block copies the {kind} contract's record ({n} of its {len(keys)} keys): "
-                         f"link its contract and docs/contracts/samples/…#{kind} instead")
+                         f"link its contract and its example on docs/contracts/packs/…#example-… instead")
     return probs
 
 
