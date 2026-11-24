@@ -16,6 +16,12 @@
 # Changelog
 
 
+## 2.9.11.i7k (2026-11-24)
+
+- **Documentation consolidation, step 0**: `config/docs-corpus.yaml` (the 400 tracked Markdown files by class and lane), `tools/docs/moved.yaml` + `moved.py`
+  (old path to new home; sweep and comment-only verify), `tools/docs/dup_check.py` (report mode), `tools/docs/merge_audit.py`, `config/docs-owners.yaml`,
+  `tools/test_docs_consolidation.py`. No document moved yet. Version 2.9.11.i7k.
+
 ## 2.9.11.i7j (2026-11-24)
 
 - **`launchers --list` / `launchers --run "<name>"`**: every committed launcher (`run-configs/*.run.xml`, `drishti-console/run-configs/*.run.xml`) with its group

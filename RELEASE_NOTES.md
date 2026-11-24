@@ -13,6 +13,25 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7k: release notes
+
+*A documentation release on i7j: the corpus is consolidated, one home per fact.* No product behaviour changes.
+
+## What changes for readers and developers
+
+- **The documentation shrinks from 400 tracked Markdown files to a target of 215** (224,475 lines before): hand-written documents 282 to 84 files, 187 files merged or
+  removed, 82 generated references kept whole. Packs, modules, connector templates and contracts describe themselves in YAML and their page is generated; each
+  feature has one guide that absorbs its pack, module and tool pages; a folder carries a note, never a procedure.
+- **The plan** (kept on the products branch; the owner approved its six defaults). Step 0 adds the tools that keep it honest:
+  `config/docs-corpus.yaml` (every tracked `*.md` with its class), `tools/docs/moved.yaml` and `moved.py` (old path to new home for the 194 files that go, the sweep of code
+  comments and its comment-only proof), `tools/docs/dup_check.py` (the same procedure or text in two documents; report mode first) and `tools/docs/merge_audit.py`
+  (every heading and fenced block of a merged document is in its new home or logged).
+- **Help and About** follow the documents (in the lanes): pages that merge keep their address through the old-address redirects, and the context-help sections are not renumbered.
+
+## Known limits
+
+As in i7j. This entry is written at the start of the release; the counts above are the targets, and the final figures replace them at the tag.
+
 # Drishti 2.9.11.i7j: release notes
 
 *A point release on i7i: the IDE launchers can be listed and run from the command line.*
