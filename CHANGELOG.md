@@ -16,6 +16,12 @@
 # Changelog
 
 
+## 2.9.11.i7j (2026-11-24)
+
+- **`launchers --list` / `launchers --run "<name>"`**: every committed launcher (`run-configs/*.run.xml`, `drishti-console/run-configs/*.run.xml`) with its group
+  and exact command (Maven, Python, JAR Application), and a run of it in its folder with its environment; read from the files, no second table
+  (`tools/launch/launchrun.py`). Version 2.9.11.i7j.
+
 ## 2.9.11.i7i (2026-11-24)
 
 - **Launchers back in `run-configs/`, no `.idea` in the source**: `run-configs/*.run.xml` (IntelliJ, `drishti`) and `drishti-console/run-configs/*.run.xml`

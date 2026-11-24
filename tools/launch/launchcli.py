@@ -342,12 +342,14 @@ def register(groups, add) -> None:
 
     __import__("nodecmd").register(groups)
 
-    lg = groups.add_parser("launchers", help="launchers [--check|--machine]: the IDE launchers and IDE_GUIDE section 4 from tools/launch/launchers.yaml; this machine's JVM arguments files",
+    lg = groups.add_parser("launchers", help="launchers [--check|--machine|--list|--run NAME]: the IDE launchers and IDE_GUIDE section 4 from tools/launch/launchers.yaml; this machine's JVM arguments files",
                            description=__import__("launchers").__doc__, formatter_class=RAW,
-                           epilog=f"examples:\n  {P} launchers\n  {P} launchers --check\n  {P} --settings ~/drishti-envs/dev.ini launchers --machine")
+                           epilog=f"examples:\n  {P} launchers\n  {P} launchers --check\n  {P} launchers --list\n  {P} launchers --run 'Drishti: run server (demo)'\n  {P} --settings ~/drishti-envs/dev.ini launchers --machine")
     lg.add_argument("--check", action="store_true", help="change nothing; exit 1 naming each committed launcher (or IDE_GUIDE section 4) that differs from the table")
     lg.add_argument("--machine", action="store_true", help="write this machine's JVM arguments files, <settings folder>/jvm-<profile>.args (setup runs it)")
     lg.add_argument("--envs-dir", metavar="DIR", help="the settings folder (default ~/drishti-envs)")
+    lg.add_argument("--list", action="store_true", help="print every committed launcher by group with the exact command it runs and its working folder (read from the run-configs/*.run.xml files)")
+    lg.add_argument("--run", metavar="NAME", help='run the launcher called NAME (the whole name or a prefix naming one), exactly as its file holds it: its folder, command and environment; e.g. --run "Drishti: run server (demo)"')
     lg.set_defaults(func=lambda a, extra: __import__("launchers").main(a), cmd=None)
 
     st = groups.add_parser("status", help="status: the resolved home, data, modules and java; then every process started with drishti.py start",

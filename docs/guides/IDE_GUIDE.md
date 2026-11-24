@@ -391,6 +391,10 @@ one table, `tools/launch/launchers.yaml`, by `python tools/drishti.py launchers`
 a committed launcher differs from it: change the table, never a file of `run-configs/`. **Ports**: 18480
 default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Finance console.
 
+**From the command line.** `py -3.13 tools\drishti.py launchers --list` (Linux and macOS `python3.13 tools/drishti.py`) prints every launcher, its group and the
+command it runs; `launchers --run "Drishti: run server (demo)"` runs exactly what the launcher file holds (its folder, command and environment variables), so the IDE
+and the command line cannot drift apart.
+
 <!-- generated: launchers begin (python tools/drishti.py launchers) -->
 
 ### 4.1 IntelliJ IDEA: open `drishti` (`run-configs/`)

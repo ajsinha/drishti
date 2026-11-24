@@ -20,6 +20,7 @@
   in the source), never made only locally.
 * ``launchers --check`` changes nothing and fails (exit 1) naming each committed file that differs from the table, a launcher file the
   table does not name, or a stale IDE_GUIDE section 4.
+* ``launchers --list`` prints every committed launcher with the exact command it runs; ``launchers --run "<name>"`` runs it (tools/launch/launchrun.py).
 * ``launchers --machine`` writes this machine's JVM arguments files, ``<settings folder>/jvm-<profile>.args``, which every server launcher
   names (``@…/jvm-demo.args``): the one function ``drishti.py start server`` runs (``serverstart.jvm_flags``), with this machine's data
   folder (from ``dev.ini`` and the profile), so the temp folder, heap dumps and GC log follow a moved data folder. ``setup`` runs it.
@@ -389,6 +390,9 @@ def argv(xml: Path, home: Path, user_home: Path) -> tuple[list[str], dict]:
 
 def main(a) -> int:
     home = javacmd.launch_roots(None, None, None, javacmd.settings()[1])["home"][0]
+    if getattr(a, "list", False) or getattr(a, "run", None) is not None:
+        import launchrun
+        return launchrun.main(a, home)
     try:
         if a.machine:
             envs_dir = Path(a.envs_dir).expanduser().resolve() if a.envs_dir else Path.home() / "drishti-envs"

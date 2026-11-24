@@ -2797,6 +2797,11 @@ answering.
 from one table, `tools/launch/launchers.yaml`; the files are committed. `launchers --check` changes nothing and exits 1 naming each file
 that differs (the drill's gate runs it). `launchers --machine` writes this machine's `~/drishti-envs/jvm-<profile>.args`, the JVM options
 of the server launchers: `serverstart.jvm_flags`, the function `start server` runs, with the data folder of `dev.ini` and the profile.
+`launchers --list` prints every committed launcher by group with the exact command it runs and its working folder (Maven: `mvnw` + goals; Python: the one
+Python (`DRISHTI_PYTHON`, else `drishti.python`, else the running Python) + script + parameters; JAR Application: `java` + VM options, `@` files included,
++ `-jar` + arguments), read from the `run-configs/*.run.xml` files themselves. `launchers --run "<name>"` (the whole name or a prefix that names one launcher,
+e.g. `--run "Drishti: run server (demo)"`) runs exactly that command in that folder with the launcher's environment variables, streams the output and returns
+the exit code; an unknown or ambiguous name is one `[FAIL] launcher "<x>": <why>. Fix: <the --list command>` (exit 1).
 
 ```
 python tools/drishti.py setup                                                        # once per machine

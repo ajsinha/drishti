@@ -13,6 +13,24 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7j: release notes
+
+*A point release on i7i: the IDE launchers can be listed and run from the command line.*
+Everything else is as in i7i.
+
+## What changes for developers
+
+- **`launchers --list` and `launchers --run "<name>"`.** `py -3.13 tools\drishti.py launchers --list` prints every launcher, its group and the exact
+  command it runs (Maven, Python or JAR Application) with its working folder; `launchers --run "Drishti: run server (demo)"` (the whole name or a prefix
+  that names one) runs exactly what the launcher file holds, in its folder and with its environment variables, and returns its exit code. Both read the
+  committed `run-configs/*.run.xml` themselves, so the IDE and the command line never drift apart. An unknown or ambiguous name is one
+  `[FAIL] launcher "<x>": <why>. Fix: <the --list command>`.
+
+## Known limits
+
+Carried from i7g. On macOS the demo lake may report "locked by another run" and fall back to the Python loader. The server reads a settings
+file saved as "UTF-8 with BOM" without its first line (save it as plain UTF-8, Notepad's default; the tools and the console read both).
+
 # Drishti 2.9.11.i7i: release notes
 
 ## What changes in the IDEs
