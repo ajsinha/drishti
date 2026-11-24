@@ -2801,7 +2801,8 @@ of the server launchers: `serverstart.jvm_flags`, the function `start server` ru
 Python (`DRISHTI_PYTHON`, else `drishti.python`, else the running Python) + script + parameters; JAR Application: `java` + VM options, `@` files included,
 + `-jar` + arguments), read from the `run-configs/*.run.xml` files themselves. `launchers --run "<name>"` (the whole name or a prefix that names one launcher,
 e.g. `--run "Drishti: run server (demo)"`) runs exactly that command in that folder with the launcher's environment variables, streams the output and returns
-the exit code; an unknown or ambiguous name is one `[FAIL] launcher "<x>": <why>. Fix: <the --list command>` (exit 1).
+the exit code; an unknown or ambiguous name is one `[FAIL] launcher "<x>": <why>. Fix: <the --list command>` (exit 1). A launcher that asks for a value in the IDE (the file of **Drishti: run loader**) takes it from `--input`, e.g.
+`launchers --run "Drishti: run loader" --input C:\data\trades.jsonl`.
 
 ```
 python tools/drishti.py setup                                                        # once per machine
