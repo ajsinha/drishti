@@ -1,0 +1,131 @@
+<!-- Copyright (c) 2026 Ashutosh Sinha. Proprietary: see LICENSE. -->
+# i7g release gate review, part 1: the first run on Windows
+
+Release gate of Drishti 2.9.11.i7g, part 1: branch `release/i7g`, commit `ba0e1ac66`, against `origin/main` (tag `v2.9.11.i_7f`):
+317 files, +3768 / −1585. Run on 2026-11-23, 20:42 to 20:58, time-boxed. No sub-agent; read-only (`git show`, `git diff`); every claim
+below was read in the code or run in a scratch copy. No product code was changed. Lane C (`i7g/accept`, not yet on origin at the time
+of this review) is not reviewed here: section 4 is the checklist its merge must pass.
+
+**What was gated.** Only the owner's six rules on the Windows-facing paths: (1) no virtual environment made or named; (2) launchers by
+project, on the project interpreter; (3) `start` / `stop` / `status` / `run_drishti_web.py` make and install nothing and follow no old
+root; (4) every failure is one `[FAIL] ... Fix: <command>` line, `py -3.13` on Windows, no traceback; (5) no package index, no proxy
+for Drishti's own calls; (6) the documents say the same.
+
+**Not run:** anything on Windows; the Java build; the drill; `drishti.py start|stop|status` themselves (not run so that nothing could
+come near the owner's stack: those paths were read, the console's entry functions were called directly in a scratch copy).
+
+## Verdict for part 1: FIX (five one-line fixes, then PASS)
+
+Rules 1 and 5 pass. Rule 2 passes but for one folder name. Rules 3, 4 and 6 each have a small hole, all on the path a Windows user
+takes first: the PyCharm launcher **Drishti: run console** (it runs `run_drishti_web.py` directly, so the tools' guards do not apply).
+
+| # | Fix (one line each) | Rule | Where |
+|---|---|---|---|
+| F1 | **A traceback when `dev.ini` is not there yet.** The launcher (and the VS Code task) passes `--settings ~/drishti-envs/dev.ini`; before `setup` that file does not exist, `foreign_settings` calls `settings_ini.read_all`, and `SettingsError` leaves `main()` as a Python traceback (reproduced: `SettingsError: drishti.settings.file names .../drishti-envs/dev.ini, which is not a file`). Catch it in `foreign_settings` (or around `main()`): `raise SystemExit(f"[FAIL] the settings file: {e}. Fix: {setup_line()}")`. The two `raise SystemExit(f"--settings: {e}")` of `core/config.py` take the same shape. One test: the launcher's arguments with no file. | 4 | `drishti-console/run_drishti_web.py:106-115, 168-176`; `drishti-console/core/config.py:144, 162` |
+| F2 | **The console started directly follows an old `DRISHTI_*` folder.** The trust rule lives only in `tools/drishti.py` `main()`. `run_drishti_web.py` has none: with no `dev.ini` (or another checkout's, which it rightly drops) an old `DRISHTI_DATA_DIR` is taken as the data folder (`core/app.py:65`, `core/tmpdir.py:49`, `run_drishti_web.py:85`), and an old `DRISHTI_TMP_DIR` is followed even with a good `dev.ini` (`core/tmpdir.py:42`); `tmpdir.start` then makes the folder there (`mkdir(parents=True)`, line 103) and `remove_stale` cleans in it. Reproduced in a scratch copy: bare run, `DRISHTI_DATA_DIR` and `DRISHTI_TMP_DIR` naming an old clone: the temp base resolved to the old clone, the variable kept. Fix: in `run_drishti_web.main()`, after the settings file is accepted or dropped and unless `drishti.py start` started it (it passes its own resolved roots), drop every variable of `settingsfile.ROOT_VARS` that names a folder outside `HERE.parent` and is not the folder the accepted settings file names, one `[WARN]` line each (the tools' rule, the same words). One test beside row 12 of `tools/test_first_run.py`. | 3 | `drishti-console/run_drishti_web.py:168-178` |
+| F3 | **Failures that are not `[FAIL] ... Fix:`.** (a) `tools/drishti.py:1270-1275` prints `drishti: <text>` for `SettingsError`, `JavaError`, `HomeError` and `CliError`: a Windows machine with no JDK reads `drishti: no Java found (...)`: print `[FAIL] ` as `launchcli._run` does (line 126), and give `no Java found` / `Java too old` a `Fix:` (`javacmd.py:174, 178`). (b) These first-run failures carry the command inside the sentence, not after `Fix:`: no server jar and the wrong jar version (`javacmd.py:269, 275`), modules not current (`serverstart.py:170`); put them through `procs.fail(what, why, procs.command("build", "all"))`. (c) Port in use (`serverstart.py:245`, `consolestart.py:96`) and "already uses the data folder" (`serverstart.py:243`) say the fix in words: `Fix: <procs.command("stop", "server")>` (or `--port`). The option mistakes (`--node`, `--seed` ...) may stay in words. | 4 | as listed |
+| F4 | **`Drishti: test` is in the wrong folder.** The owner's folders are Drishti-java 1 Build / 2 Run / 3 Test; the table's own comment (line 20), `launchers.GROUPS` and IDE_GUIDE line 24-25 say so, but the row says `group: "Drishti-java 1 Build"`, so no launcher is in **3 Test**. Change `tools/launch/launchers.yaml:41` to `"Drishti-java 3 Test"`, run `python tools/drishti.py launchers` (it rewrites `.idea/runConfigurations/Drishti test.xml` and the tables of IDE_GUIDE section 4.1). | 2 | `tools/launch/launchers.yaml:41` |
+| F5 | **Four document lines.** `bin/README.md:26`: "`setup [--check]` makes the console's virtual environment ..." (say: checks the Python you run Drishti with, the settings and the data folder). `docs/guides/IDE_GUIDE.md:399` and `:498`: "a `.run.xml`" (there is none now: "a file of `.idea/runConfigurations/`"). `docs/guides/IDE_GUIDE.md:766`: the task `Drishti: test Python` is in no table and not in `drishti.code-workspace`: delete the row. `docs/QUICKSTART_DEVELOPERS.md:114`: "On Windows Drishti never makes a virtual environment" reads as if it did elsewhere: "On every system". `.gitignore:88` still speaks of `run-configs/` (a comment). | 6 | as listed |
+
+F1 and F2 are the two that matter (a traceback and a folder made in an old clone, both on the first click in PyCharm); F3 to F5 are
+wording and shape. None needs a design decision.
+
+## 1. What passed
+
+**Rule 1, no virtual environment.** `git grep` of the dot-venv name, `-m venv`, `uv venv`, `virtualenv`, `EnvBuilder`, `make_venv`
+over the whole tree at `ba0e1ac66`: only ignore patterns are left (`.gitignore`, `.dockerignore`, the scanners' skip sets, each line
+marked as an ignore pattern), plus two sentences of AI_GUIDE about SAJHA's own scratch copy. `--python` / `--reinstall` on `start` are
+refused with the setup line (`consolestart.py:56`). The guard is `tools/test_no_venv.py`.
+
+**Rule 2, launchers.** Tracked launcher files: `.idea/runConfigurations/` (6: Maven and JarApplication only) and
+`drishti-console/.idea/runConfigurations/` (12: Python only); no `*.run.xml`, no `run-configs/` anywhere; `.gitignore` commits only
+`runConfigurations` of each `.idea`. Every Python launcher has `SDK_HOME=""`, `IS_MODULE_SDK="false"`, module `drishti-console`: no
+interpreter path, so PyCharm falls back to the interpreter of the project; folders Drishti-python 1 Setup / 2 Data / 3 Run / 4 Check.
+To confirm on the owner's PyCharm (cannot be checked here): the Run dialog of **Drishti: run console** shows the project's
+interpreter, and the module is named `drishti-console` (PyCharm names it after the folder).
+
+**Rule 3, the tools' side.** `start server|console|all`: the roots come from `javacmd.launch_roots` after `drishti.py main()` has
+dropped every `DRISHTI_*` folder variable that names a folder outside the checkout (said once) and has refused another checkout's
+`~/drishti-envs/dev.ini`; `require_set_up` refuses a data folder with no `run/` before anything is made (`serverstart.py:188-192`,
+called at `:214` and `consolestart.py:76`); the only `mkdir` calls after that are under the data folder; no pip, no install anywhere
+in `serverstart.py`, `consolestart.py`, `launchcli.py`, `procs.py`. `status` and `stop` write nothing but the removal of a stale pid
+file. `run_drishti_web.py`: no install, the library check is first (`check_libraries`, one `[FAIL] ... Fix:` line), another
+checkout's `dev.ini` is warned about and dropped (bare run and `--settings`). Its two holes are F1 and F2.
+
+One thing accepted, to know about: `use_tmp_dir()` runs before `main()`, so an old `DRISHTI_TMP_DIR` naming a folder outside the
+checkout that still exists is used as this command's temp folder without a word (a site may set it on purpose; a missing one is
+warned about and ignored, and never made). The line to say it once belongs with F2.
+
+**Rule 4, the shape.** `procs.fail` is the one shape and `procs.command` / `run_drishti_web.setup_line` give `py -3.13 tools\drishti.py ...`
+on Windows (the running version's digits), the tool's path in full when not in the install folder, quotes around a path with a space.
+Not set up, the console's Python missing or lacking libraries, no demo lake, PyYAML missing for a cluster file, a missing library in
+any command (the `ImportError` branch) all print it. Anything unexpected is one `[FAIL]` line with the traceback in a log file
+(`drishti.py:1297-1310`). The rest is F1 and F3.
+
+**Rule 5, no network.** Every call Drishti makes to itself goes through an opener with no proxy: `procs.no_proxy_opener` (health
+checks of start, stop, status), `clusterctl.get_json`, `nodecmd`, `doctor.py:127, 234`, the command line's client for a loopback
+`--server` (`drishti.py:296-297`), and the console's clients to the server (`trust_env=False` in `core/backend.py:125`,
+`backend_watch.py:62`, `cluster.py:279, 308`). Start, stop, status and the console reach no package index. pip is in `setup` only
+(`--isolated --no-index --find-links` from the pack; a package index only with `--index`): lane C removes it.
+To know about, not a fix: the command line's client uses the system proxy for a `--server` that is not loopback (a LAN address);
+the default is `http://localhost:18480`, so the default path is clean.
+
+**Rule 6, the documents.** IDE_GUIDE, QUICKSTART_DEVELOPERS, DEPLOYMENT_AND_QA_GUIDE, CLI_REFERENCE and README say "the Python you
+run Drishti with ... Drishti makes none", `py -3.13` on every Windows command, `.idea/runConfigurations/` per project, "When PyCharm
+offers to create a virtual environment, Cancel". No `uv run`, no `Scripts\activate`, no `make_venv`, no `--reinstall`. The lines
+left over are F5. The sentences that say setup installs from the wheel pack (IDE_GUIDE 9 places, QUICKSTART 3, DEPLOYMENT 14,
+CLI_REFERENCE 13, README 2) are true at `ba0e1ac66` and become false with lane C: section 4, C8.
+
+## 2. The 28 tools test failures: not from i7g
+
+The three groups (`tools/lake`, `tools/drillkit`, `tools/test_config_readers_guard.py`; 256 tests) were run on clean copies
+(`git archive`) of `origin/main` and of `ba0e1ac66` under `~/drishti-bench-scratch/fable-i7g-gate`, with the Python of the owner's
+console (read only), one run at a time.
+
+| Run | `origin/main` (i7f) | `ba0e1ac66` (i7g) |
+|---|---|---|
+| Clean copy, **no server jar in `lib/`** | 28 failed, 173 passed, 27 skipped | 28 failed, 173 passed, 27 skipped: **the same 28 tests** |
+| The same copy **with the built jar** in `lib/` | stopped at 96 of 256 to keep to the time box: 0 failed until then (the tests that failed without the jar passed) | **0 failed**, 218 passed, 10 skipped |
+
+- The 28 are all in `tools/lake` (`test_maintain.py` 9, `test_build.py` 4, `test_stores.py` 4, `test_demo.py` 3,
+  `test_maintain_admin.py` 3, `test_names.py` 3, `test_feedroute.py` 2). The cause is the copy, not the code: 16 are
+  `javacmd.JarError: no server jar in .../lib`, the others follow from it (`Delta tables are read by Delta Kernel ... build the
+  server's exec jar`, a command that failed for the same reason). They fail identically on `origin/main`.
+- With the jar of the i7g worktree (`drishti-server-2.9.11.i7g-exec.jar`) the i7g copy is green in all three groups. The `origin/main`
+  copy used the same jar under the i7f name (main's Java sources differ from i7g in `DataFeeds.java` only): a stand-in, so that
+  column is a comparison, not a release result.
+- **No failure in `tools/drillkit` or `test_config_readers_guard.py` was seen in any run, on either commit.** If the lane saw failures
+  there, they come from the state of its worktree (files not in git, or no jar), not from the commit.
+
+**i7g introduced none of them.** A clean checkout of `ba0e1ac66` with the jar built passes the three groups. What the lane should
+note: these suites need `build jar` first, and say so in their own failure text.
+
+The scratch copies and the one temp folder the stopped run left were removed. Three `drishti-pytest-*` folders made in `/tmp`
+between 20:42 and 20:44 (`y686vyr8`, 77 MB; `yk0b4vav`, `t6aybymh`, empty) could not be shown to be this review's and were left.
+
+## 3. Notes
+
+- `Drishti: setup (package index)` (`launchers.yaml:100-105`, `setup --index`) is a launcher whose only purpose is pip on a package
+  index: it goes with lane C (C2).
+- The development secrets are spelled in the committed launcher files (`drishti-dev-only-...-change-me`), by design
+  (`tools/launch/devsecrets.py`, warned about at start); not a finding.
+
+## 4. The checklist lane C's merge must pass
+
+Lane C changes setup to check-only, takes pip out of the compute environments, adds wheel-pack discovery, finishes
+`doctor --acceptance`, fixes `contracts.py` `_yaml`, and adds the matrix tests. Before `i7g/accept` is merged into `release/i7g`:
+
+| # | Must hold | How to check |
+|---|---|---|
+| C1 | **Setup never runs pip.** No `pip` process is started by `setup`, `setup libs`, `setup --check` on any system; missing libraries are one `[FAIL] libraries: ... Fix: <the owner's pip command>` line, the command printed, never run, with `py -3.13 -m pip ...` on Windows. | `git grep -n -E '"-m", ?"pip"|-m pip|pip install' -- tools/launch tools/drishti.py compute drishti-console/core` shows only printed text; a test that fails if `subprocess` is called with pip |
+| C2 | **No option or launcher that installs.** `--index`, `--wheels`, `--isolated` handling and the launcher `Drishti: setup (package index)` are gone, or only shape the printed command; `launchers --check` clean; `Drishti-python 1 Setup` holds `setup` and `check setup` only. | `python tools/drishti.py launchers --check`; `tools/test_run_configs.py`, `tools/test_launchers.py` |
+| C3 | **Compute environments: no pip at all**, and still no virtual environment (`tools/test_no_venv.py` green, the server's Java side included). What an environment lacks is said, with the command, never installed. | `git grep -n -i pip -- compute/drishti-compute/src/main` (`env/Environments.java:158` today) |
+| C4 | **Wheel-pack discovery makes and writes nothing**: it only finds the pack (`%USERPROFILE%\drishti-wheels`, Downloads, the platform folder, the zip itself) and puts its folder into the printed command; nothing is unzipped outside the data folder or the checkout. | read; a test with a pack one folder deep and a zip |
+| C5 | **`doctor --acceptance`** makes nothing, installs nothing, calls only loopback through the no-proxy opener, and ends with one verdict line; each failed row is `[FAIL] ... Fix: <command>`. | read; run it in a scratch copy with no server |
+| C6 | **F1 to F5 of this review are in** (or already in `release/i7g` before the merge), each with its test: the launcher's `--settings` with no file; a direct console run with old `DRISHTI_*` variables; `[FAIL]` for Java, jar, modules, port; `Drishti: test` in `Drishti-java 3 Test`; the four document lines. | the tests named in F1, F2; `launchers --check` |
+| C7 | **The matrix tests cover the first click**: Windows-shaped (`ntpath`) rows for no `dev.ini`, another checkout's `dev.ini`, old `setx` variables, a Python with no libraries, no JDK, no jar, no demo lake, the port taken: each row asserts exactly one `[FAIL]` line with `Fix: py -3.13 ...`, no `Traceback`, and nothing made outside the checkout or data folder. | the new matrix test file |
+| C8 | **The documents follow in the same merge**: every sentence that says setup installs (IDE_GUIDE, QUICKSTART_DEVELOPERS, DEPLOYMENT_AND_QA_GUIDE, CLI_REFERENCE sections of `setup`, README, `bin/README.md`, the launcher texts in `launchers.yaml`, `setup --help`) says setup checks and prints the command; CONFIGURATION.md regenerated; PDFs regenerated; no `--index` / `--wheels` left where the option is gone. | `git grep -n -i -E 'installs what is missing|setup installs|--index|--wheels' -- docs README.md bin tools/launch` |
+| C9 | **`contracts.py` `_yaml`**: the `tools/feeds` tests that fail on `origin/main` too pass; the three groups of section 2 show no new failure against `ba0e1ac66`. | the same command as section 2 |
+| C10 | **Guards still green**: `tools/test_no_venv.py`, `test_no_hidden_names.py`, `test_first_run.py`, `test_setup_split.py`, `test_setup_collisions.py`, `test_launch.py`, `test_drishti_cli.py`, `test_settingsfile.py`. | pytest, targeted |
+
+Part 2 of this gate is a read of the lane C merge against C1 to C10, nothing more.
