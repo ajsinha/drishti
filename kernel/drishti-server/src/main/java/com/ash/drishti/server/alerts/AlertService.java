@@ -317,8 +317,14 @@ public final class AlertService implements AutoCloseable {
         ObjectNode doc = spec.toJson();
         doc.put("createdAt", old.map(o -> o.path("createdAt").asText()).orElse(clock.instant().toString()));
         doc.set("state", JSON.createObjectNode());                                // an edited alert is armed afresh
-        doc.set("history", old.<JsonNode>map(o -> o.path("history").deepCopy()).orElse(JSON.createArrayNode()));
-        store.put(owner, NS, name, doc);
+        ReentrantLock lock = locks.computeIfAbsent(owner + "/" + name, k -> new ReentrantLock());
+        lock.lock();                       // not between an evaluation's read and its write-back (it would put the old rule back)
+        try {
+            doc.set("history", store.get(owner, NS, name).<JsonNode>map(o -> o.path("history").deepCopy()).orElse(JSON.createArrayNode()));
+            store.put(owner, NS, name, doc);
+        } finally {
+            lock.unlock();
+        }
         personal.put(spec.key(), spec);
         resetRuntime(spec.key());
         audit.record(owner, "alert.save", "alert/" + spec.key(), spec.source().label() + " · " + spec.describe() + " · " + spec.trigger().mode());
@@ -344,13 +350,20 @@ public final class AlertService implements AutoCloseable {
 
     /** Pause or resume. A resumed alert is armed afresh. */
     public JsonNode setEnabled(String owner, String name, boolean enabled, String actor) {
-        JsonNode cur = store.get(owner, NS, name).orElseThrow(() -> notFound(name));
-        ObjectNode doc = cur.deepCopy();
-        doc.put("enabled", enabled);
-        if (enabled) {
-            doc.set("state", JSON.createObjectNode());
+        ObjectNode doc;
+        ReentrantLock lock = locks.computeIfAbsent(owner + "/" + name, k -> new ReentrantLock());
+        lock.lock();                       // not between an evaluation's read and its write-back: its write would bring the old switch back
+        try {
+            JsonNode cur = store.get(owner, NS, name).orElseThrow(() -> notFound(name));
+            doc = cur.deepCopy();
+            doc.put("enabled", enabled);
+            if (enabled) {
+                doc.set("state", JSON.createObjectNode());
+            }
+            store.put(owner, NS, name, doc);
+        } finally {
+            lock.unlock();
         }
-        store.put(owner, NS, name, doc);
         AlertSpec spec = parseStored(doc);
         if (spec != null) {
             personal.put(spec.key(), spec);

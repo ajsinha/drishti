@@ -286,7 +286,7 @@ public final class TransformService implements AutoCloseable {
         if (Files.isRegularFile(f)) {
             try {
                 @SuppressWarnings("unchecked")
-                Map<String, String> read = JSON.readValue(f.toFile(), LinkedHashMap.class);
+                Map<String, String> read = JSON.readValue(java.nio.file.Files.readAllBytes(f), LinkedHashMap.class);
                 learned.put(datasetName, read);
                 return read;
             } catch (IOException ignored) {

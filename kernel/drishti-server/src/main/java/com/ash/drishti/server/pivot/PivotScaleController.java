@@ -227,7 +227,7 @@ public class PivotScaleController {
             return;
         }
         try {
-            for (Map<String, Object> d : (List<Map<String, Object>>) json.readValue(f.toFile(), List.class)) {
+            for (Map<String, Object> d : (List<Map<String, Object>>) json.readValue(java.nio.file.Files.readAllBytes(f), List.class)) {
                 try {
                     scale.rollups().define(RollupDef.parse(d));
                 } catch (RuntimeException e) {

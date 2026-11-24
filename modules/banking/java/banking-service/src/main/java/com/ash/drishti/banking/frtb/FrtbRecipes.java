@@ -109,7 +109,7 @@ public final class FrtbRecipes {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no recipe " + id + " on this server");
         }
         try {
-            return JSON.readValue(f.toFile(), Recipe.class);
+            return JSON.readValue(java.nio.file.Files.readAllBytes(f), Recipe.class);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -279,7 +278,7 @@ public class PackDataLoader {
             List<String> files = new ArrayList<>();
             for (Map.Entry<LocalDate, Path> e : tmp.entrySet()) {
                 Path target = t.dir().resolve(e.getKey().toString()).resolve(kind + ".jsonl");
-                Files.move(e.getValue(), target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(e.getValue(), target);
                 files.add(t.dir().relativize(target).toString());
             }
             tmp.clear();

@@ -441,7 +441,7 @@ public final class IdentitySync implements StateSync.Part, AutoCloseable {
             return;
         }
         try {
-            Map<String, Long> read = json.readValue(tombstoneFile.toFile(), new TypeReference<TreeMap<String, Long>>() {});
+            Map<String, Long> read = json.readValue(java.nio.file.Files.readAllBytes(tombstoneFile), new TypeReference<TreeMap<String, Long>>() {});
             long oldest = now() - KEEP_TOMBSTONES.toMillis();
             read.forEach((k, at) -> {
                 String[] p = k.split("/", 2);
@@ -476,7 +476,7 @@ public final class IdentitySync implements StateSync.Part, AutoCloseable {
             Path tmp = tombstoneFile.resolveSibling(tombstoneFile.getFileName() + ".tmp");
             json.writeValue(tmp.toFile(), out);
             try {
-                Files.move(tmp, tombstoneFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, tombstoneFile);
             } catch (AtomicMoveNotSupportedException e) {
                 Files.move(tmp, tombstoneFile, StandardCopyOption.REPLACE_EXISTING);
             }

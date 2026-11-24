@@ -51,7 +51,7 @@ public final class FileUserStore implements UserStore {
         this.file = file.toAbsolutePath().normalize();
         if (Files.exists(this.file)) {
             try {
-                List<User> loaded = json.readValue(this.file.toFile(), new TypeReference<List<User>>() {});
+                List<User> loaded = json.readValue(java.nio.file.Files.readAllBytes(this.file), new TypeReference<List<User>>() {});
                 loaded.forEach(u -> users.put(u.username(), u));
             } catch (IOException e) {
                 throw new UncheckedIOException("cannot read users from " + this.file, e);
@@ -145,7 +145,7 @@ public final class FileUserStore implements UserStore {
             // not a POSIX file system
         }
         try {
-            Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(tmp, file);
         } catch (AtomicMoveNotSupportedException e) {
             Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING);
         }

@@ -153,7 +153,7 @@ public final class SourceShape {
             file = p.toString();
             JsonNode doc;
             try {
-                doc = YAML.readTree(p.toFile());
+                doc = YAML.readTree(java.nio.file.Files.readAllBytes(p));
             } catch (IOException e) {
                 throw refused(connector, "map: " + p + " is not valid YAML: " + e.getMessage().lines().findFirst().orElse(""));
             }

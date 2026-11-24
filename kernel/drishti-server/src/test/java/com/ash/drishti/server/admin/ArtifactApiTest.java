@@ -35,10 +35,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -91,22 +88,19 @@ class ArtifactApiTest {
         r.add("drishti.bi.query.store-dir", () -> root.resolve("bi-store").toString());
     }
 
+    /** A path as a JSON string (a Windows path's backslashes escaped). */
+    private static String json(Path p) throws IOException {
+        return JSON.writeValueAsString(p.toString());
+    }
+
     private static void write(String rel, String text) throws IOException {
         Path p = root.resolve(rel);
         Files.createDirectories(p.getParent());
         Files.writeString(p, text);
     }
 
-    @AfterAll
-    static void clean() throws IOException {
-        if (root != null && Files.isDirectory(root)) {
-            try (Stream<Path> s = Files.walk(root)) {
-                for (Path p : s.sorted(Comparator.reverseOrder()).toList()) {
-                    Files.delete(p);
-                }
-            }
-        }
-    }
+    // no clean-up here: the folder is under the test run's (TestRun), removed when the JVM ends; this class's context, cached for
+    // later classes, still holds its identity database open, and Windows refuses to delete an open file
 
     @Autowired MockMvc mvc;
     @Autowired PreferenceStore prefs;
@@ -127,7 +121,7 @@ class ArtifactApiTest {
             mvc.perform(post("/api/v1/admin/packs/" + p + "/load")).andExpect(status().isOk());
         }
         mvc.perform(put("/api/v1/admin/connectors/art-used").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"plugin\":\"file\",\"settings\":{\"root\":\"" + root.resolve("data") + "\"}}")).andExpect(status().isOk());
+                .content("{\"plugin\":\"file\",\"settings\":{\"root\":" + json(root.resolve("data")) + "}}")).andExpect(status().isOk());
         // the binding owns the kind (KERNEL_AND_MODULES.md section 18.6): artwidget is read from art-used
         connectors.adopt(connectors.bindings().with("artwidget",
                 com.ash.drishti.packs.bindings.Bindings.binding("artwidget", java.util.Map.of("read", List.of("art-used")))));
@@ -323,7 +317,7 @@ class ArtifactApiTest {
     @Test
     @Order(8)
     void anUnusedConnectorIsArchivedAndRestoredAndAClashNeedsReplace() throws Exception {
-        String body = "{\"plugin\":\"file\",\"kinds\":[\"artfree\"],\"settings\":{\"root\":\"" + root.resolve("data2") + "\"}}";
+        String body = "{\"plugin\":\"file\",\"kinds\":[\"artfree\"],\"settings\":{\"root\":" + json(root.resolve("data2")) + "}}";
         mvc.perform(put("/api/v1/admin/connectors/art-free").contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk());
         assertThat(json("/api/v1/admin/artifacts/impact?kind=connector&name=art-free").path("blocked").asBoolean()).isFalse();
         JsonNode done = JSON.readTree(act("/uninstall", "{\"kind\":\"connector\",\"name\":\"art-free\"}"));

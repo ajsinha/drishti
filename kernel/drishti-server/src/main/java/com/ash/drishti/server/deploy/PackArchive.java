@@ -95,7 +95,7 @@ public final class PackArchive {
         Path mf = root.resolve(MANIFEST);
         if (Files.isRegularFile(mf)) {
             try {
-                manifest = JSON.readTree(mf.toFile());
+                manifest = JSON.readTree(java.nio.file.Files.readAllBytes(mf));
             } catch (IOException e) {
                 throw new Refused(MANIFEST + " is not valid JSON (" + e.getMessage() + ")");
             }

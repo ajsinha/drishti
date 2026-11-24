@@ -129,7 +129,7 @@ public final class CommandCatalog {
             return YAML.createObjectNode();
         }
         try {
-            JsonNode n = YAML.readTree(f.toFile());
+            JsonNode n = YAML.readTree(java.nio.file.Files.readAllBytes(f));
             return n == null ? YAML.createObjectNode() : n;
         } catch (IOException e) {
             return YAML.createObjectNode();

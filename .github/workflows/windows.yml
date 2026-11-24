@@ -18,7 +18,7 @@ name: windows
 # start server, status, stop server) with the server on a generated lake asked for a view, a search and a past business
 # date. Testcontainers tests skip themselves (no Docker on Windows runners).
 on:
-  push: { branches: [develop, main, 'release/**', 'i7k/**'] }
+  push: { branches: [develop, main, 'release/**', 'i7k/**', 'i7l/**'] }
   pull_request:
   workflow_dispatch:
 jobs:
@@ -54,7 +54,11 @@ jobs:
       - name: Build (no tests)
         run: ./mvnw.cmd -B -q install -DskipTests
       - name: Tests of the lake host, the Delta and Iceberg connectors and the server
-        run: ./mvnw.cmd -B verify -pl :drishti-lake-host,plugins/drishti-plugin-delta,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external,:drishti-server
+        run: ./mvnw.cmd -B -fae verify -pl :drishti-lake-host,plugins/drishti-plugin-delta,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external,:drishti-server
+      # its own step (everything is installed above): a failure here never hides the server suite's result, nor the other way round
+      - name: Tests of the identity stores (users, preferences, designs)
+        if: ${{ !cancelled() }}
+        run: ./mvnw.cmd -B verify -pl :drishti-identity
       - name: A small lake (the banking packs' samples, ten business days)
         run: |
           python -m pip install --quiet deltalake pyarrow pyyaml

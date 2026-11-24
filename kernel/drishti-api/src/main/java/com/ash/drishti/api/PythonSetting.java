@@ -52,4 +52,15 @@ public final class PythonSetting {
         }
         return "";
     }
+
+    /**
+     * {@code configured} when it is not blank, else the PATH's Python by its name on this operating system: {@code python} on Windows
+     * (where the installer and the Store put no {@code python3}), {@code python3} elsewhere. Every place that starts Python asks here.
+     */
+    public static String orDefault(String configured) {
+        if (configured != null && !configured.isBlank()) {
+            return configured.strip();
+        }
+        return System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).startsWith("windows") ? "python" : "python3";
+    }
 }

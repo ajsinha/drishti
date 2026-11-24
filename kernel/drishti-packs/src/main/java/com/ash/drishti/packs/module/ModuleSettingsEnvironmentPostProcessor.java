@@ -74,7 +74,7 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
             return List.of();
         }
         try {
-            add(one, YAML.readTree(f.toFile()));
+            add(one, YAML.readTree(java.nio.file.Files.readAllBytes(f)));
         } catch (IOException e) {
             throw new IllegalStateException("the module manifest " + f + " cannot be read: " + e.getMessage(), e);
         }
@@ -91,7 +91,7 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
             Path f = h.dir().resolve("module.yaml");
             if (Files.isRegularFile(f)) {
                 try {
-                    add(out, YAML.readTree(f.toFile()));
+                    add(out, YAML.readTree(java.nio.file.Files.readAllBytes(f)));
                 } catch (IOException e) {
                     throw new IllegalStateException("the module manifest " + f + " cannot be read: " + e.getMessage(), e);
                 }

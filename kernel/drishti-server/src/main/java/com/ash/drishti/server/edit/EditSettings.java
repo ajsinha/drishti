@@ -121,7 +121,7 @@ public record EditSettings(boolean enabled, String log, String primary, Duration
             return Map.of();
         }
         try {
-            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(file.toFile(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(java.nio.file.Files.readAllBytes(file), new TypeReference<Map<String, Object>>() {});
             return doc == null ? Map.of() : doc;
         } catch (IOException e) {
             throw new IllegalArgumentException(file + " is not valid YAML: " + e.getMessage(), e);

@@ -134,7 +134,7 @@ public class RunStore {
         }
         Path file = folder(key).resolve(ANSWER);
         try {
-            Map<String, Object> doc = JSON.readValue(file.toFile(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> doc = JSON.readValue(java.nio.file.Files.readAllBytes(file), new TypeReference<Map<String, Object>>() {});
             if (!String.valueOf(doc.get("signature")).equals(signature)) {
                 return Optional.empty();
             }
@@ -252,7 +252,7 @@ public class RunStore {
             return Optional.empty();
         }
         try {
-            return Optional.of(JSON.readValue(file.toFile(), new TypeReference<Map<String, Object>>() {}));
+            return Optional.of(JSON.readValue(java.nio.file.Files.readAllBytes(file), new TypeReference<Map<String, Object>>() {}));
         } catch (IOException e) {
             throw new UncheckedIOException("could not read the snapshot " + name + " v" + v + ": " + e.getMessage(), e);
         }

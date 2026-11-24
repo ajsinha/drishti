@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 
@@ -67,10 +66,7 @@ public record ComputeSettings(boolean enabled, String python, Path root, Path sc
 
     /** The interpreter to start: the setting, else {@code python} on Windows and {@code python3} elsewhere. */
     public String interpreter() {
-        if (python != null && !python.isBlank()) {
-            return python;
-        }
-        return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).startsWith("windows") ? "python" : "python3";
+        return com.ash.drishti.api.PythonSetting.orDefault(python);
     }
 
     public Path envs() {
@@ -129,7 +125,7 @@ public record ComputeSettings(boolean enabled, String python, Path root, Path sc
             return parse(Map.of(), dataDir, node, resolve, "defaults (no " + file + ")");
         }
         try {
-            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(file.toFile(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(java.nio.file.Files.readAllBytes(file), new TypeReference<Map<String, Object>>() {});
             return parse(doc == null ? Map.of() : doc, dataDir, node, resolve, file.toString());
         } catch (IOException e) {
             throw new IllegalArgumentException(file + " is not valid YAML: " + e.getMessage(), e);

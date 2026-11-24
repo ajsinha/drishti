@@ -73,7 +73,7 @@ public final class FileShareStore implements ShareStore {
             if (Files.isDirectory(root)) {
                 try (Stream<Path> files = Files.walk(root, 2)) {
                     for (Path f : files.filter(p -> p.toString().endsWith(".json")).toList()) {
-                        Entry e = json.readValue(f.toFile(), Entry.class);
+                        Entry e = json.readValue(java.nio.file.Files.readAllBytes(f), Entry.class);
                         index.put(e.share().id(), e);
                     }
                 }

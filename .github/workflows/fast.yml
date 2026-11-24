@@ -17,7 +17,7 @@ name: fast
 # from THEIR release tags (never from Maven Central or PyPI: the owner publishes nowhere); only third-party libraries come from Central.
 # What stays in the drill: the full Java test suite (./mvnw verify), the browser tests and the console's whole test suite.
 on:
-  push: { branches: [develop, main, 'release/**', 'i7k/**'] }
+  push: { branches: [develop, main, 'release/**', 'i7k/**', 'i7l/**'] }
   pull_request:
 concurrency: { group: 'fast-${{ github.ref }}', cancel-in-progress: true }
 env:
@@ -29,7 +29,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
+      # the whole history and its tags: the docs merge audit reads the sources it audits from the base release tag
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '21' }
       - uses: actions/setup-python@v5
@@ -50,6 +52,9 @@ jobs:
           done
       - name: Build Drishti (packages the server jar and the modules, no tests)
         run: ./mvnw -B -q package -DskipTests
+      # the About catalogue as the server loads it from the shipped packs: the drill was the first to run these (about 2 minutes here)
+      - name: About and catalogue tests (AboutPacksTest, ExplainAboutTest)
+        run: ./mvnw -B -q verify -pl testing/drishti-modules-it -am -Dtest=AboutPacksTest,ExplainAboutTest -Dsurefire.failIfNoSpecifiedTests=false
       - name: The Lake Python wheel (built from the Lake tag, as the pin in lib/lake-wheel.pin says) and the console's requirements
         run: |
           pip install uv

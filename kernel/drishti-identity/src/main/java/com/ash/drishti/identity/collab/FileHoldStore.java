@@ -50,7 +50,7 @@ public final class FileHoldStore implements HoldStore {
             return new ArrayList<>();
         }
         try {
-            return new ArrayList<>(json.readValue(file.toFile(), new TypeReference<List<Hold>>() {}));
+            return new ArrayList<>(json.readValue(java.nio.file.Files.readAllBytes(file), new TypeReference<List<Hold>>() {}));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

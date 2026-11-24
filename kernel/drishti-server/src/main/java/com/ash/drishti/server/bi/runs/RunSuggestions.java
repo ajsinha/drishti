@@ -112,7 +112,7 @@ public final class RunSuggestions {
             return;
         }
         try {
-            Map<String, Object> m = JSON.readValue(file.toFile(), Map.class);
+            Map<String, Object> m = JSON.readValue(java.nio.file.Files.readAllBytes(file), Map.class);
             m.forEach((k, v) -> {
                 if (v instanceof Map<?, ?> x) {
                     Map<String, String> d = new LinkedHashMap<>();

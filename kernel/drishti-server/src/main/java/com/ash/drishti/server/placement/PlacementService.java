@@ -445,7 +445,7 @@ public final class PlacementService {
             }
             Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
             Files.writeString(tmp, p.toYaml());
-            Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(tmp, file);
             current = p;
             fileProblem = null;
             seen = Files.getLastModifiedTime(file).toMillis() ^ Files.size(file);
@@ -466,7 +466,7 @@ public final class PlacementService {
     /** Every plan, oldest first. */
     public List<Plan> plans() {
         try {
-            return Files.isRegularFile(plansFile) ? JSON.readValue(plansFile.toFile(), new TypeReference<List<Plan>>() { }) : List.of();
+            return Files.isRegularFile(plansFile) ? JSON.readValue(java.nio.file.Files.readAllBytes(plansFile), new TypeReference<List<Plan>>() { }) : List.of();
         } catch (IOException e) {
             LOG.warn("placement: {} does not read: {}", plansFile, e.getMessage());
             return List.of();

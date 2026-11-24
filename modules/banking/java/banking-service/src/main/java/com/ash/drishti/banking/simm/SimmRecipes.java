@@ -108,7 +108,7 @@ public final class SimmRecipes {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no SIMM recipe " + id + " on this server");
         }
         try {
-            return JSON.readValue(f.toFile(), Recipe.class);
+            return JSON.readValue(java.nio.file.Files.readAllBytes(f), Recipe.class);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -49,7 +49,7 @@ public record ModuleCandidate(DmodManifest manifest, Path dir, Path dmod) {
             throw new ModuleRefusedException(check, manifest.label() + ": " + relative + " is named by module.yaml but missing");
         }
         try {
-            Object o = YAML.readValue(p.toFile(), Object.class);
+            Object o = YAML.readValue(java.nio.file.Files.readAllBytes(p), Object.class);
             return o instanceof Map<?, ?> ? DmodManifest.map(o) : Map.of("items", o == null ? List.of() : o);
         } catch (IOException e) {
             throw new ModuleRefusedException(check, manifest.label() + ": " + relative + " does not read: "

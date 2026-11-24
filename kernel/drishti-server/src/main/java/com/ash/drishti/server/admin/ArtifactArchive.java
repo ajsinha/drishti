@@ -226,7 +226,7 @@ public final class ArtifactArchive {
             return Optional.empty();
         }
         try {
-            var n = JSON.readTree(meta.toFile());
+            var n = JSON.readTree(java.nio.file.Files.readAllBytes(meta));
             return Optional.of(new Entry(folder.getFileName().toString(), n.path("kind").asText(), n.path("subtype").asText(), n.path("name").asText(),
                     n.path("area").asText(), n.path("rel").asText(), Instant.parse(n.path("at").asText()), n.path("by").asText(), n.path("summary").asText(),
                     n.path("bytes").asLong()));

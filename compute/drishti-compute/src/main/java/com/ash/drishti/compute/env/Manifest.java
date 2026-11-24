@@ -59,7 +59,7 @@ public final class Manifest {
             return Optional.empty();
         }
         try {
-            return Optional.of(JSON.readValue(f.toFile(), new TypeReference<Map<String, Object>>() {}));
+            return Optional.of(JSON.readValue(java.nio.file.Files.readAllBytes(f), new TypeReference<Map<String, Object>>() {}));
         } catch (IOException e) {
             return Optional.empty();
         }

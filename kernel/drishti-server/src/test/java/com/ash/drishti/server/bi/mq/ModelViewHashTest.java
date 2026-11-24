@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.layer.DatasetDef;
 import com.ash.drishti.server.bi.layer.ResolvedDataset;
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -108,9 +107,8 @@ class ModelViewHashTest {
     void everyFreshJvmGivesTheSameHash() throws Exception {
         String here = hash(ALIASES, MASKS, "1.0.0");
         Set<String> seen = new HashSet<>();
-        String java = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
         for (int i = 0; i < 4; i++) {
-            Process p = new ProcessBuilder(java, "-Xmx64m", "-cp", System.getProperty("java.class.path"), Boot.class.getName()).redirectErrorStream(true).start();
+            Process p = com.ash.drishti.testkit.ChildJvm.of(List.of("-Xmx64m"), Boot.class.getName()).redirectErrorStream(true).start();
             String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).strip();
             assertThat(p.waitFor()).as(out).isZero();
             seen.add(out.lines().reduce((a, b) -> b).orElse(""));
