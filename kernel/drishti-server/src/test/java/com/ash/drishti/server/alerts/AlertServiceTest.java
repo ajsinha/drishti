@@ -594,7 +594,8 @@ class AlertServiceTest {
 
     private String awaitEmail(String owner, String name, java.util.function.Predicate<String> done) throws InterruptedException {
         String last = "";
-        for (int i = 0; i < 100; i++) {
+        long tries = com.ash.drishti.testkit.MachineSpeed.scaled(100L);              // 5 s on the reference machine, longer on a smaller one
+        for (int i = 0; i < tries; i++) {
             last = history(owner, name).get(0).path("delivered").path("email").asText();
             if (done.test(last)) {
                 return last;
