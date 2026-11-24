@@ -75,7 +75,7 @@ public final class TablesService {
     /** The catalogue as last read, with the stamp of the files it was read from and the names refused. */
     private record Loaded(String stamp, Catalogue catalogue, List<Problem> problems, Set<String> refused) {}
 
-    /** Reads a domain folder only while its domain's module is on (docs/architecture/DOMAIN_MODULES.md section 8). */
+    /** Reads a domain folder only while its domain's module is on (docs/architecture/KERNEL_AND_MODULES.md section 8). */
     public TablesService domains(java.util.function.Predicate<String> on) {
         this.domainOn = on == null ? d -> true : on;
         return this;

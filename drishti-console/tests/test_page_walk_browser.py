@@ -225,7 +225,7 @@ def test_the_key_pages_are_laid_out(stack, browser, width, theme):
 
 
 def _distribution_console(server_url: str, name: str):
-    """A second console over the same server, showing the distribution ``name`` (docs/architecture/DISTRIBUTIONS.md): one cluster, a
+    """A second console over the same server, showing the distribution ``name`` (docs/architecture/KERNEL_AND_MODULES.md): one cluster, a
     Drishti Risk console and a Drishti Finance console, as the owner's stack runs them."""
     import threading
     import time

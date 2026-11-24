@@ -134,7 +134,7 @@ def _holds(request, edition: Edition, need: str, ctx: dict) -> bool:
         return _has_route(request, value)
     if kind == "engine":                                         # requires: engine:frtb-sa (ADMIN_GUIDE.md 5.2): it runs and the role opens it
         return engines.engine_available(value) and engine_opened(request, value)
-    if kind == "module":                                         # requires: module:banking (ACCESS_MODEL.md: on for this person)
+    if kind == "module":                                         # requires: module:banking (KERNEL_AND_MODULES.md: on for this person)
         return modules.module_on(value)
     return True
 

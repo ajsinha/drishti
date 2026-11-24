@@ -28,7 +28,7 @@ POWERS = [("raw", "See every field unmasked (raw JSON, views, search)"), ("autho
           ("approve", "Approve proposed Sutras"), ("admin", "Administer users, roles and caches"), ("calc", "Use Calc: Python in the browser on what the role opens"),
           ("edit", "Submit edits: change records through forms that save (write-back, when editing is on)"),
           ("layout", "Customise layouts: arrange a view's panels for themselves (Alt+L)")]
-#: the module permissions a role may hold (ACCESS_MODEL.md section 8): the server's RoleDefinition.PERMISSIONS, each with its words
+#: the module permissions a role may hold (KERNEL_AND_MODULES.md section 8): the server's RoleDefinition.PERMISSIONS, each with its words
 PERMISSIONS = [("var:system-baskets", "VaR system baskets: create, edit, retire and import them (VAR_GUIDE.md section 5.7)")]
 
 

@@ -228,7 +228,7 @@ Java 21 build stays the reference until Java 21 is retired.
 | Part | How |
 |---|---|
 | The seam | each hot path sits behind a small Java interface (for example `VarKernels`: sum a scope's rows, select the k-th, sum many scopes; `ExposureKernels`; `HotFileReader`; `GzipReader`; `JsonIntake`). Today's code becomes the **baseline** implementation of each, unchanged |
-| The accelerated module | `drishti-native` ([DRISHTI_NATIVE.md](ARCHITECTURE.md#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks)) holds the Java 25 implementations beside its Java 21 ones (no separate `drishti-accel` module): `MemorySegment` readers, Vector API kernels, the FFM bindings to BLAS, libdeflate and zstd. It is built only by a Maven profile active on JDK 25 (`<activation><jdk>[25,)</jdk></activation>`); a Java 21 build leaves it out, and nothing else depends on it at compile time |
+| The accelerated module | `drishti-native` ([DRISHTI_NATIVE.md](../architecture/ARCHITECTURE.md#25-drishti-native-native-maths-behind-abstractions-with-java-fallbacks)) holds the Java 25 implementations beside its Java 21 ones (no separate `drishti-accel` module): `MemorySegment` readers, Vector API kernels, the FFM bindings to BLAS, libdeflate and zstd. It is built only by a Maven profile active on JDK 25 (`<activation><jdk>[25,)</jdk></activation>`); a Java 21 build leaves it out, and nothing else depends on it at compile time |
 | Discovery | `java.util.ServiceLoader` finds the accelerated implementations when the module is on the class path; each says what it needs (the Java version, the incubator module, a native library on disk) and is offered only when that is present |
 | The choice | `drishti.native.mode`: **`auto`** (the default) uses each accelerated implementation whose needs are met and keeps the baseline for the rest; `off` uses the baseline everywhere, also on a Java 25 build; `on` fails the start when an enabled implementation cannot load. Per-path switches (section 9.3) can still turn one path off. On a machine without the native libraries (the Windows QA machine) `auto` quietly keeps the baseline for those paths and says so |
 | The canary | at start each chosen implementation answers a fixed check against the baseline (the parity rule of section 6.2); a mismatch drops it back to the baseline and is logged and shown |
@@ -557,7 +557,7 @@ well they plug into those two formats.
 Data loading is Drishti Lake's one loader (Java and Python), with its guards (future days, zone, maximum drop share, force drop); the
 Python tools call the Lake wheel and stage each JSON line in Python (`tools/lake/stage.py`, `jsonstream.py`) before it commits the table.
 Where a JVM exists (the server's machine, the drill, AWS loaders) the parallel loader is the default
-([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load)). Where no JVM exists, a Polars
+([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#10-the-parallel-lake-loader-lake-load)). Where no JVM exists, a Polars
 staging path (`pl.scan_ndjson` into Arrow, the reject rules of `stage.py` as Polars expressions, the Arrow table handed to the Lake
 writer) must give exactly the same rows and rejects as `stage.py` (a parity test over the test data). The loader itself is documented
 by [Drishti Lake](https://github.com/drishti-platform/drishti-lake).

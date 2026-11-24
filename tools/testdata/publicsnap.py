@@ -58,7 +58,7 @@ PACKS: dict[str, dict] = {
     "funds": {"connector": "funds-store",
               "source": "SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)",
               "keys": {"fund": "TICKER", "fund-holder": "TICKER", "index-funds": "INDEX"}, "part-bytes": 1_200_000},
-    # the genomics module's showcase (docs/architecture/GENOMICS_SHOWCASE.md): synthetic, seeded, so the date is the generator's own
+    # the genomics module's showcase (modules/genomics/docs/guide.md): synthetic, seeded, so the date is the generator's own
     "genomics-showcase": {"connector": "genomics-showcase-store", "captured": "2026-11-16",
                           "source": "the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)",
                           "keys": {"study-gene": "GENE", "study-sample": "SAMPLE_ID", "study-variant": "VARIANT_ID",

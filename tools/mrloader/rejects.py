@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The reject report of every kind, ``<kind>.<date>.rejects.csv`` (docs/plans/CSV_LOADERS.md section 10.2): one line per problem, in row
+"""The reject report of every kind, ``<kind>.<date>.rejects.csv`` (docs/guides/BANK_DATA_GUIDE.md section 10.2): one line per problem, in row
 order: FILE, ROW (as a spreadsheet shows it: the header is row 1), KEY, COLUMN, FIELD, VALUE (cut to 80 characters), REASON (one code of
 a fixed list), WHY (a sentence), FIX (what to do, when the loader can say)."""
 from __future__ import annotations

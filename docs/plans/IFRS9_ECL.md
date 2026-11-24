@@ -245,7 +245,7 @@ the coverage ratio (allowance ÷ gross carrying amount) for each; the stage-2 sh
 credit risk grade and stage.
 
 **Cluster.** Facilities are sharded by facility id; each owner computes its shard's facility ECLs and partial sums per requested cut; the
-coordinator adds the partials in shard order (the same equality rule as the VaR sums, [DATA_ARCHITECTURE.md section 13](DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)).
+coordinator adds the partials in shard order (the same equality rule as the VaR sums, [DATA_ARCHITECTURE.md section 13](../architecture/DATA_ARCHITECTURE.md#13-var-sharding-how-it-is-built)).
 
 ## 11. Why the provision moved
 
@@ -282,7 +282,7 @@ remeasurement, FX, closing, by stage) is a regrouping of the same steps.
 The contracts follow the [contract rules](../contracts/README.md) (types, dates and as-of, restatements, delivery, rejects, entitlements)
 and are written as YAML files of a new pack `credit-risk` when it is built, each with its generated reference page. All data is JSON Lines
 (`data/testdata/credit-risk/<kind>/*.jsonl.gz` for the demo, loaded into Delta or Iceberg, read by the lake connector). Keys are
-UPPER_SNAKE. A loan book may be a memory-only source ([IN_MEMORY_LAKE.md](DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)) when a bank's contract forbids storing it.
+UPPER_SNAKE. A loan book may be a memory-only source ([IN_MEMORY_LAKE.md](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)) when a bank's contract forbids storing it.
 
 ### 12.1 `credit-facility` (one record per facility and business date)
 

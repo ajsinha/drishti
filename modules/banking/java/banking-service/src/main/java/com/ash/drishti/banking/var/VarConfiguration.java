@@ -121,7 +121,7 @@ public class VarConfiguration {
         return 0;
     }
 
-    /** The VaR engine's figures on Admin -> Capacity (DOMAIN_MODULES.md J3). */
+    /** The VaR engine's figures on Admin -> Capacity (KERNEL_AND_MODULES.md J3). */
     /** The VaR intake's rules, for the checks of a file before it is pushed (DATA_LAKE_GUIDE.md section 3.5). */
     @Bean
     com.ash.lake.inbox.ReadyRule varReadyRule(VarProperties props, ObjectProvider<PackRegistry> packs) {
@@ -134,7 +134,7 @@ public class VarConfiguration {
     }
 
     /**
-     * {@code /api/v1/health}'s {@code hierarchyWarnings} (DOMAIN_MODULES.md J4): a level column the VaR or exposure engine's source does not
+     * {@code /api/v1/health}'s {@code hierarchyWarnings} (KERNEL_AND_MODULES.md J4): a level column the VaR or exposure engine's source does not
      * promote (its rows sit under (Blank) at that level), "var LL LIMIT_LETTER scenario-pv" to the words and the fix (DRS-5211, a warning).
      */
     @Bean
@@ -228,7 +228,7 @@ public class VarConfiguration {
         return new VarExplain(svc, props);
     }
 
-    /** Explain a VaR figure (kind var, the one Explain of SHARED_SCREENS.md section 3): formula, inputs and lineage, why it moved, workbook. */
+    /** Explain a VaR figure (kind var, the one Explain of THIN_CONSOLE_DESIGN.md section 3): formula, inputs and lineage, why it moved, workbook. */
     @Bean
     com.ash.drishti.kernel.api.explain.Explainer varNumberExplainer(VarService svc, VarViews views, VarExplain explain) {
         return new VarNumberExplainer(svc, views, explain);

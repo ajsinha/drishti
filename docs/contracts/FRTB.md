@@ -132,9 +132,9 @@ contract. The YAML contracts are the machine-readable truth for the two planned 
 [`position-sensitivity.contract.yaml`](../../modules/banking/packs/market-risk/contracts/position-sensitivity.contract.yaml),
 [`risk-factor.contract.yaml`](../../modules/banking/packs/market-risk/contracts/risk-factor.contract.yaml) and
 [`capital-input.contract.yaml`](../../modules/banking/packs/market-risk/contracts/capital-input.contract.yaml); their generated pages are in
-[packs/market-risk.md](packs/market-risk.md#sens-position-sensitivities-position-sensitivity) and a real demo record explained field by
-field is in [samples/market-risk.md](samples/market-risk.md#position-sensitivities-position-sensitivity-sens) and
-[samples/market-risk.md](samples/market-risk.md#risk-factor-dictionary-risk-factor-rfac).
+[packs/market-risk.md](packs/market-risk.md#sens-position-sensitivities-position-sensitivity) and a real demo record of each is on the same
+page: [position-sensitivity](packs/market-risk.md#example-market-risk-position-sensitivity) and
+[risk-factor](packs/market-risk.md#example-market-risk-risk-factor).
 
 ### 3.2 The shared sensitivity table: position-sensitivity (SENS)
 

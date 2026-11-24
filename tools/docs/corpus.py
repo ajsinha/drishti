@@ -29,6 +29,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[2]
 CORPUS = ROOT / "config" / "docs-corpus.yaml"
 MOVED = ROOT / "tools" / "docs" / "moved.yaml"
@@ -76,6 +78,8 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"docs/architecture/DOCS_PLAN\.md", "delete", "B", "", ""),
     (r"docs/architecture/(ELEMENTS_IN_DRISHTI|SHARED_SCREENS)\.md", "merge", "B", TC, ""),
     (r"docs/architecture/GENOMICS_SHOWCASE\.md", "merge", "B", GEN, ""),
+    (r"docs/architecture/DECISIONS\.md", "keep", "B", "", ""),
+    (r"docs/contracts/CSV_FORMATS\.md", "generate", "B", "", "tools/mrloader/kind_docs.py"),
     (r"docs/architecture/adr/README\.md", "rename", "B", "docs/architecture/DECISIONS.md", ""),
     (r"docs/architecture/adr/[^/]+\.md", "merge", "B", "docs/architecture/DECISIONS.md", ""),
     (r"docs/architecture/kernel-and-modules/.+\.md", "merge", "B", KM, ""),
@@ -96,6 +100,7 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"docs/guides/[^/]+\.md", "keep", "A", "", ""),
     (r"docs/knowledge/[^/]+\.md", "keep", "A", "", ""),
     (r"docs/lenses/mockups/[^/]+/README\.md", "merge", "B", "docs/architecture/LENSES.md", ""),
+    (r"docs/plans/(COUNTERPARTY_ENGINES|FINANCIAL_CRIME|IFRS9_ECL|HIGH_PERFORMANCE_NATIVE|FIGMA_INTEGRATION)\.md", "keep", "B", "", ""),
     (r"docs/plans/[^/]+\.md", "delete", "B", "", ""),
     (r"docs/strategy/BI_AND_POWER_BI\.md", "merge", "A", GL + "bi/README.md", ""),
     (r"docs/strategy/COMPETITIVE_ANALYSIS\.md", "keep", "A", "", ""),
@@ -150,9 +155,19 @@ def classify(path: str) -> tuple[str, str, str, str] | None:
     return None
 
 
+def gone() -> list[str]:
+    """Paths the manifest names that are no longer tracked: a document merged, moved or deleted by the consolidation keeps its row, so
+    moved.yaml and the merge audit still know it."""
+    if not CORPUS.exists():
+        return []
+    have = set(tracked())
+    rows = yaml.safe_load(CORPUS.read_text(encoding="utf-8")).get("files") or []
+    return [r["path"] for r in rows if r["path"] not in have and r["class"] in ("merge", "delete", "move", "rename")]
+
+
 def build(paths: list[str] | None = None) -> tuple[list[tuple], list[str]]:
     rows, unmatched = [], []
-    for p in paths if paths is not None else tracked():
+    for p in paths if paths is not None else sorted(set(tracked()) | set(gone())):
         c = classify(p)
         (rows.append((p,) + c) if c else unmatched.append(p))
     return rows, unmatched

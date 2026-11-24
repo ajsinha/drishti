@@ -213,7 +213,7 @@ public class CapacityController {
         add(rows, "Resident memory (RSS)", s.get("rssMb"), "MB");
         add(rows, "Machine memory", s.get("ramMb"), "MB");
         add(rows, "Cores (hardware threads the JVM sees)", s.get("cpus"), "cores");
-        for (CapacityFigures f : figures) {                      // each module's engine's rows (DOMAIN_MODULES.md J3)
+        for (CapacityFigures f : figures) {                      // each module's engine's rows (KERNEL_AND_MODULES.md J3)
             if (m.get(f.key()) instanceof Map<?, ?> v) {
                 for (Object[] r : f.rows((Map<String, Object>) v)) {
                     add(rows, String.valueOf(r[0]), r[1], String.valueOf(r[2]));

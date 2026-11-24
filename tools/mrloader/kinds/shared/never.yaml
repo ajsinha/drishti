@@ -14,7 +14,7 @@
 
 # The kinds the CSV loader never loads, beyond those its contracts already refuse by their class (computed, drishti-owned): each is
 # another system's answer (a charge, an initial margin, an EAD, a CVA), which an engine of Drishti computes or will compute
-# (docs/plans/CSV_LOADERS.md section 3.5, decision 5). Each says why and what to load instead.
+# (docs/guides/BANK_DATA_GUIDE.md section 3.5, decision 5). Each says why and what to load instead.
 frtb-sensitivity: "a book's FRTB charge, another system's answer: the FRTB SA engine computes it from position-sensitivity (load that)"
 simm: "an initial margin, another system's answer: the SIMM engine computes it from position-sensitivity (load that)"
 sa-ccr: "an exposure at default, another system's answer: computed from the trades, netting sets and collateral"

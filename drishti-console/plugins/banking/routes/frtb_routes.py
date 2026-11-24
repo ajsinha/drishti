@@ -175,5 +175,5 @@ async def template(request: Request):
     return await stream(request, risk_api.path("/frtb/playground/template"), {}, "frtb-sa-playground-hand-built-cases.xlsx")
 
 
-# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2) ----------------------------------------------------------------------
+# ---- the core's hooks (core/plugins.py, KERNEL_AND_MODULES.md C2) ----------------------------------------------------------------------
 _plugins.command(redirect_for, needs=("VAR", "FRSA"))                         # FRSA <scope>: FRTB-SA capital

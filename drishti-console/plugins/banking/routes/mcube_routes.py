@@ -144,7 +144,7 @@ async def post(request: Request, action: str):
     return await _call(request, "POST", "/" + action, await _body(request))
 
 
-# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2 and C5) ---------------------------------------------------------------
+# ---- the core's hooks (core/plugins.py, KERNEL_AND_MODULES.md C2 and C5) ---------------------------------------------------------------
 def _ccube(typed: str):
     """CCUBE: the Pivot's preset ccr (core/pivot_presets.py), under construction."""
     if [w.upper() for w in typed.split()[:1]] != ["CCUBE"]:

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Banking's object types on the Build home (core/build_registry.py): what a risk person builds. The domain split
-(docs/architecture/DOMAIN_MODULES.md) moves this file into the banking module whole; the core names none of it."""
+(docs/architecture/KERNEL_AND_MODULES.md) moves this file into the banking module whole; the core names none of it."""
 from __future__ import annotations
 
 from urllib.parse import urlencode

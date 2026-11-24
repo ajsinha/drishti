@@ -18,7 +18,7 @@ package com.ash.drishti.kernel.api.official;
 import java.util.Map;
 
 /**
- * The publishers of official results a module brings (docs/architecture/DOMAIN_MODULES.md, the cycles: J6), found with the
+ * The publishers of official results a module brings (docs/architecture/KERNEL_AND_MODULES.md, the cycles: J6), found with the
  * {@link java.util.ServiceLoader} before any bean exists: the core names none of them.
  */
 public interface OfficialResults {

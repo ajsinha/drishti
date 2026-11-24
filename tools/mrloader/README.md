@@ -19,7 +19,7 @@
 
 `tools/mrloader/csv_load.py` turns one dataset's CSV into checked records of its kind, written as the data inbox and `lake build` take
 them; it loads nothing itself. Every kind is a mapping file (`kinds/<kind>.yaml`: the CSV columns named as the contract's fields) and a
-generated page (`tools/mrloader/docs/<kind>.md`); the day's runbook is `tools/mrloader/docs/DAILY_RUNBOOK.md`.
+generated page (`docs/contracts/CSV_FORMATS.md`); the day's runbook is `tools/mrloader/docs/DAILY_RUNBOOK.md`.
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29             # convert and check
@@ -248,7 +248,7 @@ date's scenario-set record (`scenario-set.<date>.jsonl.gz`) with `SCENARIO_SET_I
 
 ## The outputs
 
-Under `<out>/mr-<date>/`, the folder every kind of the date shares (docs/plans/CSV_LOADERS.md section 6.4):
+Under `<out>/mr-<date>/`, the folder every kind of the date shares (docs/guides/BANK_DATA_GUIDE.md section 6.4):
 
 | File | What |
 |---|---|

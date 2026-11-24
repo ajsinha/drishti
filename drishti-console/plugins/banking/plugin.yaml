@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The banking module's console part (docs/architecture/DOMAIN_MODULES.md section 8, ACCESS_MODEL.md section 2). The console reads this file
+# The banking module's console part (docs/architecture/KERNEL_AND_MODULES.md section 8, KERNEL_AND_MODULES.md section 2). The console reads this file
 # (core/modules.py); the server's manifest (drishti-banking's META-INF/drishti/module.yaml) decides whether the module is on. While the
 # module is off for a person, everything listed here is gone for them: its routes and pages answer 404, its words are neither offered nor
 # run (typed anyway: "VAR is not available to you: ask your administrator"), its menus, Help pages, Build types, search hits, tiles and

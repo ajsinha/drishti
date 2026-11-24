@@ -66,7 +66,7 @@ def test_the_guide_has_both_sections_and_links_every_kind(pack):
         assert f"docs/contracts/packs/{pack.name}.md#" in contracts and f"(`contracts/{c['_file']}`)" in contracts, f"{pack.name}: {c['kind']}"
         if c["kind"] in examples:
             page, anchor = examples[c["kind"]]
-            assert f"docs/contracts/samples/{page}.md#{anchor})" in contracts, f"{pack.name}: {c['kind']} does not link its example"
+            assert f"docs/contracts/packs/{page}.md#{anchor})" in contracts, f"{pack.name}: {c['kind']} does not link its example"
     assert "| Column | Type |" not in contracts and "\nNested `" not in contracts, f"{pack.name}: a copied field table"
     for c in GD.contracts(pack):
         assert f"| `{c['mnemonic']}` | `{c['kind']}` |" in retrieval, f"{pack.name}: {c['kind']} has no origin row"

@@ -323,7 +323,7 @@ public final class EngineRegistry implements AutoCloseable {
     }
 
     /**
-     * Says why an engine this build lists is not installed here: its module is off (docs/architecture/ACCESS_MODEL.md), so its code was not
+     * Says why an engine this build lists is not installed here: its module is off (docs/architecture/KERNEL_AND_MODULES.md), so its code was not
      * loaded. Shown on Admin -> Engines and in the API's 404.
      */
     public void notInstalledBecause(String id, String why) {

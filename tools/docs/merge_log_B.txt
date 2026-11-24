@@ -1,0 +1,15 @@
+# Lane B merge log (documentation consolidation, i7k): items of a merged source that are deliberately not carried over.
+# <old path> | <heading or first line of the block> | <the place that already says it>
+docs/architecture/GENOMICS_SHOWCASE.md | The genomics showcase: one protein, read and rewritten | modules/genomics/docs/guide.md (The design of the showcase)
+docs/architecture/GENOMICS_SHOWCASE.md | 8. Drishti Elements: what exists, what is new | modules/genomics/docs/guide.md (built: the module's chart table above)
+docs/architecture/GENOMICS_SHOWCASE.md | 9. The server: words, APIs, Sutras | modules/genomics/docs/guide.md (built: routes and words above)
+docs/architecture/GENOMICS_SHOWCASE.md | 10. Effort | design-phase estimate; the showcase is built
+docs/architecture/GENOMICS_SHOWCASE.md | 11. Risks | design-phase risks; the showcase is built
+docs/architecture/GENOMICS_SHOWCASE.md | 12. Questions for the product owner | answered; the showcase is built
+docs/architecture/GENOMICS_SHOWCASE.md | 13. The mock-ups and the build checklist | built; the mock-ups stay under docs/architecture/mockups/genomics-showcase
+docs/architecture/kernel-and-modules/examples/banking/docs/help/var-in-five-minutes.md | VaR in five minutes | the real banking module (modules/banking/docs) replaces the example
+docs/architecture/kernel-and-modules/examples/banking/docs/help/var-in-five-minutes.md | Open it | the real banking module
+docs/architecture/kernel-and-modules/examples/banking/docs/help/var-in-five-minutes.md | Read it | the real banking module
+docs/architecture/kernel-and-modules/examples/banking/docs/help/var-in-five-minutes.md | When a number looks wrong | the real banking module
+docs/architecture/kernel-and-modules/examples/banking/docs/help/var-in-five-minutes.md | Learn more | the real banking module
+docs/architecture/kernel-and-modules/examples/console/route-groups.md | Console route groups: the migration order | docs/architecture/THIN_CONSOLE_DESIGN.md (the migration, step by step)

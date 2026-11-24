@@ -808,3 +808,82 @@ with the offline rehearsal in its [section 12](../DEPLOYMENT_AND_QA_GUIDE.md#12-
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
 Proprietary and confidential. Unauthorised copying, use or distribution is prohibited.*
+
+## 10. The documentation gates: generated versus hand-written
+
+**Generated (never edited by hand):** CONFIGURATION settings (`settings_catalogue.py`), API_REFERENCE (`api_docs.py`), CLI_REFERENCE
+(`command_catalog.py` + a parser dump), FUNCTIONS, Rachana key tables (from the schema), contracts and their examples (`contracts.py`),
+guides' data tables (`guide_data.py`), Knowledge glossaries (`knowledge.py`), UNDER_CONSTRUCTION, the docs and tutorial indexes (from
+help.yaml), the connector table (from plugin READMEs), the README's numbers (`code_volume.py`), screenshots (`tools/docs/screenshots.py`).
+
+**Hand-written:** the 23 guides, the 22 tutorials, the Knowledge primers' prose, the concepts parts of CONFIGURATION and RACHANA_REFERENCE,
+everything internal.
+
+**Gates to add** (in the docs gate beside the existing help, links, rot, placeholders, settings, error-code and image tests):
+
+| Gate | Fails when |
+|---|---|
+| Feature register | `config/docs-features.yaml` (planned) (feature, guide, tutorial, domain, lenses, budget) and the files disagree; a feature without exactly one guide and one tutorial (or `tutorial: after <release>`) |
+| Count caps | guides > 24, tutorials > 23, reference > 10, contracts > 30, knowledge > 5, Help entries > 65 |
+| Page budgets | a guide or tutorial over its budget by more than 10% |
+| One home for data | a field table or JSON record of a contract kind outside `docs/contracts/` (tutorial outputs excepted) |
+| One home for settings, endpoints, functions | a `drishti.*` default, an endpoint table or a function table outside its reference |
+| No repeated prose | the same 40-word run in two user documents |
+| Stale generated sections | any generator's `--check` |
+| Customer text | version history ("since 2.x", "(2.9.x)"), defect words, links to internal docs from Help pages |
+| Help is user docs only | a Help entry pointing under `docs/architecture/`; an entry without domain and lens |
+| Executable tutorials | a tutorial's command-line block fails against the demo lakes (run once per release before drill 1) |
+
+Gates land first in warn mode and switch to fail at the end of g.
+
+## Connector files of the tests
+
+A connector is defined by its file and nothing else; the server refuses a `drishti.sources.connectors.<name>.*` property or variable. Each folder here is one set: the connector files a test (or the tests listed) copies into its run folder with `ConnectorFixtures.copy("<set>")` and names as `drishti.sources.connectors-dir=${drishti.test.dir}/connectors/<set>`. A file with only `enabled: false` switches a template's connector off; a value only the running test knows is a placeholder `${test-connectors.<connector>.<setting>}` that the test's `@DynamicPropertySource` gives.
+
+| Set | Used by |
+|---|---|
+| `bi-ai` | BiAiTest |
+| `bi-report-api` | BiReportApiTest |
+| `business-date` | BusinessDateTest, HistoryApiTest |
+| `cache-admin` | CacheAdminTest |
+| `calc-api` | CalcApiTest, ColumnarSearchTest |
+| `dataset-api` | DatasetApiTest |
+| `dist-api` | DistApiTest |
+| `exposure-api` | ExposureApiTest |
+| `exposure-official-hierarchies` | ExposureOfficialHierarchiesTest |
+| `exposure-pre-deal-api` | ExposurePreDealApiTest |
+| `field-params-api` | FieldParamsApiTest |
+| `finance-lake-off` | ReportApiTest, RegistryApiTest, DerivedKindTest, SimmApiTest, FrtbApiTest (the finance pack's lake connector off) |
+| `hierarchy-column-missing` | HierarchyColumnMissingTest |
+| `index-reload-admin` | IndexReloadAdminTest |
+| `internal-imf-fixture` | a test of its own name |
+| `languages-api` | LanguagesApiTest |
+| `model-acceptance` | ModelAcceptanceTest |
+| `mr-cube-off` | MrCubeOffTest, VarRootNameTest, VarBusyProtectionTest |
+| `news-and-markets-sutra-next-equivalence` | a test of its own name |
+| `news-in-memory-sentinel` | NewsInMemorySentinelTest |
+| `pack-data-api` | PackDataApiTest |
+| `panel-provenance` | PanelProvenanceTest |
+| `panel-source-budget` | a test of its own name |
+| `pick-list-scale` | PickListScaleTest |
+| `recent-store-api` | RecentStoreApiTest |
+| `statement-api` | StatementApiTest |
+| `statement-rows` | StatementRowsTest |
+| `trading-sutra-next-equivalence` | TradingSutraNextEquivalenceTest |
+| `transform-inputs-api` | TransformInputsApiTest |
+| `var-by-attribute-api` | VarByAttributeApiTest |
+| `var-currency-ahead` | VarCurrencyAheadTest, VarCurrencyApiTest |
+| `var-deleted-date` | VarDeletedDateTest, VarMrCubeApiTest, VarBasketSheetApiTest, VarApiTest, VarPivotApiTest, VarParametricApiTest |
+| `var-explain-api` | VarExplainApiTest |
+| `var-hierarchy-api` | VarHierarchyApiTest |
+| `var-inputs-api` | VarInputsApiTest |
+| `var-intraday-api` | VarIntradayApiTest |
+| `var-matrix-api` | VarMatrixApiTest |
+| `var-mr-cube-cap` | VarMrCubeCapTest, VarStressApiTest, VarWindowApiTest |
+| `var-playground-api` | VarPlaygroundApiTest |
+| `var-pv-stream` | VarPvStreamTest |
+| `var-refusal-remembered` | VarRefusalRememberedTest |
+| `var-regulatory-api` | VarRegulatoryApiTest |
+| `var-resources-soak` | VarResourcesSoakTest |
+| `var-stress-window-api` | VarStressWindowApiTest |
+| `var-system-basket-api` | VarSystemBasketApiTest |

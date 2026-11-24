@@ -13,4 +13,4 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""The domain modules' console parts, one folder each (docs/architecture/DOMAIN_MODULES.md section 8): plugin.yaml, read by core/modules.py."""
+"""The domain modules' console parts, one folder each (docs/architecture/KERNEL_AND_MODULES.md section 8): plugin.yaml, read by core/modules.py."""

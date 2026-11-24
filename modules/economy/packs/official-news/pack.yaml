@@ -16,7 +16,7 @@
 # banks, regulators and governments from their own feeds, filled daily by the official-news feed (config/feeds/official-news.yaml) into
 # the newslake lake.
 pack: official-news
-domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/KERNEL_AND_MODULES.md)
 version: 1.0.0
 code: ONEWS
 title: Official news

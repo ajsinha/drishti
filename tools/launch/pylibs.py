@@ -436,7 +436,7 @@ _MANAGED = ("import os, sys, sysconfig; print('MANAGED', int(sys.prefix == sys.b
             "os.path.isfile(os.path.join(sysconfig.get_path('stdlib'), 'EXTERNALLY-MANAGED'))))")
 #: what setup says for an operating system's own Python (PEP 668): never --break-system-packages; Drishti makes no environment itself
 MANAGED = ("this Python is managed by the operating system: run setup with a Python you prepared for Drishti (a dedicated Python 3.13, "
-           "e.g. /opt/python3.13, see PRODUCTION_DEPLOYMENT.md; your own virtual environment is fine)")
+           "e.g. /opt/python3.13, see OPERATIONS_GUIDE.md; your own virtual environment is fine)")
 
 
 def externally_managed(py: str, run=subprocess.run) -> bool:

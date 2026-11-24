@@ -25,7 +25,7 @@ The shape is checked by a machine-readable [JSON Schema](#9-the-json-schema), se
 and generated from the Java records, and a test validates real views and live frames against it.
 
 Every example below is real output, abbreviated (lists cut to two items, long text cut). Most come from the
-[all-panels showcase](../guides/examples/all-panels-showcase.md), the bond trade `DEMO-BOND-1` that holds one panel of
+[all-panels showcase](../guides/examples/README.md), the bond trade `DEMO-BOND-1` that holds one panel of
 every kind; some come from the demo swap `IRS-48213`.
 
 ## Contents
@@ -44,7 +44,7 @@ The code: Rachana's `view` package (`ViewModel.java`, `PanelData.java`,
 `Emptiness.java`, `MaskCount.java`, `ScreenGrid.java`, `ViewModelSchema.java`), the binders that fill `data`
 (`engine/bind/Binder.java`, `ChartBinder.java`, `PivotBinder.java`, `MapBinder.java`), and the live code
 (`engine/live/PatchDiffer.java`, `Patch.java`, `Frame.java`, `ViewStream.java`; `server/api/StreamController.java`,
-`FrameMailbox.java`). The decision: [ADR-004](adr/004-server-returns-a-view-model.md).
+`FrameMailbox.java`). The decision: [ADR-004](DECISIONS.md).
 
 ---
 
@@ -64,7 +64,7 @@ document. The pipeline builds it in one pass; the rest of the system only reads 
 | **Failures stay local** | A panel that cannot bind carries `error` and no `data`; a strip value that fails reads `—`. The view still arrives. |
 
 What it is not: it is not the entity's data (that is `GET /api/v1/entities/{kind}/{id}/raw`), and it is not HTML (the console
-and the embed API turn it into HTML; see [ADR-021](adr/021-embedding-is-html-over-the-wire.md)).
+and the embed API turn it into HTML; see [ADR-021](DECISIONS.md)).
 
 ---
 
@@ -816,7 +816,7 @@ The client-side renderer ([EMBED_GUIDE.md section 7](ARCHITECTURE.md#302-the-ren
 table to `static/render/<version>/m/` and is compared with these macros by `tests/test_render_parity_browser.py` and, on the console's
 own page in both modes, `tests/test_render_console_browser.py`. In phase 2 (built) the console's entity page draws with it when
 a client mode (since retired) is on, and Elements 2.0 do; the macros stay as the `server` path and are retired later
-([ADR-022](adr/022-one-renderer-in-the-browser.md)). On a client page live panel patches come over a `vm:` subscription as panels, with
+([ADR-022](DECISIONS.md)). On a client page live panel patches come over a `vm:` subscription as panels, with
 no HTML, and are applied by the renderer.
 
 ---
@@ -844,7 +844,7 @@ no HTML, and are applied by the renderer.
 ### Proposed
 
 **The client-side renderer is built (phase 1 and phase 2, 2026-10-30;** [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md),
-[ADR-022](adr/022-one-renderer-in-the-browser.md)): Drishti Render (`static/render/1.0.0/`) draws every kind of section 4 from this JSON,
+[ADR-022](DECISIONS.md)): Drishti Render (`static/render/1.0.0/`) draws every kind of section 4 from this JSON,
 applies section 5's patches, and is compared with the console's macros by a parity suite over every pack Sutra; the console's entity page
 draws with it behind a client mode (since retired), and Elements 2.0 receive this JSON from the embed API v2. Items 1 (on every ViewModel; not on frames
 yet) and 2 are built, 3 and 4 are not; item 5 is ADR-022. The proposals, which turn this document into a published contract:
@@ -857,7 +857,7 @@ yet) and 2 are built, 3 and 4 are not; item 5 is ADR-022. The proposals, which t
    instead of drawing a wrong screen.
 3. **A kind registry in the schema**: each kind with the version it appeared in, so a renderer can say "needs 1.3".
 4. **Deprecation before removal**: a field to be removed stays for one minor with `"deprecated": true` in the schema.
-5. **The client-side renderer revisits ADR-021's decision** ("no second renderer"): done, [ADR-022](adr/022-one-renderer-in-the-browser.md)
+5. **The client-side renderer revisits ADR-021's decision** ("no second renderer"): done, [ADR-022](DECISIONS.md)
    (one renderer, in the browser; the console moves onto it in phase 2), with parity tests that compare its output with the console's
    macros for every kind, every pack Sutra and the edge cases of this document (EMBED_GUIDE.md section 14).
 

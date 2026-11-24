@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Modules in the console (docs/architecture/ACCESS_MODEL.md section 2, DOMAIN_MODULES.md section 8): a module that is off is gone from
+"""Modules in the console (docs/architecture/KERNEL_AND_MODULES.md section 2, KERNEL_AND_MODULES.md section 8): a module that is off is gone from
 every door the console draws, and so is a function the person may not use.
 
 Two answers from the server, never the access model itself (the console and the browser ask the server, which asks the registry):

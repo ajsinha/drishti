@@ -61,7 +61,6 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.ir-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/ir-curve |
-| Worked example | [market-data/ir-curve](../samples/market-data.md#ir-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -129,6 +128,62 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 - number types decided by the field's name: POINTS[].ZERO_RATE rate, FORWARDS[].RATE rate: confirm amount, rate or integer.
 - no unit stated for the amounts TEN_Y, SLOPE_2S_10S, POINTS[].QUOTE, POINTS[].DF (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-ir-curve"></a>
+**Example: `data/testdata/market-data/ir-curve`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CURVE_ID": "CRV-AUD-BASIS",
+  "CURRENCY": "AUD",
+  "CURVE_TYPE": "Cross-currency basis",
+  "INDEX": "AONIA",
+  "TEN_Y": 0.038427,
+  "SLOPE_2S_10S": 46.3,
+  "AS_OF": "2026-07-08",
+  "POINTS": [
+    {
+      "TENOR": "1M",
+      "MATURITY": "2026-08-06",
+      "INSTRUMENT": "Deposit / future",
+      "QUOTE": 0.032815,
+      "ZERO_RATE": 3.2869,
+      "DF": 0.997264
+    },
+    {
+      "TENOR": "3M",
+      "MATURITY": "2026-10-02",
+      "INSTRUMENT": "Deposit / future",
+      "QUOTE": 0.032867,
+      "ZERO_RATE": 3.303,
+      "DF": 0.991777
+    },
+    "… 10 more elements of the same shape"
+  ],
+  "FORWARDS": [
+    {
+      "TENOR": "1Y",
+      "RATE": 3.4391
+    },
+    {
+      "TENOR": "2Y",
+      "RATE": 3.6496
+    },
+    "… 6 more elements of the same shape"
+  ],
+  "INTERPOLATION": "Log-linear on discount factors",
+  "DAY_COUNT": "ACT/365F",
+  "CALENDAR": "CAL-GBLO",
+  "FIXING_INDEX": "FIX-AONIA",
+  "BUILT_AT": "2026-07-08T18:02:41Z",
+  "SOURCES": [
+    "Broker composite",
+    "Exchange settlements"
+  ]
+}
+```
+
 ## REPO: Repo curve (`repo-curve`)
 
 General-collateral or specials repo rates by term.
@@ -146,7 +201,6 @@ General-collateral or specials repo rates by term.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.repo-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/repo-curve |
-| Worked example | [market-data/repo-curve](../samples/market-data.md#repo-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -187,6 +241,32 @@ General-collateral or specials repo rates by term.
 - number types decided by the field's name: POINTS[].RATE rate: confirm amount, rate or integer.
 - no unit stated for the amounts OVERNIGHT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-repo-curve"></a>
+**Example: `data/testdata/market-data/repo-curve`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CURVE_ID": "REPO-AUD",
+  "CURRENCY": "AUD",
+  "COLLATERAL": "General collateral (government)",
+  "OVERNIGHT": 0.031915,
+  "AS_OF": "2026-07-08",
+  "POINTS": [
+    {
+      "TENOR": "ON",
+      "RATE": 3.1936
+    },
+    {
+      "TENOR": "1W",
+      "RATE": 3.197
+    },
+    "… 4 more elements of the same shape"
+  ]
+}
+```
+
 ## FX: FX spot rate (`fx-spot`)
 
 Spot rate for a currency pair with bid/ask.
@@ -204,7 +284,6 @@ Spot rate for a currency pair with bid/ask.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.fx-spot`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-spot |
-| Worked example | [market-data/fx-spot](../samples/market-data.md#fx-spot) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -265,6 +344,44 @@ Spot rate for a currency pair with bid/ask.
 - enum values inferred from the data, not from a glossary: CONVENTIONS.BASE: confirm they are closed lists.
 - no unit stated for the amounts MID, BID, ASK, CHANGE_1D, HISTORY[].MID (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-fx-spot"></a>
+**Example: `data/testdata/market-data/fx-spot`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "PAIR": "FX-AUDUSD",
+  "PAIR_NAME": "AUD/USD",
+  "MID": 0.68418,
+  "BID": 0.68415,
+  "ASK": 0.68421,
+  "CHANGE_1D": -0.01049,
+  "SPOT_DATE": "2026-07-10",
+  "HISTORY": [
+    {
+      "DATE": "2026-05-26",
+      "MID": 0.74924
+    },
+    {
+      "DATE": "2026-05-27",
+      "MID": 0.74797
+    },
+    "… 28 more elements of the same shape"
+  ],
+  "CONVENTIONS": {
+    "BASE": "AUD",
+    "QUOTE": "USD",
+    "PIP_FACTOR": 10000,
+    "SPOT_LAG": "T+2",
+    "CALENDAR": "GBLO+USNY",
+    "NDF": false
+  },
+  "FX_FORWARD_CURVE": "FXF-AUDUSD",
+  "FX_VOL_SURFACE": "FXV-AUDUSD"
+}
+```
+
 ## FXF: FX forward curve (`fx-forward-curve`)
 
 Forward points by tenor for a pair.
@@ -282,7 +399,6 @@ Forward points by tenor for a pair.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.fx-forward-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-forward-curve |
-| Worked example | [market-data/fx-forward-curve](../samples/market-data.md#fx-forward-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -324,6 +440,35 @@ Forward points by tenor for a pair.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - no unit stated for the amounts SPOT, POINTS_3M, POINTS_1Y, POINTS[].PIPS, POINTS[].OUTRIGHT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-fx-forward-curve"></a>
+**Example: `data/testdata/market-data/fx-forward-curve`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CURVE_ID": "FXF-AUDUSD",
+  "PAIR": "AUDUSD",
+  "SPOT": 0.68418,
+  "POINTS_3M": 1.8,
+  "POINTS_1Y": 6.8,
+  "POINTS": [
+    {
+      "TENOR": "ON",
+      "PIPS": 0.0,
+      "OUTRIGHT": 0.68418
+    },
+    {
+      "TENOR": "1W",
+      "PIPS": 0.1,
+      "OUTRIGHT": 0.68419
+    },
+    "… 7 more elements of the same shape"
+  ],
+  "FX_SPOT": "FX-AUDUSD"
+}
+```
+
 ## FXV: FX volatility surface (`fx-vol-surface`)
 
 Implied vols by expiry and delta (ATM, 25D RR/BF).
@@ -341,7 +486,6 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.fx-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/fx-vol-surface |
-| Worked example | [market-data/fx-vol-surface](../samples/market-data.md#fx-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -391,6 +535,46 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 - enum values inferred from the data, not from a glossary: GRID[].EXPIRY: confirm they are closed lists.
 - no unit stated for the amounts ATM_1M, ATM_1Y, RR_1Y, GRID[].P_10, GRID[].P_25, GRID[].ATM, GRID[].C_25, GRID[].C_10, GRID[].RR_25, GRID[].BF_25 (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-fx-vol-surface"></a>
+**Example: `data/testdata/market-data/fx-vol-surface`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SURFACE_ID": "FXV-AUDUSD",
+  "PAIR": "AUDUSD",
+  "ATM_1M": 9.17,
+  "ATM_1Y": 9.9,
+  "RR_1Y": -0.46,
+  "GRID": [
+    {
+      "EXPIRY": "1M",
+      "P_10": 10.04,
+      "P_25": 9.6,
+      "ATM": 9.17,
+      "C_25": 9.24,
+      "C_10": 9.4,
+      "RR_25": -0.36,
+      "BF_25": 0.25
+    },
+    {
+      "EXPIRY": "3M",
+      "P_10": 10.22,
+      "P_25": 9.76,
+      "ATM": 9.31,
+      "C_25": 9.38,
+      "C_10": 9.54,
+      "RR_25": -0.38,
+      "BF_25": 0.26
+    },
+    "… 4 more elements of the same shape"
+  ],
+  "MODEL": "Vanna-volga smile, delta-quoted",
+  "FX_SPOT": "FX-AUDUSD"
+}
+```
+
 ## IRV: Swaption volatility cube (`ir-vol-cube`)
 
 Normal (bp) swaption vols by expiry × tenor.
@@ -408,7 +592,6 @@ Normal (bp) swaption vols by expiry × tenor.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.ir-vol-cube`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/ir-vol-cube |
-| Worked example | [market-data/ir-vol-cube](../samples/market-data.md#ir-vol-cube) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -451,6 +634,40 @@ Normal (bp) swaption vols by expiry × tenor.
 - enum values inferred from the data, not from a glossary: GRID[].EXPIRY: confirm they are closed lists.
 - no unit stated for the amounts V_1Y_10Y, V_5Y_5Y, GRID[].T_1Y, GRID[].T_2Y, GRID[].T_5Y, GRID[].T_10Y, GRID[].T_30Y (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-ir-vol-cube"></a>
+**Example: `data/testdata/market-data/ir-vol-cube`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CUBE_ID": "IRV-AUD",
+  "CURRENCY": "AUD",
+  "MODEL": "Normal (Bachelier), SABR smile",
+  "V_1Y_10Y": 137.22,
+  "V_5Y_5Y": 132.72,
+  "GRID": [
+    {
+      "EXPIRY": "1M",
+      "T_1Y": 148.55,
+      "T_2Y": 146.78,
+      "T_5Y": 143.74,
+      "T_10Y": 141.09,
+      "T_30Y": 136.56
+    },
+    {
+      "EXPIRY": "3M",
+      "T_1Y": 147.6,
+      "T_2Y": 145.83,
+      "T_5Y": 142.82,
+      "T_10Y": 140.19,
+      "T_30Y": 135.69
+    },
+    "… 5 more elements of the same shape"
+  ]
+}
+```
+
 ## CPV: Cap/floor volatility surface (`cap-vol-surface`)
 
 Cap vols by maturity and strike.
@@ -468,7 +685,6 @@ Cap vols by maturity and strike.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.cap-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/cap-vol-surface |
-| Worked example | [market-data/cap-vol-surface](../samples/market-data.md#cap-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -510,6 +726,39 @@ Cap vols by maturity and strike.
 - enum values inferred from the data, not from a glossary: GRID[].MATURITY: confirm they are closed lists.
 - no unit stated for the amounts ATM_5Y, GRID[].ATM, GRID[].K_2, GRID[].K_3, GRID[].K_4, GRID[].K_5 (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-cap-vol-surface"></a>
+**Example: `data/testdata/market-data/cap-vol-surface`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SURFACE_ID": "CPV-AUD",
+  "CURRENCY": "AUD",
+  "ATM_5Y": 124.3,
+  "GRID": [
+    {
+      "MATURITY": "1Y",
+      "ATM": 130.38,
+      "K_2": 140.42,
+      "K_3": 135.86,
+      "K_4": 131.29,
+      "K_5": 134.03
+    },
+    {
+      "MATURITY": "2Y",
+      "ATM": 128.34,
+      "K_2": 138.22,
+      "K_3": 133.73,
+      "K_4": 129.24,
+      "K_5": 131.94
+    },
+    "… 4 more elements of the same shape"
+  ],
+  "MODEL": "Normal, stripped caplets"
+}
+```
+
 ## EQ: Equity (`equity`)
 
 A listed stock: price, dividends, sector and identifiers.
@@ -527,7 +776,6 @@ A listed stock: price, dividends, sector and identifiers.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.equity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity |
-| Worked example | [market-data/equity](../samples/market-data.md#equity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -603,6 +851,64 @@ A listed stock: price, dividends, sector and identifiers.
 - enum values inferred from the data, not from a glossary: EXCHANGE, CURRENCY: confirm they are closed lists.
 - no unit stated for the amounts PRICE, CHANGE_1D, HISTORY[].CLOSE, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-equity"></a>
+**Example: `data/testdata/market-data/equity`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "TICKER": "EQ-GRNT",
+  "NAME": "Granite Building Materials plc",
+  "PRICE": 7.21,
+  "CHANGE_1D": -0.01503,
+  "MARKET_CAP": 23384106480,
+  "SECTOR": "Materials",
+  "EXCHANGE": "LSE",
+  "CURRENCY": "GBP",
+  "HISTORY": [
+    {
+      "DATE": "2026-05-26",
+      "CLOSE": 7.51
+    },
+    {
+      "DATE": "2026-05-27",
+      "CLOSE": 7.66
+    },
+    "… 28 more elements of the same shape"
+  ],
+  "OHLC": [
+    {
+      "DATE": "2026-04-13",
+      "OPEN": 8.3,
+      "HIGH": 8.32,
+      "LOW": 8.0,
+      "CLOSE": 8.08,
+      "VOLUME": 10910608
+    },
+    {
+      "DATE": "2026-04-14",
+      "OPEN": 8.09,
+      "HIGH": 8.13,
+      "LOW": 7.68,
+      "CLOSE": 7.84,
+      "VOLUME": 12618341
+    },
+    "… 58 more elements of the same shape"
+  ],
+  "IDENTIFIERS": {
+    "ISIN": "GB0GRNT00017",
+    "BLOOMBERG": "GRNT LS Equity",
+    "RIC": "GRNT.L",
+    "FIGI": "BBG1D831446F"
+  },
+  "ISSUER": "ISS-GRANITE",
+  "EQUITY_VOL_SURFACE": "EQV-GRNT",
+  "DIVIDEND_CURVE": "DIV-GRNT",
+  "EQUITY_INDEX": "EQX-UKX"
+}
+```
+
 ## EQX: Equity index (`equity-index`)
 
 Index level with its largest constituents.
@@ -620,7 +926,6 @@ Index level with its largest constituents.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.equity-index`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity-index |
-| Worked example | [market-data/equity-index](../samples/market-data.md#equity-index) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -678,6 +983,41 @@ Index level with its largest constituents.
 - number types decided by the field's name: CONSTITUENTS[].WEIGHT rate: confirm amount, rate or integer.
 - no unit stated for the amounts LEVEL, CHANGE_1D, HISTORY[].CLOSE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-equity-index"></a>
+**Example: `data/testdata/market-data/equity-index`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "INDEX_ID": "EQX-NDX",
+  "NAME": "Nasdaq-100",
+  "LEVEL": 25569.56,
+  "CHANGE_1D": 0.00101,
+  "CONSTITUENT_COUNT": 101,
+  "CURRENCY": "USD",
+  "CONSTITUENTS": [
+    {
+      "EQUITY": "EQ-NVTK",
+      "WEIGHT": 0.02
+    }
+  ],
+  "HISTORY": [
+    {
+      "DATE": "2026-05-26",
+      "CLOSE": 25263.42
+    },
+    {
+      "DATE": "2026-05-27",
+      "CLOSE": 25446.39
+    },
+    "… 28 more elements of the same shape"
+  ],
+  "EQUITY_VOL_SURFACE": "EQV-NDX",
+  "DIVIDEND_CURVE": "DIV-NDX"
+}
+```
+
 ## DIV: Dividend curve (`dividend-curve`)
 
 Expected dividends by year (implied from dividend futures and forwards).
@@ -695,7 +1035,6 @@ Expected dividends by year (implied from dividend futures and forwards).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.dividend-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/dividend-curve |
-| Worked example | [market-data/dividend-curve](../samples/market-data.md#dividend-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -739,6 +1078,31 @@ Expected dividends by year (implied from dividend futures and forwards).
 - number types decided by the field's name: DIVIDEND_YIELD rate, POINTS[].AMOUNT amount: confirm amount, rate or integer.
 - no unit stated for the amounts POINTS[].AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-dividend-curve"></a>
+**Example: `data/testdata/market-data/dividend-curve`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CURVE_ID": "DIV-CSCA",
+  "UNDERLIER": "EQ-CSCA",
+  "DIVIDEND_YIELD": 0.0275,
+  "POINTS": [
+    {
+      "YEAR": "2026",
+      "AMOUNT": 0.6
+    },
+    {
+      "YEAR": "2027",
+      "AMOUNT": 0.63
+    },
+    "… 4 more elements of the same shape"
+  ],
+  "UNDERLYING_EQUITY": "EQ-CSCA"
+}
+```
+
 ## EQV: Equity volatility surface (`equity-vol-surface`)
 
 Implied vols by expiry and moneyness.
@@ -756,7 +1120,6 @@ Implied vols by expiry and moneyness.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.equity-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/equity-vol-surface |
-| Worked example | [market-data/equity-vol-surface](../samples/market-data.md#equity-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -800,6 +1163,41 @@ Implied vols by expiry and moneyness.
 - enum values inferred from the data, not from a glossary: GRID[].EXPIRY: confirm they are closed lists.
 - no unit stated for the amounts ATM_1M, ATM_1Y, SKEW_1Y, GRID[].M_80, GRID[].M_90, GRID[].M_100, GRID[].M_110, GRID[].M_120 (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-equity-vol-surface"></a>
+**Example: `data/testdata/market-data/equity-vol-surface`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SURFACE_ID": "EQV-CSCA",
+  "UNDERLIER": "EQ-CSCA",
+  "ATM_1M": 37.54,
+  "ATM_1Y": 36.67,
+  "SKEW_1Y": 3.63,
+  "GRID": [
+    {
+      "EXPIRY": "1M",
+      "M_80": 43.17,
+      "M_90": 40.35,
+      "M_100": 37.54,
+      "M_110": 36.64,
+      "M_120": 35.74
+    },
+    {
+      "EXPIRY": "3M",
+      "M_80": 42.93,
+      "M_90": 40.13,
+      "M_100": 37.33,
+      "M_110": 36.44,
+      "M_120": 35.54
+    },
+    "… 4 more elements of the same shape"
+  ],
+  "MODEL": "SVI, moneyness-quoted"
+}
+```
+
 ## CDS: Credit curve (`credit-curve`)
 
 CDS par spreads by tenor, recovery and implied default probabilities.
@@ -817,7 +1215,6 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.credit-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/credit-curve |
-| Worked example | [market-data/credit-curve](../samples/market-data.md#credit-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -868,6 +1265,40 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 - number types decided by the field's name: SPREAD_5Y rate, RECOVERY rate, PD_1Y rate, POINTS[].SPREAD rate: confirm amount, rate or integer.
 - no unit stated for the amounts POINTS[].HAZARD, POINTS[].SURVIVAL (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-credit-curve"></a>
+**Example: `data/testdata/market-data/credit-curve`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CURVE_ID": "CDS-BUND",
+  "ISSUER_NAME": "Federal Republic of Germany",
+  "SPREAD_5Y": 9,
+  "RECOVERY": 0.25,
+  "SENIORITY": "Senior unsecured",
+  "DOC_CLAUSE": "MM14",
+  "PD_1Y": 0.000666,
+  "POINTS": [
+    {
+      "TENOR": "6M",
+      "SPREAD": 4.5,
+      "HAZARD": 0.0006,
+      "SURVIVAL": 0.9997
+    },
+    {
+      "TENOR": "1Y",
+      "SPREAD": 5.0,
+      "HAZARD": 0.000667,
+      "SURVIVAL": 0.999334
+    },
+    "… 5 more elements of the same shape"
+  ],
+  "ISSUER": "ISS-BUND",
+  "CURRENCY": "EUR"
+}
+```
+
 ## INF: Inflation index (`inflation-index`)
 
 Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
@@ -885,7 +1316,6 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.inflation-index`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/inflation-index |
-| Worked example | [market-data/inflation-index](../samples/market-data.md#inflation-index) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -929,6 +1359,36 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 - number types decided by the field's name: FIXINGS[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, YOY, FIXINGS[].VALUE, FIXINGS[].YOY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-inflation-index"></a>
+**Example: `data/testdata/market-data/inflation-index`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "INDEX_ID": "INF-HICPX",
+  "NAME": "Euro HICP ex-tobacco",
+  "LATEST": 128.4,
+  "YOY": 0.021,
+  "LAG": "3 months",
+  "CURRENCY": "EUR",
+  "FIXINGS": [
+    {
+      "MONTH": "2026-08",
+      "VALUE": 128.4,
+      "YOY": 0.021
+    },
+    {
+      "MONTH": "2026-07",
+      "VALUE": 128.176,
+      "YOY": 0.0218
+    },
+    "… 10 more elements of the same shape"
+  ],
+  "INFLATION_CURVE": "INFC-HICPX"
+}
+```
+
 ## INFC: Inflation curve (`inflation-curve`)
 
 Zero-coupon breakevens by tenor, with monthly seasonality.
@@ -946,7 +1406,6 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.inflation-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/inflation-curve |
-| Worked example | [market-data/inflation-curve](../samples/market-data.md#inflation-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -996,6 +1455,43 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 - enum values inferred from the data, not from a glossary: POINTS[].TENOR: confirm they are closed lists.
 - no unit stated for the amounts BE_5Y, BE_10Y, POINTS[].BREAKEVEN, SEASONALITY[].FACTOR (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-inflation-curve"></a>
+**Example: `data/testdata/market-data/inflation-curve`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CURVE_ID": "INFC-HICPX",
+  "INDEX": "INF-HICPX",
+  "BE_5Y": 0.021588,
+  "BE_10Y": 0.022497,
+  "POINTS": [
+    {
+      "TENOR": "1Y",
+      "BREAKEVEN": 1.994
+    },
+    {
+      "TENOR": "2Y",
+      "BREAKEVEN": 2.0548
+    },
+    "… 4 more elements of the same shape"
+  ],
+  "SEASONALITY": [
+    {
+      "MONTH": "Jan",
+      "FACTOR": 0.00075
+    },
+    {
+      "MONTH": "Feb",
+      "FACTOR": 0.0013
+    },
+    "… 10 more elements of the same shape"
+  ],
+  "INFLATION_INDEX": "INF-HICPX"
+}
+```
+
 ## CMD: Commodity (`commodity`)
 
 A traded commodity with its benchmark, unit and venue.
@@ -1013,7 +1509,6 @@ A traded commodity with its benchmark, unit and venue.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.commodity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity |
-| Worked example | [market-data/commodity](../samples/market-data.md#commodity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1083,6 +1578,52 @@ A traded commodity with its benchmark, unit and venue.
 - enum values inferred from the data, not from a glossary: NAME, UNIT, EXCHANGE, SECTOR, SPEC.CONTRACT, SPEC.UNIT, SPEC.EXCHANGE, SPEC.SETTLEMENT: confirm they are closed lists.
 - no unit stated for the amounts FRONT, OHLC[].OPEN, OHLC[].HIGH, OHLC[].LOW, OHLC[].CLOSE, SPEC.TICK_SIZE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-commodity"></a>
+**Example: `data/testdata/market-data/commodity`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "COMMODITY_ID": "CMD-BRENT",
+  "NAME": "Brent crude oil",
+  "FRONT": 79.99,
+  "UNIT": "USD/bbl",
+  "EXCHANGE": "ICE",
+  "SECTOR": "Energy",
+  "OHLC": [
+    {
+      "DATE": "2026-04-13",
+      "OPEN": 92.02,
+      "HIGH": 96.44,
+      "LOW": 90.01,
+      "CLOSE": 96.02,
+      "VOLUME": 163625
+    },
+    {
+      "DATE": "2026-04-14",
+      "OPEN": 96.27,
+      "HIGH": 98.33,
+      "LOW": 95.63,
+      "CLOSE": 96.88,
+      "VOLUME": 138952
+    },
+    "… 58 more elements of the same shape"
+  ],
+  "SPEC": {
+    "CONTRACT": "BRENT",
+    "UNIT": "USD/bbl",
+    "EXCHANGE": "ICE",
+    "SETTLEMENT": "Physical",
+    "LISTING": "Monthly",
+    "TICK_SIZE": 0.01,
+    "TRADING_HOURS": "Sun-Fri 18:00-17:00 ET"
+  },
+  "COMMODITY_CURVE": "CMDC-BRENT",
+  "COMMODITY_VOL_SURFACE": "CMDV-BRENT"
+}
+```
+
 ## CMDC: Commodity forward curve (`commodity-curve`)
 
 Futures settlement prices by delivery month.
@@ -1100,7 +1641,6 @@ Futures settlement prices by delivery month.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.commodity-curve`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity-curve |
-| Worked example | [market-data/commodity-curve](../samples/market-data.md#commodity-curve) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1148,6 +1688,36 @@ Futures settlement prices by delivery month.
 - number types decided by the field's name: POINTS[].PRICE amount: confirm amount, rate or integer.
 - no unit stated for the amounts FRONT, ROLL, POINTS[].PRICE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-commodity-curve"></a>
+**Example: `data/testdata/market-data/commodity-curve`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CURVE_ID": "CMDC-BRENT",
+  "COMMODITY": "Brent crude oil",
+  "FRONT": 79.99,
+  "SHAPE": "backwardation",
+  "ROLL": -0.4,
+  "POINTS": [
+    {
+      "MONTH": "X6",
+      "PRICE": 79.99,
+      "OPEN_INTEREST": 200000
+    },
+    {
+      "MONTH": "Z6",
+      "PRICE": 79.67,
+      "OPEN_INTEREST": 143306
+    },
+    "… 10 more elements of the same shape"
+  ],
+  "COMMODITY_REF": "CMD-BRENT",
+  "UNIT": "USD/bbl"
+}
+```
+
 ## CMDV: Commodity volatility surface (`commodity-vol-surface`)
 
 Implied vols by delivery month and moneyness.
@@ -1165,7 +1735,6 @@ Implied vols by delivery month and moneyness.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.commodity-vol-surface`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/commodity-vol-surface |
-| Worked example | [market-data/commodity-vol-surface](../samples/market-data.md#commodity-vol-surface) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1204,6 +1773,34 @@ Implied vols by delivery month and moneyness.
 - enum values inferred from the data, not from a glossary: GRID[].MONTH: confirm they are closed lists.
 - no unit stated for the amounts ATM_FRONT, GRID[].M_90, GRID[].M_100, GRID[].M_110 (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-commodity-vol-surface"></a>
+**Example: `data/testdata/market-data/commodity-vol-surface`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SURFACE_ID": "CMDV-BRENT",
+  "COMMODITY": "Brent crude oil",
+  "ATM_FRONT": 31.32,
+  "GRID": [
+    {
+      "MONTH": "X6",
+      "M_90": 32.82,
+      "M_100": 31.32,
+      "M_110": 32.12
+    },
+    {
+      "MONTH": "Z6",
+      "M_90": 32.24,
+      "M_100": 30.74,
+      "M_110": 31.54
+    },
+    "… 6 more elements of the same shape"
+  ]
+}
+```
+
 ## FIX: Rate index fixings (`rate-fixing`)
 
 Published overnight and term rate fixings (SOFR, €STR, SONIA…).
@@ -1221,7 +1818,6 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.rate-fixing`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/rate-fixing |
-| Worked example | [market-data/rate-fixing](../samples/market-data.md#rate-fixing) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1267,6 +1863,37 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 - number types decided by the field's name: FIXINGS[].RATE rate, FIXINGS[].RATE_PCT rate, FIXINGS[].VOLUME_BN amount: confirm amount, rate or integer.
 - no unit stated for the amounts LATEST, FIXINGS[].VOLUME_BN (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-rate-fixing"></a>
+**Example: `data/testdata/market-data/rate-fixing`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "INDEX_ID": "FIX-AONIA",
+  "NAME": "AUD Overnight Index Average",
+  "LATEST": 0.037906,
+  "ADMINISTRATOR": "RBA",
+  "TENOR": "Overnight",
+  "CURRENCY": "AUD",
+  "FIXINGS": [
+    {
+      "DATE": "2026-07-08",
+      "RATE": 0.037906,
+      "RATE_PCT": 3.7906,
+      "VOLUME_BN": 555.5
+    },
+    {
+      "DATE": "2026-07-07",
+      "RATE": 0.037899,
+      "RATE_PCT": 3.7899,
+      "VOLUME_BN": 1029.2
+    },
+    "… 18 more elements of the same shape"
+  ]
+}
+```
+
 ## BND: Bond (security master) (`bond`)
 
 A listed bond: terms, price, yield, spreads and analytics.
@@ -1284,7 +1911,6 @@ A listed bond: terms, price, yield, spreads and analytics.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.bond`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/bond |
-| Worked example | [market-data/bond](../samples/market-data.md#bond) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1359,6 +1985,60 @@ A listed bond: terms, price, yield, spreads and analytics.
 - number types decided by the field's name: COUPON rate, PRICE amount, YIELD rate, Z_SPREAD rate, TERMS.AMOUNT_ISSUED amount, COUPONS[].AMOUNT amount, HISTORY[].PRICE amount: confirm amount, rate or integer.
 - no unit stated for the amounts PRICE, MOD_DURATION, TERMS.AMOUNT_ISSUED, COUPONS[].AMOUNT, HISTORY[].PRICE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-data-bond"></a>
+**Example: `data/testdata/market-data/bond`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "ISIN": "BND-US0UST030079",
+  "ISIN_CODE": "US0UST030079",
+  "ISSUER_NAME": "United States Treasury",
+  "COUPON": 0.0382,
+  "MATURITY": "2031-02-15",
+  "PRICE": 97.691,
+  "YIELD": 0.043508,
+  "Z_SPREAD": 16.8,
+  "MOD_DURATION": 4.5,
+  "RATING": "AA+",
+  "TERMS": {
+    "CURRENCY": "USD",
+    "COUPON_FREQUENCY": "Semi-annual",
+    "DAY_COUNT": "ACT/ACT",
+    "ISSUE_DATE": "2021-02-15",
+    "AMOUNT_ISSUED": 2800000000,
+    "SENIORITY": "Sovereign",
+    "CALLABLE": false,
+    "CUSIP": "0UST03005"
+  },
+  "COUPONS": [
+    {
+      "DATE": "2027-02-15",
+      "AMOUNT": 1.91
+    },
+    {
+      "DATE": "2028-02-15",
+      "AMOUNT": 1.91
+    },
+    "… 3 more elements of the same shape"
+  ],
+  "HISTORY": [
+    {
+      "DATE": "2026-05-26",
+      "PRICE": 99.103
+    },
+    {
+      "DATE": "2026-05-27",
+      "PRICE": 98.968
+    },
+    "… 28 more elements of the same shape"
+  ],
+  "ISSUER": "ISS-UST",
+  "BENCHMARK_CURVE": "CRV-USD-GOVT"
+}
+```
+
 ## CORR: Correlation matrix (`correlation-matrix`)
 
 A correlation set: the factors whose pairwise correlations basket, quanto and spread products use. The set keeps its definition only; the correlations are the computed kind correlation-result (CORRC), worked out from the factors' price history when asked.
@@ -1376,7 +2056,6 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `market.correlation-matrix`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-data/correlation-matrix |
-| Worked example | [market-data/correlation-matrix](../samples/market-data.md#correlation-matrix) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1407,6 +2086,31 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - number types decided by the field's name: AVERAGE rate, PAIRS[].RHO rate: confirm amount, rate or integer.
+
+<a id="example-market-data-correlation-matrix"></a>
+**Example: `data/testdata/market-data/correlation-matrix`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "MATRIX_ID": "CORR-EU-EQ",
+  "NAME": "European equities",
+  "FACTORS": [
+    "ORBT",
+    "RHNB",
+    "GRNT",
+    "LUMN"
+  ],
+  "EQUITY_IDS": [
+    "EQ-ORBT",
+    "EQ-RHNB",
+    "EQ-GRNT",
+    "EQ-LUMN"
+  ],
+  "FX_IDS": []
+}
+```
 
 ## CORRC: Correlations of a factor set (computed from price history) (`correlation-result`)
 

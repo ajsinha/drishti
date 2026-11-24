@@ -36,7 +36,7 @@ public class SwitchesConfiguration {
     @Bean
     public CommandSwitches commandSwitches(SwitchLedger ledger, Mnemonics mnemonics, PackAccess access,
             com.ash.drishti.registry.AccessRegistry registry) {
-        // the mnemonic switches fold into the access registry (ACCESS_MODEL.md, functions): the ledger keeps the administrator's switch
+        // the mnemonic switches fold into the access registry (KERNEL_AND_MODULES.md, functions): the ledger keeps the administrator's switch
         // (the system of record, gossiped across the cluster); the registry decides a function on with its module
         registry.functionSwitches(word -> ledger.find(SwitchLedger.COMMAND, word).map(SwitchLedger.Entry::on).orElse(null));
         CommandSwitches c = new CommandSwitches(ledger, mnemonics, registry);

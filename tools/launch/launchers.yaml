@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The IDE launchers, one row each (docs/plans/LAUNCHER_REVIEW.md 4.2): `python tools/drishti.py launchers` writes them, the VS Code workspace
+# The IDE launchers, one row each (docs/guides/IDE_GUIDE.md 4.2): `python tools/drishti.py launchers` writes them, the VS Code workspace
 # drishti.code-workspace (both kinds) and the tables of docs/guides/IDE_GUIDE.md section 4 from this table, and `launchers --check` (a quick
 # file check of the drill's gate) fails when a committed file differs. The section says which project a row belongs to: `intellij` rows go
 # into run-configs/ (IntelliJ IDEA opens `drishti`: only the Java launchers), `pycharm` rows into

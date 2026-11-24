@@ -15,7 +15,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 -->
 <!-- A Drishti module project, made by drishti-module-archetype. `mvn package` builds the jar; packaging/dist packs the folder with it
-     (the Python packager) and runs the conformance checks C1-C14 (docs/guides/DEVELOPER_GUIDE.md, the Module SDK). The genomics sample (DISTRIBUTIONS.md
+     (the Python packager) and runs the conformance checks C1-C14 (docs/guides/DEVELOPER_GUIDE.md, the Module SDK). The genomics sample (KERNEL_AND_MODULES.md
      section 4) is built in the kernel's reactor too: there the parent is the SDK's own folder; a partner's project leaves relativePath
      empty and takes the parent from its Maven repository. -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">

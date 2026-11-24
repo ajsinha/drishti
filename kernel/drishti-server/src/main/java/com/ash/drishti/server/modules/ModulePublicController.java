@@ -115,7 +115,7 @@ public class ModulePublicController {
     }
 
     /**
-     * The modules a distribution may list, as this server reads them now (DISTRIBUTIONS.md section 10), each with what a distribution
+     * The modules a distribution may list, as this server reads them now (KERNEL_AND_MODULES.md section 10), each with what a distribution
      * takes from it. The console's distributions read this list; the fingerprint is {@code /public/about}'s {@code manifests}.
      */
     @GetMapping("/public/modules/manifests")

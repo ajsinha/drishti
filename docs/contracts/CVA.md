@@ -233,7 +233,7 @@ by trade (EXPOSURE_GUIDE.md section 18.6, giving each trade's CVA contribution: 
 | `BY_COUNTERPARTY`, `BY_NETTING_SET` | record list | | `ID`, `CVA`, `DVA`, `FVA`, `CS01`, `BA_CVA_SCVA` |
 | `PROVENANCE` | record | | NSET's (`INPUTS`: each `KIND` with its `VERSION` and `BATCH_IDS`; `UNVALUED`, `PARTIAL`, `HIDDEN`), plus EXP's run (`RUN_ID`, `CALIBRATION`), the curves (`CURVES`: `ID`, `DATE`, `PROXY`), the settings used (`SETTINGS`, by the names of §6.1) and `FLAGS` (§10: `proxy`, `real-world-exposure`, `extrapolated`) |
 
-**FVA comes first, in its own kind** (product owner, 2026-11-02, [COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions), decision 9). Before the CVA family is built, FCA, FBA and
+**FVA comes first, in its own kind** (product owner, 2026-11-02, [COUNTERPARTY_ENGINES.md section 14](../plans/COUNTERPARTY_ENGINES.md#14-decisions), decision 9). Before the CVA family is built, FCA, FBA and
 FVA are computed by the xVA engine (`drishti_ccr.xva:XvaEngine`) into the computed kind `fva-result` with its own API `/api/v1/fva`
 (scope, date, run; per netting set and summed). FVA is computed on the collateralised EE and ENE, funding symmetric (FBA reported) and not
 survival-weighted by default, and refused on a `REAL_WORLD` run in production (decisions 10, 11, 13). When CVA and DVA join the same
@@ -414,7 +414,7 @@ counterparty K_reduced = SCVA × √(0.25 + 0.75) = 541,755; **K_BA-CVA = 0.65 �
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
-| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions)): FVA computed first into its own kind `fva-result` (`/api/v1/fva`) and read by reference by `cva-result`; FVA on the collateralised profile, symmetric, not survival-weighted; the demo funding curve is a synthetic, labelled curve |
+| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../plans/COUNTERPARTY_ENGINES.md#14-decisions)): FVA computed first into its own kind `fva-result` (`/api/v1/fva`) and read by reference by `cva-result`; FVA on the collateralised profile, symmetric, not survival-weighted; the demo funding curve is a synthetic, labelled curve |
 
 ## 17. JSON examples
 

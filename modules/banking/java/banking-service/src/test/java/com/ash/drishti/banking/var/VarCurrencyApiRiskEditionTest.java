@@ -18,7 +18,7 @@ package com.ash.drishti.banking.var;
 import org.springframework.test.context.TestPropertySource;
 
 /**
- * Every test of {@link VarCurrencyApiTest} again with the server running Drishti Risk (drishti.distribution=risk, docs/architecture/DISTRIBUTIONS.md): every reporting currency (scenario FX, crosses through USD) work
+ * Every test of {@link VarCurrencyApiTest} again with the server running Drishti Risk (drishti.distribution=risk, docs/architecture/KERNEL_AND_MODULES.md): every reporting currency (scenario FX, crosses through USD) work
  * under Drishti Risk exactly as on the full product. The test's own packs (the site's drishti.packs.enabled) win over the distribution's; the commands stay Drishti Risk's.
  */
 @TestPropertySource(properties = {"drishti.distribution=risk", "drishti.distributions-dir=../../../../config/distributions"})

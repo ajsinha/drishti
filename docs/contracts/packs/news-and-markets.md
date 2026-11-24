@@ -43,7 +43,6 @@ A topic and the news about it: headlines (newest first) with their publishers an
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `news.news-topic`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/news-and-markets/samples |
-| Worked example | [news-and-markets/news-topic](../samples/news-and-markets.md#news-topic) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -80,6 +79,33 @@ A topic and the news about it: headlines (newest first) with their publishers an
 - a snapshot refreshed when the news-and-markets data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: CATEGORY: confirm they are closed lists.
 
+<a id="example-news-and-markets-news-topic"></a>
+**Example: `modules/economy/packs/news-and-markets/samples/news-topic.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "TOPIC_ID": "TOPIC-INDIA",
+  "NAME": "India",
+  "CATEGORY": "Country",
+  "ALIASES": [
+    "Indian",
+    "New Delhi"
+  ],
+  "ALIAS_TEXT": "Indian, New Delhi",
+  "EDITION": "default",
+  "NEWS_ID": "NEWS-India",
+  "NEWS_ALL_ID": "NEWS-India~all",
+  "ECONOMY": "ECON-IND",
+  "_meta": {
+    "source": "reference",
+    "generation": 1,
+    "live": false
+  }
+}
+```
+
 ## NEWS: Headlines (`news`)
 
 The headlines for one name, as the news connector computed them: newest first, filtered for relevance, duplicates removed.
@@ -97,7 +123,6 @@ The headlines for one name, as the news connector computed them: newest first, f
 | Cadence | intraday (due: on demand, when the connector is on) |
 | Binding hint | any source the site binds; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/news-and-markets/news |
-| Worked example | [news-and-markets/news](../samples/news-and-markets.md#news) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -179,6 +204,81 @@ The headlines for one name, as the news connector computed them: newest first, f
 - read live through the news connector when it is on: confirm the cadence (intraday, on demand).
 - enum values inferred from the data, not from a glossary: EDITION, RELEVANCE_FILTER, FETCHED_AT, PIPELINE[].STEP, PROVENANCE.FETCHED: confirm they are closed lists.
 
+<a id="example-news-and-markets-news"></a>
+**Example: `data/testdata/news-and-markets/news`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "NEWS_ID": "NEWS-Alphabet",
+  "ENTITY": "Alphabet",
+  "ALIASES": [
+    "Google",
+    "GOOGL"
+  ],
+  "EDITION": "en-US",
+  "RELEVANCE_FILTER": "on",
+  "COUNT": 15,
+  "FETCHED_AT": "2026-10-18 03:25 UTC (snapshot captured 2026-10-18)",
+  "ITEMS": [
+    {
+      "PUBLISHED": "2026-10-18 01:37 UTC",
+      "SOURCE": "Simply Wall Street",
+      "TITLE": "Alphabet (GOOGL) Plans Toronto Robotaxi Service By 2028",
+      "LINK": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOWF9ZUUxETmlWdDF5VS1QVjZFbU5YUWp4bGlRTmpSWTJzTUtkZ0hSR3Ntcmt1R0JZVU45VkNXU0hHYk9TQXU0dERzeENqQ0FBY3JKbk45VmMzN01sWHg3MllVQ1JIamViNnFzUlZUbVNneGVCeG80WGtzZVhKampYOUptTWJIUTVRTmFwU0laczNUcXRLYnExYnlyX0ZFTkQ2R0ZFcTFmVGJGMjNkU1Q2NlprRF9NTWppRkHSAb8BQVVfeXFMTUdQaUJxbkkwMzNEbGFIVXRXN3lud0ZWbDVfczV6eEhST1ptaWhFQTVHVGdqUF9Pc0FnTlhvZGpBT1FaeHdoRUhBcUlSMmVucU1qSjB2c2JiMWx6X1hicFlHTUVCUEJJX1kwTHlVa0FvY082ZS1kMDRTV1gtQXpabXl0aXNGYjU3anl6TDNaXzlmQThRR1hOMm5tY2lSTkhwZl82cGd6Y1pBRkNTTGRTeGpCUUxJM3Z6b213bGhmRDA?oc=5",
+      "SNIPPET": ""
+    },
+    {
+      "PUBLISHED": "2026-10-18 00:03 UTC",
+      "SOURCE": "TradingKey",
+      "TITLE": "Alphabet Stock Price Forecast: Can Expanding Access to Gemini 4 Argon Help Its Stock Recover?",
+      "LINK": "https://news.google.com/rss/articles/CBMi7AFBVV95cUxNcG1EUWVvaFpxcDgwRzNNZzRRb2tJTlMzSWVmYjJEb0UwSUZYNy1Dc3pSZmRvdTF0UnRkZHZoNDlLSHFPWWhDVDRmeWUzV25HNWRmLUg3Q3h5Nkh5N3ZmY0ZDZldqZmVxdThnc3BKQmdGbVBENDhhelk0cXlEVlZWT19lNk01eTllOWRCTnRqRDI0TkJidEQyRkhIaUR2eE5kX2prYXdwWXFRaWpNQmF6NEZwODdhWjVJSnNqQ0xnSlVQV1pSWVN2OThxLW5SR2ZwOVVHZlNNWURrREgxQnVVVGpwcmI4VUJseDJLVA?oc=5",
+      "SNIPPET": ""
+    },
+    "… 13 more elements of the same shape"
+  ],
+  "BY_SOURCE": [
+    {
+      "SOURCE": "The Motley Fool",
+      "COUNT": 3
+    },
+    {
+      "SOURCE": "Benzinga",
+      "COUNT": 2
+    },
+    "… 10 more elements of the same shape"
+  ],
+  "PIPELINE": [
+    {
+      "DROPPED": 4,
+      "KEPT": 96,
+      "STEP": "relevance"
+    },
+    {
+      "DROPPED": 0,
+      "KEPT": 96,
+      "STEP": "duplicates"
+    },
+    {
+      "DROPPED": 81,
+      "KEPT": 15,
+      "STEP": "limit"
+    }
+  ],
+  "FETCHED": 100,
+  "PROVENANCE": {
+    "FEED": "Google News RSS (news.google.com)",
+    "FETCHED": "2026-10-18 03:25 UTC",
+    "CACHED_FOR": "3600 s",
+    "TERMS": "Headlines and links belong to their publishers; shown for information",
+    "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Google News; served from the demo lake (news-store), not live; the data belongs to its providers, shown for demonstration"
+  },
+  "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Google News",
+  "SNAPSHOT_CAPTURED_AT": "2026-10-18T03:24:33Z"
+}
+```
+
 ## CO: Listed company (`listed-company`)
 
 A listed company: its live quote and price history (yfinance connector) and its news headlines (news connector), both computed on demand.
@@ -196,7 +296,6 @@ A listed company: its live quote and price history (yfinance connector) and its 
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `news.listed-company`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/news-and-markets/samples |
-| Worked example | [news-and-markets/listed-company](../samples/news-and-markets.md#listed-company) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -237,6 +336,37 @@ A listed company: its live quote and price history (yfinance connector) and its 
 - a snapshot refreshed when the news-and-markets data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: EXCHANGE: confirm they are closed lists.
 
+<a id="example-news-and-markets-listed-company"></a>
+**Example: `modules/economy/packs/news-and-markets/samples/listed-company.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "COMPANY_ID": "CO-AAPL",
+  "TICKER": "AAPL",
+  "NAME": "Apple Inc.",
+  "ALIASES": [
+    "Apple Inc",
+    "AAPL",
+    "iPhone"
+  ],
+  "ALIAS_TEXT": "Apple Inc, AAPL, iPhone",
+  "EXCHANGE": "Nasdaq",
+  "SECTOR": "Technology",
+  "COUNTRY": "US",
+  "ECONOMY": "ECON-USA",
+  "QUOTE_ID": "QUOTE-AAPL",
+  "NEWS_ID": "NEWS-Apple",
+  "NEWS_ALL_ID": "NEWS-Apple~all",
+  "_meta": {
+    "source": "reference",
+    "generation": 1,
+    "live": false
+  }
+}
+```
+
 ## QUOTE: Quote and price history (`quote`)
 
 A quote and recent price history for a ticker, as the yfinance connector computed them.
@@ -254,7 +384,6 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 | Cadence | intraday (due: on demand, when the connector is on) |
 | Binding hint | any source the site binds; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/news-and-markets/quote |
-| Worked example | [news-and-markets/quote](../samples/news-and-markets.md#quote) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -329,3 +458,63 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 - enum values inferred from the data, not from a glossary: EXCHANGE: confirm they are closed lists.
 - number types decided by the field's name: PRICE amount, CHANGE_PCT rate: confirm amount, rate or integer.
 - no unit stated for the amounts PRICE, PREVIOUS_CLOSE, CHANGE, DAY_LOW, DAY_HIGH, FIFTY_TWO_WEEK_LOW, FIFTY_TWO_WEEK_HIGH, VOLUME, HISTORY[].OPEN, HISTORY[].HIGH, HISTORY[].LOW, HISTORY[].CLOSE and 1 more (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+
+<a id="example-news-and-markets-quote"></a>
+**Example: `data/testdata/news-and-markets/quote`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "QUOTE_ID": "QUOTE-AAPL",
+  "SYMBOL": "AAPL",
+  "NAME": "Apple Inc.",
+  "EXCHANGE": "NasdaqGS",
+  "CURRENCY": "USD",
+  "INSTRUMENT_TYPE": "EQUITY",
+  "PRICE": 343.46,
+  "PREVIOUS_CLOSE": 342.0,
+  "CHANGE": 1.4599999999999795,
+  "CHANGE_PCT": 0.4269005847953157,
+  "DAY_LOW": 340.46,
+  "DAY_HIGH": 347.82,
+  "FIFTY_TWO_WEEK_LOW": 243.42,
+  "FIFTY_TWO_WEEK_HIGH": 348.15,
+  "VOLUME": 59852690.0,
+  "MARKET_CAP": null,
+  "MARKET_STATE": "CLOSED",
+  "AS_OF": "2026-10-16 16:00 America/New_York (snapshot captured 2026-10-18)",
+  "HISTORY": [
+    {
+      "DATE": "2025-10-17",
+      "OPEN": 248.02000427246094,
+      "HIGH": 253.3800048828125,
+      "LOW": 247.27000427246094,
+      "CLOSE": 252.2899932861328,
+      "VOLUME": 49147000.0
+    },
+    {
+      "DATE": "2025-10-20",
+      "OPEN": 255.88999938964844,
+      "HIGH": 264.3800048828125,
+      "LOW": 255.6300048828125,
+      "CLOSE": 262.239990234375,
+      "VOLUME": 90483000.0
+    },
+    "… 249 more elements of the same shape"
+  ],
+  "DAY_RANGE": "340.46 – 347.82",
+  "FIFTY_TWO_WEEK_RANGE": "243.42 – 348.15",
+  "HISTORY_RANGE": "1y",
+  "INTERVAL": "1d",
+  "PROVENANCE": {
+    "FEED": "Yahoo Finance public chart endpoint (unofficial)",
+    "FETCHED": "2026-10-18T03:24:33.511628799Z",
+    "CACHED_FOR": "3600 s",
+    "TERMS": "Sample and internal demonstration use only; not for production or redistribution",
+    "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance; served from the demo lake (news-store), not live; the data belongs to its providers, shown for demonstration"
+  },
+  "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance",
+  "SNAPSHOT_CAPTURED_AT": "2026-10-18T03:24:33Z"
+}
+```

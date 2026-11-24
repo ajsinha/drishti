@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Genomics walked in a browser (DISTRIBUTIONS.md section 4): the one server jar started with ``--distribution genomics`` over a
+"""Drishti Genomics walked in a browser (KERNEL_AND_MODULES.md section 4): the one server jar started with ``--distribution genomics`` over a
 modules folder that holds the genomics module's package (modules/genomics-0.1.0.dmod, which ``build modules`` makes) and nothing else, no
 banking, a console in front of it.
 Its Home, every top-bar link, the Research lens, the module's pages (the gene's lollipop drawn) and Help open clean (the page walk's
@@ -136,7 +136,7 @@ def _showcase_api(pg, asked):
 
 
 def test_the_showcase_screens_draw_link_and_explain(genomics, browser):
-    """The board, its guided mode and the workbench (GENOMICS_SHOWCASE.md): every card drawn by Elements, a cluster and a rectangle sent
+    """The board, its guided mode and the workbench (guide.md): every card drawn by Elements, a cluster and a rectangle sent
     as the next calls' selection, a lollipop head's Explain filling the records, Play the rounds and the leaderboard following the round,
     a missing pack said in words."""
     base = str(genomics)

@@ -24,7 +24,7 @@ and the IAM policy the server and the loaders need, created, checked and removed
 Every command takes --region/--profile (else AWS_REGION/AWS_PROFILE and the default credential chain), --env FILE and --dry-run.
 `check` reads one table end to end the way Drishti does: the S3 Tables API, then the Iceberg REST endpoint with SigV4 (config,
 loadTable), the metadata file, the manifest list, a manifest and the first data file's Parquet footer and first row group, from S3.
-Exit: 0 done (or the check passed), 1 a step failed (named), 2 usage. Guide: deploy/aws/s3-tables/README.md."""
+Exit: 0 done (or the check passed), 1 a step failed (named), 2 usage. Guide: docs/guides/CLUSTER_GUIDE.md."""
 from __future__ import annotations
 
 import argparse

@@ -41,7 +41,6 @@ One publisher of official news (a central bank, a regulator, a government): its 
 | Cadence | daily (due: the official-news feed's schedule (0 23 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `officialnews.release-source`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/official-news/samples |
-| Worked example | [official-news/release-source](../samples/official-news.md#release-source) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -109,6 +108,61 @@ One publisher of official news (a central bank, a regulator, a government): its 
 - Stored in the newslake lake (config/lakes/newslake.yaml), table <data>/delta/newslake/officialnews/release-source/, one JSONL.gz a business date loaded with mode replace (a rerun of a day is idempotent).
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
 
+<a id="example-official-news-release-source"></a>
+**Example: `modules/economy/packs/official-news/samples/release-source.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "BY_CATEGORY": [
+    {
+      "CATEGORY": "Uncategorised",
+      "COUNT": 12
+    }
+  ],
+  "COUNTRY": "GBR",
+  "FEED_URL": "https://www.bankofengland.co.uk/rss/news",
+  "INTERNAL_ONLY": true,
+  "LAST_PUBLISHED": "2026-11-05T12:00:00Z",
+  "LAST_PULL": "ok",
+  "LATEST": [
+    {
+      "CATEGORY": null,
+      "PRESS_RELEASE": "PREL-BOE-26D3012260",
+      "PUBLISHED": "2026-11-05T12:00:00Z",
+      "TITLE": "Bank rate increased to 4% - November 2026 Monetary Policy Summary and Minutes",
+      "URL": "https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/november-2026"
+    },
+    {
+      "CATEGORY": null,
+      "PRESS_RELEASE": "PREL-BOE-E8D32C5873",
+      "PUBLISHED": "2026-11-04T14:51:45Z",
+      "TITLE": "Summary of the RTGS CHAPS Industry Forum - 13 October 2026",
+      "URL": "https://www.bankofengland.co.uk/minutes/2026/october/rtgs-chaps-industry-forum-13-october-2026"
+    },
+    "… 10 more elements of the same shape"
+  ],
+  "LICENCE": "Bank of England copyright: download, display or print for personal or internal non-commercial use; other re-use needs its permission",
+  "NAME": "Bank of England",
+  "PROVENANCE": {
+    "ATTRIBUTION": "Source: Bank of England.",
+    "DATASET": "Bank of England: press releases",
+    "INTERNAL_ONLY": true,
+    "LICENCE": "Bank of England copyright: download, display or print for personal or internal non-commercial use; other re-use needs its permission",
+    "RETRIEVED_AT": "2026-11-06",
+    "SOURCE": "Bank of England",
+    "URL": "https://www.bankofengland.co.uk/news"
+  },
+  "PUBLISHER_TYPE": "central bank",
+  "RELEASES": 12,
+  "SOURCE_ID": "PRESS-BOE",
+  "TERMS_URL": "https://www.bankofengland.co.uk/legal",
+  "WEBSITE": "https://www.bankofengland.co.uk/news",
+  "WHY_INTERNAL": "The Bank of England allows personal and internal non-commercial use only; anything else needs its written permission."
+}
+```
+
 ## PREL: Press release (`press-release`)
 
 One official press release: its title, publisher, date, summary and the link to the original.
@@ -126,7 +180,6 @@ One official press release: its title, publisher, date, summary and the link to 
 | Cadence | daily (due: the official-news feed's schedule (0 23 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `officialnews.press-release`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/official-news/samples |
-| Worked example | [official-news/press-release](../samples/official-news.md#press-release) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -172,3 +225,34 @@ One official press release: its title, publisher, date, summary and the link to 
 
 - Stored in the newslake lake (config/lakes/newslake.yaml), table <data>/delta/newslake/officialnews/press-release/, one JSONL.gz a business date loaded with mode replace (a rerun of a day is idempotent).
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
+
+<a id="example-official-news-press-release"></a>
+**Example: `modules/economy/packs/official-news/samples/press-release.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CATEGORY": "Enforcement Actions",
+  "COUNTRY": "USA",
+  "DATE": "2026-11-05",
+  "INTERNAL_ONLY": false,
+  "PROVENANCE": {
+    "ATTRIBUTION": "Source: Board of Governors of the Federal Reserve System.",
+    "DATASET": "Federal Reserve Board: press releases",
+    "INTERNAL_ONLY": false,
+    "LICENCE": "Public domain (US government work); cite the Board as the source",
+    "RETRIEVED_AT": "2026-11-06",
+    "SOURCE": "Federal Reserve Board",
+    "URL": "https://www.federalreserve.gov/newsevents/pressreleases/enforcement20261105a.htm"
+  },
+  "PUBLISHED": "2026-11-05T16:00:00Z",
+  "PUBLISHER_NAME": "Federal Reserve Board",
+  "PUBLISHER_TYPE": "central bank",
+  "RELEASE_ID": "PREL-FED-0224349908",
+  "RELEASE_SOURCE": "PRESS-FED",
+  "SUMMARY": "Federal Reserve Board announces termination of enforcement action with Allegiant United Holdings, LLC, Nano Financial Holdings, Inc., and Nano Banc",
+  "TITLE": "Federal Reserve Board announces termination of enforcement action with Allegiant United Holdings, LLC, Nano Financial Holdings, Inc., and Nano Banc",
+  "URL": "https://www.federalreserve.gov/newsevents/pressreleases/enforcement20261105a.htm"
+}
+```

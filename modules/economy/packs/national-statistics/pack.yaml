@@ -15,7 +15,7 @@
 # National statistics · the economy module's public-sector national statistics pack (docs/guides/WORLD_DATA_GUIDE.md): Statistics Canada's
 # headline series by vector, filled daily by the national-statistics feed (config/feeds/national-statistics.yaml) into worldlake.
 pack: national-statistics
-domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/KERNEL_AND_MODULES.md)
 version: 1.0.0
 code: STCAN
 title: National statistics

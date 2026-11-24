@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The CSV dialect every kind's file is read with unless its mapping's `csv:` block says otherwise (docs/plans/CSV_LOADERS.md section 9).
+# The CSV dialect every kind's file is read with unless its mapping's `csv:` block says otherwise (docs/guides/BANK_DATA_GUIDE.md section 9).
 # The rule behind every line: the file's format is DECLARED, never guessed cell by cell. A value that does not fit rejects its row.
 delimiter: ","            # ; (European locales), \t, | or auto (chosen from the header among these four; reported in the summary); a first line sep=; is honoured
 encoding: utf-8           # a byte-order mark is removed; cp1252 for Excel's plain CSV on Windows

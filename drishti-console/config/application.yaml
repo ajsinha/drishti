@@ -247,7 +247,7 @@ help:
   api_docs_dir: ${DRISHTI_API_DOCS_DIR:web/apidocs}
   # the address of the server's OpenAPI UI as a browser reaches it (blank: the page names /api/docs/ui on the server)
   openapi_url: ${DRISHTI_OPENAPI_URL:}
-# The distribution this console shows (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics, all, or a path to a site's own file.
+# The distribution this console shows (docs/architecture/KERNEL_AND_MODULES.md): risk, finance, genomics, all, or a path to a site's own file.
 # Blank: the server's (learned from its about answer), else Drishti All, exactly as before distributions. drishti.py start console
 # --distribution <name> sets it; a stack file's consoles: list gives each console its own (Risk on 17480, Finance on 17481).
 distribution: ${DRISHTI_DISTRIBUTION:}

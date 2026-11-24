@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * The banking domain module (docs/architecture/DOMAIN_MODULES.md): VaR and ES with regulatory VaR ({@code var}), exposure and CCR
+ * The banking domain module (docs/architecture/KERNEL_AND_MODULES.md): VaR and ES with regulatory VaR ({@code var}), exposure and CCR
  * ({@code exposure}), FRTB-SA and sensitivities ({@code frtb}), ISDA SIMM ({@code simm}) and the official end-of-day results
  * ({@code official}); their maths is in drishti-compute-banking ({@code com.ash.drishti.banking.compute}).
  *

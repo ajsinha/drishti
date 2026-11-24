@@ -17,7 +17,7 @@ for all packs), generated so they cannot drift:
 
   ## Data contracts    every kind of the pack from modules/<module>/packs/<pack>/contracts/*.contract.yaml: class, key, grain and links
                        to its two homes, never a copy: its contract (docs/contracts/packs/<pack>.md, every field) and its example
-                       (docs/contracts/samples/<domain>.md#<table>, a real record of the test data, every field explained)
+                       (docs/contracts/packs/<pack>.md#example-<domain>-<table>, a real record of the test data, every field explained)
   ## Data retrieval    per kind, where its data comes from: an external source (licence, internal-only flag, the refresh script with an
                        example), a generator of synthetic data, or a Drishti engine; how it reaches the lake, how to check it, offline
 
@@ -105,23 +105,30 @@ def _anchor(c: dict) -> str:
     return re.sub(r"[^\w\- ]", "", f"{c['mnemonic']}: {c['title']} ({c['kind']})".lower()).replace(" ", "-")
 
 
-SAMPLES = ROOT / "docs" / "contracts" / "samples"
-SAMPLES_PAGE = "../../../../../docs/contracts/samples/{page}.md#{anchor}"
+PACK_PAGES = ROOT / "docs" / "contracts" / "packs"
+SAMPLES_PAGE = "../../../../../docs/contracts/packs/{page}.md#{anchor}"
 
 
 def sample_anchors() -> dict[str, tuple[str, str]]:
-    """kind -> (its data-sample page, its anchor): the test data's folders <domain>/<table> (testdata.yaml), else a page's own
-    <a id="<kind>"></a>; a kind with no sample section is missing (a computed kind, a kind with no test data)."""
+    """kind -> (its pack's contract page, the anchor of its example there): <a id="example-<domain>-<table>"></a>, written by
+    tools/contracts.py docs for each test-data folder <domain>/<table> (testdata.yaml); a kind with no example is missing (a computed
+    kind, a kind with no test data)."""
     out: dict[str, tuple[str, str]] = {}
-    pages = {p.stem: p.read_text(encoding="utf-8") for p in sorted(SAMPLES.glob("*.md"))}
+    pages = {p.stem: p.read_text(encoding="utf-8") for p in sorted(PACK_PAGES.glob("*.md"))}
     for kind, ds in _testdata().items():
         for d in ds:
             parts = (d.get("folder") or "").split("/")
-            if len(parts) == 2 and f'<a id="{parts[1]}"></a>' in pages.get(parts[0], ""):
-                out.setdefault(kind, (parts[0], parts[1]))
+            anchor = f"example-{parts[0]}-{parts[1]}" if len(parts) == 2 else ""
+            for page, text in pages.items():
+                if anchor and f'<a id="{anchor}"></a>' in text:
+                    out.setdefault(kind, (page, anchor))
+    domains = sorted((d.name for d in (ROOT / "data" / "testdata").iterdir() if d.is_dir()), key=len, reverse=True)
     for page, text in pages.items():
-        for a in re.findall(r'<a id="([^"]+)"></a>', text):
-            out.setdefault(a, (page, a))
+        for a in re.findall(r'<a id="(example-[^"]+)"></a>', text):
+            name = a[len("example-"):]
+            domain = next((d for d in [*domains, page] if name.startswith(d + "-")), None)
+            if domain:
+                out.setdefault(name[len(domain) + 1:], (page, a))
     return out
 
 
@@ -174,7 +181,7 @@ def contracts_section(pack: str, items: list[dict], where: str | None = None) ->
            "checked against `tools/contracts.schema.json`) that says what one record is, its key, how it is stored and dated, and every "
            f"field with its type, presence, unit and meaning. The contracts are published on [docs/contracts/packs/{pack}.md]({page}) "
            "and each kind's example (a real record of the test data, every field explained) on "
-           "[docs/contracts/samples](../../../../../docs/contracts/samples/README.md); this guide links them and copies neither. Check "
+           "[docs/contracts/samples](../../../../../docs/contracts/packs/README.md); this guide links them and copies neither. Check "
            "them against the pack and its data with `python3 tools/contracts.py check` (or `drishti.py contract check`); show one with "
            "`python3 tools/contracts.py show <MNEMONIC>`.", ""]
     rows = []

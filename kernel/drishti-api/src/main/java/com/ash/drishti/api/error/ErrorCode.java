@@ -66,7 +66,7 @@ public enum ErrorCode {
     /** The engine's file changed on disk since the page read it, or its folder cannot be written (DRISHTI_ENGINES_DIR). */
     ENGINE_FILE_CONFLICT("DRS-1023", 409),
     /**
-     * A module is off here (docs/architecture/ACCESS_MODEL.md): not installed, not licensed or switched off by an administrator. Its API
+     * A module is off here (docs/architecture/KERNEL_AND_MODULES.md): not installed, not licensed or switched off by an administrator. Its API
      * answers 404 in words, never 403 (nothing is forbidden; the module is not here).
      */
     MODULE_OFF("DRS-1025", 404),

@@ -22,11 +22,11 @@ Per guide the spec names its file, its section number and, per dataset: the kind
 by hand) and a link to the guide's own section. The tool writes, between ``<!-- guide-data:begin <id> -->`` and
 ``<!-- guide-data:end -->`` in the guide, an at-a-glance table and one subsection per dataset that LINKS the input's two homes and copies
 neither: its data contract (the pack's contract page and its file, modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml, with the
-key and the field counts) and its example (the data-sample section docs/contracts/samples/<domain>.md#<table>, a real record with every
-field explained, written by tools/testdata/sample_docs.py). Text outside the markers is never touched.
+key and the field counts) and its example (the example on its pack's page docs/contracts/packs/<pack>.md#example-<domain>-<table>, the most complete real record
+written by tools/contracts.py docs). Text outside the markers is never touched.
 
 ``--check`` fails on a stale section, a kind with no contract (unless ``contract: null``), a sample glob that matches no file, a sample
-folder with no data-sample section, or a link to a heading the guide does not have.
+folder with no example on a contract page, or a link to a heading the guide does not have.
 """
 from __future__ import annotations
 
@@ -45,7 +45,6 @@ SPEC = Path(__file__).resolve().with_name("guide_data.yaml")
 TESTDATA = ROOT / "data" / "testdata"
 CONTRACTS = ROOT / "config" / "packs"
 PACK_PAGES = ROOT / "docs" / "contracts" / "packs"
-SAMPLE_PAGES = ROOT / "docs" / "contracts" / "samples"
 
 BEGIN = "<!-- guide-data:begin {id} -->"
 END = "<!-- guide-data:end -->"
@@ -97,16 +96,17 @@ def sample_files(ds: dict) -> list[Path]:
     return files
 
 
-def sample_link(ds: dict, rel: str) -> str | None:
-    """The dataset's section on its data-sample page (docs/contracts/samples/<domain>.md#<table>, for the test data's folder
-    <domain>/<table>), relative to the guide's folder; None when the page has no such section."""
+def sample_link(ds: dict, rel: str, contracts_by_folder: dict | None = None) -> str | None:
+    """The dataset's example on its pack's contract page (docs/contracts/packs/<pack>.md#example-<domain>-<table>, for the test data's
+    folder <domain>/<table>), relative to the guide's folder; None when no page has it."""
     parts = Path(ds.get("sample") or "").parts
     if len(parts) < 2:
         return None
-    page = SAMPLE_PAGES / f"{parts[0]}.md"
-    if not page.exists() or f'<a id="{parts[1]}"></a>' not in page.read_text(encoding="utf-8"):
-        return None
-    return f"{rel}contracts/samples/{page.name}#{parts[1]}"
+    anchor = f'<a id="example-{parts[0]}-{parts[1]}"></a>'
+    for page in sorted(PACK_PAGES.glob("*.md")):
+        if anchor in page.read_text(encoding="utf-8"):
+            return f"{rel}contracts/packs/{page.name}#example-{parts[0]}-{parts[1]}"
+    return None
 
 
 # ---------------------------------------------------------------- the section
@@ -156,10 +156,10 @@ def build(guide: dict, cons: dict) -> tuple[str, list[str]]:
             continue
         example = sample_link(ds, rel)
         if example is None:
-            problems.append(f"{where}: docs/contracts/samples has no section for data/testdata/{ds['sample']}"
-                            " (run python3 tools/testdata/sample_docs.py)")
+            problems.append(f"{where}: no contract page has an example for data/testdata/{ds['sample']}"
+                            " (run python3 tools/contracts.py docs)")
             continue
-        subs.append(f"- **Example:** [a real record of the test data, every field explained]({example}) (files "
+        subs.append(f"- **Example:** [a real record of the test data]({example}) (files "
                     f"`data/testdata/{ds['sample']}`).")
     if guide.get("note"):
         out += ["", guide["note"].strip()]

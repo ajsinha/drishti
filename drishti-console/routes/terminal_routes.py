@@ -111,7 +111,7 @@ async def go(request: Request, q: str = ""):
     ed = getattr(request.state, "edition", None) or request.app.state.editions.instance
     head = typed.split(None, 1)[0].upper() if typed else ""
     if (gone := _modules.typed_refusal(typed)) is not None:        # a function whose module is off, switched off or not the person's
-        return RedirectResponse(f"/t?error={quote(gone)}", status_code=303)   # (ACCESS_MODEL.md): "VRES is not available to you: ..."
+        return RedirectResponse(f"/t?error={quote(gone)}", status_code=303)   # (KERNEL_AND_MODULES.md): "VRES is not available to you: ..."
     if (hosted := request.app.state.module_parts.word(head)) is not None and hosted[1].page and _modules.module_on(hosted[0].id):
         part, route = hosted                                       # a hosted module's composed page (KERNEL_AND_MODULES.md 9.10): its route
         names = re.findall(r"{(\w+)}", route.path)

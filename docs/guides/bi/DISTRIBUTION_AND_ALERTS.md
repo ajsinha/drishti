@@ -946,7 +946,7 @@ BI reports.
 
 ### Step 38 · Start from a search
 
-Run a search that finds what you want to see every day: the trades whose valuation lost more than 200 million. Valuations are their own kind, [`trade-valuation`](../../contracts/samples/market-risk.md#trade-valuation) ([contract](../../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation))
+Run a search that finds what you want to see every day: the trades whose valuation lost more than 200 million. Valuations are their own kind, [`trade-valuation`](../../contracts/packs/market-risk.md#example-market-risk-trade-valuation) ([contract](../../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation))
 (mnemonic `TVAL`, one per trade per day, from the market-risk pack); the trade itself carries no MTM. Type:
 
 ```text

@@ -95,7 +95,7 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
      * @param edit may submit changes through write-back (APPROVALS_GUIDE.md › The design and its reasons, section 12); false unless set
      * @param permissions module permissions ({@code var:system-baskets}: create, edit, retire and import the VaR engine's system baskets,
      *     VAR_GUIDE.md section 5.7); an administrator holds every one
-     * @param rows row rules by kind (ACCESS_MODEL.md section 10): {@code trade: "ASSET_CLASS = 'RATES' and DESK in $user.desks"}; the role sees
+     * @param rows row rules by kind (KERNEL_AND_MODULES.md section 10): {@code trade: "ASSET_CLASS = 'RATES' and DESK in $user.desks"}; the role sees
      *     the records of the kind the rule passes (lists, blotters, search, FORM, Raw JSON); a kind without a rule: every record it may open
      * @param editSystems the trading systems whose records the role may change through write-back ({@code [ENDUR]}); empty: every system
      */

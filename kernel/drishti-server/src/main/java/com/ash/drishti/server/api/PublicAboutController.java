@@ -79,7 +79,7 @@ public class PublicAboutController {
         m.put("lenses", edition.lensNames());               // the editions a person may open as a lens (none with an edition)
         com.ash.drishti.server.engines.EngineCluster c = cluster.getIfAvailable();   // what the console shows or hides (ADMIN_GUIDE.md 5.2)
         m.put("engines", c == null ? null : c.about());
-        // the modules loaded at this start (ACCESS_MODEL.md): the console serves no page, route or asset of a module not listed, for anyone
+        // the modules loaded at this start (KERNEL_AND_MODULES.md): the console serves no page, route or asset of a module not listed, for anyone
         com.ash.drishti.server.modules.ModuleConfiguration.Started started = modules.getIfAvailable();
         m.put("modules", started == null ? null : started.loaded().entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).sorted().toList());
         // the module registry's fingerprint: when it changes, a console reads /public/modules/manifests again (its distribution's modules)

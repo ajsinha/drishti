@@ -20,7 +20,7 @@
 # The ownership groups (LEIG) and the countries (LEIC) are computed from the entities when asked, by the derived connector
 # gleif-groupings (docs/guides/bi/README.md): nothing of them is stored.
 pack: gleif
-domain: core   # the domain it serves (docs/architecture/ACCESS_MODEL.md): the core, always loaded when enabled (reference data every domain uses)
+domain: core   # the domain it serves (docs/architecture/KERNEL_AND_MODULES.md): the core, always loaded when enabled (reference data every domain uses)
 version: 1.0.0
 code: GLEIF            # typed alone, opens this pack's overview
 title: GLEIF legal entities

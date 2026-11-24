@@ -15,7 +15,7 @@
 # OECD · the economy module's public-sector OECD pack (docs/guides/WORLD_DATA_GUIDE.md): the cycle, jobs, prices and growth of the OECD
 # members from the OECD Data Explorer (SDMX), filled daily by the oecd feed (config/feeds/oecd.yaml) into worldlake.
 pack: oecd
-domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/KERNEL_AND_MODULES.md)
 version: 1.0.0
 code: OECDP
 title: OECD

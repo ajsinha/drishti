@@ -52,7 +52,7 @@ public class TablesConfiguration {
         return tables;
     }
 
-    /** The editors of tables, models and Python-driven tables (docs/architecture/SHARED_SCREENS.md sections 1 to 4): their API is {@link EditorController}. */
+    /** The editors of tables, models and Python-driven tables (docs/architecture/THIN_CONSOLE_DESIGN.md sections 1 to 4): their API is {@link EditorController}. */
     @Bean
     public EditorService tablesEditorService(TablesService tables, DataViewService data, com.ash.drishti.server.security.Entitlements entitlements,
             com.ash.drishti.server.bi.BiAccess access, com.ash.drishti.server.bi.BiService bi, com.ash.drishti.identity.PreferenceStore preferences,

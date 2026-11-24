@@ -25,7 +25,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Row rules on the canonical trade kind by role and person attributes (ACCESS_MODEL.md section 10): a rates trader sees rates trades of their
+ * Row rules on the canonical trade kind by role and person attributes (KERNEL_AND_MODULES.md section 10): a rates trader sees rates trades of their
  * desks, Endur support sees Endur's trades, a person with both sees either, a role without a rule sees every record it may open; edit rights
  * per {@code SOURCE_SYSTEM}.
  */

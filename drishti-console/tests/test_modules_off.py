@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The guarantee, console part (docs/architecture/ACCESS_MODEL.md section 6): a module that is off is gone from every door the console
+"""The guarantee, console part (docs/architecture/KERNEL_AND_MODULES.md section 6): a module that is off is gone from every door the console
 draws, and so is a function the person may not use. The console asks the server (the public about answer's ``modules``; the person's
 ``GET /api/v1/modules``) and nothing else: pages and routes answer 404, menus, the Admin strip, search, the command line
 and its type-ahead, Help and the Build home leave them out, a word typed anyway says "<WORD> is not available to you: ask your
@@ -206,7 +206,7 @@ def test_a_lens_never_hides_a_modules_assets(backend, monkeypatch):
 
 
 def test_the_registrations_are_the_modules_and_the_core_names_none():
-    """C1 to C6 (DOMAIN_MODULES.md section 5): the banking module's console code fills the core's hooks; plugin.yaml lists its routers."""
+    """C1 to C6 (KERNEL_AND_MODULES.md section 5): the banking module's console code fills the core's hooks; plugin.yaml lists its routers."""
     plugins.load()
     banking = modules.plugin("banking")
     assert banking is not None and "plugins.banking.routes.var_routes" in banking.routers

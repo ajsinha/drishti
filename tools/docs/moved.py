@@ -38,7 +38,7 @@ ROOT = Path(__file__).resolve().parents[2]
 MOVED = ROOT / "tools" / "docs" / "moved.yaml"
 COMMENT = re.compile(r"^\s*(#|//|\*|/\*|<!--|-->|--|;|rem\b)", re.I)
 SKIP = {"tools/docs/moved.yaml", "tools/docs/moved.py", "tools/docs/corpus.py", "config/docs-corpus.yaml", "config/docs-owners.yaml",
-        "tools/docs/dup_check.py", "tools/docs/merge_audit.py", "tools/test_docs_consolidation.py"}
+        "tools/docs/dup_check.py", "tools/docs/merge_audit.py", "tools/docs/merge_log_B.txt", "tools/test_docs_consolidation.py"}
 TEXT_SUFFIXES = {".java", ".py", ".yaml", ".yml", ".xml", ".js", ".html", ".css", ".sh", ".ps1", ".properties", ".json", ".txt", ".toml"}
 
 

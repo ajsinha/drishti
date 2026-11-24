@@ -178,3 +178,24 @@ moved:
   - {from: 'config/connectors.examples/*/README.md', to: 'tools/connector_readmes/<template>.yaml (body) via tools/connector_readmes.py', how: rename, note: 'the 12 template READMEs are generated whole; the hand text is the source file beside the tool'}
   - {from: 'modules/*/docs/README.md', to: 'modules/<module>/docs/about.yaml (front, body) via tools/packgen/module_readme.py', how: rename, note: 'the 12 module READMEs are generated whole from module.yaml and their about.yaml'}
   - {from: 'examples/packs/*/guides/*.md', to: '', how: delete, note: 'the generators (tools/packgen/common/packbuild.py) write no guide for an example pack; help.yaml lists none'}
+  - {from: 'docs/contracts/samples/README.md', to: 'docs/contracts/packs/README.md', how: redirect, note: 'one example per kind now sits on its pack page'}
+  - {from: 'docs/contracts/samples/central-banks.md', to: 'docs/contracts/packs/central-banks.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-central-banks-<leaf>'}
+  - {from: 'docs/contracts/samples/compute-demo.md', to: 'docs/contracts/packs/compute-demo.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-compute-demo-<leaf>'}
+  - {from: 'docs/contracts/samples/core.md', to: 'docs/contracts/packs/core.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-core-<leaf>'}
+  - {from: 'docs/contracts/samples/counterparty-risk.md', to: 'docs/contracts/packs/counterparty-risk.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-counterparty-risk-<leaf>'}
+  - {from: 'docs/contracts/samples/funds.md', to: 'docs/contracts/packs/funds.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-funds-<leaf>'}
+  - {from: 'docs/contracts/samples/gdelt-events.md', to: 'docs/contracts/packs/gdelt-events.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-gdelt-events-<leaf>'}
+  - {from: 'docs/contracts/samples/genomics-showcase.md', to: 'docs/contracts/packs/genomics-showcase.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-genomics-showcase-<leaf>'}
+  - {from: 'docs/contracts/samples/gleif.md', to: 'docs/contracts/packs/gleif.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-gleif-<leaf>'}
+  - {from: 'docs/contracts/samples/market-data.md', to: 'docs/contracts/packs/market-data.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-market-data-<leaf>'}
+  - {from: 'docs/contracts/samples/market-risk.md', to: 'docs/contracts/packs/market-risk.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-market-risk-<leaf>'}
+  - {from: 'docs/contracts/samples/national-statistics.md', to: 'docs/contracts/packs/national-statistics.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-national-statistics-<leaf>'}
+  - {from: 'docs/contracts/samples/news-and-markets.md', to: 'docs/contracts/packs/news-and-markets.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-news-and-markets-<leaf>'}
+  - {from: 'docs/contracts/samples/oecd.md', to: 'docs/contracts/packs/oecd.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-oecd-<leaf>'}
+  - {from: 'docs/contracts/samples/official-news.md', to: 'docs/contracts/packs/official-news.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-official-news-<leaf>'}
+  - {from: 'docs/contracts/samples/protein-engineering.md', to: 'docs/contracts/packs/protein-engineering.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-protein-engineering-<leaf>'}
+  - {from: 'docs/contracts/samples/trades.md', to: 'docs/contracts/packs/trading.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-trades-<leaf>'}
+  - {from: 'docs/contracts/samples/us-equities.md', to: 'docs/contracts/packs/us-equities.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-us-equities-<leaf>'}
+  - {from: 'docs/contracts/samples/world-development.md', to: 'docs/contracts/packs/world-development.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-world-development-<leaf>'}
+  - {from: 'docs/contracts/samples/world-economy.md', to: 'docs/contracts/packs/world-economy.md', how: redirect, note: 'section <leaf> is now <pack>.md#example-world-economy-<leaf>'}
+  - {from: 'docs/architecture/GENOMICS_SHOWCASE.md#the-genomics-showcase-one-protein-read-and-rewritten', to: 'modules/genomics/docs/guide.md#the-design-of-the-showcase', how: redirect}

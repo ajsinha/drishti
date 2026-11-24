@@ -92,6 +92,6 @@ class ModuleArchitectureRulesTest {
     static final ArchRule coreNeverImportsADomain = noClasses()
             .that().resideOutsideOfPackages("com.ash.drishti.banking..", "com.ash.drishti.economy..", "com.ash.drishti.trading..", "com.ash.drishti.marketdata..")
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.banking..", "com.ash.drishti.economy..")
-            .because("the core knows no industry: a domain registers with the core through its SPIs (docs/architecture/DOMAIN_MODULES.md)")
+            .because("the core knows no industry: a domain registers with the core through its SPIs (docs/architecture/KERNEL_AND_MODULES.md)")
             .allowEmptyShould(true);
 }

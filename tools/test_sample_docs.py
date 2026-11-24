@@ -12,12 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The data samples (docs/contracts/samples/, tools/testdata/sample_docs.py) and the contracts against ALL the committed test data.
+"""The data of the contracts (tools/testdata/sample_docs.py) against ALL the committed test data, and the examples on the contract pages.
 
-Every test-data folder has its page; every page is what the tool writes from the data and the contracts now (so a page never names a
-field the data does not have, and a changed contract or file shows); every contract matches every row of its test data (contracts.py
-check reads a sample of the rows): no field in the data missing from the contract, no contract field in no row, no required field null,
-no type or enum that differs. One scan of the 150 MB of test data serves all the checks (about 25 s, four worker processes).
+Every contract matches every row of its test data (contracts.py check reads a sample of the rows): no field in the data missing from
+the contract, no contract field in no row, no required field null, no type or enum that differs. One scan of the 150 MB of test data
+serves the check (about 25 s, four worker processes). Every test-data folder has its example on its pack's contract page
+(docs/contracts/packs/<pack>.md, written by tools/contracts.py docs; a stale page is the contract check's, test_contracts.py).
 
     python3 -m pytest -q tools/test_sample_docs.py
 """
@@ -41,35 +41,14 @@ def _scans():
     return S.scan_all(S.pages())
 
 
-@functools.lru_cache(maxsize=1)
-def _files():
-    return S.build(_scans())
-
-
-def test_every_test_data_folder_has_its_page():
-    native = {d["folder"] for d in S.manifest().get("datasets") or [] if d.get("native")}   # a mocked source system's own style: no page
+def test_every_test_data_folder_has_its_example():
+    native = {d["folder"] for d in S.manifest().get("datasets") or [] if d.get("native")}   # a mocked source system's own style: no example
     folders = sorted(str(d.relative_to(S.TESTDATA)) for d in S.TESTDATA.glob("*/*/")          # its feed files: dated .jsonl.gz, or tars
                      if (any(d.glob("*.jsonl.gz")) or any(d.glob("*.tar"))) and str(d.relative_to(S.TESTDATA)) not in native)
     assert len(folders) >= 69
-    pages = {d: (S.OUT / f"{d}.md").read_text(encoding="utf-8") if (S.OUT / f"{d}.md").is_file() else "" for d in {f.split("/")[0] for f in folders}}
-    missing = [f for f in folders if f'<a id="{f.split("/", 1)[1]}"></a>' not in pages[f.split("/")[0]]]
-    assert not missing, f"no data-sample page for {missing}: run python3 tools/testdata/sample_docs.py"
-
-
-def test_every_page_is_current():
-    probs = S.check(_files())
-    assert not probs, "\n".join(probs)
-
-
-def test_no_page_lists_a_field_the_data_does_not_have():
-    for f, page in _files().items():
-        if f.name == "README.md":
-            continue
-        for leaf, text in re.findall(r'<a id="([^"]+)"></a>(.*?)(?=<a id=|\Z)', page, re.S):
-            name = f"{f.stem}/{leaf}"
-            known = set(_scans()[name].order)
-            named = set(re.findall(r"^\| `([A-Za-z_][\w.\[\]]*)` \|", text, re.M))
-            assert named and named <= known, f"{name}: fields the data does not have: {sorted(named - known)}"
+    text = "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "docs" / "contracts" / "packs").glob("*.md"))
+    missing = [f for f in folders if f'<a id="example-{f.replace("/", "-")}"></a>' not in text]
+    assert not missing, f"no example on a contract page for {missing}: run python3 tools/contracts.py docs"
 
 
 def test_every_contract_matches_all_its_test_data():
@@ -77,27 +56,8 @@ def test_every_contract_matches_all_its_test_data():
     assert not probs, "\n".join(probs)
 
 
-def test_the_index_lists_every_page_and_the_computed_kinds():
-    index = _files()[S.OUT / "README.md"]
-    for p in S.pages():
-        assert f"]({S.page_link(p)})" in index, p["name"]
-    for x in S.computed():
-        assert f"`{x['kind']}`" in index, x["kind"]
-    assert "**VaR: required**" in index and "**Exposure: required**" in index
-
-
-def test_the_pages_name_no_release():
-    for f, text in _files().items():
-        prose = re.sub(r"```json\n.*?```", "", text, flags=re.S)
-        found = re.findall(r"(?<![\w.-])\d\.\d+\.\d+(?![\w.-])", prose)
-        assert not found, f"{f.relative_to(ROOT)}: release numbers {found[:5]} (the pages describe the data as it is)"
-
-
-def test_the_forms_of_pv_and_pnl_are_all_shown():
-    page = _files()[S.OUT / "market-risk.md"]
-    spv = page.split('<a id="scenario-pv"></a>')[1].split("<a id=")[0]
-    pnl = page.split('<a id="pnl-vector"></a>')[1].split("<a id=")[0]
-    for text, what, leaf in ((spv, "Scenario PVs", "scenario-pv"), (pnl, "P&L vector", "pnl-vector")):
-        assert f"#### {leaf}: {what} by trade, full run" in text and f"#### {leaf}: {what} by position, full run" in text
-    assert "#### scenario-pv: Scenario PVs by trade, intraday update, cancel" in spv and "#### scenario-pv: Scenario PVs by trade, intraday update" in spv
-    assert '"… 506 more numbers (one per scenario' in pnl
+def test_an_example_names_no_release_and_folds_long_arrays():
+    ex = S.examples()
+    assert len(ex) >= 69
+    pnl = ex["market-risk/pnl-vector"]["record"]
+    assert any(isinstance(v, list) and v and isinstance(v[-1], str) and v[-1].startswith("… ") for v in pnl.values()), "a long vector is folded"

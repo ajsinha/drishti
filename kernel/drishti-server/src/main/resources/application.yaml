@@ -136,7 +136,7 @@ management:
           include: readinessState,nodeReadiness
 
 drishti:
-  # The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names
+  # The distribution (docs/architecture/KERNEL_AND_MODULES.md): risk, finance, genomics or all, or the path of a site's own file; it names
   # config/distributions/drishti.<name>.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank:
   # Drishti All, exactly as before. Also --distribution=<name> on the command line (drishti.py start server --distribution <name>).
   distribution: ${DRISHTI_DISTRIBUTION:}
@@ -201,7 +201,7 @@ drishti:
     dir: ${DRISHTI_ENGINES_DIR:${drishti.config.dir}/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
     drain: 30s                       # an engine turned off live: requests in flight finish within this, then are cancelled
     watch-seconds: 5                 # how often the engine files are compared with what was read (an edit by hand takes effect as from the page)
-  modules:                           # the modules (docs/architecture/ACCESS_MODEL.md; POST /api/v1/admin/modules): each on when installed, licensed and enabled
+  modules:                           # the modules (docs/architecture/KERNEL_AND_MODULES.md; POST /api/v1/admin/modules): each on when installed, licensed and enabled
     dir: ${DRISHTI_MODULES_DIR:${drishti.config.dir}/modules}   # the folder of the modules' switches (config/modules/<id>.yaml: enabled), written by POST /api/v1/admin/modules; drishti.modules.<id>.enabled (DRISHTI_MODULES_<ID>_ENABLED) wins over a file
     watch-seconds: 5                 # how often the module and access files are compared with what was read (a change to a module takes effect at the next start; lenses and the licence at once)
     dev: ${DRISHTI_MODULES_DEV:false}   # development mode: the module source folders of the modules folder (drishti.modules.home) load without a .dmod, unverified; refused in a cluster and under the prod or production profile
@@ -211,7 +211,7 @@ drishti:
     path: ${DRISHTI_LIB_PATH:${drishti.home}/lib/ext}   # the SITE's jars (JDBC drivers, connector plugins, a company's own libraries), kept on an upgrade; <home>/lib itself holds Drishti's own jar; seen by connectors and modules, never replacing a kernel class; a change needs a restart; jars in <data>/lib (the previous default) are moved here once
   launcher:                          # the Python launcher's stop (docs/DEPLOYMENT_AND_QA_GUIDE.md section 7.1; POST /launcher/stop)
     stop-key: ${DRISHTI_STOP_KEY:}   # the key `drishti.py start server` makes and keeps in the pid file; `stop server` sends it straight from this machine (loopback, no proxy header) to stop gracefully on every OS; empty: every call refused (403); never logged
-  access:                            # the access model's files (docs/architecture/ACCESS_MODEL.md): the access registry reads them, nothing else does
+  access:                            # the access model's files (docs/architecture/KERNEL_AND_MODULES.md): the access registry reads them, nothing else does
     dir: ${DRISHTI_ACCESS_DIR:${drishti.config.dir}/access}     # licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed
   metrics:                           # the platform metrics and alerts (docs/guides/OPERATIONS_GUIDE.md section 13.6; CLUSTER_GUIDE.md 8.3, 8.5)
     enabled: ${DRISHTI_METRICS_ENABLED:true}  # export the platform gauges (caches, memory budget, disk, sources, feeds, loads) on /actuator/prometheus and evaluate the alert rules
@@ -773,7 +773,7 @@ drishti:
     server-roles: {}                 # "[server]": [roles]   absent = every signed-in user
     tool-roles: {}                   # "[server/tool]": [roles]
     server-features: {}              # "[server]": [features]
-  approvals:                         # the one Approvals queue (docs/architecture/SHARED_SCREENS.md section 2; USER_GUIDE.md, Approvals)
+  approvals:                         # the one Approvals queue (docs/architecture/THIN_CONSOLE_DESIGN.md section 2; USER_GUIDE.md, Approvals)
     due-soon-days: 3                 # an item due within this many days (or overdue) is pinned at the top as due soon
     due-days:                        # per kind: an item with a period is due this many days after its period ends
       var-report: 30                 # a regulatory report run (VAR_GUIDE.md section 18.14)

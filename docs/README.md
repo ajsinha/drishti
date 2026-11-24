@@ -33,7 +33,7 @@ If you will change the code, start with [QUICKSTART_DEVELOPERS.md](QUICKSTART_DE
 | **Operate** | [Configuration](admin/CONFIGURATION.md) · [Load PVF files and remove old scenario PV dates](guides/PVF_LOADING.md) · [Administration: people, access and lenses](guides/ADMIN_GUIDE.md) · [Deployment and QA guide](DEPLOYMENT_AND_QA_GUIDE.md) · [Install and operate](guides/OPERATIONS_GUIDE.md) · [Operations tutorial: run it in production](tutorials/21-run-it-in-production.md) · [Clusters and scale](guides/CLUSTER_GUIDE.md) · [Cluster tutorial: a cluster of three](tutorials/22-a-cluster-of-three.md) · [Benchmark: every measurement and how to run it](admin/BENCHMARK.md) |
 | **Reference** | [API reference](guides/API_REFERENCE.md) · Developer: API references (console guide) · [ViewModel contract](architecture/VIEWMODEL.md) · [Rachana reference](guides/RACHANA_REFERENCE.md) · [Functions](guides/FUNCTIONS.md) · [Command line](guides/CLI_REFERENCE.md) · [Release notes](../RELEASE_NOTES.md) |
 | **Knowledge** | [Knowledge home and glossary](knowledge/README.md) · [Risk](knowledge/risk.md) · [Data](knowledge/data.md) · [World](knowledge/world.md) |
-| In the repository only | [architecture/](architecture/ARCHITECTURE.md) (design notes and [decision records](architecture/adr/README.md)), the internal [competitive landscape: kernel and modules](strategy/COMPETITIVE_LANDSCAPE.md) (does any product share Drishti's kernel and module architecture), the per-plugin [connector documents](connectors/), the [runbooks](guides/OPERATIONS_GUIDE.md#201-source-down-or-slow), the [QA history](../CHANGELOG.md); the AG Grid migration guide ([moving an AG Grid Enterprise pivot app to drishti-grid](guides/EMBED_GUIDE.md#14-moving-an-ag-grid-enterprise-pivot-app), named in the Elements gallery); [Using Drishti Elements in your app](guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app) (install, pick libraries, theme, connect to a server) |
+| In the repository only | [architecture/](architecture/ARCHITECTURE.md) (design notes and [decision records](architecture/DECISIONS.md)), the internal [competitive landscape: kernel and modules](strategy/COMPETITIVE_LANDSCAPE.md) (does any product share Drishti's kernel and module architecture), the per-plugin [connector documents](connectors/), the [runbooks](guides/OPERATIONS_GUIDE.md#201-source-down-or-slow), the [QA history](../CHANGELOG.md); the AG Grid migration guide ([moving an AG Grid Enterprise pivot app to drishti-grid](guides/EMBED_GUIDE.md#14-moving-an-ag-grid-enterprise-pivot-app), named in the Elements gallery); [Using Drishti Elements in your app](guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app) (install, pick libraries, theme, connect to a server) |
 ## How these documents are organised
 
 | Folder | What is in it |
@@ -46,7 +46,8 @@ If you will change the code, start with [QUICKSTART_DEVELOPERS.md](QUICKSTART_DE
 | [admin/](admin/) | running Drishti: operations (with Drishti\*net, compute workers and lake maintenance), configuration, users and roles, editions, AI (model providers and MCP), performance, and the runbooks |
 | [lenses/mockups/](lenses/mockups/) | the lens mock-ups; the lens product document is [architecture/LENSES.md](architecture/LENSES.md): one product document per lens: Drishti Risk, Trading, Market and World (built), the proposed Drishti Oversight for market risk oversight, the proposed MR Cube and CCR Cube (risk cubes on one shared core, with their data contracts) the proposed CRO lens (the Chief Risk Officer's appetite view, with its mock-ups and build checklist) and the proposed CIO lens (the risk data estate and BCBS 239, with its mock-ups and build checklist); who uses each, their questions, what it answers today, the gaps and the proposals |
 | [qa/](../CHANGELOG.md) | quality assurance: the history of every run (findings, fixes, commits) and the Windows QA script |
-| [architecture/](architecture/) | how Drishti is built: the architecture, the BI design (with the W1 model specification, Rūpaka and BI runs), the data architecture (live updates, history queries, Iceberg, reactive connectors, the content store, the database), the client renderer (with Elements and GenUI), a design study of Figma to Sutra ([FIGMA_INTEGRATION.md](architecture/FIGMA_INTEGRATION.md)), the ViewModel contract, collaboration, VaR sharding, resources and scale, cluster deployment (with Drishti\*net, AWS, the Delta lake in S3 and super scale), the implementation plan, [high-performance native integration and Java 25](architecture/HIGH_PERFORMANCE_NATIVE.md) (the roadmap: BLAS, the Vector API, native libraries, embedded columnar engines), the [scale strategy](guides/CLUSTER_GUIDE.md#14-scale-strategy-for-one-server) (millions of trades a day, a year of history) and the decision records (ADRs) |
+| [architecture/](architecture/) | how Drishti is built: the architecture, the BI design (with the W1 model specification, Rūpaka and BI runs), the data architecture (live updates, history queries, Iceberg, reactive connectors, the content store, the database), the client renderer (with Elements and GenUI), a design study of Figma to Sutra ([FIGMA_INTEGRATION.md](plans/FIGMA_INTEGRATION.md)), the ViewModel contract, collaboration, VaR sharding, resources and scale, cluster deployment (with Drishti\*net, AWS, the Delta lake in S3 and super scale), the implementation plan, [high-performance native integration and Java 25](plans/HIGH_PERFORMANCE_NATIVE.md) (the roadmap: BLAS, the Vector API, native libraries, embedded columnar engines), the [scale strategy](guides/CLUSTER_GUIDE.md#14-scale-strategy-for-one-server) (millions of trades a day, a year of history) and the [decision records](architecture/DECISIONS.md) (ADRs, one document); what is built only, a design not built is in `plans/` |
+| [plans/](plans/) | the designs not built (counterparty engines, financial crime, IFRS 9 ECL, high-performance native, Figma integration): frozen until built, then folded into a guide and deleted |
 | [requirements/](requirements/), [publications/](publications/) | the reference mockups and logo; the design-and-evidence presentation |
 
 There is no archive folder. An obsolete design is deleted: git keeps its history, so its live content moves into the current document
@@ -228,8 +229,8 @@ repeat.
 | Understand the design: pipeline, grammar, inference, modules | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) |
 | See how server-side pricing (QuantLib) will work, and what is next on the roadmap | [AI_GUIDE.md › Server-side pricing: the quant service (proposed)](guides/AI_GUIDE.md#4-server-side-pricing-the-quant-service-proposed), [the release notes](../RELEASE_NOTES.md) |
 | Call the REST API, or read the ViewModel contract | [API_REFERENCE.md](guides/API_REFERENCE.md) (OpenAPI at `http://localhost:18480/api/docs/ui`) |
-| Know why something is the way it is | [adr/](architecture/adr/README.md): the architecture decision records |
-| See the performance roadmap: Java 25, native libraries (BLAS, compression, JSON), embedded columnar engines (DuckDB, Polars) | [HIGH_PERFORMANCE_NATIVE.md](architecture/HIGH_PERFORMANCE_NATIVE.md) |
+| Know why something is the way it is | [DECISIONS.md](architecture/DECISIONS.md): the architecture decision records |
+| See the performance roadmap: Java 25, native libraries (BLAS, compression, JSON), embedded columnar engines (DuckDB, Polars) | [HIGH_PERFORMANCE_NATIVE.md](plans/HIGH_PERFORMANCE_NATIVE.md) |
 | See the four reference mockups the views reproduce | [requirements/](requirements/) |
 
 ## Every document, and when to read it
@@ -345,8 +346,8 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [AI_GUIDE.md › The MCP client: other servers' tools, behind Drishti's policy](guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) | you connect MCP servers (their tools, resources and prompts) behind Drishti's policy: one file per server in `config/mcp/`, off by default |
 | [AI_GUIDE.md › Server-side pricing: the quant service (proposed)](guides/AI_GUIDE.md#4-server-side-pricing-the-quant-service-proposed) | you want the design of server-side pricing (QuantLib) and how it would reach the screen (proposed, not built; ADR-019); its deployment shape is replaced by the compute workers of [guides/bi/README.md](guides/bi/README.md) |
 | [VAR_PLAYGROUND.md](guides/VAR_GUIDE.md) | you want the design of the VaR Playground (design, not built; planned): every VaR figure worked in a grid with an explanation panel and exported as an .xlsx with real formulas (Main, Config, Data, FX, PnL, Explain, Provenance) that recalculates in Excel, LibreOffice and Google Sheets and equals the engine to the cent; up to 500 positions from the VaR screen's scope; the playground family and the rule that every metric ships with its playground |
-| [IFRS9_ECL.md](architecture/IFRS9_ECL.md) | you want the design of the IFRS 9 expected credit loss engine (design, not built; proposed for 2.9.20): staging, PD, LGD, EAD, weighted scenarios, overlays, POCI, why the provision moved, the data contracts, the playground and the hand-built cases |
-| [FINANCIAL_CRIME.md](architecture/FINANCIAL_CRIME.md) | you want the design of the financial crime engines (design, not built; proposed for 2.9.21 and 2.9.22): trade surveillance, transaction monitoring and threshold tuning, network analytics, customer risk rating, sanctions and PEP screening, fraud scoring, alerts and cases, FINTRAC reporting, rule effectiveness and data protection |
+| [IFRS9_ECL.md](plans/IFRS9_ECL.md) | you want the design of the IFRS 9 expected credit loss engine (design, not built; proposed for 2.9.20): staging, PD, LGD, EAD, weighted scenarios, overlays, POCI, why the provision moved, the data contracts, the playground and the hand-built cases |
+| [FINANCIAL_CRIME.md](plans/FINANCIAL_CRIME.md) | you want the design of the financial crime engines (design, not built; proposed for 2.9.21 and 2.9.22): trade surveillance, transaction monitoring and threshold tuning, network analytics, customer risk rating, sanctions and PEP screening, fraud scoring, alerts and cases, FINTRAC reporting, rule effectiveness and data protection |
 
 ### Lenses (`lenses/`)
 
@@ -366,8 +367,8 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | Document | Read this when… |
 |---|---|
 | [contracts/README.md](contracts/README.md) | you deliver data to Drishti or build a computed measure: the rules every contract shares (the common risk lake, keys, types, dates, signs, vectors, delivery, validation, retirement) and the contracts of the computed measures |
-| [contracts/samples/README.md](contracts/samples/README.md) | you write the production query or ETL job that must emit a data type: one page per type with a real record as folded JSON, every field explained, the fields of other rows and a checklist (generated by `tools/testdata/sample_docs.py`) |
-| [contracts/packs/README.md](contracts/packs/README.md) | you want the shape of any command's data: every mnemonic with its contract (class, status, what replaces it), a page per pack (generated by `drishti.py contract docs`) |
+| [contracts/CSV_FORMATS.md](contracts/CSV_FORMATS.md) | you load a kind from a CSV file: the columns, rules, checks and a sample of every kind the CSV loaders know (generated by `tools/mrloader/kind_docs.py`) |
+| [contracts/packs/README.md](contracts/packs/README.md) | you want the shape of any command's data: every mnemonic with its contract (class, status, what replaces it), a page per pack, each kind with one real example record (generated by `drishti.py contract docs`) |
 
 ### Connectors (`connectors/`)
 
@@ -456,33 +457,9 @@ Twelve working Sutras with their data, introduced in [guides/examples/README.md]
 | [tree-table.md](guides/examples/tree-table.md) | Tables and ladders whose rows hold their own children: an organisation of units, each with sub-units, to any depth. |
 | [pack/helpdesk/guides/helpdesk.md](guides/examples/pack/helpdesk/guides/helpdesk.md) | the help-desk teaching pack's own guide, built step by step in the pack developer guide |
 
-### Decision records (`architecture/adr/`)
+### Decision records (`architecture/DECISIONS.md`)
 
-The index is [adr/README.md](architecture/adr/README.md); the 20 records:
-
-| Record |
-|---|
-| [001-backend-is-a-spring-boot-application.md](architecture/adr/001-backend-is-a-spring-boot-application.md): ADR-001: Backend is a spring boot application |
-| [002-layout-is-sutra-plus-inference.md](architecture/adr/002-layout-is-sutra-plus-inference.md): ADR-002: Layout is sutra plus inference |
-| [003-sutra-is-yaml-with-a-closed-expression-language.md](architecture/adr/003-sutra-is-yaml-with-a-closed-expression-language.md): ADR-003: Sutra is yaml with a closed expression language |
-| [004-server-returns-a-view-model.md](architecture/adr/004-server-returns-a-view-model.md): ADR-004: Server returns a view model |
-| [005-server-sent-events-for-live-updates.md](architecture/adr/005-server-sent-events-for-live-updates.md): ADR-005: Server sent events for live updates |
-| [006-vendored-front-end-without-a-build-pipeline.md](architecture/adr/006-vendored-front-end-without-a-build-pipeline.md): ADR-006: Vendored front end without a build pipeline |
-| [007-build-gates-in-tests.md](architecture/adr/007-build-gates-in-tests.md): ADR-007: Build gates in tests |
-| [008-rachana-is-the-grammar-a-sutra-is-a-layout.md](architecture/adr/008-rachana-is-the-grammar-a-sutra-is-a-layout.md): ADR-008: Rachana is the grammar, a Sutra is a layout |
-| [009-users-live-in-the-server.md](architecture/adr/009-users-live-in-the-server.md): ADR-009: Users live in the server |
-| [010-industries-are-domain-packs.md](architecture/adr/010-industries-are-domain-packs.md): ADR-010: Industries are domain packs |
-| 011-sutras-are-markdown-documents.md: ADR-011: Sutras are Markdown documents |
-| [012-business-dates-and-delta-lake.md](architecture/adr/012-business-dates-and-delta-lake.md): ADR-012: Every read is for a business date; history lives in Delta Lake |
-| [013-sutras-go-live-through-review.md](architecture/adr/013-sutras-go-live-through-review.md): ADR-013: Sutras go live through review |
-| [014-single-sign-on-verified-by-the-server.md](architecture/adr/014-single-sign-on-verified-by-the-server.md): ADR-014: Single sign-on, verified by the server |
-| [015-packs-inherit.md](architecture/adr/015-packs-inherit.md): ADR-015: Packs inherit, and the more specific pack wins |
-| [016-one-console-many-servers.md](architecture/adr/016-one-console-many-servers.md): ADR-016: One console, many servers; the user picks one and signs in to it |
-| [017-sutras-are-yaml.md](architecture/adr/017-sutras-are-yaml.md): ADR-017: Sutras are YAML, through and through |
-| [018-signed-pack-registry.md](architecture/adr/018-signed-pack-registry.md): ADR-018: Packs come from a signed, versioned registry |
-| [019-pricing-is-a-quantlib-service-behind-the-server.md](architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md): ADR-019: Pricing is a QuantLib service behind the Drishti server |
-| [020-collaboration-records-live-in-the-identity-database.md](architecture/adr/020-collaboration-records-live-in-the-identity-database.md): ADR-020: Collaboration records live in the identity database; the notice is a link, never  |
-| [021-embedding-is-html-over-the-wire.md](architecture/adr/021-embedding-is-html-over-the-wire.md): ADR-021: Embedding is HTML over the wire for views, and the viewer's own code for reports |
+[DECISIONS.md](architecture/DECISIONS.md) holds the 21 architecture decision records, one section each (ADR-001 to ADR-022; 011 was superseded by 017); the index is at its top.
 
 ### Quality assurance runs (`qa/`)
 

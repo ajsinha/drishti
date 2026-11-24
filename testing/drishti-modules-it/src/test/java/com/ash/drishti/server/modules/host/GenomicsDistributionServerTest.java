@@ -45,7 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * Drishti Genomics (docs/architecture/DISTRIBUTIONS.md section 4) boots from its file alone: the thin kernel (drishti-server, no banking)
+ * Drishti Genomics (docs/architecture/KERNEL_AND_MODULES.md section 4) boots from its file alone: the thin kernel (drishti-server, no banking)
  * with the genomics module, built here from its sources (modules/genomics, the SDK's layout) and dropped into the modules folder as an administrator would. Its
  * brand, the Research lens, none of the kernel's packs (no counterparty, book or desk) and no risk word; the module loaded, its VCF reader
  * routed by the kernel like any connector, its kinds, functions, API and pages answering. The .dmod passes the fourteen checks.
