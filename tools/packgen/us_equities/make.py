@@ -497,7 +497,7 @@ python3 tools/drishti.py feed run us-equities --snapshot                # the ne
 python3 tools/drishti.py feed run us-equities --snapshot -- --scope TSLA,FILINGS:40,YEARS:15   # a wider build in the data folder, not this pack
 ```
 
-`drishti-console/.venv/bin/python tools/drishti.py feed run us-equities` (Linux, macOS) and `drishti-console\\.venv\\Scripts\\python.exe tools\\drishti.py feed run us-equities` (Windows) run the same command. Underneath it are the
+`python3 tools/drishti.py feed run us-equities` (Linux, macOS) and `py tools\\drishti.py feed run us-equities` (Windows) run the same command. Underneath it are the
 generator's two steps, which can also be run by hand:
 
 ```bash

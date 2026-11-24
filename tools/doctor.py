@@ -83,13 +83,13 @@ def jar_check(find_jar) -> dict:
 def python_check() -> list[dict]:
     v = sys.version_info
     out = [item("ok" if v >= (3, 10) else "fail", "python", f"{sys.executable}: Python {v.major}.{v.minor}.{v.micro}",
-                "" if v >= (3, 10) else "the tools need Python 3.10+ (or run them with: uv run python tools/drishti.py ...)")]
+                "" if v >= (3, 10) else "the tools need Python 3.10+")]
     for mod, pip, why in LIBS:
         if importlib.util.find_spec(mod):
             out.append(item("ok", f"python {pip}", "installed"))
         else:
             out.append(item("warn", f"python {pip}", f"not installed (needed for {why})",
-                            f"pip install {pip}   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ..."))
+                            "python tools/drishti.py setup   (installs what is missing into this Python from the offline wheel pack: ~/drishti-wheels, or --wheels <folder>)"))
     return out
 
 
@@ -97,8 +97,10 @@ def layout_check(root: pathlib.Path) -> list[dict]:
     out = [item("ok" if (root / "config" / "packs").is_dir() else "fail", "repo config/packs/", str(root / "config" / "packs"),
                 "" if (root / "config" / "packs").is_dir() else "run from a Drishti checkout (config/packs/ holds the shipped packs)")]
     venv = root / "drishti-console" / ".venv"
-    out.append(item("ok" if venv.is_dir() else "warn", "console venv", str(venv),
-                    "" if venv.is_dir() else "none needed when drishti.python names a Python with the libraries (python tools/drishti.py setup --system); else python tools/drishti.py setup venv"))
+    if venv.is_dir() and os.name == "nt":          # Windows uses the Python you run Drishti with: never a venv
+        out.append(item("warn", "drishti-console/.venv", f"{venv}: not used on Windows", "you may delete it: Drishti uses the Python you run it with (drishti.python)"))
+    elif venv.is_dir():                            # Linux and macOS: setup's environment
+        out.append(item("ok", "console venv", str(venv)))
     return out
 
 

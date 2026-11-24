@@ -19,9 +19,9 @@ The Markdown is rendered by Python-Markdown with the help centre's extensions (t
 are inlined as data: URLs, and Chromium (Playwright's, which the browser tests already install) prints it with page.pdf(). The PDF's title
 carries a fingerprint of the source (the Markdown and every picture it shows), so a check needs no browser:
 
-    drishti-console/.venv/bin/python tools/docs/md_to_pdf.py                    # every guide of PDFS, rewritten
-    drishti-console/.venv/bin/python tools/docs/md_to_pdf.py --check            # exit 1 when a PDF is older than its Markdown or pictures
-    drishti-console/.venv/bin/python tools/docs/md_to_pdf.py docs/X.md out.pdf  # any one file
+    python3 tools/docs/md_to_pdf.py                    # every guide of PDFS, rewritten
+    python3 tools/docs/md_to_pdf.py --check            # exit 1 when a PDF is older than its Markdown or pictures
+    python3 tools/docs/md_to_pdf.py docs/X.md out.pdf  # any one file
 
 The product name and the copyright line come from the console's settings (ui.product, ui.copyright), never from this file.
 """
@@ -214,7 +214,7 @@ def main() -> int:
     if a.check:
         bad = [why for s in sources if (why := stale(s))]
         for why in bad:
-            print("stale:", why, "->", "drishti-console/.venv/bin/python tools/docs/md_to_pdf.py")
+            print("stale:", why, "->", "python3 tools/docs/md_to_pdf.py")
         return 1 if bad else 0
     for s in sources:
         render(s, Path(a.target).resolve() if a.target else s.with_suffix(".pdf"))

@@ -18,8 +18,8 @@
   PowerShell form of deploy/aws/delta-s3/delta_s3.py).
 
 .DESCRIPTION
-  Runs deploy\aws\delta-s3\delta_s3.py with the console's Python environment (drishti-console\.venv) when it exists, else
-  DRISHTI_PYTHON or python. Python with boto3 (and pyarrow for check) only: no AWS CLI, no other program. Region and profile from
+  Runs deploy\aws\delta-s3\delta_s3.py with the Python you run Drishti with:
+  DRISHTI_PYTHON, else py. Python with boto3 (and pyarrow for check) only: no AWS CLI, no other program. Region and profile from
   --region and --profile, else AWS_REGION and AWS_PROFILE; credentials from the AWS default chain, never printed. Every argument is
   passed on: create | check | remove | policy, --env FILE, --dry-run, --yes; --help for the rest. Guide: deploy\aws\delta-s3\README.md.
 
@@ -30,7 +30,6 @@
 #>
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
-$python = Join-Path $root 'drishti-console\.venv\Scripts\python.exe'
-if (-not (Test-Path $python)) { $python = if ($env:DRISHTI_PYTHON) { $env:DRISHTI_PYTHON } else { 'python' } }
+$python = if ($env:DRISHTI_PYTHON) { $env:DRISHTI_PYTHON } else { 'py' }
 & $python (Join-Path $PSScriptRoot 'delta_s3.py') @args
 exit $LASTEXITCODE

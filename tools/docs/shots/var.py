@@ -15,7 +15,7 @@
 """Pictures of the VaR guide (docs/guides/VAR_GUIDE.md), written to docs/guides/img/var/, over the committed VaR test data (see _var.py).
 Run it on its own (it builds its own lake and starts its own scratch server and console):
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide var
+    python3 tools/docs/screenshots.py --guide var
 
 The pictures, in the guide's order: the explorer on a desk (the tree, the toolbar, the scope), a scenario's contributors, the history with its
 backtest, a desk's contributions, a book's positions, Construct your basket (its sheet), a capture compared with now, the provenance

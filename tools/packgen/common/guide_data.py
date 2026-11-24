@@ -304,8 +304,8 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
             ex += [(f"feed run {fd} {e[0]}", e[1]) for e in info.get("examples") or []]
             w = max(len(f"python3 tools/drishti.py {e[0]}") for e in ex) + 2
             out += ["Run these from the Drishti folder (the repository root, or the install folder of a release).", "", "```bash"] + [f"python3 tools/drishti.py {e[0]}".ljust(w) + f"# {e[1]}" for e in ex] + ["```", "",
-                    f"The same with the console's Python: `drishti-console/.venv/bin/python tools/drishti.py feed run {fd}` on Linux and macOS, "
-                    f"`drishti-console\\.venv\\Scripts\\python.exe tools\\drishti.py feed run {fd}` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or "
+                    f"The same with the Python you run Drishti with: `python3 tools/drishti.py feed run {fd}` on Linux and macOS, "
+                    f"`py tools\\drishti.py feed run {fd}` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or "
                     "`--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).", ""]
     if used_gen:
         out += ["### Generators", ""]

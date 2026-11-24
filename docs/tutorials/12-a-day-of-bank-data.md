@@ -71,7 +71,7 @@ Your job's last step is one command:
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py data landed --pack trading --kind trade --date 2026-10-15 --rows 15000 --rejected 0 --batch eod-20261015 --source nightly-trade-etl
+$ python3 tools/drishti.py data landed --pack trading --kind trade --date 2026-10-15 --rows 15000 --rejected 0 --batch eod-20261015 --source nightly-trade-etl
 trade for 2026-10-15 loaded: 15,000 rows, 0 rejected; 0 alerts fired
   load mvcxcxas-1  status ready  verified verified  attempt 1
   record  ok      recorded
@@ -89,7 +89,7 @@ trade pages built from them), so screens and BI read the new data; `verify` open
 Announce the very same batch again:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py data landed --pack trading --kind trade --date 2026-10-15 --rows 15000 --rejected 0 --batch eod-20261015 --source nightly-trade-etl
+$ python3 tools/drishti.py data landed --pack trading --kind trade --date 2026-10-15 --rows 15000 --rejected 0 --batch eod-20261015 --source nightly-trade-etl
 trade for 2026-10-15 loaded: 15,000 rows, 0 rejected; 0 alerts fired
   load mvcxcxas-1  status ready  verified verified  attempt 1  (already announced: nothing ran again)
   record  ok      recorded
@@ -108,7 +108,7 @@ be retried safely. (The step lines below repeat the first record.) A different b
 If the copy breaks, say so (quote the note: it has spaces):
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py data landed --pack trading --kind trade --date 2026-10-14 --status failed --note "copy stopped: disk full" --batch eod-20261014
+$ python3 tools/drishti.py data landed --pack trading --kind trade --date 2026-10-14 --status failed --note "copy stopped: disk full" --batch eod-20261014
 trade load for 2026-10-14 FAILED: copy stopped: disk full
   load mvcxd8um-3  status failed  verified skipped  attempt 1
   record  ok      recorded
@@ -180,7 +180,7 @@ You should see the same steps as JSON: `receivedBy` is the token's owner, `verif
 ## Step 5 · Read the history and what is due
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py data loads --pack trading --limit 6 --expectations
+$ python3 tools/drishti.py data loads --pack trading --limit 6 --expectations
 received             kind              date        status        rows    rej  verified  alerts told  batch / source
 2026-10-17 21:45:01  trade             2026-10-14  failed                     skipped        0    1  eod-20261014
 2026-10-17 21:44:48  trade             2026-10-13  ready        14998      2  verified       0    1  eod-20261013 nightly-trade-etl
@@ -267,9 +267,9 @@ the browser saves the file as it streams. **Copy link** copies the address, whic
 **From the command line** the same, with the count first:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py data get trade --date 2026-10-15 --columns TRADE_ID,PORTFOLIO,PRODUCT_TYPE,QUANTITY \
+$ python3 tools/drishti.py data get trade --date 2026-10-15 --columns TRADE_ID,PORTFOLIO,PRODUCT_TYPE,QUANTITY \
       --where "PRODUCT_TYPE in ComSwap,ComFut" --where "QUANTITY > 10000" --count
-$ drishti-console/.venv/bin/python tools/drishti.py data get trade --date 2026-10-15 --columns TRADE_ID,PORTFOLIO,PRODUCT_TYPE,QUANTITY \
+$ python3 tools/drishti.py data get trade --date 2026-10-15 --columns TRADE_ID,PORTFOLIO,PRODUCT_TYPE,QUANTITY \
       --where "PRODUCT_TYPE in ComSwap,ComFut" --where "QUANTITY > 10000"
 $ zcat trade_2026-10-15.jsonl.gz | head -2
 ```

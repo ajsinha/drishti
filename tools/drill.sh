@@ -131,11 +131,12 @@ elif [[ "$MODE" == docs && -n "$non_docs" ]]; then
 fi
 echo "drill: mode = $MODE$([[ $GATE_ONLY == 1 ]] && echo ' (gate only)')$([[ $PUSH == 0 ]] && echo ' (no push)')$([[ $KEEP_GOING == 1 ]] && echo ' (keep going)')"
 
-PY=drishti-console/.venv/bin/python
-# a new worktree has no console environment of its own: stop at once with the remedy, not after the gate
-if [[ ! -x "$PY" ]]; then
-  echo "drill: $PY not found: create the console environment (python3 -m venv drishti-console/.venv, then pip install -r" >&2
-  echo "       drishti-console/requirements.txt), or in a worktree link the main checkout's: ln -s <main>/drishti-console/.venv drishti-console/.venv" >&2
+# the Python of the tests: DRISHTI_PYTHON (any interpreter with drishti-console/requirements-test.txt), else the console's environment
+# setup made (Linux); the drill never makes one
+PY="${DRISHTI_PYTHON:-drishti-console/.venv/bin/python}"
+if ! command -v "$PY" >/dev/null; then
+  echo "drill: no Python at $PY: set DRISHTI_PYTHON to a Python with drishti-console/requirements-test.txt installed, or run" >&2
+  echo "       python3 tools/drishti.py setup (it makes drishti-console/.venv), then install drishti-console/requirements-test.txt into it" >&2
   exit 1
 fi
 # the test servers run the compute pool `python` in this interpreter: a library at another version than the lock refuses every Python run
@@ -157,8 +158,8 @@ print("; ".join(off))
 PYEOF
 )
 if [[ -n "$pins_off" ]]; then
-  echo "drill: the console environment differs from config/compute/locks/python.in: $pins_off" >&2
-  echo "       install the pins: drishti-console/.venv/bin/pip install -r drishti-console/requirements-test.txt" >&2
+  echo "drill: the Python $PY (DRISHTI_PYTHON) differs from config/compute/locks/python.in: $pins_off" >&2
+  echo "       install the pins into it: $PY -m pip install -r drishti-console/requirements-test.txt (or set DRISHTI_PYTHON to a Python that has them)" >&2
   exit 1
 fi
 DATA="${DRISHTI_DATA_DIR:-data}"; mkdir -p "$DATA/drill"; LOGS=$(cd "$DATA/drill" && pwd -P)

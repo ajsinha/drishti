@@ -212,35 +212,17 @@
         "problemMatcher": []
       },
       {
-        "label": "Drishti: setup (system Python)",
+        "label": "Drishti: setup (package index)",
         "type": "shell",
-        "command": "python3 tools/drishti.py setup --system",
+        "command": "python3 tools/drishti.py setup --index",
         "windows": {
-          "command": "py -3.13 tools/drishti.py setup --system"
+          "command": "py -3.13 tools/drishti.py setup --index"
         },
         "linux": {
-          "command": "python3 tools/drishti.py setup --system"
+          "command": "python3 tools/drishti.py setup --index"
         },
         "osx": {
-          "command": "python3 tools/drishti.py setup --system"
-        },
-        "options": {
-          "cwd": "${workspaceFolder}"
-        },
-        "problemMatcher": []
-      },
-      {
-        "label": "Drishti: setup (system Python, offline wheels)",
-        "type": "shell",
-        "command": "python3 tools/drishti.py setup --system --wheels \"${userHome}/drishti-wheels\"",
-        "windows": {
-          "command": "py -3.13 tools/drishti.py setup --system --wheels \"${userHome}/drishti-wheels\""
-        },
-        "linux": {
-          "command": "python3 tools/drishti.py setup --system --wheels \"${userHome}/drishti-wheels\""
-        },
-        "osx": {
-          "command": "python3 tools/drishti.py setup --system --wheels \"${userHome}/drishti-wheels\""
+          "command": "python3 tools/drishti.py setup --index"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -402,7 +384,7 @@
         ]
       },
       {
-        "name": "Drishti: setup (system Python)",
+        "name": "Drishti: setup (package index)",
         "type": "debugpy",
         "request": "launch",
         "cwd": "${workspaceFolder}",
@@ -410,21 +392,7 @@
         "program": "${workspaceFolder}/tools/drishti.py",
         "args": [
           "setup",
-          "--system"
-        ]
-      },
-      {
-        "name": "Drishti: setup (system Python, offline wheels)",
-        "type": "debugpy",
-        "request": "launch",
-        "cwd": "${workspaceFolder}",
-        "console": "integratedTerminal",
-        "program": "${workspaceFolder}/tools/drishti.py",
-        "args": [
-          "setup",
-          "--system",
-          "--wheels",
-          "${userHome}/drishti-wheels"
+          "--index"
         ]
       },
       {

@@ -64,7 +64,7 @@ python3 tools/drishti.py feed run oecd               # pull today's data and loa
 python3 tools/drishti.py feed run oecd --load inbox  # the same through the data inbox: the server loads it
 ```
 
-The same with the console's Python: `drishti-console/.venv/bin/python tools/drishti.py feed run oecd` on Linux and macOS, `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run oecd` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run oecd` on Linux and macOS, `py tools\drishti.py feed run oecd` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Into the lake, checking, offline
 

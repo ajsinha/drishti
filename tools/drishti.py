@@ -15,7 +15,7 @@
 
 """drishti: one command line for building, checking, loading and shipping Drishti packs and Sutras.
 
-    python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
+    python3 tools/drishti.py <group> <command> [options]          (Windows: py tools\\drishti.py ...; the one Python, its libraries from setup)
 
 Groups: setup (prepare this machine), build (jar: the server jar into <home>/lib), start, stop and status (server, console, all, cluster;
 every OS, by pid files), sutra (the Java `sutra` tool, plus `sutra gen`), module (pack a folder; verify, check, inspect a .dmod with the server jar's verifier; deploy, plan, apply, list, remove, disable, enable, upgrade, run), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
@@ -97,7 +97,7 @@ def need_yaml():
         import yaml
         return yaml
     except ModuleNotFoundError:
-        raise CliError("PyYAML is not installed: run with  uv run --with pyyaml python tools/drishti.py ...  or  pip install pyyaml") from None
+        raise CliError("PyYAML is not installed in this Python: run  python tools/drishti.py setup  (it installs the libraries from the offline wheel pack: ~/drishti-wheels, or --wheels <folder>)") from None
 
 
 def say_json(obj) -> None:
@@ -1140,6 +1140,46 @@ def is_setup(argv: list[str]) -> bool:
     return i < len(argv) and argv[i] == "setup"
 
 
+REEXEC = "DRISHTI_TOOLS_REEXEC"
+
+
+def setup_python() -> str | None:
+    """The Python setup prepared (DRISHTI_PYTHON, drishti.python, on Linux and macOS drishti-console/.venv) when it is not this one and
+    this process is not already such a re-run: ``python3 tools/drishti.py lake demo`` then runs in it. None otherwise."""
+    if os.environ.get(REEXEC):
+        return None
+    try:
+        sys.path.insert(0, str(ROOT / "tools" / "launch"))
+        import procs
+        py = procs.tools_python()[0]
+    except Exception:                     # noqa: BLE001 - only a convenience: the one-line message follows
+        return None
+    norm = lambda x: os.path.normcase(os.path.abspath(x))     # never resolved: a venv's python is a link to the base one
+    same = norm(py) == norm(sys.executable)
+    return py if not same and (pathlib.Path(py).is_file() or shutil_which(py)) else None
+
+
+def shutil_which(name: str) -> str | None:
+    import shutil
+    return shutil.which(name)
+
+
+def default_settings() -> str | None:
+    """The settings file setup writes, ``~/drishti-envs/dev.ini`` (Windows ``%USERPROFILE%\\drishti-envs\\dev.ini``), when no --settings is
+    given and it names THIS checkout as drishti.home (another copy's file is never picked up by default): its path, else None."""
+    base = (os.environ.get("USERPROFILE") if os.name == "nt" else None) or str(pathlib.Path.home())
+    ini = pathlib.Path(base) / "drishti-envs" / "dev.ini"
+    if not ini.is_file():
+        return None
+    try:
+        home = (settingsfile.read_all(str(ini)).get("drishti.home") or "").strip()
+    except (settingsfile.SettingsError, OSError):
+        return None
+    if home and settingsfile.inside(home, ROOT) and settingsfile.inside(ROOT, home):
+        return str(ini)
+    return None
+
+
 def use_tmp_dir() -> None:
     """``DRISHTI_TMP_DIR``, when set, is this command's temp folder too: Python's own temporary files and every program it starts
     (``TMPDIR``), so a site whose system temp folder is small or in memory points all of Drishti at one folder of its choosing."""
@@ -1165,6 +1205,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         # --settings /absolute/drishti.ini: the optional settings file (tools/settingsfile.py), handed on to every java this command starts
         argv, settings = settingsfile.pop_option(list(sys.argv[1:] if argv is None else argv))
+        if not settings and not is_setup(argv):
+            settings = default_settings()        # ~/drishti-envs/dev.ini of this checkout: no --settings needed on the command line
         # --profile demo|samples|qa: a committed settings file of this install (config/profiles/<name>.ini), after --settings (it wins)
         lead = 0                                # only before the command: a command's own options are its own
         while lead < len(argv) and (argv[lead] == "--profile" or argv[lead].startswith("--profile=")):
@@ -1203,8 +1245,14 @@ def main(argv: list[str] | None = None) -> int:
             print(e.code, file=sys.stderr)
             return 2
         return e.code or 0
-    except ModuleNotFoundError as e:
-        print(f"drishti: {e.name} is not installed; run  uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...  (or install the libraries into this Python: python tools/drishti.py setup --system)", file=sys.stderr)
+    except ImportError as e:              # ModuleNotFoundError, or the Lake wheel missing (tools/lake/lakewheel.py): one line, no traceback
+        again = setup_python()
+        if again:                         # this Python lacks them, the one setup prepared has them: the same command in that one
+            return subprocess.run([again, str(pathlib.Path(__file__).resolve()), *(sys.argv[1:] if argv is None else argv)],
+                                  env={**os.environ, REEXEC: "1"}).returncode
+        what = getattr(e, "name", None) or ("drishti_lake" if "drishti_lake" in str(e) else "a library Drishti needs")
+        print(f"drishti: {what} is not installed in this Python ({sys.executable}): run  python tools/drishti.py setup  "
+              "(it installs the libraries from the offline wheel pack: ~/drishti-wheels, or --wheels <folder>)", file=sys.stderr)
         return 2
     except FileNotFoundError as e:
         print(f"drishti: {e.filename or e}: no such file", file=sys.stderr)

@@ -381,9 +381,9 @@ gleif    CC0 1.0                                           committable  2026-10-
 On Windows (from the repository folder; the console's Python, nothing else to install):
 
 ```powershell
-drishti-console\.venv\Scripts\python.exe tools\drishti.py feed status funds
-drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run funds --dry-run
-drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run funds
+py tools\drishti.py feed status funds
+py tools\drishti.py feed run funds --dry-run
+py tools\drishti.py feed run funds
 python tools\build_demo_lakes.py --only funds
 ```
 
@@ -521,7 +521,7 @@ which runs the parallel loader in the server's jar, or drops files into the data
 | the command line | `tools/feeds/cli.py` | `drishti.py feed list|run|status|schedule` |
 | the polite HTTP client and download cache | `tools/feeds/pullkit.py` | User-Agent, pause, retries with back-off, `Retry-After`, the cache |
 | each source's pull | `tools/feeds/sources/<module>.py` | one module per source (a feed file's `class:`) |
-| the command | `drishti-console/.venv/bin/python tools/drishti.py feed run` (Linux, macOS), `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run` (Windows) | what cron, systemd and Task Scheduler run |
+| the command | `python3 tools/drishti.py feed run` (Linux, macOS), `py tools\drishti.py feed run` (Windows) | what cron, systemd and Task Scheduler run |
 
 Every external source of the packs is pulled this way: each pack's source module in `tools/feeds/sources/` (gleif, us-equities, funds,
 world-economy, news-and-markets, market-data) is a feed's pull, and the same module refreshes its pack's committed demo snapshot with
@@ -579,7 +579,7 @@ fetch golden
 ```
 
 The last line is the run's **one log line**: what a scheduler's mail or the journal shows. On Windows:
-`drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run gleif`.
+`py tools\drishti.py feed run gleif`.
 
 | Option | Means |
 |---|---|
@@ -759,7 +759,7 @@ python3 tools/drishti.py feed schedule --windows --root 'C:\drishti'
 ```
 
 ```text
-schtasks /Create /F /TN "Drishti feed gleif" /SC DAILY /ST 05:30 /TR "\"C:\drishti\drishti-console\.venv\Scripts\python.exe\" \"C:\drishti\tools\drishti.py\" feed run gleif --trigger schedule"
+schtasks /Create /F /TN "Drishti feed gleif" /SC DAILY /ST 05:30 /TR "\"C:\Program Files\Python313\python.exe\" \"C:\drishti\tools\drishti.py\" feed run gleif --trigger schedule"
 ```
 
 Task Scheduler's *Last Run Result* is the exit code (section 3.1). One task for every feed instead: `drishti.py feed run --all` (the feeds run
@@ -1056,7 +1056,7 @@ python3 tools/drishti.py feed run us-equities --offline -- sec           # the S
 python3 tools/drishti.py feed run gleif --snapshot -- mapping            # the BIC, ISIN, MIC and OpenCorporates files into the committed pack
 ```
 
-On Windows the same through `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run gleif --dry-run`; nothing but Python and
+On Windows the same through `py tools\drishti.py feed run gleif --dry-run`; nothing but Python and
 Java is needed.
 
 ### 14. How external data reaches the server
@@ -1409,7 +1409,7 @@ $ python3 tools/drishti.py pack check modules/economy/packs/world-economy module
 ![Brazil's lower-chamber election](img/realdata/election-brazil.jpg)
 ![A governance indicator: Nigeria, rule of law](img/realdata/indicator-nigeria-rule-of-law.jpg)
 
-The pictures are made by `tools/docs/shots/realdata.py` (`drishti-console/.venv/bin/python tools/docs/screenshots.py --guide realdata`) on a server started with
+The pictures are made by `tools/docs/shots/realdata.py` (`python3 tools/docs/screenshots.py --guide realdata`) on a server started with
 `DRISHTI_PACKS=world-economy`.
 
 #### news-and-markets
@@ -1620,7 +1620,7 @@ python3 tools/drishti.py feed run funds --snapshot -- --scope FUNDS:300,HOLDINGS
                                                                    # the 300 largest, 1,000 holdings a fund, in <data>/datafeeds/sources/funds
 ```
 
-On Windows the same through `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run funds --dry-run`; on Linux and macOS
+On Windows the same through `py tools\drishti.py feed run funds --dry-run`; on Linux and macOS
 `python tools/drishti.py feed run funds` takes the same arguments.
 
 - **The 200.** Every fund's newest N-PORT report in the quarter (amendments win over the report they amend), ranked by net assets;
@@ -1656,7 +1656,7 @@ committed but a few sample documents (from the feeds' recorded fixtures). The gu
 python3 tools/drishti.py feed run world-development --dry-run    # what it would ask; nothing changes
 python3 tools/drishti.py feed run world-development              # pull what is new, load into worldlake
 python3 tools/drishti.py feed run official-news --load inbox     # through the data inbox
-drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run oecd    # Windows
+py tools\drishti.py feed run oecd    # Windows
 ```
 
 Each feed file (`config/feeds/<pack>.yaml`) records every source's licence and terms in `options.sources`; the Bank of England, OSFI and
@@ -1813,7 +1813,7 @@ python3 tools/drishti.py feed status gdelt-events                # its last runs
 python3 tools/drishti.py feed schedule --cron world-development central-banks national-statistics oecd official-news gdelt-events
 ```
 
-The command is `drishti-console/.venv/bin/python tools/drishti.py feed run <feed>` (Linux, macOS) and `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run <feed>` (Windows); Admin → Data loads → Feeds shows each
+The command is `python3 tools/drishti.py feed run <feed>` (Linux, macOS) and `py tools\drishti.py feed run <feed>` (Windows); Admin → Data loads → Feeds shows each
 run and offers Run now. Exit codes: 0 ok, 1 failed, 2 refused, 3 locked, 4 partial.
 
 **Keys.** Only FRED needs one: a free key from https://fred.stlouisfed.org/docs/api/api_key.html in `DRISHTI_FRED_API_KEY` where the feed
@@ -2509,7 +2509,7 @@ Further in the guide: [section 7](../guides/WORLD_DATA_GUIDE.md#7-commands-searc
 
 **In the UI.** Nothing to click: the data is refreshed by a script, then the lake is rebuilt and the server reads it.
 
-**From the command line.** On Linux and macOS (on Windows `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run funds` takes the same arguments):
+**From the command line.** On Linux and macOS (on Windows `py tools\drishti.py feed run funds` takes the same arguments):
 
 ```bash
 python tools/drishti.py feed run funds --dry-run      # what would be fetched; changes nothing

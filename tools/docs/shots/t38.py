@@ -16,7 +16,7 @@
 docs/tutorials/img/t38/, in the light theme. Run it on its own: it builds the VaR pictures' scratch lake from the committed test data
 (2026-09-30) and starts its own scratch server and console (tools/docs/shots/_var.py):
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t38
+    python3 tools/docs/screenshots.py --guide t38
 
 The pictures, in the tutorial's order: the landing (desks by risk class), the headline's tiles, the RATES × IR cell's provenance with its
 tail and Explain the move, the lens at 10 days and 97.5% on DESK:RATES, RATES opened to its books with CURRENCY across, tabs B and C, and

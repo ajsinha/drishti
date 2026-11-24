@@ -20,12 +20,12 @@ This is the short, step-by-step way for the PVF files: a day's per-path PV file,
 committed. The columns of every kind and the mapping rules are in [tools/mrloader/README.md](../../tools/mrloader/README.md); the same
 loader inside a whole day of CSV extracts (limits, desks, exposure) is [the daily runbook](../../tools/mrloader/docs/DAILY_RUNBOOK.md).
 
-Commands are written for **Linux** and **Windows**. `PY` stands for the Python of Drishti's environment:
+Commands are written for **Linux** and **Windows**. `PY` stands for the Python setup prepared (`drishti.python`):
 
 | | `PY` is | a path looks like |
 |---|---|---|
 | Linux | `drishti-console/.venv/bin/python` | `tools/mrloader/pvf_run.py` |
-| Windows (PowerShell, no `.exe` of ours) | `drishti-console\.venv\Scripts\python.exe` | `tools\mrloader\pvf_run.py` |
+| Windows (PowerShell, no `.exe` of ours) | `py` | `tools\mrloader\pvf_run.py` |
 
 Run every command from the install folder (the one holding `tools/`). On Windows write your own paths with `\` and put a path that has a
 space in quotes; the examples use `data/pvf/...`, which Windows also accepts.
@@ -153,7 +153,7 @@ Windows (PowerShell):
 ```powershell
 foreach ($d in "20261027","20261028","20261029") {
   $iso = $d.Substring(0,4) + "-" + $d.Substring(4,2) + "-" + $d.Substring(6,2)
-  drishti-console\.venv\Scripts\python.exe tools\mrloader\pvf_run.py --pv data\pvf\pvf_path_$d.csv --portfolio data\pvf\portfolio_d2.csv `
+  py tools\mrloader\pvf_run.py --pv data\pvf\pvf_path_$d.csv --portfolio data\pvf\portfolio_d2.csv `
      --positions data\pvf\pos_$d.csv --date $iso --load --lake risklake --server http://localhost:18480
   if ($LASTEXITCODE -ne 0) { break }
 }
@@ -298,5 +298,4 @@ Run it on a schedule with `lake maintain --daemon` or the console's schedules ([
 | `lake delete` exit 2 | deleted, but the server could not be told | the server notices within 30 s; or restart the call with the right `--server` |
 | Windows: a path cut at a space, or *can't open file* | a path with a space, unquoted | put the path in quotes; nothing but the environment's `python.exe` and Java is needed |
 | Windows: `drishti.py` is not found | not in the install folder | `cd` to the folder holding `tools\` |
-| Windows: `Activate.ps1` is blocked | script policy | do not activate: call `drishti-console\.venv\Scripts\python.exe` directly, as above |
 | memory error on the full extract | one chunk is too large | `--chunk 20000` (default 50,000) |

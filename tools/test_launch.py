@@ -264,7 +264,6 @@ def test_windows_terminate_only_forces_and_spawn_detaches(tmp_path):
         procs.spawn(["a-server", "--port=1"], tmp_path, {}, log=tmp_path / "logs" / "s.out")
         kw = popen.call_args.kwargs
         assert kw["creationflags"] == procs.CREATE_NEW_PROCESS_GROUP | procs.CREATE_NO_WINDOW and "start_new_session" not in kw
-        assert procs.venv_python(tmp_path) == tmp_path / "drishti-console" / ".venv" / "Scripts/python.exe"
     with mock.patch.object(procs.subprocess, "Popen") as popen:
         if os.name != "nt":
             procs.spawn(["a-server"], tmp_path, {}, log=tmp_path / "s.out")

@@ -14,7 +14,7 @@
 
 """Makes the pictures and the captured output of docs/guides/bi/README.md, bi/README.md and BI_TUTORIAL.md (chapter 17) from the real stack (not a test: run it by hand).
 
-    drishti-console/.venv/bin/python drishti-console/tests/bi_gov_shots.py <pictures dir> <captures.json>
+    python3 drishti-console/tests/bi_gov_shots.py <pictures dir> <captures.json>
 
 Ports 18992 (server) and 17992 (console), a scratch directory, a 120-trade file lake. Pictures are desktop (1600 px: the top bar needs it) and the phone (390 px)."""
 import json

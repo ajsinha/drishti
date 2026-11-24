@@ -282,11 +282,10 @@ GREEN  server jar              ~/drishti/lib/drishti-server-<version>-exec.jar (
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
-                               fix: pip install deltalake   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...
+                               fix: python tools/drishti.py setup   (installs what is missing into this Python from the offline wheel pack: ~/drishti-wheels, or --wheels <folder>)
 YELLOW python pyarrow          not installed (needed for data ingest --store delta)
-                               fix: pip install pyarrow   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...
+                               fix: python tools/drishti.py setup   (installs what is missing into this Python from the offline wheel pack: ~/drishti-wheels, or --wheels <folder>)
 GREEN  repo config/packs/      ~/drishti/config/packs
-GREEN  console venv            ~/drishti/drishti-console/.venv
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18480              in use by Drishti: status UP
 GREEN  port 17480              in use by Drishti: answers 404 on /actuator/health, as the Drishti console does
@@ -309,7 +308,7 @@ You should see the story of step 2, filtered to the development administrator wi
 2. **Back up** (step 5) and keep the old jar: `cp drishti-server.jar drishti-server-$(date +%F).jar`.
 3. **Build or fetch** the new release: `./mvnw -q clean package -DskipTests`.
 4. **Stop** the console and the server: `sudo systemctl stop drishti-console drishti-server`.
-5. **Replace** the jar, `config/packs/`, `drishti-console/` and `docs/`; keep `drishti-console/.venv` and your `application.local.yaml`. Re-run `uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt` in case the console's libraries changed.
+5. **Replace** the jar, `config/packs/`, `drishti-console/` and `docs/`; keep your `application.local.yaml`. Re-run `python3 tools/drishti.py setup --wheels <the new release's wheel pack>` in case the libraries changed (it installs only what is missing).
 6. **Start** the server, then the console. (Upgrade them **together**: a new console cannot sign anyone in to an older server.)
 7. **Verify** the version and readiness, and open **Admin → Health**:
 

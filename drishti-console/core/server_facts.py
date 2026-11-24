@@ -67,12 +67,21 @@ class _Held:
     stamps: dict = field(default_factory=dict)
     about: dict = field(default_factory=dict)  # what the server says of itself: version, product, tagline, notice, edition
     older: bool = False                        # the server gives no stamps: older than this console
+    refused: int = 0                           # 401/403 answers in a row: logged once, then asked again only after a growing wait
+    retry_at: float = 0.0                      # no ask before this time while refused
+
+
+#: the one line logged when the server refuses the console's service identity (a different token secret): once, not at every check
+REFUSED = ("the server rejects this console's secret (its service identity): start both with the same settings (launcher Drishti: run console, or "
+           "drishti.py start all --demo); auth.token_secret must be the server's drishti.security.secret")
 
 
 class ServerFacts:
     """The installation's answer per server of this console (one per app; each worker process holds its own and follows the stamps)."""
 
     PATH = "/api/v1/console/bootstrap"
+    #: the waits between asks while the server refuses the service identity (seconds; the last repeats)
+    BACKOFF = (5, 15, 60, 300)
 
     #: what of /public/about the pages may show (the server's words about itself)
     ABOUT_KEYS = ("product", "version", "tagline", "notice", "edition")
@@ -104,6 +113,8 @@ class ServerFacts:
         if held.answer is not None and held.answer.follows == held.stamp:
             held.problem = ""
             return False
+        if held.refused and time.time() < held.retry_at:
+            return False                       # refused: back off (the problem stays on Admin -> Health), no flood of asks and lines
         took = await self._fetch(held, base_url, headers)
         if took and self.on_answer is not None:
             self.on_answer(sid, held.answer.doc)
@@ -124,10 +135,15 @@ class ServerFacts:
             held.problem = ""
             return False
         if status in (401, 403):
-            held.problem = ("the server refused the console's service identity for its installation's answer "
-                            "(auth.token_secret must be the server's drishti.security.secret)")
-            LOG.warning(held.problem)
+            held.problem = REFUSED
+            if not held.refused:
+                LOG.warning(REFUSED)
+            held.retry_at = time.time() + self.BACKOFF[min(held.refused, len(self.BACKOFF) - 1)]
+            held.refused += 1
             return False
+        if held.refused:
+            LOG.info("the server accepts this console's secret again")
+            held.refused, held.retry_at = 0, 0.0
         if status == 409:
             held.problem = (f"the server does not compile this console's distribution '{self.distribution}' (--distribution): "
                             "name one of its distributions, or none to follow the server's")

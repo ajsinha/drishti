@@ -16,7 +16,7 @@
 real stack (not a test: run it by hand).
 
     DRISHTI_BI_REPORT_SERVER_PORT=18951 DRISHTI_BI_REPORT_CONSOLE_PORT=17951 \
-        drishti-console/.venv/bin/python drishti-console/tests/alerts_shots.py <pictures dir> <captures.json>
+        python3 drishti-console/tests/alerts_shots.py <pictures dir> <captures.json>
 
 The stack is tests/alerts_stack.py (the sample report "Trades overview", rows and a masked column per person, a board with one tile that notifies, a local fake SMTP; no
 mail leaves the machine). Pictures are desktop (1600 px: the top bar needs it) and the phone (390 px). Everything shown is real: the alert, its history and the inbox rows

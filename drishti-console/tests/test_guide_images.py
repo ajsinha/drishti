@@ -78,7 +78,7 @@ def test_every_picture_any_guide_shows_exists_and_is_a_real_image():
         for rel in pictures_of(doc):
             f = doc.parent / rel
             count += 1
-            assert f.is_file(), f"{doc.relative_to(ROOT)} shows {rel}, which is missing: drishti-console/.venv/bin/python tools/docs/screenshots.py --guide <guide>"
+            assert f.is_file(), f"{doc.relative_to(ROOT)} shows {rel}, which is missing: python3 tools/docs/screenshots.py --guide <guide>"
             if f.suffix == ".svg":
                 assert_a_self_contained_diagram(f)
                 continue

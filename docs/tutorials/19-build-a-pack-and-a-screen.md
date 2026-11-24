@@ -29,7 +29,7 @@ About 2 h 10 min in all; each part can be done on its own day.
 
 ## Before you start
 
-- [Tutorial 15](15-connect-your-data.md) done: the connector `desk-quotes` exists and runs (check with `drishti-console/.venv/bin/python tools/drishti.py connector list --origin file`).
+- [Tutorial 15](15-connect-your-data.md) done: the connector `desk-quotes` exists and runs (check with `python3 tools/drishti.py connector list --origin file`).
 - Signed in as the development administrator. The server needs `DRISHTI_STUDIO_SAVE=true` (tutorial 1, step 2), and deploying a pack needs the administrator.
 - The console's Python (tutorial 1, Part A) for the command-line part: it has the Drishti Lake wheel and `pyarrow`, which `pack make` uses to write its Delta store.
 - The data: `docs/tutorials/data/schemas/desk-quote.schema.json` (a JSON Schema titled *Desk quote*, with a description for every field) and `docs/tutorials/data/desk-quotes/`
@@ -54,7 +54,7 @@ About 2 h 10 min in all; each part can be done on its own day.
 
 **Part C · Computed panels: a reactive connector.**
 
-- The compute workers need a Python 3.10 or newer; the console's own (`drishti-console/.venv/bin/python`) is enough: the sample engine
+- The compute workers need a Python 3.10 or newer; the one you run Drishti with (`drishti.python`) is enough: the sample engine
   uses the standard library only.
 
 The compute-demo pack is **synthetic** (a seeded random walk): nothing in it is market data.
@@ -195,7 +195,7 @@ configuration and start scripts. `pack make` wants the ids in what it reads to b
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack make docs/tutorials/data/desk-quotes/2026-09-30/desk-quote.jsonl --kind desk-quote --match VENUE --name desk-quotes --version 1.2.0 --out build/desk-quotes
+$ python3 tools/drishti.py pack make docs/tutorials/data/desk-quotes/2026-09-30/desk-quote.jsonl --kind desk-quote --match VENUE --name desk-quotes --version 1.2.0 --out build/desk-quotes
 read 6 desk-quote document(s)
 key:   ID  (named id, present and unique in all 6 documents)
 date:  AS_OF  (date-valued, named like a business date, 1 distinct date(s))
@@ -304,7 +304,7 @@ On this server that store reads `<data>/delta/desk-quotes`, which is empty until
 Verify the bundle, as a colleague would before deploying it:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack verify build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz
+$ python3 tools/drishti.py pack verify build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz
 verify build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz: desk-quotes 1.2.0
   checksums ok
   schema    ok
@@ -316,7 +316,7 @@ verified
 Ask the server what a deploy would do, without doing it (`--preview` discards the upload):
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server packs deploy build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz --preview
+$ python3 tools/drishti.py server packs deploy build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz --preview
 archive desk-quotes-1.2.0.tar.gz (4559 bytes, sha256 2ef97e13fb4c877c...)
   ok    archive         4559 bytes, sha256 2ef97e13fb4c877c...
   ok    checksum        matches the sha256 you gave
@@ -342,7 +342,7 @@ was itself made by `pack make`, so only the version differs; after the page's 1.
 Sutra and glossary under CHANGE.) Then deploy it for real, look at the history, roll back and look again:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server packs deploy build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz
+$ python3 tools/drishti.py server packs deploy build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz
 archive desk-quotes-1.2.0.tar.gz (4559 bytes, sha256 2ef97e13fb4c877c...)
   ok    archive         4559 bytes, sha256 2ef97e13fb4c877c...
   ok    checksum        matches the sha256 you gave
@@ -364,7 +364,7 @@ deployed desk-quotes 1.2.0 (replacing 1.0.0): Applied now; no restart.
 ```
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server packs history --pack desk-quotes --limit 6
+$ python3 tools/drishti.py server packs history --pack desk-quotes --limit 6
   when (UTC)           action    pack         version  replaced  by
   -------------------  --------  -----------  -------  --------  -----------------
   2026-10-17 21:42:46  deploy    desk-quotes  1.2.0    1.0.0     drishti-dev-admin
@@ -375,12 +375,12 @@ $ drishti-console/.venv/bin/python tools/drishti.py server packs history --pack 
 ```
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server packs rollback desk-quotes --version 1.0.0
+$ python3 tools/drishti.py server packs rollback desk-quotes --version 1.0.0
 rolled desk-quotes back to 1.0.0 (replacing 1.2.0): Applied now; no restart.
 ```
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server packs history --pack desk-quotes --limit 3
+$ python3 tools/drishti.py server packs history --pack desk-quotes --limit 3
   when (UTC)           action    pack         version  replaced  by
   -------------------  --------  -----------  -------  --------  -----------------
   2026-10-17 21:42:47  rollback  desk-quotes  1.0.0    1.2.0     drishti-dev-admin
@@ -509,11 +509,11 @@ The command line runs the same checks, which is what a CI job would do. Put the 
 ```bash
 mkdir -p desk-test && cp docs/tutorials/data/desk-book.sutra.yaml desk-test/
 cp docs/tutorials/data/desks/desk-rates.json desk-test/desk-book.json
-drishti-console/.venv/bin/python tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
+python3 tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
 ```
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
+$ python3 tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
 ok      desk-test/desk-book.sutra.yaml
 desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
 desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'VAR_99' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
@@ -525,7 +525,7 @@ You should see `ok desk-test/desk-book.sutra.yaml` and a list of warnings, one p
 default about help text: exit 0; `--strict` makes these warnings fail the run.)
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py sutra lint --strict desk-test/desk-book.sutra.yaml
+$ python3 tools/drishti.py sutra lint --strict desk-test/desk-book.sutra.yaml
 ok      desk-test/desk-book.sutra.yaml
 desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
 desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'VAR_99' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
@@ -546,7 +546,7 @@ desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.MATURITY' is sh
 `preview` renders every sample and reports panels in error:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py sutra preview desk-test/desk-book.sutra.yaml
+$ python3 tools/drishti.py sutra preview desk-test/desk-book.sutra.yaml
 desk-book / desk-book.json: 1 panels, 0 in error
 ```
 
@@ -910,7 +910,7 @@ write-back event that recomputes what a screen shows. Each step shows the UI, th
 
 ```bash
 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,compute-demo \
-DRISHTI_COMPUTE_ENABLED=true DRISHTI_PYTHON=$PWD/drishti-console/.venv/bin/python \
+DRISHTI_COMPUTE_ENABLED=true DRISHTI_PYTHON=$(command -v python3) \
   java -jar lib/drishti-server-*-exec.jar
 ```
 

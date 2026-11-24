@@ -106,7 +106,7 @@ the server and console started with sign-in on: the quick-start environment of [
 **Drishti: build demo lakes**, **Drishti: run server (demo)** and **Drishti: run console** set up in three clicks. Later tutorials say what else they need. For the command line you need a
 personal API token (tutorial 1, Step 9) in `DRISHTI_TOKEN`.
 
-Run commands from the repository root with the console's Python (`drishti-console/.venv/bin/python tools/drishti.py ...`). Where a tutorial shows output, it was captured from
+Run commands from the repository root with the console's Python (`python3 tools/drishti.py ...`). Where a tutorial shows output, it was captured from
 a fresh clone on the seven-day demo lakes, built on Saturday 17 October 2026 (**2026-10-07 to 2026-10-16**), unless the tutorial says
 otherwise. The lakes hold sixty business days (the test data's 2026-07-08 to 2026-09-30), so a captured count or value may differ on yours. `lake demo`
 moves the days to end on *your* today's business date, so your dates differ; the ids (`MX-20000001`, `1000001`, `CLY-3000157`, `CP-NORTHPLAINS`) and the 5,000 trades per

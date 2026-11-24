@@ -13,10 +13,12 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The Python half of ``drishti.py setup``: the libraries of drishti-console/requirements.txt (the pinned Lake wheel first) installed into one
-interpreter (the console's .venv, or the current one with ``setup libs`` / ``--system``), verified name by name and version by version, and
-the one ``drishti.python`` line of the settings file that tells the server which interpreter that is (written once, never over a value).
+interpreter, the one you run Drishti with (never a venv), verified name by name and version by version, and the one ``drishti.python`` line
+of the settings file that tells the server and ``start console`` which interpreter that is (written when absent; a value naming a .venv
+or a missing file is replaced, any other is kept).
 
-No network is needed to *check*; pip is the only thing that touches one, and on Windows it is told to use the Windows certificate store
+No network is needed to *check*; pip is the only thing that touches one (setup runs it offline from a wheel pack, or on the package index
+only with ``setup --index``), and on Windows it is told to use the Windows certificate store
 (pip's truststore), so a company proxy that re-signs TLS works as it does for Maven."""
 from __future__ import annotations
 
@@ -164,9 +166,10 @@ def installed(py: str, names: list[str], run=subprocess.run) -> dict[str, str | 
     return json.loads(r.stdout.strip().splitlines()[-1])
 
 
-def verify(py: str, home: Path, run=subprocess.run) -> list[str]:
-    """What is missing or wrong in the interpreter ``py`` against drishti-console/requirements.txt and the Lake pin; empty: all is in order."""
-    reqs = all_requirements(home)
+def verify(py: str, home: Path, run=subprocess.run, lock: bool = True) -> list[str]:
+    """What is missing or wrong in the interpreter ``py`` against drishti-console/requirements.txt (and python.lock, the server's compute
+    pool's, unless ``lock`` is False: the console needs only the requirements) and the Lake pin; empty: all is in order."""
+    reqs = all_requirements(home) if lock else [r for r in all_requirements(home) if r[2] != LOCK.as_posix()]
     have = installed(py, [n for n, _, _ in reqs], run)
     pin = lake_pin(home).get("version", "")
     bad = []
@@ -292,20 +295,44 @@ def pack_pythons(folder: Path) -> set[tuple[int, int]]:
     return out
 
 
-def check_pack_python(py: str, folder: Path, run=subprocess.run) -> None:
-    """Refuses, in one sentence, a pack of cpNN wheels for another Python than ``py`` (``py`` on Windows starts the newest one)."""
-    packs = pack_pythons(folder)
-    if not packs:
-        return
+def python_version(py: str, run=subprocess.run) -> tuple[int, int] | None:
+    """(major, minor) of the interpreter ``py``; None when it cannot be asked."""
     r = run([py, "-c", "import sys; print('PYVER %d.%d' % sys.version_info[:2])"], capture_output=True, text=True, cwd=tempfile.gettempdir())
     m = re.search(r"PYVER (\d+)\.(\d+)", r.stdout or "")
-    if not m or r.returncode:
-        return
-    have = (int(m.group(1)), int(m.group(2)))
-    if have not in packs:
-        want = "/".join(f"{a}.{b}" for a, b in sorted(packs))
-        first = f"{sorted(packs)[0][0]}.{sorted(packs)[0][1]}"
-        raise LaunchError(f"this pack is for Python {want}; this Python is {have[0]}.{have[1]}: run it with `py -{first} tools\\drishti.py setup ...`, or download the pack for your Python")
+    return (int(m.group(1)), int(m.group(2))) if m and not r.returncode else None
+
+
+def pack_mismatch(py: str, folder: Path, run=subprocess.run, windows: bool | None = None) -> str:
+    """One sentence when the pack's cpNN wheels are for another Python than ``py`` (naming both versions); "" when they fit."""
+    packs = pack_pythons(folder)
+    have = python_version(py, run) if packs else None
+    if not packs or have is None or have in packs:
+        return ""
+    want = "/".join(f"{a}.{b}" for a, b in sorted(packs))
+    first = f"{sorted(packs)[0][0]}.{sorted(packs)[0][1]}"
+    how = (f"`py -{first} tools\\drishti.py setup`" if (procs.windows() if windows is None else windows)
+           else f"a dedicated Python {first} (e.g. /opt/python{first}/bin/python{first} tools/drishti.py setup)")
+    return f"the wheel pack is for Python {want}; this Python is {have[0]}.{have[1]}: run setup with {how}, or use the pack for Python {have[0]}.{have[1]}"
+
+
+def check_pack_python(py: str, folder: Path, run=subprocess.run, windows: bool | None = None) -> None:
+    """Refuses, in one sentence, a pack of cpNN wheels for another Python than ``py`` (``py`` on Windows starts the newest one)."""
+    said = pack_mismatch(py, folder, run, windows)
+    if said:
+        raise LaunchError(said)
+
+
+_MANAGED = ("import os, sys, sysconfig; print('MANAGED', int(sys.prefix == sys.base_prefix and "
+            "os.path.isfile(os.path.join(sysconfig.get_path('stdlib'), 'EXTERNALLY-MANAGED'))))")
+#: what setup says for an operating system's own Python (PEP 668): never --break-system-packages, never a venv
+MANAGED = ("this Python is managed by the operating system: use a dedicated Python 3.13 for Drishti (e.g. /opt/python3.13, see "
+           "PRODUCTION_DEPLOYMENT.md) and run setup with it")
+
+
+def externally_managed(py: str, run=subprocess.run) -> bool:
+    """``py`` is an operating system's Python that refuses pip (PEP 668: EXTERNALLY-MANAGED in its standard library, not a venv)."""
+    r = run([py, "-c", _MANAGED], capture_output=True, text=True, cwd=tempfile.gettempdir())
+    return "MANAGED 1" in (r.stdout or "") and not r.returncode
 
 
 def offline_failure(output: str, dirs: list[Path], wanted: list[str]) -> str:
@@ -351,7 +378,7 @@ def install(py: str, home: Path, windows: bool | None = None, run=subprocess.run
         if lacking:
             raise LaunchError(f"the wheel folder {wheels} has no wheel for {', '.join(lacking)}: add it (on a machine with a working index: pip download {' '.join(n + sp for n, sp in others)} -d <folder>) and run setup again")
     if wheels:
-        check_pack_python(py, wheels, run)
+        check_pack_python(py, wheels, run, win)
     dirs = wheel_dirs(wheels) if wheels else []
     extra = [] if wheels else pip_extra(py, win, run)
     off = ["--no-index", *[x for d in dirs for x in ("--find-links", str(d))]] if wheels else []
@@ -372,13 +399,34 @@ def install(py: str, home: Path, windows: bool | None = None, run=subprocess.run
             raise LaunchError(why + ("" if wheels else "\nthen install what is missing by hand:  " + pip_line(py, by_hand)))
 
 
+def in_venv(py: str) -> bool:
+    """``py`` lies in a virtual environment (a pyvenv.cfg beside its folder, or a .venv folder on its path)."""
+    p = Path(py)
+    return ".venv" in p.parts or (p.parent.parent / "pyvenv.cfg").is_file()
+
+
+def stale_python(py: str, windows: bool | None = None) -> bool:
+    """A drishti.python setup replaces: a file that is not there, or, on Windows, a .venv's Python (Windows uses none)."""
+    win = procs.windows() if windows is None else windows
+    return (win and in_venv(py)) or not (Path(py).is_file() or shutil.which(py))
+
+
 def ensure_setting(ini: Path, py: str, check: bool = False) -> tuple[str, str]:
-    """``drishti.python=<py>`` into the settings file when absent; (state, detail) with state ok, made or todo. An existing value is never changed."""
+    """``drishti.python=<py>`` into the settings file when absent or stale (:func:`stale_python`); (state, detail) with state ok, made or todo.
+    Any other existing value is kept."""
     text = ini.read_text(encoding="utf-8") if ini.is_file() else ""
     m = re.search(rf"^[ \t]*{re.escape(SETTING)}[ \t]*=[ \t]*(\S.*)$", text, flags=re.M)
     if m:
         v = m.group(1).strip()
-        return "ok", f"{v}  (kept as it is; setup used {py})" if v != Path(py).as_posix() else v
+        if v == Path(py).as_posix():
+            return "ok", v
+        if not stale_python(v):
+            return "ok", f"{v}  (kept as it is; setup used {py})"
+        if check:
+            return "todo", f"{v} is {'a .venv Python' if in_venv(v) else 'not there'}: setup writes {Path(py).as_posix()}"
+        line = f"{SETTING}={Path(py).as_posix()}"
+        ini.write_text(text[:m.start()] + line + text[m.end():], encoding="utf-8")
+        return "made", f"{line}  (was {v}: {'a .venv is no longer used' if in_venv(v) else 'no such Python'})"
     if check or not ini.is_file():
         return "todo", f"{SETTING} is not in {ini}: setup writes {Path(py).as_posix()}"
     line = f"{SETTING}={Path(py).as_posix()}"
@@ -391,4 +439,4 @@ def ensure_setting(ini: Path, py: str, check: bool = False) -> tuple[str, str]:
         at = sec.start() if sec else len(text)
         pre = text[:at] + ("" if not text[:at] or text[:at].endswith("\n") else "\n")
         ini.write_text(pre + line + "\n" + text[at:], encoding="utf-8")
-    return "made", f"{line}  (the server's Python where its own setting is blank; DRISHTI_PYTHON still overrides)"
+    return "made", f"{line}  (the one Python: start console, the cluster, the feeds and the server's Python work; DRISHTI_PYTHON overrides)"

@@ -59,15 +59,15 @@ whoever writes the production query that must emit the same JSON Lines: [docs/co
 On Windows, offline, with your own ENDUR files: [How to QA in Windows Environment using Custom Data](../../docs/DEPLOYMENT_AND_QA_GUIDE.md#12-offline-qa-with-your-own-trade-files).
 
 1. **Clone** the repository (`git clone …`, then `cd drishti`; the product repositories sit side by side under `~/IdeaProjects/drishti-platform/`, each cloned from `github.com/drishti-platform/<repo>`).
-2. **Install** once: the console's Python with its requirements (PyYAML, the Drishti Lake wheel and pyarrow among them),
-   `python3 -m venv drishti-console/.venv && drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt`,
+2. **Install** once: the libraries into the Python you run Drishti with (PyYAML, the Drishti Lake wheel and pyarrow among them),
+   `python3 tools/drishti.py setup` (Linux and macOS: into `drishti-console/.venv`, which it makes),
    and the server jar in `lib/`: the run configuration **Drishti: build all** (or `python tools/drishti.py build all`).
 3. **Build the demo lakes**: the run configuration **Drishti: build demo lakes**, or
 
    Run these from the Drishti folder (the repository root, or the install folder of a release).
 
    ```bash
-   drishti-console/.venv/bin/python tools/drishti.py lake demo
+   python3 tools/drishti.py lake demo
    ```
 
    It rebuilds the sixty daily snapshots of each dataset, writes them under `data/delta/demo/<domain>/<kind>/` (the trades under
@@ -316,8 +316,8 @@ those same connectors, which the pack serves from the demo lake when the live co
 **Refreshing it** (on a machine with internet; the server jar built: run configuration **Drishti: build all**):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py testdata capture-market            # about four minutes
-drishti-console/.venv/bin/python tools/drishti.py testdata capture-market --dry-run  # what it would fetch: 20 quotes, 71 news ids
+python3 tools/drishti.py testdata capture-market            # about four minutes
+python3 tools/drishti.py testdata capture-market --dry-run  # what it would fetch: 20 quotes, 71 news ids
 ```
 
 It starts a scratch server from the jar (its own port, 18977 by default, and folders under `<data>/build/capture-market`, removed at
@@ -353,12 +353,12 @@ manifest names the pack, kind, connector, key and partitions of each dataset); t
 ```bash
 # the first day of the ENDUR trades, into the table the trade-endur connector reads (trading/trade_endur): the table and the business
 # date (2026-07-08) come from the file's name; mode replace, so running it again replaces that day
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
+python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     --partition-by PRODUCT_TYPE --mode overwrite-dates --lake data/delta/demo
 
 # a kind of another pack (core/counterparty: the table counterparty of the core pack, connector reference-store, domain reference),
 # under another business date: --as-of wins over the name's
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/core/counterparty/counterparty.2026-07-08.jsonl.gz \
+python3 tools/drishti.py lake build --from data/testdata/core/counterparty/counterparty.2026-07-08.jsonl.gz \
     --as-of 2026-09-22 --mode overwrite-dates --lake data/delta/demo
 ```
 
@@ -373,7 +373,7 @@ folder is updated, its earlier text kept in `data/connectors/history/`. Without 
 ## Local only: `--with-real`
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake demo --with-real ~/Downloads/endur.json,~/Downloads/ComSwap.json
+python3 tools/drishti.py lake demo --with-real ~/Downloads/endur.json,~/Downloads/ComSwap.json
 ```
 
 Adds real trade extracts to **the local lake only**: the trades themselves (into the ENDUR table; `BMO_LEGAL_ENTITY` read as

@@ -12,7 +12,7 @@
 
 *Your data is a treasury;* **Drishti is its sentinel.**
 
-**Release i7f: Drishti is one of five.** Each module is a verified `.dmod` package in `<home>/modules`, beside one server jar; the language, the lake, the screens' libraries and the shared utilities are products of their own, built once and used here as jars and bundles ([The platform](#the-platform)).
+**Release i7g: Drishti is one of five.** Each module is a verified `.dmod` package in `<home>/modules`, beside one server jar; the language, the lake, the screens' libraries and the shared utilities are products of their own, built once and used here as jars and bundles ([The platform](#the-platform)).
 
 Drishti looks at data, analyses it and explains it. It is built from **three blocks**: a domain-free **kernel** (connectors and lakes,
 screens written as short YAML **Sutras** in one grammar, **Rachana**, the pivot and BI engines, the cluster), a **console** in front of
@@ -357,7 +357,7 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 
 ## Run it
 
-With a 64-bit Java 21 (JDK) and [uv](https://docs.astral.sh/uv/) for the console's Python (Maven ships with the repository), from the
+With a 64-bit Java 21 (JDK) and Python 3.11+ with Drishti's libraries (`setup` installs them, from the offline wheel pack when there is one: on Windows into the Python you run Drishti with (never a `.venv`), on Linux and macOS into `drishti-console/.venv`, which setup makes (`--system`: into the Python you run it with); Maven ships with the repository), from the
 repository root ([OPERATIONS_GUIDE.md section 2](docs/guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) has every step):
 
 Get the code first: unpack the platform's source bundle, or clone `drishti-platform/drishti-platform` and run its `clone_all.py`, then `build_all.py`
@@ -366,7 +366,7 @@ Get the code first: unpack the platform's source bundle, or clone `drishti-platf
 folder (that checkout, or the install folder of a release).
 
 ```bash
-# 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini (with the IDE launchers' JVM options) and drishti-console/.venv
+# 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini (with the IDE launchers' JVM options), and the libraries (Windows: into this Python, never a .venv; Linux, macOS: drishti-console/.venv)
 python tools/drishti.py setup
 
 # 2. Build the runnable server and its modules: the kernel's jar goes to ./lib, each first-party module is a .dmod package in ./modules (the jar holds none)
@@ -400,7 +400,7 @@ development account, never for a shared machine) and try `TRD MX-20000001`, `VAR
   `--distribution` and a second console in one data folder with `--name`:
   [DEPLOYMENT_AND_QA_GUIDE.md section 7](docs/DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
 
-- **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads, feeds, approvals, VaR, exposure
+- **The command line** is `tools/drishti.py`, run with the Python you run Drishti with (its libraries from setup): lakes and loads, feeds, approvals, VaR, exposure
   and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)).
 - **A local cluster of three** with its consoles, from one file: `tools/drishti.py start cluster` with [deploy/stack/stack.yaml](deploy/stack/README.md)
   (its `consoles:` list may start a Drishti Risk and a Drishti Finance console over the same cluster).
@@ -458,7 +458,7 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
   `packaging/`, `testing/` and `drishti-sdk/` ([DEVELOPER_GUIDE.md section 1.1](docs/guides/DEVELOPER_GUIDE.md#11-java-modules)); a module's
   folder is its artifact id.
 - **Contributing**: work on `develop`; `./mvnw -q verify` and the console tests
-  (`drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`) must pass; no source file over 2,000 lines; every file carries
+  (`python3 -m pytest -q drishti-console/tests`) must pass; no source file over 2,000 lines; every file carries
   the copyright header (`python3 tools/license_headers.py --fix`); every change updates the documents it affects and the changelog in
   the same push; the documentation gates (`drishti-console/tests/test_docs_gates.py`, `config/docs-features.yaml`) keep one guide and one
   tutorial per feature.

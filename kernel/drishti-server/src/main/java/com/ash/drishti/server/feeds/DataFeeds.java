@@ -66,7 +66,7 @@ public final class DataFeeds {
      * @param config the feed files' folder ({@code config/feeds})
      * @param data the data folder ({@code drishti.data.dir}): the ledger is {@code <data>/datafeeds/ledger.jsonl}
      * @param root the installation's folder, where {@code tools/drishti.py} is (Run now)
-     * @param python the Python Run now starts (blank: the console's {@code drishti-console/.venv}, else python3)
+     * @param python the Python Run now starts (blank: python3, python on Windows)
      */
     public DataFeeds(Path config, Path data, Path root, String python, MeterRegistry registry) {
         this.config = config;
@@ -305,11 +305,8 @@ public final class DataFeeds {
         if (!python.isEmpty()) {
             return python;
         }
+        // no DRISHTI_PYTHON, drishti.feeds.python or drishti.python: the PATH's Python (Drishti makes and uses no venv)
         boolean win = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).contains("win");
-        Path venv = root.resolve("drishti-console").resolve(".venv").resolve(win ? "Scripts" : "bin").resolve(win ? "python.exe" : "python");
-        if (Files.isRegularFile(venv)) {
-            return venv.toString();
-        }
         return win ? "python" : "python3";
     }
 

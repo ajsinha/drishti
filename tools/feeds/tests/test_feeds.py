@@ -331,15 +331,17 @@ def test_cli_dry_run_and_source_arguments(data):
 
 
 def test_schedule_entries_for_cron_systemd_and_windows(spec):
-    cron = S.cron([spec], Path("/opt/drishti"))
-    run = "/opt/drishti/drishti-console/.venv/bin/python /opt/drishti/tools/drishti.py feed run sample-mapping --trigger schedule"
+    cron = S.cron([spec], Path("/opt/drishti"), py="/usr/bin/python3.13")
+    run = "/usr/bin/python3.13 /opt/drishti/tools/drishti.py feed run sample-mapping --trigger schedule"
     assert f"15 7 * * 1-5 {run} >> $HOME/drishti-feeds-logs/sample-mapping.log 2>&1" in cron
-    unit = S.systemd([spec], Path("/opt/drishti"))
+    unit = S.systemd([spec], Path("/opt/drishti"), py="/usr/bin/python3.13")
     assert "OnCalendar=Mon..Fri *-*-* 07:15:00" in unit and f"ExecStart={run}" in unit
     assert "Persistent=true" in unit and "Type=oneshot" in unit
-    win = S.windows([spec], Path("C:/drishti"))
+    win = S.windows([spec], Path("C:/drishti"), py="C:/Program Files/Python313/python.exe")
     assert 'schtasks /Create /F /TN "Drishti feed sample-mapping" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 07:15' in win
-    assert "C:\\drishti\\drishti-console\\.venv\\Scripts\\python.exe" in win and "C:\\drishti\\tools\\drishti.py" in win
+    assert "C:\\Program Files\\Python313\\python.exe" in win and "C:\\drishti\\tools\\drishti.py" in win and ".venv" not in win + cron + unit
+    import procs
+    assert S.cron([spec], Path("/opt/drishti")).count(procs.tools_python()[0] + " /opt/drishti/tools/drishti.py") == 1   # the default: the one Python
     assert "feed run sample-mapping --trigger schedule" in win and "powershell" not in win and ".ps1" not in win
     p = cli("schedule", "--cron", "--config", str(FX))
     assert p.returncode == 0 and "sample-mapping" in p.stdout

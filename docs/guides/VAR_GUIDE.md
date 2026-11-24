@@ -6380,7 +6380,7 @@ entitlement)* for the bank: the bank's 7,993 records less the rates desk's 1,358
 During the day a pricing system sends only the trades that changed. `tools/pvgen` is a stand-in for one (pure Python, JSONL only, every
 line one row of the contract; [VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)).
 
-**From the command line**, with the server of step 1 running (Windows: `drishti-console\.venv\Scripts\python.exe tools\pvgen\intraday.py` with the same options):
+**From the command line**, with the server of step 1 running (Windows: `py tools\pvgen\intraday.py` with the same options):
 
 ```text
 $ python tools/pvgen/intraday.py --batches 3 --trades-per-batch 10 --lake data/delta/demo --server http://<host>:<port>
@@ -7065,7 +7065,7 @@ from the risk lake built into Iceberg. The build itself, the official results on
 build and its output are [tutorial 16, step 29](../tutorials/16-load-your-own-data-into-a-new-lake.md#step-29--build-the-var-data-into-iceberg)), then start the server again:
 
 ```bash
-drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=iceberg \
+python3 tools/build_demo_lakes.py --as-of data --store risk=iceberg \
   --only market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 

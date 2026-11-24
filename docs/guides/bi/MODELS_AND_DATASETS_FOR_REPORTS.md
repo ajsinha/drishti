@@ -311,11 +311,11 @@ configurations **Drishti: build demo lakes**, **Drishti: run server (demo)** and
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake demo
+python3 tools/drishti.py lake demo
 DRISHTI_DEMO_ENABLED=false DRISHTI_SECURITY_ENABLED=true DRISHTI_TOKEN_SECRET=drishti-dev-only-token-secret-change-me-0123456789 \
   DRISHTI_SEED_ADMIN=true DRISHTI_SEED_USERNAME=drishti-dev-admin DRISHTI_SEED_PASSWORD=drishti-dev-admin123 \
   java -Xmx4g -jar lib/drishti-server-*-exec.jar
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480
+python3 drishti-console/run_drishti_web.py --server.port=17480 --backend.url=http://127.0.0.1:18480
 ```
 
 Open http://localhost:17480 and sign in as `drishti-dev-admin` / `drishti-dev-admin123` ([OPERATIONS_GUIDE.md](../OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine)). Then make
@@ -545,7 +545,7 @@ The environment, the sign-in and the token are those of [Reports, Before you sta
   and [the Notebook tutorial](NOTEBOOK_AND_PYTHON.md) for Python and the Notebook. You sign in as the development administrator, who holds `bi-author`.
 - Step 21 uses two colleagues; make them in **Admin → Users** ([tutorial 21](../../tutorials/21-run-it-in-production.md)): `rita` with a role `risk` (raw power on, BI power `bi`), and `hana` with a role `desk-head` (raw power **off**, BI power `bi`) and **Desk** `DESK-FX`.
 - A shared workspace called **Exposure desk** (**Workspaces → New workspace**): a model and a report are published from a shared workspace; a private one cannot publish.
-- The console's Python environment from tutorial 1, Part A (it carries `pandas` and `pyarrow`), for steps 18, 20 and 22.
+- The Python you run Drishti with, from tutorial 1, Part A (it carries `pandas` and `pyarrow`), for steps 18, 20 and 22.
 - **The numbers.** Every number below (`15,000` trade valuations, MTM `3,210,381,877`, P&L `90,804,863`, `76` netting sets with computed
   exposure `2,663,018,256`, the sector rows) was taken on the default demo lake `lake demo` built on 26 October 2026: sixty business days ending
   2026-10-26 and the exposure run `lake demo` generates (all 76 netting sets of the 24 counterparties), whose official end-of-day results the

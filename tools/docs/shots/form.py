@@ -16,7 +16,7 @@
 written to docs/guides/img/form/: the form for the trading pack's trades, its results with the command it made, the same on a phone (390 px,
 touch), a regular expression the search refused, and the Form tab beside a design. The real console over a real server:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide form
+    python3 tools/docs/screenshots.py --guide form
 """
 from __future__ import annotations
 

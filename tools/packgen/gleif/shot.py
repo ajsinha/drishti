@@ -17,7 +17,7 @@
 The pack is off by default, so this script starts its own scratch server and console with it on (18760/18761 unless
 DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT say otherwise), takes the picture and stops them (build the server first):
 
-    drishti-console/.venv/bin/python tools/packgen/gleif/shot.py [--work DIR]
+    python3 tools/packgen/gleif/shot.py [--work DIR]
 """
 from __future__ import annotations
 

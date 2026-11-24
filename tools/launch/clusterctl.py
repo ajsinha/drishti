@@ -113,7 +113,7 @@ def notice(text: str) -> None:
 # -- configuration -----------------------------------------------------------------------------------------------------------------
 def load_stack() -> dict:
     if clusterlakes is None:
-        sys.exit("needs PyYAML: run with the console's Python (drishti-console/.venv; python tools/drishti.py setup makes it)")
+        sys.exit("needs PyYAML: run with the Python you run Drishti with, its libraries installed (python tools/drishti.py setup)")
     if not at.file.exists():
         sys.exit(f"no cluster file at {at.file} (--cluster FILE; deploy/stack/stack.yaml is the format)")
     return clusterlakes.read_stack(at.file.read_text(encoding="utf-8"))   # YAML 1.2 booleans: a node's off: list stays a list
@@ -148,12 +148,8 @@ def business_today(stack: dict) -> None:
 
 
 def python() -> str:
-    """The console's Python (it has PyYAML, deltalake and the console's packages), else this one."""
-    for rel in ("bin/python", "Scripts/python.exe"):
-        py = ROOT / "drishti-console" / ".venv" / rel
-        if py.exists():
-            return str(py)
-    return sys.executable
+    """The one Python (DRISHTI_PYTHON, drishti.python of the settings files, else this one): procs.tools_python."""
+    return procs.tools_python()[0]
 
 
 def read_env(path: Path) -> dict:

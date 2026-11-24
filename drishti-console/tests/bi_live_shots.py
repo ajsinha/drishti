@@ -15,7 +15,7 @@
 """Makes the pictures and the captured output of docs/guides/bi/README.md (chapters 18 and 19), bi/REPORTS.md › Reports: the YAML, the visuals and how they behave, section 23, bi/REPORTS.md and bi/README.md from the real stack (not a
 test: run it by hand).
 
-    drishti-console/.venv/bin/python drishti-console/tests/bi_live_shots.py <pictures dir> <captures.json>
+    python3 drishti-console/tests/bi_live_shots.py <pictures dir> <captures.json>
 
 Ports 18995 (server) and 17995 (console), a scratch directory, the shipped live samples over the demo source ticking every 200 ms (the risk engine's trade valuations of every source system and the netting sets).
 No Perspective pictures: since 2.3.0 a 2.1 perspective-grid is drawn as Drishti's own grid, pictured as the live grid.

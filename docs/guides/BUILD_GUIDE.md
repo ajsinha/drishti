@@ -157,7 +157,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
   java -jar lib/drishti-server-*-exec.jar
-DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 python3 drishti-console/run_drishti_web.py
 ```
 
 The commands below use `B=http://localhost:18996/api/v1` for the server's API. **Packs follow the folder while the server runs:** a change to
@@ -735,8 +735,8 @@ that one connector. The finished example pack in the repository leaves this step
 
 ```bash
 python3 tools/license_headers.py --fix                                  # a header on every new file
-drishti-console/.venv/bin/python tools/drishti.py pack check config/packs/helpdesk --tail 3
-drishti-console/.venv/bin/python tools/drishti.py pack about-check config/packs/helpdesk
+python3 tools/drishti.py pack check config/packs/helpdesk --tail 3
+python3 tools/drishti.py pack about-check config/packs/helpdesk
 ```
 
 ```text
@@ -753,8 +753,8 @@ With only two glossary entries, `about-check` exits `1` and names the gaps: `tic
 HISTORY.EVENT`. Then sign it and publish it to a registry ([section 29.1](#291-a-signed-pack-registry-publishing-and-installing)):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack keygen --out ~/drishti-keys/acme          # once per publisher
-drishti-console/.venv/bin/python tools/drishti.py pack publish config/packs/helpdesk --registry /srv/drishti-registry \
+python3 tools/drishti.py pack keygen --out ~/drishti-keys/acme          # once per publisher
+python3 tools/drishti.py pack publish config/packs/helpdesk --registry /srv/drishti-registry \
     --key ~/drishti-keys/acme.pem --publisher acme
 ```
 
@@ -2629,7 +2629,7 @@ Worked example, run as written: 300 ENDUR trades on two business days (600 rows,
 taken from `data/testdata/` into a folder `jsonl/` (`trade.jsonl`, `counterparty.jsonl`):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack new jsonl/ --name my-bank --title "My bank" \
+python3 tools/drishti.py pack new jsonl/ --name my-bank --title "My bank" \
     --key trade=TRADE_ID,counterparty=COUNTERPARTY_ID --match trade=PRODUCT_TYPE --date BUSINESS_DATE \
     --samples 3 --fallback --out packs/my-bank --lake lake/
 ```
@@ -3911,7 +3911,7 @@ missing field. A shipped pack also keeps `tests/help-coverage.txt`, a ratchet th
 (`--tail 2` keeps the last two lines of each step):
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack check modules/banking/packs/market-risk --tail 2
+$ python3 tools/drishti.py pack check modules/banking/packs/market-risk --tail 2
 == market-risk: sutra lint: exit 0
 ok      modules/banking/packs/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml
 ok      modules/banking/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml
@@ -4298,7 +4298,7 @@ installs only what a publisher it trusts signed. `drishti.py pack keygen|publish
 Check a registry from the command line:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack verify --registry /srv/drishti-registry --publisher acme \
+python3 tools/drishti.py pack verify --registry /srv/drishti-registry --publisher acme \
     --public-key MCowBQYDK2VwAyEAcYvYL5cL9D3XYx6w49WZ4oAnDrhjAfRT95Twju2ug+A=
 ```
 
@@ -4502,7 +4502,7 @@ curl -s $B/sutras/problems                                  # {}
 curl -s $B/admin/health | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["overrides"]); print([(p["name"], p["status"], p["version"]) for p in d["packs"] if p["name"]=="helpdesk"])'
 curl -s $B/packs/HELP/overview | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["name"], d["code"], [(k["mnemonic"], k["count"]) for k in d["kinds"]])'
 curl -s $B/sources | python3 -c 'import json,sys; [print(s["name"], s["kinds"], s["health"]) for s in json.load(sys.stdin)["sources"] if s["name"] in ("helpdesk-store", "agent-totals")]'
-drishti-console/.venv/bin/python tools/drishti.py pack check config/packs/helpdesk --tail 1
+python3 tools/drishti.py pack check config/packs/helpdesk --tail 1
 ```
 
 The output for the finished help-desk pack, with the file connector of step 16 on:
@@ -4786,7 +4786,7 @@ python3 tools/packgen/library/make.py --check
 DRISHTI_PACKS_OUT=/tmp/review python3 tools/packgen/library/make.py
 
 # also build ten business days of history in the Delta Lake, for the date picker
-drishti-console/.venv/bin/python tools/packgen/library/make.py --lake data/delta/demo
+python3 tools/packgen/library/make.py --lake data/delta/demo
 ```
 
 **Step 6. What you get.**
@@ -5070,7 +5070,7 @@ The committed test data (`data/testdata/`, sixty business days of every dataset,
 (or the IDE run configuration **Drishti: build demo lakes**):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake demo
+python3 tools/drishti.py lake demo
 ```
 
 ```text

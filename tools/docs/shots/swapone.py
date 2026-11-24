@@ -19,7 +19,7 @@ the file in the scratch server's modules folder and restarts it). Nothing is wri
 repository's config/ or data/:
 
     DRISHTI_SHOTS_WORK=<an empty folder> DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> \\
-        drishti-console/.venv/bin/python tools/docs/screenshots.py --guide swapone
+        python3 tools/docs/screenshots.py --guide swapone
 
 The data is the mocked SwapOne file of data/testdata/trades/swapone/ (tools/samplegen/src_swapone.py), made by docs/tutorials/data/swapone/make_day.py as swapone-2026-07-08.jsonl.gz.
 Run the pictures all together and once: each step moves files on."""

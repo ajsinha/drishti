@@ -34,8 +34,8 @@ a stranger).
 
 ## Run it
 
-Three processes, on ports that are free. The commands are from the repository root; the console needs its virtualenv
-(`uv venv drishti-console/.venv && uv pip install -p drishti-console/.venv/bin/python -r drishti-console/requirements.txt`).
+Three processes, on ports that are free. The commands are from the repository root; the console needs the libraries (`python3 tools/drishti.py setup`
+makes `drishti-console/.venv` with them).
 
 ```bash
 # 1. the Drishti server: security on, embedding on, the trading, counterparty-risk and market-risk packs, a scratch folder for ./data
@@ -81,7 +81,7 @@ webkit`; WebKit also needs a few system libraries, which Playwright names if the
 acceptance criteria of step 0 and records first-paint and switch timings and payload sizes:
 
 ```bash
-drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_embed_elements_browser.py
+python3 -m pytest -q drishti-console/tests/test_embed_elements_browser.py
 ```
 
 Results and what they changed in the plan are in the *Step 0 results* section of

@@ -421,8 +421,8 @@ Run it alone:
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py      # starts its own stack
-DRISHTI_PAGEWALK_BASE=http://<host>:<console port> drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_page_walk_browser.py   # a running console
+python3 -m pytest -q drishti-console/tests/test_page_walk_browser.py      # starts its own stack
+DRISHTI_PAGEWALK_BASE=http://<host>:<console port> python3 -m pytest -q drishti-console/tests/test_page_walk_browser.py   # a running console
 ```
 
 ### 3.20 The visual snapshots
@@ -465,9 +465,9 @@ file check) holds the split honest: every key page in exactly one group, every g
 Refresh the goldens deliberately, look at them, and commit them with the change that meant them:
 
 ```bash
-drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_snapshots_var_browser.py --update-snapshots   # one group
-drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_snapshots_*_browser.py     # compare, every group
-DRISHTI_SNAPSHOT_ONLY=why-it-moved,var-desk drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_snapshots_var_browser.py --update-snapshots   # some pages
+python3 -m pytest -q drishti-console/tests/test_snapshots_var_browser.py --update-snapshots   # one group
+python3 -m pytest -q drishti-console/tests/test_snapshots_*_browser.py     # compare, every group
+DRISHTI_SNAPSHOT_ONLY=why-it-moved,var-desk python3 -m pytest -q drishti-console/tests/test_snapshots_var_browser.py --update-snapshots   # some pages
 ```
 
 ### 3.21 The container smoke test
@@ -494,8 +494,8 @@ the native maths (`compute/drishti-compute`'s `linalg`), `.java-version`, the im
 `DRILL_CONTAINERS=full` forces it, `smoke` skips it). `tools/drillkit/test_drill_lanes.py` checks that choice.
 
 ```bash
-drishti-console/.venv/bin/python tools/drillkit/container_smoke.py run          # build, boot, check (about a minute when cached)
-drishti-console/.venv/bin/python tools/drillkit/container_smoke.py record       # the VaR golden again, after a change that moves the demo figures on purpose
+python3 tools/drillkit/container_smoke.py run          # build, boot, check (about a minute when cached)
+python3 tools/drillkit/container_smoke.py record       # the VaR golden again, after a change that moves the demo figures on purpose
 python3 tools/drillkit/container_smoke.py full-needed --base origin/main          # would the full in-container suite run, and why
 ```
 
@@ -685,7 +685,7 @@ server reads. It is not in the gate (three server starts take minutes).
   `DRISHTI_HOME` and `DRISHTI_MODULES_HOME` are passed absolute, and the working folder anchors nothing but a relative path the person typed.
 
 ```bash
-drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_release_from_other_folder.py   # needs the server jar (./mvnw -q clean package -DskipTests)
+python3 -m pytest -q drishti-console/tests/test_release_from_other_folder.py   # needs the server jar (./mvnw -q clean package -DskipTests)
 tools/drill.sh --lanes anywhere --no-push                                                              # the same, through the drill
 ```
 

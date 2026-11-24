@@ -21,7 +21,7 @@ console for only the panels that read the control (the others do not move); the 
 host as a composed `drishti:controls` event; the control works from the keyboard. The trade (static since 2.3.0) shows the controls; a live netting set
 shows that the live subscription is built with the values.
 
-    drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_embed_controls_browser.py"""
+    python3 -m pytest -q drishti-console/tests/test_embed_controls_browser.py"""
 import json
 import os
 import re

@@ -36,7 +36,7 @@ USAGE="load-day.sh --date YYYY-MM-DD [--tables domain/table,...] [--mode overwri
 
 Exit: 0 every table published; 2 published with rejected documents (see the summary); 1 a table failed (the others still ran;
 nothing of the failed table was committed); 3 another load, backfill or maintenance holds a table's lock.
-Runs as the ECS loader task (deploy/aws/ecs/templates/loader-task.json) or on any host with the repository, Java 21 and its venv."
+Runs as the ECS loader task (deploy/aws/ecs/templates/loader-task.json) or on any host with the repository, Java 21 and a Python with the libraries."
 source "$(dirname "$0")/../lib/common.sh"
 drishti_init "$@"
 need AWS_REGION LAKE_BUCKET LANDING_BUCKET LAKE_PREFIX LAKE_WORK_DIR LAKE_LOCK_DIR LAKE_BATCH_ROWS LAKE_ROW_GROUP_KB

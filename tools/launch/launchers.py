@@ -14,18 +14,20 @@
 
 """``drishti.py launchers``: the IDE launchers generated from one table, ``tools/launch/launchers.yaml`` (LAUNCHER_REVIEW.md 4.2).
 
-* ``launchers`` writes ``run-configs/*.run.xml`` (IntelliJ and PyCharm: one folder, one project at the repository root), the VS Code
-  workspace ``drishti.code-workspace`` and the tables of ``docs/guides/IDE_GUIDE.md`` section 4; the files are committed, never made only locally.
+* ``launchers`` writes the Java launchers into ``run-configs/*.run.xml`` (IntelliJ IDEA opens ``drishti``), the Python ones into
+  ``drishti-console/run-configs/*.run.xml`` (PyCharm opens ``drishti/drishti-console``), the VS Code workspace ``drishti.code-workspace``
+  (both kinds) and the tables of ``docs/guides/IDE_GUIDE.md`` section 4; the files are committed, never made only locally.
 * ``launchers --check`` changes nothing and fails (exit 1) naming each committed file that differs from the table, a launcher file the
   table does not name, or a stale IDE_GUIDE section 4.
 * ``launchers --machine`` writes this machine's JVM arguments files, ``<settings folder>/jvm-<profile>.args``, which every server launcher
   names (``@…/jvm-demo.args``): the one function ``drishti.py start server`` runs (``serverstart.jvm_flags``), with this machine's data
   folder (from ``dev.ini`` and the profile), so the temp folder, heap dumps and GC log follow a moved data folder. ``setup`` runs it.
 
-One folder, ``run-configs/``, is read by both IDEs: IntelliJ runs the Java ones (Maven, JAR Application) and PyCharm the Python ones; each
-IDE shows the other's as not runnable (a red cross), which is expected. The IDE groups them: ``FOLDER_JAVA`` ("Drishti-java") for every
-Maven and JAR Application launcher, ``FOLDER_PYTHON`` ("Drishti-python") for every Python one. The VS Code workspace uses ``${userHome}``
-and ``py -3.13`` on Windows, no machine-specific path.
+Each IDE opens its own project and sees only its own launchers: IntelliJ IDEA the Java ones (Maven, JAR Application) of ``run-configs/``,
+folder ``FOLDER_JAVA`` ("Drishti-java"); PyCharm, opening ``drishti-console``, the Python ones of ``drishti-console/run-configs/``, folder
+``FOLDER_PYTHON`` ("Drishti-python"), their paths from ``$PROJECT_DIR$/..`` (the install folder) and their interpreter the project's (the
+one Python Drishti runs with, ``drishti.python``): none names a .venv. The VS Code workspace uses ``${userHome}`` and ``py -3.13`` on
+Windows, no machine-specific path.
 
 A launcher carries what to run and its profile only (``config/profiles/<profile>.ini``); the development secrets are the one exception,
 taken from ``serverstart.DEV`` (kept as they are, LAUNCHER_REVIEW.md D6)."""
@@ -48,7 +50,9 @@ TABLE = HERE / "launchers.yaml"
 GUIDE = "docs/guides/IDE_GUIDE.md"   # under the install folder (home / GUIDE)
 BEGIN, END = "<!-- generated: launchers begin (python tools/drishti.py launchers) -->", "<!-- generated: launchers end -->"
 FOLDER_JAVA, FOLDER_PYTHON = "Drishti-java", "Drishti-python"   # folderName of the launchers: Java ones for IntelliJ, Python ones for PyCharm
-FOLDERS = {"intellij": "run-configs", "pycharm": "run-configs"}   # under the install folder: the one folder of the launcher standard (docs/plans/LAUNCHER_STANDARD.md)
+#: under the install folder: IntelliJ IDEA opens `drishti` and sees the Java launchers of run-configs/; PyCharm opens `drishti/drishti-console`
+#: and sees the Python launchers of drishti-console/run-configs/ (their install folder is $PROJECT_DIR$/..)
+FOLDERS = {"intellij": "run-configs", "pycharm": "drishti-console/run-configs"}
 WORKSPACE = "drishti.code-workspace"                                     # VS Code: a task or launch of every launcher's name
 DEV_INI = "$USER_HOME$/drishti-envs/dev.ini"
 ENVS = "$USER_HOME$/drishti-envs"
@@ -116,9 +120,14 @@ def python_params(row: dict) -> str:
 
 
 def render(home: Path, ide: str, row: dict) -> str:
-    """One launcher's .run.xml."""
+    """One launcher's .run.xml. A Python one is PyCharm's, whose project is drishti-console: the install folder is $PROJECT_DIR$/..."""
     name, kind = row["name"], row["kind"]
+    console = ide == "pycharm"
+    root = "$PROJECT_DIR$/.." if console else "$PROJECT_DIR$"       # the install folder, from the project the IDE opened
     why = [f"{name}: {row['what']}.", f"Use it when: {row['when']}."]
+    if console:
+        why += ["PyCharm: open drishti/drishti-console as the project (the install folder is $PROJECT_DIR$/..); it runs on the project",
+                "interpreter, the one Python Drishti runs with (never a venv)."]
     if kind == "server":
         why += [f"The profile config/profiles/{row['profile']}.ini holds its settings; ~/drishti-envs/jvm-{row['profile']}.args its JVM options",
                 "(python tools/drishti.py setup writes it, from the function drishti.py start server runs).",
@@ -147,12 +156,14 @@ def render(home: Path, ide: str, row: dict) -> str:
                    '    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />\n'
                    '    <option name="ALTERNATIVE_JRE_PATH" />\n' + envs(SERVER_ENV) + '    <method v="2" />\n  </configuration>\n')
     else:
-        script = "$PROJECT_DIR$/drishti-console/run_drishti_web.py" if kind == "console" else "$PROJECT_DIR$/tools/drishti.py"
+        script = f"{root}/drishti-console/run_drishti_web.py" if kind == "console" else f"{root}/tools/drishti.py"
+        if console and kind == "console":
+            script = "$PROJECT_DIR$/run_drishti_web.py"
         out.append(f'  <configuration default="false" name="{esc(name)}" type="PythonConfigurationType" factoryName="Python" folderName="{FOLDER_PYTHON}">\n'
-                   '    <module name="drishti" />\n    <option name="ENV_FILES" value="" />\n'
+                   f'    <module name="{"drishti-console" if console else "drishti"}" />\n    <option name="ENV_FILES" value="" />\n'
                    '    <option name="INTERPRETER_OPTIONS" value="" />\n    <option name="PARENT_ENVS" value="true" />\n'
                    + envs(CONSOLE_ENV if kind == "console" else TOOL_ENV) +
-                   '    <option name="SDK_HOME" value="" />\n    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />\n'
+                   f'    <option name="SDK_HOME" value="" />\n    <option name="WORKING_DIRECTORY" value="{root}" />\n'
                    '    <option name="IS_MODULE_SDK" value="false" />\n    <option name="ADD_CONTENT_ROOTS" value="true" />\n'
                    '    <option name="ADD_SOURCE_ROOTS" value="true" />\n'
                    f'    <option name="SCRIPT_NAME" value="{script}" />\n'
@@ -353,7 +364,8 @@ def argv(xml: Path, home: Path, user_home: Path) -> tuple[list[str], dict]:
     conf = ET.parse(xml).getroot().find("configuration")
     o = {e.get("name"): e.get("value") for e in conf.findall("option")}
     env = {e.get("name"): e.get("value") for e in conf.iter("env")}
-    project = home                                                 # the one project: the repository root (every launcher folder is run-configs/)
+    # the project the IDE opened: the repository root (IntelliJ), or drishti-console (PyCharm, its launchers in drishti-console/run-configs)
+    project = home / "drishti-console" if xml.resolve().parent == (home / FOLDERS["pycharm"]).resolve() else home
 
     def expand(s: str) -> str:
         return (s or "").replace("$PROJECT_DIR$", project.as_posix()).replace("$USER_HOME$", user_home.as_posix())

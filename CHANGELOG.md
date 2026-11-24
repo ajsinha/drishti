@@ -16,6 +16,28 @@
 # Changelog
 
 
+## 2.9.11.i7g (2026-11-23)
+
+- **Windows never gets a `.venv`**: there `setup` is the system-Python mode (`--system` kept), `setup venv` and `--reinstall` refused in one
+  line, `make_venv` refuses; the libraries come from a wheel pack (`--wheels`, `DRISHTI_WHEELS`, else `%USERPROFILE%\drishti-wheels` when it
+  holds wheels, said in one line) or with `--index`, else a `[FAIL]` with the fix. **Linux and macOS** keep `drishti-console/.venv` from
+  setup as before; `--system`/`libs` there: PEP 668 (*EXTERNALLY-MANAGED*) and a pack for another Python version are one `[FAIL]` line each.
+- **`start console` / `start all` / `run_drishti_web.py` never make or install anything**: the Python (`procs.tools_python`: `DRISHTI_PYTHON`,
+  `drishti.python`, the Linux/macOS `.venv`, the running Python) is verified before anything is made; `start all` checks it before the
+  server starts. Setup's next steps name `start` only when no `[FAIL]`/`[todo]` remains.
+- `drishti.python` written into the settings file `--settings` names (production `/etc/drishti/prod.ini`; no `dev.ini` made then);
+  `tools/drishti.py` takes `~/drishti-envs/dev.ini` naming this checkout by itself and re-runs in the prepared Python when this one lacks
+  the libraries.
+- **Launchers by project**: Java launchers in `run-configs/` (IntelliJ opens `drishti`), Python ones in `drishti-console/run-configs/`
+  (PyCharm opens `drishti/drishti-console`; `$PROJECT_DIR$/..`, the project interpreter); **Drishti: setup (package index)** replaces the two
+  system-Python setup launchers; `tools/launchers/check_launchers.py` follows the two folders.
+- **The console run bare** takes `~/drishti-envs/dev.ini`, `--profile demo` and the development secrets (`tools/launch/devsecrets.py`, the one
+  source, shared with `serverstart`); a 401 on the installation answer is logged once and backed off (5 s to 5 min); a missing library exits
+  at once with the setup line.
+- Feed schedules, AWS wrappers, the ECS loader image and the server's feeds use the one Python; the drill: `DRISHTI_PYTHON`, else the `.venv`.
+- Guard `tools/test_no_venv.py`; tests for each change. Docs: Windows instructions without `.venv`, the command-line path (QUICKSTART 3.1,
+  IDE_GUIDE 11), IDE_GUIDE 2.3/4/8, CLI_REFERENCE, DEPLOYMENT, OPERATIONS; CONFIGURATION.md regenerated; version 2.9.11.i7g.
+
 ## 2.9.11.i7f (2026-11-23)
 
 - **`setup` never writes into another folder.** A `dev.ini` naming another folder (drishti.home, drishti.data.dir, drishti.modules.home,

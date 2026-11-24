@@ -15,12 +15,14 @@
 
   Drishti: run loader (file into the lake): one file of yours into the demo lake, by its kind (it asks for the file when it runs).
   Use it when: you hold a file of your own (never committed; the launcher asks for its path).
+  PyCharm: open drishti/drishti-console as the project (the install folder is $PROJECT_DIR$/..); it runs on the project
+  interpreter, the one Python Drishti runs with (never a venv).
   It asks for the file when it runs (the $Prompt$ macro of PyCharm): nothing to edit, no file of yours is named here.
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Drishti: run loader (file into the lake)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti-python">
-    <module name="drishti" />
+    <module name="drishti-console" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -28,11 +30,11 @@
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
     <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; lake build --from &quot;$Prompt$&quot; --kind trade --mode overwrite-dates --lake demo" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />

@@ -13,6 +13,68 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7g: release notes
+
+*A point release on i7f: on Windows no virtual environment, `start` never installs anything, each IDE opens its own project.*
+Everything else is as in i7f.
+
+## What changes for administrators
+
+- **Windows never gets a `.venv`.** On Windows `setup` installs the libraries into the Python you run Drishti with (what `setup --system`
+  did; `--system` stays accepted), from the offline wheel pack: unzip it into `%USERPROFILE%\drishti-wheels` and run
+  `py tools\drishti.py setup`; it finds the folder by itself and says so in one line (`--wheels <folder or .zip>` or `DRISHTI_WHEELS` name
+  another). Without a pack it touches no network unless you pass `--index`: a missing library is a `[FAIL]` line and the first next step
+  is the command that fixes it. `setup venv` and `--reinstall` are refused there in one line (*Windows uses the Python you run Drishti
+  with; no .venv*).
+- **Linux and macOS keep `drishti-console/.venv`**, made by `setup` as before (from the wheel pack when one is found); `setup --system`
+  puts the libraries into the Python you run it with. There an operating system's own Python (PEP 668, *EXTERNALLY-MANAGED*) is one
+  `[FAIL]` line (*this Python is managed by the operating system: use a dedicated Python 3.13 for Drishti ...*), never
+  `--break-system-packages`; a wheel pack for another Python version is one `[FAIL]` line naming both versions.
+- **`start` only starts, on every system.** `start console`, `start all` and `run_drishti_web.py` never make an environment and never
+  install: the Python (`DRISHTI_PYTHON`, else `drishti.python`, else on Linux and macOS the `.venv` setup made) is checked first and a missing
+  library is refused at once with the list and the `setup` line, before anything is made (`start all` asks before the server starts).
+  The owner's Windows case (the server started, then the console went to the company index and got a 401) cannot recur.
+- **`setup` writes `drishti.python`** into the settings file: `~/drishti-envs/dev.ini`, or the file `--settings` names (a production
+  `/etc/drishti/prod.ini`; then no developer `dev.ini` and no IDE JVM options are made). A value naming a missing Python (or a `.venv` on
+  Windows) is replaced and said; another Python you named is kept.
+- **Setup's next steps never say `start` while a `[FAIL]` or `[todo]` remains**: the fixes come first, then `setup` again.
+- **No `--settings` needed.** Every `tools/drishti.py` command but `setup` takes `~/drishti-envs/dev.ini` by itself when it names this
+  folder as `drishti.home`; `python3 tools/drishti.py <command>` runs in the Python setup prepared when this one lacks the libraries.
+- **The console run bare** (`run_drishti_web.py` with no arguments, PyCharm's *Run current file*) is the launcher **Drishti: run
+  console**: `~/drishti-envs/dev.ini` with the demo profile and the development secrets `drishti.py start all --demo` gives the server,
+  each said in one line (*DEVELOPMENT secrets in use (NOT FOR PRODUCTION)*). The development secrets have one source,
+  `tools/launch/devsecrets.py`. A console whose secret the server rejects logs one line (*the server rejects this console's secret:
+  start both with the same settings ...*) and backs off (5 s, 15 s, 1 min, 5 min) instead of a 401 every second. A Python without the
+  console's libraries (for example no `drishti_lake`) stops at once with the `setup` line.
+- The feed schedules, the AWS wrappers and the server's data feeds use the one Python (`DRISHTI_PYTHON`, `drishti.python`); the ECS loader
+  image installs its libraries into the image's Python 3.
+
+## What changes in the IDEs
+
+- **Each IDE opens its own project and sees only its own launchers.** IntelliJ IDEA opens `drishti` and shows the Java launchers of
+  `run-configs/` (**Drishti-java**: the builds, the tests, the servers); PyCharm opens `drishti\drishti-console` and shows the Python
+  launchers of `drishti-console/run-configs/` (**Drishti-python**: the consoles, setup, the demo lakes, the loader, the checks), which
+  reach the install folder as `$PROJECT_DIR$/..` and run on the project interpreter you choose (*Settings → Project → Python Interpreter*:
+  the Python setup prepared; Cancel PyCharm's offer to create a virtual environment). No launcher names a `.venv` or an interpreter path.
+  `launchers --check` and the tests refuse a Python launcher in `run-configs/`, a Java one in `drishti-console/run-configs/` and a `.venv`
+  in any. VS Code keeps one workspace with both.
+- The PyCharm setup launchers are **Drishti: setup** and **Drishti: setup (package index)**; the two *system Python* ones are gone.
+- **Without an IDE**: every step on the command line, Windows and Linux, in QUICKSTART_DEVELOPERS.md section 3.1 and IDE_GUIDE.md
+  section 11.
+
+## What changes for developers
+
+- `make_venv` lives in `tools/launch/envsetup.py`, the one place a venv is made (refused on Windows); `procs.tools_python` is the one
+  Python resolver; a guard test fails when other code makes a venv or a launcher names one.
+- The drill runs its Python lanes with `DRISHTI_PYTHON`, else `drishti-console/.venv/bin/python` (it makes no environment).
+
+## Known limits
+
+The server's compute environments (an approved lock built under the data folder, `compute.build`) still use Python's `venv` there: a
+server feature of its own, not changed here. No site-configuration overlay folder yet: what Admin saves goes into the release's
+`config/`; compare it on an upgrade (PRODUCTION_DEPLOYMENT.md). Carried from i7d: where Program Files is not writable, pip falls back to
+the user's own folder; the server's pivot Python workers start Python isolated (`-I`) and do not see it.
+
 # Drishti 2.9.11.i7f: release notes
 
 *A point release on i7e: `setup` can no longer write into another folder, and nothing is left for you to rename or delete by hand.*

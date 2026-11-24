@@ -444,16 +444,28 @@ def run_foreground(proc: subprocess.Popen, pid_file: Path, on_up=None) -> int:
 
 
 # ---- Python ------------------------------------------------------------------------------------------------------------------------------
+def old_venv(root: Path = ROOT) -> Path:
+    """drishti-console/.venv: setup's environment on Linux and macOS; on Windows Drishti makes none and uses none."""
+    return Path(root) / "drishti-console" / ".venv"
+
+
 def venv_python(root: Path = ROOT) -> Path:
-    """drishti-console/.venv's Python (``Scripts\\python.exe`` on Windows)."""
-    venv = Path(root) / "drishti-console" / ".venv"
-    return venv / ("Scripts/python.exe" if windows() else "bin/python")
+    """drishti-console/.venv's Python (Linux and macOS; setup makes it): ``bin/python`` (``Scripts\\python.exe`` on Windows, never used)."""
+    return old_venv(root) / ("Scripts/python.exe" if windows() else "bin/python")
 
 
-def tools_python(env=None) -> str:
-    """The Python to run repository tools with: DRISHTI_PYTHON, else the console's environment, else this one."""
+def tools_python(env=None, keys: dict | None = None) -> tuple[str, str]:
+    """The one Python Drishti runs its Python work with, and where it came from: DRISHTI_PYTHON, else ``drishti.python`` of the settings
+    files (``keys``; default those given to this process), else drishti-console/.venv when setup made one (Linux and macOS; never on
+    Windows), else this Python. Never makes anything."""
     env = os.environ if env is None else env
     if (env.get("DRISHTI_PYTHON") or "").strip():
-        return env["DRISHTI_PYTHON"].strip()
-    v = venv_python()
-    return str(v) if v.exists() else sys.executable
+        return env["DRISHTI_PYTHON"].strip(), "DRISHTI_PYTHON"
+    if keys is None:
+        import javacmd
+        keys = javacmd.settings()[1]
+    if (keys.get("drishti.python") or "").strip():
+        return keys["drishti.python"].strip(), "drishti.python of your settings file"
+    if not windows() and venv_python().exists():
+        return str(venv_python()), "drishti-console/.venv (setup made it)"
+    return sys.executable, "the Python running drishti.py"

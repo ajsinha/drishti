@@ -4532,8 +4532,8 @@ pictures is `tools/docs/shots/panels.py` (driver: `tools/docs/screenshots.py`). 
   ```bash
   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
   ./mvnw -o -q package -DskipTests -pl :drishti-app -am          # the driver starts the packaged server on :18997 and the console on :17997
-  drishti-console/.venv/bin/python tools/docs/screenshots.py --guide panels --only metric
-  drishti-console/.venv/bin/python tools/docs/screenshots.py --list --guide panels
+  python3 tools/docs/screenshots.py --guide panels --only metric
+  python3 tools/docs/screenshots.py --list --guide panels
   ```
 
   The driver refuses `:18480` and `:17480`, starts and stops what it started, and writes
@@ -4623,7 +4623,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64            # or any JDK 21 o
 ./mvnw spotless:apply                                           # formatting (Java)
 python3 tools/license_headers.py --fix                          # the copyright header on new files
 # the console, from the repository root:
-drishti-console/.venv/bin/python -m pytest drishti-console/tests/test_metric.py drishti-console/tests/test_examples.py drishti-console/tests/test_terminal.py \
+python3 -m pytest drishti-console/tests/test_metric.py drishti-console/tests/test_examples.py drishti-console/tests/test_terminal.py \
   drishti-console/tests/test_workbench_options_browser.py drishti-console/tests/test_workbench_add_browser.py drishti-console/tests/test_workbench_metric_browser.py \
   drishti-console/tests/test_guide_images.py drishti-console/tests/test_panel_kinds.py drishti-console/tests/test_help.py drishti-console/tests/test_help_links.py -q
 ./mvnw -q -o verify                                             # everything, once, at the end

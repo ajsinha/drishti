@@ -15,7 +15,7 @@
 """Pictures of the computed attributes on the pages (docs/architecture/DATA_ARCHITECTURE.md section 12, docs/guides/EXPOSURE_GUIDE.md
 section 22), written to docs/guides/img/computed/, over the packs' samples on the shared scratch server and console:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide computed
+    python3 tools/docs/screenshots.py --guide computed
 
 The pictures: the netting set's panel computed from the trade valuations beside the stored figures (NSMTM) and its trades past maturity,
 the counterparty's computed panel and its netting sets (CPMTM), a scenario's bank P&L and desks (SSPNL), and the Checks panels of a

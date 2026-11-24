@@ -14,10 +14,16 @@
 
 """Drishti console entry point.
 
-    python drishti-console/run_drishti_web.py [--server.port=17480] [--backend.url=http://...]
+    python drishti-console/run_drishti_web.py [--settings FILE] [--profile demo] [--server.port=17480] [--backend.url=http://...]
+
+Run bare (no argument at all, no DRISHTI_BACKEND_URL: an IDE's "Run current file"), it is the launcher **Drishti: run console**: the
+settings file ~/drishti-envs/dev.ini (when there) with the demo profile, and the development secrets where none is set (the ones
+``drishti.py start all --demo`` gives the server: tools/launch/devsecrets.py), each said in one line. A Python without the console's
+libraries stops at once with the setup line (start installs nothing).
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import secrets
 import os
@@ -26,6 +32,26 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+#: the libraries without which the console cannot start (import name: distribution); the full list is checked by drishti.py setup
+NEEDS = {"fastapi": "fastapi", "uvicorn": "uvicorn", "httpx": "httpx", "yaml": "pyyaml", "jinja2": "jinja2", "drishti_lake": "drishti-lake"}
+SETUP_LINE = ("python tools/drishti.py setup   (with this Python: it installs what is missing from the offline wheel pack in "
+              "~/drishti-wheels, or --wheels <folder>)")
+
+
+def missing_libraries(find=importlib.util.find_spec) -> list[str]:
+    """The distributions of :data:`NEEDS` this Python cannot import."""
+    return [dist for mod, dist in NEEDS.items() if find(mod) is None]
+
+
+def check_libraries() -> None:
+    """Stops at once, with the setup line, when this Python lacks a library the console needs (never a traceback minutes later)."""
+    lacking = missing_libraries()
+    if lacking:
+        raise SystemExit(f"drishti console: this Python ({sys.executable}) lacks {', '.join(lacking)}: run  {SETUP_LINE}")
+
+
+if __name__ == "__main__":
+    check_libraries()
 
 import uvicorn  # noqa: E402
 
@@ -95,7 +121,44 @@ def warn_other_home(argv: list[str]) -> str | None:
             f" drishti-envs and writes fresh ones.")
 
 
+def devsecrets():
+    """tools/launch/devsecrets.py of this install (the one place the development secrets are spelled), or None when it is not here."""
+    path = HERE.parent / "tools" / "launch" / "devsecrets.py"
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("drishti_devsecrets", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def bare_defaults(argv: list[str], env: dict, home: Path | None = None) -> tuple[list[str], list[str]]:
+    """A bare run (no argument, no DRISHTI_BACKEND_URL(S)) is the launcher Drishti: run console: ``--settings ~/drishti-envs/dev.ini``
+    (when there) ``--profile demo``, and the development secrets into ``env`` where none is set. (the arguments, the lines to print);
+    any other run is left as it is."""
+    if argv or (env.get("DRISHTI_BACKEND_URL") or env.get("DRISHTI_BACKEND_URLS") or "").strip():
+        return argv, []
+    ini = (home or Path.home()) / "drishti-envs" / "dev.ini"
+    said = []
+    if ini.is_file():
+        argv = ["--settings", str(ini), "--profile", "demo"]
+        said.append(f"no arguments: the settings file {ini} with the demo profile (as the launcher Drishti: run console)")
+    else:
+        argv = ["--profile", "demo"]
+        said.append(f"no arguments and no settings file at {ini} (python tools/drishti.py setup writes it): the demo profile only")
+    mod = devsecrets()
+    if mod is not None:
+        used = mod.apply(env, mod.CONSOLE)
+        if used:
+            said.append("WARNING: " + mod.warning(used))
+    return argv, said
+
+
 def main() -> None:
+    argv, said = bare_defaults(sys.argv[1:], os.environ)
+    for line in said:
+        print(line, file=sys.stderr)
+    sys.argv[1:] = argv
     warning = warn_other_home(sys.argv[1:])
     if warning:
         print(warning, file=sys.stderr)

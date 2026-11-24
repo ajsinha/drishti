@@ -22,9 +22,9 @@ import java.util.function.UnaryOperator;
  * <ol>
  * <li>{@code DRISHTI_PYTHON} (the environment variable): beats everything;</li>
  * <li>the work's own setting ({@code drishti.feeds.python}, {@code compute.python} of compute.yaml);</li>
- * <li>{@code drishti.python}: the interpreter {@code tools/drishti.py setup} set up or used, written into the settings file
+ * <li>{@code drishti.python}: the interpreter {@code tools/drishti.py setup} ran with, written into the settings file
  * (an absolute path, see the explicit-paths rule);</li>
- * <li>empty: the caller's own last resort (feeds: the console's {@code .venv}, else {@code python3}, {@code python} on Windows).</li>
+ * <li>empty: the caller's own last resort (feeds: {@code python3}, {@code python} on Windows; Drishti makes and uses no venv).</li>
  * </ol>
  */
 public final class PythonSetting {

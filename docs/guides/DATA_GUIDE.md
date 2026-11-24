@@ -210,7 +210,7 @@ batch (step 3), the same through the API (step 4), the history and what is due (
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py data landed --pack market-risk --kind stress-scenario --date 2026-10-16 --rows 8 --batch eod-20261016-1
+$ python3 tools/drishti.py data landed --pack market-risk --kind stress-scenario --date 2026-10-16 --rows 8 --batch eod-20261016-1
 stress-scenario for 2026-10-16 loaded: 8 rows; 0 alerts fired
   load mvczs759-1  status ready  verified verified  attempt 1
   record  ok      recorded
@@ -789,9 +789,9 @@ entity (`<kind>/<id>.json`); `lake build`, `build_demo_lakes.py`, `data ingest` 
 JSON Lines ([CLI_REFERENCE.md](CLI_REFERENCE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py convert trades.csv                    # trades.jsonl, a line per row
-drishti-console/.venv/bin/python tools/drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data/feeds/fixing.jsonl
-drishti-console/.venv/bin/python tools/drishti.py convert data/feeds/settlement          # settlement.jsonl, the file name as "id"
+python3 tools/drishti.py convert trades.csv                    # trades.jsonl, a line per row
+python3 tools/drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data/feeds/fixing.jsonl
+python3 tools/drishti.py convert data/feeds/settlement          # settlement.jsonl, the file name as "id"
 ```
 
 ### 4. Going out: JSON Lines beside every export
@@ -3133,7 +3133,7 @@ days) and, for scale tests, a generated trade book: the scripts in [the other st
 ### 11.1 The test data and the demo lakes (the default)
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake demo
+python3 tools/drishti.py lake demo
 ```
 
 (the IDE run configuration **Drishti: build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 103 tables, about 3.4 GB**, sixty business days
@@ -3175,7 +3175,7 @@ public-data folders are whole tables, a date each, and load as they are.
 chosen per system when the demo lakes are built, so one installation proves that the connectors, history, search, the grouped pages and
 BI answer the same whatever the storage. Every other dataset stays in Delta.
 
-| Command (`drishti-console/.venv/bin/python tools/build_demo_lakes.py …`; Windows `drishti-console\.venv\Scripts\python.exe tools\build_demo_lakes.py …`) | Result |
+| Command (`python3 tools/build_demo_lakes.py …`; Windows `py tools\build_demo_lakes.py …`) | Result |
 |---|---|
 | (no `--store`) | everything in Delta |
 | `--store calypso=iceberg` | CALYPSO in Iceberg, ENDUR and MUREX in Delta (the mixed case) |
@@ -3367,10 +3367,10 @@ instead (streamed, flat memory).
 
 ```bash
 # Delta lake (default): <root>/<domain>/<kind>/business_date=...; serve with DRISHTI_DELTA_ROOT
-drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/trade.jsonl --pack config/packs/my-bank --lake /tmp/lake
+python3 tools/drishti.py data ingest --from data/trade.jsonl --pack config/packs/my-bank --lake /tmp/lake
 DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar lib/drishti-server-*-exec.jar
 # JSON-lines files (stdlib + PyYAML only): <root>/<domain>/<date>/<kind>.jsonl; serve with DRISHTI_FILES_ROOT
-drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder/ --domain my-bank --key trade=TRADE_ID \
+python3 tools/drishti.py data ingest --from your-folder/ --domain my-bank --key trade=TRADE_ID \
     --store files --root /tmp/files --dry-run
 ```
 
@@ -3426,7 +3426,7 @@ The packs' samples in `modules/<module>/packs/<pack>/samples/` are what the `dem
 sample's kind, id, title and subtitle (the type-ahead's text). The five banking packs' samples are written by
 
 ```bash
-drishti-console/.venv/bin/python tools/packgen/banking/make_data.py          # add --check to verify instead of write
+python3 tools/packgen/banking/make_data.py          # add --check to verify instead of write
 ```
 
 which prints (real output on a fresh clone):
@@ -3493,8 +3493,8 @@ in a tar of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders, each row in its own date's
 folder's date (never the row's `date`, which stays in the row as data):
 
 ```bash
-drishti-console/.venv/bin/python tools/packgen/banking/make_data.py --jsonl data/build/loader-rows/banking.tar   # the samples, 10 days
-drishti-console/.venv/bin/python tools/samplegen/bulk_trades.py --trades 10000 --days 3 --jsonl data/build/loader-rows/bulk-trades.tar
+python3 tools/packgen/banking/make_data.py --jsonl data/build/loader-rows/banking.tar   # the samples, 10 days
+python3 tools/samplegen/bulk_trades.py --trades 10000 --days 3 --jsonl data/build/loader-rows/bulk-trades.tar
 ```
 
 (`make_data.py --jsonl` took 9 s and wrote 25,430 rows over the ten days 2026-09-17 to 2026-09-30, 7,650 of them trades: 450 folders,
@@ -3522,6 +3522,6 @@ a new connector adds can be loaded with the same demo data.
 | `tools/samplegen/load_rows.py --rows F --restated F --root R` | loads dated loader rows (JSONL) into the lake |
 | `tools/samplegen/bulk_trades.py` | a large trade book for one source system: JSONL a day, then `lake build` (`--no-lake`), or loader rows (`--jsonl FILE.tar`, a tar of `trade/<YYYY-MM-DD>/` folders) |
 
-`lake demo` and `lake build` need only the console's Python (`drishti-console/.venv`, with PyYAML, deltalake and pyarrow). The
+`lake demo` and `lake build` need only the Python you run Drishti with (PyYAML, deltalake and pyarrow among its libraries, installed by `setup`). The
 `data load` needs the same Python and, for every store but Delta, Java 21 or newer (found as by every tool: `drishti.java.home`,
 `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH) and the server jar in `<home>/lib` (`python tools/drishti.py build jar`), whose loaders it runs.

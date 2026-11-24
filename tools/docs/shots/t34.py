@@ -16,7 +16,7 @@
 theme. Run the tutorial's steps 4 to 5 first (they write the scratch folder $SCRATCH), then start a scratch stack on the demo lake whose
 lake folder is $SCRATCH/lakes (LAKE_LAKES_DIR: the demo lake file, the official-results lakes, and the append lake `intraday` of step 5), sign-in off, and point this at its console:
 
-    DRISHTI_SHOTS_CONSOLE_PORT=<port> drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t34
+    DRISHTI_SHOTS_CONSOLE_PORT=<port> python3 tools/docs/screenshots.py --guide t34
 
 The pictures, in the tutorial's order: Admin → Lakes with the demo lake open, Admin → Connectors on trade-endur, the lakes checked,
 trading.trade_endur's row, and the append table's row."""

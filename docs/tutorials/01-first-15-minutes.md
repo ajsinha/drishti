@@ -146,17 +146,17 @@ cd drishti
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64     # your Java 21 or newer
 export PATH="$JAVA_HOME/bin:$PATH"
 ./mvnw -q package -DskipTests -pl :drishti-app -am
-uv venv --python 3.13 drishti-console/.venv
-uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
+python3 tools/drishti.py setup        # drishti-console/.venv with the libraries (from ~/drishti-wheels when there)
 ```
 
-(`python3 -m venv` works too where your Python has `ensurepip`; on Ubuntu's system Python without the `python3-venv` package it does not, and `uv venv` does.)
+(On Linux and macOS `setup` makes `drishti-console/.venv`; `--system` puts the libraries into the Python you run it with instead, as
+Windows always does.)
 
 Then build the demo lakes, sixty business days ending on today's business date, so that past dates and **Compare** work in Part B. The lake tool also tells a
 running server that the data changed (here none is running yet, so it leaves a note the server reads at its first start):
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py lake demo
+$ python3 tools/drishti.py lake demo
   trading/trade_endur: … rows over 60 days
   trading/trade_calypso: … rows over 60 days
   trading/trade_murex: … rows over 60 days
@@ -180,15 +180,14 @@ It takes about 15 minutes and about 3.4 GB of disk. The other outputs in these t
 Now ask the machine whether it is ready. `doctor` prints green, yellow and red lines, each red or yellow with a fix:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py doctor
+$ python3 tools/drishti.py doctor
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
 GREEN  server jar              ~/drishti/lib/drishti-server-<version>-exec.jar (version <version>)
-GREEN  python                  ~/drishti/drishti-console/.venv/bin/python: Python 3.13.15
+GREEN  python                  /usr/bin/python3: Python 3.13.15
 GREEN  python pyyaml           installed
 GREEN  python deltalake        installed
 GREEN  python pyarrow          installed
 GREEN  repo config/packs/      ~/drishti/config/packs
-GREEN  console venv            ~/drishti/drishti-console/.venv
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18480              free
 GREEN  port 17480              free
@@ -285,7 +284,7 @@ You should see the title, the strip as a grid and the panels stacked, with the f
 **From the command line.** The view has a twin, `view get`, which prints it as text. It needs the token of Step 9; for now just look at what it prints:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py view get trade/MX-20000001
+$ python3 tools/drishti.py view get trade/MX-20000001
 Rates · Interest rate swap (fixed/float)  MX-20000001  with CP-MERIDIAN-RE   [TRD]
 
 Key figures
@@ -396,7 +395,7 @@ You should see the BI home: a menu on the left (Home, Catalogue, My workspace, D
 **From the command line** (with the token of Step 9), the catalogue as you may see it:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py bi catalogue list
+$ python3 tools/drishti.py bi catalogue list
 ...
 file:model:trades-basic                             model    promoted  published v1   Trades, the basics  (Shipped content, shipped)
 file:dataset:trades-basic-trade                     dataset  promoted  published v1   Trades, the basics: trade  (Shipped content, shipped)
@@ -430,7 +429,7 @@ export DRISHTI_TOKEN=$(cat ~/drishti-tokens/tutorial.token)
 Without a token a signed-in server says no, in plain words:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server health        # no token
+$ python3 tools/drishti.py server health        # no token
 drishti: the server said 401 DRS-5010: DRS-5010 missing bearer token (no or bad token: set DRISHTI_TOKEN or --token-file)
 [exit 1]
 ```
@@ -438,7 +437,7 @@ drishti: the server said 401 DRS-5010: DRS-5010 missing bearer token (no or bad 
 With it, `doctor` checks the token too, and the server answers. `server health` lists every source (a connector to a store) and says whether it is up:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://localhost:18480
+$ python3 tools/drishti.py doctor --server http://localhost:18480
 ...
 GREEN  server                  http://localhost:18480: version 2.9.2, java 21.0.12.1, status OK
 GREEN  token                   accepted; this token 'SLq29IMYJkTj' acts as drishti-dev-admin: scopes design:write, loads:write, packs:admin, bi:write, expires 2026-11-16T21:47:27.779Z
@@ -446,7 +445,7 @@ doctor: all clear
 ```
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server health
+$ python3 tools/drishti.py server health
 status OK  version 2.5.0  java 21.0.12.1  uptime 214s
 packs 7  sources 14 (degraded 0, down 0)  packs with problems 0  failed to start 0
   civic-store                 UP        UP (engine: native)
@@ -590,7 +589,7 @@ bar, which is the next step.
 **From the command line:**
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py view get netting-set/NS-MERIDIAN-RE-NY
+$ python3 tools/drishti.py view get netting-set/NS-MERIDIAN-RE-NY
 Exposure and capital · Netting set  NS-MERIDIAN-RE-NY   [NSET]
 
 Key figures
@@ -643,7 +642,7 @@ $ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" http://localhost:18480/api/v
 And the command line reads the past just as well; this is the same trade on 15 October:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py view get trade/MX-20000022 --date 2026-10-15
+$ python3 tools/drishti.py view get trade/MX-20000022 --date 2026-10-15
 Rates · Cross-currency swap (non-MtM)  MX-20000022  with CP-VERDANT   [TRD]
 
 Key figures
@@ -735,7 +734,7 @@ You should see the United States as a jurisdiction: its government type, capital
 related entities (office holders, elections, parties, the region). The command line prints the same view:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py view get jurisdiction/JUR-USA
+$ python3 tools/drishti.py view get jurisdiction/JUR-USA
 Politics and society · Jurisdiction  JUR-USA   [JUR]
 
 Key figures
@@ -1277,8 +1276,7 @@ days*.
 | You see | Do this |
 |---|---|
 | The build says `Drishti needs Java 21 or newer` | `JAVA_HOME` is older than 21; point it at 21 or newer and run the build again |
-| `python3 -m venv` says `ensurepip is not available` | use `uv venv --python 3.13 drishti-console/.venv`, or install your system's `python3-venv` package |
-| `lake demo` says `No module named 'drishti_lake'` | run it with the console's Python (`drishti-console/.venv/bin/python`), which has the requirements |
+| `lake demo` says `No module named 'drishti_lake'` | `python3 tools/drishti.py setup` with the same Python: it installs the libraries from the wheel pack |
 | The sign-in page says the password is wrong | the development password is `drishti-dev-admin123` until you change it; five wrong tries lock the account for 15 minutes |
 | Every page says `DRS-5010 missing bearer token` | the console was started without `DRISHTI_TOKEN_SECRET` (or with another value than the server's): start it as in Step 2 |
 | A view says *No data held for that date* | the demo lakes are not built, or were built for other dates: run `lake demo` again (a running server re-reads them) |

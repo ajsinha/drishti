@@ -12,15 +12,16 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The IDE launchers, one row each (docs/plans/LAUNCHER_REVIEW.md 4.2): `python tools/drishti.py launchers` writes the one folder run-configs/
-# (read by both IDEs: IntelliJ runs the Java launchers, PyCharm the Python ones; each IDE shows the other's as not runnable, a red cross,
-# which is expected), the VS Code workspace drishti.code-workspace and the tables of docs/guides/IDE_GUIDE.md section 4 from this table, and
-# `launchers --check` (a quick file check of the drill's gate) fails when a committed file differs. The IDE groups them by kind: every Maven
-# and JAR Application launcher is in the folder Drishti-java, every Python one in Drishti-python (the generator's rule). The sections
-# `intellij` and `pycharm` below say which IDE a row is for. A launcher carries what to run and which profile
+# The IDE launchers, one row each (docs/plans/LAUNCHER_REVIEW.md 4.2): `python tools/drishti.py launchers` writes them, the VS Code workspace
+# drishti.code-workspace (both kinds) and the tables of docs/guides/IDE_GUIDE.md section 4 from this table, and `launchers --check` (a quick
+# file check of the drill's gate) fails when a committed file differs. The section says which project a row belongs to: `intellij` rows go
+# into run-configs/ (IntelliJ IDEA opens `drishti`: only the Java launchers, folder Drishti-java), `pycharm` rows into
+# drishti-console/run-configs/ (PyCharm opens `drishti/drishti-console`: only the Python launchers, folder Drishti-python, the install
+# folder as $PROJECT_DIR$/..). A launcher carries what to run and which profile
 # (config/profiles/<profile>.ini) only: every setting with a config home is in the profile, the server's JVM options are the one function
 # drishti.py start server runs (serverstart.jvm_flags), written per machine into ~/drishti-envs/jvm-<profile>.args by setup.
 # kind: maven (goals), server (profile), console (profile, args), tool (command, profile optional; prompt: true asks for the file when the launcher runs).
+# Every Python launcher runs on the project interpreter (the one Python, drishti.python): no launcher names a .venv.
 
 intellij:
   - name: "Drishti: build all"
@@ -81,20 +82,14 @@ pycharm:
     kind: tool
     settings: false
     command: setup
-    what: "prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then `drishti-console/.venv` with the Lake wheel and the requirements (it makes `dev.ini`, so it names none)"
-    when: after a clone, or after a pull that changed `requirements.txt`
-  - name: "Drishti: setup (system Python)"
+    what: "prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): checked, what is missing installed offline from the wheel pack in `~/drishti-wheels`; never a venv (it makes `dev.ini`, so it names none)"
+    when: after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing
+  - name: "Drishti: setup (package index)"
     kind: tool
     settings: false
-    command: setup --system
-    what: "the same with no `.venv`: the libraries go into the project interpreter (the Python that runs this launcher)"
-    when: the machine forbids virtual environments
-  - name: "Drishti: setup (system Python, offline wheels)"
-    kind: tool
-    settings: false
-    command: setup --system --wheels $USER_HOME$/drishti-wheels
-    what: "the same, installing only from `~/drishti-wheels` (unzip the wheel pack there, or pass the .zip itself): no package index is asked"
-    when: the company package index rejects pip (401/403), is unreachable, or lacks a library
+    command: setup --index
+    what: "the same, installing what is missing from your configured package index instead of the wheel pack"
+    when: no wheel pack, and pip may reach your package index
   - name: "Drishti: build demo lakes"
     kind: tool
     command: lake demo --engine java

@@ -107,7 +107,7 @@ def session(args):
         import boto3
         import botocore.exceptions
     except ImportError as e:
-        raise Failed("boto3 is not installed for this Python: pip install boto3 pyarrow, or set DRISHTI_PYTHON to drishti-console's .venv") from e
+        raise Failed("boto3 is not installed for this Python: install boto3 and pyarrow into the Python you run Drishti with (or set DRISHTI_PYTHON to one that has them)") from e
     profile = args.profile or env("AWS_PROFILE") or None
     try:
         s = boto3.Session(profile_name=profile, region_name=region_of(args) or None)

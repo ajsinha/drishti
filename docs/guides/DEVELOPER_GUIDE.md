@@ -515,7 +515,7 @@ kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/DISTRIBUTIONS
 |---|---|---|
 | JDK | 21 or newer (any vendor; Java 21 is the production target) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [CLUSTER_GUIDE.md](../architecture/ARCHITECTURE.md#14-concurrency-and-performance)). |
 | Python | 3.13 ([the minimum and why](OPERATIONS_GUIDE.md#21-prerequisites)) | The console and the tools. CI uses 3.13. |
-| uv | any recent | Creates the console's environment (`uv venv --python 3.13`), which works where the system Python has no `ensurepip` (Debian and Ubuntu without `python3.X-venv`); runs some tools with `uv run --with …` so nothing is installed globally. |
+| The offline wheel pack | the release's | `python3 tools/drishti.py setup` installs the libraries from it (`~/drishti-wheels`, or `--wheels`): into `drishti-console/.venv` on Linux and macOS, into the Python you run Drishti with on Windows (never a `.venv` there). |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, Cassandra, ScyllaDB, ActiveMQ, RabbitMQ, MinIO) and `deploy/docker/compose.yaml`. |
 
 Set `JAVA_HOME` in every terminal:
@@ -533,10 +533,9 @@ You should see `Java version: 21…` in the output. Maven itself comes with the 
 
 ```bash
 git clone https://github.com/drishti-platform/drishti.git && cd drishti
-uv venv --python 3.13 drishti-console/.venv
-uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
+python3 tools/drishti.py setup                                     # the libraries into this Python from ~/drishti-wheels
 ./mvnw -q package -DskipTests -pl :drishti-app -am                 # 1 min 12 s with ~/.m2 filled
-drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 86 Delta tables, sixty days, under data/delta/demo
+python3 tools/drishti.py lake demo           # about 15 min (943 s): 86 Delta tables, sixty days, under data/delta/demo
 ```
 
 then the server and the console as the run configurations start them ([OPERATIONS_GUIDE.md, Steps 6 and 7](OPERATIONS_GUIDE.md#25-start-the-server)).
@@ -610,16 +609,18 @@ Docker before you merge a schema change ([§5.6](#56-add-a-table-to-the-identity
 ### 2.4 The console from source
 
 ```bash
-uv venv --python 3.13 drishti-console/.venv
-uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements-test.txt   # requirements.txt, plus pytest-xdist, Playwright and the test extras
+python3 tools/drishti.py setup                                     # drishti-console/.venv with the libraries (Linux, macOS)
+drishti-console/.venv/bin/python -m pip install -r drishti-console/requirements-test.txt    # plus pytest-xdist, Playwright and the test extras
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
 You should see `Uvicorn running on http://0.0.0.0:17480` (`server.host` is every interface by default; `DRISHTI_CONSOLE_HOST=127.0.0.1`
 for this machine only). `drishti-console/requirements.txt` holds FastAPI, Uvicorn, Jinja2, httpx, PyYAML, Markdown, pytest,
 `cryptography`, numpy, pandas, pyarrow and Drishti Lake's Python package (the last two for `lake build` and `lake demo`, so the console's Python is also the
-tools' Python), boto3 for the Bedrock AI provider and, optionally, `brotli`. Without uv, `python3 -m venv drishti-console/.venv` and
-`drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt` do the same where the system Python has `ensurepip`.
+tools' Python), boto3 for the Bedrock AI provider and, optionally, `brotli`. Run with no arguments (an IDE's *Run current file*),
+`run_drishti_web.py` is the launcher **Drishti: run console**: `~/drishti-envs/dev.ini` with the demo profile and the development secrets
+of `drishti.py start all --demo` (`tools/launch/devsecrets.py`, the one place they are spelled), each said in one line; a Python
+lacking a library stops at once with the `setup` line.
 
 For Calc (Python on a view, `Alt+C`), install its runtime once: `python tools/drishti.py calc install` (about 340 MB downloaded to
 `~/.cache/drishti/`, 53 MB kept; see [USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)). Without it the console runs
@@ -630,9 +631,9 @@ The console reads `drishti-console/config/application.yaml`, then `drishti-conso
 
 ```bash
 # three ways to move the console to port 17481
-DRISHTI_CONSOLE_PORT=17481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
-DRISHTI_CONSOLE__SERVER__PORT=17481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17481
+DRISHTI_CONSOLE_PORT=17481 python3 drishti-console/run_drishti_web.py
+DRISHTI_CONSOLE__SERVER__PORT=17481 python3 drishti-console/run_drishti_web.py
+python3 drishti-console/run_drishti_web.py --server.port=17481
 ```
 
 `DRISHTI_CONSOLE__A__B` sets any key `a.b` (the prefix is `DRISHTI_CONSOLE__`, double underscores separate the levels). Named
@@ -701,7 +702,7 @@ or is a `help.yaml`, the drill runs in docs mode by itself; otherwise it runs in
 refused, with the files that are not documentation listed.
 
 **Before anything runs**, the drill refuses to start unless the current branch is `develop` (`drill: must be on develop`; not checked
-with `--no-push`), the working tree is clean (`drill: commit your changes first`) and the console's Python environment exists.
+with `--no-push`), the working tree is clean (`drill: commit your changes first`) and the Python it runs the tests with (`DRISHTI_PYTHON`, else `drishti-console/.venv/bin/python`) holds `drishti-console/requirements-test.txt` at the lock's pins (the drill makes no environment).
 
 **Stage 1, the gate** (a few minutes, all at once; the first failure stops the drill and prints the failed job's log):
 
@@ -1648,8 +1649,8 @@ def test_sources_page_lists_connectors(client):
 Run the console tests:
 
 ```bash
-drishti-console/.venv/bin/python -m pytest -q -p no:cacheprovider drishti-console/tests/test_sources.py -k connectors
-drishti-console/.venv/bin/python -m pytest -q -p no:cacheprovider -n 4 --dist loadfile drishti-console/tests        # the whole suite
+python3 -m pytest -q -p no:cacheprovider drishti-console/tests/test_sources.py -k connectors
+python3 -m pytest -q -p no:cacheprovider -n 4 --dist loadfile drishti-console/tests        # the whole suite
 ```
 
 (`-p no:cacheprovider`: no `.pytest_cache` folder.) `test_assets_policy.py` will fail if the template gains an inline script, handler or
@@ -1781,7 +1782,7 @@ the state more than once. Examples: `ReferenceCatalog`, `SearchProperties`, `Rol
 | Console | `drishti-console/tests` | pytest with `FakeBackend`; fixtures in `tests/fixtures/` are ViewModels captured from the real server | `test_terminal.py` (every panel kind with broken data), `test_assets_policy.py` (no CDN, no inline code, Python size), `test_contrast.py` (theme contrast), `test_help.py` (every catalogued guide renders) |
 | Python tools | `tools/` | `unittest` | `tools/samplegen/test_samplegen.py`, `tools/lake/test_build.py`, `tools/lake/test_demo.py`, `tools/lake/test_maintain.py`, `tools/testdata/test_testdata.py` |
 | Generated content | `tools/packgen`, pack tools | `--check` | run by the drill |
-| In the browser | your machine (`drishti-console/tests/*_browser.py`) | Playwright with Chromium; skipped when not installed | `test_live_tabs_browser.py`, `test_page_widths_browser.py` (no sideways scroll at 390, 1600 and 2560 px; images fit), `test_workspace_keys_browser.py`, `test_calc_browsers.py`. Install with `uv pip install -r drishti-console/requirements-test.txt` and `drishti-console/.venv/bin/python -m playwright install chromium`. Run **one browser test file at a time** on a laptop. They do not replace a look by hand: after a UI change, open the page in the running console in at least one dark and one light theme and on a phone width, use the keys (F-keys, `/`, `Alt+←`, table keys), watch a live view tick, and check the browser console for CSP violations. |
+| In the browser | your machine (`drishti-console/tests/*_browser.py`) | Playwright with Chromium; skipped when not installed | `test_live_tabs_browser.py`, `test_page_widths_browser.py` (no sideways scroll at 390, 1600 and 2560 px; images fit), `test_workspace_keys_browser.py`, `test_calc_browsers.py`. Install with `python3 -m pip install -r drishti-console/requirements-test.txt` (into the Python you run Drishti with) and `python3 -m playwright install chromium`. Run **one browser test file at a time** on a laptop. They do not replace a look by hand: after a UI change, open the page in the running console in at least one dark and one light theme and on a phone width, use the keys (F-keys, `/`, `Alt+←`, table keys), watch a live view tick, and check the browser console for CSP violations. |
 
 Habits that keep the suite fast and reliable:
 
@@ -1924,7 +1925,7 @@ Only names an external tool looks for by exactly that name keep the dot:
 | `.mvn/` | the Maven wrapper |
 | `.github/` | GitHub |
 | `.idea/` | the IDEs' settings ([IDE_GUIDE.md](IDE_GUIDE.md)) |
-| `.venv/` | the Python convention for a virtual environment (git-ignored) |
+| `.venv/` | git-ignored: `drishti-console/.venv`, which setup makes on Linux and macOS (never on Windows) |
 | `.claude/` | Claude Code |
 | `_rels/.rels` | the Excel file format (OOXML) names it so: a workbook template's package relationships (the Capacity and Playground templates) |
 
@@ -2278,7 +2279,7 @@ Whichever you choose, it is configured as a connector file (`config/connectors/<
 Every chapter below uses the same few commands. They are collected here once.
 
 **1. Build once** (from the repository root; see [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) for Java 21 or newer and the
-console's Python environment):
+Python you run Drishti with, its libraries from `setup`):
 
 ```bash
 ./mvnw -q package -DskipTests
@@ -2311,7 +2312,7 @@ Routes (`kind -> connector`) are the pack's `routes:`; the server's own settings
 
 ```bash
 java -jar lib/drishti-server-*-exec.jar
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+python3 drishti-console/run_drishti_web.py
 ```
 
 The server listens on `http://localhost:18480`, the console on `http://localhost:17480`. Configuration is read at

@@ -61,7 +61,7 @@ About 1 h 45 min in all; each part can be done on its own day.
 - [The VaR tutorial, Part A](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade) step 1 done once: you know the VaR test data and `VAR BANK` (112,041,646 USD on
   2026-09-30).
 - `build_demo_lakes.py` writes Iceberg with the loader in the server's jar, so the server is built first (above).
-- The console's Python (`drishti-console/.venv/bin/python`; Windows `drishti-console\.venv\Scripts\python.exe`): it has the Drishti Lake wheel (the loader's Python path) and `pyarrow`.
+- The Python you run Drishti with (`python3`; Windows `py`), its libraries installed by `setup`: it has the Drishti Lake wheel (the loader's Python path) and `pyarrow`.
 - Stop the server while you build the lake; the examples use the default data folder, `data/` (`data/delta/demo`, `data/iceberg`).
 
 ## What you will learn
@@ -854,8 +854,8 @@ Instead of writing the `.ready` by hand, use **Upload** (DATA_LAKE_GUIDE section
 
 ```bash
 export DRISHTI_TOKEN=...      # a token with loads:write
-drishti-console/.venv/bin/python tools/drishti.py dataload ready --inbox trades-2026-11-03.jsonl --table trade --check
-drishti-console/.venv/bin/python tools/drishti.py dataload ready --inbox trades-2026-11-03.jsonl --table trade --mode append --push
+python3 tools/drishti.py dataload ready --inbox trades-2026-11-03.jsonl --table trade --check
+python3 tools/drishti.py dataload ready --inbox trades-2026-11-03.jsonl --table trade --mode append --push
 ```
 
 **The `.ready` it writes:**
@@ -1299,7 +1299,7 @@ committed test data.
 **From the command line.** The same `--only` list as the VaR tutorial, Part A, with `--store risk=iceberg`:
 
 ```bash
-drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=iceberg \
+python3 tools/build_demo_lakes.py --as-of data --store risk=iceberg \
   --only market-risk/pnl-vector,market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit
 ```
 
@@ -1482,7 +1482,7 @@ files an earlier release left).
 **From the command line** (server stopped):
 
 ```text
-$ drishti-console/.venv/bin/python tools/build_demo_lakes.py --as-of data --store risk=delta --only market-risk/pnl-vector,…,market-risk/var-limit
+$ python3 tools/build_demo_lakes.py --as-of data --store risk=delta --only market-risk/pnl-vector,…,market-risk/var-limit
   the risk domain is in Delta now: its Iceberg tables are removed (data/iceberg/risk)
   Risk domain: delta data/delta/risk; risk-store: now reads delta, was iceberg (the pack's own connector; …); exposure-store: now reads delta, was iceberg (…)
 ```

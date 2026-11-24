@@ -17,7 +17,7 @@ docs/tutorials/img/t35/, in the light theme. Start a scratch stack on the VaR pi
 (_tut.SERVER_ENV), the Flight port's certificate and key as PEM files (DRISHTI_FLIGHT_TLS_CERT, DRISHTI_FLIGHT_TLS_KEY: a test PKI) and
 Flight switched on (Admin -> Engines, then a restart), then point this at its console:
 
-    DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t35
+    DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> python3 tools/docs/screenshots.py --guide t35
 
 The pictures, in the tutorial's order: Admin -> Engines with Arrow Flight on, My account -> API tokens after making the token "risk
 notebook" with data:read, and Admin -> Data out (take that one while a stream reads: step 7 of the tutorial)."""

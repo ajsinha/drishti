@@ -3067,7 +3067,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.distribution` | string | empty | `DRISHTI_DISTRIBUTION` | server | The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names config/distributions/drishti.&lt;name&gt;.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank: Drishti All, exactly as before. Also --distribution=&lt;name&gt; on the command line (drishti.py start server --distribution &lt;name&gt;). | restart |  | admin |
 | `drishti.distributions-dir` | string | `<config>/distributions` | `DRISHTI_DISTRIBUTIONS_DIR` | server | the distribution files and kernel.yaml (the kernel's packs and words) | restart |  | admin |
 | `drishti.lenses` | string | `default` | `DRISHTI_LENSES` | server | Lenses (LENSES.md): workspaces a person may open ("Open Drishti Risk"), for their own session: each arranges Home and the menus for a role and never hides anything (what exists is the distribution's). default: every lens of the modules that are on (a lens file under config/lenses not marked offered-by-default: false); a list names them (it may hold the word default); DRISHTI\_LENSES= (empty) offers none. A lens named that cannot be offered is left out, with an ERROR in the log and a red line on Admin -&gt; Health; the start goes on. | restart |  | everyday |
-| `drishti.python` | string | empty | `DRISHTI_PYTHON` | server | the Python the server starts for its Python work, as an absolute path (tools/drishti.py setup writes it into the settings file, never over a value there): used where the work's own setting (drishti.feeds.python, compute.python) is blank; DRISHTI\_PYTHON beats every setting; blank: the work's own default (python3, python on Windows) | restart |  | admin |
+| `drishti.python` | string | empty | `DRISHTI_PYTHON` | server | the ONE Python (the console, the tools and the server's Python work; never a venv), as an absolute path (tools/drishti.py setup writes the Python it ran with into the settings file; a value naming a .venv or a missing file is replaced): used where the work's own setting (drishti.feeds.python, compute.python) is blank; DRISHTI\_PYTHON beats every setting; blank: the work's own default (python3, python on Windows) | restart |  | admin |
 
 #### `drishti.data`
 
@@ -3197,7 +3197,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 |---|---|---|---|---|---|---|---|---|
 | `drishti.feeds.config` | string | `<config>/feeds` | `DRISHTI_FEEDS_CONFIG` | server | the feed files' folder (config/feeds/&lt;feed&gt;.yaml); the run ledger is &lt;data folder&gt;/datafeeds/ledger.jsonl | restart |  | admin |
 | `drishti.feeds.root` | string | `<home>` | `DRISHTI_FEEDS_ROOT` | server | the installation's folder (the one holding tools/drishti.py): Run now starts `tools/drishti.py feed run <feed>` there | restart |  | admin |
-| `drishti.feeds.python` | string | empty | `DRISHTI_FEEDS_PYTHON` | server | the Python Run now starts (blank: drishti.python, else the console's drishti-console/.venv, else python3, python on Windows) | restart |  | admin |
+| `drishti.feeds.python` | string | empty | `DRISHTI_FEEDS_PYTHON` | server | the Python Run now starts (blank: drishti.python, else python3, python on Windows) | restart |  | admin |
 | `drishti.feeds.sample-seconds` | integer | `60` |  | server | how often the ledger is read for the gauge drishti.datafeed.failed (the alert rule data-feed-failed) | restart |  | admin |
 
 #### `drishti.store`
@@ -6529,7 +6529,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FEEDS` | `drishti.sources.plugins.file.settings.root` | `<data>/feeds` | server | the folder the bundled file source reads |
 | `DRISHTI_FEEDS_CONFIG` | `drishti.feeds.config` | `<config>/feeds` | server | the feed files' folder (config/feeds/&lt;feed&gt;.yaml); the run ledger is &lt;data folder&gt;/datafeeds/ledger.jsonl |
 | `DRISHTI_FEEDS_DEBUG` | drishti.py feed | none | tools | Set (any value): a feed's own error prints its Python stack trace too (the ledger keeps the one line either way) |
-| `DRISHTI_FEEDS_PYTHON` | `drishti.feeds.python` | empty | server | the Python Run now starts (blank: drishti.python, else the console's drishti-console/.venv, else python3, python on Windows) |
+| `DRISHTI_FEEDS_PYTHON` | `drishti.feeds.python` | empty | server | the Python Run now starts (blank: drishti.python, else python3, python on Windows) |
 | `DRISHTI_FEEDS_ROOT` | `drishti.feeds.root` | `<home>` | server | the installation's folder (the one holding tools/drishti.py): Run now starts `tools/drishti.py feed run <feed>` there |
 | `DRISHTI_FEEDS_USER_AGENT` | drishti.py feed | `Drishti ajsinha@gmail.com` | tools | The User-Agent every data feed sends (SEC EDGAR, GLEIF and the rest; the SEC asks for a contact in it): set it to your organisation's contact in production |
 | `DRISHTI_FEED_ECB_ESTR` | ecb-estr-feed enabled | `false` | packs | The ECB euro short-term rate feed on |
@@ -6649,7 +6649,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_PLACEMENT_FILE` | `drishti.placement.file` | empty | server | where config/placement.yaml is; empty: placement.yaml beside the connectors' folder |
 | `DRISHTI_PORT` | `server.port` | `18480` | server | the server's HTTP port |
 | `DRISHTI_PUBLIC_URL` | `drishti.embed.issuer` | empty | server | the iss of embed tokens: this server's public URL |
-| `DRISHTI_PYTHON` | `drishti.python`, `compute.python` (compute) | empty | compute, server | the Python the server starts for its Python work, as an absolute path (tools/drishti.py setup writes it into the settings file, never over a value there): used where the work's own setting (drishti.feeds.python, compute.python) is blank; DRISHTI\_PYTHON beats every setting; blank: the work's own default (python3, python on Windows) |
+| `DRISHTI_PYTHON` | `drishti.python`, `compute.python` (compute) | empty | compute, server | the ONE Python (the console, the tools and the server's Python work; never a venv), as an absolute path (tools/drishti.py setup writes the Python it ran with into the settings file; a value naming a .venv or a missing file is replaced): used where the work's own setting (drishti.feeds.python, compute.python) is blank; DRISHTI\_PYTHON beats every setting; blank: the work's own default (python3, python on Windows) |
 | `DRISHTI_RABBITMQ_ENABLED` | `drishti.sources.plugins.rabbitmq.enabled` | `false` | server | run the rabbitmq source as itself |
 | `DRISHTI_REDIS_CLUSTER` | redis connector file | `false` | packs | Redis Cluster rather than one server |
 | `DRISHTI_REDIS_PASSWORD` | the Redis loader | none | tools | The Redis loader's password (secret) |
@@ -6763,7 +6763,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_VIEWS_REFRESH_MIN_SECONDS` | `views.refresh_min_seconds` | `5` | console | The fastest any panel refreshes (refresh: in a Sutra, RACHANA\_REFERENCE.md 9), in seconds: a Sutra or a reader asking for faster gets this. |
 | `DRISHTI_WAIT_BUSY` | drishti.py | `false` | tools | 1: every command waits when the server is busy (503 DRS-9501 to DRS-9505, busy protection) for its Retry-After and tries again, three times at most (data get --wait does the same for one download) |
 | `DRISHTI_WEBKIT_LIBS` | the browser tests' WebKit libraries | `~/.cache/drishti-lanes/webkit-libs` | tools | The folder under which tools/browser/webkit\_env.py unpacks the few system libraries Playwright's WebKit needs on a machine that lacks them (a download, no root) |
-| `DRISHTI_WHEELS` | setup's offline wheels | `(none)` | tools | A folder of wheels or a wheel-pack .zip: drishti.py setup, setup venv, setup libs and setup --system install the libraries only from it, offline (the same as --wheels; --wheels wins) |
+| `DRISHTI_WHEELS` | setup's offline wheels | `(none)` | tools | A folder of wheels or a wheel-pack .zip: drishti.py setup and setup libs install the missing libraries into the Python running setup only from it, offline (the same as --wheels; --wheels wins; unset: ~/drishti-wheels when it holds wheels) |
 | `DRISHTI_XLSX_CAPTURE` | the workbook capture folder | `(none)` | tools | Where the temporary test patch of tools/xlsx\_before\_after/ writes every workbook a test makes, to compare two builds cell by cell (never set in a normal test run) |
 | `DRISHTI_YFINANCE_ENABLED` | yfinance connector enabled | `false` | packs | The news-and-markets pack's yfinance connector on |
 | `DRISHTI_YFINANCE_URL` | yfinance base URL | `https://query1.finance.yahoo.com/v8/finance/chart` | packs | Where the yfinance connector asks |

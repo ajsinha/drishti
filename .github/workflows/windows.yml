@@ -53,8 +53,8 @@ jobs:
         run: python tools/drishti.py build jar --offline
       - name: Prepare and check this machine (setup, then setup --check)
         run: |
-          python tools/drishti.py setup --skip-venv
-          python tools/drishti.py setup --check --skip-venv
+          python tools/drishti.py setup drishti
+          python tools/drishti.py setup drishti --check
           if ($LASTEXITCODE -ne 0) { throw 'setup --check found something to do' }
       - name: The server on the lake (start server), asked for a view, a search and a past date; status; stop server
         env:

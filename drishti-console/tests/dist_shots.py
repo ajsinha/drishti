@@ -16,7 +16,7 @@
 run it by hand).
 
     DRISHTI_BI_REPORT_SERVER_PORT=18950 DRISHTI_BI_REPORT_CONSOLE_PORT=17950 \
-        drishti-console/.venv/bin/python drishti-console/tests/dist_shots.py <pictures dir> <captures.json>
+        python3 drishti-console/tests/dist_shots.py <pictures dir> <captures.json>
 
 The stack is tests/dist_stack.py (the sample report "Trades overview", rows and a masked column per person, a local fake SMTP; no mail leaves the machine). Pictures are
 desktop (1600 px: the top bar needs it) and the phone (390 px). Everything the pictures and captures show is real: the files are the server's, the mails are what the fake

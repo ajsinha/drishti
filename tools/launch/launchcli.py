@@ -80,8 +80,9 @@ def add_options(p: argparse.ArgumentParser, verb: str, what: str) -> None:
     elif what == "console":
         p.add_argument("--server", action="append", metavar="URLS", help="the server, or a cluster's entry nodes, comma-separated (default DRISHTI_SERVER_URL, else this machine's LAN address :18480)")
         p.add_argument("--port", type=int, help="the console's port (default DRISHTI_CONSOLE_PORT, else 17480)")
-        p.add_argument("--python", metavar="FILE", help="the Python 3.11+ to make drishti-console/.venv with (default this one)")
-        p.add_argument("--reinstall", action="store_true", help="remake drishti-console/.venv (after drishti-console/requirements.txt changed)")
+        # moved to setup (start never makes a Python environment): kept only to say so
+        p.add_argument("--python", metavar="FILE", help=argparse.SUPPRESS)
+        p.add_argument("--reinstall", action="store_true", help=argparse.SUPPRESS)
         p.add_argument("--wait", type=int, default=90, metavar="SECONDS", help="how long to wait for the health answer (default 90)")
         p.add_argument("--name", help="a name for this console when several run from one data folder (run/console-<name>.pid)")
     else:
@@ -137,10 +138,14 @@ def cmd_start(a, extra) -> int:
         return _run(consolestart.start, a)
     # all: one server and one console on this machine, in the background, the console pointed at the server's LAN address
     host = procs.lan_ip() or "localhost"
+    console = _console_ns(a, port=a.console_port, background=True, server=[f"http://{host}:{a.server_port}"])
+    rc = _run(lambda ns: consolestart.prepared_python(ns) and 0, console)   # the console's Python first: an unprepared one stops before the server starts
+    if rc:
+        return rc
     rc = _run(serverstart.start, _server_ns(a, port=a.server_port, background=True))
     if rc:
         return rc
-    return _run(consolestart.start, _console_ns(a, port=a.console_port, background=True, server=[f"http://{host}:{a.server_port}"]))
+    return _run(consolestart.start, console)
 
 
 def cmd_stop(a, extra) -> int:
@@ -155,16 +160,16 @@ def cmd_stop(a, extra) -> int:
 
 
 def cmd_cluster(a, extra) -> int:
-    """start|stop cluster, status --cluster: tools/launch/clusterctl.py, which reads the cluster file with PyYAML: run with the console's
-    Python when this one has no PyYAML."""
+    """start|stop cluster, status --cluster: tools/launch/clusterctl.py, which reads the cluster file with PyYAML: run with the one Python
+    (DRISHTI_PYTHON, drishti.python) when this one has no PyYAML."""
     try:
         import yaml  # noqa: F401
     except ModuleNotFoundError:
-        py = procs.venv_python()
-        if py.exists() and Path(sys.executable).resolve() != py.resolve():
-            return subprocess.run([str(py), str(HERE.parent / "drishti.py"), *a._argv]).returncode
-        raise SystemExit("drishti: the cluster file needs PyYAML: run  python tools/drishti.py setup  (it makes drishti-console/.venv) or  setup --system  (the libraries into this Python), "
-                         "then run this with that Python") from None
+        py, why = procs.tools_python()
+        if Path(py).exists() and Path(sys.executable).resolve() != Path(py).resolve():
+            return subprocess.run([py, str(HERE.parent / "drishti.py"), *a._argv]).returncode
+        raise SystemExit("drishti: the cluster file needs PyYAML, which this Python has not got: run  python tools/drishti.py setup  "
+                         "(it installs the libraries from the offline wheel pack into the Python you run Drishti with)") from None
     import clusterctl
     verb = getattr(a, "verb", "status")
     data = a.data_dir[0] if isinstance(a.data_dir, list) else a.data_dir
@@ -245,24 +250,29 @@ def cmd_build(a, extra) -> int:
 
 def register(groups, add) -> None:
     """Adds setup, build, start, stop and status to drishti.py's command line."""
-    s = groups.add_parser("setup", help="setup [drishti|venv|libs]: prepare this machine (the Drishti part, the Python part in drishti-console/.venv, or the libraries in this Python)",
+    s = groups.add_parser("setup", help="setup [drishti|venv|libs]: prepare this machine (the Drishti part, then the libraries: Windows into the Python you run "
+                                         "Drishti with, never a .venv; Linux and macOS into drishti-console/.venv, or this Python with --system)",
                           description=__import__("envsetup").__doc__, formatter_class=RAW,
-                          epilog=f"examples:\n  {P} setup\n  {P} setup --check\n  {P} setup drishti --data-dir D:/drishti-data\n  {P} setup venv --reinstall\n"
-                                 f"  {P} setup --system     (no .venv allowed: setup drishti + setup libs)")
+                          epilog=f"examples:\n  {P} setup\n  {P} setup --check\n  {P} setup --wheels %USERPROFILE%\\drishti-wheels\n  {P} setup drishti --data-dir D:/drishti-data\n"
+                                 f"  {P} setup --system     (Linux, macOS: the libraries into this Python instead of drishti-console/.venv)\n"
+                                 f"  {P} setup venv --reinstall     (Linux, macOS)")
     s.add_argument("part", nargs="?", choices=("drishti", "venv", "libs"),
-                   help="drishti: the settings folder, dev.ini, data folder, JVM argument files, Java, jar and modules checks; venv: drishti-console/.venv with the "
-                        "Lake wheel and requirements.txt; libs: the same libraries into the CURRENT Python (no venv); none: drishti, then venv")
-    s.add_argument("--system", action="store_true", help="setup drishti + setup libs: where no .venv is allowed (everything goes to this Python)")
+                   help="drishti: the settings folder, dev.ini, data folder, JVM argument files, Java, jar and modules checks; venv (Linux, macOS): "
+                        "drishti-console/.venv with the Lake wheel and requirements.txt; libs: the same libraries into THIS Python; none: drishti, then "
+                        "libs on Windows, venv on Linux and macOS")
     s.add_argument("--check", action="store_true", help="only report; change nothing (exit 1 when something needs doing); also verifies the libraries name by name")
     s.add_argument("--home", help="the install folder (default DRISHTI_HOME, else the folder these tools are in)")
     s.add_argument("--data-dir", metavar="DIR", help="the data folder to prepare (default DRISHTI_DATA_DIR, else <home>/data)")
     s.add_argument("--envs-dir", metavar="DIR", help="the settings folder (default ~/drishti-envs; Windows %%USERPROFILE%%\\drishti-envs)")
     s.add_argument("--java-home", metavar="DIR", help="the JDK to check (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then the PATH)")
-    s.add_argument("--python", metavar="FILE", help="venv: the Python to make drishti-console/.venv with; libs, --system: the Python to install into (default this one)")
-    s.add_argument("--skip-venv", action="store_true", help="the same as setup drishti: leave drishti-console/.venv alone")
-    s.add_argument("--reinstall", action="store_true", help="remake drishti-console/.venv and install the libraries again")
+    s.add_argument("--index", action="store_true", help="libs, --system, Windows: let pip install what is missing from your configured package index "
+                                                      "(default: offline, from the wheel pack only)")
+    s.add_argument("--system", action="store_true", help="Linux, macOS: setup drishti + setup libs (the libraries into this Python, no venv); always so on Windows")
+    s.add_argument("--python", metavar="FILE", help="Linux, macOS: venv: the Python to make drishti-console/.venv with; libs, --system: the Python to install into")
+    s.add_argument("--skip-venv", action="store_true", help="the same as setup drishti")
+    s.add_argument("--reinstall", action="store_true", help="Linux, macOS: remake drishti-console/.venv and install the libraries again")
     s.add_argument("--wheels", metavar="FOLDER", help="install the libraries ONLY from this folder (or the wheel-pack .zip itself), offline: pip --no-index --find-links; "
-                                                      "default DRISHTI_WHEELS")
+                                                      "default DRISHTI_WHEELS, else ~/drishti-wheels (Windows %%USERPROFILE%%\\drishti-wheels) when it holds wheels")
     s.set_defaults(func=cmd_setup, cmd=None)
 
     b = groups.add_parser("build", help="build jar|modules|all|sdk: the server jar (copied into <home>/lib) and the modules (packages in <home>/modules), with Maven, never install")

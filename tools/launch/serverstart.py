@@ -26,6 +26,7 @@ import sys
 from pathlib import Path
 
 import procs
+import devsecrets  # noqa: E402 - the one place the development secrets are spelled
 from procs import LaunchError, say, warn
 
 TOOLS = procs.TOOLS
@@ -36,23 +37,15 @@ import lakeconfig  # noqa: E402 - the one name of the demo lake's root variable
 import settingsfile  # noqa: E402 - tools/ is on the path through procs
 
 #: the development secrets (D6: kept as they are, here once): drishti.py start --demo and the generated launchers take them from here
-DEV = {"DRISHTI_SEED_PASSWORD": "drishti-dev-admin123",
-       "DRISHTI_TOKEN_SECRET": "drishti-dev-only-token-secret-change-me-0123456789",
-       "DRISHTI_SESSION_SECRET": "drishti-dev-only-session-secret-change-me-0123456789",
-       "DRISHTI_NET_SECRET": "drishti-dev-only-cluster-key-change-me-0123456789"}
+DEV = devsecrets.DEV                     # the development secrets: tools/launch/devsecrets.py, the one place they are spelled
 #: the profile key of the server's heap (a JVM option the launchers and start server read from the settings files; the server ignores it)
 HEAP_KEY = "drishti.launch.heap"
 HEADER = "".join(line + "\n" for line in Path(__file__).read_text(encoding="utf-8").splitlines()[:13])
 
 
 def dev_secrets(env: dict, names) -> list:
-    """The development secrets, only where none is set; the names set."""
-    out = []
-    for n in names:
-        if not (env.get(n) or "").strip():
-            env[n] = DEV[n]
-            out.append(n)
-    return out
+    """The development secrets, only where none is set; the names set (devsecrets.apply)."""
+    return devsecrets.apply(env, names)
 
 
 def roots_line(roots: dict, java: str | None = None, why: str = "") -> list:
@@ -104,7 +97,7 @@ def memory_flags(workdir: Path, env: dict) -> list:
     out = []
     for flag, fmt in (("--extra-only", lambda n: f"-XX:MaxDirectMemorySize={256 + n}m"), ("--arrow-only", lambda n: f"-Ddrishti.arrow.max-bytes={n * 1048576}")):
         try:
-            r = subprocess.run([procs.tools_python(env), str(TOOLS / "lake" / "memory_caps.py"), flag], cwd=str(workdir), env=env,
+            r = subprocess.run([procs.tools_python(env)[0], str(TOOLS / "lake" / "memory_caps.py"), flag], cwd=str(workdir), env=env,
                                capture_output=True, text=True, timeout=60)
             n = int(r.stdout.strip() or 0)
         except (OSError, ValueError, subprocess.SubprocessError):
@@ -283,7 +276,7 @@ def start(a, env: dict | None = None) -> int:
     if net:
         say(f"  Drishti*net folder {net}, advertising {url}")
     if dev:
-        warn(f"DEVELOPMENT secrets in use (NOT FOR PRODUCTION): {' '.join(dev)}. Put your own in an --env-file for anything shared.")
+        warn(devsecrets.warning(dev))
 
     # the one way a Drishti tool starts a JVM (tools/javacmd.py): the flags above win; it adds compact object headers on Java 25+
     cmd = javacmd.java_cmd(java, [*flags, "-jar", str(jar), *args], cwd=workdir, env=env)

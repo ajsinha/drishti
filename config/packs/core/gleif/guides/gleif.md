@@ -108,7 +108,7 @@ python3 tools/drishti.py feed run gleif --snapshot --offline            # rebuil
 python3 tools/drishti.py feed run gleif --snapshot -- --scope GROUP:<LEI>,COUNTRY:LU,NAME:allianz   # a wider build in the data folder, not this pack
 ```
 
-`drishti-console/.venv/bin/python tools/drishti.py feed run gleif` (Linux, macOS) and `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run gleif` (Windows) run the same command. Underneath it are the generator's two
+`python3 tools/drishti.py feed run gleif` (Linux, macOS) and `py tools\drishti.py feed run gleif` (Windows) run the same command. Underneath it are the generator's two
 steps, which can also be run by hand:
 
 ```bash
@@ -167,7 +167,7 @@ python3 tools/drishti.py feed run gleif --snapshot --offline             # the s
 python3 tools/drishti.py feed run gleif -- --scope NAME:allianz,CAP:200  # a widened pull of more entities
 ```
 
-The same with the console's Python: `drishti-console/.venv/bin/python tools/drishti.py feed run gleif` on Linux and macOS, `drishti-console\.venv\Scripts\python.exe tools\drishti.py feed run gleif` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run gleif` on Linux and macOS, `py tools\drishti.py feed run gleif` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](../../../../../docs/guides/WORLD_DATA_GUIDE.md)).
 
 ### Into the lake, checking, offline
 

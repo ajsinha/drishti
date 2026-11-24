@@ -13,12 +13,14 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """``drishti.py start console`` and ``stop console``: the Drishti console (the web front end), pointed at a server or at the entry nodes of
-a cluster. Its Python is DRISHTI_PYTHON, else ``drishti.python`` of --settings, else drishti-console/.venv (made on first use: ``drishti.py setup`` makes it too)."""
+a cluster. Its Python is DRISHTI_PYTHON, else ``drishti.python`` of --settings, else (Linux, macOS) a drishti-console/.venv setup made, else
+the Python running drishti.py. Start
+never makes an environment and never installs anything (setup prepares, start only starts): a Python lacking the console's libraries is
+refused with the ``drishti.py setup`` line that prepares it."""
 from __future__ import annotations
 
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -29,46 +31,40 @@ import serverstart
 import settingsfile  # noqa: E402 - tools/ is on the path through procs
 
 
-def make_venv(home: Path, base_python: str, reinstall: bool = False, install: bool = True, run=subprocess.run, wheels: Path | None = None) -> Path:
-    """drishti-console/.venv with the libraries installed (the Lake wheel first, then drishti-console/requirements.txt; uv when it is
-    installed, else venv and pip); its Python. An existing environment is kept (``reinstall`` removes it first)."""
+def setup_line(settings: str | None = None) -> str:
+    """The one line that prepares the console's Python (start never does: setup prepares, start only starts)."""
+    return (f"python tools/drishti.py{' --settings ' + settings if settings else ''} setup   (with the Python you run Drishti with: it installs what is "
+            f"missing from the offline wheel pack in ~/drishti-wheels, or --wheels <folder>)")
+
+
+def console_python(env: dict, keys: dict, home: Path, settings: str | None = None, verify=None) -> str:
+    """The console's Python: :func:`procs.tools_python` (DRISHTI_PYTHON, drishti.python, on Linux and macOS a drishti-console/.venv setup
+    made, else this one). Never makes a venv
+    and never installs anything: a Python that is not there, or lacks the console's libraries (pylibs.verify), is a LaunchError naming
+    what is missing and the setup line that fixes it."""
     import pylibs
-    venv = home / "drishti-console" / ".venv"
-    py = procs.venv_python(home)
-    if reinstall and venv.is_dir():
-        shutil.rmtree(venv)
-    if py.exists():
-        return py
-    say(f"making the console's Python environment in {venv} ...")
-    uv = None if wheels else shutil.which("uv")
-    try:
-        r = run([uv, "venv", str(venv)] if uv else [base_python, "-m", "venv", str(venv)])
-    except OSError as e:
-        raise LaunchError(f"{base_python}: {e.strerror}: install Python 3.11 or newer (or pass --python)") from None
-    if r.returncode:
-        raise LaunchError("the venv could not be made: install Python 3.11 or newer (or pass --python), then try again")
-    if install and uv and not wheels:       # offline wheels go through pip (--no-index --find-links)
-        wheel = pylibs.lake_wheel(home)
-        if wheel is None:
-            raise LaunchError(f"the pinned Lake wheel is not in {home / 'lib' / 'wheels'}: see lib/lake-wheel.pin")
-        tls = ["--native-tls"] if procs.windows() else []
-        for tail in ([str(wheel)], ["-r", str(pylibs.plain_requirements(home / "drishti-console" / "requirements.txt"))]):
-            if run([uv, "pip", "install", *tls, "--python", str(py), *tail]).returncode:
-                raise LaunchError(f"uv pip install {tail[-1]} failed: read uv's message above")
-    elif install:
-        pylibs.install(str(py), home, run=run, wheels=wheels)
-    return py
+    chosen, why = procs.tools_python(env, keys)
+    if not (Path(chosen).exists() or shutil.which(chosen)):
+        raise LaunchError(f"the console's Python {chosen} (from {why}) is not there: install it, or run  {setup_line(settings)}")
+    bad = verify(chosen, home) if verify else pylibs.verify(chosen, home, lock=False)     # the console's own requirements
+    if bad:
+        raise LaunchError(f"the console's Python {chosen} (from {why}) lacks libraries the console needs:\n  " + "\n  ".join(bad)
+                          + f"\nstart installs nothing: run  {setup_line(settings)}")
+    return chosen
 
 
-def console_python(env: dict, keys: dict, home: Path, python: str | None = None, reinstall: bool = False, venv=None) -> str:
-    """The console's Python: DRISHTI_PYTHON, else the settings' drishti.python (setup --system writes it where no .venv is allowed),
-    else drishti-console/.venv, made or checked here (--python and --reinstall ask for the .venv)."""
-    chosen = (env.get("DRISHTI_PYTHON") or "").strip()
-    if not chosen and not (python or reinstall):
-        chosen = (keys.get("drishti.python") or "").strip()
-    if chosen:
-        return chosen
-    return str((venv or make_venv)(home, python or sys.executable, reinstall))
+def prepared_python(a, env: dict | None = None, keys: dict | None = None, home: Path | None = None) -> str:
+    """The console's prepared Python for the options of ``start console`` (``start all`` asks before the server starts); never makes one."""
+    if getattr(a, "python", None) or getattr(a, "reinstall", False):
+        raise LaunchError("start never makes a Python environment and installs nothing: run start with the Python you run Drishti with, "
+                          "or name it in drishti.python of your settings file; python tools/drishti.py setup checks its libraries", 2)
+    env = dict(os.environ if env is None else env)
+    if keys is None or home is None:
+        if getattr(a, "env_file", None):
+            procs.load_env_file(a.env_file, env, quiet=True)
+        keys = serverstart.profiled(a)[1]
+        home = javacmd.launch_roots(getattr(a, "home", None), getattr(a, "data_dir", None), env, keys)["home"][0]
+    return console_python(env, keys, home, javacmd.settings()[0])
 
 
 def start(a, env: dict | None = None) -> int:
@@ -79,6 +75,7 @@ def start(a, env: dict | None = None) -> int:
     settings, keys = serverstart.profiled(a)          # --demo: config/profiles/demo.ini after the settings files (sign-in on, plain-HTTP cookie)
     roots = javacmd.launch_roots(getattr(a, "home", None), a.data_dir, env, keys)
     home, data = roots["home"][0], roots["data"][0]
+    py = prepared_python(a, env, keys, home)          # before anything is made: an unprepared Python is refused with the setup line
     data.mkdir(parents=True, exist_ok=True)
     env["DRISHTI_DATA_DIR"] = str(data)
     env["DRISHTI_HOME"] = str(home)
@@ -101,9 +98,6 @@ def start(a, env: dict | None = None) -> int:
     if procs.port_in_use(port):
         raise LaunchError(f"port {port} is in use by another process: stop it, or pick another with --port", 3)
 
-    py = console_python(env, keys, home, a.python, a.reinstall)
-    if not (Path(py).exists() or shutil.which(py)):
-        raise LaunchError(f"no Python at {py}")
 
     dev = []
     if a.demo:   # sign-in and the cookie are the profile's [console.auth]; only the development secrets come from here
@@ -135,7 +129,7 @@ def start(a, env: dict | None = None) -> int:
     for line in serverstart.roots_line(roots):
         say(line)
     if dev:
-        warn(f"DEVELOPMENT secrets in use (NOT FOR PRODUCTION): {' '.join(dev)}. Put your own in an --env-file for anything shared.")
+        warn(serverstart.devsecrets.warning(dev))
     (data / "run").mkdir(parents=True, exist_ok=True)
     cmd = [py, str(home / "drishti-console" / "run_drishti_web.py"), *(["--settings", settings] if settings else []), f"--server.port={port}"]
     # the launcher's stop key: the console answers POST /launcher/stop with it (core/launcher_stop.py), the same stop on every OS

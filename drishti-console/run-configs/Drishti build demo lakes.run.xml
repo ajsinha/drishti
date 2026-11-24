@@ -13,29 +13,28 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Drishti: run console (Risk): the Risk distribution's console on 17480 (temp folder `<data>/tmp/console-risk`).
-  Use it when: Drishti Risk, with **Drishti: run server (demo)**.
-  The profile config/profiles/demo.ini (after your dev.ini) holds its settings.
+  Drishti: build demo lakes: the demo lakes with the Java loader of the jar in `lib/`.
+  Use it when: after a build, with the server stopped.
+  PyCharm: open drishti/drishti-console as the project (the install folder is $PROJECT_DIR$/..); it runs on the project
+  interpreter, the one Python Drishti runs with (never a venv).
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti: run console (Risk)" type="PythonConfigurationType" factoryName="Python" folderName="Drishti-python">
-    <module name="drishti" />
+  <configuration default="false" name="Drishti: build demo lakes" type="PythonConfigurationType" factoryName="Python" folderName="Drishti-python">
+    <module name="drishti-console" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
       <env name="PYTHONUNBUFFERED" value="1" />
-      <env name="DRISHTI_TOKEN_SECRET" value="drishti-dev-only-token-secret-change-me-0123456789" />
-      <env name="DRISHTI_SESSION_SECRET" value="drishti-dev-only-session-secret-change-me-0123456789" />
     </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/drishti-console/run_drishti_web.py" />
-    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; --profile demo --distribution=risk" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
+    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; lake demo --engine java" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

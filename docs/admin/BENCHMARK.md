@@ -157,13 +157,13 @@ day, on a machine sized for it, see [9.8](#98-running-it-at-a-million-trades-a-d
 
 ```bash
 # a lake of synthetic trades of the real shapes: N a day per system for D business days, with counterparties and netting sets
-drishti-console/.venv/bin/python tools/bench/trades.py --lake <data dir>/delta --tmp <data dir>/tmp/bench \
+python3 tools/bench/trades.py --lake <data dir>/delta --tmp <data dir>/tmp/bench \
     --days 7 --min 300000 --max 500000 --systems endur,calypso,murex --counterparties 10000
 # start the server and console on that data folder, then: simultaneous users against the server's API, or through the console
-drishti-console/.venv/bin/python tools/bench/users.py --server http://127.0.0.1:18480 --token-file token.txt --users 50 --seconds 60
-drishti-console/.venv/bin/python tools/bench/users.py --console http://127.0.0.1:17480 --password … --users 50 --seconds 60
+python3 tools/bench/users.py --server http://127.0.0.1:18480 --token-file token.txt --users 50 --seconds 60
+python3 tools/bench/users.py --console http://127.0.0.1:17480 --password … --users 50 --seconds 60
 # 30 days, the tables of a day loaded side by side, the days in a shuffled order
-drishti-console/.venv/bin/python tools/bench/trades.py --lake <data dir>/delta --tmp <data dir>/tmp/bench --days 30 \
+python3 tools/bench/trades.py --lake <data dir>/delta --tmp <data dir>/tmp/bench --days 30 \
     --counterparties 25000 --parallel --order random
 ```
 
@@ -1538,11 +1538,11 @@ lake (`--single`).
 # what would run, and the disk it needs (nothing written)
 python3 tools/bench/pivot_bench.py plan --nodes 3
 # everything: 5, 25 and 75 GB, every configuration, the report; the data deleted at the end (--keep keeps it)
-drishti-console/.venv/bin/python tools/bench/pivot_bench.py all --data-dir /data/drishti-bench/pivot --nodes 3 \
+python3 tools/bench/pivot_bench.py all --data-dir /data/drishti-bench/pivot --nodes 3 \
     --servers http://<node-1>:18480,http://<node-2>:18480,http://<node-3>:18480 --single http://<node-1>:18490 \
     --token-file token.txt --cold-cmd "<restart the servers and drop the page cache>" --out tools/bench/results/pivot-2.9.11c.jsonl
 # or step by step
-drishti-console/.venv/bin/python tools/bench/pivot_bench.py generate --data-dir /data/drishti-bench/pivot --gb 5
+python3 tools/bench/pivot_bench.py generate --data-dir /data/drishti-bench/pivot --gb 5
 python3 tools/bench/pivot_bench.py run --servers http://<node-1>:18480 --token-file token.txt --gb 5 --nodes 1 --cache warm --rollups with
 python3 tools/bench/pivot_bench.py report tools/bench/results/pivot-2.9.11c.jsonl > pivot-report.md
 python3 tools/bench/pivot_bench.py clean --data-dir /data/drishti-bench/pivot

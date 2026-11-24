@@ -31,8 +31,9 @@ example `C:\Users\you\IdeaProjects\drishti-platform\drishti` on Windows and `/ho
 `DRISHTI_DATA_DIR` (`<drishti>/data` unless you name another). **Every command is a Python command**, `tools/drishti.py`, the same on
 every operating system: Linux and macOS write `python3 tools/drishti.py …` with `/` paths, Windows `py tools\drishti.py …` (or
 `python`) with `\` paths. Where only the slashes differ, one line is shown. `setup`, `build`, `start`, `stop` and `status` run on any
-Python 3.11 or newer; the other commands (`lake`, `doctor`, `net`, …) need the console's packages, so they run with the console's Python,
-`drishti-console/.venv/bin/python` (Windows `drishti-console\.venv\Scripts\python.exe`), which `setup` makes. `~/drishti-envs` is a
+Python 3.11 or newer; the other commands (`lake`, `doctor`, `net`, …) need the libraries, which `setup` installs: on **Windows into the
+Python you run Drishti with** (never a `.venv`), on Linux and macOS into `drishti-console/.venv`, which setup makes (`--system`: into the
+Python you run it with). The Python chosen is written as `drishti.python` and every command runs it. `~/drishti-envs` is a
 folder in your home (`C:\Users\you\drishti-envs` on Windows) for the settings files ([section 5.1](#51-the-settings-file)). `<host>` is
 the machine's **real address** on the network (`hostname -I` on Linux, `ipconfig getifaddr en0` on macOS, `ipconfig` on Windows), for
 example `192.168.2.77`: give people that address, never `localhost`. Each step says what to do **in the UI**, **from the command line**
@@ -79,8 +80,8 @@ there waits and says so, and the rest works). The two can run on one machine or 
 | Need | Windows 10/11, Server 2019+ | Linux (Ubuntu 22.04+, RHEL 9+) | macOS 13+ (Apple silicon or Intel) |
 |---|---|---|---|
 | **Java 21**, a JDK, 64-bit | Temurin 21 **ZIP** from adoptium.net unpacked to `C:\jdk-21` (no installer needed), or the MSI | `sudo apt install openjdk-21-jdk` / `sudo dnf install java-21-openjdk-devel`, or the Temurin 21 `.tar.gz` | `brew install openjdk@21`, or the Temurin 21 `.tar.gz` |
-| **Python 3.11 or newer** (the release is tested on 3.13) | python.org's installer for Windows (it adds the `py` launcher), or its embeddable ZIP with pip | the distribution's `python3` when 3.11+, else `uv python install 3.13` | `brew install python@3.13`, or `uv python install 3.13` |
-| The console's environment | made by `setup` with Python's own `venv` and `pip` (no other tool) | `setup` (with `uv` when installed, else `venv` and `pip`) | the same as Linux |
+| **Python 3.11 or newer** (the release is tested on 3.13) | python.org's installer for Windows (it adds the `py` launcher), or its embeddable ZIP with pip | the distribution's `python3` when 3.11+ | `brew install python@3.13` |
+| The libraries | the offline wheel pack unzipped into `%USERPROFILE%\drishti-wheels`: `setup` installs what is missing into the Python you run Drishti with (no venv, no package index) | the same, `~/drishti-wheels` | the same as Linux |
 | The commands | `py tools\drishti.py …` (or `python`) in PowerShell or `cmd` | `python3 tools/drishti.py …` | the same as Linux |
 | An IDE (optional) | IntelliJ IDEA (Community or Ultimate) to build and run the server, Java only (no Python, no Python plugin); PyCharm for the console and the tools | the same | the same |
 | **Memory** | 8 GB free for the demo (the server's heap 4 GB, the console about 1 GB); building the demo lake: 4 GB a loader job ([section 6](#6-build-the-demo-lake)) | the same | the same |
@@ -88,8 +89,8 @@ there waits and says so, and the rest works). The two can run on one machine or 
 | Ports | 18480 and 17480 open on the machine's firewall for the people who use it | the same | the same |
 
 **Windows without any `.exe` beyond Java and Python.** Drishti needs nothing else: no Hadoop (`winutils.exe`), no Docker, no MinIO, no
-uv, no bash. Java comes from the Temurin ZIP (`C:\jdk-21\bin\java.exe` is Java's own), Python from python.org; the console's environment is
-made with Python's own `venv` and `pip` (through the company's mirror: `%APPDATA%\pip\pip.ini`); every command is `tools\drishti.py`. The
+uv, no bash. Java comes from the Temurin ZIP (`C:\jdk-21\bin\java.exe` is Java's own), Python from python.org; the libraries go into that
+Python from the offline wheel pack (`setup`; never a `.venv` on Windows, no package index); every command is `tools\drishti.py`. The
 demo lake is written by Drishti Lake's Java loader (`--engine java`, [section 6](#6-build-the-demo-lake)) and read by Drishti Lake's Delta
 reader: both are pure Java, and there is no Hadoop engine to choose. Native libraries the server unpacks itself (DLLs loaded by `java.exe`) are not programs and are allowed. What
 works differently on Windows: [OPERATIONS_GUIDE.md › Drishti on Windows](guides/OPERATIONS_GUIDE.md#44-what-works-differently-on-windows).
@@ -111,9 +112,9 @@ sizing planner (`tools/sizing_planner.py`, and **Admin → Capacity** in the con
 |---|---|---|
 | Maven: `PKIX path building failed` on the first download | the company network re-signs HTTPS with its own root, which Windows trusts and the JDK does not | let Java trust the Windows store: `setx MAVEN_OPTS "-Djavax.net.ssl.trustStoreType=Windows-ROOT"`, open a new terminal; the same option goes into the IDE's Maven runner and importer ([IDE_GUIDE.md section 1.4](guides/IDE_GUIDE.md#14-maven-behind-a-company-network-pkix-path-building-failed)), and into the server's JVM options when it reaches public feeds on that network |
 | `Drishti needs Java 21 or newer`, or Maven names Java 8 | `JAVA_HOME` points at an older Java | `setx DRISHTI_JAVA_HOME "C:\jdk-21"` (the tools' own lookup, before `JAVA_HOME`) and set `JAVA_HOME` to the same folder for Maven |
-| the browser tests say Chromium is missing | Playwright's browsers are installed once per user | `drishti-console\.venv\Scripts\python.exe -m playwright install chromium` (into your profile, no administrator rights) |
-| the company forbids virtual environments, or pip fails with a certificate error | everything must go to the system Python; the company proxy re-signs HTTPS | `py tools\drishti.py setup --system` installs the Lake wheel and `requirements.txt` into that Python and writes it as `drishti.python` in `dev.ini`; on Windows pip uses the Windows certificate store itself ([CLI_REFERENCE.md › setup](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)); `py tools\drishti.py setup libs --check` names what is missing |
-| setup fails with `401 Credentials not correct` (or 403, "could not be reached", "No matching distribution"): the company package index in `pip.ini` refuses pip | setup installs only what is missing from `requirements.txt` and `config/compute/locks/python.lock` (nothing, when all is installed) and says in one sentence which index refused and what to do, with the missing libraries as one `py -m pip install name==ver ...` line | **offline, no index**: unzip the wheel pack into `C:\Users\you\drishti-wheels` and run `py tools\drishti.py setup --system --wheels %USERPROFILE%\drishti-wheels` (the folder or the pack's `.zip`; `setup venv` and `setup libs` take `--wheels` too; PyCharm: **Drishti: setup (system Python, offline wheels)**); only that folder is used, a missing wheel is named |
+| the browser tests say Chromium is missing | Playwright's browsers are installed once per user | `py -m playwright install chromium` (into your profile, no administrator rights) |
+| setup says `[FAIL] libraries ... (no wheel pack found and no --index: nothing installed)`, or `start` refuses with *the console's Python ... lacks libraries* | the Python you run Drishti with lacks a library; Drishti makes no virtual environment and `start` installs nothing | unzip the wheel pack into `C:\Users\you\drishti-wheels` and run `py tools\drishti.py setup` (it finds that folder by itself and says so; or `--wheels <folder or .zip>`; PyCharm: **Drishti: setup**); only that folder is used, a missing wheel is named; `py tools\drishti.py setup --check` names what is missing |
+| `setup --index` fails with `401 Credentials not correct` (or 403, "could not be reached", "No matching distribution"), or a certificate error | the company package index in `pip.ini` refuses pip; the proxy re-signs HTTPS | setup says in one sentence which index refused; use the wheel pack instead (no `--index`). On Windows pip uses the Windows certificate store itself ([CLI_REFERENCE.md › setup](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)) |
 | the company will not allow an `.exe` | nothing here needs one | Java (the Temurin ZIP), Python and Maven's wrapper only; every Drishti command is `py tools\drishti.py ...`; the products install from their release tags with `mvnw.cmd` |
 
 The platform's source is in `C:\Users\<you>\IdeaProjects\drishti-platform\` (one folder per repository,
@@ -175,7 +176,7 @@ None is required on a developer machine: the install folder is where `tools/dris
 | `DRISHTI_MODULES_HOME` | the modules folder | `<drishti>/modules` | rarely set |
 | `DRISHTI_JAVA_HOME` | the JDK every Drishti tool uses, before `JAVA_HOME` | none | `/usr/lib/jvm/java-21-openjdk-amd64` / `C:\jdk-21` |
 | `JAVA_HOME` | the usual JDK setting: used when `DRISHTI_JAVA_HOME` is not set | none | the same |
-| `DRISHTI_PYTHON` | optional: the Python the console runs with, instead of `drishti-console/.venv` | none | `/usr/bin/python3.13` |
+| `DRISHTI_PYTHON` | optional: the one Python (the console, the tools, the server's Python work), instead of `drishti.python` of the settings file | none | `/usr/bin/python3.13` |
 | `DRISHTI_LIB_PATH` | your site's jar folder ([1.4](#14-drishtis-jars-and-your-jars)) | `<drishti>/lib/ext` | rarely set |
 | `DRISHTI_PORT`, `DRISHTI_CONSOLE_PORT` | the server's and the console's ports | `18480`, `17480` | `18580` |
 | `DRISHTI_SERVER_URL` | the server the console talks to | this machine's LAN address `:18480` | `http://192.168.2.77:18480` |
@@ -218,11 +219,14 @@ it checks Python and Java (and says which `java` and why), shows the install, da
 the data folder's layout, makes `~/drishti-envs` with a copy of `config/settings.examples/dev.ini` **with this machine's paths filled in**
 (a `dev.ini` already there that names this checkout is kept as it is, also when its data folder is elsewhere; one that names another folder, and a JVM arguments file that
 differs, is **moved** into a dated folder there, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one is written, so nothing is
-lost and nothing is made in the other folder; `--check` says what it would move), makes `drishti-console/.venv` and installs the pinned Lake wheel, then
-`drishti-console/requirements.txt`, lists the environment variables it sees (a secret only as *set*), and prints the next steps.
-`--check` changes nothing and only reports (exit 1 when something needs doing). The two parts also run alone: `setup drishti` (everything
-but the Python libraries) and `setup venv` (the `.venv`); and where no `.venv` is allowed, **`setup --system`** puts the libraries into the
-Python that runs it (`setup libs` is that half alone); that Python needs nothing installed beforehand, not even PyYAML. On such a machine run `start console` / `start all` with `--settings <your dev.ini>`: without it no `drishti.python` is seen, a `.venv` is made and the server starts `python` by name. All of it, with `--check`'s library verification and the `drishti.python` line, is in
+lost and nothing is made in the other folder; `--check` says what it would move), checks the libraries (the pinned Lake wheel, then
+`drishti-console/requirements.txt`) and installs what is missing: **on Windows into the Python it runs with** (never a `.venv`; from the
+offline wheel pack, `%USERPROFILE%\drishti-wheels` found by itself, or `--wheels <folder or .zip>`; `--index` uses your package index
+instead), **on Linux and macOS into `drishti-console/.venv`**, which it makes (`--system`: into the Python it runs with, as on Windows),
+writes that Python's path into `dev.ini` as `drishti.python`, lists the environment variables it sees (a secret only as *set*), and prints
+the next steps. Only setup makes a venv: `start` never makes one and never installs anything. `--check` changes nothing and only
+reports (exit 1 when something needs doing). The parts also run alone: `setup drishti` (everything but the libraries), `setup libs` (this
+Python) and, on Linux and macOS, `setup venv`; that Python needs nothing installed beforehand, not even PyYAML. The next steps name `start` only when nothing is left to fix. All of it, with `--check`'s library verification and the `drishti.python` line, is in
 [CLI_REFERENCE.md › setup](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti).
 
 ```bash
@@ -236,9 +240,8 @@ cd C:\Users\you\IdeaProjects\drishti-platform\drishti
 py tools\drishti.py setup
 ```
 
-Its options: `--data-dir DIR` (another data folder), `--envs-dir DIR` (another settings folder), `--java-home DIR`, `--python FILE` (the
-Python to make the console's environment with, or to install into with `libs` / `--system`), `--skip-venv` (= `setup drishti`), `--reinstall` (remake `drishti-console/.venv`, after
-`drishti-console/requirements.txt` changed). **You should see** (a first run on a clone; `ok` lines for what was already in place):
+Its options: `--data-dir DIR` (another data folder), `--envs-dir DIR` (another settings folder), `--java-home DIR`, `--wheels FOLDER`
+(the offline wheel pack), `--index` (pip may use your package index). **You should see** (a first run on a clone; `ok` lines for what was already in place):
 
 ```text
 Drishti setup on linux
@@ -251,7 +254,8 @@ Drishti setup on linux
   [todo] server jar (<home>/lib) none in <home>/lib yet: python tools/drishti.py build jar
   [  ok] your jars (lib/ext)    /home/you/IdeaProjects/drishti-platform/drishti/lib/ext  (JDBC drivers, connector plugins: drishti.lib.path; kept on an upgrade)
   [made] JVM options            /home/you/drishti-envs: jvm-demo.args, jvm-qa.args, jvm-samples.args  (the IDE server launchers' @files; data folder from dev.ini)
-  [made] console .venv          /home/you/IdeaProjects/drishti-platform/drishti/drishti-console/.venv/bin/python
+  [made] libraries              /usr/bin/python3: what was missing installed from /home/you/drishti-wheels (the Lake wheel first)
+  [made] drishti.python         drishti.python=/usr/bin/python3
 
 Environment variables seen:
   DRISHTI_HOME             -
@@ -285,8 +289,8 @@ one have every option.
 **1 · Get the release.** Unpack the release ZIP (it carries the server jar in `lib/`), or get the platform's source and build it (JDK 21
 only; every repository carries Maven as `mvnw`). The source is five repositories (and the index repository) under one folder, `~/IdeaProjects/drishti-platform/`
 (Windows `C:\Users\you\IdeaProjects\drishti-platform\`): download the source bundle from the index repository's release, or
-`git clone https://github.com/drishti-platform/drishti-platform.git` into that folder and run `clone_all.py --release i7f`; then
-`build_all.py --release i7f` installs the products from their tags in order (tools, Rachana, Lake) and runs the whole Drishti build and its tests (to build only the jar, `build all` below). The steps have one home,
+`git clone https://github.com/drishti-platform/drishti-platform.git` into that folder and run `clone_all.py --release i7g`; then
+`build_all.py --release i7g` installs the products from their tags in order (tools, Rachana, Lake) and runs the whole Drishti build and its tests (to build only the jar, `build all` below). The steps have one home,
 [QUICKSTART_DEVELOPERS.md sections 1 and 2](QUICKSTART_DEVELOPERS.md#1-get-the-code-and-set-up-the-machine); the versions that go together are in the index
 repository's [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md). Then, in the `drishti` folder:
 
@@ -308,11 +312,11 @@ You should see Maven's progress, then `lib/drishti-server-<version>-exec.jar` an
 **3 · The demo lake** (about 15 minutes; or skip it and start without `--demo` to see the packs' built-in samples, [6.1](#61-the-demo-on-and-off-on-a-clean-data-folder)):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java
+python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java
 ```
 
 ```powershell
-drishti-console\.venv\Scripts\python.exe tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
+py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
 ```
 
 You should see `lake writer: java (asked for); 4 datasets at a time`, a line per table, then `Demo lake ready: …: <n> tables, 60 business
@@ -358,7 +362,7 @@ runs Drishti. It holds:
   config/                      the kernel's packs, lakes, module switches, lenses, engines, settings examples
   modules/                     the modules (the server refuses to start without this folder)
   tools/                       drishti.py (every command) and what it runs
-  drishti-console/             the console's code and requirements.txt (its .venv is made on the machine)
+  drishti-console/             the console's code and requirements.txt (the libraries go into the machine's Python: setup)
   data/testdata/               the committed test data the demo lake is built from
   deploy/, docs/, LICENSE, CHANGELOG.md, RELEASE_NOTES.md, THIRD-PARTY-NOTICES.md
 ```
@@ -385,22 +389,21 @@ or the scheduled task's env-file.
 ([5.1](#51-the-settings-file)). The secrets go into an env-file only the service account can read (`chmod 600`; on Windows the folder's
 permissions), or a second settings file (`secrets.ini`) given last: never into `config/` or git ([7.4](#74-the-secrets-in-an-env-file)).
 
-**6 · The console's environment.** `requirements.txt` installs Drishti Lake's Python wheel from `/opt/drishti/lib/wheels` (Windows `C:\drishti\lib\wheels`): the exact
+**6 · The libraries** (Windows: into the Python Drishti runs with, never a `.venv`; Linux: `drishti-console/.venv`, or `--system`). `requirements.txt` installs Drishti Lake's Python wheel from `/opt/drishti/lib/wheels` (Windows `C:\drishti\lib\wheels`): the exact
 wheel `lib/lake-wheel.pin` names (Lake ref, version, SHA-256). The release bundle does not carry it (it archives the tags, and git ignores `lib/wheels`): build it from the tag with
 `uv build --wheel <drishti-lake checkout at the pinned tag>/python --out-dir lib/wheels` (the build is reproducible), and check it with
-`python tools/lake/lakewheel.py` (exit 0 and `(ok)`). Then:
+`python tools/lake/lakewheel.py` (exit 0 and `(ok)`). Then, with the offline wheel pack unzipped into `~/drishti-wheels`:
 
 ```bash
-python3 -m venv /opt/drishti/drishti-console/.venv
-/opt/drishti/drishti-console/.venv/bin/python -m pip install -r /opt/drishti/drishti-console/requirements.txt
+python3 /opt/drishti/tools/drishti.py setup            # drishti-console/.venv with the libraries (from ~/drishti-wheels); drishti.python written
 ```
 
 ```powershell
-py -m venv C:\drishti\drishti-console\.venv
-C:\drishti\drishti-console\.venv\Scripts\python.exe -m pip install -r C:\drishti\drishti-console\requirements.txt
+py C:\drishti\tools\drishti.py setup
 ```
 
-pip ends with `Successfully installed …` (through the company's mirror: `%APPDATA%\pip\pip.ini`, `~/.config/pip/pip.conf`).
+`[made] libraries` (or `[  ok]`) says they are in place. With no wheel pack, `setup --index` installs from the company's mirror
+(`%APPDATA%\pip\pip.ini`, `~/.config/pip/pip.conf`).
 
 **7 · The data.** Build the demo lake ([section 6](#6-build-the-demo-lake)), or point the lakes at your business lake in the settings
 file (`[lake.<name>]` `root=`, [5.1](#51-the-settings-file)) and load your files ([section 12](#12-offline-qa-with-your-own-trade-files)).
@@ -445,7 +448,7 @@ the jar into `<drishti>/lib` (removing an older server jar there) and the packag
 | `deploy/jvm/server-service.args` | the service unit's JVM options (generated from the function `start server` runs), copied to `<drishti>/lib/server.args` |
 | `modules/` | the modules (banking, capital markets, economy, market data, trading and one per trading system): their packs, connector templates, Sutras and help. The server refuses to start without this folder |
 | `config/` | the kernel's packs, the lakes, the module switches, lenses, engines, tables, BI files and the example settings files (`config/settings.examples/`): the site's configuration |
-| `drishti-console/` | the console's code and `requirements.txt` (its `.venv` is made on the machine, never copied) |
+| `drishti-console/` | the console's code and `requirements.txt` (the libraries go into the machine's Python: `setup`) |
 | `lib/lake-wheel.pin`, `lib/wheels/` | the pin of Drishti Lake's Python wheel (ref, version, SHA-256) and the wheel itself, which `requirements.txt` installs |
 | `tools/` | `drishti.py` (every command: setup, build, start, stop, status, lake, …) and what it runs |
 | `data/testdata/` | the committed test data the demo lake is built from (about 140 MB of `.jsonl.gz`) |
@@ -471,11 +474,11 @@ Compress-Archive C:\Users\you\drishti-release\drishti C:\Users\you\drishti-relea
 ```
 
 Unpack it anywhere (`C:\drishti`, `/opt/drishti`, `/home/you/IdeaProjects/drishti-platform/drishti`) and run `python3 tools/drishti.py setup` there
-([1.6](#16-the-settings-file-and-drishtipy-setup)): it makes the console's environment (`drishti-console/.venv`) with Python's own `venv`
-and `pip`, or `uv` when installed. Every command finds the install folder from its own place (`tools/..`), not from where it is started.
-**You should see** `drishti-console/.venv/bin/python tools/drishti.py doctor` (Windows
-`drishti-console\.venv\Scripts\python.exe tools\drishti.py doctor`) end with `doctor: all clear` (it checks Java, the jar, the Python
-packages, the console's environment and the two ports). `start console` also makes `drishti-console/.venv` by itself on its first run.
+([1.6](#16-the-settings-file-and-drishtipy-setup)): it installs the libraries from the offline wheel pack (Windows: into the Python you run it with, never a
+`.venv`; Linux and macOS: into `drishti-console/.venv`, which it makes). Every command finds the install folder from its own place (`tools/..`), not from where it is started.
+**You should see** `python3 tools/drishti.py doctor` (Windows
+`py tools\drishti.py doctor`) end with `doctor: all clear` (it checks Java, the jar, the Python
+packages and the two ports). `start console` never installs anything: a Python lacking a library is refused with the `setup` line.
 
 ### 4.1 Upgrading an older install: start from clean state
 
@@ -617,7 +620,7 @@ The rule in full: [KERNEL_AND_MODULES.md section 18.10](architecture/KERNEL_AND_
 prints each table's folder under your `drishti.data.dir`:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake check
+$ python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake check
   note  demo/reference.legal-entity: no table yet at /home/you/IdeaProjects/drishti-platform/drishti/data/delta/demo/reference/legal-entity (a writer creates it as the lake file says)
   …
 lake check: 9 lakes, 0 errors
@@ -657,12 +660,12 @@ a release already carries it.
 
 ```bash
 cd /home/you/IdeaProjects/drishti-platform/drishti
-drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java
+python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java
 ```
 
 ```powershell
 cd C:\Users\you\IdeaProjects\drishti-platform\drishti
-drishti-console\.venv\Scripts\python.exe tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
+py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
 ```
 
 **How many at a time.** The loader writes several datasets at once, each in a Java process of its own:
@@ -678,7 +681,7 @@ Windows** the jobs run one after another (Python cannot fork there), so `--jobs`
 each table is still written by every core.
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java --jobs 3 --memory-mb 12288
+python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java --jobs 3 --memory-mb 12288
 ```
 
 **Which Java.** The one order of every command: `--java FILE` (the `java` executable), `--java-home DIR`, `drishti.java.home` in the settings file
@@ -710,7 +713,7 @@ nothing is written to `config/connectors/`. It takes about 15 minutes with 4 job
 what the server will read matches the disk:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake check
+$ python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake check
   …
 lake check: 9 lakes, 0 errors
 ```
@@ -744,7 +747,7 @@ environment. This section is the one place for the full list of options; `--help
 | Command | What it does |
 |---|---|
 | `start server` | finds Java 21 or newer ([the one order](#15-environment-variables)) and the server jar in `<drishti>/lib`, sets the temporary folder, the memory settings and the logs under the data folder, starts the server (in the foreground, or in the background with `--background`), waits for `/actuator/health` and prints the address other machines open. With `--node` it starts a node of a cluster |
-| `start console` | finds the console's Python (`DRISHTI_PYTHON`, else `drishti-console/.venv`, made on first use), points the console at the server (or a cluster's entry nodes), waits for `/healthz` and prints the address people open |
+| `start console` | finds the one Python (`DRISHTI_PYTHON`, else `drishti.python` of the settings file, else on Linux and macOS a `drishti-console/.venv` setup made, else the Python running `drishti.py`; start never makes one), refuses it with the missing list and the `setup` line when it lacks a library (before anything is made; `start all` asks before the server starts), points the console at the server (or a cluster's entry nodes), waits for `/healthz` and prints the address people open |
 | `stop server` | stops the server (or one node, or every node) **by its pid file only**, never by name, and only when the process with that id is ours (its full command line holds `-Ddrishti.data.dir=` with the pid file's data folder; on Windows read with PowerShell's `Get-CimInstance`, else `wmic`), so a reused process id never stops another JVM: the server is asked to stop itself over HTTP (`POST /launcher/stop` from this machine with the key of the pid file, the same graceful stop on every OS), forced after a timeout (SIGKILL; Windows `taskkill /F /PID`); removes the pid file. `stop console` is the same |
 | `stop console` | the same for the console |
 | `status` | the resolved install, data and modules folders and Java, each with where it came from; then every process this machine started with `drishti.py start`: pid, running or a stale pid, port, whether its health URL answers, its distribution and LAN address |
@@ -795,9 +798,7 @@ command) adds the install's `config/profiles/<NAME>.ini` after them ([1.6](#16-t
 | `--data-dir DIR` | as for the server | the data folder |
 | `--env-file FILE` | none | `KEY=VALUE` lines (the token and session secrets, the same as the servers') |
 | `--demo` | off | the demo profile's console keys (`[console.auth]`: sign-in on, plain-http cookies) with **development secrets: not for production** |
-| `--python FILE` | the Python running the command | the Python 3.11+ that makes `drishti-console/.venv` when `uv` is not installed |
 | `--distribution NAME`, `--name NAME` | the server's; none | the distribution this console shows; a name when several consoles run from one data folder ([7.7](#77-starting-a-white-labelled-instance)) |
-| `--reinstall` | off | remake `drishti-console/.venv` (after `drishti-console/requirements.txt` changed) |
 | `--background`, `--wait SECONDS` | off, `90` | detach; how long to wait for `/healthz` |
 
 **`stop`, `status`, `start all` and the cluster options**
@@ -939,7 +940,7 @@ Blank lines and `#` comments are allowed, as is a leading `export`; one pair of 
 ### 7.5 Without the commands
 
 Under a service manager (section 8), or to see exactly what runs: `start server` starts `java -Djava.io.tmpdir=<data>/tmp/server -Xmx… -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError … -Ddrishti.data.dir=<data> [-Ddrishti.settings.file=<files>] -jar <drishti>/lib/drishti-server-<version>-exec.jar --server.port=<port>`
-with the environment above (`DRISHTI_HOME`, `DRISHTI_MODULES_HOME` among it), and `start console` runs `drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=<port>` with
+with the environment above (`DRISHTI_HOME`, `DRISHTI_MODULES_HOME` among it), and `start console` runs `<drishti.python> drishti-console/run_drishti_web.py --server.port=<port>` with
 `DRISHTI_BACKEND_URLS`. The first lines each command prints say which jar, Java, port, packs and folders it used.
 
 | Port | Who calls it | Change with |
@@ -1058,7 +1059,7 @@ The same four steps from a terminal:
 ```bash
 cd /home/you/IdeaProjects/drishti-platform/drishti
 python3 tools/drishti.py build all
-drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java
+python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake demo --engine java
 python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini start all --demo
 python3 tools/drishti.py status
 ```
@@ -1066,7 +1067,7 @@ python3 tools/drishti.py status
 ```powershell
 cd C:\Users\you\IdeaProjects\drishti-platform\drishti
 py tools\drishti.py build all
-drishti-console\.venv\Scripts\python.exe tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
+py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini lake demo --engine java
 py tools\drishti.py --settings C:\Users\you\drishti-envs\dev.ini start all --demo
 py tools\drishti.py status
 ```
@@ -1138,7 +1139,7 @@ launchctl load ~/Library/LaunchAgents/com.example.drishti-server.plist
 launchctl list | grep drishti                                    # a process id in the first column
 ```
 
-The console's plist runs `/Users/you/drishti/drishti-console/.venv/bin/python /Users/you/drishti/drishti-console/run_drishti_web.py` the same way. Docker and Kubernetes:
+The console's plist runs `/usr/local/bin/python3.13 /Users/you/drishti/drishti-console/run_drishti_web.py` (the Python `setup` wrote as `drishti.python`) the same way. Docker and Kubernetes:
 [OPERATIONS_GUIDE.md › Docker Compose](guides/OPERATIONS_GUIDE.md#54-docker-compose).
 
 ## 9. Verify, step by step
@@ -1208,10 +1209,10 @@ once) into `~/drishti-token`.
 **From the command line:**
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://<host>:18480 --token-file ~/drishti-token
+$ python3 tools/drishti.py doctor --server http://<host>:18480 --token-file ~/drishti-token
 GREEN  java                    …/bin/java: Java 21.0
 GREEN  server jar              <drishti>/lib/drishti-server-<version>-exec.jar (version <version>)
-GREEN  python                  <drishti>/drishti-console/.venv/bin/python: Python 3.13.15
+GREEN  python                  /usr/bin/python3.13: Python 3.13.15
 …
 GREEN  server                  http://<host>:18480: version <version>, java 21.0.12.1, status UP
 GREEN  token                   accepted; this token '…' acts as drishti-dev-admin: scopes read
@@ -1253,7 +1254,7 @@ day (or a week, a month end, a date you pick) in steps that add up ([VAR_GUIDE.m
 **From the command line:**
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py var show BANK
+$ python3 tools/drishti.py var show BANK
 VAR BANK  ·  Drishti Bank  ·  node  ·  2026-11-06
   horizon    1-day   (1-day · 99% VaR, ES 97.5% · historical simulation)
   VaR 99%   167,372,692 USD
@@ -1324,7 +1325,7 @@ mode: replace
 **From the command line:**
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py feed list
+$ python3 tools/drishti.py feed list
 FEED                 LAKE           LOAD  SCHEDULE        LICENCE                             USE            DATASETS
 central-banks        worldlake      java  weekdays 18:15  FRED API terms (the default series  attribution    central-bank, rate-series
 funds                capitalmarket  java  daily 06:15     Public domain (U.S. Government wor  allowed        fund, fund-holder, index-funds
@@ -1333,7 +1334,7 @@ gleif                referencelake  java  daily 05:30     CC0 1.0 (attribution a
 …
 world-economy        worldlake      java  daily 06:45     World Bank CC BY 4.0; IMF terms (n  internal only  economy, macro-indicator, …
 yahoo-prices (off)   capitalmarket  java  weekdays 22:30  Yahoo terms of service (personal u  internal only  price-history
-$ drishti-console/.venv/bin/python tools/drishti.py feed run gleif --dry-run
+$ python3 tools/drishti.py feed run gleif --dry-run
 dry run: feed gleif (GLEIF legal entities, ownership and identifier mappings), business date 2026-11-08, window 2026-10-09..2026-11-08, datasets lei-entity, lei-relationship, lei-mapping -> lake referencelake by java
   dry run: gleif, sources golden, api, mapping
     golden (CC0 1.0 (attribution appreciated); committable): 3 request(s) or file(s), cache <drishti>/data/datafeeds/sources/cache/gleif
@@ -1409,7 +1410,7 @@ newest date of the demo lake's scenario PVs, `2026-11-13`; use a date your lake 
 **1 · See what it would delete** (nothing changes):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake delete --lake demo --kind scenario-pv --date 2026-11-13 --dry-run
+python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake delete --lake demo --kind scenario-pv --date 2026-11-13 --dry-run
 ```
 
 ```powershell
@@ -1428,7 +1429,7 @@ A date the table does not hold is refused, nothing deleted: *2026-11-15 is not i
 scope `loads:write`); the command asks you to type the table's name (`risk/scenario-pv`) unless you give `--yes`:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake delete --lake demo --kind scenario-pv --date 2026-11-13 --server http://<host>:18480 --token-file ~/drishti-token
+python3 tools/drishti.py --settings /home/you/drishti-envs/dev.ini lake delete --lake demo --kind scenario-pv --date 2026-11-13 --server http://<host>:18480 --token-file ~/drishti-token
 ```
 
 ```powershell
@@ -1452,7 +1453,7 @@ captured for 2026-11-13 stay as history (the node history still shows them); the
 token) the server reaches the same state by itself a few seconds later (the connector's next refresh; at most the version check, 30 s).
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py var show BANK --date 2026-11-13
+$ python3 tools/drishti.py var show BANK --date 2026-11-13
 VAR BANK  ·  Drishti Bank  ·  node  ·  2026-11-12
   …
   warning: scenario P&L for 2026-11-13 not loaded — showing 2026-11-12
@@ -1585,12 +1586,12 @@ url: http://<host-a>:18480
 ```bash
 export DRISHTI_NET_SECRET=<the cluster key>
 net=/srv/drishti/data/nodes/drishti-b/net
-drishti-console/.venv/bin/python tools/drishti.py net set node.node-id drishti-b --dir $net
-drishti-console/.venv/bin/python tools/drishti.py net set node.secret '${DRISHTI_NET_SECRET}' --dir $net
-drishti-console/.venv/bin/python tools/drishti.py net set node.advertise-url http://<host-b>:18480 --dir $net
-drishti-console/.venv/bin/python tools/drishti.py net set node.enabled true --dir $net
-drishti-console/.venv/bin/python tools/drishti.py net add-peer drishti-a <host-a>:18480 --dir $net
-drishti-console/.venv/bin/python tools/drishti.py net check --dir $net             # exit 0: every file would be taken
+python3 tools/drishti.py net set node.node-id drishti-b --dir $net
+python3 tools/drishti.py net set node.secret '${DRISHTI_NET_SECRET}' --dir $net
+python3 tools/drishti.py net set node.advertise-url http://<host-b>:18480 --dir $net
+python3 tools/drishti.py net set node.enabled true --dir $net
+python3 tools/drishti.py net add-peer drishti-a <host-a>:18480 --dir $net
+python3 tools/drishti.py net check --dir $net             # exit 0: every file would be taken
 ```
 
 **In the UI** (once a server runs): **Admin → Cluster → Files** (open `node.yaml`, edit, **Check**, **Save**), **Admin → Cluster → Members →
@@ -1719,7 +1720,7 @@ hash ring is green.
 **From the command line:**
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py net members --server http://<host-a>:18480 --token-file ~/drishti-token
+$ python3 tools/drishti.py net members --server http://<host-a>:18480 --token-file ~/drishti-token
 3 member(s); this node drishti-a
   node                   state  address                    version   tags  latency  incarnation
   drishti-a (this node)  alive  http://<host-a>:18480      <version>       -        1
@@ -1831,14 +1832,14 @@ The rest: [CLUSTER_GUIDE.md › When something is wrong](guides/CLUSTER_GUIDE.md
 A demo or QA rehearsal on a machine **without internet access** (pip and Maven through the company's mirror; on Windows no `.exe`
 placed on the machine), showing ENDUR trades from the bank's own JSON Lines files beside the synthetic CALYPSO and MUREX trades and all
 the supporting data, the committed quotes-and-news snapshot (no website is contacted) and the world economy data. Do it the day before
-the demo. The commands are PowerShell lines; on Linux and macOS the same commands run with `drishti-console/.venv/bin/python` and `/` paths.
+the demo. The commands are PowerShell lines; on Linux and macOS the same commands run with `python3` and `/` paths.
 
 **Your real trade files are confidential.** Keep them **outside** the release folder (below `<private>`, for example
 `C:\Users\<you>\drishti-private\endur\`); never copy them into the repository. Drishti reads them where they are. Every command is one
 PowerShell line, after once:
 
 ```powershell
-$py = "<drishti>\drishti-console\.venv\Scripts\python.exe"; $tools = "<drishti>\tools"
+$py = "py"; $tools = "<drishti>\tools"
 ```
 
 ### 12.1 Set up once
@@ -1946,7 +1947,8 @@ Afterwards stop both, and check that `git status` (in a clone) shows nothing new
 |---|---|
 | `Drishti needs Java 21 or newer` (build or start) | `JAVA_HOME` (or `DRISHTI_JAVA_HOME`, or `--java-home`) at a JDK 21 |
 | PowerShell says `lake` is not recognized | `lake …` is a sub-command: `& $py "$tools\drishti.py" lake …` |
-| `python3.13 -m venv` fails on Linux with *ensurepip is not available* | `sudo apt install python3.13-venv`, or use `uv venv` |
+| setup says *this Python is managed by the operating system* (Linux `python3`, PEP 668), or *the wheel pack is for Python 3.13; this Python is 3.14* | install a dedicated Python 3.13 (for example under `/opt/python3.13`) and run `setup` with it; Drishti never uses `--break-system-packages` and never makes a venv |
+| `start` refuses: *the console's Python ... lacks libraries* | `python3 tools/drishti.py setup` with that Python (the wheel pack in `~/drishti-wheels`, or `--wheels <folder>`) |
 | `Port 18480 (or 17480) is already in use` | another copy is running: `python3 tools/drishti.py status` shows it; stop it (`python3 tools/drishti.py stop server`, `systemctl stop`, `launchctl unload`); more in [7.6](#76-when-a-command-stops-with-an-error) |
 | The console shows *Server not reachable* | the server is not up yet, or `--server` names the wrong address; `curl http://<host>:18480/actuator/health` |
 | Every page empty; the console's log says `DRS-5010 missing bearer token` | the console and the server need the same `DRISHTI_TOKEN_SECRET`, and `DRISHTI_AUTH_ENABLED=true` on the console |

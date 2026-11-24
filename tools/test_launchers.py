@@ -38,7 +38,7 @@ import procs  # noqa: E402
 import serverstart  # noqa: E402
 import settingsfile  # noqa: E402
 
-LAUNCHERS = sorted((ROOT / "run-configs").glob("*.run.xml"))
+LAUNCHERS = sorted((ROOT / "run-configs").glob("*.run.xml")) + sorted((ROOT / launchers.FOLDERS["pycharm"]).glob("*.run.xml"))
 
 
 def conf(f: Path) -> ET.Element:
@@ -142,8 +142,10 @@ def test_g7_paths_follow_the_data_folder_and_are_quoted():
         o = {x.get("name"): x.get("value") or "" for x in c.findall("option")}
         text = ET.tostring(c, encoding="unicode")
         if c.get("type") == "PythonConfigurationType":
-            assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$", f.name           # the one project: the repository root
-            assert "$PROJECT_DIR$/.." not in text, f"{f.name}: $PROJECT_DIR$ is the repository root"
+            assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$/..", f.name        # PyCharm's project is drishti-console: the root is its parent
+            assert f.parent == ROOT / "drishti-console" / "run-configs", f"{f.name}: a Python launcher is PyCharm's (drishti-console/run-configs)"
+        else:
+            assert f.parent == ROOT / "run-configs", f"{f.name}: a Java launcher is IntelliJ's (run-configs)"
         if c.get("type") == "JarApplication":
             assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$", f.name
         for value in (o.get("VM_PARAMETERS", ""), o.get("PARAMETERS", "")):
@@ -153,8 +155,8 @@ def test_g7_paths_follow_the_data_folder_and_are_quoted():
 
 
 def test_the_argv_helper_turns_a_python_launcher_into_its_command_line(tmp_path):
-    cmd, env = launchers.argv(ROOT / "run-configs" / "Drishti run console (QA, port 17580).run.xml", ROOT, tmp_path)
-    assert cmd[1] == f"{ROOT.as_posix()}/drishti-console/run_drishti_web.py"
+    cmd, env = launchers.argv(ROOT / "drishti-console" / "run-configs" / "Drishti run console (QA, port 17580).run.xml", ROOT, tmp_path)
+    assert Path(cmd[1]).resolve() == (ROOT / "drishti-console" / "run_drishti_web.py").resolve()
     assert cmd[2:] == ["--settings", f"{tmp_path.as_posix()}/drishti-envs/dev.ini", "--profile", "qa"]
     assert env["PYTHONUNBUFFERED"] == "1"
 
@@ -202,7 +204,7 @@ def test_g3_every_pycharm_launcher_parses_with_the_real_command_line():
     spec.loader.exec_module(cli)
     import yaml
     console_keys = yaml.safe_load((ROOT / "drishti-console" / "config" / "application.yaml").read_text(encoding="utf-8"))
-    for f in sorted(p for p in (ROOT / "run-configs").glob("*.run.xml") if "PythonConfigurationType" in p.read_text(encoding="utf-8")):
+    for f in sorted(p for p in LAUNCHERS if "PythonConfigurationType" in p.read_text(encoding="utf-8")):
         words = shlex.split(_params(f))
         if words[:1] == ["setup"]:      # setup makes dev.ini: it names none (--settings would refuse a file that is not there yet)
             assert "--settings" not in words, f.name

@@ -217,8 +217,8 @@ figures). `terminal/_risk_elements.html` loads drishti-inputs. FRTB-SA's and SIM
 library's own two (a form's enum of more than three, the grid's select editor) are still native.
 
 ```bash
-DRISHTI_FIGURES_OUT=data/figures/before drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_var_family_figures_browser.py
-DRISHTI_FIGURES_BASELINE=data/figures/before drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_var_family_figures_browser.py
+DRISHTI_FIGURES_OUT=data/figures/before python3 -m pytest -q drishti-console/tests/test_var_family_figures_browser.py
+DRISHTI_FIGURES_BASELINE=data/figures/before python3 -m pytest -q drishti-console/tests/test_var_family_figures_browser.py
 ```
 
 **Open.** The exposure scope tree is still hand-built (not tree data yet); the scenario matrix's date headings lose their hover note (in the column

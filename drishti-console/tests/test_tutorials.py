@@ -108,7 +108,7 @@ def test_every_picture_a_tutorial_shows_is_there_and_is_an_image(doc):
     assert len(shown) >= 5, f"{doc.name} shows only {len(shown)} pictures"
     for rel in shown:
         f = (doc.parent / rel).resolve()
-        assert f.is_file(), f"{doc.name}: {rel} is missing: drishti-console/.venv/bin/python tools/docs/screenshots.py --guide {f.parent.name}"
+        assert f.is_file(), f"{doc.name}: {rel} is missing: python3 tools/docs/screenshots.py --guide {f.parent.name}"
         head = f.read_bytes()[:4]
         assert (head[:3] == b"\xff\xd8\xff" or head == b"\x89PNG") and f.stat().st_size > 2000, rel
 

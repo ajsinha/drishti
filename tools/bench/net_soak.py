@@ -338,7 +338,7 @@ class Soak:
     @staticmethod
     def python() -> str:
         """The console's Python (it has httpx, which users.py needs), else this one."""
-        py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
+        py = Path(os.environ.get("DRISHTI_PYTHON") or _sys.executable)
         return str(py if py.exists() else sys.executable)
 
     def console(self) -> str:

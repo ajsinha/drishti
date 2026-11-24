@@ -280,7 +280,7 @@ def commands(plan: Plan, root: Path = ROOT) -> list[tuple[str, list[str]]]:
         wanted = [m for m in sorted(plan.modules) if m in mods]
         cmds.append(("maven", ["./mvnw", "-o", "-q", "clean", "verify", "-T", "1C", "-pl", ",".join(wanted), "-am", "-Dtest=" + test_classes(set(wanted), root),
                                "-Dsurefire.failIfNoSpecifiedTests=false"]))
-    py = "drishti-console/.venv/bin/python"
+    py = os.environ.get("DRISHTI_PYTHON") or "drishti-console/.venv/bin/python"     # as tools/drill.sh
     if plan.everything or plan.all_console:
         targets = [CONSOLE_TESTS]
     else:

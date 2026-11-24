@@ -13,13 +13,16 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 
-  Drishti: build demo lakes: the demo lakes with the Java loader of the jar in `lib/`.
-  Use it when: after a build, with the server stopped.
+  Drishti: check environment: this machine and the server on 18480 (without a token it says how to make one).
+  Use it when: something does not start or answer.
+  PyCharm: open drishti/drishti-console as the project (the install folder is $PROJECT_DIR$/..); it runs on the project
+  interpreter, the one Python Drishti runs with (never a venv).
+  The profile config/profiles/demo.ini (after your dev.ini) holds its settings.
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti: build demo lakes" type="PythonConfigurationType" factoryName="Python" folderName="Drishti-python">
-    <module name="drishti" />
+  <configuration default="false" name="Drishti: check environment" type="PythonConfigurationType" factoryName="Python" folderName="Drishti-python">
+    <module name="drishti-console" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -27,12 +30,12 @@
       <env name="PYTHONUNBUFFERED" value="1" />
     </envs>
     <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
-    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; lake demo --engine java" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
+    <option name="PARAMETERS" value="--settings &quot;$USER_HOME$/drishti-envs/dev.ini&quot; --profile demo doctor" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

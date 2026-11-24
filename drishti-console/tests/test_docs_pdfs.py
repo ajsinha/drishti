@@ -34,7 +34,7 @@ spec.loader.exec_module(md_to_pdf)
 def test_every_pdf_is_current(source):
     assert source.is_file(), source
     why = md_to_pdf.stale(source)
-    assert not why, why + ": drishti-console/.venv/bin/python tools/docs/md_to_pdf.py"
+    assert not why, why + ": python3 tools/docs/md_to_pdf.py"
 
 
 @pytest.mark.parametrize("source", md_to_pdf.PDFS, ids=lambda p: p.name)

@@ -17,7 +17,7 @@ their format, the command each gets (the floor of the risk domains raised and pa
 a dry run), the ownership rule, the history; and, where Java and the server's exec jar (or LAKE_CLASSPATH) are at hand, a real
 table built with lake build --format iceberg, an orphan listed by a dry run and removed by the run.
 
-    drishti-console/.venv/bin/python -m pytest tools/lake/test_maintain_iceberg.py -q
+    python3 -m pytest tools/lake/test_maintain_iceberg.py -q
 """
 import io
 import json
