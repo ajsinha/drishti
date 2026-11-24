@@ -17,7 +17,7 @@ name: fast
 # from THEIR release tags (never from Maven Central or PyPI: the owner publishes nowhere); only third-party libraries come from Central.
 # What stays in the drill: the full Java test suite (./mvnw verify), the browser tests and the console's whole test suite.
 on:
-  push: { branches: [develop, main, 'release/**', 'i7k/**'] }
+  push: { branches: [develop, main, 'release/**', 'i7k/**', 'i7l/**'] }
   pull_request:
 concurrency: { group: 'fast-${{ github.ref }}', cancel-in-progress: true }
 env:

@@ -18,7 +18,7 @@ name: windows
 # start server, status, stop server) with the server on a generated lake asked for a view, a search and a past business
 # date. Testcontainers tests skip themselves (no Docker on Windows runners).
 on:
-  push: { branches: [develop, main, 'release/**', 'i7k/**'] }
+  push: { branches: [develop, main, 'release/**', 'i7k/**', 'i7l/**'] }
   pull_request:
   workflow_dispatch:
 jobs:
