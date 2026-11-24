@@ -5838,7 +5838,7 @@ Each example in `docs/guides/examples/` opens as your own copy (*Create → Exam
 
 Select **terms** (a `kv`) and **ops** (a `status`). Exercise: drag the field `currency` onto **terms** and watch a new line appear; click the **title line** and change the pill; click the **strip** and add a figure by dropping `maturityDate` on it.
 
-#### Tables, the tree table and pivot row groups: [tree-table](examples/README.md#tree-table), [pivot-row-groups](examples/README.md#pivot-with-row-groups)
+#### Tables, the tree table and pivot row groups: [tree-table](examples/README.md#tree-table), [pivot-row-groups](examples/README.md#pivot-row-groups)
 
 ![A table whose rows hold child rows](img/designer/31-family-tables.jpg)
 
@@ -5866,7 +5866,7 @@ The candlestick needs `open`, `high`, `low` and `close`; the surface needs `rows
 
 Exercise: change the histogram's `bins`; drag the gauge's right edge to make it narrower and watch the others reflow.
 
-#### P&L, waterfall and horizontal bars: [pnl-explain](examples/README.md#pl-explain)
+#### P&L, waterfall and horizontal bars: [pnl-explain](examples/README.md#pnl-explain)
 
 ![A P&L waterfall and sensitivity bars](img/designer/36-family-pnl.jpg)
 

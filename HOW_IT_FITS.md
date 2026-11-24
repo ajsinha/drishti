@@ -389,7 +389,7 @@ exists and the next ones only narrow it.
 | To understand | Read |
 |---|---|
 | the full design of the kernel, modules, loading, data needs, placement and the distribution file | [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) |
-| each distribution, what is shared, and how to start it | [DISTRIBUTIONS.md](docs/architecture/DISTRIBUTIONS.md) |
+| each distribution, what is shared, and how to start it | [DISTRIBUTIONS.md](docs/architecture/KERNEL_AND_MODULES.md) |
 | building a module: the SDK, the archetype, the three ways to pack, the genomics sample step by step | [DEVELOPER_GUIDE.md section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk) |
 | modules on or off, the `modules/` and `lib/` folders, data bindings, white label, Admin → Modules | [ADMIN_GUIDE.md section 22](docs/guides/ADMIN_GUIDE.md#22-modules-on-or-off) to [section 25](docs/guides/ADMIN_GUIDE.md#25-modules) |
 | several servers as one, placement and installing across a cluster | [CLUSTER_GUIDE.md section 1.9](docs/guides/CLUSTER_GUIDE.md#19-module-placement) and [1.10](docs/guides/CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster) |

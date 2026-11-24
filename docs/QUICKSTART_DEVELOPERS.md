@@ -139,7 +139,7 @@ python3 build_all.py --release <release> [--skip-tests] [--repo-local]       # W
 `build_all.py` checks that each repository is at the release's tag (it stops and says so if not: `clone_all.py --release <release>` puts them there), then runs
 `mvnw -B clean install` in `drishti-tools/java`, `drishti-rachana/java` and `drishti-lake/java` in that order (their tests included unless `--skip-tests`),
 and then `mvnw -B clean verify` in `drishti`: the whole Drishti suite, not `build all`. It repeats what is already built (nothing is skipped), builds neither the
-Elements bundles (Drishti vendors them, [ELEMENTS_IN_DRISHTI.md](architecture/ELEMENTS_IN_DRISHTI.md)) nor the Lake wheel, and does not start Drishti.
+Elements bundles (Drishti vendors them, [ELEMENTS_IN_DRISHTI.md](architecture/THIN_CONSOLE_DESIGN.md)) nor the Lake wheel, and does not start Drishti.
 `--repo-local` installs into `<parent>/.m2-drishti` instead of `~/.m2`; `--dry-run` prints the commands. For the Drishti jar and modules alone, with the products already
 installed, use `python tools/drishti.py build all` below. By hand, per repository, the same order (each repository's README, section *Build and run in the IDE*,
 names its launchers):
@@ -243,7 +243,7 @@ Everything the two write at run time is under `data/` (git-ignored except `data/
 ### Starting a white-labelled instance
 
 The same build starts as **Drishti Risk**, **Drishti Finance**, **Drishti Genomics** or **Drishti All** with one argument
-(`config/distributions/drishti.<name>.yaml`; [DISTRIBUTIONS.md](architecture/DISTRIBUTIONS.md)). Without it you run Drishti All, every
+(`config/distributions/drishti.<name>.yaml`; [DISTRIBUTIONS.md](architecture/KERNEL_AND_MODULES.md)). Without it you run Drishti All, every
 module: what the drill, the page walk and the tutorials use.
 
 | Distribution | Start (Windows: `py -3.13 tools\drishti.py ...`) | You should see |

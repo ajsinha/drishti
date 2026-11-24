@@ -1986,7 +1986,7 @@ shipped, read-only files. The BI powers are granted on roles, see below.
 
 ### `drishti.bi.query` — the dataset query engine (phase 2)
 
-The embedded DuckDB that answers dataset queries ([MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads), [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md) section 13) and the layers it keeps. It starts its connection on the first query. Every limit
+The embedded DuckDB that answers dataset queries ([MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads), [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md) section 13) and the layers it keeps. It starts its connection on the first query. Every limit
 answers with its own code (the codes are in [API_REFERENCE.md](../guides/API_REFERENCE.md#4-datasets-and-the-query-engine-apiv1bi)). Defaults are what a laptop can carry.
 
 | Key | Default | Meaning |
@@ -2053,7 +2053,7 @@ A **Python dataset** (or a Python-driven table) is made by a Python Transform, r
 
 ### `drishti.bi.refresh` — scheduled dataset refresh
 
-A dataset's `refresh:` schedule rebuilds its columns and rollup layers ([MODELS_AND_DATASETS_FOR_REPORTS.md › Datasets: the YAML, the expression language and the security rules, section 7.2](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#16-layers-rollups-and-refresh)); a failed run is retried with the shared retry policy, area `bi` (`drishti.retry.bi.*`, falling back to `drishti.retry.*`: see Retries above).
+A dataset's `refresh:` schedule rebuilds its columns and rollup layers ([MODELS_AND_DATASETS_FOR_REPORTS.md › Datasets: the YAML, the expression language and the security rules, section 7.2](../guides/bi/TABLES_AND_MODELS.md#16-layers-rollups-and-refresh)); a failed run is retried with the shared retry policy, area `bi` (`drishti.retry.bi.*`, falling back to `drishti.retry.*`: see Retries above).
 Times are in `drishti.business-date.zone`, business days by `drishti.business-date.calendar`.
 
 | Key | Default | Meaning |
@@ -2084,7 +2084,7 @@ the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring
 
 ### `drishti.bi.live` — streaming BI (phase 5)
 
-Live tables kept in memory by the engine and the streams that tell browsers they changed ([MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#17-live-tables), [LIVE_REPORTS_AND_BOARDS.md](../guides/bi/LIVE_REPORTS_AND_BOARDS.md#11-a-live-report), [LIVE_REPORTS_AND_BOARDS.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/bi/LIVE_REPORTS_AND_BOARDS.md#2-boards-report-pages-of-live-tiles),
+Live tables kept in memory by the engine and the streams that tell browsers they changed ([MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/TABLES_AND_MODELS.md#17-live-tables), [LIVE_REPORTS_AND_BOARDS.md](../guides/bi/LIVE_REPORTS_AND_BOARDS.md#11-a-live-report), [LIVE_REPORTS_AND_BOARDS.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/bi/LIVE_REPORTS_AND_BOARDS.md#2-boards-report-pages-of-live-tiles),
 [README.md](../guides/bi/README.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds`, `bi.board.rotate_seconds` (Python runs on the server's compute pool: [NOTEBOOK_AND_PYTHON.md](../guides/bi/NOTEBOOK_AND_PYTHON.md#3-python-measures-and-visuals) section 9).
 
 | Key | Default | Meaning |
@@ -2100,7 +2100,7 @@ Live tables kept in memory by the engine and the streams that tell browsers they
 | `stale-after` | `30s` | A feed that pushes but has delivered nothing for this long is shown as **stale**. |
 | `max-streams` | `100` | Live report streams open at once on the server (`429 DRS-9051`). |
 | `max-streams-per-user` | `10` | Live report streams open at once for one person (`429 DRS-9051`). A browser holds one per distinct report on its open reports and boards. |
-| `incremental-aggregates` | `true` | The rollups a dataset declares over a live table are kept by group as rows change (sums and counts by difference; a lost minimum or maximum is read again for its group alone), and a query a rollup can answer reads them ([MODELS_AND_DATASETS_FOR_REPORTS.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#17-live-tables)). `false`: every measure of a live table is computed over its rows on each query. |
+| `incremental-aggregates` | `true` | The rollups a dataset declares over a live table are kept by group as rows change (sums and counts by difference; a lost minimum or maximum is read again for its group alone), and a query a rollup can answer reads them ([MODELS_AND_DATASETS_FOR_REPORTS.md › Datasets: the YAML, the expression language and the security rules, section 7.1](../guides/bi/TABLES_AND_MODELS.md#17-live-tables)). `false`: every measure of a live table is computed over its rows on each query. |
 
 <a id="drishtibimq--the-model-layer-and-the-model-query-language-22-wave-w1"></a>
 ### `drishti.bi.mq` — the model layer and the model query language

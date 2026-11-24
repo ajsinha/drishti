@@ -48,7 +48,7 @@ Where to read more, in the order a newcomer wants it:
 | For | Read |
 |---|---|
 | a tour of the pages and a walk-through with the samples in this folder | [docs/guides/bi/README.md](../../docs/guides/bi/README.md) (start here), [docs/tutorials/10-first-bi-report.md](../../docs/guides/bi/REPORTS.md#part-a--your-first-bi-report) |
-| the dataset and model formats (`datasets/`, `models/`) | [docs/guides/bi/README.md](../../docs/guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads) |
+| the dataset and model formats (`datasets/`, `models/`) | [docs/guides/bi/README.md](../../docs/guides/bi/TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads) |
 | the report format (`reports/`): a report names its model with `model: <name>@<major>` (a 2.1 live report still names a `dataset:`) | [docs/guides/bi/README.md](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) |
 | boards (`layout: board`) and the theme format (`themes/`) | [the report file](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#23-themes) |
 | publishing, review, certification and moving content between servers | [docs/guides/bi/README.md](../../docs/guides/bi/GOVERNANCE_AND_AI.md#2-publishing-and-governance-versions-review-certification-lineage-impact-environments) |

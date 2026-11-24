@@ -450,8 +450,8 @@ Twelve working Sutras with their data, introduced in [guides/examples/README.md]
 | [market-charts.md](guides/examples/README.md#market-charts) | Market data: daily bars, a line of closes and a volatility surface. |
 | [metric.md](guides/examples/README.md#metric) | A desk's headline numbers as big-number tiles: one large formatted, toned figure each, with a small change, a unit and a caption. |
 | [operations-status.md](guides/examples/README.md#operations-status) | The back office on one screen: where a trade stands and what comes next. |
-| [pivot-row-groups.md](guides/examples/README.md#pivot-with-row-groups) | A pivot whose `by` is a list: desks hold books, books hold product families, each level with a subtotal. |
-| [pnl-explain.md](guides/examples/README.md#pl-explain) | Where a trade's P&L came from, and how sensitive it is. |
+| [pivot-row-groups.md](guides/examples/README.md#pivot-row-groups) | A pivot whose `by` is a list: desks hold books, books hold product families, each level with a subtotal. |
+| [pnl-explain.md](guides/examples/README.md#pnl-explain) | Where a trade's P&L came from, and how sensitive it is. |
 | [relationships.md](guides/examples/README.md#relationships) | How entities relate: a group and its agreements as a graph, netting sets as tabs, and the entities a document refers to. |
 | [risk-distribution.md](guides/examples/README.md#risk-distribution) | How risk is spread: scenario P&L as a histogram with VaR lines, books as points, a limit as a dial. |
 | [tree-table.md](guides/examples/README.md#tree-table) | Tables and ladders whose rows hold their own children: an organisation of units, each with sub-units, to any depth. |

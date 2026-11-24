@@ -3774,7 +3774,7 @@ breadcrumb: [section 9.6](#96-drill-down-leg--cash-flow--resets),
 [levels](RACHANA_REFERENCE.md#levels-drill-down-level-by-level)).
 
 A pivot **aggregates** rows by fields you name; a tree table or `levels` **shows** a hierarchy the document already has. Runnable versions:
-[pivot-row-groups](examples/README.md#pivot-with-row-groups) and [tree-table](examples/README.md#tree-table). Do not confuse the **`pivot` panel kind** with the **`pivot:`
+[pivot-row-groups](examples/README.md#pivot-row-groups) and [tree-table](examples/README.md#tree-table). Do not confuse the **`pivot` panel kind** with the **`pivot:`
 option** that gives a table a user-driven Pivot.
 
 ## 22. Dates, live data, imperfect data and controls
@@ -4922,7 +4922,7 @@ this table is the map. Seven packs are on by default; the others are turned on b
 | `gleif` | `GLEIF` | — | `LEI` `LEIG` `LEIR` `LEIC` `LEIM` (off by default; with `us-equities` on, a company and its LEI link both ways) | `LEI 8I5DZWZKVSZI1NUHU748`, `LEIG ALL` | [gleif](../../config/packs/core/gleif/README.md) |
 | `funds` | `FUNDS` | — | `FUND` `HELD` `TRACK` (off by default, after `us-equities`; [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) | `FUND QQQ`, `HELD AAPL` | [funds](../../modules/capital-markets/packs/funds/README.md) |
 | `compute-demo` | `CMPD` | — | `PBOOK` `PSTRIP` `PSUM` `PSUMJ` (a sample pack for reactive connectors; [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)) | `PSUM …` | [compute-demo](../../config/packs/core/compute-demo/README.md) |
-| genomics showcase (genomics module) | `GENOMICS` `PROTENG` | — | `genomics-showcase` and `protein-engineering`: the showcase's synthetic cohort and protein campaign (off by default, read from the demo lake; [GENOMICS_SHOWCASE.md](../architecture/GENOMICS_SHOWCASE.md)) | `GWAS RESPONSE`, `PROTEIN HLXK7` | [genomics-showcase](../../modules/genomics/packs/genomics-showcase/README.md) |
+| genomics showcase (genomics module) | `GENOMICS` `PROTENG` | — | `genomics-showcase` and `protein-engineering`: the showcase's synthetic cohort and protein campaign (off by default, read from the demo lake; [GENOMICS_SHOWCASE.md](../../modules/genomics/docs/guide.md)) | `GWAS RESPONSE`, `PROTEIN HLXK7` | [genomics-showcase](../../modules/genomics/packs/genomics-showcase/README.md) |
 | public sector (economy module) | `WDEV` `CBNK` `STCAN` `OECDP` `ONEWS` `GDLT` | — | world development, central banks, national statistics, OECD, official news, GDELT events ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) | | [world-development](../../modules/economy/packs/world-development/README.md), [central-banks](../../modules/economy/packs/central-banks/README.md), [national-statistics](../../modules/economy/packs/national-statistics/README.md), [oecd](../../modules/economy/packs/oecd/README.md), [official-news](../../modules/economy/packs/official-news/README.md), [gdelt-events](../../modules/economy/packs/gdelt-events/README.md) |
 
 **Links between packs.** A `core` counterparty carries its country of risk and two link fields that open other packs when they are on: `ECONOMY`
@@ -5416,7 +5416,7 @@ drishti:
 ```
 
 A person with this role (and no other that opens trades) sees only SwapOne's trades in `TRD`, search and the blotter; a trade of another system is
-*not found*. Aggregates (VaR, BI totals) keep their own scope model ([ACCESS_MODEL.md section 10](../architecture/ACCESS_MODEL.md#10-row-rules)).
+*not found*. Aggregates (VaR, BI totals) keep their own scope model ([ACCESS_MODEL.md section 10](../architecture/KERNEL_AND_MODULES.md#10-row-rules)).
 
 You should see, signed in as that person, only `SW1-…` ids in `TRD`, and *not found* for a trade of another system.
 

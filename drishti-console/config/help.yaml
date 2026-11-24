@@ -27,13 +27,13 @@
 #           module is off for the person the page is not listed, searched or served (a module's own Help file: its pages are its own);
 # A group's words: the command words shown beside its title.
 # Every other document under docs/ (and the top-level *.md) is reachable unlisted at a slug made from its path
-# (docs/architecture/adr/016-one-console-many-servers.md -> /help/docs-architecture-adr-016-one-console-many-servers), in the section
+# (docs/architecture/DECISIONS.md -> /help/docs-architecture-decisions), in the section
 # documents: names for its top folder, so a link between documents always opens in the help centre (DOC-18; tests/test_help_links.py).
 
 # Addresses of pages that were merged into another page (the documentation consolidation): the old address goes to the new one, anchor and all.
 moved:
   pvf-loading: bank-data-guide
-  data-samples: docs-contracts-readme
+  data-samples: docs-contracts-packs-readme
   bi-report-models: bi-tables-models#models-and-datasets-for-reports
   bi-and-power-bi: bi-guide#drishti-bi-and-power-bi-compared
   sharing-and-discussion: user-guide#sharing-and-discussion

@@ -28,7 +28,7 @@ doc: plugins/drishti-plugin-iceberg/README.md
 Ready-made connector files for **AWS S3 Tables**: the `iceberg` plugin with `catalog: s3tables`, which reads (and, for the loaders,
 writes) Iceberg tables in an S3 table bucket through the S3 Tables Iceberg REST endpoint, every request signed with SigV4. One
 setting names the table bucket, its ARN; everything else follows from it. The AWS side (the table bucket, the namespace, the IAM
-policy) is made, checked and removed by [`deploy/aws/s3-tables/`](../../../deploy/aws/s3-tables/README.md).
+policy) is made, checked and removed by [`deploy/aws/s3-tables/`](../../../docs/guides/CLUSTER_GUIDE.md).
 
 ## What it reads
 
@@ -90,7 +90,7 @@ deploy/aws/s3-tables/s3-tables.sh check --bucket drishti-risk --namespace risk -
 ## See also
 
 - [The Iceberg connector, section 20](../../../plugins/drishti-plugin-iceberg/README.md#aws-s3-tables) and the [iceberg connector README](../../../plugins/drishti-plugin-iceberg/README.md).
-- [The tool scripts](../../../deploy/aws/s3-tables/README.md) and [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
+- [The tool scripts](../../../docs/guides/CLUSTER_GUIDE.md) and [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
 
 The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching
 file in [config/lakes.examples/s3tables/](../../lakes.examples/s3tables/): copy both (docs/guides/DATA_LAKE_GUIDE.md).

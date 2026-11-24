@@ -100,6 +100,8 @@ A country on the map: the world with the country highlighted, and the same count
 
 **Lines to copy:** `highlight` and `region` (expressions), and, on a server that holds the entities, `link: { kind: jurisdiction, id: "JUR-{iso3}" }` so a click on a country opens its page, and `shade: { kind: economy, field: $.gdpUsdBn, label: "GDP (USD bn)" }` to colour the countries by a figure.
 
+<a id="pivot-row-groups"></a>
+
 <!-- example: pivot-row-groups -->
 ## Pivot with row groups
 
@@ -151,6 +153,8 @@ How risk is spread: scenario P&L as a histogram with VaR lines, books as points,
 **What to look for:** dashed marker lines for VaR 99%, ES 97.5% and the mean on the histogram; one labelled point per book on the scatter; the gauge reading usage against the limit.
 
 **Lines to copy:** `markers:` with `value: "-$.VAR99"` (an expression over the document), `x`, `y` and `label` on the scatter, `value` and `max` on the gauge.
+
+<a id="pnl-explain"></a>
 
 <!-- example: pnl-explain -->
 ## P&L explain

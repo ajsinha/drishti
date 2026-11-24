@@ -75,6 +75,8 @@ class PackGuidesTest {
         Files.writeString(about, ABOUT);
         if (withReadme) {
             Files.writeString(pack.resolve("README.md"), README);
+        } else {
+            Files.deleteIfExists(pack.resolve("README.md"));
         }
         AboutProperties props = new AboutProperties(List.of(new AboutProperties.PackSource("market-risk", "Market risk", about.toString(), null,
                 List.of("scenario-pv", "risk-factor"), List.of("market-risk"))), null, null);

@@ -2963,7 +2963,7 @@ What exists now, on the server and in the console (the console's part since phas
 
 ### 9. Related
 
-The domain boundaries and the move: [the domain modules part](#domain-modules-the-boundary-between-the-core-and-banking). The kernel, the module package, its loading and data binding, and distributions: [the kernel and modules document](#the-kernel-and-its-modules). The JavaScript libraries
+The domain boundaries and the move: [the domain modules part](#domain-modules-the-boundary-between-the-core-and-banking). The kernel, the module package, its loading and data binding, and distributions: [the kernel and modules document](#contents). The JavaScript libraries
 modules contribute: `docs/architecture/ELEMENTS.md` (planned until the train merges). The one database: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md).
 
 ### 10. Row rules
@@ -3255,7 +3255,7 @@ distribution ships its own files.
 
 ## Domain modules: the boundary between the core and banking
 
-> **What comes next is [the kernel and modules document](#the-kernel-and-its-modules)** (2.9.11.i, design): the kernel, the signed module package, loading from
+> **What comes next is [the kernel and modules document](#contents)** (2.9.11.i, design): the kernel, the signed module package, loading from
 > module folders, kernel-controlled data binding and distributions. Section 6 step 9, section 7's D1 and D6 and section 8's *Phase 2, still to do*
 > moved there (its section 12); this document stays the record of the split as built until that design's phase P2 completes.
 
@@ -3553,7 +3553,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   branding; `drishti.edition` (a lens for the
   whole instance) and `drishti.lenses` are unchanged ([LENSES.md](../guides/ADMIN_GUIDE.md#12-what-a-lens-is), *Editions are lenses of modules*).
 
-**Phase 2, still to do** (carried into [the kernel and modules document](#the-kernel-and-its-modules) section 14, phases P1 and P2):
+**Phase 2, still to do** (carried into [the kernel and modules document](#contents) section 14, phases P1 and P2):
 
 1. **The thin jar and the plugins folder** (step 9): `drishti-app` builds the core jar alone; the banking module (drishti-banking with
    drishti-compute-banking) is a module jar in a site's modules folder on the launcher's `loader.path`, and the registry's *installed*
@@ -3569,7 +3569,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
 
 **Status:** design, not built.
 
-Static, self-contained pages (no CDN) for the screens of [the kernel and modules document](#the-kernel-and-its-modules); the list, the
+Static, self-contained pages (no CDN) for the screens of [the kernel and modules document](#contents); the list, the
 alternatives and the recommendation for each are in its [section 17](#17-mock-ups). Each page holds its
 options as views: open it in a browser and use the A, B, C buttons, or address one directly with `?v=B` (or `#B` on the newer pages)
 and `?theme=light`. The PNGs beside each page are those views in the dark theme.

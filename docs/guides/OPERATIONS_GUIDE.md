@@ -2362,7 +2362,7 @@ benchmark's users phase at a small heap with more users than it holds: expect re
 Drishti multiplies matrices with **OpenBLAS, bundled** in the server (JavaCPP's `org.bytedeco:openblas`, the Linux and Windows x86-64 builds, about
 44 MB of jars, so one artifact runs on both): **nothing is installed on a server**. Where it does not fit the server runs the same sums in **pure
 Java**, with the same results (within 1e-12; many-scope sums are exact), only slower; nothing about BLAS can stop the server
-([HIGH_PERFORMANCE_NATIVE.md](../architecture/HIGH_PERFORMANCE_NATIVE.md#6-blas)).
+([HIGH_PERFORMANCE_NATIVE.md](../plans/HIGH_PERFORMANCE_NATIVE.md#6-blas)).
 
 | Platform | BLAS |
 |---|---|

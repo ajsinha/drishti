@@ -572,7 +572,7 @@ python3 clients/python/drishti_flight.py --out pnl.parquet measure var.scenarios
 trade legs, a desk's VaR scenario P&L with the VaR scenario and ES tail marked, a live stream with resume, a join in DuckDB, an
 in-memory lake table, and a direct lake read for users who already hold lake access
 ([examples/clients/python](../../examples/clients/README.md#python-notebooks-python)). Excel from Python, no add-in:
-[examples/clients/excel](../../examples/clients/excel/README.md).
+[examples/clients/excel](../../examples/clients/README.md).
 
 **Errors.** A refusal raises `FlightRefused` with `.code` (`DRS-5604` …) and the words (section 4).
 
@@ -625,7 +625,7 @@ A part on another node needs a client for that node's location (`e.getLocations(
 `s.getLatestMetadata().getLong(0)`. Ask again with `"resume": <sequence>` after a break.
 
 **Example.** `ReadKindAndVarPnl.java`, one file run with the source launcher (a kind, then a desk's VaR scenario P&L with the engine's VaR
-and ES, each part from the first node that answers): [examples/clients/java](../../examples/clients/java/README.md).
+and ES, each part from the first node that answers): [examples/clients/java](../../examples/clients/README.md).
 
 **Errors.** A refusal is a `FlightRuntimeException`; `e.getMessage()` starts with the code (`DRS-5604: …`) and
 `e.status().metadata().get("drishti-code")` carries it alone.
@@ -686,7 +686,7 @@ A prepared statement works the same way (read only, no parameters).
 
 **Example.** `JdbcFlightSql.java`, plain JDBC with the driver jar: without arguments it lists the models you may read and their tables;
 with a model and a statement it runs the statement:
-[examples/clients/java](../../examples/clients/java/README.md#jdbc-through-flight-sql).
+[examples/clients/java](../../examples/clients/README.md).
 
 **Errors.** The driver shows the service's message, starting with its code: `DRS-5603` (no model named, a statement DSQL refuses, with
 the BI SQL code in the words), `DRS-5602` (the token or the person may not read the model), `DRS-5604` (the rows limit of your role).
@@ -695,7 +695,7 @@ the BI SQL code in the words), `DRS-5602` (the token or the person may not read 
 
 **Install.** An Arrow Flight SQL ODBC driver (third-party). It is an **installer**, so it cannot go on machines where no program may be
 installed: there, use the JDBC jar (7.3) or the Python client (7.1), or get an Excel workbook from a Flight read through Python
-([examples/clients/excel](../../examples/clients/excel/README.md)).
+([examples/clients/excel](../../examples/clients/README.md)).
 
 **Connect.** A DSN with host `drishti-1.bank.example`, port `18815`, encryption (TLS) on, the bank's CA, and an API token with `data:read`
 as the token (or as the password, with any user name). Name the BI model with the driver's extra connection property `model=<model>`

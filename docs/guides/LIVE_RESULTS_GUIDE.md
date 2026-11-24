@@ -156,7 +156,7 @@ drishti:
 A person sees a record when any of their roles that opens the kind passes it; a role without a rule for the kind opens every record of it; an
 administrator sees all. `edit-systems` limits write-back to the listed source systems. Row rules restrict record views (live sets, search,
 FORM, Raw JSON); aggregates such as VaR keep their own scope model. The rule is part of the viewer's audience, so two people with different
-rules never share a filled set. Full text: [ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md) section 10. The rest of the isolation (masks, the
+rules never share a filled set. Full text: [ACCESS_MODEL.md](../architecture/KERNEL_AND_MODULES.md) section 10. The rest of the isolation (masks, the
 node answering, the embedding app) is in section 7, "Who sees what".
 
 ## 6. The declaration

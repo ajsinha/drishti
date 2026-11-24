@@ -730,7 +730,7 @@ release tag `v2.9.11.i_6`.
   `formats.yaml` from the copy as a Maven resource (`drishti.elements.version`); `/elements` opens the vendored gallery with the modules'
   visuals. Deleted: the moved sources, gallery, sheets, engines, tools (`tools/elements/`, `tools/maps/`, the API and catalogue
   generators, the `elements` command, the WebJar module) and docs (`ELEMENTS.md`, `ELEMENTS_API.md`, EMBED_GUIDE sections 13 and 14 now
-  point to the Elements docs). New: [ELEMENTS_IN_DRISHTI.md](docs/architecture/ELEMENTS_IN_DRISHTI.md) and the guard
+  point to the Elements docs). New: [ELEMENTS_IN_DRISHTI.md](docs/architecture/THIN_CONSOLE_DESIGN.md) and the guard
   `test_elements_vendored.py` (one pin, the copy unedited by its SHA-384s, nothing moved left behind, the host script matches the
   manifest); the version, licence, budget, guard and Node tests now cover Drishti's own libraries. About 100,000 lines of source leave
   Drishti for one vendored release tree.
@@ -1687,7 +1687,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   shows the new picture (the old flow diagram is deleted) and links the page; the PDF is generated and
   checked with the other guides' (`tools/docs/md_to_pdf.py`).
 - **Banking is a module** (2.9.11.i2 + i3, wave 2, option A; [KERNEL_AND_MODULES.md section 3.3](docs/architecture/KERNEL_AND_MODULES.md#33-the-manifest-moduleyaml),
-  [DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute), [DISTRIBUTIONS.md section 10](docs/architecture/DISTRIBUTIONS.md#10-how-it-works-as-built)).
+  [DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute), [DISTRIBUTIONS.md section 10](docs/architecture/KERNEL_AND_MODULES.md#10-how-it-works-as-built)).
   First-party modules: `origin: first-party` is verified against the `first-party.yaml` the build ships (ids and hash-list hashes); only
   such a module may declare a `kernel-internals:` allowance, honoured by conformance check C1 and the module class loader, and a module
   with one loads only on the exact kernel build stamped into it ("built for kernel X, this is Y: install the matching module"). One
@@ -1701,7 +1701,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   loaded. Removing banking from a running server answers 410 (*needs module
   banking*) for its API (old prefixes too) and pages, installing it again brings back the same VaR, and its class loader is collected (leak-free).
 - **The genomics sample module and Drishti Genomics** (2.9.11.i2 + i3, wave 3; [DEVELOPER_GUIDE.md section 1.9](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step),
-  [DISTRIBUTIONS.md section 4](docs/architecture/DISTRIBUTIONS.md#4-drishti-genomics-sample)). `modules/genomics`, a third party's module
+  [DISTRIBUTIONS.md section 4](docs/architecture/KERNEL_AND_MODULES.md#4-drishti-genomics-sample)). `modules/genomics`, a third party's module
   made from the archetype and finished by hand on the kernel API and the plugin API only: a VCF reader as a connector extension inside
   the module (a module's `SourcePlugin` is routed while it is loaded, started with its folders), the kinds `variant`, `sample`, `gene`,
   `cohort`, the functions `VARIANT`, `GENE`, `COHORT` on one page folder, synthetic samples (a seeded generator), its `.dmod` built in the
@@ -1777,7 +1777,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   Modules** (mock-up A) and **Deploy** (mock-up C); the token scope `modules:deploy`; settings `drishti.module-deploy.*`. Tested on three
   nodes (`ModuleDeployClusterTest`: placed on two, nothing on the third; a phase-2 failure rolled back; a rolling upgrade under load with no
   failed request; remove, saved work marked, reinstall; leak-free).
-- **Content modules for the distributions** (2.9.11.i2 + i3, wave 2; [DISTRIBUTIONS.md section 10](docs/architecture/DISTRIBUTIONS.md)):
+- **Content modules for the distributions** (2.9.11.i2 + i3, wave 2; [DISTRIBUTIONS.md section 10](docs/architecture/KERNEL_AND_MODULES.md)):
   `market-data` (split out of banking; banking now requires it), `capital-markets` (us-equities and funds, and Drishti Finance's new
   **Markets lens** with Home's Markets cards) and `economy` (the eight public-data packs and the World lens), each a folder under
   `modules/` that the module tool packs into a `.dmod` passing the fifteen conformance checks. The module tool brings repository content in
@@ -1788,7 +1788,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   stays on when banking or capital markets is switched off.
 
 - **Distributions: Drishti Risk, Drishti Finance, Drishti Genomics and Drishti All** (2.9.11.i2 + i3, wave 3, white label;
-  [DISTRIBUTIONS.md](docs/architecture/DISTRIBUTIONS.md)). One build, one file per product: `config/distributions/drishti.<name>.yaml`
+  [DISTRIBUTIONS.md](docs/architecture/KERNEL_AND_MODULES.md)). One build, one file per product: `config/distributions/drishti.<name>.yaml`
   (brand, theme, modules, lenses, menus, Home, Help), chosen by `--distribution <name|path>`, `DRISHTI_DISTRIBUTION` or
   `drishti.distribution`; none named is Drishti All, exactly as before. The kernel and the console read the same file, and each module's
   own manifest for what it holds (`modules/<id>/module.yaml`; `config/distributions/kernel.yaml` for the kernel's part). What a
@@ -2038,7 +2038,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   notice are the control. API: `/api/v1/risk/var/system-baskets` (list, one, save, retire, export, import).
 - **Module permissions on roles:** a role carries `permissions` (today `var:system-baskets`): in configuration and packs
   (`permissions: [var:system-baskets]`), in Admin → Roles (*Permissions*) and the role API; kept as a power row (no schema change);
-  every administrator holds them ([ACCESS_MODEL.md section 8](docs/architecture/ACCESS_MODEL.md#8-as-built-the-backend-phase-1-of-the-split)).
+  every administrator holds them ([ACCESS_MODEL.md section 8](docs/architecture/KERNEL_AND_MODULES.md#8-as-built-the-backend-phase-1-of-the-split)).
 
 - **(Blank) nodes:** a row whose level column is empty, or whose source does not promote it, sits under a **(Blank)** node at that level,
   under its real parent, the deeper levels beneath it (Power BI's convention): never refused, never dropped, the totals complete. The
@@ -2212,7 +2212,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   contract pages say so; `tools/test_guide_contract_links.py` now covers the pack guides and `tools/test_pack_guides.py` checks the links
   (and that no column is copied). Every generator's `--check` passes (banking, funds, us-equities, gleif, world-economy, guide_data).
 
-- **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
+- **The documentation plan, for approval** (DOCS_PLAN.md, since deleted; git keeps it): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
 ### Deployment and QA guide, developer quickstart, PDFs
 
@@ -2271,7 +2271,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   finds the `Form` with `formOf(host, {widgets})`; its own `new Form` path and the `data-qf-schema` attribute are deleted. `formOf`
   called with `widgets` on a `Form` already drawn draws its fields again with them, the values kept. The page's GET address and every
   criterion's name (`op.`, `v.`, `v2.`, `cs.<path>`) are unchanged.
-- **The Admin forms, part 2, on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
+- **The Admin forms, part 2, on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
   Users, Roles, Access, Audit, Configuration (search and *Propose a change*), Connectors (the list's filters and the connector editor),
   Artifacts (filters, a BI file), Packs (the archive, the signature, the breaking-change box), a pack's *Load a data file*, Lakes,
   Drishti*net (seed, map filter, *Explain a request*, nodes per role, this node's tags, the file's YAML), Capacity (the plan's inputs, the
@@ -2313,7 +2313,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   record forms' enum and lookup cells (it opens on the value; a pick saves), the refresh interval, the table chart, and the banking
   plugin's trading landing, market-risk ladder and scenario matrix is drishti-inputs' `<drishti-select>`: search on a long list,
   type-ahead, the kit's keys; a form submits the same names; 39 files and 78 selects off the guard's allow-list.
-- **The theme designer's YAML on the kit's `YamlPane`** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
+- **The theme designer's YAML on the kit's `YamlPane`** ([ELEMENTS.md section 12.3](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
   the theme as YAML is BI Studio's YAML panel (Visual, YAML, Both), both ways: an edit is read by the server after a pause, a line that does
   not read is marked and the theme keeps its last good version; the hand-made YAML writer and the text area are deleted (`dumpYaml` writes it).
 - **The Phone and Tablet orders on the kit's `LayoutModel`** ([ELEMENTS.md section 8.9](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
@@ -2332,7 +2332,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 - **The workbench's menus on drishti-inputs** (Add panel, Bind field, File, Ship, the command palette, a dropped field's kinds): `Listbox`
   under a search ranked by `searchOptions`, placed by drishti-core (`build/drishti_menus.js` 132 → 119 lines; the hand-made listbox and
   its CSS deleted). `Listbox` gains `followActive`; `searchOptions` ranks a label that is the word first.
-- **Admin forms, part 1, on the one server-drawn form** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
+- **Admin forms, part 1, on the one server-drawn form** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
   Collaboration (search, holds, export, verify, the list toggles, a comment's hide reason), Data loads (the filter embedded in its GET
   form, Announce, Expectations with a repeatable row per kind), Embedding (filter, new application, the secret, rotate) and Lakes ›
   Maintain (the choices, settings, a new schedule) are drawn by the same machinery as part 2: `core/form_kit.py`'s field helpers, the one
@@ -2344,14 +2344,14 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 - **Fixed: an unchecked "Active" saved as active.** The alert form, a scheduled report and a subscription read a missing `enabled` field
   (an unchecked checkbox is not sent) as on; now as off, and the subscribe form drawn again after a refusal keeps the box as it was. Tests
   in `test_alert_routes.py` and `test_dist_routes.py`.
-- **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
+- **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
   the server sends the form's schema (`core/alert_form.py`, new, 168 lines) and the page's `Form`, embedded in its POST form, draws every
   field with the name it always submitted (saving and *Check now* unchanged); the source, condition and trigger groups follow the choice
   through `when`, the model's measures and the filters' fields arrive as the server answers (`Form.setOptions`), and the filters are an array
   of objects written into the hidden `model_query`. `drishti_alert-form.js` 218 → 191 lines, `alert_form.html` 163 → 69; the hand-made groups,
   filter rows, swapped select and their CSS deleted. **drishti-inputs**: `Form.setOptions(path, list, labels)`, an array's `itemHook` and
   `addHook`.
-- **No bespoke UI, the editors' rows on drishti-grid editing** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
+- **No bespoke UI, the editors' rows on drishti-grid editing** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
   the model editor's tables, relationships, measures (the ? card and the engine's "adds up?" as drawn cells), hierarchies, row rules,
   fields and access matrix, and the table editor's source and look-ups and its columns checklist are drishti-grid with cell editing through
   one helper (`E.rowGrid`, `drishti_editor-formula.js` 59 → 92 lines; `drishti_editor-model.js` 332 → 340 and `drishti_editor-table.js`
@@ -2424,7 +2424,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   connected graph on a canvas (counterparty, ownership and AML networks; layouts, paths, grouping, Explain, a linked table), a tree
   (org chart, tree grid with ◆ non-additive measures, sunburst; re-parenting as a four-eyes proposal), and the one shell every
   designer is built on, shown as the BI report designer and as the form designer. Design only.
-- **No bespoke UI, the panes** ([ELEMENTS.md section 12.3, fourth pass](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
+- **No bespoke UI, the panes** ([ELEMENTS.md section 12.3, fourth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
   the Build workbench's inspector is drishti-designer's `Inspector` (one live `Form` from the Rachana schema; `build/drishti_inspector.js`
   286 → 242 lines) and its palette the kit's `Palette` (`build/drishti_palette.js` 80 → 63); its expression fields are `Form`'s new
   **formula** widget, a one-line `CodeEditor` completing shape paths and functions (`build/drishti_expr.js` 107 → 65: the hand-made
@@ -2442,7 +2442,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   top bar's Known at, compare, the record forms). The column filter's dates and BI's date parameters are the date picker. Deleted: the
   query form's server-drawn fields, its dependents and long-list search, the record forms' field boxes, messages and currency painter,
   the inspector's hand-made lists, objects and number checks, the Format pane's hand-made controls, and their CSS.
-- **No bespoke UI, the second pass** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
+- **No bespoke UI, the second pass** ([ELEMENTS.md section 12.3](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
   `trackPointer` moved into drishti-core (with pointer capture); the Sutra designer's Customize, Grid and Outline drags, the BI designer's
   field, visual-type and well drags, layout mode, screen arranging, workspaces and sliders on it or on drishti-designer's `DragHub` (their
   HTML5 drags deleted); drishti-inputs makes a page's `<textarea data-di-code>` a code editor (`upgradeCodeArea`) and the connector,
@@ -2457,7 +2457,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   leaving comes only after a person's edit, never for the page's own text. drishti-designer's `Outline`: a node's `cls` and its own
   `data-*` attributes. The guard's allow-list went from 3 files to 1 (the workbench's data-shape tree, moved onto drishti-tree on its
   own branch).
-- **No bespoke UI: the BI designer's own panes** ([ELEMENTS.md section 12.3](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
+- **No bespoke UI: the BI designer's own panes** ([ELEMENTS.md section 12.3](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
   conditional formatting (each rule a live `Form` whose fields follow its kind; the 2.1 short form a Form's repeatable rows), the theme
   designer's name, series colours (repeatable rows: add, remove, move; 3 to 12), colours and type, Edit interactions, the tooltip page,
   the page's layout, the report's theme and kiosk rotation, a board tile's report, visual and alert, and the visual's, page's and
@@ -2876,7 +2876,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 - **Settings tiers, one home** (`tools/settings_schemas.yaml` `tiers`): everyday by area:key (18), expert by pattern in the areas that
   hold internals (413), admin by area (1,720); CONFIGURATION.md gains a *Tier* column; `settings_catalogue.py --check` fails when an area has
   no tier or a listed key or pattern matches nothing (`test_settings_catalogue.py`).
-- **The BI and Pivot family moved onto drishti-grid** ([ELEMENTS.md section 12.1](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
+- **The BI and Pivot family moved onto drishti-grid** ([ELEMENTS.md section 12.1](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
   - **The Pivot screen** (`PIVOT`, and its presets the MR cube `MCUBE` and the CCR cube) is drawn by drishti-grid in its `wells`
     layout: the catalogue's fields, a document's paths by their grain and the engine's measures are the grid's fields; the wells, the
     member filters, + and −, a level (1 to 9), Shift+→ and the aggregation menus build the view, and every answer is the server's
@@ -2930,7 +2930,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
     sets the machine was shared with other runs and the sums varied by run (2,252 s before, 3,835 s after, 1,744 s in 2.9.11.d's
     drill), so they say nothing either way. The thinner screen tests the owner asked for come with the component tests (the gallery).
   - **Still to move** (ELEMENTS.md 8.6): the multi-select, the pickers, the controls, the forms and the Build and Studio editors.
-- **The VaR and exposure family on Drishti Elements** ([ELEMENTS.md section 12.2](docs/architecture/ELEMENTS_IN_DRISHTI.md#10-drishtis-screens-on-the-libraries)):
+- **The VaR and exposure family on Drishti Elements** ([ELEMENTS.md section 12.2](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
   every table of the VaR explorer (the scope tree as tree data, the path, the history, the contributions, the captures, the
   currencies), parametric VaR, the basket's sheet (now drishti-grid's cell editing: typing, Enter, Tab, Delete, undo; the paste with
   headings stays the sheet's) and its what-if, the VaR Playground (its six header rows pinned), backtesting, the regulatory screens, the
@@ -2982,7 +2982,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 
 ### Domain modules, the access registry and lenses (2.9.11.f)
 
-- **Domain modules, phase 1: the backend split** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md)).
+- **Domain modules, phase 1: the backend split** ([DOMAIN_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md), [ACCESS_MODEL.md](docs/architecture/KERNEL_AND_MODULES.md)).
   The core knows no industry: banking is a module. New Maven modules: **drishti-registry** (the access registry), **drishti-compute-banking**
   (VaR and ES, parametric, components, backtesting, exposure, FRTB-SA, SIMM, beta and correlation: `com.ash.drishti.banking.compute`, pure
   maths), **drishti-banking** (the VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube and official-results services, storage and API:
@@ -3014,8 +3014,8 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   core reference data; economy keeps world-economy and news-and-markets. The Market lens needs capital markets and banking.
 - **Editions as lenses**: the risk, trading, market and world editions are lenses of the registry; an edition opened as a lens is offered
   only while its modules are on.
-- **Domain modules, phase 2 (first half): the console follows the modules** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md)
-  section 8, [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md) section 8; OPERATIONS.md section 22). The console asks the server and
+- **Domain modules, phase 2 (first half): the console follows the modules** ([DOMAIN_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md)
+  section 8, [ACCESS_MODEL.md](docs/architecture/KERNEL_AND_MODULES.md) section 8; OPERATIONS.md section 22). The console asks the server and
   nothing else: the public about answer now lists the `modules` loaded, and `GET /api/v1/modules` answers, as the person, the modules not
   loaded (with why), the lenses open to them (with the modules and functions each needs) and the **functions they may not use** (each with
   its module and the words to say). A module that is off, or a function off for the person, is gone from every door the console draws:
@@ -3949,7 +3949,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   show|parts --matrix|playground --measure parametric`, and the playground's workbook gains its Parametric tab (recalculated by LibreOffice
   equal to the engine to the cent; `NORM.S.INV` and `PI` join the common function set). Settings `drishti.var.parametric.*`.
 - Docs: [OPERATIONS.md section 2.1](docs/guides/OPERATIONS_GUIDE.md#149-native-libraries-blas) (server requirements, platforms,
-  verification, the fallback and the warning), [HIGH_PERFORMANCE_NATIVE.md section 6](docs/architecture/HIGH_PERFORMANCE_NATIVE.md#6-blas)
+  verification, the fallback and the warning), [HIGH_PERFORMANCE_NATIVE.md section 6](docs/plans/HIGH_PERFORMANCE_NATIVE.md#6-blas)
   as built, TROUBLESHOOTING, CONFIGURATION.md regenerated, THIRD-PARTY-NOTICES.
 - **Excel, SAS and MATLAB/Octave coverage (FUNCTION_CATALOGUE.md section 12).** Every family of Excel's functions, SAS's DATA-step
   functions and PROC MEANS/UNIVARIATE/FREQ/RANK statistics, and MATLAB's everyday data functions, marked covered (by which Drishti
@@ -4895,9 +4895,9 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   feed) and a basket shared with you have **Edit a copy**. The what-if trades, save with read-only sharing, Open without saving, Alt+B and
   the count on the link are kept.
 - **Designs: IFRS 9 expected credit loss and financial crime (docs only; product owner, 2026-11-02).**
-  [IFRS9_ECL.md](docs/architecture/IFRS9_ECL.md) designs the impairment engine (staging with SICR, backstop, exemption and cure; PD from
+  [IFRS9_ECL.md](docs/plans/IFRS9_ECL.md) designs the impairment engine (staging with SICR, backstop, exemption and cure; PD from
   curves or migration matrices; LGD with collateral; EAD with CCF; EIR discounting; weighted scenarios; overlays with four eyes; POCI;
-  why the provision moved in exact steps; contracts, playground, hand-built cases). [FINANCIAL_CRIME.md](docs/architecture/FINANCIAL_CRIME.md)
+  why the provision moved in exact steps; contracts, playground, hand-built cases). [FINANCIAL_CRIME.md](docs/plans/FINANCIAL_CRIME.md)
   designs the FCU engines (trade surveillance, transaction monitoring with threshold tuning, network analytics, customer risk rating,
   sanctions and PEP screening, fraud scoring, alerts and cases, FINTRAC STR, LCTR and EFTR, rule effectiveness, data protection). The
   plan proposes 2.9.20 (IFRS 9) and 2.9.21 and 2.9.22 (financial crime, split in two), placement to confirm.
@@ -5610,7 +5610,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   - **Date loads off the common pool:** VaR, shard books and exposure load on pools of their own (`drishti.var.load-threads`,
     `drishti.ccr.exposure.load-threads`, 2 each).
 - **The client-side renderer, phase 2: the console draws its entity page with it** ([CLIENT_RENDERER.md section 16](docs/architecture/ARCHITECTURE.md#301-one-page-renderer-one-embed-renderer),
-  [ADR-022](docs/architecture/adr/022-one-renderer-in-the-browser.md)). **Drishti Render 1.0.0** (`static/render/1.0.0/`; 0.1.0 stays
+  [ADR-022](docs/architecture/DECISIONS.md)). **Drishti Render 1.0.0** (`static/render/1.0.0/`; 0.1.0 stays
   served, unchanged). **`ui.render`** (CONFIGURATION.md): `ui.render.mode` `server` (default this release) or `client`, page by page
   (`ui.render.pages`: `view`, `pane`); `?render=server|client` compares the two on one address. On a client page the entity page
   (`/v/{kind}/{id}`, what `/go`, a share and a history day open, a workspace pane) embeds its ViewModel as the page arranges it (the
@@ -5658,7 +5658,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 
 - **Plan: the order of the rest of 2.9.7 and a memory and CPU diet** (IMPLEMENTATION_PLAN): the renderer, then the benchmark with profiling (JFR, heap histograms) on Java 21 and 25 as the baseline, then ten measured improvements (the heap skeleton per shard, dictionary-encoded ids, one cache budget, released maps, compact headers on 25, the renderer, fewer JSON passes, faster cold loads, quieter logs, unpinned virtual threads on 21), the benchmark again, soak-proofing, the fixes and the release; Java 21 and 25 both stay supported.
 - **The client-side renderer, phase 1 (first item of 2.9.7, product owner 2026-10-30)** ([CLIENT_RENDERER.md](docs/guides/EMBED_GUIDE.md),
-  [ADR-022](docs/architecture/adr/022-one-renderer-in-the-browser.md), superseding ADR-021's rendering decision): **Drishti Render 0.1.0**
+  [ADR-022](docs/architecture/DECISIONS.md), superseding ADR-021's rendering decision): **Drishti Render 0.1.0**
   (`drishti-console/web/static/render/0.1.0/`) paints a Drishti screen in the browser from the server's ViewModel. Plain ES modules, no
   build, the vendored ECharts, nothing from a CDN (49 KB gzip of script, 27 KB of sheet generated from the console's own by
   `tools/render_sheet.py`, `integrity.json`, `drishti-render.d.ts`). All 22 panel kinds and every state (waits, denied, empty, error,
@@ -9802,7 +9802,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 - **Fixed (DATA-06):** JSON-lines rows whose `doc` is a JSON object and that carry no `columns` now have their promoted fields read from the document, as rows with `doc` as a string always had; searches, pick lists and derived kinds over such files were empty.
 - **Fixed (DATA-09):** an id on several lines of a JSON-lines day is one entity, its last line (as a reload leaves it): the view, searches, columns, derived kinds and reverse lookups agree and count it once. The ids repeated are counted (`duplicateIds`) and named in Health.
 - **Fixed (DATA-10):** a read racing an atomic replace of a JSON-lines file no longer fails (502) or reads with the old file's offsets: a day's index holds the file it read open, and a read that finds the file rewritten in place builds the index again and reads again.
-- **Roadmap: server-side pricing.** A design for a QuantLib pricing service behind the Drishti server ([QUANT_SERVICE.md](docs/guides/AI_GUIDE.md#4-server-side-pricing-the-quant-service-proposed), [ADR-019](docs/architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md), proposed), now first on the roadmap in IMPLEMENTATION_PLAN.md.
+- **Roadmap: server-side pricing.** A design for a QuantLib pricing service behind the Drishti server ([QUANT_SERVICE.md](docs/guides/AI_GUIDE.md#4-server-side-pricing-the-quant-service-proposed), [ADR-019](docs/architecture/DECISIONS.md), proposed), now first on the roadmap in IMPLEMENTATION_PLAN.md.
 - **Fixed:** the server no longer opens an unused MongoDB client to `localhost:27017` at every start (and logs connection errors when no MongoDB runs). The MongoDB driver ships for the `mongodb` plugin, which makes its own client only when configured; Spring Boot's MongoDB auto-configuration is now excluded.
 - **Fixed (DATA-04):** loaders never leave a business day empty or half loaded for readers. `PostgresLoader` COPYs into a stage nobody reads and publishes each (kind, business date) in one transaction (delete, insert, `entity_dates`); `--recreate` builds a shadow schema swapped in in one transaction; a load that fails or is killed leaves every day as it was (the next load drops its stage), two loads of one day are serialised, and the table catalogue re-reads a day's columns that were loaded again while it read them. Reloads of 10,000 trades × 3 days cost about a tenth more (1.65–1.96 s against 1.52–1.81 s). `RedisLoader` journals each id before its document, so the next load (or the failing one) deletes documents a dead load wrote that no day's columns list, and gains `--replace` (merging, still the default, is documented). `MongoLoader` hides a new day in `<domain>_loading` until its load has finished. DuckDB, Iceberg and the JSON-lines files were already atomic per day (checked).
 - **Fixed (DATA-05):** one mis-dated row can no longer wipe a store's history. Every loader (PostgreSQL, DuckDB, MongoDB, Redis, Iceberg, Aerospike, JSON-lines files) quarantines rows dated after tomorrow in the business zone (`--future-days`, `--zone`) and ends with an error naming them; retention (`--keep-months`, `--keep-days`, `--ttl-days`, `IcebergMaintenance --keep-days`, `maintain.py keep-business-days`) counts back from `--as-of` (today), never from the newest date loaded; and a run that would drop more than `--max-drop-share` (0.5) of a table drops nothing unless `--force-drop` (`maintain.py`: `max-drop-share`, `--force-drop`, `--as-of`).

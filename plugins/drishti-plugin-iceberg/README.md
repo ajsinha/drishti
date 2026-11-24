@@ -298,7 +298,7 @@ is the table `pnl_vector`, and a name that still breaks the rule is refused, nam
 (`drishti.py lake build --format iceberg --iceberg-set catalog=s3tables --iceberg-set table-bucket-arn=<ARN>`, or `target.iceberg` of the
 parallel loader); `iceberg-external` reads S3 Tables written by Athena, EMR or Firehose with the same two settings. Files:
 `config/connectors.examples/s3tables/` ([README](../../config/connectors.examples/s3tables/README.md)); the AWS side:
-`deploy/aws/s3-tables/s3-tables.sh create|check` ([README](../../deploy/aws/s3-tables/README.md),
+`deploy/aws/s3-tables/s3-tables.sh create|check` ([README](../../docs/guides/CLUSTER_GUIDE.md),
 [CLI_REFERENCE.md section 4.14](../../docs/guides/CLI_REFERENCE.md#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)). Tests check the
 ARN's settings, names and request signatures against recorded botocore ones, and a stand-in REST server that refuses unsigned
 requests; the live run is `deploy/aws/iceberg/check-glue.sh --s3-tables <ARN>`.

@@ -829,7 +829,7 @@ element thinks. **The sign-in button is greyed out**: your page's origin is not 
 
 The libraries the console draws with (grid and pivot, charts and maps, inputs, tree, graph, the data client, the designer kit) are Drishti
 Elements, a separate project by the same owner that Drishti vendors at a pinned version
-([docs/architecture/ELEMENTS_IN_DRISHTI.md](../architecture/ELEMENTS_IN_DRISHTI.md)). Using them in your own app, served by a host or from
+([docs/architecture/ELEMENTS_IN_DRISHTI.md](../architecture/THIN_CONSOLE_DESIGN.md)). Using them in your own app, served by a host or from
 the release tree, is in its own docs: [USING.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/USING.md), with the
 [API reference](https://github.com/drishti-platform/drishti-elements/blob/main/docs/API.md) and the
 [contracts](https://github.com/drishti-platform/drishti-elements/blob/main/docs/CONTRACTS.md) a server answers (the live set, the errors, the

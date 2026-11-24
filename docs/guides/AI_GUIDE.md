@@ -775,7 +775,7 @@ budget and alert path.
 ## 4. Server-side pricing: the quant service (proposed)
 
 **Status: proposed; not in a planned release, a later candidate in [the release notes](../../RELEASE_NOTES.md); the decision is
-[ADR-019](../architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md).** Nothing here is built yet (there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
+[ADR-019](../architecture/DECISIONS.md).** Nothing here is built yet (there is no `drishti-quant-gateway` module, no `drishti.quant.*` server setting and no `quant` power; `drishti.quant` below is the small browser library of Calc).
 
 **Read [README.md](bi/README.md) first.** The product owner decided that computations,
 pricing included, run in **compute workers supervised by the Drishti server** (out-of-process Python workers with QLRisk as the
@@ -832,7 +832,7 @@ user's credentials; it is given a trade, market data and a model, and it returns
 
 | Option | For | Against | Verdict |
 |---|---|---|---|
-| **A separate Python service with QuantLib-Python** | QuantLib publishes ready-made wheels for Linux, macOS and Windows (QuantLib 1.43 today); a crash in native code cannot take the Drishti server down; it scales on its own; the same interface can front ORE or a bank's pricers later | one more process to run | **chosen** ([ADR-019](../architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md)) |
+| **A separate Python service with QuantLib-Python** | QuantLib publishes ready-made wheels for Linux, macOS and Windows (QuantLib 1.43 today); a crash in native code cannot take the Drishti server down; it scales on its own; the same interface can front ORE or a bank's pricers later | one more process to run | **chosen** ([ADR-019](../architecture/DECISIONS.md)) |
 | QuantLib's Java (SWIG) bindings inside the server | one process | native libraries to build for every platform, and a crash or a long calibration inside the server everyone uses | rejected |
 | QuantLib compiled to WebAssembly, in Calc | no server | no build exists; tens of MB more to download; a laptop's CPU for calibrations; rebuilt for every Pyodide version | rejected ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)) |
 | ORE (Open Source Risk Engine) as the service | portfolio analytics (XVA, simulation) | larger to adopt, XML-configured | later, behind the same API |

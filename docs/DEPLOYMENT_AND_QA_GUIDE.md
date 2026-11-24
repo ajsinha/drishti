@@ -999,7 +999,7 @@ machine and on three machines, are in [section 11.6](#116-start-order-and-joinin
 ### 7.7 Starting a white-labelled instance
 
 One build, several products: a distribution (`config/distributions/drishti.<name>.yaml`,
-[DISTRIBUTIONS.md](architecture/DISTRIBUTIONS.md)) decides the name, theme, modules, lenses, Home and Help. Without one you get
+[DISTRIBUTIONS.md](architecture/KERNEL_AND_MODULES.md)) decides the name, theme, modules, lenses, Home and Help. Without one you get
 Drishti All, exactly as in 7.2. What a distribution leaves out does not exist in it: Drishti Finance has no VaR command, menu, Help page
 or AI tool; Drishti Risk has no economy command; market data is in both.
 

@@ -578,7 +578,7 @@ settings:
   ([CLI_REFERENCE.md section 4.11](../../docs/guides/CLI_REFERENCE.md#711-lake-publish-a-built-day-into-a-delta-table-in-s3)); commits rely on S3's
   conditional PUTs (`deploy/aws/delta-lake/check-conditional-writes.sh` checks a bucket).
 - **The AWS side.** `deploy/aws/delta-s3/delta-s3.sh` (and `.ps1`) creates a private encrypted bucket, prefix and IAM policy, checks them
-  by reading one table end to end, and removes them ([its README](../../deploy/aws/delta-s3/README.md),
+  by reading one table end to end, and removes them ([its README](../../docs/guides/CLUSTER_GUIDE.md),
   [CLI_REFERENCE.md section 4.14](../../docs/guides/CLI_REFERENCE.md#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)). A production lake
   past 200 TB (KMS, VPC endpoint, tiers, loads, maintenance, alarms):
   [CLUSTER_GUIDE.md](../../docs/guides/CLUSTER_GUIDE.md#13-the-delta-lake-in-s3-at-scale).
