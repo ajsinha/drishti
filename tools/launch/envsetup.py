@@ -412,8 +412,13 @@ def _setup(a, env: dict, argv: list | None, run, pack: "pylibs.Pack | None", rea
     if not jar:
         steps.append(procs.command("build", "all") + "   (the server jar into lib/ and the modules into modules/)")
     else:
-        steps += [procs.command("build", "modules") + f"   ({w})" for w in modulesbuild.missing_report(modules)[:1]]
-        steps += [f"{w}" for w in modulesbuild.fresh_report(modules, jar)[:3]]
+        try:                                         # the modules' checks run the jar: with no usable Java they are the Java line's to fix
+            steps += [procs.command("build", "modules") + f"   ({w})" for w in modulesbuild.missing_report(modules)[:1]]
+            steps += [f"{w}" for w in modulesbuild.fresh_report(modules, jar)[:3]]
+        except (javacmd.JavaError, javacmd.JarError, LaunchError) as e:
+            if not problems:
+                problems.append(str(e))
+            steps = [*problems, *todo]
     # the default settings file needs no --settings (tools/drishti.py takes ~/drishti-envs/dev.ini naming this checkout by itself)
     named = None if not settings and not a.envs_dir else str(settings or ini)
     fixes = len(dict.fromkeys(steps))
