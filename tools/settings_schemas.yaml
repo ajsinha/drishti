@@ -113,7 +113,7 @@ schemas:
     file: drishti-console/config/help.yaml
     applies: console
     change: live
-    maps: [contextual, knowledge, documents]
+    maps: [contextual, knowledge, documents, moved]
     keys:
       - { key: most-used, type: list, default: shipped, meaning: "The most used pages, under the search box of the help centre's front door: {slug, label} each (a page the person cannot see is left out)" }
       - { key: "most-used[].slug", type: string, meaning: "The page" }
@@ -137,6 +137,7 @@ schemas:
       - { key: "sections[].groups[].guides[].roles", type: list, default: "[]", meaning: "Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it)" }
       - { key: "sections[].groups[].guides[].engine", type: string, default: none, meaning: "The compute engine it is about: left out while it runs on no server (an administrator sees it greyed); open to anyone who can open Help otherwise" }
       - { key: "sections[].groups[].guides[].pair", type: string, default: none, meaning: "The tutorial drawn beside this guide on its row (a page of the same group)" }
+      - { key: "sections[].groups[].guides[].section", type: string, default: none, meaning: "With doc: the page is only this section of the document (the words of its heading), not the whole document: the Developer page is one section of the API reference" }
       - { key: "sections[].groups[].guides[].children", type: list, default: "[]", meaning: "Pages that sit under this one in the Help list: each a page of its own with a slug, doc, title, icon and summary (the Business intelligence section)" }
       - { key: "sections[].groups[].guides[].children[].title", type: string, meaning: "Its title" }
       - { key: "sections[].groups[].guides[].children[].slug", type: string, meaning: "The child page's address, /help/<slug>" }
@@ -148,7 +149,9 @@ schemas:
       - { key: knowledge, type: map, default: shipped, meaning: "\"What does this mean?\" beside a data page: screen or kind -> the Knowledge page or glossary entry that explains it" }
       - { key: "knowledge.<name>", type: string, meaning: "One screen or kind and its Knowledge target" }
       - { key: contextual, type: map, default: shipped, meaning: "F1: screen -> the guide it opens" }
+      - { key: moved, type: map, default: shipped, meaning: "A page merged into another: its old address (slug) -> the address it leads to now (a slug, with an optional #anchor)" }
       - { key: "contextual.<name>", type: string, meaning: "One screen and its guide's slug" }
+      - { key: "moved.<name>", type: string, meaning: "One old page address and where it leads now" }
   workspaces:
     area: console-files
     title: "`workspaces.yaml`: the starter workspaces"

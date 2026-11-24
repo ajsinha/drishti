@@ -1995,7 +1995,7 @@ made a **child kind**: `LEGS` of `trade` becomes the kind `trade-leg`, one row p
 | its **promoted columns** | the link first, then the element's own fields, as for any kind | `TRADE_ID`, `LEG_ID`, `CURRENCY`, `NOTIONAL` |
 | its **own table** | written by the same loader in the same run, beside the parent, under the parent's business date | `<files root>/<pack>/2026-11-03/trade-leg.jsonl`, `<lake>/<pack>/trade-leg/` |
 | its **own Sutra** | one entity screen per leg, its `TRADE_ID` a link back to the trade (beside the title and on F7) | `trade-leg-default` |
-| a **BI relationship** | a model in the site's `tables/<pack>/` relating every leg to its trade, many-to-one and both ways | section 5.3 of the [Reports guide](bi/MODELS_AND_DATASETS_FOR_REPORTS.md#13-relationships-and-how-a-question-joins) |
+| a **BI relationship** | a model in the site's `tables/<pack>/` relating every leg to its trade, many-to-one and both ways | section 5.3 of the [Reports guide](bi/TABLES_AND_MODELS.md#13-relationships-and-how-a-question-joins) |
 
 The parent is unchanged: it keeps the whole array in its document and its screen still shows it as a sub-table.
 
@@ -3676,7 +3676,7 @@ panels:
 
 Previewed on `MX-20000001`, you should see four tabs, `NS-MERIDIAN-RE-FRA` to `NS-MERIDIAN-RE-TKY`, the London one with `Trades 191` and `Net MTM
 −316,071,572`; and the rates desk's grid, three books (`BOOK-RATES-1` `6.0bn`, `BOOK-RATES-2` `−1.5bn`, `BOOK-RATES-3` `−393.7m`) across `swap`,
-`linear`, `future`, `option` and `exotic`, the desk `4.1bn` in all. The runnable version is the [linked-sources example](examples/linked-sources.md).
+`linear`, `future`, `option` and `exotic`, the desk `4.1bn` in all. The runnable version is the [linked-sources example](examples/README.md#linked-sources).
 
 - `source` is an expression that gives a `link(id, kind)`. Then write `rows`, `each` and the other options as if the linked document were the page's own;
   `@` is still the row. The title line still reads this entity.
@@ -3774,7 +3774,7 @@ breadcrumb: [section 9.6](#96-drill-down-leg--cash-flow--resets),
 [levels](RACHANA_REFERENCE.md#levels-drill-down-level-by-level)).
 
 A pivot **aggregates** rows by fields you name; a tree table or `levels` **shows** a hierarchy the document already has. Runnable versions:
-[pivot-row-groups](examples/pivot-row-groups.md) and [tree-table](examples/tree-table.md). Do not confuse the **`pivot` panel kind** with the **`pivot:`
+[pivot-row-groups](examples/README.md#pivot-with-row-groups) and [tree-table](examples/README.md#tree-table). Do not confuse the **`pivot` panel kind** with the **`pivot:`
 option** that gives a table a user-driven Pivot.
 
 ## 22. Dates, live data, imperfect data and controls

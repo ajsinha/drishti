@@ -3704,3 +3704,30 @@ The **Notebook** (`/bi/notebook`, the BI rail's *Notebook*) is the one place for
 run on the server's compute pool, over an extract of the rows you may see. Everything about it (extracts, cells, saving, promoting, the profile,
 limits and errors) is in [NOTEBOOK_AND_PYTHON.md](bi/NOTEBOOK_AND_PYTHON.md#2-the-notebook), with Python measures, visuals and data prep; the walk-through is
 [the Notebook tutorial](bi/NOTEBOOK_AND_PYTHON.md). For Python in your own browser on a view's rows, see [Calc](#calc-python-on-any-view).
+
+## Sharing and discussion
+
+Three ways to tell a colleague about a number without leaving Drishti. None of them sends data: what travels is your words and a link,
+and the colleague sees the view **with their own permissions**.
+
+| I want to | Do this | Keys |
+|---|---|---|
+| Send this view (or one panel) to people, with a note | **Share** in the view's title line, or the **send** icon in a panel's header | `Alt+S` |
+| See what people sent me | the **bell** in the top bar: the inbox (shares, mentions, replies) | `Alt+I` |
+| Talk about this view, a panel or one field, in the open | **Discussion** in the title line, or the comment icon in a panel's header | `Alt+N` |
+
+### The short version
+
+1. **Share.** Press `Alt+S`, type two letters of a name or a role, write the note, press `Ctrl+Enter`. The dialog says who was reached and who
+   was not, and why. The date you are looking at travels with it: the people you send it to open the view *as you saw it*.
+2. **Receive.** The bell counts it within a second. Open the inbox, click the row: the view opens on your colleague's screen at your date, with
+   a banner ("Shared by ...") and your note. Anything their role may not see reads •••, including in your note if you typed it.
+3. **Discuss.** Press `Alt+N`. Type `@` to mention a person or a role, `{` to quote a field: each reader sees the quoted number as they may
+   see it. **Open as it was** takes a reader to the data the comment was written against.
+
+![A shared view: the banner, the note, and a masked value](/help/files/guides/img/collab/05-shared-view.jpg)
+
+Everything else (the recipient rules, the no-access page, edit and retract, resolve and follow, the email opt-outs on the account page,
+moderation) is in the user guide: [Share a view with a note](/help/user-guide#share-a-view-with-a-note),
+[Your inbox](/help/user-guide#your-inbox), [Discussion](/help/user-guide#discussion). If something did not arrive or
+opened the wrong data, see [Troubleshooting](/help/operations#21-troubleshooting).

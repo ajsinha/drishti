@@ -17,5 +17,5 @@ sections:
 - id: source-murex
   title: Source Murex
   pages:
-  - title: 'Source Murex'
-    file: guide.md
+  - title: Source Murex
+    file: ../guides/BANK_DATA_GUIDE.md

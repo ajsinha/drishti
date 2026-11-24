@@ -7135,3 +7135,136 @@ connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --lo
 | `SMAT` answers *DRS-4023 SMAT is not part of …* | your edition or lens is Drishti Market or World: the scenario matrix is Risk's and Trading's |
 | no *Limit letters* in the select | the lake has no limit letters (no `LIMIT_LETTER`, no `var-limit`): rebuild it with step 1's `--only` list, which includes `market-risk/var-limit` |
 | *Limit letters (not available)* in the select; the warning *DRS-5211 the hierarchy LL … is not built …: pnl-vector does not keep its level column LIMIT_LETTER* | the lake's rows predate the letters, or a `config/connectors/risk-store.yaml` from an older template lacks the column in its layout: rebuild the data with step 1, and let the server's template update add the column (Admin → Connectors → Template updates); VaR answers meanwhile without LL |
+
+## Market risk pack
+
+Value at risk, stress testing, FRTB sensitivities and P&L explain.
+
+**Extends:** `market-data`, `trading` · **Extended by:** none · **Kinds:** 5
+
+Enable it with `DRISHTI_PACKS=market-risk` (the packs it extends come with it; where they differ, the more specific wins).
+
+### Finding things
+
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for stress scenarios; the same works for every mnemonic.
+
+| Command | Does |
+|---|---|
+| `SCN <id> <GO>` | Opens that stress scenario. A bare identifier works too: its prefix (`SCN-…`) tells Drishti the kind. |
+| `SCN <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `SCN <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `SCN <GO>` | Lists every stress scenario. |
+| `FORM market-risk <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
+| `MRSK <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
+
+### Where the data comes from
+
+Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/demo/<domain>/<kind>/`, partitioned by business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.
+
+| Connector | Folder | Domain | Tables | Kinds |
+|---|---|---|---|---|
+| `risk-store` | `data/delta/demo/risk/` | Market-risk results: VaR, stress, FRTB, P&L explain | snapshot (every business date) | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation` |
+
+#### Value at risk: the VaR engine
+
+The pack's VaR is computed, never stored: the server adds up one P&L vector per live trade (`pnl-vector`, 509 historical scenario days) for any set of trades you name, from the bank down to a trade, with ES, component, incremental and marginal VaR, history and backtests. `VAR BANK <GO>`, `VAR DESK DESK-RATES <GO>` and `VAR SCOPE DESK:DESK-RATES - TRD:MX-30000121 <GO>` open the explorer (F1 there opens the VaR guide); positions (`POS`) are derived by the pack's `positions:` rules; system baskets (`PORT`) are definitions kept in Drishti's basket store (not data) whose figures are computed as their page opens; `VRES <scope> <GO>` reads a scope's VaR as an ordinary kind (`var-result`); the explorer's basket tray asks the same engine for a pre-deal what-if. Each loaded date lives in a memory-mapped hot file under the data folder (`drishti.var.tier`). From the command line: `drishti.py var show 'DESK:RATES'`.
+
+The VaR guide (`docs/guides/VAR_GUIDE.md`) explains every number with worked examples, the data flow, the scope grammar, the memory tiers and sizing, entitlements, the CLI and the API; the VaR tutorial, Part A (`docs/guides/VAR_GUIDE.md`) walks through it on the test data; the data contract is its Part II.
+
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, with the Python you run Drishti with (Windows `py -3.13`), run `python3 tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
+
+### Kinds
+
+| Kind | Name | Mnemonic | Identifiers | Id field | What it is |
+|---|---|---|---|---|---|
+| `stress-scenario` | Stress scenario | `SCN` | `SCN-…` | `SCENARIO_ID` | A named historical or hypothetical shock set. |
+| `stress-result` | Stress result | `STR` | `STR-…` | `RESULT_ID` | P&L of a desk under a scenario, by book. |
+| `frtb-sensitivity` | FRTB sensitivities | `FRTB` | `FRTB-…` | `RESULT_ID` | Delta, vega and curvature by risk class and bucket (SBM). |
+| `pnl-explain` | P&L explain | `PNL` | `PNL-…` | `RESULT_ID` | Daily P&L attributed to risk factors, new trades and residual. |
+| `trade-valuation` | Trade valuation | `TVAL` | `TVAL-…` | `VALUATION_ID` | A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product). |
+
+#### Stress scenario (`stress-scenario`)
+
+A named historical or hypothetical shock set.
+
+**Fields its Sutra reads:** `NAME`, `TYPE`, `SEVERITY`, `SHOCKS`.
+
+#### Stress result (`stress-result`)
+
+P&L of a desk under a scenario, by book.
+
+**Fields its Sutra reads:** `SCENARIO_NAME`, `PNL`, `LIMIT`, `BY_BOOK`.
+
+**Links:** `SCENARIO` → Scenario (`stress-scenario`), `DESK` → Desk (`desk`).
+
+#### FRTB sensitivities (`frtb-sensitivity`)
+
+Delta, vega and curvature by risk class and bucket (SBM).
+
+**Fields its Sutra reads:** `BOOK`, `DELTA_CHARGE`, `VEGA_CHARGE`, `CURVATURE_CHARGE`, `TOTAL`, `SENSITIVITIES`, `BY_CLASS`.
+
+**Links:** `BOOK` → Book (`book`).
+
+#### P&L explain (`pnl-explain`)
+
+Daily P&L attributed to risk factors, new trades and residual.
+
+**Fields its Sutra reads:** `DATE`, `ACTUAL`, `EXPLAINED`, `UNEXPLAINED`, `ATTRIBUTION`, `EXPLAIN_STEPS`.
+
+**Links:** `BOOK` → Book (`book`).
+
+#### Trade valuation (`trade-valuation`)
+
+A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product).
+
+**Fields its Sutra reads:** `TRADE_ID`, `SOURCE_SYSTEM`, `MTM`, `PNL_1D`, `DV01`, `NOTIONAL`, `VALUATION_DATE`.
+
+**Links:** `TRADE_ID` → Trade (`trade`), `DESK` → Desk (`desk`), `NETTING_SET` → Netting set ([`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set))).
+
+### Who can see it
+
+Role `market-risk`: kinds `*`, raw JSON.
+
+### F8 impact
+
+Amounts at stake: `trade-valuation` by `$.MTM`.
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `SCN` | `stress-scenario` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/stress-scenario/` → `lake demo` → connector `risk-store` |
+| `STR` | `stress-result` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/stress-result/` → `lake demo` → connector `risk-store` |
+| `FRTB` | `frtb-sensitivity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/frtb-sensitivity/` → `lake demo` → connector `risk-store` |
+| `PNL` | `pnl-explain` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/pnl-explain/` → `lake demo` → connector `risk-store` |
+| `TVAL` | `trade-valuation` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/trade-valuation/` → `lake demo` → connector `risk-store` |
+| `POS` | `position` | computed by Drishti: (the VaR engine derives positions from the trades of pnl-vector when a date loads, docs/guides/VAR_GUIDE.md section 15.6); see the [VaR guide](VAR_GUIDE.md) (positions) | nothing to load: computed from its inputs when asked |
+| `PORT` | `system-basket` | computed by Drishti: (the basket store's system scope, var/system-baskets/, docs/guides/VAR_GUIDE.md section 5.7; the demo's from the market-risk pack's seed) | nothing to load: computed from its inputs when asked |
+| `PNLV` | `pnl-vector` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/pnl-vector/` → connector `risk-store` |
+| `SPV` | `scenario-pv` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/scenario-pv/` → `lake demo` → connector `risk-store` |
+| `FXS` | `fx-scenario` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/fx-scenario/` → `lake demo` → connector `risk-store` |
+| `SSET` | `scenario-set` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/scenario-set/` → `lake demo` → connector `risk-store` |
+| `VLIM` | `var-limit` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/var-limit/` → `lake demo` → connector `risk-store` |
+| `DPNL` | `desk-pnl` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/desk-pnl/` → `lake demo` → connector `risk-store` |
+| `PNLH` | `pnl-history` | synthetic: `python3 tools/packgen/var/make_var_data.py` | `data/testdata/market-risk/pnl-history/` → `lake demo` → connector `risk-store` |
+| `SENS` | `position-sensitivity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/position-sensitivity/` → `lake demo` → connector `risk-store` |
+| `RFAC` | `risk-factor` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/risk-factor/` → `lake demo` → connector `risk-store` |
+| `VRES` | `var-result` | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.banking.var.VarResultEngine); see the [VaR guide](VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `VOFF` | `var-official` | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official; see the [VaR guide](VAR_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/var-official/` |
+| `SSPNL` | `stress-scenario-pnl` | computed by Drishti: the derived connector mr-derived over the kind stress-result | nothing to load: computed from its inputs when asked |
+
+#### Generators
+
+| Generator | Writes | Check |
+|---|---|---|
+| `python3 tools/testdata/make_testdata.py` | sixty business days of every dataset of the seven packs into data/testdata/<pack>/<kind>/ (the universe: tools/testdata/universe.py; deterministic, fictitious names) | `python3 tools/testdata/make_testdata.py --check` |
+| `python3 tools/packgen/banking/make_data.py` | the pack's few reference documents in samples/ (from the taxonomy, tools/packgen/banking/taxonomy.py) | `python3 tools/packgen/banking/make_data.py --check` |
+| `python3 tools/packgen/var/make_var_data.py` | the VaR engine's inputs into data/testdata/market-risk/<kind>/, as an upstream risk batch would deliver them, from the committed trades (VAR_GUIDE.md) | `python3 -m pytest -q tools/packgen/var/test_var_data.py` |
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

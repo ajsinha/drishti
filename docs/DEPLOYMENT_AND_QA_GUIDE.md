@@ -25,7 +25,7 @@ This guide is the one place for the deployment and QA steps; the details behind 
 (Drishti\*net in depth), [CONFIGURATION.md](admin/CONFIGURATION.md) (every setting), [CLI_REFERENCE.md](guides/CLI_REFERENCE.md) (every command),
 [DATA_LAKE_GUIDE.md](guides/DATA_LAKE_GUIDE.md) (lakes and loads). Developers building from source start with
 [QUICKSTART_DEVELOPERS.md](QUICKSTART_DEVELOPERS.md). **A production server on Linux** (systemd services, `/etc/drishti` settings and
-secrets, PostgreSQL, TLS, backups, upgrades): [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) ([PDF](PRODUCTION_DEPLOYMENT.pdf)).
+secrets, PostgreSQL, TLS, backups, upgrades): [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md#production-deployment-linux).
 
 **Conventions.** `<drishti>` is the install folder (a clone, or the unpacked release), `DRISHTI_HOME`, always written out in full: for
 example `C:\Users\you\IdeaProjects\drishti-platform\drishti` on Windows and `/home/you/IdeaProjects/drishti-platform/drishti` on Linux. `<data>` is the data folder,
@@ -1721,7 +1721,7 @@ t-b: stopped (pid 1978776)
 **The repository's own three on one machine.** `python3 tools/drishti.py start cluster` starts three servers and a console from
 `deploy/stack/stack.yaml` through these same commands, with the real address and the secrets made for you; `python3 tools/drishti.py
 status --cluster deploy/stack/stack.yaml` shows them, `python3 tools/drishti.py stop cluster` stops them
-([deploy/stack/README.md](../deploy/stack/README.md)). The same commands run on Windows with `py -3.13 tools\drishti.py`.
+([deploy/stack/README.md](guides/CLUSTER_GUIDE.md#deploystack-a-ready-made-local-drishtinet-cluster)). The same commands run on Windows with `py -3.13 tools\drishti.py`.
 
 ### 11.7 Verify the cluster, step by step
 

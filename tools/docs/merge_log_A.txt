@@ -1,0 +1,46 @@
+# Lane A merge log: one line per dropped item: <old path> | <heading or first line of the block> | <the place that already says it>
+modules/banking/packs/trading/guides/trading.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated from the contracts)
+modules/market-data/packs/market-data/guides/market-data.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated from the contracts)
+config/packs/core/core/guides/core.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated from the contracts)
+config/packs/core/compute-demo/guides/compute-demo.md | Data contracts | docs/contracts/packs/compute-demo.md (generated)
+modules/banking/packs/counterparty-risk/guides/counterparty-risk.md | Data contracts | docs/contracts/packs/counterparty-risk.md (generated)
+modules/banking/packs/market-risk/guides/market-risk.md | Data contracts | docs/contracts/packs/market-risk.md (generated)
+config/packs/core/gleif/guides/gleif.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated)
+modules/capital-markets/packs/funds/guides/funds.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated)
+modules/capital-markets/packs/us-equities/guides/us-equities.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated)
+modules/economy/packs/central-banks/guides/central-banks.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated)
+modules/economy/packs/gdelt-events/guides/gdelt-events.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated)
+modules/economy/packs/national-statistics/guides/national-statistics.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated)
+modules/economy/packs/news-and-markets/guides/news-and-markets.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated)
+modules/economy/packs/oecd/guides/oecd.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated)
+modules/economy/packs/official-news/guides/official-news.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated)
+modules/economy/packs/world-development/guides/world-development.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated)
+modules/economy/packs/world-economy/guides/world-economy.md | Data contracts | docs/contracts/packs/<pack>.md and the pack README (generated)
+modules/genomics/packs/genomics-showcase/guides/genomics-showcase.md | Data contracts | docs/contracts/packs/<pack>.md (generated)
+modules/genomics/packs/protein-engineering/guides/protein-engineering.md | Data contracts | docs/contracts/packs/<pack>.md (generated)
+modules/source-calypso/docs/guide.md | What the module ships | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-calypso/docs/guide.md | Bind it | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-calypso/docs/guide.md | Load a file | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-calypso/docs/guide.md | # config/connectors/trade-calypso.yaml (from connectors/delta.yaml) | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
+modules/source-calypso/docs/guide.md | cp calypso-2026-11-03.jsonl.gz data/dataload/inbox/ | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
+modules/source-ici/docs/guide.md | What the module ships | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-ici/docs/guide.md | Bind it | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-ici/docs/guide.md | Load a file | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-ici/docs/guide.md | # config/connectors/trade-ici.yaml (from connectors/delta.yaml) | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
+modules/source-ici/docs/guide.md | cp ici-2026-11-03.jsonl.gz data/dataload/inbox/ | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
+modules/source-murex/docs/guide.md | What the module ships | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-murex/docs/guide.md | Bind it | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-murex/docs/guide.md | Load a file | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-murex/docs/guide.md | # config/connectors/trade-murex.yaml (from connectors/delta.yaml) | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
+modules/source-murex/docs/guide.md | cp murex-2026-11-03.jsonl.gz data/dataload/inbox/ | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
+modules/source-swapone/docs/guide.md | What the module ships | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-swapone/docs/guide.md | Bind it | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-swapone/docs/guide.md | Load a file | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-swapone/docs/guide.md | # config/connectors/trade-swapone.yaml (from connectors/delta.yaml) | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
+modules/source-swapone/docs/guide.md | cp swapone-2026-11-03.jsonl.gz data/dataload/inbox/ | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
+modules/source-wss/docs/guide.md | What the module ships | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-wss/docs/guide.md | Bind it | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-wss/docs/guide.md | Load a file | docs/guides/BANK_DATA_GUIDE.md, the same heading under Source Endur (the same steps with the system name changed)
+modules/source-wss/docs/guide.md | # config/connectors/trade-wss.yaml (from connectors/delta.yaml) | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
+modules/source-wss/docs/guide.md | cp wss-2026-11-03.jsonl.gz data/dataload/inbox/ | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
+docs/guides/PVF_LOADING.md | Load your scenario PV and portfolio files into the Delta lake, and remove older scenario PV dates | docs/guides/BANK_DATA_GUIDE.md, the document's title (it is renamed and its title now names the whole guide: Bank data: what a bank sends each day and how it is loaded)

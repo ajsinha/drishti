@@ -318,7 +318,7 @@ read`); a token with a write scope must expire (at most `writeMaxDays`, 90). Rev
 `python tools/drishti.py stop all` (Windows `py -3.13 tools\drishti.py stop all`), `Ctrl+C` in a foreground terminal, or the red square in the IDE stops it; start again as
 in 2.5 and 2.6 (no rebuild unless the code changed; monitors, alerts, workspaces and settings are kept in the data folder). New demo data: run 2.4 again, with
 the server running or not. The start order does not matter ([5.2](#52-first-start-by-hand-and-check-it-works)). Three servers as one
-cluster with a console, on this machine: `python tools/drishti.py start cluster` ([deploy/stack/README.md](../../deploy/stack/README.md),
+cluster with a console, on this machine: `python tools/drishti.py start cluster` ([deploy/stack/README.md](CLUSTER_GUIDE.md#deploystack-a-ready-made-local-drishtinet-cluster),
 [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 
 ### 2.10 Where Drishti keeps things
@@ -1580,7 +1580,7 @@ Work through this for every shared installation. Each item says how to check it.
    `auth.recheck_seconds` (10); signing out ends the session on the server.
 3. **The development admin is gone.** Compose never creates it. Elsewhere sign in as `drishti-dev-admin`, create your own admin, change or
    disable the development one. In production give `DRISHTI_SEED_USERNAME` and `DRISHTI_SEED_PASSWORD` for the first start (the first
-   administrator), then remove the two lines ([PRODUCTION_DEPLOYMENT.md › The first administrator](../PRODUCTION_DEPLOYMENT.md#44-the-first-administrator));
+   administrator), then remove the two lines ([PRODUCTION_DEPLOYMENT.md › The first administrator](#44-the-first-administrator));
    never `DRISHTI_SEED_ADMIN=false` on an empty store, which then has no administrator at all. Check:
    no default-password warning; `/api/v1/admin/status` reports `"defaultAdminPasswordInUse": false`.
 4. **Single sign-on (optional).** `DRISHTI_OIDC_ENABLED=true`, `DRISHTI_OIDC_ISSUER` (https) and `DRISHTI_OIDC_CLIENT_ID` on both processes,
@@ -2874,7 +2874,7 @@ key (`DRISHTI_NET_SECRET`), keep their clocks in step, and are watched on **Admi
 upgrades, VaR sharding, the console with several servers, sizing and performance tuning, and Drishti on AWS are all in
 [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md); the deployment steps, on one machine or three, with the QA checklist, are in
 [DEPLOYMENT_AND_QA_GUIDE.md › A cluster of three](../DEPLOYMENT_AND_QA_GUIDE.md#11-a-cluster-of-three); the repository's own three on one
-machine are `python tools/drishti.py start cluster` ([deploy/stack/README.md](../../deploy/stack/README.md)) and [tutorial 22](../tutorials/22-a-cluster-of-three.md).
+machine are `python tools/drishti.py start cluster` ([deploy/stack/README.md](CLUSTER_GUIDE.md#deploystack-a-ready-made-local-drishtinet-cluster)) and [tutorial 22](../tutorials/22-a-cluster-of-three.md).
 
 ## 20. Runbooks
 
@@ -3406,7 +3406,7 @@ BI reads only tables and models of the table layer, and only Rachana. Nothing is
 | A Vega-Lite visual says Not drawn, is empty, or "may not load anything from a URL" | the specification uses what drishti-chart does not draw (the message lists each path and what to use, [REPORT_FILE_FORMAT_STATEMENTS.md](bi/REPORT_FILE_FORMAT_STATEMENTS.md#16-vega-lite-visuals)); a field not in the rows (`DESK`, not `trade.DESK`); remove `data.url`/`loader` |
 | The Notebook's extract is short; a SQL cell is refused (`DRS-9170`, `DRS-9072`) | `bi.notebook.max_rows` (10,000) of your rows; SQL is one read-only `SELECT` over the model, at most `sql_max_chars` |
 | Calc: `No module named 'drishti_bi'`, `needs JavaScript Promise Integration`, `DRS-9002` | `import drishti_bi` in the cell; `await drishti_bi.query_async(...)`; you need the `bi` power |
-| A window function reads `null`; a rank differs by reader; `DRS-9020` *no many-to-one path* | no row before or after; row rules apply first; group by a field every fact reaches, or ask the measures apart ([MODELS_AND_DATASETS_FOR_REPORTS.md](bi/MODELS_AND_DATASETS_FOR_REPORTS.md#13-relationships-and-how-a-question-joins)) |
+| A window function reads `null`; a rank differs by reader; `DRS-9020` *no many-to-one path* | no row before or after; row rules apply first; group by a field every fact reaches, or ask the measures apart ([TABLES_AND_MODELS.md](bi/TABLES_AND_MODELS.md#13-relationships-and-how-a-question-joins)) |
 | A history query is empty or refused; a publish refused (`DRS-9040`) for a rename; *Roll back this import* `DRS-9004` | the live table has not been open long enough (Layers: `samples`); give the column a `path:` so the rename is recognised; an item changed since: export, then a bi-admin rolls back with force |
 | A deployed pack's BI items did not appear | the import was held (deploy answer `bi.loaded: false`, audit `pack-bi-held`) or files not named `<name>.<kind>.yaml` |
 | A theme or format refused (`DRS-9036`, `DRS-9032`); a Transform input refused (`DRS-9102`, `DRS-9108`) | the designer names the path; pick the kind and fields from the editor's lists |
@@ -3524,3 +3524,869 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-9166` | a filter-context function cannot be planned (HTTP 422): `via=` a relationship id, `parent_of` a hierarchy, `as_of` a fixed date; at most three deep |
 | `DRS-9184` | with several Java nodes, the owner of the model's standing queries could not be reached (HTTP 503): retry; check `drishti.bi.exec.nodes` and the owner's health |
 | `DRS-9404` | raised by the console only (HTTP 404): an embedding page asked for an Elements module or script the console does not ship: check the file name and the library version in the `<script>` tag |
+
+## Production deployment (Linux)
+
+How to run Drishti in production: one machine or a cluster, as services under a dedicated user, behind TLS, with secrets in a
+protected file, a real database, backups and upgrades. **Production is Linux only; Windows is for demo and QA (DEPLOYMENT_AND_QA_GUIDE.md), never production.** Every command below is exact; where a setting has a
+full table, this guide links it instead of repeating it ([CONFIGURATION.md](../admin/CONFIGURATION.md),
+[CLI_REFERENCE.md](CLI_REFERENCE.md), [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md), [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
+The developer and QA path (clone, demo lake, IDE) is [DEPLOYMENT_AND_QA_GUIDE.md](../DEPLOYMENT_AND_QA_GUIDE.md); **the demo profile is not for
+production**: it carries development secrets and the development administrator.
+
+**Conventions.** `<release>` is the release's folder name; `<host>` is the machine's real address (`ip route get 1.1.1.1`, the `src`
+address), never `localhost`. Commands that change the machine run as root (`sudo`); the services run as the user `drishti`.
+
+### Quick path
+
+The whole install on one Linux machine, as root, in order. Each line says what you should see; the sections after it give the detail.
+`<release>` is the release's folder name, `PY` is the dedicated Python 3.13 of step 1.
+
+1. **A dedicated Python 3.13** for Drishti alone: `/opt/python3.13/bin/python3.13 --version` says `Python 3.13.<n>` ([section 1](#1-what-you-need)).
+   Never the operating system's `python3` and never a Python shared with other work: installing Drishti's pinned libraries **upgrades pandas,
+   pyarrow, tzdata and others in that Python**. Drishti never creates an environment or runs pip itself; a virtual environment you make yourself
+   from that Python is fine (then `PY` is its `python`).
+2. **Java 21 and the folders**: `java -version` says 21; make the user and folders of [section 2](#2-lay-out-the-machine).
+3. **Unzip the release and the Linux wheel pack**, both into folders (setup never opens a zip):
+   `sudo unzip -q drishti-platform-<release>-source.zip -d /opt/drishti/<release>` and
+   `sudo unzip -q drishti-platform-<release>-wheels-linux-x64-py313.zip -d /root/drishti-wheels`. `ls /root/drishti-wheels | head` lists `.whl` files
+   (if the zip made one more folder inside, the `--find-links` folder is that one).
+4. **Build once**, in the folder that holds `build_all.py`: `cd /opt/drishti/<release> && sudo $PY build_all.py --skip-tests` ends without error, and
+   `ls drishti/lib/drishti-server-*-exec.jar` lists exactly one jar ([section 3](#3-install-a-release)).
+5. **Install the libraries**: two pip commands, one each, from `drishti/drishti-console`, offline from the unzipped pack:
+   `sudo $PY -m pip install --no-index --find-links /root/drishti-wheels -r requirements.txt` then
+   `sudo $PY -m pip install --no-index --find-links /root/drishti-wheels -r ../config/compute/locks/python.lock`; both end `Successfully installed ...`
+   (or `Requirement already satisfied`).
+6. **Write `/etc/drishti/prod.ini`** ([4.1](#41-the-settings-file)), the secrets ([4.2](#42-the-secrets)) and the environment ([4.5](#45-the-environment-file)).
+7. **Check with setup**: `sudo $PY /opt/drishti/<release>/drishti/tools/drishti.py setup --settings /etc/drishti/prod.ini` ends with the line
+   **`Drishti is ready.`** Any `[FAIL]` line names its fix: [3.1](#31-what-setup-tells-you). Setup changes nothing in the Python.
+8. **Disk**: the data folder's disk has at least 20 GB free (`df -h /srv/drishti/data`), or you lowered `drishti.disk.min-free-gb` in `prod.ini`
+   ([2](#2-lay-out-the-machine)); below the guard a VaR date is refused with 503.
+9. **Services**: write the two units ([section 6](#6-run-as-services-systemd)), then `sudo systemctl daemon-reload && sudo systemctl enable --now drishti-server`.
+10. **Start and verify**: `curl -s http://127.0.0.1:18480/actuator/health/readiness` says `{"status":"UP"}` (the first start can take minutes), then
+    `sudo systemctl enable --now drishti-console` and `curl -s http://127.0.0.1:17480/readyz` says `{"status":"UP","server":"reachable"}`; sign in
+    as the first administrator ([section 9](#9-check-it-works)).
+
+### Contents
+
+0. [Quick path](#quick-path)
+1. [What you need](#1-what-you-need)
+2. [Lay out the machine](#2-lay-out-the-machine)
+3. [Install a release](#3-install-a-release)
+4. [The settings and secrets](#4-the-settings-and-secrets)
+5. [Database](#5-database)
+6. [Run as services (systemd)](#6-run-as-services-systemd)
+7. [Cluster (more nodes)](#7-cluster-more-nodes)
+8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
+9. [Check it works](#9-check-it-works)
+10. [Operate: logs, health, backups](#10-operate-logs-health-backups)
+11. [Upgrade](#11-upgrade)
+12. [Security checklist](#12-security-checklist)
+13. [Troubleshooting](#13-troubleshooting)
+14. [Command line reference](#command-line-reference)
+
+### 1. What you need
+
+| Need | Detail |
+|---|---|
+| **Linux**, 64-bit, systemd | Ubuntu 22.04+ or RHEL 9+ |
+| **Java 21**, a JDK | the distribution's `openjdk-21-jdk` / `java-21-openjdk-devel`, or a Temurin 21 `.tar.gz`; `java -version` says 21 |
+| **A Python 3.13 base** | the release's wheel pack is for Python 3.13. Use the distribution's `python3.13` package where it has one, else build python.org's source once into `/opt/python3.13` (below). The operating system's own `python3` is not used when it is not 3.13, and a distribution's Python refuses `pip install` into itself (PEP 668): Drishti's libraries never go into it |
+| **The release** | `drishti-platform-<release>-source.zip`: the platform folder (`build_all.py`, `drishti/` and the products it is built on). There is no binary archive: the release is built on the machine once with `build_all.py` ([section 3](#3-install-a-release)), which needs the JDK 21 and Maven's libraries (a company mirror, or a filled `~/.m2`) |
+| **The offline wheel pack** | `drishti-platform-<release>-wheels-linux-x64-py313.zip`: every Python library the console and the server's Python work need, and the pinned Lake wheel. No package index is needed on the machine |
+| **A database** | PostgreSQL for a cluster or any shared use ([section 5](#5-database)); SQLite is the default of a single node |
+| **Memory** | the server's heap plus about 1 GB, plus RAM for the page cache of the mapped hot files; the console about 1 GB (4 worker processes). About 4 GB of heap per 400,000 trades a day, 8 GB for a million or more |
+| **Disk** | the data folder (lakes if local, hot files, caches, logs, dumps): size it with the sizing planner |
+| **A reverse proxy** with a certificate | nginx or the bank's load balancer ([section 8](#8-tls-and-the-reverse-proxy)) |
+| **NTP** | clocks within 60 seconds on every node of a cluster |
+
+Nothing else is required: no Kafka or other broker, no Docker, no internet. Kafka, AI providers and the public data feeds are optional
+and off as shipped; a stream connector whose broker is not there waits and says so, and the rest works.
+
+**The Python 3.13 base** (once per machine, as root; skip the build where the distribution gives you `/usr/bin/python3.13`, and use that
+path below in place of `/opt/python3.13/bin/python3.13`):
+
+```bash
+# the distribution's -dev packages for ssl, zlib, ffi, sqlite, bz2, lzma and readline first, then:
+tar xf Python-3.13.<n>.tgz && cd Python-3.13.<n>
+./configure --prefix=/opt/python3.13 --enable-optimizations
+make -j"$(nproc)"
+sudo make altinstall                        # altinstall: it never replaces the system's python3
+/opt/python3.13/bin/python3.13 --version    # Python 3.13.<n>
+```
+
+**Never** use `--break-system-packages`. **Drishti never installs Python packages and never makes an environment**: you install the libraries
+with the pip commands of [section 3](#3-install-a-release), and `setup` only checks them. The pinned libraries replace what the Python has
+(pandas, pyarrow, tzdata and others), so the Python is **dedicated to Drishti**; one in its own prefix carries no `EXTERNALLY-MANAGED` marker.
+A virtual environment you make yourself from it works the same (use its `python` wherever this guide says `/opt/python3.13/bin/python3.13`).
+Both services run that Python; it is owned by root and read-only to the service user.
+
+**Sizing.** Before a large deployment, plan it: `python3 tools/sizing_planner.py --out <folder>` writes the single-node planner workbook (the
+committed copy is `docs/architecture/Drishti-Sizing-Planner.xlsx`), and **Admin → Capacity** compares today against the plan
+([CLUSTER_GUIDE.md › Sizing](CLUSTER_GUIDE.md#15-sizing-memory-cpu-and-disk), [OPERATIONS_GUIDE.md › Memory, caches and capacity](OPERATIONS_GUIDE.md#14-memory-caches-and-capacity)).
+
+### 2. Lay out the machine
+
+```text
+/opt/drishti/<release>/        the platform folder of one release (build_all.py, the products); read only to the service user
+/opt/drishti/<release>/drishti/      the install folder (DRISHTI_HOME)
+/opt/python3.13/                    the Python 3.13 Drishti runs with, its libraries installed by you with the two pip commands; setup only checks (drishti.python)
+/srv/drishti/data/             the data folder (DRISHTI_DATA_DIR): everything Drishti writes; owned by drishti
+/etc/drishti/prod.ini          the settings file: folders, lakes, databases, brokers (no secret in it)
+/etc/drishti/secrets.ini       optional: passwords of the databases, brokers and lakes, given last (mode 600)
+/etc/drishti/secrets.env       the secrets as environment variables (mode 600, root)
+/etc/drishti/drishti.env       the non-secret environment of both services (mode 644)
+/etc/drishti/release.env       which release runs (the file to change on an upgrade)
+/etc/drishti/server.args       the server's JVM options
+```
+
+```bash
+sudo useradd --system --home-dir /srv/drishti --shell /usr/sbin/nologin drishti
+sudo mkdir -p /opt/drishti /srv/drishti/data /etc/drishti
+sudo chown drishti:drishti /srv/drishti/data
+sudo chmod 750 /srv/drishti/data
+```
+
+What the data folder holds (made by the server as it needs them; `<data>` is `/srv/drishti/data`):
+
+```text
+<data>/
+  identity/    users, roles, audit, settings (drishti.db: SQLite; unused when the identity database is PostgreSQL)
+  fstore/      the content store: designs, collaboration, proposals, load history, BI items
+  governance/, packs/, loads/, reports/, net/    state of the server
+  delta/       the lakes, when they are local
+  cache/, state/, derived/, index/, bi-store/     caches and markers (rebuilt from the sources)
+  logs/        server.log, gc-server-<pid>.log
+  dumps/       heap dumps (dumps/server)
+  tmp/         tmp/server and tmp/console: each process's temporary files, removed on a clean stop
+  console/     what the console keeps between runs
+  nodes/<node>/net/    a cluster node's Drishti*net folder (section 7)
+```
+
+Logs, dumps and temporary files are under the data folder by design, never in the system's `/tmp`. Put the data folder on a file system
+with room for the hot files and a free-space guard that holds (`drishti.disk.min-free-percent` 10, `drishti.disk.min-free-gb` 20 by
+default). Local lakes sit on the data disk or on a mount named in their lake file ([4.3](#43-lakes)); a cluster's are shared.
+
+### 3. Install a release
+
+```bash
+# as root. PY is the dedicated Python 3.13 (section 1)
+PY=/opt/python3.13/bin/python3.13
+
+# 1. unpack the release into its own folder (one folder per release, never over another) and build it once, in the folder that holds
+#    build_all.py (when the zip holds one top folder, cd into it): the products, then Drishti's server jar into drishti/lib and its
+#    module packages into drishti/modules (no tests)
+sudo mkdir -p /opt/drishti/<release> && sudo unzip -q /root/drishti-platform-<release>-source.zip -d /opt/drishti/<release>
+cd /opt/drishti/<release> && sudo $PY build_all.py --skip-tests
+ls /opt/drishti/<release>/drishti/lib/drishti-server-*-exec.jar          # exactly one jar (the start refuses two)
+ls /opt/drishti/<release>/drishti/modules/*.dmod | head -3               # the module packages
+
+# 2. the wheel pack, UNZIPPED (setup does not open a zip)
+sudo unzip -q /root/drishti-platform-<release>-wheels-linux-x64-py313.zip -d /root/drishti-wheels
+
+# 3. the Python libraries: two pip commands, one each (the lock file carries hashes, so pip takes it in its own run), offline
+cd /opt/drishti/<release>/drishti/drishti-console
+sudo $PY -m pip install --no-index --find-links /root/drishti-wheels -r requirements.txt
+sudo $PY -m pip install --no-index --find-links /root/drishti-wheels -r ../config/compute/locks/python.lock
+
+# 4. write /etc/drishti/prod.ini (4.1), then let setup CHECK everything; it ends with "Drishti is ready." or "Drishti is NOT ready: N to fix"
+sudo $PY /opt/drishti/<release>/drishti/tools/drishti.py setup --settings /etc/drishti/prod.ini
+
+# 5. the install is root-owned and not writable by the service user
+sudo chown -R root:root /opt/drishti/<release> && sudo chmod -R go-w /opt/drishti/<release>
+```
+
+The build needs the JDK 21 and Maven's libraries (a company mirror, or a filled `~/.m2` of root). Your own jars (JDBC drivers, connector
+plugins) go in `/opt/drishti/<release>/drishti/lib/ext`; copy them from the previous release on an upgrade.
+
+`setup --settings /etc/drishti/prod.ini` reads and keeps your settings file (never moves it), adds `drishti.python` (the Python it ran with:
+the one both services and the server's compute work use) and writes no developer settings folder or IDE files in the home of whoever runs
+it. `setup --check` changes nothing and only reports (exit 1 when something needs doing). The Python is shared by every release that names
+it, and a release whose pins differ changes it for the others: keep one release per machine, or give each release its own Python (a
+second prefix, or a virtual environment you make yourself) named in that release's `drishti.python`.
+
+#### 3.1 What setup tells you
+
+Setup prints one line per check (`[  ok]`, `[todo]`, `[FAIL]`) and ends with `Drishti is ready.` or `Drishti is NOT ready: N to fix (above)`;
+every `[FAIL]` ends with `Fix:`. Run it again after each fix.
+
+| You see | It means | Fix |
+|---|---|---|
+| `[FAIL] libraries` ... `<name><spec> is not installed` | a pinned library is missing from this Python | run the two pip commands of section 3 with the Python setup ran with (the line prints them) |
+| `[FAIL] libraries` ... `<name> <x> is installed, the requirement is <name><spec>` | an older (or newer) version than the pin | the same two pip commands: they bring it to the pin; `drishti-lake` must equal `lib/lake-wheel.pin` |
+| `[FAIL] wheel pack: <file>.zip is still zipped` | the pack was given as a zip; setup never unzips | `unzip` it into the folder the line names (`/root/drishti-wheels`), run setup again |
+| `[FAIL] libraries: no wheel pack found` | no folder with the `.whl` files where setup looked | unzip the pack and name it: `setup --wheels /root/drishti-wheels` (or `DRISHTI_WHEELS`) |
+| `[FAIL] wheel pack` ... another system, architecture or Python version | the pack is for another machine or not Python 3.13 | fetch the `linux-x64-py313` pack of this release |
+| `this Python is managed by the operating system` | setup ran with the distribution's Python (`EXTERNALLY-MANAGED`, PEP 668) | run setup with the dedicated Python 3.13 (or your own virtual environment); never `--break-system-packages` |
+| `[FAIL] the server jar: no server jar in <home>/lib` | the release is not built | `cd` to the folder with `build_all.py`, run `$PY build_all.py --skip-tests` (step 1) |
+| `<n> server jars` | an old jar is still in `lib/` | keep exactly one `drishti-server-*-exec.jar` (your jars live in `lib/ext`) |
+| `[FAIL] Java` ... `Java <n> is older than 21` | the JDK found is too old | install JDK 21; point `JAVA_HOME` or `drishti.java.home` in `prod.ini` at it |
+| `[FAIL] <file>: <folder> is not writable` | the account running setup cannot write the settings file or the data folder | run setup as root (or as `drishti` for the data folder), or fix the owner of `/etc/drishti` and `/srv/drishti/data` |
+| `[todo] drishti.python` | the settings file does not name the Python yet | run setup without `--check`: it writes the line |
+
+Not from setup, but met on the first VaR: with the data disk under the guard (`drishti.disk.min-free-percent` 10 and `drishti.disk.min-free-gb`
+20) a VaR or exposure date is refused with `503 DRS-5218` or `DRS-9502`: free the space, or lower `drishti.disk.min-free-gb` in `prod.ini`
+for a small machine (Admin → Health → Disk shows what holds it).
+
+### 4. The settings and secrets
+
+#### 4.1 The settings file
+
+`/etc/drishti/prod.ini` holds every folder and named resource, by absolute path; the example with every lake, database and broker form is
+`config/settings.examples/prod.ini`. A minimal file:
+
+```ini
+# /etc/drishti/prod.ini: no secret in this file; a value runs to the end of its line, so no comment after a value
+[roots]
+drishti.home=/opt/drishti/<release>/drishti
+drishti.data.dir=/srv/drishti/data
+drishti.modules.home=/opt/drishti/<release>/drishti/modules
+
+[console.backend]
+url=http://127.0.0.1:18480
+```
+
+`setup` ([3.1](#31-what-setup-tells-you)) adds `drishti.python`, the Python the server starts for its Python work (feeds, compute workers); the
+console runs under the same interpreter ([6.2](#62-the-console-unit)).
+
+Both services read the file (`-Ddrishti.settings.file=` on the server, `--settings` on the console, which takes only the keys under
+`console.` and the keys it shares with the server). An explicit `-D` or command-line argument beats the files; the files beat the
+environment. Admin → Configuration → Resolved paths shows every folder and the file it came from; passwords show as masked values.
+The rules, sections and placeholders: [CONFIGURATION.md › The settings file](../admin/CONFIGURATION.md#the-settings-file--ddrishtisettingsfile).
+
+#### 4.2 The secrets
+
+Three secrets, each made once with `openssl rand -hex 32`, kept only in `/etc/drishti/secrets.env` (mode 600, owned by root; systemd reads
+it as root). Never in `prod.ini`, in a unit file, under `config/`, in git or in a ticket.
+
+```bash
+sudo install -m 600 -o root -g root /dev/null /etc/drishti/secrets.env
+sudo tee /etc/drishti/secrets.env >/dev/null <<EOF
+DRISHTI_TOKEN_SECRET=$(openssl rand -hex 32)
+DRISHTI_SESSION_SECRET=$(openssl rand -hex 32)
+DRISHTI_NET_SECRET=$(openssl rand -hex 32)
+DRISHTI_SEED_USERNAME=<the first administrator's user name>
+DRISHTI_SEED_PASSWORD=<a long password of your own>
+EOF
+```
+
+| Variable | Read by | What it is |
+|---|---|---|
+| `DRISHTI_TOKEN_SECRET` | server and console | signs the tokens of signed-in people; at least 32 bytes, **the same on the server and the console** (and on every node of a cluster). Whoever holds it can act as any user: treat it as a master key |
+| `DRISHTI_SESSION_SECRET` | console | signs the console's session cookie; at least 32 characters |
+| `DRISHTI_NET_SECRET` | every server of a cluster | the cluster key ([section 7](#7-cluster-more-nodes)); leave it out of a single node |
+| `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | server | the first administrator, made at the first start with no users; see [4.4](#44-the-first-administrator) |
+
+Database and broker passwords go in `/etc/drishti/secrets.ini` (mode 600), given **last** on the settings list so it wins, under the same
+sections and keys as `prod.ini` (`config/settings.examples/secrets.ini`); a key named password, secret, token or key is masked in logs and in
+Admin. The list is then `-Ddrishti.settings.file=/etc/drishti/prod.ini,/etc/drishti/secrets.ini`.
+
+#### 4.3 Lakes
+
+A lake is one file per lake in `config/lakes/` with its tables; **where it is** is a section of `prod.ini`, so the release's `config/` stays
+as shipped:
+
+```ini
+[lake.risk]
+root=s3://bank-risk-lake/drishti
+storage.s3.region=us-east-1
+```
+
+Local lakes use an absolute path (`root=/srv/drishti/data/delta/risk`); in a cluster every node reads the same lake at the same path
+([7.3](#73-shared-data)). The lake loaders and the data inbox: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md).
+
+#### 4.4 The first administrator
+
+Sign-in is on in production (`DRISHTI_SECURITY_ENABLED=true`, `DRISHTI_AUTH_ENABLED=true`, [4.5](#45-the-environment-file)). The server creates the
+first administrator at the first start with no users, from `DRISHTI_SEED_USERNAME` and `DRISHTI_SEED_PASSWORD` (the log says *Created the
+first administrator ... with the password from the configuration*). Then:
+
+1. Sign in, create the real administrators (**Admin → Users**), and give each their own password.
+2. Disable or delete the first one if it was only for set-up.
+3. Delete the two `DRISHTI_SEED_*` lines from `/etc/drishti/secrets.env`; once the store holds users they are not read again.
+
+The built-in development administrator `drishti-dev-admin` with its default password is what a start gets when `DRISHTI_SEED_USERNAME` and
+`DRISHTI_SEED_PASSWORD` are not set: never start production without the two variables. With `DRISHTI_SEED_ADMIN=false` and an empty store
+**no** administrator is made at all. Single sign-on is an option (`DRISHTI_OIDC_*`,
+[OPERATIONS_GUIDE.md › Security checklist](OPERATIONS_GUIDE.md#11-security-checklist)).
+
+#### 4.5 The environment file
+
+`/etc/drishti/drishti.env` (mode 644, no secret) is read by both services; `/etc/drishti/release.env` names the release that runs:
+
+```bash
+sudo tee /etc/drishti/drishti.env >/dev/null <<'EOF'
+# the server
+DRISHTI_SECURITY_ENABLED=true
+DRISHTI_DEMO_ENABLED=false
+DRISHTI_LOG_FILE=/srv/drishti/data/logs/server.log
+DRISHTI_DRAIN_WAIT=240
+SERVER_ADDRESS=127.0.0.1
+# the console
+DRISHTI_AUTH_ENABLED=true
+DRISHTI_CONSOLE_HOST=127.0.0.1
+DRISHTI_CONSOLE_PORT=17480
+EOF
+sudo tee /etc/drishti/release.env >/dev/null <<'EOF'
+DRISHTI_HOME=/opt/drishti/<release>/drishti
+DRISHTI_DATA_DIR=/srv/drishti/data
+DRISHTI_MODULES_HOME=/opt/drishti/<release>/drishti/modules
+EOF
+```
+
+`DRISHTI_DEMO_ENABLED` is `true` as shipped: set it `false`. `DRISHTI_CONSOLE_HOST=127.0.0.1` makes the console reachable only from this
+machine, so only the reverse proxy reaches it ([section 8](#8-tls-and-the-reverse-proxy)); `SERVER_ADDRESS=127.0.0.1` does the same for the
+server on a single machine (**remove it on a cluster node**, [section 7](#7-cluster-more-nodes)). `DRISHTI_SECURE_COOKIE` stays unset
+(cookies are `Secure` by default). Leave `DRISHTI_AI_ENABLED`, `DRISHTI_MCP_ENABLED`, `DRISHTI_OFFLINE`, `DRISHTI_STUDIO_SAVE` and the data
+inbox as shipped unless you want them ([12](#12-security-checklist)). Modules and engines are switched in `config/modules/<module>.yaml`
+(`enabled: true/false`) and `config/engines/<engine>.yaml`; Admin → Modules and Admin → Engines show and change them, and a change takes
+effect at the next start. Every variable: [CONFIGURATION.md](../admin/CONFIGURATION.md#every-placeholder).
+
+#### 4.6 The JVM options
+
+`/etc/drishti/server.args` is a Java `@argfile`, one quoted option per line: the flags `drishti.py start server` passes, with every folder
+under the data folder. Change the heap here. The GC log's folder must exist or the JVM does not start (the unit makes it).
+
+```text
+"-Djava.io.tmpdir=/srv/drishti/data/tmp/server"
+"-Xmx8g"
+"-XX:+UseZGC"
+"-XX:MaxDirectMemorySize=256m"
+"-XX:TrimNativeHeapInterval=60000"
+"-Djdk.nio.maxCachedBufferSize=262144"
+"-XX:NativeMemoryTracking=summary"
+"-XX:+HeapDumpOnOutOfMemoryError"
+"-XX:HeapDumpPath=/srv/drishti/data/dumps/server"
+"-Xlog:gc*:file=\"/srv/drishti/data/logs/gc-server-%p.log\":time,uptime:filecount=5,filesize=20m"
+```
+
+`-XX:+ZGenerational` goes on the unit's command line on Java 21 (it is the default from Java 23). A shipped starting point is
+`deploy/jvm/server-service.args` (a 4 GB heap, data folder `/opt/drishti/data`: change the paths).
+
+### 5. Database
+
+Drishti keeps users, roles, sessions, audit and the content store in one **identity database**.
+
+| | SQLite (the default) | PostgreSQL |
+|---|---|---|
+| For | a single node | a cluster, or any shared or heavy use (the access log alone adds millions of rows) |
+| Where | `<data>/identity/drishti.db` | a database you run, with its own backup and high availability |
+| Settings | none | `[db.identity]` (and `[db.store]` for the content store) in `prod.ini`, the password in `secrets.ini` |
+
+PostgreSQL: create an empty database and a user that owns it. Drishti applies its **complete schema file** (`CREATE ... IF NOT EXISTS`,
+idempotent, **no migrations**) at every start.
+
+```bash
+sudo -u postgres psql -c "CREATE ROLE drishti LOGIN PASSWORD '<password>'" -c "CREATE DATABASE drishti OWNER drishti"
+```
+
+```ini
+# /etc/drishti/prod.ini
+[db.identity]
+url=jdbc:postgresql://db.example.internal:5432/drishti?sslmode=verify-full
+user=drishti
+
+# the content store, in the same database (config/store/store.yaml, backend: postgres)
+[db.store]
+url=jdbc:postgresql://db.example.internal:5432/drishti
+user=drishti
+```
+
+```ini
+# /etc/drishti/secrets.ini (mode 600)
+[db.identity]
+password=<password>
+
+[db.store]
+password=<password>
+```
+
+The content store's backend is chosen in its own file, `config/store/store.yaml` (`backend: postgres`; the ready-made variant is
+`config/store.examples/postgres.yaml`; with `backend: filesystem` a cluster needs a shared mount at the same path on every node), and every
+node of a cluster must read the same one. Settings and pools: [CONFIGURATION.md › `drishti.identity`](../admin/CONFIGURATION.md#drishtiidentity--users-passwords-and-the-identity-database),
+[› The content store](../admin/CONFIGURATION.md#the-content-store-configstorestoreyaml). The server does not start when it cannot reach the
+database. A cluster never uses SQLite. Backup and restore: [10.3](#103-backups).
+
+### 6. Run as services (systemd)
+
+Both units run the process **in the foreground** under systemd (`Type=simple`, the default): the server as the JVM itself, the console as
+the Python of section 3 running `run_drishti_web.py`. Neither goes through `tools/drishti.py start`, which is for a terminal.
+
+#### 6.1 The server unit
+
+`/etc/systemd/system/drishti-server.service` (the shipped `deploy/systemd/drishti-server.service`, with this guide's layout):
+
+```ini
+[Unit]
+Description=Drishti server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=drishti
+Group=drishti
+WorkingDirectory=/srv/drishti
+EnvironmentFile=/etc/drishti/drishti.env
+EnvironmentFile=/etc/drishti/release.env
+EnvironmentFile=/etc/drishti/secrets.env
+Environment=MALLOC_ARENA_MAX=2
+ExecStartPre=/usr/bin/mkdir -p /srv/drishti/data/logs /srv/drishti/data/dumps/server /srv/drishti/data/tmp/server
+ExecStart=/bin/sh -c 'exec java @/etc/drishti/server.args -XX:+ZGenerational -Ddrishti.settings.file=/etc/drishti/prod.ini,/etc/drishti/secrets.ini -jar "$DRISHTI_HOME"/lib/drishti-server-*-exec.jar'
+SuccessExitStatus=143
+TimeoutStopSec=300
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+- `exec java ...` in a shell lets the release's one jar be found by its name whatever its version (the shell expands the pattern), and
+  `exec` makes the JVM the unit's main process, so SIGTERM reaches it.
+- **The stop drains first.** On SIGTERM the server drains itself (`drishti.node.drain.on-stop`: in a cluster its forwarded work and VaR
+  shards move to other members and readiness turns `OUT_OF_SERVICE`), waits at most `DRISHTI_DRAIN_WAIT` seconds (240), then shuts down
+  gracefully (open requests finish, up to 30 s; exit 143 is a normal stop). `TimeoutStopSec` covers the drain, the graceful stop and a margin.
+- If `java` is not on the unit's `PATH`, write your JDK's `bin/java` path in its place. Without a `secrets.ini`, leave it off the list.
+
+#### 6.2 The console unit
+
+`/etc/systemd/system/drishti-console.service`:
+
+```ini
+[Unit]
+Description=Drishti console
+After=network-online.target drishti-server.service
+Wants=drishti-server.service
+
+[Service]
+User=drishti
+Group=drishti
+WorkingDirectory=/srv/drishti
+EnvironmentFile=/etc/drishti/drishti.env
+EnvironmentFile=/etc/drishti/release.env
+EnvironmentFile=/etc/drishti/secrets.env
+ExecStart=/bin/sh -c 'exec /opt/python3.13/bin/python3.13 "$DRISHTI_HOME"/drishti-console/run_drishti_web.py --settings /etc/drishti/prod.ini'
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+The unit names the Python setup wrote as `drishti.python` (another, such as a virtual environment of your own, in its place). The console reads
+`console.backend.url` from `prod.ini` (or `DRISHTI_BACKEND_URL`; `DRISHTI_BACKEND_URLS` for a cluster's entry nodes), listens on
+`DRISHTI_CONSOLE_HOST`:`DRISHTI_CONSOLE_PORT`, and runs `DRISHTI_CONSOLE_WORKERS` (4) processes. Its temporary folder is `<data>/tmp/console`,
+its state `<data>/console`, its log standard output (the journal).
+
+#### 6.3 Enable and start
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now drishti-server
+curl -s http://127.0.0.1:18480/actuator/health/readiness        # {"status":"UP"} when ready (the first start can take minutes)
+sudo systemctl enable --now drishti-console
+curl -s http://127.0.0.1:17480/readyz                           # {"status":"UP","server":"reachable"}
+journalctl -u drishti-server -f                                 # the server's log; also <data>/logs/server.log
+```
+
+Start servers before consoles and stop them after (a console newer than its server cannot sign anyone in); the console unit's `After=`
+does this on one machine.
+
+### 7. Cluster (more nodes)
+
+Several servers can act as one (**Drishti\*net**): each holds its packs and data, they find each other by gossip, a request for something
+one node holds is forwarded to it, and the console moves to another server when its own stops. Choose a cluster when one machine's memory
+or CPU is not enough, when the service must survive a machine's loss, or for upgrades without downtime. Production is **three machines**,
+each with one server and one console, the lake and the database shared and highly available outside them
+([CLUSTER_GUIDE.md › Three machines in production](CLUSTER_GUIDE.md#23-three-machines-in-production)). Sections 1 to 6 apply to every
+machine; what differs is below.
+
+#### 7.1 What is the same and what differs per node
+
+| | Same on every node | Per node |
+|---|---|---|
+| `DRISHTI_TOKEN_SECRET`, `DRISHTI_SESSION_SECRET`, `DRISHTI_NET_SECRET` | yes | |
+| The release, `prod.ini` lakes and packs, `config/modules`, `config/engines`, `config/store/store.yaml`, the identity database | yes | |
+| `DRISHTI_DATA_DIR` | the same path (each machine has its own folder) | its own contents |
+| `DRISHTI_NET_DIR` | | `/srv/drishti/data/nodes/<node>/net` |
+| `DRISHTI_DATALOAD_ENABLED=true` and `DRISHTI_DATALOAD_OWNER=true` | | on one node only, when the data inbox is used |
+| `SERVER_ADDRESS` | **not set** (remove it from `drishti.env`) | |
+
+Add the node's folder to `/etc/drishti/drishti.env` on each machine: `DRISHTI_NET_DIR=/srv/drishti/data/nodes/<node>/net`. On the console
+machines also `DRISHTI_BACKEND_URLS=http://<host-a>:18480` (one entry node is enough: the console learns the others and fails over) and,
+for consoles behind one load balancer, `DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true` with **one** `DRISHTI_CONSOLE_RELAY_KEY` in `secrets.env` on
+all of them; open `17490-17493` between the consoles.
+
+#### 7.2 The node's Drishti\*net folder
+
+Each node advertises its **real address**, never `localhost`, `127.0.0.1` or `0.0.0.0` (they are refused in `advertise-url`, in a seed's
+URL and in every tool; [CLUSTER_GUIDE.md › Real addresses only](CLUSTER_GUIDE.md#12-real-addresses-only)). On each machine, as the
+service user, with the cluster key in the command's environment so the check can see it (the key itself is never written to a file; the
+files hold only the reference `${DRISHTI_NET_SECRET}`):
+
+```bash
+PY=/opt/python3.13/bin/python3.13
+D=/opt/drishti/<release>/drishti/tools/drishti.py
+NET=/srv/drishti/data/nodes/drishti-b/net
+KEY=$(sudo sed -n 's/^DRISHTI_NET_SECRET=//p' /etc/drishti/secrets.env)
+sudo -u drishti mkdir -p "$NET"
+sudo -u drishti env DRISHTI_NET_SECRET="$KEY" $PY $D net set node.node-id drishti-b --dir "$NET"
+sudo -u drishti env DRISHTI_NET_SECRET="$KEY" $PY $D net set node.secret '${DRISHTI_NET_SECRET}' --dir "$NET"
+sudo -u drishti env DRISHTI_NET_SECRET="$KEY" $PY $D net set node.advertise-url http://<host-b>:18480 --dir "$NET"
+sudo -u drishti env DRISHTI_NET_SECRET="$KEY" $PY $D net set node.enabled true --dir "$NET"
+sudo -u drishti env DRISHTI_NET_SECRET="$KEY" $PY $D net add-peer drishti-a <host-a>:18480 --dir "$NET"   # not on the seed itself
+sudo -u drishti env DRISHTI_NET_SECRET="$KEY" $PY $D net check --dir "$NET"                              # exit 0: every file would be taken
+```
+
+`drishti-a` is the seed the others are given; it needs no peer. The other files of the folder (`gossip.yaml`, `routing.yaml`, `access.yaml`)
+have defaults. `net list` shows the folder; Admin → Cluster → Files edits it with the same checks.
+
+#### 7.3 Shared data
+
+Every node reads **the same lake at the same path**, and the same identity database and content store.
+
+| Shared piece | How |
+|---|---|
+| The lake | an S3 or S3-compatible store (`root=s3://...`, nothing mounted: the recommended choice), or NFS mounted at the identical path on every node |
+| The identity database and content store | PostgreSQL ([section 5](#5-database)); with `backend: filesystem` the content store's folder is a shared mount |
+
+Each node's own data folder (caches, hot files, its net state) is not shared: it is rebuilt from the lake.
+
+#### 7.4 Ports and firewall
+
+| Port | Between | Notes |
+|---|---|---|
+| 18480 (server) | console to server, server to server | open between every pair of machines; never to users |
+| gossip port | server to server only | `gossip-port: auto` chooses a free port; set a number (`net set node.gossip-port 7946`) and open exactly that |
+| 17480 (console) | the reverse proxy to the console | the proxy's port 443 faces the users |
+| 17490-17493 | console to console | only with `DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true` |
+
+```bash
+sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="<net-of-the-nodes>" port port="18480" protocol="tcp" accept'
+sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="<net-of-the-nodes>" port port="7946" protocol="tcp" accept'
+sudo firewall-cmd --reload
+# or: sudo ufw allow from <net-of-the-nodes> to any port 18480,7946 proto tcp
+```
+
+Member-to-member and console-to-server traffic can use TLS with mutual authentication (`server.ssl.*`, `https://` advertise URLs, `tls.*`
+in `node.yaml`): use it where the network is not trusted ([CLUSTER_GUIDE.md › Security](CLUSTER_GUIDE.md#16-security-the-key-mutual-tls-nodes-per-role)).
+
+#### 7.5 Start order
+
+1. The shared pieces: the lake reachable, PostgreSQL up.
+2. The seed server (`drishti-a`), then the others (any order).
+3. The consoles last.
+
+On each machine `sudo systemctl enable --now drishti-server`, then `drishti-console`. Check Admin → Cluster: every member alive, each with its
+real address. A node stopped with `systemctl stop` drains itself first ([6.1](#61-the-server-unit)).
+
+### 8. TLS and the reverse proxy
+
+Users reach **only the console**, through a reverse proxy that terminates TLS. The server's `/api` is for the console; `/actuator` is for
+monitoring only.
+
+| Path | Exposed to users? |
+|---|---|
+| console `:17480`, everything | yes, through the proxy |
+| server `:18480/api/...`, `/api/docs` | no |
+| server `:18480/actuator/...` | no; monitoring only (with sign-in on only `/actuator/health` is open; the rest needs an administrator's token or `DRISHTI_METRICS_TOKEN`) |
+
+The console listens on `127.0.0.1` ([4.5](#45-the-environment-file)); the proxy runs on the same machine, or on a balancer in front of the
+consoles of a cluster (health check `GET /readyz`; no stickiness needed with the relay on). nginx:
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name drishti.example.internal;
+    ssl_certificate     /etc/ssl/drishti/fullchain.pem;
+    ssl_certificate_key /etc/ssl/drishti/privkey.pem;
+
+    location / {
+        proxy_pass         http://127.0.0.1:17480;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Connection        "";
+        proxy_buffering    off;          # live updates
+        proxy_read_timeout 1h;           # long-lived event streams
+    }
+}
+server { listen 80; server_name drishti.example.internal; return 301 https://$host$request_uri; }
+```
+
+- **Live updates** use one long-lived Server-Sent Events connection per browser (`/api/channel`): the proxy must not buffer, its read
+  timeout must be well above the 15-second heartbeat, and it speaks HTTP/1.1 to the console.
+- **Cookies** are `Secure` by default, `HttpOnly` and `SameSite=Lax`: leave `DRISHTI_SECURE_COOKIE` unset once TLS is in place.
+- **Cross-site requests**: the console refuses a state-changing request whose `Origin` is not its own host (`403 DRS-5002`); keep
+  `proxy_set_header Host $host`. If your proxy changes the host, list the public origin in `auth.allowed_origins` in
+  `drishti-console/config/application.local.yaml`.
+- **Single sign-on** behind a proxy: set `DRISHTI_OIDC_REDIRECT_URI=https://drishti.example.internal/auth/oidc/callback` and register exactly
+  that URL.
+- **At a sub-path** (`https://host/drishti/`): `DRISHTI_CONSOLE_BASE_PATH=/drishti`; the proxy may keep or strip the prefix
+  ([OPERATIONS_GUIDE.md › TLS and the reverse proxy](OPERATIONS_GUIDE.md#113-tls-and-the-reverse-proxy)).
+- Do not add or loosen a content security policy at the proxy: the console sets a strict one.
+
+### 9. Check it works
+
+From the machine, then from outside:
+
+```bash
+systemctl is-active drishti-server drishti-console                        # active, active
+curl -s http://127.0.0.1:18480/actuator/health/liveness                   # {"status":"UP"}: the process is up
+curl -s http://127.0.0.1:18480/actuator/health/readiness                  # {"status":"UP"}: joined, newest dates open, shards ready
+curl -s http://127.0.0.1:17480/healthz                                    # the console answers
+curl -s http://127.0.0.1:17480/readyz                                     # the console reaches the server
+curl -s http://127.0.0.1:18480/api/v1/sources                             # 401 DRS-5010 "missing bearer token": sign-in is on
+curl -sI https://drishti.example.internal/healthz | head -1               # HTTP/2 200 through the proxy
+```
+
+Then in the browser: a private window goes to the sign-in page; sign in as the first administrator ([4.4](#44-the-first-administrator));
+**Admin → Health** is OK, shows no default-password warning (`GET /api/v1/admin/status` reports `"defaultAdminPasswordInUse": false`) and
+lists the folders under `/srv/drishti/data`; **Admin → Configuration → Resolved paths** shows each root and the file it came from;
+**Admin → Modules** lists the modules you expect; **Admin → Cluster** shows every member alive.
+
+From a terminal, as the same Python (`--token-file` names a file holding an administrator's personal API token, mode 600):
+
+```bash
+PY=/opt/python3.13/bin/python3.13; D=/opt/drishti/<release>/drishti/tools/drishti.py
+sudo $PY $D server health --server http://127.0.0.1:18480 --token-file /root/drishti.token     # exit 0 only when the status is OK
+sudo $PY $D doctor --server http://127.0.0.1:18480 --token-file /root/drishti.token           # green/yellow/red lines, each with a fix; exit 1 on any red
+```
+
+`doctor` checks Java, the jar, Python, the folders and ports (and with `--server` the token) and changes nothing. **`doctor --acceptance` is for a
+demo stack only**: it signs in to the console as the *development administrator* and compares VaR BANK with the release's demo figures, so
+in production it fails by design (that administrator must not exist, [4.4](#44-the-first-administrator)). Production is verified by the
+health checks above, `GET /api/v1/about` with an administrator's token, and an administrator's sign-in.
+
+Operators who also work on the code: `drishti.py launchers --list` prints every IDE launcher with the exact command it runs and
+`launchers --run "<name>"` runs one (the whole name, or a prefix that names one); neither is needed to run production.
+
+### 10. Operate: logs, health, backups
+
+#### 10.1 Logs, dumps and temporary files
+
+| What | Where |
+|---|---|
+| server log | `journalctl -u drishti-server`; and `<data>/logs/server.log` (`DRISHTI_LOG_FILE`), rotated by the server (100 MB a file, compressed, 30 days, 1 GB at most: `drishti.logging.*`) |
+| the JVM's GC log | `<data>/logs/gc-server-<pid>.log` (5 files of 20 MB) |
+| console log | `journalctl -u drishti-console` |
+| heap dumps | `<data>/dumps/server` (`drishti.disk.max-dumps`, 2: the oldest go at the next start) |
+| temporary files | `<data>/tmp/server`, `<data>/tmp/console`; the left-overs of a crash are listed on Admin → Health for you to remove by hand |
+
+#### 10.2 Health and monitoring
+
+| URL | Auth | Use |
+|---|---|---|
+| `:18480/actuator/health/liveness` | none | restart the process if it fails |
+| `:18480/actuator/health/readiness` | none | send traffic only when `UP`; `DOWN` (503) while an engine opens its newest date or the node joins; `OUT_OF_SERVICE` while drained |
+| `:18480/actuator/info` | administrator or metrics token | the running version |
+| `:18480/actuator/prometheus` | `Authorization: Bearer $DRISHTI_METRICS_TOKEN` | metrics for Prometheus (examples in `deploy/prometheus/`, `deploy/grafana/`) |
+| `:17480/healthz`, `:17480/readyz` | none | the console (liveness, readiness) |
+
+Set `DRISHTI_METRICS_TOKEN` (long, random, in `secrets.env`) before scraping with sign-in on. `drishti.py node wait-ready` waits for
+readiness; `drishti.py node drain`, `undrain` and `status` act on one server ([CLUSTER_GUIDE.md › Drain before a stop](CLUSTER_GUIDE.md#81-drain-before-a-stop)).
+Alerts and dashboards: [OPERATIONS_GUIDE.md › Monitoring and health](OPERATIONS_GUIDE.md#13-monitoring-and-health).
+
+#### 10.3 Backups
+
+Back up **what Drishti writes and what you configured**; caches are rebuilt. The full table is
+[OPERATIONS_GUIDE.md › Backups and restore](OPERATIONS_GUIDE.md#17-backups-and-restore).
+
+| What | Back up? | How |
+|---|---|---|
+| the identity database | **daily** | SQLite: `sqlite3 /srv/drishti/data/identity/drishti.db ".backup '/backup/drishti/identity.db'"` (safe while running); PostgreSQL: `pg_dump -Fc drishti` |
+| `<data>/fstore/`, `governance/`, `packs/`, `loads/`, `reports/`, `net/` and `nodes/*/net/` (the node's `node-id` and net files) | **yes** | copy |
+| the site's changes under the release's `config/` (modules, engines, connector overrides, tables, BI), `lib/ext`, your own Sutras | **yes**, in version control | commit or copy |
+| `/etc/drishti/` (`prod.ini`, `secrets.ini`, `secrets.env`, units) | **yes**, securely | copy; the secrets also in your vault |
+| the lakes (`<data>/delta/` or the bucket) | by their owners | your data platform's policy |
+| `<data>/cache`, `derived`, `index`, `bi-store`, `tmp`, `dumps`, `logs` | no | rebuilt, or diagnostics |
+| `<data>/state/<connector>/` of ActiveMQ and RabbitMQ connectors | if used | with the server stopped |
+
+```bash
+#!/usr/bin/env bash
+# /usr/local/sbin/drishti-backup.sh: keep 14 nightly archives of Drishti's own state (run from cron as root)
+set -euo pipefail
+D=/srv/drishti/data; stamp=$(date +%Y%m%d-%H%M); mkdir -p /backup/drishti
+[ -f $D/identity/drishti.db ] && sudo -u drishti sqlite3 $D/identity/drishti.db ".backup '$D/identity/backup.db'"
+keep=(); for p in fstore identity governance packs loads reports nodes; do [ -e $D/$p ] && keep+=("$p"); done
+tar czf /backup/drishti/drishti-$stamp.tgz -C $D --exclude=identity/drishti.db* "${keep[@]}" /etc/drishti
+ls -1t /backup/drishti/drishti-*.tgz | tail -n +15 | xargs -r rm --
+```
+
+**Restore:** `systemctl stop drishti-console drishti-server`; move the damaged folder aside; unpack the archive into `/srv/drishti/data`
+(with SQLite `mv identity/backup.db identity/drishti.db`); `chown -R drishti:drishti /srv/drishti/data`; start; sign in and check Admin → Users
+and Admin → Audit. A PostgreSQL database is restored with `pg_restore` before the start.
+
+#### 10.4 Lake maintenance and secret rotation
+
+Lake compaction and the lake build run as their own scheduled units ([OPERATIONS_GUIDE.md › Lake maintenance and scheduling](OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling),
+`deploy/lake-maintenance.yaml`). Rotate `DRISHTI_TOKEN_SECRET` on a schedule (90 days is common) and at once on any suspicion: put the new
+value in `secrets.env` on every machine and restart all servers and consoles together; everyone signs in again
+([OPERATIONS_GUIDE.md › The token secret is a master key](OPERATIONS_GUIDE.md#112-the-token-secret-is-a-master-key)).
+
+### 11. Upgrade
+
+The install folder is replaced, never edited; the settings, the secrets and the data folder are kept. **Run the two pip commands again** with the
+new release's wheel pack (they change only what the new pins need), then `setup` to check.
+
+```bash
+# 1. read RELEASE_NOTES.md and CHANGELOG.md of the new release; back up (10.3) and note the running release
+# 2. unpack and build the new release beside the old one; its libraries: your pip command with its wheel pack (section 3)
+sudo mkdir -p /opt/drishti/<new> && sudo unzip -q /root/drishti-platform-<new>-source.zip -d /opt/drishti/<new>
+PY=/opt/python3.13/bin/python3.13
+cd /opt/drishti/<new> && sudo $PY build_all.py --skip-tests
+sudo unzip -q /root/drishti-platform-<new>-wheels-linux-x64-py313.zip -d /root/drishti-wheels-<new>
+cd /opt/drishti/<new>/drishti/drishti-console                      # the new pack, unzipped: the two pip commands
+sudo $PY -m pip install --no-index --find-links /root/drishti-wheels-<new> -r requirements.txt
+sudo $PY -m pip install --no-index --find-links /root/drishti-wheels-<new> -r ../config/compute/locks/python.lock
+sudo $PY /opt/drishti/<new>/drishti/tools/drishti.py setup --settings /etc/drishti/prod.ini     # checks: "Drishti is ready."
+sudo chown -R root:root /opt/drishti/<new> && sudo chmod -R go-w /opt/drishti/<new>
+
+# 3. carry over what the site added: your jars, and the site's changed config files (compare the two config folders)
+sudo cp -a /opt/drishti/<old>/drishti/lib/ext/. /opt/drishti/<new>/drishti/lib/ext/
+diff -r /opt/drishti/<old>/drishti/config /opt/drishti/<new>/drishti/config
+
+# 4. stop (the console, then the server), switch the release, start (the server, then the console)
+sudo systemctl stop drishti-console drishti-server
+sudo sed -i 's#/opt/drishti/<old>/drishti#/opt/drishti/<new>/drishti#' /etc/drishti/release.env /etc/drishti/prod.ini
+sudo systemctl start drishti-server && curl -s http://127.0.0.1:18480/actuator/health/readiness
+sudo systemctl start drishti-console
+```
+
+`prod.ini` names the release in `drishti.home` and `drishti.modules.home`: the `sed` changes both (`drishti.python` names the Python, not the release). Then check the
+version in **Admin → Health** (or `/actuator/info` with an administrator's token) and run [section 9](#9-check-it-works).
+
+- The database schema is applied again at the start (idempotent, no migrations). Keep the backup of before the upgrade.
+- **A cluster upgrades one node at a time**, servers first, consoles last, draining each before its stop: `tools/rolling.py` does it from an
+  inventory (`deploy/rolling.example.yaml`; `--dry-run` prints every step). Releases run side by side during the roll
+  ([CLUSTER_GUIDE.md › Rolling upgrades](CLUSTER_GUIDE.md#82-rolling-upgrades)).
+- **Roll back:** stop both, point `release.env` and `prod.ini` at the previous release (its environment is still in its folder), restore the
+  pre-upgrade backup if the new release changed stored data, start.
+- Remove an old release when nothing needs it: `sudo rm -rf /opt/drishti/<old>`.
+
+### 12. Security checklist
+
+Work through it before anyone else uses the machine. Detail: [OPERATIONS_GUIDE.md › Security checklist](OPERATIONS_GUIDE.md#11-security-checklist).
+
+- [ ] Sign-in is on for both: `DRISHTI_SECURITY_ENABLED=true`, `DRISHTI_AUTH_ENABLED=true`; `curl http://127.0.0.1:18480/api/v1/sources` answers 401.
+- [ ] `DRISHTI_TOKEN_SECRET` (the same on server and console), `DRISHTI_SESSION_SECRET` and, in a cluster, `DRISHTI_NET_SECRET` are each 32+ random bytes, only in `secrets.env` (mode 600, root).
+- [ ] The development administrator is not there: the first administrator came from `DRISHTI_SEED_USERNAME` and `_PASSWORD`, which were then deleted from `secrets.env`; no default-password warning.
+- [ ] `DRISHTI_DEMO_ENABLED=false`; the demo profile (`--demo`, `config/profiles/demo.ini`) is used nowhere.
+- [ ] Roles and field masks reviewed (`drishti.security.roles`, `drishti.security.redact`); Sutra authoring off (`DRISHTI_STUDIO_SAVE` unset) with review and four-eyes on (`DRISHTI_SUTRA_REVIEW`, `DRISHTI_SUTRA_FOUR_EYES`, the defaults).
+- [ ] Only the reverse proxy reaches the console (`DRISHTI_CONSOLE_HOST=127.0.0.1`); only the console and the other nodes reach the server's 18480; only monitoring reaches `/actuator`; the firewall names exactly these.
+- [ ] TLS at the proxy; `DRISHTI_SECURE_COOKIE` unset; between nodes TLS where the network is not trusted.
+- [ ] The services run as `drishti`, the install folder (with its Python environment) is root-owned and not writable by it, `/etc/drishti/secrets.env` is mode 600.
+- [ ] AI and MCP off unless wanted (`DRISHTI_AI_ENABLED`, `DRISHTI_MCP_ENABLED`; provider keys as `${ENV}` references, never in files); Kafka, ActiveMQ and RabbitMQ only through `[broker.<name>]` sections you wrote; `DRISHTI_OFFLINE=true` where the machine must not reach the internet.
+- [ ] Backups run and one restore has been tried; monitoring scrapes with `DRISHTI_METRICS_TOKEN`; the token secret has a rotation date.
+
+### 13. Troubleshooting
+
+| You see | Cause | Fix |
+|---|---|---|
+| the server stops at start: `drishti.security.secret must be at least 32 bytes when security is enabled` | `DRISHTI_TOKEN_SECRET` unset or short | put a 32-byte value in `/etc/drishti/secrets.env`; `systemctl restart drishti-server` |
+| the JVM does not start, the log folder is named | the GC log's folder is missing | the unit's `ExecStartPre` makes it; check the folder's owner |
+| the start refuses, naming a setting and a folder (modules folder, a relative path, a data folder with no identity database) | a root is relative or missing | `prod.ini` and `release.env` name absolute paths; Admin → Configuration → Resolved paths shows what was taken |
+| the start names two server jars | `lib/` holds more than one `drishti-server-*-exec.jar` | keep exactly one in `lib/` (your jars are in `lib/ext`) |
+| `setup`: the wheel folder has no wheel for X | wrong or incomplete pack | use the release's `linux-x64-py313` pack with a Python 3.13 base; the message names the wheel |
+| setup says *this Python is managed by the operating system* | setup ran with the operating system's Python | run it with the Python you prepared for Drishti (the dedicated `/opt/python3.13`, or a virtual environment you made yourself); never `--break-system-packages` |
+| the console unit fails: *this Python lacks ...* | the Python the unit names lacks the new release's libraries | run the two pip commands of section 3 with that Python and the new pack ([3](#3-install-a-release)) |
+| sign-in is impossible, no administrator exists | the first start ran without `DRISHTI_SEED_USERNAME` and `DRISHTI_SEED_PASSWORD`, or with `DRISHTI_SEED_ADMIN=false`, on an empty store | set the two variables on a store with no users and restart |
+| signed-in people are refused (401) between console and server | the two processes have different `DRISHTI_TOKEN_SECRET` | the same value on both (and every node); restart both |
+| the console loads but live panels never tick | the proxy buffers or times out the event stream | `proxy_buffering off`, `proxy_read_timeout 1h`, HTTP/1.1 |
+| `403 DRS-5002` on every save | the proxy changed the `Host` header | `proxy_set_header Host $host`, or list the public origin in `auth.allowed_origins` |
+| a node refuses its `advertise-url` | a loopback, wildcard or bridge address | use the machine's real address (`ip route get 1.1.1.1`) |
+| a node does not join | wrong cluster key, clocks apart by more than 60 s, the seed's 18480 or the gossip port blocked | the same `DRISHTI_NET_SECRET`, NTP, open the ports ([7.4](#74-ports-and-firewall)); `drishti.py net check --dir <the net folder>` |
+| readiness stays `DOWN` after a start | an engine is opening its newest business date, or the node is joining | wait; `drishti.py node wait-ready`; Admin → Health says what it waits for |
+| a stop takes minutes | the drain waits for `safeToStop` | normal on a cluster node (up to `DRISHTI_DRAIN_WAIT`); keep `TimeoutStopSec` larger |
+| the disk fills | heap dumps, logs or hot files | the `drishti.disk.*` guards and caps; Admin → Health → Disk; remove old dumps |
+
+More: [OPERATIONS_GUIDE.md › Troubleshooting](OPERATIONS_GUIDE.md#21-troubleshooting) and [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md).
+
+### Command line reference
+
+Every operator command in one place. `PY` is the dedicated Python 3.13 (`/opt/python3.13/bin/python3.13`), `D` is
+`/opt/drishti/<release>/drishti/tools/drishti.py`, `<settings>` is `/etc/drishti/prod.ini`. In production the two services are run by
+systemd ([section 6](#6-run-as-services-systemd)); `start`, `stop` and `status` are the terminal's tools for a machine without units.
+
+| Command | What it does | What you should see |
+|---|---|---|
+| `cd /opt/drishti/<release> && sudo $PY build_all.py --skip-tests` | builds the products and Drishti's server jar and module packages, once per release | ends without error; one `drishti/lib/drishti-server-*-exec.jar` |
+| `cd drishti/drishti-console && sudo $PY -m pip install --no-index --find-links <pack folder> -r requirements.txt` | installs the console's and server's Python libraries from the unzipped wheel pack (never from the network) | `Successfully installed ...` or `Requirement already satisfied` |
+| `sudo $PY -m pip install --no-index --find-links <pack folder> -r ../config/compute/locks/python.lock` | the second pip command: the server's compute pool (hash-locked, so its own run) | the same |
+| `sudo $PY $D setup --settings <settings>` | checks Java 21, the jar, the modules, the folders and every library name by name; writes `drishti.python` into the settings file; installs nothing | `[  ok]` lines, then **`Drishti is ready.`** (else `[FAIL] ... Fix:`, [3.1](#31-what-setup-tells-you)) |
+| `sudo $PY $D setup --settings <settings> --check` | the same, changing nothing | exit 0 when nothing is to do, 1 otherwise |
+| `sudo $PY $D setup --settings <settings> --wheels <folder>` | names the unzipped wheel pack in the pip commands setup prints | the printed pip commands name that folder |
+| `sudo systemctl enable --now drishti-server` / `drishti-console` | starts and enables a service; `systemctl stop` drains the server first | `systemctl is-active` says `active` |
+| `$PY $D --settings <settings> start server` / `start console` / `start all` | starts the server or the console from a terminal, with the same settings file as the units (add `--background` to keep your shell) | the log says started; `status` lists it |
+| `$PY $D --settings <settings> status` | the servers and consoles of this install and their ports | one line each; nothing running prints so |
+| `$PY $D --settings <settings> stop server` / `stop console` / `stop all` | stops them (the server drains first) | `status` no longer lists them |
+| `$PY $D server health --server http://127.0.0.1:18480 --token-file <file>` | the administrator's health report | status `OK`, exit 0 |
+| `$PY $D doctor --server http://127.0.0.1:18480 --token-file <file>` | is this machine ready: Java, jar, Python, folders, ports, the token; changes nothing | green, yellow and red lines each with a fix; exit 1 on any red |
+| `$PY $D doctor --acceptance` | **demo stack only**: signs in as the development administrator and compares VaR BANK with the release's figures | exit 0 only when they agree; in production it fails by design |
+| `$PY $D lake demo --engine java` | builds the demo lakes from `data/testdata`; **a demo or QA machine only** | the lakes are listed, with the command to start next |
+| `$PY $D lake build --from <file or folder> --kind <kind> --lake <lake> --mode overwrite-dates` | loads your own JSON Lines into a lake ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)) | the table, rows and dates written |
+| `$PY $D launchers --list` | prints every IDE launcher with the exact command it runs (developers; not needed in production) | each launcher, its group, its command and folder |
+| `$PY $D launchers --run "<name>"` (`--input <value>` for a launcher that asks for one) | runs that launcher's command from the command line | what the launcher runs; its exit code |
+| `curl -s http://127.0.0.1:18480/actuator/health/readiness` | the server's readiness | `{"status":"UP"}` |
+| `curl -s http://127.0.0.1:17480/readyz` | the console reaches the server | `{"status":"UP","server":"reachable"}` |
+| `curl -s http://127.0.0.1:18480/api/v1/sources` | sign-in is on | `401` `DRS-5010` |
+
+Every other group (`net`, `node`, `var`, `pivot`, `admin`, ...): [CLI_REFERENCE.md](CLI_REFERENCE.md).
+
+## bin: where the commands are
+
+Starting, stopping and checking Drishti is one Python command, `tools/drishti.py` (on Windows `py -3.13 tools\drishti.py ...`), the same on
+Linux, macOS and Windows; no shell script. `bin/` holds only this README. A server drains itself when it is stopped (the service unit, the
+images, a terminal's Ctrl+C: `drishti.node.drain.on-stop`); `drishti.py node drain|undrain|status|wait-ready` drains one ahead of a stop.
+
+### The command
+
+| Command | What it does |
+|---|---|
+| `setup [--check]` | checks the Python you run Drishti with (its libraries), writes the settings file and makes the data folder; `--check` only reports |
+| `build jar`, `build modules`, `build all` | the server's executable jar into `<DRISHTI_HOME>/lib`; the module packages (`.dmod`) and `first-party.yaml` into `<DRISHTI_HOME>/modules` (the jar holds no module); both in one Maven run |
+| `start server\|console\|all\|cluster` | Java 21+, the one server jar in `<DRISHTI_HOME>/lib` (more than one is refused), temp folder, memory settings and logs under the data folder; waits for health; prints the LAN address. `--node` starts a cluster node; `all` is one server and one console on this machine; `cluster --cluster FILE` starts a cluster from a file (default `deploy/stack/stack.yaml`) |
+| `stop server\|console\|all\|cluster` | stops by the pid file only (never by name): graceful first, forced after `--timeout`; `--node`, `--all-nodes` |
+| `status` | pid, state, port, health answer, distribution and LAN address of every process started from here, and of every server or console of this install started elsewhere (an IDE); with `--cluster FILE` also the members each node sees and the console's servers |
+| `node drain\|undrain\|status\|wait-ready` | one server's drain before a stop and its readiness (`--server`, `DRISHTI_NODE_URL`; the token `DRISHTI_DRAIN_TOKEN`) |
+| `launchers [--check\|--machine]` | the IDE launchers from `tools/launch/launchers.yaml`; this machine's JVM options files for them |
+
+Run them from the Drishti folder (the repository root, or the install folder of a release). Every command takes `--help`.
+
+```bash
+python tools/drishti.py setup
+python tools/drishti.py build all
+python tools/drishti.py start all --demo                  # the demo, with development secrets (not for production)
+python tools/drishti.py start all --demo --distribution finance   # risk, genomics, finance, all: docs/architecture/DISTRIBUTIONS.md
+python tools/drishti.py start server --env-file /etc/drishti/drishti.env --background
+python tools/drishti.py start console --server http://192.168.1.20:18480 --port 17481 --distribution finance --name finance --background
+python tools/drishti.py start server --node drishti-b --seed 192.168.1.20:18480 --env-file cluster.env --background
+python tools/drishti.py status
+python tools/drishti.py stop server --all-nodes
+python tools/drishti.py start cluster --cluster deploy/stack/stack.yaml   # three nodes and a console from a file
+python tools/drishti.py status --cluster deploy/stack/stack.yaml          # adds the members and the console's servers
+python tools/drishti.py stop cluster --cluster deploy/stack/stack.yaml
+```
+
+```powershell
+py -3.13 tools\drishti.py start all --demo
+py -3.13 tools\drishti.py start all --demo --distribution risk
+py -3.13 tools\drishti.py start server --node drishti-b --seed 192.168.1.20:18480 --env-file C:\drishti-secrets\cluster.env --background
+py -3.13 tools\drishti.py status
+```
+
+A settings file goes before the command: `python tools/drishti.py --settings FILE start server`.
+
+Files go under the data folder (`--data-dir`, `DRISHTI_DATA_DIR`, else `data/`): `run/server[-<node>].pid`, `run/console[-<name>].pid`,
+`logs/server[-<node>].log`, `logs/console[-<name>].log`, `tmp/server[-<node>]`. Exit codes: 0 ok, 1 failed, 2 a wrong option, 3 already running or
+the port is in use.
+
+All jars live under the home. Drishti's own jar (the server's executable jar, exactly one) is in `<DRISHTI_HOME>/lib`. Your jars live in
+`<DRISHTI_HOME>/lib/ext` (`drishti.lib.path`, `DRISHTI_LIB_PATH`): the jars every connector and module may use, read at start, the one place for a JDBC
+driver or a connector plugin; an upgrade keeps them. The data folder holds `run`, `logs`, `tmp`, `dumps`, `delta` and `modules/` (the `.dmod` cache and leftovers; the packages themselves sit in `<home>/modules`):
+[ADMIN_GUIDE.md section 22.1](ADMIN_GUIDE.md#221-module-packages-and-the-shared-lib-folder). Every option, the environment they read, a cluster of three on one machine and
+on three machines, and the errors: [DEPLOYMENT_AND_QA_GUIDE.md section 7](../DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
