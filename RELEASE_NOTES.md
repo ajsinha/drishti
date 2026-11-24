@@ -50,6 +50,8 @@ fixed and tested on Windows.*
 
 - On Windows, the `drishti-api` module's tests are not yet in the Windows check; two of them show a memory-mapped file cannot be
   replaced while mapped (next release). Disk-cache "lock" warnings on Windows are harmless.
+- The `windows` check passes every Java test suite on Windows; its later step that loads a small lake with the Python loader
+  (`make_data.py` + `load_rows.py`) writes no trade table there yet (next release). `drishti.py lake demo --engine java` works on Windows.
 - The 125-product catalogue in `BANK_DATA_GUIDE` is still written by hand (a generator next release).
 
 # Drishti 2.9.11.i7j: release notes
