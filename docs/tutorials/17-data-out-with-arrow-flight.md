@@ -29,7 +29,7 @@ About 20 minutes.
 ## Before you start
 
 - The server and console running on the demo lake ([tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around)), VaR on (the default).
-- Python 3.10 or newer with `pyarrow` and `pandas`; for step 5 a JDK 17 or newer; for step 6 DBeaver.
+- Python 3.13 with `pyarrow` and `pandas`; for step 5 a JDK 17 or newer; for step 6 DBeaver.
 - The server's certificate and its CA as PEM files (a test PKI is fine on your own machine).
 
 ## What you will learn

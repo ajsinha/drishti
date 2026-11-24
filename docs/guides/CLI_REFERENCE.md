@@ -211,7 +211,7 @@ Concepts used throughout (each is explained in its own guide; this one only link
   [BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs) has the rules.
 
 Run the program from the repository root, or from anywhere with its path, with the Python you run Drishti with (its libraries,
-PyYAML, deltalake and pyarrow among them, installed by `python tools/drishti.py setup`). Many examples write `python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that does not write a Delta lake;
+PyYAML, deltalake and pyarrow among them, installed with the two pip commands; `setup` checks them). Many examples write `python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that does not write a Delta lake;
 `drishti.py` in the output is the same program.
 
 **`drishti.py --help`** (captured on a fresh clone)
@@ -259,7 +259,7 @@ Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regene
 publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
 lake (build a Delta lake from a large JSON export, scan, status, maintain), view (get, explain), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
-Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
+Needs Python 3.13 and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_REFERENCE.md.
 
 Exit codes: 0 ok, 1 problems found (a failing check, a server that said no, an unreachable server), 2 usage (a bad option,
@@ -271,7 +271,7 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 
 | You need | For | How to check |
 |---|---|---|
-| Python 3.10 or newer | everything | `python3 --version` |
+| Python 3.13 | everything | `python3 --version` |
 | PyYAML | `pack`, `data ingest`, `design create --from-sutra` | `python3 -c "import yaml"` |
 | `deltalake` and `pyarrow` | `data ingest --store delta`, `pack new --lake` | only when you write a Delta lake |
 | JDK 21 or newer | `sutra`, `pack new`, `pack check`, `pack about-check` | `java -version` (the tool prefers `drishti.java.home` of the settings file, then `JAVA_HOME`, then `/usr/lib/jvm/java-21-openjdk-amd64`, then `java`) |
@@ -282,7 +282,7 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 The program uses only the standard library plus PyYAML. It imports `deltalake` and `pyarrow` **only** when a command writes
 a Delta lake, so a machine without them runs everything else.
 
-**The one Python.** `setup` only CHECKS the libraries of the Python you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself; Drishti makes none) and installs nothing: you install them yourself with `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt` from `drishti-console` (Linux and macOS `python3.13` and `/`), from the offline wheel pack unzipped into `~/drishti-wheels` (Windows `%USERPROFILE%\drishti-wheels`). The IDE launchers use the project interpreter, the same
+**The one Python.** `setup` only CHECKS the libraries of the Python you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself; Drishti makes none) and installs nothing: you install them yourself with two pip commands (Windows `py -3.13`, Linux and macOS `python3.13`), from the offline wheel pack unzipped into `~/drishti-wheels` (Windows `%USERPROFILE%\drishti-wheels`), in `drishti-console`: `-m pip install --no-index --find-links <wheel folder> -r requirements.txt`, then the same with `-r ../config/compute/locks/python.lock` (Windows `..\config\compute\locks\python.lock`); [DEPLOYMENT_AND_QA_GUIDE.md 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup) shows both per system. The IDE launchers use the project interpreter, the same
 Python ([Running the tools from PyCharm](#running-the-tools-from-pycharm-and-the-java-sutra-from-intellij)):
 
 ```bash
@@ -2500,7 +2500,7 @@ python3 tools/drishti.py server caches purge var.hot-files --date 2026-09-29 --c
 
 ### `admin capacity`: Admin → Capacity from a terminal
 
-`admin capacity` is **Admin → Capacity** from a terminal ([OPERATIONS_GUIDE.md 12.4](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan)): it reads the planner the server serves (`GET /api/v1/admin/capacity`, administrators) and evaluates it here with the evaluator the workbook is checked with, then prints the answers (`-Xmx`, the collector, `drishti.var.open-heap-mb`, RAM, disk, cores), the warnings that are not OK, the YAML block of the settings for `./application.local.yaml` and the whole JVM command line. `--set Name=value` changes any input by its workbook name (repeat it); `--live` puts this server's measured figures into the inputs and prints them (`GET /api/v1/admin/capacity/live`); `--all` prints every result line band by band; `--json` the inputs, the live figures and every result. `--xlsx FILE` downloads the formula workbook instead (`--inputs plan`, `live` or `both`), audited on the server as `capacity-workbook-downloaded`.
+`admin capacity` is **Admin → Capacity** from a terminal ([OPERATIONS_GUIDE.md 14.6](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan)): it reads the planner the server serves (`GET /api/v1/admin/capacity`, administrators) and evaluates it here with the evaluator the workbook is checked with, then prints the answers (`-Xmx`, the collector, `drishti.var.open-heap-mb`, RAM, disk, cores), the warnings that are not OK, the YAML block of the settings for `./application.local.yaml` and the whole JVM command line. `--set Name=value` changes any input by its workbook name (repeat it); `--live` puts this server's measured figures into the inputs and prints them (`GET /api/v1/admin/capacity/live`); `--all` prints every result line band by band; `--json` the inputs, the live figures and every result. `--xlsx FILE` downloads the formula workbook instead (`--inputs plan`, `live` or `both`), audited on the server as `capacity-workbook-downloaded`.
 
 ```bash
 python3 tools/drishti.py admin capacity --set Trades=450000 --set Positions=450000
@@ -2688,7 +2688,7 @@ connectors of desk-demo   [files in /srv/drishti/config/connectors; change them 
 ### `setup`, `build jar`, `start`, `stop` and `status`: install, build, run and stop Drishti
 
 One command, `tools/drishti.py`, prepares the machine, builds the server jar, and starts, stops and shows the server, the console and a
-cluster. It is the same on Linux, macOS and Windows; on Windows write `py -3.13 tools\drishti.py ...` (or `python`) and backslash paths. The
+cluster. It is the same on Linux, macOS and Windows; on Windows write `py -3.13 tools\drishti.py ...` and backslash paths. The
 settings file goes **before** the command: `python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo`; with no
 `--settings`, every command but `setup` takes `~/drishti-envs/dev.ini` (Windows `%USERPROFILE%\drishti-envs\dev.ini`) by itself when that
 file names this checkout as `drishti.home` (another copy's file is never taken), so `python tools/drishti.py start all --demo` is enough. A
@@ -2716,11 +2716,11 @@ folder is refused, a settings file or `DRISHTI_HOME` naming one is a WARNING and
 | Command | What it does |
 |---|---|
 | `setup` | the Drishti part, then the check of the libraries of the Python running it |
-| the Drishti part | checks Python 3.11+ and Java 21+, makes the data folder's layout (`run/ logs/ tmp/ dumps/ delta/ dataload/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths filled in (one whose `drishti.home` names this checkout is kept as it is, also when its data folder is elsewhere: setup then makes nothing there unless `--data-dir` is passed; one whose `drishti.home` names another folder, or that names none and a folder outside this checkout, is moved into a dated folder, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one written; `--check` says what it would move), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`; one that differs is moved into the same dated folder: setup never overwrites a file (it adds only `drishti.python`, once, to a kept `dev.ini`) and makes no folder outside this checkout, the settings folder and an explicit `--data-dir`; a `DRISHTI_*` folder variable naming another folder is a WARNING and never used), checks the server jar and the modules |
+| the Drishti part | checks Python 3.13 and Java 21+, makes the data folder's layout (`run/ logs/ tmp/ dumps/ delta/ dataload/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths filled in (one whose `drishti.home` names this checkout is kept as it is, also when its data folder is elsewhere: setup then makes nothing there unless `--data-dir` is passed; one whose `drishti.home` names another folder, or that names none and a folder outside this checkout, is moved into a dated folder, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one written; `--check` says what it would move), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`; one that differs is moved into the same dated folder: setup never overwrites a file (it adds only `drishti.python`, once, to a kept `dev.ini`) and makes no folder outside this checkout, the settings folder and an explicit `--data-dir`; a `DRISHTI_*` folder variable naming another folder is a WARNING and never used), checks the server jar and the modules |
 | the library check | the libraries of the Python running setup: the pinned Lake wheel first, then `drishti-console/requirements.txt` and `config/compute/locks/python.lock`, checked name by name; **nothing is installed**. Missing or wrong: one `[FAIL] libraries` line naming them and the pip command to run (exit 1); all in order: `[  ok] libraries` and the closing line "Drishti is ready." |
 
 Drishti never makes a virtual environment: the Python is yours (the system's, a dedicated one, or a virtual environment you made yourself; run setup with it, or name it in `drishti.python`).
-**Drishti never installs Python packages**: not `setup`, not `start`, not the server's compute environments (they run with `drishti.python` as it is; a missing library is an error naming it and the pip command). The command is yours: you install them yourself with `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt` from `drishti-console` (Linux and macOS `python3.13` and `/`). The settings file, `drishti.python` and the JVM argument files are written in either case. An operating system's own Python (PEP 668, *EXTERNALLY-MANAGED*, as Debian's and
+**Drishti never installs Python packages**: not `setup`, not `start`, not the server's compute environments (they run with `drishti.python` as it is; a missing library is an error naming it and the pip command). The command is yours: you install them yourself with the two pip commands above. The settings file, `drishti.python` and the JVM argument files are written in either case. An operating system's own Python (PEP 668, *EXTERNALLY-MANAGED*, as Debian's and
 Ubuntu's `python3`) is one `[FAIL]` line, *this Python is managed by the operating system: run setup with a Python you prepared for Drishti ... your own
 virtual environment is fine*, and pip
 never runs (never `--break-system-packages`); a wheel pack built for another Python version (`cp313` wheels on a 3.14) is one `[FAIL]` line
@@ -4238,10 +4238,10 @@ A GitHub Actions job (the jar is built once and reused):
 ```yaml
 - uses: actions/setup-java@v4
   with: { distribution: temurin, java-version: 21 }
-- run: ./mvnw -q -DskipTests -pl :drishti-app -am package
+- run: ./mvnw -B -q -DskipTests package    # the jar and the modules
 - uses: actions/setup-python@v5
   with: { python-version: "3.13" }
-- run: python -m pip install pyyaml
+- run: python -m pip install pyyaml    # a CI runner you control; Drishti itself never installs
 - run: python tools/drishti.py pack check config/packs/my-bank --strict --junit build/reports
 - uses: actions/upload-artifact@v4
   if: always()

@@ -15,6 +15,9 @@
 -->
 # Tutorial 19 · Build a pack and a screen
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 From your own data to a pack, a screen and computed panels. Part A turns a schema and a folder of data into a pack and deploys it.
 Part B designs a screen, in the Build workbench and on a live page. Part C adds panels computed on demand by a reactive connector. Every step
 shows the UI, the command line and the YAML.
@@ -54,7 +57,7 @@ About 2 h 10 min in all; each part can be done on its own day.
 
 **Part C · Computed panels: a reactive connector.**
 
-- The compute workers need a Python 3.10 or newer; the one you run Drishti with (`drishti.python`) is enough: the sample engine
+- The compute workers need a Python 3.13; the one you run Drishti with (`drishti.python`) is enough: the sample engine
   uses the standard library only.
 
 The compute-demo pack is **synthetic** (a seeded random walk): nothing in it is market data.

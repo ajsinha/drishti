@@ -515,7 +515,7 @@ kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/DISTRIBUTIONS
 |---|---|---|
 | JDK | 21 or newer (any vendor; Java 21 is the production target) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [CLUSTER_GUIDE.md](../architecture/ARCHITECTURE.md#14-concurrency-and-performance)). |
 | Python | 3.13 ([the minimum and why](OPERATIONS_GUIDE.md#21-prerequisites)) | The console and the tools. CI uses 3.13. |
-| The offline wheel pack | the release's | you install the libraries from it with `python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt` (in `drishti-console`) into the Python you run Drishti with; `setup` only checks them (the system's, a dedicated one, or a virtual environment you made yourself). |
+| The offline wheel pack | the release's | you install the libraries from it with two pip commands (`requirements.txt`, then `config/compute/locks/python.lock`; [DEPLOYMENT_AND_QA_GUIDE.md 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)) into the Python you run Drishti with; `setup` only checks them (the system's, a dedicated one, or a virtual environment you made yourself). |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, Cassandra, ScyllaDB, ActiveMQ, RabbitMQ, MinIO) and `deploy/docker/compose.yaml`. |
 
 Set `JAVA_HOME` in every terminal:
@@ -532,11 +532,12 @@ You should see `Java version: 21…` in the output. Maven itself comes with the 
 [data/testdata/README.md](../../data/testdata/README.md) walk through; measured on a 24-core laptop):
 
 ```bash
-git clone https://github.com/drishti-platform/drishti.git && cd drishti
-(cd drishti-console && python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt)   # you install the libraries
+# in the platform folder (source zip, or clone_all.py; QUICKSTART_DEVELOPERS.md sections 1 and 2): a clone of drishti alone cannot build
+python3 build_all.py --release <release> --skip-tests              # the products, then Drishti's jar AND modules (Windows: py -3.13 build_all.py ...)
+cd drishti
+# your two pip commands (requirements.txt, then ../config/compute/locks/python.lock, in drishti-console; DEPLOYMENT_AND_QA_GUIDE.md 1.6)
 python3 tools/drishti.py setup                                     # checks them
-./mvnw -q package -DskipTests -pl :drishti-app -am                 # 1 min 12 s with ~/.m2 filled
-python3 tools/drishti.py lake demo           # about 15 min (943 s): 86 Delta tables, sixty days, under data/delta/demo
+python3 tools/drishti.py lake demo           # about 15 min: the Delta tables, sixty days, under data/delta/demo
 ```
 
 then the server and the console as the run configurations start them ([OPERATIONS_GUIDE.md, Steps 6 and 7](OPERATIONS_GUIDE.md#25-start-the-server)).
@@ -649,7 +650,7 @@ Build the jar, then start it from the repository root (the server finds `./confi
 directory):
 
 ```bash
-./mvnw -q package -DskipTests -pl :drishti-app -am
+./mvnw -q package -DskipTests -pl :drishti-app -am     # the jar only; the server also needs the modules: `python3 tools/drishti.py build all` (Windows `py -3.13 tools\drishti.py build all`)
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
   java -jar lib/drishti-server-*-exec.jar
 ```
@@ -668,7 +669,7 @@ The development loop that works best:
 | A Sutra under `config/packs/*/sutras/` or a site Sutra directory | Nothing: `drishti.rachana.hot-reload` reloads it; an invalid edit keeps the last good version |
 | A connector file in `config/connectors/` | Nothing: the folder is watched and only that connector restarts |
 | A BI file under `config/bi/` | Nothing: the folder is watched (`drishti.bi.watch`, `BiFolder`); a changed file becomes the next version, one that does not parse keeps its last good version and is listed as a problem |
-| Java code | Rebuild the module and the server jar (`./mvnw -q -o -pl :drishti-app -am package -DskipTests`), restart the server |
+| Java code | Rebuild with `python3 tools/drishti.py build all` (`build modules` when only a module changed; `build jar` only when no module did), restart the server |
 | `pack.yaml` or anything in a pack folder | Nothing, usually: the packs folder is watched (`drishti.packs.watch`, `PackReloader`) and the running packs are reconciled with it; a change that cannot be applied live keeps the last version running, is refused with the reason in the log and on Admin → Packs, and is tried again by itself |
 | The demo lakes | `drishti.py lake demo` again: a running server is told (or notices a rebuilt Delta date by itself), so no restart |
 | A console template | Reload the page |

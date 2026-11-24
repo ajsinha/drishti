@@ -15,6 +15,9 @@
 -->
 # SIMM guide: ISDA SIMM initial margin per netting set, collect and post
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 Drishti computes ISDA SIMM the way it computes VaR and FRTB-SA: **from trade-grain inputs, when asked, never stored as a figure.** The input
 is the same table of position sensitivities FRTB-SA reads; the factor dictionary maps each factor to SIMM's terms (the CRIF risk type,
 qualifier, bucket and labels); the netting-set master gives each netting set its trades, and the CSA its SIMM version, regimes,

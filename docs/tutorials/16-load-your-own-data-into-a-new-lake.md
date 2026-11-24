@@ -15,6 +15,9 @@
 -->
 # Tutorial 16 · Load your own data into a new lake
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 Lakes and loading, from a lake of your own to news held only in memory. Part A writes a new lake, routes and loads a day of your own
 data into it and points the connectors at it. Part B reads the lake files: one file per lake, append tables, `lake check`. Part C loads files
 automatically with the data inbox. Part D holds a feed in memory only. Part E moves the risk lake and the official results to Iceberg and back.
@@ -61,7 +64,7 @@ About 1 h 45 min in all; each part can be done on its own day.
 - [The VaR tutorial, Part A](../guides/VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade) step 1 done once: you know the VaR test data and `VAR BANK` (112,041,646 USD on
   2026-09-30).
 - `build_demo_lakes.py` writes Iceberg with the loader in the server's jar, so the server is built first (above).
-- The Python you run Drishti with (`python3`; Windows `py`), its libraries installed by `setup`: it has the Drishti Lake wheel (the loader's Python path) and `pyarrow`.
+- The Python you run Drishti with (`python3`; Windows `py -3.13`), its libraries installed with the two pip commands (`setup` checks them): it has the Drishti Lake wheel (the loader's Python path) and `pyarrow`.
 - Stop the server while you build the lake; the examples use the default data folder, `data/` (`data/delta/demo`, `data/iceberg`).
 
 ## What you will learn

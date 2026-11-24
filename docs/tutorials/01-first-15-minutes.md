@@ -36,8 +36,8 @@ About 1 h 50 min in all; each part can be done on its own day.
 
 ## Before you start
 
-You need a Linux, macOS or Windows machine with Java 21 or newer, Python 3.13 ([the minimum](../guides/OPERATIONS_GUIDE.md#21-prerequisites)), [uv](https://docs.astral.sh/uv/) and git. Nothing else: no database, no
-Docker. On Windows follow [OPERATIONS_GUIDE.md (Windows)](../guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) for the same steps in PowerShell.
+You need a Linux, macOS or Windows machine with Java 21 or newer, Python 3.13 ([the minimum](../guides/OPERATIONS_GUIDE.md#21-prerequisites)) and git ([uv](https://docs.astral.sh/uv/) only when you build Drishti Lake's wheel from a git clone; the source zip and the wheel pack carry it). Nothing else: no database, no
+Docker. On Windows follow [OPERATIONS_GUIDE.md (Windows)](../guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) for the same steps in PowerShell, and write every `python3 tools/drishti.py ...` below as `py -3.13 tools\drishti.py ...`.
 
 These tutorials run on the **quick-start environment** of [data/testdata/README.md](../../data/testdata/README.md): the seven packs (`core`, `market-data`, `trading`,
 `counterparty-risk`, `market-risk`, `world-economy`, `news-and-markets`) reading the **demo lakes**, sixty business days of production-shaped test data (5,000 trades from
@@ -141,12 +141,13 @@ will also have a token that lets the command line talk to your server, which tut
 **From the command line:**
 
 ```bash
-git clone https://github.com/drishti-platform/drishti.git
-cd drishti
+# in the platform folder: the source zip, or `python3 clone_all.py --release <release>` (QUICKSTART_DEVELOPERS.md sections 1 and 2); a clone of drishti alone cannot build
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64     # your Java 21 or newer
 export PATH="$JAVA_HOME/bin:$PATH"
-./mvnw -q package -DskipTests -pl :drishti-app -am
-(cd drishti-console && python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt)   # you install the libraries
+python3 build_all.py --release <release> --skip-tests    # the products, then Drishti's jar AND modules (Windows: py -3.13 build_all.py ...)
+cd drishti                                               # or, in drishti/ alone later: python3 tools/drishti.py build all
+(cd drishti-console && python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt)                          # your pip command 1
+(cd drishti-console && python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r ../config/compute/locks/python.lock)       # your pip command 2
 python3 tools/drishti.py setup        # checks them: "Drishti is ready."
 ```
 
@@ -173,7 +174,7 @@ Connector files:
 ```
 
 You should see a line for each of the 103 tables, then `Demo lake ready` with sixty business dates ending on *your* today's business date (the summary above is from a
-sixty-day run that kept the test data's own dates, 2026-07-08 to 2026-09-30; the table lines' row counts, captured on seven-day lakes, are left out). This output is to be re-run: it predates the test data's conversion to dated files, so the lines `lake demo` prints now may read differently.
+sixty-day run that kept the test data's own dates, 2026-07-08 to 2026-09-30; the table lines' row counts, captured on seven-day lakes, are left out).
 It takes about 15 minutes and about 3.4 GB of disk. The other outputs in these tutorials were captured on Saturday 17 October 2026 on seven-day lakes
 (Friday **2026-10-16** back to **2026-10-07**): on the sixty-day lakes the ids are the same, but a captured count or value may differ.
 
@@ -194,7 +195,6 @@ GREEN  port 17480              free
 doctor: all clear
 ```
 
-(This output is to be re-run: the jar name in it is newer than the run that printed the versions.)
 
 You should see no red line (the exit is 0). The two `port` lines say what is on the ports: with nothing started they say *free*; once the server and the console run they say
 *in use by Drishti*.
@@ -209,9 +209,9 @@ security on and a development administrator; the second signs people in with the
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-python tools/drishti.py start server --demo --background     # Windows: py -3.13 tools\drishti.py start server --demo --background
-python tools/drishti.py start console --demo --background    # Windows: py -3.13 tools\drishti.py start console --demo --background
-python tools/drishti.py status
+python3 tools/drishti.py start server --demo --background     # Windows: py -3.13 tools\drishti.py start server --demo --background
+python3 tools/drishti.py start console --demo --background    # Windows: py -3.13 tools\drishti.py start console --demo --background
+python3 tools/drishti.py status
 ```
 
 The secrets `--demo` uses are the development ones of the run configurations, and the command says so: fine on your own machine, never on
@@ -226,7 +226,7 @@ server from the command line too:
 curl -s localhost:18480/actuator/health
 ```
 
-You should see `{"status":"UP","groups":["liveness","readiness"]}`. `python tools/drishti.py stop all` stops both when you are done.
+You should see `{"status":"UP","groups":["liveness","readiness"]}`. `python3 tools/drishti.py stop all` stops both when you are done.
 
 (`DRISHTI_STUDIO_SAVE=true` lets the Build pages of tutorial 19 save work. Tutorials 1 and 8 need two people, so all the tutorials run with sign-in on.)
 
@@ -1276,7 +1276,7 @@ days*.
 | You see | Do this |
 |---|---|
 | The build says `Drishti needs Java 21 or newer` | `JAVA_HOME` is older than 21; point it at 21 or newer and run the build again |
-| `lake demo` says `No module named 'drishti_lake'` | the same Python lacks the libraries: run the pip command `setup` prints (`python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt` in `drishti-console`); Drishti installs nothing |
+| `lake demo` says `No module named 'drishti_lake'` | the same Python lacks the libraries: run the two pip commands of Step 1 (or the line `setup` prints); Drishti installs nothing |
 | The sign-in page says the password is wrong | the development password is `drishti-dev-admin123` until you change it; five wrong tries lock the account for 15 minutes |
 | Every page says `DRS-5010 missing bearer token` | the console was started without `DRISHTI_TOKEN_SECRET` (or with another value than the server's): start it as in Step 2 |
 | A view says *No data held for that date* | the demo lakes are not built, or were built for other dates: run `lake demo` again (a running server re-reads them) |

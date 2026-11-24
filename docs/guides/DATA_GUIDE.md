@@ -15,6 +15,9 @@
 -->
 # Data guide: getting data into Drishti
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 Getting data into Drishti and keeping it current, for the people who connect it: **telling Drishti a batch has landed** (section 1:
 one call from your ETL, the Data loads page, expectations and late data), **the data formats** (section 2: JSON Lines is the standard;
 Arrow to the browser where it pays), **external data** (section 4: every public source of every pack, its licence and its refresh

@@ -16,6 +16,9 @@
 
 # Packs and screens
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 A **domain pack** teaches Drishti an industry: its kinds of entity, the commands that open them, how they link, how their screens look,
 a vocabulary, sample data, roles, the connectors its data comes through, a guide. It is configuration and content: no Java and no Python
 the server runs. A **Sutra** is one screen of a pack: a YAML layout in Drishti's screen grammar, Rachana. This guide is for the person who
@@ -4642,7 +4645,7 @@ say (the `history:` sections, the trading pack's `ingest:`) is kept in `tools/pa
 A pack with many kinds and many consistent documents is better **generated**: you describe kinds and documents in a short Python script, and the common
 pack builder checks them and writes the manifest, Sutras, samples, guide, help card and (optionally) a Delta Lake. This walk-through generates a small
 library pack with two kinds (book titles and authors); it was run as written and printed the lines shown. You need the repository and Python 3 with
-`pyyaml` (the console's virtual environment has it). For a handful of kinds, writing the pack by hand is simpler, and for existing data `pack new` is quicker.
+`pyyaml` (the Python you run Drishti with has it). For a handful of kinds, writing the pack by hand is simpler, and for existing data `pack new` is quicker.
 
 **Step 1. The script.** Create `tools/packgen/library/make.py` (with the copyright header, or run `python3 tools/license_headers.py --fix`):
 

@@ -15,6 +15,9 @@
 -->
 # Tutorial 15 · Connect your data
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 A **connector** is one small YAML file that tells Drishti where a store of data is and how to read it. In this tutorial you connect a folder of JSON Lines files (a desk's end-of-day
 quotes) with the shipped `file` plugin, use **Test connection**, read the connector's own page, and then see what a connector that cannot connect looks like: a PostgreSQL connector with TLS and
 a pool size, aimed at a port where nothing listens, so it never touches a real database.

@@ -4531,7 +4531,7 @@ pictures is `tools/docs/shots/panels.py` (driver: `tools/docs/screenshots.py`). 
 
   ```bash
   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-  ./mvnw -o -q package -DskipTests -pl :drishti-app -am          # the driver starts the packaged server on :18997 and the console on :17997
+  ./mvnw -o -q package -DskipTests -pl :drishti-app,:drishti-modules -am          # the driver starts the packaged server on :18997 and the console on :17997
   python3 tools/docs/screenshots.py --guide panels --only metric
   python3 tools/docs/screenshots.py --list --guide panels
   ```
@@ -4619,7 +4619,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64            # or any JDK 21 o
 ./mvnw -o -q install -N                                         # the parent POM, once
 # the engine, grammar and your test:
 ./mvnw -o -q test -pl :drishti-rachana,:drishti-engine,:drishti-server -am -Dtest='MetricPanelTest,StudioTest,AutoDesignerTest,OpApplierTest,ExamplePreviewTest' -Dsurefire.failIfNoSpecifiedTests=false
-./mvnw -o -q package -DskipTests -pl :drishti-app -am         # then the jar the browser tests drive
+./mvnw -o -q package -DskipTests -pl :drishti-app,:drishti-modules -am         # then the jar the browser tests drive
 ./mvnw spotless:apply                                           # formatting (Java)
 python3 tools/license_headers.py --fix                          # the copyright header on new files
 # the console, from the repository root:

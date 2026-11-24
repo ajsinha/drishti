@@ -620,7 +620,7 @@ The console keeps a few answers for a moment so pages draw quickly. Nothing it k
 
 The pages for running the server (Admin → Connectors, Health, Caches, Capacity, Loads, Lakes, Cluster, Packs) are in
 [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md); for example Admin → Capacity in
-[section 12.4](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan). Admin → Functions and Admin → Engines are sections 20 and 21 below; modules (no page: a file, a setting or the API) are section 22.
+[section 14.6](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan). Admin → Functions and Admin → Engines are sections 20 and 21 below; modules (no page: a file, a setting or the API) are section 22.
 
 ## 11. The users and roles API
 

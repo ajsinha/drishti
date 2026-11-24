@@ -15,6 +15,9 @@
 -->
 # FRTB-SA guide: position sensitivities and the standardised approach to market-risk capital
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 Drishti computes the FRTB standardised approach (the Basel Framework's MAR21 to MAR23) the way it computes VaR: **from trade-grain inputs,
 when asked, for any scope, never stored as a figure.** The input is one table of position sensitivities; a factor dictionary says what
 each factor is and where it falls in the regulator's grid; the parameters are configuration files that name their paragraphs. Every figure

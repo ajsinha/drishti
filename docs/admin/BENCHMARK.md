@@ -15,6 +15,9 @@
 -->
 # Benchmark
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 This is the one home of every benchmark of Drishti: what is measured and why, the harness and the exact commands to run each
 measurement again, the machine and the data, the results by area (VaR on one server and on a cluster, exposure, the loaders, trades at
 scale, the stores, memory and heap), the scaling fits with their extrapolations to 2.3 million and 10 million positions, and how to read
@@ -77,7 +80,7 @@ run on a server.
 
 ### 2.1 The tools
 
-Everything is in `tools/bench/` (Python 3.11 or later, standard library, bash, `curl`; Docker for the stores that need a container), plus
+Everything is in `tools/bench/` (Python 3.13, standard library, bash, `curl`; Docker for the stores that need a container), plus
 three opt-in Java benchmarks that are never part of the default test run. Each is listed in [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md).
 
 | Tool | What it measures |

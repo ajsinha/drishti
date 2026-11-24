@@ -15,6 +15,9 @@
 -->
 # Business intelligence
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 Business intelligence (BI) in Drishti, called **Rūpaka** (type `BI <GO>` or choose the bar-chart icon in the top bar), is one engine from a table to a
 dashboard: slice any table in the **pivot**, describe it once as a **table** and a **model**, make a **report** that is published, scheduled, put on a
 wall, sent as a statement or watched by an alert, and go further in the **Notebook** with SQL and Python. Every number is computed on the server, as the

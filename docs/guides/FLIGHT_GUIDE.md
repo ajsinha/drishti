@@ -498,7 +498,7 @@ One section per client: install, connect, read, stream, errors. Working examples
 
 #### 7.1 Python
 
-**Install.** `pip install pyarrow` (16 or newer; it brings `pyarrow.flight`), and pandas or polars if you want them. Copy
+**Install.** `pip install pyarrow` into a Python of your own, not Drishti's (16 or newer; it brings `pyarrow.flight`), and pandas or polars if you want them. Copy
 `clients/python/drishti_flight.py` next to your script or notebook: one file, no other dependency.
 
 **Connect.**
