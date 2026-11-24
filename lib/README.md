@@ -31,6 +31,6 @@ An upgrade replaces the Drishti jar in `<home>/lib` only and keeps `lib/ext`. Ja
 once into `lib/ext` at the next start; Admin → Health says so.
 
 - `<home>/lib/wheels` holds the `drishti_lake-<version>-py3-none-any.whl` wheel (Drishti Lake's Python path: the load rules, the Python
-  loader, the archive guards, the launcher of its Java tools). `pip install -r drishti-console/requirements.txt` installs it from here (a
+  loader, the archive guards, the launcher of its Java tools). the first pip command (`requirements.txt`, whose `--find-links ../lib/wheels` finds it; the source zip and the wheel pack carry the same wheel) installs it from here (a
   pure-Python wheel: the same on Linux, macOS and Windows, no executable). Where it is not installed the tools put this wheel on their path
   (`tools/lake/lakewheel.py`), only the wheel `lib/lake-wheel.pin` names (version and SHA-256 checked; never the newest file); for development `LAKE_PYTHON` names the product's `python` folder instead. Replaced on an upgrade.

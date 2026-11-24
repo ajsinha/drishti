@@ -55,7 +55,7 @@ export DRISHTI_EXAMPLE_STREAM_BATCHES=2          # batches a stream example take
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-python3 -m pip install -r examples/clients/python/requirements.txt jupyterlab     # into the Python you run the examples with
+python3 -m pip install -r examples/clients/python/requirements.txt jupyterlab     # into the Python you run the examples with (a client of Drishti, not Drishti's own Python)
 cd examples/clients/python && jupyter lab
 ```
 

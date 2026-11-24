@@ -17,6 +17,8 @@ before the consolidation (for example `/help/quickstart` or `/help/connector-kaf
 2. **[tutorials/](tutorials/README.md)**: the hands-on tutorials, in tracks, on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
 3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[BUILD_GUIDE.md, Part V](guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which)**: which industries are available and how to load them; building your own is [BUILD_GUIDE.md](guides/BUILD_GUIDE.md).
 
+**Commands in every document:** on Linux and macOS `python3 tools/drishti.py X`; on Windows `py -3.13 tools\drishti.py X`. A new user starts from the platform's `START_HERE_<OS>.pdf`.
+
 If you will change the code, start with [QUICKSTART_DEVELOPERS.md](QUICKSTART_DEVELOPERS.md), then [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
 
 ## The help centre, section by section
@@ -239,7 +241,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | Document | Read this when… |
 |---|---|
 | [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md) | you install, configure, deploy, secure, monitor, back up or upgrade Drishti: install and run on one machine with each step explained, Maven and the IDEs, Windows, installing for other people, deploy, promote and roll back, the runbooks, troubleshooting and the error codes |
-| [IDE_GUIDE.md](guides/IDE_GUIDE.md) | you run the server from IntelliJ IDEA and the console from PyCharm: JDK and interpreter setup, run configurations, debugging, reloading changes, tests in the IDE |
+| [IDE_GUIDE.md](guides/IDE_GUIDE.md) | you run the server from IntelliJ IDEA and the console from PyCharm: JDK and interpreter setup, the launcher groups (IntelliJ-drishti-build/-run/-test, PyCharm-console-setup/-data/-run/-check, IntelliJ-platform-build), `launchers --list` and `launchers --run`, debugging, reloading changes, tests in the IDE |
 | [DEPLOYMENT_AND_QA_GUIDE.md › Offline QA](DEPLOYMENT_AND_QA_GUIDE.md#12-offline-qa-with-your-own-trade-files) (a QA script) | you demo or QA on a Windows machine without internet, with your own ENDUR JSONL files replacing the synthetic ENDUR trades: setup, data, start, checks, a ten-page demo script |
 | [OPERATIONS_GUIDE.md: Windows](guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) | you run Drishti on Windows: a JDK 21 or newer (production runs 21) and Python, building or copying the jar, Drishti Lake's Delta reader (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, the Build workbench, administration |

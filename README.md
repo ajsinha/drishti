@@ -12,7 +12,7 @@
 
 *Your data is a treasury;* **Drishti is its sentinel.**
 
-**Release i7j: Drishti is one of five.** Each module is a verified `.dmod` package in `<home>/modules`, beside one server jar; the language, the lake, the screens' libraries and the shared utilities are products of their own, built once and used here as jars and bundles ([The platform](#the-platform)).
+**In the current release Drishti is one of five products.** Each module is a verified `.dmod` package in `<home>/modules`, beside one server jar; the language, the lake, the screens' libraries and the shared utilities are products of their own, built once and used here as jars and bundles ([The platform](#the-platform)).
 
 Drishti looks at data, analyses it and explains it. It is built from **three blocks**: a domain-free **kernel** (connectors and lakes,
 screens written as short YAML **Sutras** in one grammar, **Rachana**, the pivot and BI engines, the cluster), a **console** in front of
@@ -44,9 +44,26 @@ GENE TP53 <GO>                                 →  (Drishti Genomics) a gene's 
 GWAS RESPONSE <GO>                             →  (Drishti Genomics) the showcase: association plot, cohort matrix, samples, lollipop, one selection
 ```
 
+## Quick path
+
+The platform's source zip (or `clone_all.py` then `build_all.py`, [QUICKSTART_DEVELOPERS.md](docs/QUICKSTART_DEVELOPERS.md)) gives this folder; a new user follows the platform's `START_HERE_<OS>.pdf`. From it, with JDK 21 and a Python 3.13 whose libraries you installed with the two pip commands:
+
+```bash
+python3 tools/drishti.py setup                 # checks Python, Java and the libraries (installs nothing), makes ~/drishti-envs/dev.ini and the data folder
+python3 tools/drishti.py build all             # the server jar into lib/, the modules into modules/
+python3 tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java        # the demo lake, about 15 minutes
+python3 tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo               # server :18480 and console :17480 (status, stop all)
+```
+
+Windows: `py -3.13 tools\drishti.py ...`. IDE: the launchers **Drishti: build all**, **run server (demo)** and **run console** (`python3 tools/drishti.py launchers --list`). Every step with its output: [Run it](#run-it) and [DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md); production on Linux: [PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md); every document: [docs/README.md](docs/README.md).
+
+## What is in this repository
+
+`kernel/` (the server, its API and the engines), `modules/` (the `.dmod` modules and their packs), `plugins/` (the connectors), `drishti-console/` (the web console, Python), `tools/` (the one command line, `tools/drishti.py`, and the launchers), `lib/` (the server jar and the pinned Lake wheel), `config/` (settings, profiles, packs, feeds), `data/` (committed test data), `deploy/` (the stack, AWS), `examples/` (clients), `docs/` (guides, tutorials, architecture). The counts are in [By the numbers](#by-the-numbers).
+
 ## Contents
 
-[The platform](#the-platform) · [The three building blocks](#the-three-building-blocks) · [Modules](#modules) · [Build a module](#build-a-module) ·
+[Quick path](#quick-path) · [The platform](#the-platform) · [The three building blocks](#the-three-building-blocks) · [Modules](#modules) · [Build a module](#build-a-module) ·
 [Install and place modules](#install-and-place-modules) · [Distributions](#distributions) · [Build and run in the IDE](#build-and-run-in-the-ide) · [Risk](#risk) · [Analyse](#analyse) ·
 [Build](#build) · [Data in](#data-in) · [Data out](#data-out) · [Operate](#operate) · [Run it](#run-it) ·
 [Measured performance](#measured-performance) · [Documentation](#documentation) · [Project facts](#project-facts) ·
@@ -208,7 +225,7 @@ IntelliJ IDEA opens `drishti` (its launchers in `run-configs/`: folders **Intell
 PyCharm opens `drishti\drishti-console` (its launchers in `drishti-console/run-configs/`: **PyCharm-console-setup**, **-data**, **-run**, **-check**), each named `Drishti: <verb> <what>` (`build all`, `run server (demo)`, `setup`, `build demo lakes`, `run console`,
 `check acceptance`); no `.idea` is in the source (the launchers are ordinary `*.run.xml` files). VS Code opens
 `drishti.code-workspace`, whose tasks and launches carry the same names. All of them are generated from `tools/launch/launchers.yaml` by
-`python tools/drishti.py launchers`; every one is named, with what it is and when to use it, in
+`python3 tools/drishti.py launchers` (`launchers --list` shows them, `launchers --run "<name>" [--input v]` runs one from the terminal); every one is named, with what it is and when to use it, in
 [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md).
 
 ## Risk
@@ -358,7 +375,10 @@ report sign-offs go through one Approvals queue with four eyes. Anything that de
 
 ## Run it
 
-With a 64-bit Java 21 (JDK) and Python 3.11+ with Drishti's libraries (the Python you run Drishti with: the system's, a dedicated one, or a virtual environment you made yourself; you install them with one pip command from the offline wheel pack (`cd drishti/drishti-console`, then `python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt`; Windows `py -3.13` and `"C:\Users\<you>\drishti-wheels"`) and `setup` only checks them; Maven ships with the repository), from the
+With a 64-bit Java 21 (JDK) and Python 3.13 with Drishti's libraries (the Python you run Drishti with: a dedicated Python 3.13 on Linux, because the
+operating system's own `python3` is refused; 3.11 is the floor `setup` checks; or a virtual environment you made yourself). You install the libraries
+with the two pip commands of [DEPLOYMENT_AND_QA_GUIDE.md section 1.6](docs/DEPLOYMENT_AND_QA_GUIDE.md) (`requirements.txt`, then
+`../config/compute/locks/python.lock`, both offline from the wheel pack); `setup` only checks them. Maven ships with the repository. Run the steps below from the
 repository root ([OPERATIONS_GUIDE.md section 2](docs/guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) has every step):
 
 Get the code first: unpack the platform's source bundle, or clone `drishti-platform/drishti-platform` and run its `clone_all.py`, then `build_all.py`
@@ -367,24 +387,24 @@ Get the code first: unpack the platform's source bundle, or clone `drishti-platf
 folder (that checkout, or the install folder of a release).
 
 ```bash
-# 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini (with the IDE launchers' JVM options), and checks the libraries of this Python (it installs nothing; it prints the pip command when one is missing, "Drishti is ready." when all is in order)
-python tools/drishti.py setup
+# 1. Prepare the machine: checks Python and Java 21+, makes the data folder, ~/drishti-envs/dev.ini (with the IDE launchers' JVM options), and checks the libraries of this Python (it installs nothing; it prints the two pip commands when one is missing, "Drishti is ready." when all is in order)
+python3 tools/drishti.py setup
 
 # 2. Build the runnable server and its modules: the kernel's jar goes to ./lib, each first-party module is a .dmod package in ./modules (the jar holds none)
-python tools/drishti.py build all          # one Maven command; with no Python: ./mvnw clean package -DskipTests -pl :drishti-app,:drishti-modules -am
+python3 tools/drishti.py build all          # one Maven command; with no Python: ./mvnw clean package -DskipTests -pl :drishti-app,:drishti-modules -am
 # (optional) the Module SDK folder for module builders: <home>/sdk
-python tools/drishti.py build sdk
+python3 tools/drishti.py build sdk
 
 # 3. The demo lake, from the committed test data in data/testdata
-python tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java
+python3 tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java
 
 # 4. The server on :18480 and the console on :17480, in the background, with the demo profile (config/profiles/demo.ini, the file the IDE's demo launcher names)
-python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo    # add --distribution risk|finance|genomics for one product
-python tools/drishti.py status                                                # both UP, with the addresses to open
-python tools/drishti.py stop all                                              # when you are done
+python3 tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo    # add --distribution risk|finance|genomics for one product
+python3 tools/drishti.py status                                                # both UP, with the addresses to open
+python3 tools/drishti.py stop all                                              # when you are done
 ```
 
-On Windows the same commands run as `py -3.13 tools\drishti.py ...` with backslash paths. From IntelliJ IDEA and PyCharm the same steps are the
+The commands are for Linux and macOS; on Windows the same commands run as `py -3.13 tools\drishti.py ...` with backslash paths. A new user starts from the platform's `START_HERE_<OS>.pdf`. From IntelliJ IDEA and PyCharm the same steps are the
 launchers **Drishti: build all**, **Drishti: build demo lakes**, **Drishti: run server (demo)** and **Drishti: run console**
 ([IDE_GUIDE.md](docs/guides/IDE_GUIDE.md); VS Code: [IDE_GUIDE.md section 10](docs/guides/IDE_GUIDE.md#10-visual-studio-code)); they read the same profile, so the IDE and the terminal start the same server.
 
@@ -459,7 +479,7 @@ the modules they may use. The map of every document is [docs/README.md](docs/REA
   `packaging/`, `testing/` and `drishti-sdk/` ([DEVELOPER_GUIDE.md section 1.1](docs/guides/DEVELOPER_GUIDE.md#11-java-modules)); a module's
   folder is its artifact id.
 - **Contributing**: work on `develop`; `./mvnw -q verify` and the console tests
-  (`python3 -m pytest -q drishti-console/tests`) must pass; no source file over 2,000 lines; every file carries
+  (`python3 -m pytest -q drishti-console/tests`) must pass; no source file over 2,500 lines; every file carries
   the copyright header (`python3 tools/license_headers.py --fix`); every change updates the documents it affects and the changelog in
   the same push; the documentation gates (`drishti-console/tests/test_docs_gates.py`, `config/docs-features.yaml`) keep one guide and one
   tutorial per feature.

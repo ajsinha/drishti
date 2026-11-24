@@ -19,7 +19,7 @@ The AWS side of the **S3 Tables connector** (the `iceberg` plugin with `catalog:
 [ICEBERG_CONNECTOR.md section 20](../../../plugins/drishti-plugin-iceberg/README.md#aws-s3-tables)): a table bucket, a namespace for a
 Drishti domain, and the IAM policy the server (read) and the loaders (read and write) need. Python with `boto3`, so it runs the same
 on Linux, macOS and Windows with no AWS CLI; the `.sh` and `.ps1` files only start the Python you run Drishti
-with: `DRISHTI_PYTHON`, else `python3` (`py` on Windows).
+with: `drishti.python` of the settings file, else `DRISHTI_PYTHON`, else `python3` (`py -3.13` on Windows).
 
 | File | What it does |
 |---|---|

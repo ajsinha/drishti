@@ -35,11 +35,11 @@ a stranger).
 ## Run it
 
 Three processes, on ports that are free. The commands are from the repository root; the console needs the libraries in the Python you run it with
-(`python3 tools/drishti.py setup` checks them; you install them with the pip commands it prints).
+(`python3 tools/drishti.py setup` checks them; you install them with the two pip commands it prints).
 
 ```bash
 # 1. the Drishti server: security on, embedding on, the trading, counterparty-risk and market-risk packs, a scratch folder for ./data
-./mvnw -o -q package -DskipTests -pl :drishti-app -am
+python3 tools/drishti.py build all        # jar and modules (Windows: py -3.13 tools\drishti.py build all); the platform's build_all.py builds the products first
 mkdir -p /tmp/drishti-elements && cd /tmp/drishti-elements
 DRISHTI_PACKS=trading,counterparty-risk,market-risk DRISHTI_PACKS_DIR=<repo>/config/packs DRISHTI_SECURITY_ENABLED=true \
 DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 DRISHTI_EMBED_ENABLED=true \

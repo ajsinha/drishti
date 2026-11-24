@@ -20,11 +20,12 @@ need them. This page is the operator's; each kind's columns and rules are on its
 
 ## Prepare your environment
 
-From the repository root (or the install folder), Python 3.11 or later with PyYAML; Polars and NumPy for the scenario PVs of the PVF
-source:
+From the repository root (or the install folder), Python 3.13 (3.11 is the floor) with PyYAML, in the Python you run Drishti with (the two pip commands of
+[DEPLOYMENT_AND_QA_GUIDE.md section 1.6](../../../docs/DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)); Polars and NumPy for the scenario PVs of the PVF
+source, from `drishti-console`:
 
 ```bash
-pip install -r drishti-console/requirements.txt -r drishti-console/requirements-polars.txt
+python3 -m pip install -r requirements-polars.txt      # Windows: py -3.13 -m pip install -r requirements-polars.txt
 ```
 
 The scripts are run by path. Converting needs no Java, no server and no network; `--load` uses Drishti's own `lake build` (Java and the

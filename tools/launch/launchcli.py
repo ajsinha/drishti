@@ -265,23 +265,23 @@ def cmd_build(a, extra) -> int:
 
 def register(groups, add) -> None:
     """Adds setup, build, start, stop and status to drishti.py's command line."""
-    s = groups.add_parser("setup", help="setup [drishti|libs]: prepare this machine (the Drishti part, then the libraries of the Python you run Drishti "
-                                         "with; Drishti never makes a virtual environment)",
+    s = groups.add_parser("setup", help="setup [drishti|libs]: prepare this machine and CHECK the libraries of the Python you run Drishti with "
+                                         "(setup installs nothing and makes no virtual environment)",
                           description=__import__("envsetup").__doc__, formatter_class=RAW,
                           epilog=f"examples:\n  {P} setup\n  {P} setup --check\n  {P} setup --wheels %USERPROFILE%\\drishti-wheels\n  {P} setup drishti --data-dir D:/drishti-data\n"
-                                 f"  {P} setup libs     (only the libraries of this Python, checked; Drishti never installs them)")
+                                 f"  {P} setup libs     (only the libraries of this Python, checked; you install them with the two pip commands it prints)")
     s.add_argument("part", nargs="?", choices=("drishti", "libs"),
                    help="drishti: the settings folder, dev.ini, data folder, JVM argument files, Java, jar and modules checks; libs: the libraries of this "
-                        "Python (the Lake wheel and drishti-console/requirements.txt) checked, never installed: what is missing is one [FAIL] with the "
-                        "pip command you may run yourself; none: drishti, then libs")
+                        "Python (the Lake wheel and requirements.txt, then config/compute/locks/python.lock) checked, never installed: what is missing is a [FAIL] with the "
+                        "two pip commands you run yourself; none: drishti, then libs")
     s.add_argument("--check", action="store_true", help="only report; change nothing (exit 1 when something needs doing); also verifies the libraries name by name")
     s.add_argument("--home", help="the install folder (default DRISHTI_HOME, else the folder these tools are in)")
     s.add_argument("--data-dir", metavar="DIR", help="the data folder to prepare (default DRISHTI_DATA_DIR, else <home>/data)")
     s.add_argument("--envs-dir", metavar="DIR", help="the settings folder (default ~/drishti-envs; Windows %%USERPROFILE%%\\drishti-envs)")
     s.add_argument("--java-home", metavar="DIR", help="the JDK to check (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then the PATH)")
-    s.add_argument("--system", action="store_true", help="accepted for old commands; changes nothing (setup always uses the Python you run it with)")
-    s.add_argument("--wheels", metavar="FOLDER", help="the offline wheel pack folder (a pack .zip is never unzipped: unzip it into ~/drishti-wheels) that the printed pip "
-                                                      "command names; default DRISHTI_WHEELS, else ~/drishti-wheels, else the pack zip in your Downloads folder")
+    s.add_argument("--system", action="store_true", help="accepted for old commands and ignored (setup always uses the Python you run it with)")
+    s.add_argument("--wheels", metavar="FOLDER", help="the unzipped offline wheel pack folder (a .zip is never unzipped: unzip it into ~/drishti-wheels); it only names the pack in the printed pip "
+                                                      "commands (setup installs nothing); default DRISHTI_WHEELS, else ~/drishti-wheels, else the pack zip in your Downloads folder")
     s.set_defaults(func=cmd_setup, cmd=None)
 
     b = groups.add_parser("build", help="build jar|modules|all|sdk: the server jar (copied into <home>/lib) and the modules (packages in <home>/modules), with Maven, never install")
