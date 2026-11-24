@@ -24,7 +24,7 @@ lakes). The repository carries the run configurations of both as files, so nothi
 projects:** IntelliJ IDEA opens `drishti` (its `pom.xml`) and shows only the Java launchers, `run-configs/`, in the folders **IntelliJ-drishti-build**, **-run** and **-test**
 (the Maven builds, the servers, the tests); PyCharm opens `drishti\drishti-console` and shows only the Python launchers, `drishti-console/run-configs/`,
 in the folders **PyCharm-console-setup**, **-data**, **-run** and **-check** (setup, the demo lakes, the consoles, the checks; the install folder is `$PROJECT_DIR$/..`, the interpreter the
-project's: the Python you choose, the one setup prepared). Every configuration uses only `$PROJECT_DIR$` and `$USER_HOME$` paths, so
+project's: the Python you choose, the one you prepared). Every configuration uses only `$PROJECT_DIR$` and `$USER_HOME$` paths, so
 the same files work on Linux and Windows.
 
 **Which IDE opens what.**
@@ -154,7 +154,7 @@ file names this clone in `drishti.home`; a `drishti.home` or `DRISHTI_HOME` that
 the console and the tools still run, the tools on this clone), and `setup` moves such a `dev.ini` aside (below).
 
 **A launcher names a profile after it** (`config/profiles/demo.ini`, `samples.ini` or `qa.ini`, committed): what makes the demo, the
-built-in samples or the QA pair, the same file `drishti.py start server --demo` (or `--profile qa`) reads, so the IDE and the terminal start
+built-in samples or the QA pair, the same file `drishti.py start server --demo` (or `drishti.py --profile qa start server`) reads, so the IDE and the terminal start
 the same server. **A server launcher also names this machine's JVM options**, `~/drishti-envs/jvm-<profile>.args` (`@…` in its VM
 options): the options `drishti.py start server` uses, with your data folder in them (the temp folder, heap dumps and the GC log follow
 `drishti.data.dir`). `setup` writes them. To put the data folder elsewhere, run `python tools/drishti.py setup --data-dir <folder>`: it
@@ -213,7 +213,7 @@ What each key does and the other ways to make it: [DEPLOYMENT_AND_QA_GUIDE.md �
 ### 2.2 Python for the console and the tools (PyCharm)
 
 The console and `tools/drishti.py` need Python 3.13 with Drishti's packages. **One Python, yours**: the Python you run Drishti with
-(the system's, a dedicated one, or a virtual environment you made yourself) must have the libraries; you install them from the offline wheel pack, and setup checks them. Drishti installs no package and makes no virtual environment.
+(a dedicated one, a virtual environment you made yourself, or the system's, not Debian/Ubuntu's own) must have the libraries; you install them from the offline wheel pack, and setup checks them. Drishti installs no package and makes no virtual environment.
 
 Python 3.13 (the wheel packs are built for it) on the machine works as the interpreter: a python.org install, a company-packaged Python, conda, or the
 one your team already uses. Drishti needs only its packages installed in it.
@@ -249,7 +249,7 @@ or later with Polars, NumPy and PyYAML) in their own run configuration. The deta
 
 1. **File → Open**, choose the `drishti-console` folder of the clone (`C:\Users\you\IdeaProjects\drishti-platform\drishti\drishti-console`):
    its launchers are in `drishti-console/run-configs/` and reach the install folder as `$PROJECT_DIR$/..`.
-2. **Settings → Project → Python Interpreter**: choose your Python, the one setup prepared (**Add Interpreter → Add Local Interpreter →
+2. **Settings → Project → Python Interpreter**: choose your Python, the one you prepared (**Add Interpreter → Add Local Interpreter →
    System Interpreter**, or an environment you made yourself: Windows `C:\Users\you\AppData\Local\Programs\Python\Python313\python.exe`,
    Linux `/opt/python3.13/bin/python3.13`). When PyCharm offers to create a virtual environment, **Cancel**: the
    launchers use whatever interpreter you choose here and name none of their own. Install the libraries into that interpreter with the two pip commands above, then run **Drishti: setup** (or `py -3.13 tools\drishti.py setup`), which makes the settings and checks the libraries. PyCharm's *Package requirement ... is not satisfied*

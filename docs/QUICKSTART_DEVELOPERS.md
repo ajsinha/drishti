@@ -61,7 +61,7 @@ tests. Maven is not needed: every repository carries its own (`./mvnw`, `mvnw.cm
 | | Linux (Ubuntu, Debian) | macOS | Windows (PowerShell) |
 |---|---|---|---|
 | JDK 21 | `sudo apt install openjdk-21-jdk` | `brew install openjdk@21` | the Temurin 21 MSI or ZIP (a ZIP needs no installer) |
-| Python 3.13 (the one Python Drishti runs with: the system's, a dedicated one, or a virtual environment you made yourself) | the system's `python3.13` | `brew install python@3.13` | python.org's installer or its embeddable ZIP |
+| Python 3.13 (the one Python Drishti runs with: the system's, a dedicated one, or a virtual environment you made yourself) | a dedicated `python3.13` (the OS's own is externally managed on Debian/Ubuntu: section 3.1) | `brew install python@3.13` | python.org's installer or its embeddable ZIP |
 | uv (only to build the Lake wheel when you work from a git clone, section 2; the source zip and the wheel pack carry it) | the installer script from astral.sh (`install.sh`) | `brew install uv` | optional |
 | Node (Elements tests) | `sudo apt install nodejs` | `brew install node` | optional: the Node tests skip without it |
 | `JAVA_HOME` | `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64` | `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` | `$env:JAVA_HOME = 'C:\jdk-21'` |
@@ -80,7 +80,7 @@ The platform lives in one folder, every repository a sibling of the index reposi
 ```
 
 **A. From the source bundle** (no git needed): download the bundle ZIP from the index repository's release and unpack it into
-`~/IdeaProjects/drishti-platform/`. It holds every repository at the tags that go together, with `build_all.py`; the Lake wheel is not in it (section 2 builds it).
+`~/IdeaProjects/drishti-platform/`. It holds every repository at the tags that go together, with `build_all.py`; the pinned Lake wheel is already in it, in `drishti/lib/wheels/` (only a git clone builds it, section 2).
 
 **B. With git:** clone the index repository into the folder that will hold them all, and let `clone_all.py` clone the rest at the release's
 tags (it puts the repositories in the folder *above* the index repository, so the index repository goes one level down):

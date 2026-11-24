@@ -118,7 +118,7 @@ committed copy is `docs/architecture/Drishti-Sizing-Planner.xlsx`), and **Admin 
 ```text
 /opt/drishti/<release>/        the platform folder of one release (build_all.py, the products); read only to the service user
 /opt/drishti/<release>/drishti/      the install folder (DRISHTI_HOME)
-/opt/python3.13/                    the Python 3.13 Drishti runs with, its libraries installed by setup (drishti.python)
+/opt/python3.13/                    the Python 3.13 Drishti runs with, its libraries installed by you with the two pip commands; setup only checks (drishti.python)
 /srv/drishti/data/             the data folder (DRISHTI_DATA_DIR): everything Drishti writes; owned by drishti
 /etc/drishti/prod.ini          the settings file: folders, lakes, databases, brokers (no secret in it)
 /etc/drishti/secrets.ini       optional: passwords of the databases, brokers and lakes, given last (mode 600)

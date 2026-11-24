@@ -67,7 +67,7 @@ drishti-elements (the JavaScript libraries). The versions that go together are s
 ## Requirements
 
 - **JDK 21.**
-- **Python 3.13** that you prepare: the system's, a dedicated one, or a virtual environment you made yourself. Drishti never makes an
+- **Python 3.13** that you prepare: a dedicated one, a virtual environment you made yourself, or the system's (not Debian/Ubuntu's own, which is externally managed). Drishti never makes an
   environment and never installs a package; `setup` only checks.
 - 20 GB of free disk.
 - Windows: `py -3.13 tools\drishti.py ...`. Linux and macOS: `python3.13 tools/drishti.py ...`. The examples below use Linux.
