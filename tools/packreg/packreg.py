@@ -115,10 +115,11 @@ def manifest(pack: Path) -> dict:
 def publish(pack: Path, registry: Path, key: Path, publisher: str) -> dict:
     m = manifest(pack)
     data = archive(pack)
-    with tempfile.NamedTemporaryFile(suffix=".zip") as tmp:
-        tmp.write(data)
-        tmp.flush()
-        signature = _openssl("pkeyutl", "-sign", "-rawin", "-inkey", str(key), "-in", tmp.name)
+    # a file openssl can open: a NamedTemporaryFile still open here cannot be opened again by another process on Windows
+    with tempfile.TemporaryDirectory() as d:
+        archive_file = Path(d) / "pack.zip"
+        archive_file.write_bytes(data)
+        signature = _openssl("pkeyutl", "-sign", "-rawin", "-inkey", str(key), "-in", str(archive_file))
     registry.mkdir(parents=True, exist_ok=True)
     name = f"{m['pack']}-{m['version']}.zip"
     (registry / name).write_bytes(data)

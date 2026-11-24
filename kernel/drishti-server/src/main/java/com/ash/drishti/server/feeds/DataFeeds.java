@@ -302,12 +302,8 @@ public final class DataFeeds {
     }
 
     String pythonCommand() {
-        if (!python.isEmpty()) {
-            return python;
-        }
         // no DRISHTI_PYTHON, drishti.feeds.python or drishti.python: the PATH's Python (Drishti makes and uses no venv)
-        boolean win = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).contains("win");
-        return win ? "python" : "python3";
+        return com.ash.drishti.api.PythonSetting.orDefault(python);
     }
 
     private static String str(Object o) {

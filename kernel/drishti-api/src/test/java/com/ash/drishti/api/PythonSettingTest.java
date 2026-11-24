@@ -40,4 +40,16 @@ class PythonSettingTest {
         assertThat(r("", Map.of(), Map.of())).isEmpty();
         assertThat(PythonSetting.resolve(null, null, null)).isEmpty();
     }
+
+    @Test
+    void theLastResortIsThePathsPythonByItsNameOnThisOperatingSystem() throws Exception {
+        assertThat(PythonSetting.orDefault(" /opt/py/bin/python3 ")).isEqualTo("/opt/py/bin/python3");
+        boolean windows = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).startsWith("windows");
+        String fallback = PythonSetting.orDefault(null);
+        assertThat(fallback).isEqualTo(windows ? "python" : "python3").isEqualTo(PythonSetting.orDefault(" "));
+        // the name is one this machine starts (CI and every developer machine has the PATH's Python)
+        Process p = new ProcessBuilder(fallback, "-c", "print(1)").redirectErrorStream(true).start();
+        assertThat(new String(p.getInputStream().readAllBytes()).strip()).isEqualTo("1");
+        assertThat(p.waitFor()).isZero();
+    }
 }

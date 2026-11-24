@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 
@@ -67,10 +66,7 @@ public record ComputeSettings(boolean enabled, String python, Path root, Path sc
 
     /** The interpreter to start: the setting, else {@code python} on Windows and {@code python3} elsewhere. */
     public String interpreter() {
-        if (python != null && !python.isBlank()) {
-            return python;
-        }
-        return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).startsWith("windows") ? "python" : "python3";
+        return com.ash.drishti.api.PythonSetting.orDefault(python);
     }
 
     public Path envs() {
