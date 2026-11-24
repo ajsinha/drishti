@@ -15,87 +15,45 @@
 -->
 # Elements demo: a host application for `<drishti-view>`
 
-The proof of concept of [Drishti Elements](../../docs/architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements) (build step 0): a tiny "host" web
-application on **its own origin** that shows live Drishti views in a Shadow DOM, without an iframe.
+The proof of concept of [Drishti Elements](../../docs/architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements): a tiny "host" web
+application on **its own origin** showing live Drishti views in a Shadow DOM, without an iframe: its own sign-in, a backend that asks Drishti for a
+token **server to server** (the app secret never reaches the browser), a search box (`TVAL TVAL-1000001`, `TRD MX-20000001`), recent entities, an
+as-of picker and two `<drishti-view>` elements sharing a connection, under a strict CSP (what it blocks: `/api/csp-reports`).
 
-It has its own sign-in (a demo cookie), its own backend endpoint that asks Drishti for a token **server to server** (the
-app secret never reaches the browser), its own **search box** (type `TVAL TVAL-1000001`, or `TRD MX-20000001` for a trade), a **recent entities** list, an
-**as-of** date picker, a main `<drishti-view>` and a second, smaller one that shares its connection. Both show **trade valuations** of the
-market-risk pack (`TVAL-1000008`, `TVAL-1000002`): since 2.3.0 a trade is static (it changes when its source books a new version) and the
-valuations are what ticks. Clicking a linked entity inside the view (the trade it values) raises `drishti:navigate`; the host takes it over into its search box. The page
-is served with the strict CSP a careful host would have (no `'unsafe-inline'`, no `frame-src`); anything it blocks is
-listed at `/api/csp-reports`.
-
-**The tokens are real.** The host's backend signs a short assertion about its signed-in user with its own RSA key
-(`demo-host-key.json`: a DEMO key, never use it anywhere real) and exchanges it, with its client secret, at the Drishti
-**server** (`POST /api/v1/embed/token`, RFC 8693, [API_REFERENCE](../../docs/guides/API_REFERENCE.md#24-embedding-views-in-another-web-application)).
-The page gets a five-minute, read-only, always-masked embed token. Both demo users must exist in Drishti (the exchange refuses
-a stranger).
+**The tokens are real.** The backend signs an assertion with its own RSA key (`demo-host-key.json`: a DEMO key, never use it anywhere real) and
+exchanges it at the server (`POST /api/v1/embed/token`, RFC 8693, [API_REFERENCE](../../docs/guides/API_REFERENCE.md#24-embedding-views-in-another-web-application)):
+a five-minute, read-only, always-masked embed token. Both demo users must exist in Drishti.
 
 ## Run it
 
-Three processes, on ports that are free. The commands are from the repository root; the console needs the libraries in the Python you run it with
-(`python3 tools/drishti.py setup` checks them; you install them with the two pip commands it prints).
+Three processes on free ports, from the repository root, with the libraries of the Python you run (`python3 tools/drishti.py setup` checks them).
 
 ```bash
-# 1. the Drishti server: security on, embedding on, the trading, counterparty-risk and market-risk packs, a scratch folder for ./data
-python3 tools/drishti.py build all        # jar and modules (Windows: py -3.13 tools\drishti.py build all); the platform's build_all.py builds the products first
+python3 tools/drishti.py build all        # jar and modules (Windows: py -3.13 tools\drishti.py build all)
 mkdir -p /tmp/drishti-elements && cd /tmp/drishti-elements
 DRISHTI_PACKS=trading,counterparty-risk,market-risk DRISHTI_PACKS_DIR=<repo>/config/packs DRISHTI_SECURITY_ENABLED=true \
 DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 DRISHTI_EMBED_ENABLED=true \
 DRISHTI_PUBLIC_URL=http://127.0.0.1:18969 DRISHTI_CONSOLE_URL=http://127.0.0.1:17969 \
   java -jar <repo>/lib/drishti-server-*-exec.jar --server.port=18969 --drishti.security.registered-users-only=false &
-
-# 2. register the demo users and the host application as an administrator (the admin token is made with the same secret):
-#    see register_host() in drishti-console/tests/test_embed_elements_browser.py for the exact calls; the answer of
-#    POST /api/v1/admin/embed/apps shows the client secret once. Origins: http://127.0.0.1:17968; jwks: the public half of
-#    demo-host-key.json (n, e); subjectTypes: ["jwt"].
-
-# 3. the console, with embedding on
+# register the demo users and the host application as an administrator: register_host() in
+# drishti-console/tests/test_embed_elements_browser.py has the exact calls; POST /api/v1/admin/embed/apps shows the client secret once
 cd <repo>/drishti-console
 DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 DRISHTI_EMBED_ENABLED=true \
   python3 run_drishti_web.py --server.port=17969 --backend.url=http://127.0.0.1:18969 &
-
-# 4. the host application, on its own origin
-cd <repo>
-python3 tools/elements-demo/server.py --port 17968 --console http://127.0.0.1:17969 --server http://127.0.0.1:18969 --secret <the client secret>
+cd <repo> && python3 tools/elements-demo/server.py --port 17968 --console http://127.0.0.1:17969 --server http://127.0.0.1:18969 --secret <the client secret>
 ```
 
-Open <http://127.0.0.1:17968/>, press **viewer** or **author** (the host's two demo users), and the valuation
-`TVAL-1000008` appears with its MTM and one-day P&L ticking (the demo ticker is on by default). Open its trade (`1000008`, the link in the
-strip): both users see masked fields (`•••`, the trader) even though `author` holds the `raw` role: embedded views always mask. Open the
-console's own page (`http://127.0.0.1:17969/v/trade/1000008`) beside it to see the same trade unmasked.
-
-## What to try
-
-- Type `TVAL TVAL-1000001` in the search box and press Enter (or `TRD MX-20000001`: a trade, which holds still); pick entries from **Recent**.
-- Pick a past date: the view becomes a still snapshot; **Live** resubscribes.
-- Click the trade `1000008` in the strip: the host's search box takes `TRD 1000008` and the view switches.
-- Stop and restart the console: the element shows `reconnecting` (the host's status line), then repaints and ticks again.
-
-## The acceptance tests
-
-`drishti-console/tests/test_embed_elements_browser.py` starts all three processes itself (using a server already on
-`18969` if there is one) and drives this host in Chromium, Firefox and WebKit (`python -m playwright install chromium firefox
-webkit`; WebKit also needs a few system libraries, which Playwright names if they are missing). It checks the ten
-acceptance criteria of step 0 and records first-paint and switch timings and payload sizes:
-
-```bash
-python3 -m pytest -q drishti-console/tests/test_embed_elements_browser.py
-```
-
-Results and what they changed in the plan are in the *Step 0 results* section of
-[EMBED_GUIDE.md](../../docs/architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements).
+Open <http://127.0.0.1:17968/>, press **viewer** or **author**, and `TVAL-1000008` appears with its MTM and one-day P&L ticking. Both users see masked
+fields: embedded views always mask; the console's own page (`/v/trade/1000008`) shows the same trade unmasked. A past date makes the view a still
+snapshot (**Live** resubscribes); stopping the console shows `reconnecting`, then it repaints. `python3 -m pytest -q drishti-console/tests/test_embed_elements_browser.py` starts all three processes itself and drives this host in Chromium,
+Firefox and WebKit (`python -m playwright install chromium firefox webkit`), checking the ten acceptance criteria and recording timings.
 
 ## Files
 
 | File | What it is |
 |---|---|
 | `server.py` | the host's web server and its backend (sign-in, `/api/drishti-token`, CSP, CSP report collection) |
-| `static/index.html` | the host page: search, recent, as-of, two `<drishti-view>` elements, and the one script line that loads the element |
-| `static/app.js` | the host's own code: token provider, search through `DrishtiElements.resolve`, `drishti:navigate` handler |
-| `static/host.css` | the host's own styles (they must not leak into the element, nor the element's into the host) |
+| `static/index.html`, `static/app.js`, `static/host.css` | the host page, its token provider, search and `drishti:navigate` handler, and its own styles |
 
-## Framework samples
-
-The host also serves the React, Vue and Angular sample pages of `docs/guides/examples/embed/` at `/samples/<framework>/` (a search box, a view and its About body in each). Fetch the framework builds first (`bash docs/guides/examples/embed/fetch-vendor.sh`); register the application with the scopes `embed:view embed:about`. The Angular page runs the JIT compiler, so only `/samples/angular/` is served with `'unsafe-eval'`.
+The React, Vue and Angular samples of `docs/guides/examples/embed/` are served at `/samples/<framework>/` (fetch the builds with `fetch-vendor.sh`
+there; register the application with the scopes `embed:view embed:about`).

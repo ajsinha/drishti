@@ -23,26 +23,17 @@ Disabling, uninstalling (to an archive that can be restored) and uploading files
 
 ```
 config/bi/
-  datasets/   <id>.dataset.yaml   one table each (rachana: 2, <model>-<table>.dataset.yaml): the table over a connector (by logical name), its columns, row rules and masks
-                                  (ARCHITECTURE.md §28 › The model layer: the specification, section 1); the 2.1 rachana: 1 files were converted by drishti.py bi migrate --models and removed in 2.2,
-                                  except the two live ones, live-trading and live-exposure, that their live reports still read. desk-pnl-vs-exposure-py-result is a
-                                  Python dataset (source.python) over two model queries: bi/NOTEBOOK_AND_PYTHON.md › Datasets: the YAML, the expression language and the security rules, section 11 says what the 2.1 composed and derived datasets became
-  models/     <id>.model.yaml     2.2 data models: datasets as aliases, relationships, measures, hierarchies, rollups (ARCHITECTURE.md §28 › The model layer: the specification, section 2); samples:
-                                  trades-basic, trading-risk, trading-cashflows, counterparty-exposure, desk-pnl-vs-exposure-py, live-trading, live-exposure,
-                                  region-economics, world-economics, market-risk-var (the published official VaR; counterparty-exposure and
-                                  trading-risk read the published official exposure, counterparty-exposure-official-*); a report reads one with
-                                  `model: <name>@1`
-  reports/    <id>.report.yaml    pages of visuals over a model: filters, bookmarks, drill-through, theme, tooltip pages, interactions; drawn since phase 3;
-                                  a page with layout: board is a wall of tiles (the boards desk-wall and python-wall are reports here)
-                                  (commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk,
-                                  region-economics, world-economics, market-risk-var (VaR from the published official results), the boards desk-wall
-                                  and python-wall, and pnl-vs-exposure over two datasets: bi/NOTEBOOK_AND_PYTHON.md › Reports: the YAML, the visuals and how they behave, section 16)
-  boards/     <id>.board.yaml     2.3 boards (no samples ship): read as reports with board pages (POST /api/v1/bi/boards/convert shows the report)
-  themes/     <id>.theme.yaml     theme items: series colours, good and bad colours, a font, format defaults per kind of visual (samples: corporate, print)
-  notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9; one sample: pnl-vs-exposure-pandas, two extracts joined in pandas)
-  python/     <id>.python.yaml    a Python Measure, Visual or Transform with its manifest (inputs, packages, target, limits, source); run on the server's compute pool python
-                                  (target: server) (commented samples: desk-pnl-volatility, pnl-histogram, pnl-vega, and the
-                                  Transform pnl-vs-exposure behind the Python dataset desk-pnl-vs-exposure-py-result; docs/guides/bi/README.md)
+  datasets/   <id>.dataset.yaml   one table each (rachana: 2, <model>-<table>.dataset.yaml): the table over a connector, its columns, row rules and masks;
+                                  live-trading and live-exposure are the 2.1 live ones; desk-pnl-vs-exposure-py-result is a Python dataset (source.python)
+  models/     <id>.model.yaml     data models: datasets as aliases, relationships, measures, hierarchies, rollups; a report reads one with `model: <name>@1`
+                                  (samples: trades-basic, trading-risk, trading-cashflows, counterparty-exposure, live-trading, region-economics, market-risk-var, ...)
+  reports/    <id>.report.yaml    pages of visuals over a model: filters, bookmarks, drill-through, theme, tooltip pages; layout: board is a wall of tiles
+                                  (the boards desk-wall and python-wall are reports here)
+  boards/     <id>.board.yaml     boards (no samples ship): read as reports with board pages (POST /api/v1/bi/boards/convert shows the report)
+  themes/     <id>.theme.yaml     series colours, good and bad colours, a font, format defaults per kind of visual (samples: corporate, print)
+  notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (sample: pnl-vs-exposure-pandas)
+  python/     <id>.python.yaml    a Python Measure, Visual or Transform with its manifest (inputs, packages, target, limits, source); run on the
+                                  server's compute pool python (samples: desk-pnl-volatility, pnl-histogram, pnl-vega, the Transform pnl-vs-exposure)
 ```
 
 Every file is a **published, read-only item of the catalogue** (workspace "Shipped content", id `file:<kind>:<name>`). The keys `title`, `description`, `owner`, `tags`, `endorsement` (none, promoted,
@@ -59,8 +50,7 @@ Where to read more, in the order a newcomer wants it:
 | a tour of the pages and a walk-through with the samples in this folder | [docs/guides/bi/README.md](../../docs/guides/bi/README.md) (start here), [docs/tutorials/10-first-bi-report.md](../../docs/guides/bi/REPORTS.md#part-a--your-first-bi-report) |
 | the dataset and model formats (`datasets/`, `models/`) | [docs/guides/bi/README.md](../../docs/guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads) |
 | the report format (`reports/`): a report names its model with `model: <name>@<major>` (a 2.1 live report still names a `dataset:`) | [docs/guides/bi/README.md](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) |
-| boards, report pages of tiles (`layout: board`), and converting a 2.3 board file | [docs/guides/bi/README.md](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) |
-| the theme format (`themes/`) | [docs/guides/bi/README.md › Reports: the YAML, the visuals and how they behave, section 5.2](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#23-themes) |
+| boards (`layout: board`) and the theme format (`themes/`) | [the report file](../../docs/guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#23-themes) |
 | publishing, review, certification and moving content between servers | [docs/guides/bi/README.md](../../docs/guides/bi/GOVERNANCE_AND_AI.md#2-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
 | the design and what each phase built | [docs/architecture/ARCHITECTURE.md §28](../../docs/architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) (sections 6, 8 and 13, "Where BI files live", and section 20) |
 
