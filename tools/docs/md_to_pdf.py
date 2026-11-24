@@ -46,7 +46,7 @@ from core.guides import GithubSlugger  # noqa: E402  (the help centre's heading 
 
 PDFS = [ROOT / "docs" / "DEPLOYMENT_AND_QA_GUIDE.md", ROOT / "docs" / "QUICKSTART_DEVELOPERS.md", ROOT / "docs" / "guides" / "CLUSTER_GUIDE.md",
         ROOT / "docs" / "architecture" / "KERNEL_AND_MODULES.md", ROOT / "docs" / "architecture" / "DISTRIBUTIONS.md",
-        ROOT / "HOW_IT_FITS.md"]   # generated and checked together (a PDF beside a Markdown file is one of these: --check keeps it current)
+        ROOT / "HOW_IT_FITS.md", ROOT / "docs" / "PRODUCTION_DEPLOYMENT.md"]   # generated and checked together (a PDF beside a Markdown file is one of these: --check keeps it current)
 PICTURE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 MARK = "source "                                                    # the PDF's title ends with "source <fingerprint>"
 COMMENT = re.compile(r"<!--.*?-->", re.S)

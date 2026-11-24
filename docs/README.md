@@ -13,7 +13,7 @@ before the consolidation (for example `/help/quickstart` or `/help/connector-kaf
 
 ## New here? Read these, in order
 
-1. **[DEPLOYMENT_AND_QA_GUIDE.md](DEPLOYMENT_AND_QA_GUIDE.md)** (*Deploy and verify*, also as a PDF): Windows, Linux and macOS step by step, what you should see at each step, the QA checklist, a cluster of three; the details behind each step are in [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine).
+1. **[DEPLOYMENT_AND_QA_GUIDE.md](DEPLOYMENT_AND_QA_GUIDE.md)** (*Deploy and verify*, also as a PDF): Windows, Linux and macOS step by step, what you should see at each step, the QA checklist, a cluster of three; the details behind each step are in [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine). A production server on Linux: **[PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md)** (also as a PDF).
 2. **[tutorials/](tutorials/README.md)**: the hands-on tutorials, in tracks, on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
 3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[BUILD_GUIDE.md, Part V](guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which)**: which industries are available and how to load them; building your own is [BUILD_GUIDE.md](guides/BUILD_GUIDE.md).
 

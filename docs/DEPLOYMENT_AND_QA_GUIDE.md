@@ -24,7 +24,8 @@ This guide is the one place for the deployment and QA steps; the details behind 
 [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md) (installing, services, monitoring, troubleshooting), [CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md)
 (Drishti\*net in depth), [CONFIGURATION.md](admin/CONFIGURATION.md) (every setting), [CLI_REFERENCE.md](guides/CLI_REFERENCE.md) (every command),
 [DATA_LAKE_GUIDE.md](guides/DATA_LAKE_GUIDE.md) (lakes and loads). Developers building from source start with
-[QUICKSTART_DEVELOPERS.md](QUICKSTART_DEVELOPERS.md).
+[QUICKSTART_DEVELOPERS.md](QUICKSTART_DEVELOPERS.md). **A production server on Linux** (systemd services, `/etc/drishti` settings and
+secrets, PostgreSQL, TLS, backups, upgrades): [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) ([PDF](PRODUCTION_DEPLOYMENT.pdf)).
 
 **Conventions.** `<drishti>` is the install folder (a clone, or the unpacked release), `DRISHTI_HOME`, always written out in full: for
 example `C:\Users\you\IdeaProjects\drishti-platform\drishti` on Windows and `/home/you/IdeaProjects/drishti-platform/drishti` on Linux. `<data>` is the data folder,

@@ -272,8 +272,8 @@ With sign-in on you are sent to **Sign in**. The first start with no users creat
 `drishti-dev-admin` / `drishti-dev-admin123`. Sign in, click your name in the top bar (**My account**, `/account`), and under **Change
 password** type the current password and a new one twice (at least 10 characters, letters and digits). Until you do, Admin → Users warns
 that the development password is in use. Five wrong passwords lock an account for 15 minutes. With sign-in off you act as the development
-user *Ash* with every role. In production set `DRISHTI_SEED_ADMIN=false`, or your own `DRISHTI_SEED_USERNAME`/`DRISHTI_SEED_PASSWORD`
-(as the Docker setup does), and long random secrets ([section 11](#11-security-checklist)).
+user *Ash* with every role. In production give your own `DRISHTI_SEED_USERNAME`/`DRISHTI_SEED_PASSWORD` for the first
+start, then remove them (as the Docker setup does; `DRISHTI_SEED_ADMIN=false` on an empty store leaves no administrator), and long random secrets ([section 11](#11-security-checklist)).
 
 **Admin** in the top bar opens the administration pages, one tab each (*Users*, *Roles*, *Packs*, *Tokens*, *Access*, *Connectors*,
 *Artifacts*, *AI*, *Data loads*, *Collaboration*, *Embedding*, *BI*, *Audit log*, *Health*, *Caches*, *Capacity*; *Lakes* opens from
@@ -1575,7 +1575,9 @@ Work through this for every shared installation. Each item says how to check it.
    server. Check: a private window opening the console goes to the sign-in page. Disabling or demoting someone takes effect within
    `auth.recheck_seconds` (10); signing out ends the session on the server.
 3. **The development admin is gone.** Compose never creates it. Elsewhere sign in as `drishti-dev-admin`, create your own admin, change or
-   disable the development one, and set `DRISHTI_SEED_ADMIN=false` (or give `DRISHTI_SEED_USERNAME`/`_PASSWORD` for the first start). Check:
+   disable the development one. In production give `DRISHTI_SEED_USERNAME` and `DRISHTI_SEED_PASSWORD` for the first start (the first
+   administrator), then remove the two lines ([PRODUCTION_DEPLOYMENT.md › The first administrator](../PRODUCTION_DEPLOYMENT.md#44-the-first-administrator));
+   never `DRISHTI_SEED_ADMIN=false` on an empty store, which then has no administrator at all. Check:
    no default-password warning; `/api/v1/admin/status` reports `"defaultAdminPasswordInUse": false`.
 4. **Single sign-on (optional).** `DRISHTI_OIDC_ENABLED=true`, `DRISHTI_OIDC_ISSUER` (https) and `DRISHTI_OIDC_CLIENT_ID` on both processes,
    `DRISHTI_OIDC_CLIENT_SECRET` and `DRISHTI_OIDC_REDIRECT_URI` on the console, and the group-to-role map `drishti.security.oidc.role-map` on the

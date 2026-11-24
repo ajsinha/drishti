@@ -33,8 +33,8 @@ import settingsfile  # noqa: E402 - tools/ is on the path through procs
 
 def setup_line(settings: str | None = None) -> str:
     """The one line that prepares the console's Python (start never does: setup prepares, start only starts)."""
-    return (f"python tools/drishti.py{' --settings ' + settings if settings else ''} setup   (with the Python you run Drishti with: it installs what is "
-            f"missing from the offline wheel pack in ~/drishti-wheels, or --wheels <folder>)")
+    return (f"python tools/drishti.py{' --settings ' + settings if settings else ''} setup   (it prepares the console's Python: on Windows the "
+            f"Python you run Drishti with, on Linux and macOS drishti-console/.venv; from the offline wheel pack in ~/drishti-wheels when there)")
 
 
 def console_python(env: dict, keys: dict, home: Path, settings: str | None = None, verify=None) -> str:

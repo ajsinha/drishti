@@ -1252,7 +1252,8 @@ def main(argv: list[str] | None = None) -> int:
                                   env={**os.environ, REEXEC: "1"}).returncode
         what = getattr(e, "name", None) or ("drishti_lake" if "drishti_lake" in str(e) else "a library Drishti needs")
         print(f"drishti: {what} is not installed in this Python ({sys.executable}): run  python tools/drishti.py setup  "
-              "(it installs the libraries from the offline wheel pack: ~/drishti-wheels, or --wheels <folder>)", file=sys.stderr)
+              "(it prepares the libraries: on Windows into this Python, on Linux and macOS drishti-console/.venv; from the offline wheel pack "
+              "in ~/drishti-wheels when there)", file=sys.stderr)
         return 2
     except FileNotFoundError as e:
         print(f"drishti: {e.filename or e}: no such file", file=sys.stderr)
