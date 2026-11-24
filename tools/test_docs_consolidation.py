@@ -35,7 +35,8 @@ def test_every_rule_row_matches_and_totals_are_the_plans():
     rows, unmatched = corpus.build()
     assert unmatched == []
     n = corpus.counts(rows)
-    assert (n["merge"], n["delete"], n["generate"], n["move"], n["rename"], n["connector"]) == (123, 64, 81, 5, 2, 22) or len(rows) != 400
+    assert len(rows) == 383
+    assert (n["merge"], n["delete"], n["generate"], n["move"], n["rename"], n["connector"]) == (98, 64, 82, 5, 2, 22)
     assert len({r[0] for r in rows}) == len(rows)
 
 
@@ -122,5 +123,7 @@ def test_merge_audit_finds_a_lost_heading_and_a_lost_block_and_honours_the_log()
     assert merge_audit.audit(src, homes, docs, log) == []
 
 
-def test_merge_audit_runs_over_the_tree():
-    assert merge_audit.main(["--show", "0"]) in (0, 1)   # step 0 baseline: nothing merged yet, so it reports; it must not crash
+def test_merge_audit_over_the_tree_finds_nothing_missing_with_both_merge_logs(capsys):
+    d = ROOT / "tools" / "docs"
+    assert merge_audit.main(["--show", "0", "--log", str(d / "merge_log_A.txt"), "--log", str(d / "merge_log_B.txt")]) == 0
+    assert "108 merged sources audited, 0 items not found" in capsys.readouterr().out

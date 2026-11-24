@@ -43,6 +43,28 @@ class AboutParserTest {
     }
 
     @Test
+    void theIntroOfThePackReadmeIsDocumentationAndNoProblem() {
+        AboutParser.Parsed p = parse("""
+                about: 1
+                intro:
+                  title: A pack
+                  fields:
+                    thing:
+                      QTY: The quantity, in units
+                kinds:
+                  thing:
+                    title: A thing
+                """);
+        assertThat(p.problems()).isEmpty();
+        assertThat(p.kinds()).containsKey("thing");
+    }
+
+    @Test
+    void anOtherUnknownTopLevelKeyIsStillAProblem() {
+        assertThat(codes(parse("about: 1\nintros: {}\n"))).containsExactly("DRS-2040");
+    }
+
+    @Test
     void aValidFileParsesWithNoProblem() {
         AboutParser.Parsed p = parse("""
                 about: 1

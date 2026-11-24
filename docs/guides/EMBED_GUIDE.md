@@ -852,13 +852,13 @@ covered and what is not, is in its [MOVING_FROM_AG_GRID.md](https://github.com/d
 ## 15. Use Rachana and Elements in your own app, and GenUI
 
 This guide is Drishti's side: how a page of yours embeds a Drishti view. Using the screen language and the widget libraries in an application
-that has no Drishti server at all, and streaming generated screens into an app (GenUI), are the products' own guides, and they are the one
+that has no Drishti server at all, and GenUI (an assistant composing a screen through tools; streaming a screen to the page is planned), are the products' own guides, and they are the one
 home of those subjects:
 
 - [Rachana and Elements in your own app](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide3/docs/guides/IN_YOUR_APP.md): the
   renderer and the libraries, from one import to a screen of your own, with no copy of them here.
-- [GenUI](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide3/docs/guides/GENUI.md): a screen streamed to the page as it is
-  composed, its links intact, and the tool suggestions for an assistant that composes it.
+- [GenUI](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide3/docs/guides/GENUI.md): a screen an assistant composes and checks through tools and publishes as a board
+  (streaming it to the page as it is composed, links intact, is planned), with the tool suggestions for the assistant.
 
 Drishti uses the same renderer (section 6) and the same libraries (section 13); what Drishti adds is the server's views, its sign-in
 (section 4) and its data.

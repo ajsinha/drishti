@@ -27,7 +27,7 @@ kinds:
   development-profile:
     title: Development profile
     about: ${$.COUNTRY_NAME} (${$.REGION}, ${$.INCOME_GROUP}) has ${$.INDICATOR_COUNT} World Development Indicators, the latest from ${$.DATA_YEAR}.
-    guide: world-development
+    guide: world-data-guide
     glossary:
       PROFILE_ID: { term: Profile id, means: "WDI- and the country's ISO 3166 alpha-3 code." }
       NAME: { term: Name, means: "The economy's name as the World Bank writes it." }
@@ -67,7 +67,7 @@ kinds:
   development-series:
     title: Development indicator series
     about: ${$.INDICATOR} for ${$.COUNTRY_NAME} was ${fmt($.LATEST, 'amount2')} (${$.UNIT}) in ${$.LATEST_YEAR}.
-    guide: world-development
+    guide: world-data-guide
     glossary:
       SERIES_ID: { term: Series id, means: "WDIS-, the country's ISO alpha-3 code and the indicator's code with its dots as underscores." }
       NAME: { term: Name, means: "The country and the indicator, as one name." }

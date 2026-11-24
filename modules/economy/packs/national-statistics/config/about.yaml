@@ -27,7 +27,7 @@ kinds:
   statistics-series:
     title: National statistic
     about: ${$.TITLE} was ${fmt($.LATEST, 'amount2')} (${$.UNIT}) in ${$.LATEST_PERIOD}, released ${$.RELEASED}.
-    guide: national-statistics
+    guide: world-data-guide
     glossary:
       SERIES_ID: { term: Series id, means: "NSTAT-V and the Statistics Canada vector number." }
       NAME: { term: Name, means: "The series' title in the feed's YAML, as NAME for search." }

@@ -48,8 +48,7 @@ intro:
       GRID: Volatilities by expiry and delta
       MODEL: Smile model
     ir-vol-cube:
-      GRID: Volatilities by expiry
-      tenor and strike: null
+      GRID: Volatilities by expiry, tenor and strike
     cap-vol-surface:
       GRID: Volatilities by expiry and strike
       MODEL: Volatility model
@@ -75,9 +74,7 @@ intro:
       POINTS: Zero-coupon inflation rates by tenor
       SEASONALITY: Monthly seasonal adjustments
     commodity:
-      OHLC: Open
-      high: null
-      low and close bars: null
+      OHLC: Open, high, low and close bars
       SPEC: Contract specification
     commodity-curve:
       POINTS: Futures prices by delivery month
@@ -86,8 +83,7 @@ intro:
       GRID: Volatilities by expiry and strike
     rate-fixing:
       CURRENCY: Currency
-      FIXINGS: Daily fixings (date
-      rate): null
+      FIXINGS: Daily fixings (date, rate)
     bond:
       ISIN_CODE: The ISIN without the BND- prefix
       TERMS: Issue terms

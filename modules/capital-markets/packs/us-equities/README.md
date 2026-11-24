@@ -178,11 +178,11 @@ Fields, from 1 sample document:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `INDEX` | string | `DJIA` | Index code (DJIA |
+| `INDEX` | string | `DJIA` | Index code (DJIA, NDX, SP500) or bank list (BANKS-US, BANKS-CA, BANKS-UK) |
 | `NAME` | string | `Dow Jones Industrial Average` | Index |
 | `MEMBERS` | integer | `30` | Members |
 | `ROWS` | list of objects |  | The members (the totals and divisions are computed on the page) |
-| `PROVENANCE` | object |  | Source |
+| `PROVENANCE` | object |  | Source, retrieval date, licence and URL |
 
 Nested structures:
 

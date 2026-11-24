@@ -114,3 +114,37 @@ def test_the_readme_points_to_the_story_and_the_external_data_page(pack):
                  for i in (o.get("external") or []) + (o.get("official") or [])}
     if externals:
         assert "docs/guides/WORLD_DATA_GUIDE.md" in text, pack.name
+
+
+def _help_addresses() -> tuple[set[str], dict[str, str]]:
+    """(the slugs the console's Help catalogue lists, the moved: rows) of drishti-console/config/help.yaml."""
+    data = yaml.safe_load((ROOT / "drishti-console" / "config" / "help.yaml").read_text(encoding="utf-8"))
+    slugs = {str(x["slug"]) for sec in data["sections"] for grp in sec.get("groups") or [] for g in grp.get("guides") or []
+             for x in [g, *(g.get("children") or [])] if x.get("slug")}
+    return slugs, {str(k): str(v) for k, v in data["moved"].items()}
+
+
+def test_every_about_guide_slug_resolves_to_a_help_page_or_a_moved_row():
+    """The About drawer links /help/<guide>: the pack guides are gone, so each such slug is a Help page or a moved: row whose target is one
+    (a module page, ``module-<id>-<n>``, exists while its module is on)."""
+    slugs, moved = _help_addresses()
+    seen: dict[str, list[str]] = {}
+    for f in [*ROOT.glob("modules/*/packs/*/config/about.yaml"), *ROOT.glob("config/packs/*/*/config/about.yaml"), *ROOT.glob("examples/packs/*/config/about.yaml"),
+              *ROOT.glob("tools/packgen/**/*.yaml")]:
+        for ln in f.read_text(encoding="utf-8").splitlines():
+            m = re.match(r"^\s+guide: ([A-Za-z0-9_-]+)(#\S*)?\s*(#.*)?$", ln)
+            if m:
+                seen.setdefault(m.group(1), []).append(str(f.relative_to(ROOT)))
+    assert seen, "no about.yaml names a guide: the check would be empty"
+    dead = {}
+    for slug, where in seen.items():
+        target = moved.get(slug, slug).split("#")[0]
+        if target not in slugs and not re.fullmatch(r"module-[a-z0-9-]+-\d+", target) and not (ROOT / "docs").glob("**/" + target):
+            dead[slug] = where[:2]
+    assert not dead, f"a guide: that opens no Help page (add the pack guide's new home to tools/docs/moved.yaml, or drop the guide:): {dead}"
+
+
+def test_the_pack_guide_rows_of_help_yaml_are_the_generated_ones():
+    sys.path.insert(0, str(ROOT / "tools" / "docs"))
+    import pack_guide_moves
+    assert pack_guide_moves.main(["--check"]) == 0

@@ -39,16 +39,8 @@ intro:
       WIDTH: Scenario days
       RESULTS: The engine's rows
       TABLES: 'total: the book''s path, one row per day (DAY, PNL)'
-      STAMP: How it was computed (pin
-      inputs: null
-      engine: null
-      where it ran: null
-      result hash): null
-      COMPUTE: The panel's state (ready
-      computing: null
-      stale: null
-      failed: null
-      refused) and request id: null
+      STAMP: How it was computed (pin, inputs, engine, where it ran, result hash)
+      COMPUTE: The panel's state (ready, computing, stale, failed, refused) and request id
     path-sum-java:
       SUM: Sum of the book's path over all days
       WORST: Worst day of the book's path
@@ -57,10 +49,7 @@ intro:
       WIDTH: Scenario days
       RESULTS: The engine's rows
       TABLES: 'total: the book''s path, one row per day (DAY, PNL)'
-      STAMP: How it was computed (pin
-      inputs: null
-      engine: null
-      result hash): null
+      STAMP: How it was computed (pin, inputs, engine, result hash)
       COMPUTE: The panel's state and request id
   sections:
     What it is: |-

@@ -122,7 +122,10 @@ def main(argv: list[str]) -> int:
     # a source that still exists in the tree (not yet merged) is not its own proof
     for old in sources:
         docs.pop(old, None)
-    log = parse_log(Path(arg("--log", "/nonexistent")).read_text(encoding="utf-8")) if Path(arg("--log", "/nonexistent")).exists() else set()
+    log: set = set()
+    for i, a in enumerate(argv):                                   # --log may be given once per merge log (lane A, lane B)
+        if a == "--log" and i + 1 < len(argv) and Path(argv[i + 1]).exists():
+            log |= parse_log(Path(argv[i + 1]).read_text(encoding="utf-8"))
     bad = audit(sources, homes, docs, log)
     for b in bad[:show]:
         print("  ", b)

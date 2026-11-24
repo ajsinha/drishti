@@ -41,7 +41,6 @@ kinds:
     about: >-
       ${$.variantId} is a ${lower($.consequence)} change in ${$.geneSymbol} (${$.proteinChange}, ${$.hgvsC});
       it is classified "${$.significance}" for ${$.condition}.
-    guide: genomics
     glossary:
       geneSymbol: { use: "geneSymbol" }
       significance: { use: "significance" }
@@ -66,7 +65,6 @@ kinds:
     title: "Gene"
     about: >-
       ${$.symbol} (${$.name}) lies at ${$.location} on the GRCh38 assembly, ${$.length} bases long on the ${$.strand} strand, with ${$.transcripts} known transcripts.
-    guide: genomics
     glossary:
       symbol: { use: "symbol" }
       location: { use: "location" }
@@ -83,7 +81,6 @@ kinds:
     title: "Protein"
     about: >-
       ${$.name} (UniProt ${$.accession}) is ${$.length} amino acids long, about ${fmt($.massKda, 'price2')} kDa, and acts in the ${lower($.subcellular)}.
-    guide: genomics
     glossary:
       accession: { term: "UniProt accession", means: "The stable identifier of the protein entry in UniProt." }
       length: { term: "Length", means: "The number of amino-acid residues in the protein chain.", unit: "amino acids" }
@@ -96,7 +93,6 @@ kinds:
     title: "Biological pathway"
     about: >-
       ${$.name} is a ${lower($.category)} pathway of ${$.geneCount} genes in this collection.
-    guide: genomics
     glossary:
       geneCount: { term: "Genes in the pathway", means: "The number of member genes listed." }
       members.symbol: { use: "symbol" }
@@ -107,7 +103,6 @@ kinds:
     about: >-
       ${$.sampleId} is ${lower($.tissue)} tissue with a diagnosis of ${$.diagnosis}, sequenced to a mean coverage of ${fmt($.meanCoverage, 'amount0')}x;
       ${$.variantCount} variant(s) were called and the tumour purity is ${fmt($.purity, 'pct0')}.
-    guide: genomics
     glossary:
       tissue: { term: "Tissue", means: "The tissue the specimen was taken from." }
       diagnosis: { term: "Diagnosis", means: "The clinical diagnosis recorded for the specimen." }
@@ -124,7 +119,6 @@ kinds:
     title: "Sequencing run"
     about: >-
       ${$.runId} ran on a ${$.instrument} (flow cell ${$.flowcell}) and produced ${fmt($.yieldGb, 'amount0')} Gb; ${fmt($.q30, 'pct0')} of bases have a quality score of at least 30.
-    guide: genomics
     glossary:
       instrument: { term: "Instrument", means: "The sequencer model that ran the flow cell." }
       flowcell: { term: "Flow cell", means: "The identifier of the consumable the samples were loaded onto." }
@@ -138,7 +132,6 @@ kinds:
     title: "Differential-expression study"
     about: >-
       ${$.title} compares ${$.comparison} across ${$.sampleCount} samples; ${fmt($.significant, 'amount0')} genes differ significantly.
-    guide: genomics
     glossary:
       comparison: { term: "Comparison", means: "The two groups of samples whose gene expression is compared." }
       sampleCount: { term: "Samples", means: "The number of samples in the study." }
@@ -151,7 +144,6 @@ kinds:
     title: "Clinical trial"
     about: >-
       ${$.title} is a ${$.phase} trial, ${lower($.status)}: ${$.enrolled} of ${$.target} patients are enrolled, selected on the biomarker ${$.biomarkerName}.
-    guide: genomics
     glossary:
       phase: { term: "Trial phase", means: "The stage of drug development: phase I tests safety and dose, phase II looks for activity in a small group, phase III confirms benefit in a large one.", values: { "Phase I": "Safety and dose.", "Phase II": "Early evidence of activity.", "Phase III": "Confirmation against standard care." } }
       enrolled: { term: "Patients enrolled", means: "The number of patients who have joined the trial so far." }

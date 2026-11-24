@@ -24,7 +24,6 @@ kinds:
       ${$.counterpartyName} (${$.sector}) emits ${fmt($.scope12, 'compact')} tCO2e from its own operations and purchased energy, an intensity of
       ${fmt($.intensity, 'amount0')} tCO2e per USD million of revenue. Its transition-risk score is ${$.transitionScore} and its physical-risk
       score ${$.physicalScore}, both out of 100. Net-zero target: ${$.netZeroTarget}.
-    guide: climate-risk
     glossary:
       counterpartyName: { term: "Counterparty", means: "The borrower or issuer whose climate profile this is." }
       sector: { term: "Sector", means: "The industry the counterparty belongs to; sectors differ widely in how exposed they are to the shift away from fossil fuels." }
@@ -42,7 +41,6 @@ kinds:
     about: >-
       ${$.name} is a ${$.category} scenario with ${fmt($.warming, 'price2')} degrees of warming by 2100 and a carbon price of
       ${fmt($.carbon2030, 'amount0')} USD per tonne in 2030 rising to ${fmt($.carbon2050, 'amount0')} in 2050.
-    guide: climate-risk
     glossary:
       category:
         term: "Scenario family"
@@ -63,7 +61,6 @@ kinds:
     about: >-
       Under "${$.scenarioName}" the ${$.deskName} book loses ${fmt(abs($.loss2030), 'compact')} USD by 2030 and ${fmt(abs($.loss2050), 'compact')} by 2050,
       ${fmt($.capitalShare, 'pct2')} of the capital base the stress is measured against.
-    guide: climate-risk
     glossary:
       scenarioName: { term: "Climate scenario", means: "The pathway of policy, carbon prices and temperature the portfolio was revalued under." }
       deskName: { term: "Desk", means: "The trading desk whose positions were stressed." }
@@ -79,7 +76,6 @@ kinds:
     about: >-
       ${$.book} finances ${fmt($.financed, 'amount0')} tCO2e on ${fmt($.exposure, 'compact')} USD of exposure, an intensity of
       ${fmt($.intensity, 'amount0')} tCO2e per USD million, with an average PCAF data-quality score of ${fmt($.dataQuality, 'price2')}.
-    guide: climate-risk
     glossary:
       book: { term: "Book", means: "The portfolio of loans and investments the emissions are attributed to." }
       financed: { term: "Financed emissions", means: "The share of the borrowers' emissions that belongs to the bank: each borrower's emissions multiplied by the bank's attribution factor, summed.", unit: "tCO2e" }
@@ -98,7 +94,6 @@ kinds:
     about: >-
       ${$.name} in ${$.country}, worth ${fmt($.value, 'compact')} USD and owned or financed through ${$.counterpartyName}, is most exposed to
       ${$.worstHazard}; ${fmt($.insured, 'pct0')} of its value is insured.
-    guide: climate-risk
     glossary:
       counterpartyName: { term: "Counterparty", means: "The borrower or owner of the asset." }
       value: { term: "Asset value", means: "The current value of the asset.", unit: "USD" }
@@ -111,7 +106,6 @@ kinds:
     about: >-
       ${$.legalEntityName}'s green asset ratio is ${fmt($.gar, 'pct2')}: that share of its ${fmt($.covered, 'compact')} USD of covered assets
       is aligned with the EU taxonomy, while ${fmt($.eligible, 'pct0')} is eligible.
-    guide: climate-risk
     glossary:
       legalEntityName: { term: "Legal entity", means: "The legal entity the report covers." }
       gar: { term: "Green asset ratio", means: "Taxonomy-aligned assets divided by covered assets. An asset is aligned if it funds an activity that substantially contributes to an environmental objective, does no significant harm to the others and meets minimum safeguards.", unit: "% of covered assets" }

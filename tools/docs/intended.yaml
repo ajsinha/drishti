@@ -28,7 +28,8 @@ intended:
     paths: ["modules/*/docs/about.yaml", "tools/packgen/module_readme.py", "tools/connector_readmes.py", "tools/connector_readmes/*.yaml"]
   - decision: D4
     why: "the example packs keep their YAML but carry no guide (their Help entry goes); set-up makes the data folders the placeholders kept"
-    paths: ["examples/packs/*/config/help.yaml", "tools/launch/envsetup.py"]
+    paths: ["examples/packs/*/config/help.yaml", "tools/launch/envsetup.py", "examples/packs/*/config/about.yaml", "tools/packgen/climate/about.yaml",
+            "tools/packgen/genomics/about.yaml", "tools/packgen/liquidity/about.yaml", "tools/packgen/oprisk/about.yaml", "tools/packgen/retail/about.yaml"]
   - decision: D5
     why: "the gallery reads its sections of the examples README; Help > Developer reads a section of API_REFERENCE.md; Help redirects a merged page (help.yaml moved:)"
     paths: ["drishti-console/core/examples.py", "drishti-console/core/guides.py", "drishti-console/routes/help_routes.py",
@@ -49,6 +50,9 @@ intended:
   - decision: POSITIONING
     why: "owner 2026-11-24: Drishti is a platform for any domain, banking one module; the About page says so"
     paths: ["drishti-console/web/templates/help/about.html"]
+  - decision: GATE_FIXES
+    why: "the Fable gate's fixes: the about parser accepts intro: (the pack README's text); a generated Help address for each merged pack guide (tools/docs/generate.py runs it)"
+    paths: ["compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/about/AboutParser.java", "tools/docs/generate.py"]
   - decision: PACK_HELP
     why: "a shipped pack has no help.yaml since i7k: console.help goes from its pack.yaml (the generators write it only for an example pack) and the unused PackSpec.overview field goes"
     paths: ["config/packs/*/*/pack.yaml", "modules/*/packs/*/pack.yaml", "tools/packgen/*/make.py", "tools/packgen/banking/make_packs.py",

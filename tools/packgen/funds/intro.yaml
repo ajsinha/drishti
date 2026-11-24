@@ -79,16 +79,13 @@ intro:
     fund-holder:
       TICKER: The us-equities company's ticker
       FUNDS: How many of the pack's funds hold it
-      HOLDERS: Each fund with the company's weight
-      value and shares: null
+      HOLDERS: Each fund with the company's weight, value and shares
       PCT_OF_SHARES: Shares held by the funds over shares outstanding (percent)
       TOP_WEIGHTS: The ten largest weights in a fund
     index-funds:
       INDEX: The us-equities index code
       FUNDS: How many of the pack's funds track it
-      ROWS: The funds with net assets
-      expense ratio: null
-      members held and active share: null
+      ROWS: The funds with net assets, expense ratio, members held and active share
   sections:
     What it is: |-
       The 200 largest US mutual funds and ETFs by net assets, with their holdings, from SEC public data: the newest Form N-PORT report of

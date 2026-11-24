@@ -23,7 +23,6 @@ kinds:
       ${$.legalEntityName} holds ${fmt($.hqla, 'compact')} of high-quality liquid assets against ${fmt($.netOutflows, 'compact')} of
       net outflows over 30 days of stress: an LCR of ${fmt($.lcr, 'pct0')} against a minimum of ${fmt($.minimum, 'pct0')}, a buffer of
       ${fmt($.buffer, 'compact')} above the requirement as of ${$.asOf}.
-    guide: liquidity-risk
     glossary:
       lcr:
         term: "Liquidity coverage ratio"
@@ -48,7 +47,6 @@ kinds:
     about: >-
       ${$.legalEntityName} has ${fmt($.asfTotal, 'compact')} of available stable funding against ${fmt($.rsfTotal, 'compact')} required:
       an NSFR of ${fmt($.nsfr, 'pct0')} against a minimum of ${fmt($.minimum, 'pct0')}.
-    guide: liquidity-risk
     glossary:
       nsfr: { term: "Net stable funding ratio", means: "Available stable funding divided by required stable funding over a one-year horizon. It checks that long-term assets are funded by stable sources and so limits reliance on short-term wholesale funding.", unit: "% (100% is the minimum)" }
       asfTotal: { term: "Available stable funding", means: "The part of the bank's capital and liabilities expected to stay for a year, each weighted by an ASF factor.", unit: "reporting currency" }
@@ -67,7 +65,6 @@ kinds:
     about: >-
       ${$.legalEntityName}'s contractual ${$.currency} cash flows are laid out by time bucket; the cumulative gap at one month is
       ${fmt($.gap1m, 'signed0')} and the liquid-asset buffer lasts ${$.survivalDays} days.
-    guide: liquidity-risk
     glossary:
       gap1m: { term: "Cumulative gap, 1 month", means: "Inflows less outflows summed over all buckets up to one month. A negative gap must be covered from the liquidity buffer or new funding.", unit: "ladder currency", sign: "Negative is a net outflow." }
       survivalDays: { term: "Survival horizon", means: "The first day on which the liquid-asset buffer plus the cumulative net flows turns negative; 365 means it lasts the whole ladder.", unit: "days" }
@@ -81,7 +78,6 @@ kinds:
     about: >-
       ${$.holdingId} is ${$.security}, a ${$.level} asset with a market value of ${fmt($.marketValue, 'compact')} and a liquidity
       value of ${fmt($.liquidityValue, 'compact')}${$.encumbered == 'No' ? '' : '; it is pledged, so it does not count'}.
-    guide: liquidity-risk
     glossary:
       security: { term: "Security", means: "The bond or other asset held in the liquidity buffer." }
       level:
@@ -105,7 +101,6 @@ kinds:
     about: >-
       ${$.fundingId} is ${fmt($.amount, 'compact')} ${$.currency} of ${lower($.type)} from ${$.counterpartyName}, maturing ${$.maturity};
       the LCR assumes ${fmt($.runOffRate, 'pct0')} of it leaves within 30 days of stress.
-    guide: liquidity-risk
     glossary:
       counterpartyName: { term: "Funding provider", means: "The counterparty that provides the funding." }
       maturity: { term: "Maturity", means: "The date the funding falls due and has to be repaid or rolled." }
@@ -115,7 +110,6 @@ kinds:
     about: >-
       Under "${$.scenarioName}" ${$.legalEntityName} survives ${$.survivalDays} days against an appetite of ${$.appetiteDays};
       its lowest liquidity position on the way is ${fmt($.minimumPosition, 'signed0')}.
-    guide: liquidity-risk
     glossary:
       scenarioName: { term: "Stress scenario", means: "The assumed combination of idiosyncratic and market-wide shocks, such as a run on wholesale funding with a fall in asset values." }
       legalEntityName: { use: "legalEntityName" }
@@ -131,7 +125,6 @@ kinds:
     about: >-
       ${$.legalEntityName} used at most ${fmt($.peakUsage, 'compact')} ${$.currency} of intraday liquidity on ${$.paymentSystem}, ${fmt($.usagePct, 'pct0')}
       of the ${fmt($.available, 'compact')} available.
-    guide: liquidity-risk
     glossary:
       peakUsage: { term: "Peak intraday usage", means: "The largest net amount of liquidity used during the day to settle payments, the deepest point of the day's net position.", unit: "reporting currency" }
       available: { term: "Available intraday liquidity", means: "The central-bank balances, collateral and credit lines that can be used to settle payments during the day.", unit: "reporting currency" }

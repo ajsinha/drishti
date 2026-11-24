@@ -24,7 +24,6 @@ kinds:
     about: >-
       ${$.name} is a ${lower($.segment)} customer since ${$.since}, with ${fmt($.totalDeposits, 'compact')} on deposit and ${fmt($.totalLending, 'compact')} borrowed;
       the KYC risk rating is ${lower($.kycRisk)}.
-    guide: retail-banking
     glossary:
       segment: { term: "Customer segment", means: "The group the bank serves with a common offer and pricing, chosen from income and assets.", values: { "Mass market": "Everyday banking customers with standard products.", "Mass affluent": "Customers with higher income or savings who get extra services.", "Private": "High-net-worth customers with a dedicated adviser." } }
       totalDeposits: { term: "Total deposits", means: "The sum of the customer's deposit balances across the bank.", unit: "account currency" }
@@ -39,7 +38,6 @@ kinds:
     about: >-
       ${$.accountId} is a ${lower($.type)} of ${$.holderName} holding ${fmt($.balance, 'amount2')} ${$.currency} at ${fmt($.rate, 'pct2')} interest;
       it is ${lower($.status)}.
-    guide: retail-banking
     glossary:
       type: { term: "Account type", means: "A current account is for everyday payments; a savings account pays more interest and limits use." }
       holderName: { use: "holderName" }
@@ -56,7 +54,6 @@ kinds:
     about: >-
       ${$.loanId} is a mortgage of ${$.borrowerName}: ${fmt($.balance, 'compact')} outstanding at ${fmt($.rate, 'pct2')} on a property valued at
       ${fmt($.property.valuation, 'compact')} (a loan to value of ${fmt($.ltv, 'pct0')}), with ${$.remainingYears} years left and ${$.daysPastDue} days past due.
-    guide: retail-banking
     glossary:
       borrowerName: { use: "borrowerName" }
       balance: { term: "Outstanding balance", means: "The principal still to be repaid.", unit: "loan currency" }
@@ -75,7 +72,6 @@ kinds:
     about: >-
       ${$.loanId} is a ${lower($.purpose)} loan to ${$.borrowerName}: ${fmt($.balance, 'amount2')} outstanding, repaid in instalments of ${fmt($.instalment, 'amount2')}
       at ${fmt($.rate, 'pct2')}, ${$.daysPastDue} days past due.
-    guide: retail-banking
     glossary:
       borrowerName: { use: "borrowerName" }
       purpose: { term: "Purpose", means: "What the borrower said the loan is for. The loan is unsecured: nothing is pledged against it." }
@@ -92,7 +88,6 @@ kinds:
     about: >-
       ${$.cardId} is a ${$.product} of ${$.holderName} with a balance of ${fmt($.balance, 'amount2')} on a limit of ${fmt($.limit, 'amount0')}, ${fmt($.utilisation, 'pct0')} used,
       at ${fmt($.apr, 'pct2')} APR; the account is ${lower($.status)}.
-    guide: retail-banking
     glossary:
       holderName: { use: "holderName" }
       product: { term: "Card product", means: "The card the customer holds, which sets its fees, rewards and rate." }
@@ -110,7 +105,6 @@ kinds:
     about: >-
       ${$.caseId}: ${$.customerName} is ${$.daysPastDue} days past due with ${fmt($.arrears, 'amount2')} in arrears, in the stage "${$.stage}";
       the strategy is ${lower($.strategy)} and the case is ${lower($.status)}.
-    guide: retail-banking
     glossary:
       customerName: { term: "Customer", means: "The customer who is behind on payments." }
       arrears: { term: "Arrears", means: "The overdue amount, the sum of the payments that were due and not paid.", unit: "account currency" }
@@ -126,7 +120,6 @@ kinds:
     about: >-
       ${$.name} in ${$.city} serves ${fmt($.customers, 'amount0')} customers with ${fmt($.deposits, 'compact')} of deposits and ${fmt($.lending, 'compact')} of lending;
       its net promoter score is ${$.nps}.
-    guide: retail-banking
     glossary:
       city: { term: "City", means: "The town or city the branch is in." }
       customers: { term: "Customers", means: "The number of customers whose home branch this is." }
@@ -138,7 +131,6 @@ kinds:
     about: >-
       ${$.name} has ${fmt($.exposure, 'compact')} of exposure and an expected credit loss allowance of ${fmt($.ecl, 'compact')}, a coverage of ${fmt($.coverage, 'pct2')};
       ${fmt($.dpd30, 'pct2')} of it is 30 or more days past due.
-    guide: retail-banking
     glossary:
       exposure: { term: "Exposure", means: "The amount outstanding on the segment's loans.", unit: "reporting currency" }
       ecl: { term: "Expected credit loss", means: "The allowance for credit losses under IFRS 9: the probability-weighted expected loss, over 12 months for stage 1 and over the lifetime of the loan for stages 2 and 3.", unit: "reporting currency" }

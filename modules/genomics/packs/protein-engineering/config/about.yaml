@@ -20,7 +20,7 @@ kinds:
   protein:
     title: Protein
     about: '${$.NAME} (${$.PROTEIN}): ${$.LENGTH} amino acids, ${$.FAMILY}.'
-    guide: protein-engineering
+    guide: module-genomics-1
     glossary:
       PROTEIN:
         term: Protein
@@ -51,7 +51,7 @@ kinds:
   residue:
     title: Residue
     about: Position ${$.POS} of ${$.PROTEIN} is ${$.AA}, in a ${$.SECONDARY} of the ${$.DOMAIN}, burial ${$.BURIAL}.
-    guide: protein-engineering
+    guide: module-genomics-1
     glossary:
       RESIDUE_ID:
         term: Residue id
@@ -98,7 +98,7 @@ kinds:
   residue-contact:
     title: Residue contact
     about: Positions ${$.POS_A} and ${$.POS_B} of ${$.PROTEIN} are ${$.DISTANCE} angstroms apart.
-    guide: protein-engineering
+    guide: module-genomics-1
     glossary:
       CONTACT_ID:
         term: Contact id
@@ -119,7 +119,7 @@ kinds:
   dms-score:
     title: Deep mutational scan score
     about: ${$.MUTATION} of ${$.PROTEIN} scores ${$.SCORE} for ${$.ASSAY}.
-    guide: protein-engineering
+    guide: module-genomics-1
     glossary:
       SCORE_ID:
         term: Score id
@@ -155,7 +155,7 @@ kinds:
   design:
     title: Protein design
     about: '${$.DESIGN_ID}: ${$.N_CHANGES} changes, ${$.ACTIVITY} times the natural activity.'
-    guide: protein-engineering
+    guide: module-genomics-1
     glossary:
       DESIGN_ID:
         term: Design id
@@ -200,7 +200,7 @@ kinds:
   design-mutation:
     title: Design change
     about: ${$.MUTATION} in design ${$.DESIGN_ID}.
-    guide: protein-engineering
+    guide: module-genomics-1
     glossary:
       DESIGN_MUTATION_ID:
         term: Design mutation id
@@ -229,7 +229,7 @@ kinds:
   design-round:
     title: Design round
     about: 'Round ${$.ROUND} of the campaign on ${$.PROTEIN}: best activity ${$.BEST_ACTIVITY}, median ${$.MEDIAN_ACTIVITY}.'
-    guide: protein-engineering
+    guide: module-genomics-1
     glossary:
       ROUND_ID:
         term: Round id

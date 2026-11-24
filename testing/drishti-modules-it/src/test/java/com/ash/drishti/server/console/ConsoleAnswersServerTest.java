@@ -21,9 +21,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ash.drishti.packs.Pack;
+import com.ash.drishti.packs.PackRegistry;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,6 +54,9 @@ class ConsoleAnswersServerTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
+    @Autowired PackRegistry registry;
+    @Autowired ConsoleAnswers answers;
+    @TempDir Path temp;
     final ObjectMapper json = new ObjectMapper();
 
     String person(String user) {
@@ -165,6 +173,41 @@ class ConsoleAnswersServerTest {
         String digest = a.path("digest").asText();
         assertThat(call(get("/api/v1/packs/gleif/console").header("Authorization", who).header("If-None-Match", "\"" + digest + "\""))
                 .getResponse().getStatus()).isEqualTo(304);
+    }
+
+    @Test
+    void aPackThatShipsAGuideServesItAndThePicturesBesideItAndNothingElse() throws Exception {
+        // the positive side of the allow-list (ConsoleAnswers.buildPack): a fixture pack with a guide, a picture it shows and a file it does not
+        Path dir = temp.resolve("fixture-guide");
+        Files.createDirectories(dir.resolve("config"));
+        Files.createDirectories(dir.resolve("guides/images"));
+        Files.writeString(dir.resolve("config/help.yaml"), "guides:\n  - {slug: fixture-guide, title: Fixture, file: guides/fixture.md}\n");
+        Files.writeString(dir.resolve("guides/fixture.md"), "# Fixture\n\n![a](images/a.png)\n");
+        Files.write(dir.resolve("guides/images/a.png"), new byte[] {(byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10});
+        Files.writeString(dir.resolve("guides/other.md"), "# not listed\n");
+        Files.writeString(dir.resolve("pack.yaml"), "name: fixture-guide\nversion: 1\nconsole:\n  help: config/help.yaml\n");
+        Pack fixture = new Pack("fixture-guide", "1", "Fixture", "", dir, ConsoleAnswers.read(dir.resolve("pack.yaml")));
+        List<Pack> before = List.copyOf(registry.packs());
+        List<Pack> with = new ArrayList<>(before);
+        with.add(fixture);
+        registry.replace(with);
+        try {
+            ConsoleAnswers.PackAnswer a = answers.packConsole(fixture);
+            assertThat(a.files().keySet()).containsExactlyInAnyOrder("guides/fixture.md", "guides/images/a.png");
+            assertThat((List<?>) ((java.util.Map<?, ?>) a.answer().body().get("help")).get("guides")).hasSize(1);
+            MvcResult guide = call(get("/api/v1/packs/fixture-guide/console/files/guides/fixture.md").header("Authorization", "Bearer " + tokens.mint("root", List.of("admin"), 60)));
+            assertThat(guide.getResponse().getStatus()).isEqualTo(200);
+            assertThat(guide.getResponse().getHeader("X-Content-Type-Options")).isEqualTo("nosniff");
+            assertThat(guide.getResponse().getHeader("Content-Security-Policy")).contains("sandbox");
+            assertThat(guide.getResponse().getContentAsString()).contains("# Fixture");
+            MvcResult picture = call(get("/api/v1/packs/fixture-guide/console/files/guides/images/a.png").header("Authorization", "Bearer " + tokens.mint("root", List.of("admin"), 60)));
+            assertThat(picture.getResponse().getStatus()).isEqualTo(200);
+            assertThat(picture.getResponse().getContentType()).isEqualTo("image/png");
+            assertThat(call(get("/api/v1/packs/fixture-guide/console/files/guides/other.md").header("Authorization", "Bearer " + tokens.mint("root", List.of("admin"), 60)))
+                    .getResponse().getStatus()).as("a file the guide does not name").isEqualTo(404);
+        } finally {
+            registry.replace(before);
+        }
     }
 
     @Test

@@ -74,15 +74,9 @@ intro:
       PRICE_HISTORY: Id of its price-history document (read live, internal only)
       PROVENANCE: Source, retrieval date, licence and URL
     index-membership:
-      INDEX: Index code (DJIA
-      NDX: null
-      SP500) or bank list (BANKS-US: null
-      BANKS-CA: null
-      BANKS-UK): null
+      INDEX: Index code (DJIA, NDX, SP500) or bank list (BANKS-US, BANKS-CA, BANKS-UK)
       ROWS: The members (the totals and divisions are computed on the page)
-      PROVENANCE: Source
-      retrieval date: null
-      licence and URL: null
+      PROVENANCE: Source, retrieval date, licence and URL
     sic-sector:
       DIVISION: SIC division letter
       ROWS: The companies of the code (computed)
