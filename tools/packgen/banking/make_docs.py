@@ -35,7 +35,7 @@ import trade_shape as S
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "trades"))
 import schema as TSCHEMA  # noqa: E402
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "common"))
-import readme as README  # noqa: E402  (the pack README standard: each pack's README.md, from its intro in readme/)
+import readme as README  # noqa: E402  (the pack README standard: each pack's README.md, from the `intro:` of its config/about.yaml)
 import guide_data as GD  # noqa: E402  (every guide's Data contracts and Data retrieval sections)
 
 ROOT = Path(__file__).resolve().parents[3]

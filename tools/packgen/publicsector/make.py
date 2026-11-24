@@ -16,7 +16,7 @@
 """Writes the public-sector packs' samples and READMEs (docs/guides/WORLD_DATA_GUIDE.md): each feed is run on its recorded
 fixtures (tools/feeds/tests/fixtures/publicsector, never the network) with the tests' narrower selection, a few documents of each
 kind are kept as the pack's samples (samples/<kind>.jsonl and catalog.jsonl), and the README is rendered from the pack, the samples
-and its intro (tools/packgen/publicsector/readme/<pack>.intro.md).
+and the `intro:` of its config/about.yaml.
 
     python3 tools/packgen/publicsector/make.py            write the six packs' samples and READMEs
     python3 tools/packgen/publicsector/make.py --check    fail when what is committed is not what it would write
@@ -135,8 +135,7 @@ def build() -> dict[Path, str]:
         for name, text in SAMPLES.files(docs, catalog).items():
             out[pack_dir / "samples" / name] = text
         files = {f"samples/{name}": text for name, text in SAMPLES.files(docs, catalog).items()}
-        intro = Path(__file__).resolve().parent / "readme" / f"{pack}.intro.md"
-        out[pack_dir / "README.md"] = README.render_pack(pack_dir, generator=GENERATOR, files=files, intro=intro)
+        out[pack_dir / "README.md"] = README.render_pack(pack_dir, generator=GENERATOR, files=files)
     return out
 
 

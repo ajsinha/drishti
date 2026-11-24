@@ -509,8 +509,7 @@ class Draft:
             if d.get("source"):
                 return f"public data: {d['source']}"
         metas = Counter(str((d.get("_meta") or {}).get("source")) for d in self.samples + self.tdocs if (d.get("_meta") or {}).get("source"))
-        intro = R.find_intro(self.pack)
-        isrc = ((R.split(intro.read_text(encoding="utf-8"))[0] or {}).get("sources") or []) if intro else []
+        isrc = R.split_intro(self.about)[0].get("sources") or []
         public = bool(isrc) and all("proprietary" not in str(s.get("licence", "")).lower() for s in isrc)
         named = [s for s in isrc if re.search(rf"(^|[\s,]){re.escape(self.kind)}([\s,]|$)", str(s.get("used-for", "")))]
         if metas:
