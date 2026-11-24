@@ -26,7 +26,7 @@ checked name by name; NEVER installed (owner rule, 2026-11-23: an automatic inst
 drishti, then libs, on every system. Drishti never makes a virtual environment and never runs pip: the Python is yours (a dedicated one,
 or a virtual environment you made yourself and run setup with); ``--system`` is accepted and changes nothing. A missing library is a
 [FAIL] line and the pip command you may run yourself, from drishti-console: offline from the wheel pack when one is found (``--wheels
-<folder or .zip>``, else DRISHTI_WHEELS, else ~/drishti-wheels, else the pack zip in Downloads, unzipped into ~/drishti-wheels), and
+<folder or .zip>``, else DRISHTI_WHEELS, else ~/drishti-wheels, else the pack zip in Downloads; a zip is never unzipped: you unzip it), and
 from your package index as the second option. An operating system's own Python (PEP 668, EXTERNALLY-MANAGED) and a pack for another
 Python version are one [FAIL] line each. The Python setup ran with is written as drishti.python into the settings file
 (~/drishti-envs/dev.ini, or the file --settings names): the Python of ``start console``, the cluster, the feed schedules and the server's
@@ -144,7 +144,7 @@ def fix_libs(py: str, home: Path, pack: "pylibs.Pack | None" = None,
     """The command(s) the owner may run himself to put the missing libraries into ``py``: offline from the wheel pack when one was found,
     else (and always as the second option) from his package index. Drishti never runs them."""
     folder = pack.path if pack is not None and pack.path is not None else None
-    if folder is not None and folder.is_file():                 # a zip setup did not unzip (--check): where setup unzips it
+    if folder is not None and folder.is_file():                 # a zip (setup never unzips it): where the person unzips it
         folder = pylibs.wheels_home() / folder.name[:-4]
     cmds = pylibs.install_commands(py, home, folder, what=what)
     if folder is None:
@@ -154,13 +154,13 @@ def fix_libs(py: str, home: Path, pack: "pylibs.Pack | None" = None,
 
 def setup(a, env: dict | None = None, argv: list | None = None, run=subprocess.run) -> int:
     """setup. It never installs a library (owner rule): it finds the offline wheel pack (``--wheels <folder or .zip>``, else DRISHTI_WHEELS,
-    else ~/drishti-wheels, else the pack zip in Downloads; a zip is unzipped into ~/drishti-wheels) only to name it in the command it prints
-    for missing libraries."""
+    else ~/drishti-wheels, else the pack zip in Downloads) only to name it in the command it prints for missing libraries. A pack found only
+    as a zip is never unzipped (setup writes nothing outside the checkout): when libraries are missing, one [FAIL] says to unzip it."""
     real = env is None
     env = dict(os.environ if env is None else env)
     pack = pylibs.find_pack(getattr(a, "wheels", None), env) if a.part != "drishti" else None
-    spec = str(pack.path) if pack is not None and pack.path is not None and not getattr(a, "check", False) else None
-    with pylibs.wheel_folder(spec) as wheels:
+    spec = str(pack.path) if pack is not None and pack.path is not None and pack.path.is_dir() and not getattr(a, "check", False) else None
+    with pylibs.wheel_folder(spec, env) as wheels:
         if wheels is not None:
             pack.path = wheels
         return _setup(a, env, argv, run, pack, real)
@@ -373,6 +373,11 @@ def _setup(a, env: dict, argv: list | None, run, pack: "pylibs.Pack | None", rea
             line("FAIL", "libraries", f"{target}: " + "; ".join(bad))
             line("FAIL", "wheel pack", pack.problem)
             problems.append(pack.fail(procs.command("setup", settings=settings)))
+        elif pack is not None and pack.path is not None and pack.path.is_file():     # a zip: never unzipped here, the person unzips it
+            zipped = pylibs.still_zipped(pack.path, env)
+            line("FAIL", "libraries", f"{target}: " + "; ".join(bad))
+            line("FAIL", "wheel pack", f"{pack.path} is still zipped (setup never unzips it)")
+            problems.append(zipped)
         elif folder is not None and pylibs.pack_mismatch(target, folder, run):
             line("FAIL", "libraries", pylibs.pack_mismatch(target, folder, run))
             problems.append(pylibs.pack_mismatch(target, folder, run))

@@ -35,7 +35,7 @@ a stranger).
 ## Run it
 
 Three processes, on ports that are free. The commands are from the repository root; the console needs the libraries in the Python you run it with
-(`python3 tools/drishti.py setup` installs them).
+(`python3 tools/drishti.py setup` checks them; you install them with the pip commands it prints).
 
 ```bash
 # 1. the Drishti server: security on, embedding on, the trading, counterparty-risk and market-risk packs, a scratch folder for ./data

@@ -32,7 +32,6 @@ import shutil
 import sys
 import subprocess
 import tempfile
-import zipfile
 from pathlib import Path
 
 import procs
@@ -217,7 +216,7 @@ def user_home(env: dict | None = None, windows: bool | None = None) -> Path:
 
 
 def wheels_home(env: dict | None = None) -> Path:
-    """~/drishti-wheels (Windows %USERPROFILE%\\drishti-wheels): where START_HERE puts the pack, and where a pack zip is unzipped."""
+    """~/drishti-wheels (Windows %USERPROFILE%\\drishti-wheels): where START_HERE puts the pack, and where the person unzips a pack zip."""
     return user_home(env) / WHEELS_DIR
 
 
@@ -355,39 +354,16 @@ def sums_problem(folder: Path) -> str:
     return ""
 
 
-def unzip_pack(z: Path, dest: Path | None = None) -> Path:
-    """The pack zip ``z`` unzipped into ~/drishti-wheels/<its name> without a question, kept for the next run; a folder already there with
-    its wheels is used as it is (a second setup changes nothing). Whole or not at all: a sibling folder first, then a rename."""
-    base = wheels_home() if dest is None else dest
-    target = base / z.name[:-4]
-    if holds_wheels(target, 1):
-        return target
-    part = base / (z.name[:-4] + "-unzipping")
-    shutil.rmtree(part, ignore_errors=True)
-    try:
-        part.mkdir(parents=True, exist_ok=True)
-    except OSError as e:
-        raise LaunchError(procs.fail("wheel pack", f"{base} could not be made ({e.strerror or e})",
-                                     f"unzip {z} into a folder of your own and run setup with --wheels <that folder>")) from None
-    try:
-        with zipfile.ZipFile(z) as f:
-            bad = f.testzip()
-            if bad:
-                raise zipfile.BadZipFile(f"{bad} is damaged")
-            f.extractall(part)
-    except (zipfile.BadZipFile, EOFError, OSError) as e:
-        shutil.rmtree(part, ignore_errors=True)
-        raise LaunchError(procs.fail("wheel pack", f"{z} is not a readable .zip file (cut off or damaged: {e})", f"fetch {z.name} again")) from None
-    if target.exists():
-        shutil.rmtree(target, ignore_errors=True)
-    part.rename(target)
-    return target
+def still_zipped(z: Path, env: dict | None = None) -> str:
+    """The one [FAIL] line for a pack that was found only as a zip: setup never unzips it (it writes nothing outside the checkout), the
+    person does, into ~/drishti-wheels (%USERPROFILE%\\drishti-wheels on Windows)."""
+    return procs.fail("wheel pack", f"{z} is still zipped", f"unzip it into {wheels_home(env)}, then run setup again")
 
 
 @contextlib.contextmanager
-def wheel_folder(spec: str | None, dest: Path | None = None):
-    """The folder ``--wheels`` names: a folder as it is, or a pack .zip unzipped into ~/drishti-wheels (:func:`unzip_pack`); a pack that
-    carries SHA256SUMS is checked against it first (a missing or damaged wheel: one [FAIL], pip never runs). None stays None."""
+def wheel_folder(spec: str | None, env: dict | None = None):
+    """The folder ``--wheels`` names, as it is; a pack that carries SHA256SUMS is checked against it first (a missing or damaged wheel:
+    one [FAIL], pip never runs). A pack .zip is never unzipped: one [FAIL] (:func:`still_zipped`). None stays None. Writes nothing."""
     if not spec:
         yield None
         return
@@ -398,7 +374,7 @@ def wheel_folder(spec: str | None, dest: Path | None = None):
         problem = zip_problem(path, machine())
         if problem:
             raise LaunchError(procs.fail("wheel pack", problem, f"fetch {pack_zip_name(PACK_ZIP.match(path.name)['release'], *machine())}"))
-        folder = unzip_pack(path, dest)
+        raise LaunchError(still_zipped(path, env))
     else:
         raise LaunchError(f"--wheels {path}: no such folder or .zip file (unzip the wheel pack into a folder, e.g. ~/drishti-wheels, and name it)")
     for d in wheel_dirs(folder):

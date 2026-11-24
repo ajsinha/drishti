@@ -14,7 +14,7 @@
 
 """The wheel pack, found without help (docs/plans/FIRST_RUN_ROBUSTNESS.md S4, S5; matrix rows 21 to 31): ``--wheels``, DRISHTI_WHEELS,
 ~/drishti-wheels (flat, one folder deep, or the zip), the pack zip for this system, arch and Python in Downloads; a pack for another
-machine is one [FAIL] naming both sides; a zip is unzipped into ~/drishti-wheels without a question; pip only ``--isolated --no-index``.
+machine is one [FAIL] naming both sides; a zip is never unzipped (one [FAIL]: unzip it into ~/drishti-wheels); pip only ``--isolated --no-index``.
 Scratch homes only; pip is never really run."""
 from __future__ import annotations
 
@@ -78,17 +78,28 @@ def test_row21_no_pack_anywhere_lists_the_places_and_the_exact_zip_name(tmp_path
 
 # ---- rows 22, 29: the zip left in Downloads; of two packs the one of this release ------------------------------------------------------
 
-def test_row22_the_zip_in_downloads_is_found_and_unzipped_into_drishti_wheels_without_a_question(tmp_path):
+def snapshot(root: Path) -> list:
+    return sorted((str(p.relative_to(root)), p.stat().st_size if p.is_file() else -1) for p in root.rglob("*"))
+
+
+def test_row22_the_zip_in_downloads_is_found_never_unzipped_and_is_one_fail_saying_unzip_it(tmp_path, monkeypatch):
     dl = tmp_path / "John Smith" / "Downloads"
     z = make_zip(dl, name())
+    env = env_of(tmp_path)
+    monkeypatch.setattr(pylibs, "machine", lambda *a, **k: ME)
+    before = snapshot(tmp_path)
     found = find(tmp_path)
     assert found.path == z and not found.problem
-    with pylibs.wheel_folder(str(found.path), dest=tmp_path / "John Smith" / "drishti-wheels") as folder:
-        assert folder == tmp_path / "John Smith" / "drishti-wheels" / z.name[:-4]
-        assert "alpha" in pylibs.wheel_names(folder)
-    assert folder.is_dir(), "kept for the next run"
-    again = find(tmp_path)
-    assert again.path == tmp_path / "John Smith" / "drishti-wheels", "the next run takes the unzipped folder, the zip is not unzipped again"
+    with pytest.raises(LaunchError) as e:
+        with pylibs.wheel_folder(str(found.path), env):
+            pass
+    home_wheels = tmp_path / "John Smith" / "drishti-wheels"
+    assert str(e.value) == f"[FAIL] wheel pack: {z} is still zipped. Fix: unzip it into {home_wheels}, then run setup again"
+    assert snapshot(tmp_path) == before and not home_wheels.exists(), "setup writes nothing outside the checkout: the zip stays a zip"
+    assert find(tmp_path).path == z, "the next run finds the same zip: nothing was unzipped"
+    monkeypatch.setattr(pylibs.procs, "windows", lambda: True)
+    said = pylibs.still_zipped(z, {"HOME": "/ignored", "USERPROFILE": r"C:\Users\John Smith"})
+    assert "Fix: unzip it into C:\\Users\\John Smith" in said and said.endswith("drishti-wheels, then run setup again")
 
 
 def test_row29_of_two_packs_the_one_for_this_release_is_taken_never_the_newest(tmp_path):
@@ -165,9 +176,9 @@ def test_row25_a_wrong_zip_named_with_wheels_is_refused_and_never_unzipped(tmp_p
     z = make_zip(tmp_path / "dl", name(system="windows"))
     monkeypatch.setattr(pylibs, "machine", lambda *a, **k: ME)
     with pytest.raises(LaunchError, match=r"^\[FAIL\] wheel pack: the wheel pack .*windows-x64.* this machine is linux-x64.*Fix: fetch"):
-        with pylibs.wheel_folder(str(z), dest=tmp_path / "w"):
+        with pylibs.wheel_folder(str(z), env_of(tmp_path)):
             pass
-    assert not (tmp_path / "w").exists()
+    assert not (tmp_path / "John Smith" / "drishti-wheels").exists()
 
 
 def test_the_release_and_machine_of_this_checkout_are_read():
@@ -178,20 +189,21 @@ def test_the_release_and_machine_of_this_checkout_are_read():
 
 # ---- row 28: incomplete or damaged -------------------------------------------------------------------------------------------------
 
-def test_row28_a_cut_off_zip_is_one_fail_and_leaves_nothing_half_made(tmp_path):
+def test_row28_a_cut_off_zip_is_never_opened_one_fail_and_nothing_made(tmp_path, monkeypatch):
     z = make_zip(tmp_path / "dl", name())
     z.write_bytes(z.read_bytes()[: len(z.read_bytes()) // 2])
-    dest = tmp_path / "John Smith" / "drishti-wheels"
-    with pytest.raises(LaunchError, match=r"^\[FAIL\] wheel pack: .* is not a readable \.zip file.*Fix: fetch"):
-        with pylibs.wheel_folder(str(z), dest=dest):
+    monkeypatch.setattr(pylibs, "machine", lambda *a, **k: ME)
+    with pytest.raises(LaunchError, match=r"^\[FAIL\] wheel pack: .* is still zipped\. Fix: unzip it into "):
+        with pylibs.wheel_folder(str(z), env_of(tmp_path)):
             pass
-    assert not any(dest.rglob("*")) if dest.exists() else True
+    assert not (tmp_path / "John Smith" / "drishti-wheels").exists()
 
 
 def test_row28_a_wheel_missing_or_damaged_against_sha256sums_is_named(tmp_path):
     z = make_zip(tmp_path / "dl", name(), wheels=("alpha-1.2-py3-none-any.whl", "beta-2.0-py3-none-any.whl"))
-    dest = tmp_path / "w"
-    folder = pylibs.unzip_pack(z, dest)
+    folder = tmp_path / "w"
+    with zipfile.ZipFile(z) as f:                     # the person unzips the pack (setup never does)
+        f.extractall(folder)
     (folder / "beta-2.0-py3-none-any.whl").unlink()
     with pytest.raises(LaunchError, match=r"lacks beta-2\.0-py3-none-any\.whl"):
         with pylibs.wheel_folder(str(folder)):

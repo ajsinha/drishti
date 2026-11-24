@@ -299,17 +299,26 @@ def make_wheels(folder: Path, names=("alpha", "beta")) -> Path:
     return folder
 
 
-def test_wheels_zip_is_unzipped_into_drishti_wheels_and_kept(tmp_path, monkeypatch):
+def test_a_wheels_zip_is_never_unzipped_and_fails_only_when_libraries_are_missing(tmp_path, libs, capsys, monkeypatch):
     import zipfile
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
     z = tmp_path / "pack.zip"
     with zipfile.ZipFile(z, "w") as f:
         f.writestr("pack/alpha-1.0-py3-none-any.whl", b"w")
-    with pylibs.wheel_folder(str(z)) as folder:
-        assert "alpha" in pylibs.wheel_names(folder)
-        kept = folder
-    assert kept == tmp_path / "home" / "drishti-wheels" / "pack" and kept.exists(), "unzipped once, kept for the next run"
+    with pytest.raises(LaunchError, match=r"^\[FAIL\] wheel pack: .*pack\.zip is still zipped\. Fix: unzip it into .*drishti-wheels, then run setup again$"):
+        with pylibs.wheel_folder(str(z)):
+            pass
+    env = {**quiet(), "HOME": str(tmp_path / "home"), "USERPROFILE": str(tmp_path / "home")}
+    rc = envsetup.setup(ns(tmp_path, "libs", wheels=str(z)), env)
+    out = capsys.readouterr().out
+    wanted = f"[FAIL] wheel pack: {z} is still zipped. Fix: unzip it into {tmp_path / 'home' / 'drishti-wheels'}, then run setup again"
+    assert rc == 1 and wanted in out and "[FAIL] libraries" in out
+    libs["bad"] = []                                  # the libraries verify: the pack does not matter, no line about it
+    rc = envsetup.setup(ns(tmp_path, "libs", wheels=str(z)), env)
+    out = capsys.readouterr().out
+    assert rc == 0 and "wheel pack" not in out and "still zipped" not in out
+    assert not (tmp_path / "home").exists(), "setup never writes into the home folder: the zip stays a zip"
     with pytest.raises(LaunchError, match="no such folder"):
         with pylibs.wheel_folder(str(tmp_path / "nope")):
             pass

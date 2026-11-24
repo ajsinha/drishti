@@ -89,7 +89,7 @@ def python_check() -> list[dict]:
             out.append(item("ok", f"python {pip}", "installed"))
         else:
             out.append(item("warn", f"python {pip}", f"not installed (needed for {why})",
-                            "python tools/drishti.py setup   (installs what is missing into this Python from the offline wheel pack: ~/drishti-wheels, or --wheels <folder>)"))
+                            "python tools/drishti.py setup   (checks this Python's libraries; you install what is missing with the pip commands it prints)"))
     return out
 
 

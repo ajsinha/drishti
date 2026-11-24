@@ -184,7 +184,7 @@ def cmd_cluster(a, extra) -> int:
         if Path(py).exists() and Path(sys.executable).resolve() != Path(py).resolve():
             return subprocess.run([py, str(HERE.parent / "drishti.py"), *a._argv]).returncode
         raise SystemExit("[FAIL] the cluster file needs PyYAML, which this Python has not got. Fix: " + procs.setup_line() + "  "
-                         "(it installs the libraries from the offline wheel pack into the Python you run Drishti with)") from None
+                         "(setup checks the libraries of the Python you run Drishti with; you install them with the pip commands it prints)") from None
     import clusterctl
     verb = getattr(a, "verb", "status")
     data = a.data_dir[0] if isinstance(a.data_dir, list) else a.data_dir
@@ -280,7 +280,7 @@ def register(groups, add) -> None:
     s.add_argument("--envs-dir", metavar="DIR", help="the settings folder (default ~/drishti-envs; Windows %%USERPROFILE%%\\drishti-envs)")
     s.add_argument("--java-home", metavar="DIR", help="the JDK to check (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then the PATH)")
     s.add_argument("--system", action="store_true", help="accepted for old commands; changes nothing (setup always uses the Python you run it with)")
-    s.add_argument("--wheels", metavar="FOLDER", help="the offline wheel pack (a folder, or the pack .zip, unzipped into ~/drishti-wheels) that the printed pip "
+    s.add_argument("--wheels", metavar="FOLDER", help="the offline wheel pack folder (a pack .zip is never unzipped: unzip it into ~/drishti-wheels) that the printed pip "
                                                       "command names; default DRISHTI_WHEELS, else ~/drishti-wheels, else the pack zip in your Downloads folder")
     s.set_defaults(func=cmd_setup, cmd=None)
 

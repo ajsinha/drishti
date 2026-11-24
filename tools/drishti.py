@@ -97,7 +97,7 @@ def need_yaml():
         import yaml
         return yaml
     except ModuleNotFoundError:
-        raise CliError("PyYAML is not installed in this Python: run  " + procs_command("setup") + "  (it installs the libraries from the offline wheel pack: ~/drishti-wheels, or --wheels <folder>)") from None
+        raise CliError("PyYAML is not installed in this Python: run  " + procs_command("setup") + "  (setup checks the libraries; you install them with the pip commands it prints, offline from ~/drishti-wheels or --wheels <folder>)") from None
 
 
 def say_json(obj) -> None:
