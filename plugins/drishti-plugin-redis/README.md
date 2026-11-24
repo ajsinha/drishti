@@ -59,7 +59,7 @@ settings:
 - tls.*
 auth: Redis ACL user and password (${ENV} or file:, overriding the uri's); TLS with a rediss:// uri and the shared tls.* settings, including a client certificate.
 licence: Lettuce (MIT) and zstd-jni (BSD-2-Clause), bundled; zstd-jni carries its native library inside the jar.
-windows: Works on Windows as a plain network client (the native zstd library is inside the jar, no .exe); the server is yours to run, and python tools/drishti.py data load --store redis loads it from any system.
+windows: Works on Windows as a plain network client (the native zstd library is inside the jar, no .exe); the server is yours to run, and python3.13 tools/drishti.py data load --store redis loads it from any system.
 doc: plugins/drishti-plugin-redis/README.md
 ---
 # The redis connector
@@ -68,13 +68,19 @@ Plugin `redis` (`plugins/drishti-plugin-redis`): a million trades a day in memor
 80 to 250 ms, and live updates pushed to open views. Redis holds the recent days; Delta Lake or Iceberg behind it holds the years,
 and Drishti asks that store for any date Redis does not hold.
 
+## Build and use
+
+- **Build.** The plugin is a Maven module (`drishti-plugin-redis`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-redis-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
+- **Enable.** A connector file in the site's `config/connectors/` with `plugin: redis` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
+- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
+
 ## What it reads
 
 A data domain (`trading`) is a key prefix. The kinds come from `<domain>:kinds`, each kind's days from a sorted set, an entity's
 document from one `GET` (or one `MGET` over its candidate days), and a day's promoted fields from one hash read field by field. Days
 are replaced atomically through generations, so a reader sees a whole old day or a whole new one. With `live: true` (the default) it
 subscribes to `<domain>:changes` and re-reads an open entity, or refreshes the catalogue for a whole day. Retention is a TTL on every
-key (`--ttl-days`). It never writes; `python tools/drishti.py data load --store redis` (`RedisLoader`) does.
+key (`--ttl-days`). It never writes; `python3.13 tools/drishti.py data load --store redis` (`RedisLoader`) does.
 
 ## Settings
 
@@ -153,7 +159,7 @@ settings:
 ```
 
 Ready-made files for the six banking domains: `config/connectors.examples/redis/`. Load data with
-`python tools/drishti.py data load --store redis redis://localhost:6379` (add `--trades N --days D`, `--ttl-days N`, `--merge` to add to a day, `--publish` to
+`python3.13 tools/drishti.py data load --store redis redis://localhost:6379` (add `--trades N --days D`, `--ttl-days N`, `--merge` to add to a day, `--publish` to
 announce changes to open views; [Loading](#loading) has every option).
 
 ## Why this layout
@@ -225,17 +231,17 @@ the pack's template wholesale, so it repeats the promoted layout the pack declar
 
 ## Loading
 
-`python tools/drishti.py data load --store redis` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated
+`python3.13 tools/drishti.py data load --store redis` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated
 book, through `RedisLoader` (in the plugin):
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-python tools/drishti.py data load --store redis redis://localhost:6379                                  # the samples: 1,791 documents x 10 days
-python tools/drishti.py data load --store redis redis://localhost:6379 --trades 1000000 --days 2       # and a book of a million trades, streamed
-python tools/drishti.py data load --store redis redis://localhost:6379 --merge                         # add to the days instead of replacing them
-python tools/drishti.py data load --store redis redis://localhost:6379 --ttl-days 7                    # every key expires 7 days after it is written
-python tools/drishti.py data load --store redis rediss://loader:secret@redis.internal:6380 --cluster   # TLS, credentials, Redis Cluster
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379                                  # the samples: 1,791 documents x 10 days
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379 --trades 1000000 --days 2       # and a book of a million trades, streamed
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379 --merge                         # add to the days instead of replacing them
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379 --ttl-days 7                    # every key expires 7 days after it is written
+python3.13 tools/drishti.py data load --store redis rediss://loader:secret@redis.internal:6380 --cluster   # TLS, credentials, Redis Cluster
 ```
 
 ```
@@ -481,8 +487,8 @@ A quick start from nothing (use a free host port if a Redis of yours already lis
 
 ```bash
 docker run -d --name redis -m 2g -p 6379:6379 redis:8 --maxmemory 1gb
-python tools/drishti.py data load --store redis redis://localhost:6379                         # the samples, 10 business days
-python tools/drishti.py data load --store redis redis://localhost:6379 --trades 10000          # and 10,000 trades a day for 3 days
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379                         # the samples, 10 business days
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379 --trades 10000          # and 10,000 trades a day for 3 days
 cp config/connectors.examples/redis/*.yaml config/connectors/      # the banking domains on Redis
 ```
 

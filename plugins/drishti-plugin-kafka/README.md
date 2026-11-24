@@ -73,6 +73,12 @@ Plugin `kafka` (`plugins/drishti-plugin-kafka`): the latest state of each entity
 as the server runs, with views that repaint within a frame of a new message. Pair it with a dated store (Delta Lake, PostgreSQL,
 Aerospike) for history.
 
+## Build and use
+
+- **Build.** The plugin is a Maven module (`drishti-plugin-kafka`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-kafka-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
+- **Enable.** A connector file in the site's `config/connectors/` with `plugin: kafka` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
+- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
+
 ## What it reads
 
 A **compacted topic keyed by entity** is the store: at start the connector assigns itself every partition of each topic in `topics`
@@ -281,7 +287,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d kafka            # apache/kafka 3.9.1, single-node KRaft, compacted
-python3 tools/samplegen/stream.py \
+python3.13 tools/samplegen/stream.py \
     --bootstrap localhost:9092 --topic drishti.trading.trades --samples modules/banking/packs/trading/samples --rate 5 --seconds 0
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false \
   java -jar lib/drishti-server-*-exec.jar
@@ -546,14 +552,14 @@ system's **PV topic** the same way (every partition from the beginning, no consu
 - **Sizing:** a record is 4–8 KB; 10,000 updates a day are 40–80 MB on the topic.
 - **Settings:** `broker` (`default`: the `[broker.default]` section of the settings file, a Kafka at localhost:9092 when none), `topic` (`${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}`),
   `lake` (`${DRISHTI_DELTA_ROOT:./data/delta/demo}`, tables `<lake>/risk/scenario-pv` and `<lake>/risk/pnl-vector`), `poll-ms` (`200`).
-- **The publisher:** `python tools/pvgen/publish_kafka.py` (`tools/pvgen/publish_kafka.py` with the console's Python on any system) sends amended, new and cancelled trades of
+- **The publisher:** `python3.13 tools/pvgen/publish_kafka.py` (`tools/pvgen/publish_kafka.py` with the console's Python on any system) sends amended, new and cancelled trades of
   the demo's date (`--per-message`, `--rate`, `--seconds`, `--seed`, `--pv-systems`, `--pnl-systems`, `--all-vectors`, `--dry-run`);
-  `--save` writes the rows for `python tools/pvgen/check.py`, which recomputes the answer and compares it with the server's
+  `--save` writes the rows for `python3.13 tools/pvgen/check.py`, which recomputes the answer and compares it with the server's
   ([VAR_GUIDE.md, Producing P&L vectors](../../docs/guides/VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)).
 
 ```bash
-DRISHTI_VAR_PV_STREAM=true BROKER_DEFAULT_BOOTSTRAP_SERVERS=localhost:9092 ./drishti.sh start
-python tools/pvgen/publish_kafka.py --bootstrap localhost:9092 --rate 20 --seconds 60 --save pv-sent.jsonl
+DRISHTI_VAR_PV_STREAM=true BROKER_DEFAULT_BOOTSTRAP_SERVERS=localhost:9092 python3.13 tools/drishti.py start server
+python3.13 tools/pvgen/publish_kafka.py --bootstrap localhost:9092 --rate 20 --seconds 60 --save pv-sent.jsonl
 ```
 
 ## Troubleshooting

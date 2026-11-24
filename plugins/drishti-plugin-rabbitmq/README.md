@@ -54,6 +54,12 @@ doc: plugins/drishti-plugin-rabbitmq/README.md
 Plugin `rabbitmq` (`plugins/drishti-plugin-rabbitmq`, on the shared `MessageStateSource` of `drishti-common` (package `messaging`), as `activemq`):
 entity changes from RabbitMQ queues, kept on local disk, with views that update on every message.
 
+## Build and use
+
+- **Build.** The plugin is a Maven module (`drishti-plugin-rabbitmq`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-rabbitmq-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
+- **Enable.** A connector file in the site's `config/connectors/` with `plugin: rabbitmq` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
+- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
+
 ## What it reads
 
 One AMQP connection and one channel, named `drishti-<source-name>`. For each queue in `queues` it declares the queue durable (unless

@@ -50,14 +50,20 @@ settings:
 - tls.*
 auth: Credentials in the uri as ${ENV} references (a literal password is refused); TLS through tls.* (or tls=true in the uri); x.509 certificate log-in with auth-mechanism x509.
 licence: MongoDB Java driver, sync (Apache-2.0), bundled; no native library.
-windows: Works the same on Windows (pure Java driver); the server is yours to run, and python tools/drishti.py data load --store mongodb loads it from any system.
+windows: Works the same on Windows (pure Java driver); the server is yours to run, and python3.13 tools/drishti.py data load --store mongodb loads it from any system.
 doc: plugins/drishti-plugin-mongodb/README.md
 ---
 # The mongodb connector
 
 Plugin `mongodb` (`plugins/drishti-plugin-mongodb`): a document per entity per day, read as columns. One entity is one `_id` lookup;
 a day's promoted fields come from a narrow second collection, so a search over a million trades does not decompress a million
-documents. `python tools/drishti.py data load --store mongodb` (or any writer keeping the same layout) fills it.
+documents. `python3.13 tools/drishti.py data load --store mongodb` (or any writer keeping the same layout) fills it.
+
+## Build and use
+
+- **Build.** The plugin is a Maven module (`drishti-plugin-mongodb`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-mongodb-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
+- **Enable.** A connector file in the site's `config/connectors/` with `plugin: mongodb` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
+- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
 
 ## What it reads
 
@@ -133,7 +139,7 @@ settings:
 ```
 
 Ready-made files for the six banking domains: `config/connectors.examples/mongodb/`; over TLS: `other/positions-mongo.yaml`. Load data
-with `python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti` (add `--trades N --days D`, `--keep-days N` or `--ttl-days N`).
+with `python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti` (add `--trades N --days D`, `--keep-days N` or `--ttl-days N`).
 
 ## Troubleshooting
 
@@ -187,16 +193,16 @@ text. The layout's `sort-by`, `file-rows` and `row-group-rows` do not apply.
 
 ## Loading
 
-`python tools/drishti.py data load --store mongodb` loads the banking packs' samples (`tools/packgen/banking/make_data.py`), and optionally a generated book,
+`python3.13 tools/drishti.py data load --store mongodb` loads the banking packs' samples (`tools/packgen/banking/make_data.py`), and optionally a generated book,
 through `MongoLoader` (in the plugin):
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                            # the samples: 1,791 documents x 10 days
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000 --days 3    # and a book of trades, streamed
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --keep-days 90             # then delete days beyond the 90 newest
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --ttl-days 130             # documents expire 130 days after their date
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                            # the samples: 1,791 documents x 10 days
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000 --days 3    # and a book of trades, streamed
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --keep-days 90             # then delete days beyond the 90 newest
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --ttl-days 130             # documents expire 130 days after their date
 ```
 
 - **Input:** loader rows, one JSON line per entity per day (`{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`),
@@ -398,8 +404,8 @@ A quick start (MongoDB 8.0 does not start on some recent Linux kernels; `mongo:7
 
 ```bash
 docker run -d --name mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                       # the samples, 10 business days
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000        # and 10,000 trades a day for 3 days
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                       # the samples, 10 business days
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000        # and 10,000 trades a day for 3 days
 cp config/connectors.examples/mongodb/*.yaml config/connectors/               # the banking domains on MongoDB
 ```
 

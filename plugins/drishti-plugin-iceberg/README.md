@@ -83,7 +83,7 @@ settings:
 - proxy.*
 auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:), the AWS chain or credentials a REST catalog vends; a REST catalog takes credential (OAuth2 id:secret) or a token, or SigV4 through catalog.rest.*; a private CA through tls.*; an outbound proxy through proxy.*.
 licence: Reads through Drishti Lake (its own Iceberg reader over iceberg-core and Apache Parquet, and the AWS SDK for Java v2; all Apache-2.0), bundled. No Hadoop.
-windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader `python tools/drishti.py data load --store iceberg` (any system); `python tools/drishti.py start server --iceberg` copies the example files in.
+windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader `python3.13 tools/drishti.py data load --store iceberg` (any system); `python3.13 tools/drishti.py start server --iceberg` copies the example files in.
 doc: plugins/drishti-plugin-iceberg/README.md
 ---
 # The iceberg connector
@@ -92,13 +92,19 @@ Plugin `iceberg` (`plugins/drishti-plugin-iceberg`): the Delta connector's desig
 Snowflake's Iceberg tables, AWS Glue, Dremio, Trino and Apache Polaris. Built for a million trades a day kept for seven years. For
 tables someone else designed, use `iceberg-external`.
 
+## Build and use
+
+- **Build.** The plugin is a Maven module (`drishti-plugin-iceberg`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-iceberg-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
+- **Enable.** A connector file in the site's `config/connectors/` with `plugin: iceberg` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
+- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
+
 ## What it reads
 
 A data domain is a folder (`<root>/<domain>/<kind>`, `catalog: hadoop`, the default) or a REST catalog's namespace (`catalog: rest`
 with `uri`, `warehouse`, `credential`), and each kind is one Iceberg table (or `table.<kind>` when its name differs). A table can also
 be named by its metadata file (`metadata-location.<kind>`), and a table copied elsewhere is read with `relocate`. The reader is Drishti
 Lake's (no Hadoop; one reader, no choice of engine). It
-reads position and equality deletes and answers *known at* from older snapshots. It never writes; `python tools/drishti.py data load --store iceberg` does.
+reads position and equality deletes and answers *known at* from older snapshots. It never writes; `python3.13 tools/drishti.py data load --store iceberg` does.
 
 ## Settings
 
@@ -302,13 +308,13 @@ requests; the live run is `deploy/aws/iceberg/check-glue.sh --s3-tables <ARN>`.
 ## Loading
 
 Iceberg tables are written by Drishti Lake's one loader (the same loader, rules and layout as Delta; `source.format: loader-rows` for rows
-already wrapped with their table). `python tools/drishti.py lake build --format iceberg` loads a pack's tables into a table
-`<lake>/<domain>/<table>` (`--iceberg-set key=value` for a REST catalog or object store), `python tools/drishti.py lake demo --store
+already wrapped with their table). `python3.13 tools/drishti.py lake build --format iceberg` loads a pack's tables into a table
+`<lake>/<domain>/<table>` (`--iceberg-set key=value` for a REST catalog or object store), `python3.13 tools/drishti.py lake demo --store
 calypso=iceberg` moves a source system's tables, and `ingest_jsonl.py --store iceberg` loads JSON lines:
 
 ```bash
-python tools/drishti.py lake build --format iceberg --lake ./data/iceberg trading/trade-*.jsonl.gz        # a pack's table
-python tools/drishti.py lake build --format iceberg --lake s3://risk-lake/iceberg --iceberg-set s3.region=us-east-1 ...
+python3.13 tools/drishti.py lake build --format iceberg --lake ./data/iceberg trading/trade-*.jsonl.gz        # a pack's table
+python3.13 tools/drishti.py lake build --format iceberg --lake s3://risk-lake/iceberg --iceberg-set s3.region=us-east-1 ...
 ```
 
 - **Input**: JSON lines of documents, or loader rows `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}` (the lines

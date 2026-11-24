@@ -75,7 +75,7 @@ settings:
 - proxy.*
 auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:) or the AWS credential chain; a private CA or client certificate through tls.*; an outbound proxy through proxy.*.
 licence: Reads through Drishti Lake (its own Delta reader over Delta Kernel, and the AWS SDK for Java v2; Apache-2.0), bundled. No Hadoop.
-windows: Works on Windows, local folders and S3 alike (no Hadoop, no winutils.exe). Loader `python tools/drishti.py lake demo --engine java`.
+windows: Works on Windows, local folders and S3 alike (no Hadoop, no winutils.exe). Loader `python3.13 tools/drishti.py lake demo --engine java`.
 doc: plugins/drishti-plugin-delta/README.md
 ---
 # The delta connector
@@ -85,6 +85,12 @@ trade-days, 2.8 TB), with type-ahead in tens of milliseconds, a trade opening in
 its promoted columns. It never loads a day: each question reads only the files, row groups and columns it needs. Databricks or Spark
 tables, with or without Unity Catalog:
 [DATA_GUIDE.md](../../docs/guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg).
+
+## Build and use
+
+- **Build.** The plugin is a Maven module (`drishti-plugin-delta`) of the platform build: `./mvnw -B clean package -DskipTests` (or **Drishti: build all** in IntelliJ, `python3.13 tools/drishti.py build all`) compiles it and packs its jar into the server's executable jar, `lib/drishti-server-exec.jar` (as `BOOT-INF/lib/drishti-plugin-delta-<version>.jar`). There is nothing to copy and no separate install. A driver or library of your own goes into `lib/ext/`.
+- **Enable.** A connector file in the site's `config/connectors/` with `plugin: delta` turns it on; a ready-made one is in `config/connectors.examples/`. A file is applied within seconds without a restart, in **Admin → Connectors** or with `drishti.py connector apply`.
+- **Commands.** Linux and macOS `python3.13 tools/drishti.py ...`; Windows `py -3.13 tools\drishti.py ...`. The Python is the one you prepared (`tools/drishti.py setup` only checks it; Drishti never creates an environment or installs packages). Below, `drishti.py` stands for that command.
 
 ## What it reads
 
@@ -287,7 +293,7 @@ settings:
 
 `DRISHTI_DELTA_ROOT=s3://risk-lake/banking` moves every pack's lake at once. Ready-made files: `config/connectors.examples/other/customer-lake.yaml`
 (S3-compatible, keys as references), `other/delta-private-ca.yaml` (TLS), `config/connectors.examples/delta-s3/` (AWS). Build a demo lake
-with `drishti.py lake demo`, `python tools/drishti.py data load --store delta` (`--trades 50000` for a generated book) (on Windows: `py -3.13 tools\drishti.py lake demo --engine java`).
+with `drishti.py lake demo`, `python3.13 tools/drishti.py data load --store delta` (`--trades 50000` for a generated book) (on Windows: `py -3.13 tools\drishti.py lake demo --engine java`).
 
 ## Troubleshooting
 
@@ -511,7 +517,7 @@ that drifted (an intraday file whose ids overlap, a file over `file-rows`, a mis
 id, the date and the promoted columns. `relayout` does the same on demand for a table written another way:
 
 ```bash
-python3 tools/lake/maintain.py relayout --root data/delta/demo --domain trading
+python3.13 tools/lake/maintain.py relayout --root data/delta/demo --domain trading
 ```
 
 **On S3** nothing maintains a Delta table by itself: run the maintenance against the `s3://` root, or let Databricks `OPTIMIZE`. Never use
