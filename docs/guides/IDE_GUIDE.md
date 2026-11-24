@@ -48,8 +48,8 @@ runs and its command line: section 4.
 - IntelliJ may list the PyCharm folders too; without the Python plugin they sit under **Unknown**: ignore them there and run them in PyCharm.
 
 **In one minute.** From the release zip with nothing to edit: [9.5](#95-from-the-release-zip-build-and-run-with-no-hand-editing). From a clone: IntelliJ: open the root `pom.xml`, run **Drishti: build all**. Once: make `~/drishti-envs/dev.ini` (section 2.1) and,
-in PyCharm (opened on `drishti-console/`), run **Drishti: build demo lakes**. Then IntelliJ: **Drishti: run server (demo)**; PyCharm: **Drishti: run
-console**. Open `http://localhost:17480` and sign in as `drishti-dev-admin` / `drishti-dev-admin123`. Starting from scratch, or something
+in PyCharm (opened on `drishti-console/`), run **Drishti: build demo lakes**. Then IntelliJ: **Drishti: run server (demo)**; PyCharm: 
+**Drishti: run console**. Open `http://localhost:17480` and sign in as `drishti-dev-admin` / `drishti-dev-admin123`. Starting from scratch, or something
 does not work: [8. A fresh start, step by step](#8-a-fresh-start-step-by-step-and-how-to-check-each-step) checks every step.
 
 The three parts follow that order: [1. Build](#1-build-intellij-idea-java-only), [2. Prepare the environment](#2-prepare-the-environment),
@@ -479,7 +479,7 @@ and the command line cannot drift apart.
 
 `<py>` is `py -3.13` on Windows and `python3.13` elsewhere; `<dev>` is `~/drishti-envs/dev.ini`, `<envs>` is `~/drishti-envs`. `launchers --list`
 on your machine prints the exact commands with your paths; `launchers --run "<name>"` runs one (a prefix that names one is enough;
-`--input <value>` answers a launcher that asks, e.g. the file of **Drishti: run loader**). This table is hand-written from `--list`: when a
+`--input <value>` answers a launcher that asks, e.g. the file of **Drishti: run loader (file into the lake)**). This table is hand-written from `--list`: when a
 launcher changes, change `tools/launch/launchers.yaml` and this table together.
 
 | Group | Launcher | What it does | Equivalent command line |

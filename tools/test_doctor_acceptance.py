@@ -228,10 +228,16 @@ def test_the_cli_names_the_acceptance_and_its_options():
 
 
 def test_the_cli_refuses_the_dev_admin_without_the_demo_profile(tmp_path):
+    """A stack that answers but is not a demo stack (its /public/about names no demo profile): the dev administrator is never tried."""
     env = mo.oracle_env(tmp_path)
-    r = mo.drishti("doctor", "--acceptance", "--console", f"http://127.0.0.1:{free_port()}", env=env)
+    stand = Stand(profile=None)
+    try:
+        r = mo.drishti("doctor", "--acceptance", "--console", f"http://127.0.0.1:{stand.cport}", "--server", f"http://127.0.0.1:{stand.sport}", env=env)
+    finally:
+        stand.close()
     assert r.returncode == 1 and "[FAIL] demo profile:" in r.stdout and "--profile demo doctor --acceptance" in r.stdout
-    assert not mo.output_problems(r.stdout + r.stderr) and not mo.calls(tmp_path) and not mo.net(tmp_path)
+    assert not any(s[0] == "POST" for s in stand.seen)
+    assert not mo.output_problems(r.stdout + r.stderr) and not mo.calls(tmp_path)
 
 
 # ---- the one Linux end-to-end run (section E-full on Linux; plan B1 "E") ------------------------------------------------------------------
