@@ -25,6 +25,7 @@ Everything else is as in i7i.
   that names one) runs exactly what the launcher file holds, in its folder and with its environment variables, and returns its exit code. Both read the
   committed `run-configs/*.run.xml` themselves, so the IDE and the command line never drift apart. An unknown or ambiguous name is one
   `[FAIL] launcher "<x>": <why>. Fix: <the --list command>`.
+- **PRODUCTION_DEPLOYMENT.md** opens with a ten-step Quick path (dedicated Python 3.13, unzipped wheel pack, the two pip commands, setup, disk guard, units, verify), explains each setup `[FAIL]` with its fix, and ends with a Command line reference; `doctor --acceptance` is said to be demo-only. **IDE_GUIDE.md** gains a "which IDE opens what" table, the launchers' command lines and an IDE-setup and troubleshooting section.
 
 ## Known limits
 
@@ -107,6 +108,7 @@ Everything else is as in i7f.
   Downloads; setup ends with `Drishti is ready.` and a second run changes nothing.
 - **`drishti.py doctor --acceptance`** (the launcher **Drishti: check acceptance**): signs in to the console, asks `VAR BANK` through it and
   compares VaR 167,372,692 and ES 210,131,972 with the release's.
+
 - **PRODUCTION_DEPLOYMENT.md** (Linux production): the source zip built with `build_all.py`, the py313 wheel pack, a dedicated Python
   3.13 prepared by the operator, `setup --settings /etc/drishti/prod.ini`, systemd, TLS, backups, upgrades.
 
