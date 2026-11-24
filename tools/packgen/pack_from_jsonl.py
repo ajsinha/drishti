@@ -502,6 +502,7 @@ def license_fix(out: pathlib.Path) -> None:
 def readme(opts, an: Analysis, groups, lake_line: str, out: pathlib.Path) -> str:
     """The pack's README in the README standard (tools/packgen/common/readme.py), its intro written from the full pass."""
     import importlib.util
+    import yaml
     spec = importlib.util.spec_from_file_location("drishti_pack_readme", HERE / "common" / "readme.py")
     R = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(R)
