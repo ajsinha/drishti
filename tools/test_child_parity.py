@@ -16,7 +16,7 @@
 values, promoted columns) and the same answers through the BI relationship (a child's link to its parent: a filter on the child reaching the
 parent, a sum of the child grouped by a parent field).
 
-    uv run --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest tools/test_child_parity.py -q
+    python -m pytest tools/test_child_parity.py -q
 
 The rules are the pack's ``ingest:`` block (tools/packgen/childkinds.py in Python, Drishti Lake's ChildKinds in the parallel loader);
 the documents and the rows they must give are tools/lake/testdata/childkinds (a copy of Drishti Lake's lake-load test resources), which Drishti Lake's ChildLoadsTest checks against the Java

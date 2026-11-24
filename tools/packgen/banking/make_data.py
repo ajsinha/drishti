@@ -19,7 +19,7 @@
                                                                 a kind above N MB into <kind>.part-001.jsonl ..., default 50), the trading
                                                                 pack's Sutra tests and the file connector's sample feed (<data>/feeds/fixing.jsonl)
     python3 tools/packgen/banking/make_data.py --check         verify the data is consistent and the files are current
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta/demo [--days 10] [--rows DIR] [--no-load]
+    python tools/packgen/banking/make_data.py --lake data/delta/demo [--days 10] [--rows DIR] [--no-load]
                                                                 write the business-day history as JSONL rows (DIR, default <lake>/../build/lake-rows:
                                                                 banking-history.tar and banking-restated.tar), then load them with
                                                                 tools/samplegen/load_rows.py into data/delta/demo/<domain>/<kind>/, each kind in the

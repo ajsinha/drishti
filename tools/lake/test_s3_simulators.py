@@ -18,7 +18,7 @@ Windows) and on the MinIO server binary (Linux only; skipped with the reason els
 prints which conditional writes its simulator honours and skips the cases it does not. Small synthetic books only.
 
     python3 -m unittest -v tools/lake/test_s3_simulators.py
-    uv run --with deltalake --with pyarrow --with pyyaml --with "moto[server]==5.2.3" python -m unittest -v tools/lake/test_s3_simulators.py
+    python -m unittest -v tools/lake/test_s3_simulators.py
 """
 import argparse
 import json

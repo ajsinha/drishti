@@ -15,7 +15,7 @@
 """The bank's own names (config/demo/names.yaml, 2.9.4): `lake demo --names FILE` renames them as it loads the test data. A configured
 name replaces the old one in the legal-entity kind and in the risk hierarchy (another kind, loaded on its own dates), a branch keeps its
 suffix, LEIs stay, and the defaults change nothing. The committed test data is never rewritten. Needs deltalake, pyarrow and PyYAML
-(uv run --with deltalake --with pyarrow --with pyyaml python -m unittest tools/lake/test_names.py).
+(python -m unittest tools/lake/test_names.py).
 """
 from __future__ import annotations
 

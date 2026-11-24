@@ -87,7 +87,7 @@ def choose(engine: str, jar: str | None = None, java: str | None = None) -> tupl
     if deltalake_available():
         return "deltalake", "the Python deltalake package" + ("; the parallel lake loader was not found" if engine == "auto" else "")
     raise WriteError("no engine: build the server (its exec jar carries Drishti Lake's loader) or install deltalake and pyarrow "
-                     "(uv run --with deltalake --with pyarrow ...)")
+                     "(pip install deltalake pyarrow)")
 
 
 # ------------------------------------------------------------------------------------------------ the table
@@ -134,7 +134,7 @@ def existing_layout(uri: str) -> tuple[list[str], dict[str, str]] | None:
         if not any(log.glob("*.checkpoint*.parquet")):
             return None
         if not deltalake_available():
-            raise WriteError(f"{uri}: the table's log starts at a checkpoint; install deltalake to read it (uv run --with deltalake ...)")
+            raise WriteError(f"{uri}: the table's log starts at a checkpoint; install deltalake to read it (pip install deltalake)")
         from deltalake import DeltaTable
         dt = DeltaTable(uri)
         meta = {"partitionColumns": dt.metadata().partition_columns, "schemaString": dt.schema().to_json()}

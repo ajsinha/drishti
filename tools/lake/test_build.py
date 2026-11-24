@@ -14,7 +14,7 @@
 
 """lake build: streamed reading, partitions, modes, the lock, exit codes, the summary and the signal, on small synthetic books.
 
-    uv run --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest tools/lake/test_build.py -q
+    python -m pytest tools/lake/test_build.py -q
 """
 import gzip
 import http.server

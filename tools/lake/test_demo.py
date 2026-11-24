@@ -15,7 +15,7 @@
 """`drishti.py lake demo` on a small test-data set (40 trades a system, seven business days): seven business days per table, trades partitioned by
 PRODUCT_TYPE in their source system's table, `--with-real` adding a made-up "real" extract's trades, counterparty, agreement and
 netting set to the lake and never to the test data, and a connector file that pointed elsewhere moved to the lake with its earlier text
-kept. Needs deltalake, pyarrow and PyYAML (uv run --with deltalake --with pyarrow --with pyyaml python -m unittest tools/lake/test_demo.py).
+kept. Needs deltalake, pyarrow and PyYAML (python -m unittest tools/lake/test_demo.py).
 """
 from __future__ import annotations
 

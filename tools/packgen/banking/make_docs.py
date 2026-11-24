@@ -117,7 +117,7 @@ def overview(name: str, docs: dict) -> str:
                   "Each booking system lands in a table of its own and is read by its own connector; the three serve the kind `trade` together "
                   "(`union: true`): a trade opens from whichever system holds it, and a search, a type-ahead, the search form's drop-downs and a BI "
                   "table read all three, each row saying its `SOURCE_SYSTEM`. Build the three tables, with a week of business days and the "
-                  "day's amendments, with `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/trades/make_trades.py "
+                  "day's amendments, with `python tools/packgen/trades/make_trades.py "
                   "--trades 3000 --days 7 --lake data/delta/demo`.", "",
                   "### Live trades and pages over many trades", "",
                   "`trading-stream` (Kafka, **off by default**; switch it on with `DRISHTI_STREAM_TRADING=true`) streams the day's new trade versions, "
@@ -180,7 +180,7 @@ def overview(name: str, docs: dict) -> str:
                                                                  for f, (sw, ks, _, what) in make_packs.FEEDS.items()])
     lines += ["Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the "
               "site configuration. For a demonstration lake built from the generated samples, run "
-              "`uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes "
+              "`python tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes "
               "the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, "
               "[Data formats](../../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).", ""]
     lines += ["## Kinds", ""]

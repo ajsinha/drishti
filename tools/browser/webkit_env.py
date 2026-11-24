@@ -30,7 +30,7 @@ Windows or a Linux host that has the libraries, :func:`apply` does nothing.
 
     python tools/browser/webkit_env.py            # make sure the libraries are there, print the environment as export lines
     python tools/browser/webkit_env.py --check    # exit 0 when WebKit can start here, 1 with the missing libraries named
-    DRISHTI_BROWSER=webkit uv run --with playwright python -m pytest drishti-console/tests/test_x_browser.py
+    DRISHTI_BROWSER=webkit python -m pytest drishti-console/tests/test_x_browser.py
 """
 from __future__ import annotations
 

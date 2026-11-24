@@ -19,7 +19,7 @@ its expression, the fields it is grouped by and its scope. A measure is asked as
 answer rows; a row expression is checked by the server and asked inside ``distinct(...)`` (a value) or ``calc(count(...), where=...)`` (a condition); a rule
 is checked by the server in rule scope.
 
-The parsing half needs nothing; the running half is skipped when the built server jar, uv or its offline cache (to make the lake) is missing, or a
+The parsing half needs nothing; the running half is skipped when the built server jar, or deltalake and pyarrow (to make the lake) is missing, or a
 scratch port is in use. Never run with pytest -n (the ports are fixed)."""
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ def stack(tmp_path_factory):
     tmp = tmp_path_factory.mktemp("recipes")
     lake = rs.make_lake(tmp / "lake", days=3)
     if not lake:
-        pytest.skip("needs the demo lake: uv and its offline cache (deltalake, pyarrow), or DRISHTI_BI_DELTA_ROOT")
+        pytest.skip("needs the demo lake: deltalake and pyarrow, or DRISHTI_BI_DELTA_ROOT")
     try:
         s = rs.ReportStack(tmp, delta_root=lake).start()
     except FileNotFoundError as e:

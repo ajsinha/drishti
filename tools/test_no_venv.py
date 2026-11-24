@@ -78,3 +78,11 @@ def test_no_launcher_names_an_interpreter():
         text = f.read_text(encoding="utf-8")
         if "PythonConfigurationType" in text:
             assert 'name="SDK_HOME" value=""' in text, f"{f.name}: the project interpreter the user chooses, no SDK path"
+
+
+def test_no_tool_runs_uv_to_make_a_temporary_environment():
+    """``uv run --with`` builds a temporary virtual environment: tools and the console say 'the Python you run Drishti with' instead (uv build for a wheel is a build tool, allowed)."""
+    banned = re.compile(r"\buv\s+(?:" + "ru" + "n|" + "ve" + "nv|" + "pi" + "p)\\b")
+    found = [f"{f.relative_to(ROOT)}:{n}: {line.strip()[:120]}" for f in files() if f.suffix == ".py" and f.parts[len(ROOT.parts)] in ("tools", "drishti-console")
+             and f.name != Path(__file__).name for n, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1) if banned.search(line)]
+    assert found == [], "no uv run / uv venv / uv pip:\n" + "\n".join(found)
