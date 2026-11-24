@@ -53,7 +53,7 @@ class DeltaNewestLoadTest {
                 + "\\\",\\\"PNL\\\":{\\\"$vector\\\":\\\"PNL\\\"}}\",{\"DESK\":\"D\",\"PNL\":[" + v + "," + v + "],\"_load_id\":\"" + loadId + "\"}]"));
         Path rowsFile = tmp.resolve("rows-" + n + ".rows");
         Files.write(rowsFile, lines, StandardCharsets.UTF_8);
-        String m = "{\"table\":\"" + table + "\",\"partitionColumns\":[\"business_date\"],\"columns\":["
+        String m = "{\"table\":\"" + table.toString().replace('\\', '/') + "\",\"partitionColumns\":[\"business_date\"],\"columns\":["
                 + "{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"doc\",\"type\":\"string\"},{\"name\":\"business_date\",\"type\":\"date\"},"
                 + "{\"name\":\"DESK\",\"type\":\"string\"},{\"name\":\"PNL\",\"type\":\"vector\"},{\"name\":\"_load_id\",\"type\":\"string\"}],"
                 + "\"promoted\":[\"DESK\",\"PNL\",\"_load_id\"],\"mode\":\"append\",\"batchRows\":100,\"statsColumns\":[\"id\",\"business_date\",\"_load_id\"],"

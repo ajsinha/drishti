@@ -73,7 +73,7 @@ class DeltaVectorColumnTest {
         }
         Path rowsFile = tmp.resolve("v.rows");
         Files.write(rowsFile, lines, StandardCharsets.UTF_8);
-        String m = "{\"table\":\"" + table + "\",\"partitionColumns\":[\"business_date\"],\"columns\":["
+        String m = "{\"table\":\"" + table.toString().replace('\\', '/') + "\",\"partitionColumns\":[\"business_date\"],\"columns\":["
                 + "{\"name\":\"id\",\"type\":\"string\"},{\"name\":\"doc\",\"type\":\"string\"},{\"name\":\"business_date\",\"type\":\"date\"},"
                 + "{\"name\":\"DESK\",\"type\":\"string\"},{\"name\":\"TT_BOOK\",\"type\":\"string\"},{\"name\":\"PNL\",\"type\":\"" + vectorType + "\"}],"
                 + "\"promoted\":[\"DESK\",\"TT_BOOK\",\"PNL\"],\"mode\":\"overwrite-dates\",\"batchRows\":11,\"statsColumns\":[\"id\",\"business_date\"],"
