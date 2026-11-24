@@ -129,3 +129,39 @@ Lane C changes setup to check-only, takes pip out of the compute environments, a
 | C10 | **Guards still green**: `tools/test_no_venv.py`, `test_no_hidden_names.py`, `test_first_run.py`, `test_setup_split.py`, `test_setup_collisions.py`, `test_launch.py`, `test_drishti_cli.py`, `test_settingsfile.py`. | pytest, targeted |
 
 Part 2 of this gate is a read of the lane C merge against C1 to C10, nothing more.
+
+## 5. Part 2 checklist (2026-11-23 22:45 EST)
+
+Read of `origin/release/i7g` at `4cabf93d9` against `ba0e1ac66` (8 commits, 61 files), by `git show` / `git diff` / `git grep` only:
+nothing was built, started or run, so the rows that need a test run (C9, C10) are read, not proven.
+
+### Verdict for part 2: FIX (two items, both small), then TAG
+
+| # | Blocking item | The one-line fix |
+|---|---|---|
+| B1 | **Setup writes outside the checkout and the data folder.** `envsetup.setup` (line 161-163) passes a pack zip that discovery found (in `~/drishti-wheels`, the platform folder or Downloads, or named by `--wheels` / `DRISHTI_WHEELS`) to `pylibs.wheel_folder`, and `pylibs.unzip_pack` (line 358-385) unzips it into `~/drishti-wheels/<pack name>/` "without a question" (also `rmtree` of a part folder and of an incomplete target there). C4 says discovery makes and writes nothing; `tools/test_wheel_discovery.py` row 22 asserts the opposite. `setup --check`, `start console` and the bare console do not unzip. | In `wheel_folder`, a `.zip` is no longer unzipped: one `[FAIL] wheel pack: <zip> is still zipped. Fix: unzip it into ~/drishti-wheels, then run setup again` (and row 22 asserts that line and an unchanged home). Or the owner says in words that the unzip into `~/drishti-wheels` is wanted: then C4 is changed, not the code. |
+| B2 | **Six texts still say setup installs** (C8), three of them on the first-run failure path: `tools/drishti.py:100` ("it installs the libraries from the offline wheel pack", the PyYAML-missing line); `tools/doctor.py:92` ("installs what is missing into this Python"); `tools/launch/launchcli.py:187` ("it installs the libraries ..."); `tools/build_demo_lakes.py:305` ("setup installs them into this one"); `tools/settings_schemas.yaml:477` (`DRISHTI_WHEELS`: "setup and setup libs install the missing libraries"), copied into `docs/admin/CONFIGURATION.md:6767`; `tools/elements-demo/README.md:38`. | Each: "setup checks them and prints the pip command; you run it". Regenerate CONFIGURATION.md. |
+
+### C1 to C10
+
+| # | Result | What was read |
+|---|---|---|
+| C1 | **yes** | No process with pip anywhere: the only `pip install` left in `tools/launch`, `tools/drishti.py`, `tools/doctor.py`, `compute/.../src/main`, `drishti-console` is printed text (`pylibs.py:500`, `run_drishti_web.py:63`, `Environments.java:229`). `pylibs` starts the chosen Python three times, each `-c` with a read-only probe (lines 164, 441, 468). `pylibs.install`, `pip_extra`, `explain_pip_failure` and the bootstrap re-exec are gone. The printed command is two pip runs from `drishti-console` (`-r requirements.txt`, then `-r ../config/compute/locks/python.lock`), offline `--no-index --find-links <pack>` first, the package index second (`pylibs.install_commands`). Guard: `tools/test_system_python_untouched.py::test_no_python_code_starts_pip`. |
+| C2 | **yes** | `--index` and `--isolated` are gone from `tools/launch` and `tools/drishti.py`; `Drishti setup (package index).xml` is deleted and its 30 lines are out of `drishti.code-workspace`; `launchers.yaml` holds `Drishti: setup` and `Drishti: check setup` only in `Drishti-python 1 Setup`. `--wheels` stays and only names the pack in the printed command (but see B1 for a zip). `launchers --check` not run. |
+| C3 | **yes** | `Environments.java`: no `pip --target`; a build checks the interpreter against the lock pins (`missing`), `verifyLibraries` checks again before a worker; what is missing is named with the command. The one `ProcessBuilder` (line 272) runs the interpreter's probe. `EnvironmentTest.noPipIsEverStartedByTheEnvironments`, `aMissingLibraryFailsTheCheckNamesThePipCommandAndInstallsNothing`, `ComputeWritesApiTest` (4cabf93d9). Left over, not blocking: `ComputeSettings.java:88` comment "a temporary folder for pip during a build", and `PIP_CONFIG_FILE` in the probe's environment. |
+| C4 | **NO** | `find_pack` itself only reads. Setup then unzips a found zip into `~/drishti-wheels`: B1. |
+| C5 | **yes (read)** | `doctor.acceptance`: the no-proxy opener (`ProxyHandler({})`), GET/POST to the console and server URL only, no file written, no process started; `render_acceptance` prints one PASS line or one `[FAIL] ... Fix:` per problem. 13 tests in `tools/test_doctor_acceptance.py` (the E2E one behind `DRISHTI_FIRSTRUN_E2E=1`). The console URL is the caller's: loopback by default, not enforced. |
+| C6 | **yes** | `e0cd7cd39` is an ancestor of the release branch: F1/F3 `tools/drishti.py`, `javacmd.py`, `serverstart.py` with `test_first_run.py` (+26 lines; line 106 asserts one `[FAIL]`, no `Traceback`, no `drishti: `); F2 `run_drishti_web.py`, `core/settings_ini.py`, `core/tmpdir.py` with `test_bare_console_run.py`, `test_tmpdir.py`; F4 `launchers.yaml`, `Drishti test.xml` with `test_launchers.py`; F5 `bin/README.md`, IDE_GUIDE, QUICKSTART_DEVELOPERS. |
+| C7 | **partly, not blocking** | `test_matrix_setup` (22), `_start` (10), `_console` (5), `_launchers` (3) with the three oracles of `matrix_oracles.py`. The output oracle asserts no traceback and that EVERY `[FAIL]` line carries `Fix:`; "exactly one `[FAIL]`" is asserted only in `test_first_run.py:106`. There are no Windows-shaped (`ntpath`) rows: Windows wording is covered only by `test_setup_split.py` (`py -3.13`) and `test_wheel_discovery.py` (`machine(windows=True)`). Two non-strict xfails stay: row 37 (Python 3.6 SyntaxError before the version check) and row 53 (console first, then server). Carry to the Windows QA pass. |
+| C8 | **NO (small)** | The guides say it right ("you install, setup checks": README, QUICKSTART_DEVELOPERS, DEPLOYMENT_AND_QA_GUIDE, PRODUCTION_DEPLOYMENT, CLI_REFERENCE, OPERATIONS_GUIDE, IDE_GUIDE, ARCHITECTURE, tutorials 01 and 21; three PDFs regenerated; no `--index` left but `python_lock.py --index`, another tool). The tools' own messages and CONFIGURATION.md do not: B2. |
+| C9 | **yes (read)** | `contracts.py`: the module loader is `_yaml_mod()`, the file reader keeps `_yaml(path)`; all five callers changed. `tools/feeds` tests not run here. |
+| C10 | **not run** | Read-only gate. `test_no_venv.py`, `test_first_run.py`, `test_setup_split.py`, `test_setup_collisions.py`, `test_launch.py`, `test_launchers.py`, `test_run_configs.py` were changed with the code; green is the lane's word and the drill's proof. |
+
+### Risk, VaR, ES, BI and lake code: untouched
+
+Product files changed in the range (everything else is `tools/`, docs, launchers, `.gitignore`):
+`compute/drishti-compute/.../ComputeService.java` (3 lines), `compute/drishti-compute/.../env/Environments.java`,
+`drishti-console/core/config.py`, `core/settings_ini.py`, `core/tmpdir.py`, `drishti-console/run_drishti_web.py`; tests:
+`EnvironmentTest.java`, `kernel/drishti-server/.../ComputeWritesApiTest.java`, `drishti-console/tests/test_bare_console_run.py`,
+`test_tmpdir.py`. No file of the risk, VaR, ES, BI, pivot, lake or engine code is in the diff (the only path match is the document
+`docs/guides/bi/NOTEBOOK_AND_PYTHON.md`).
