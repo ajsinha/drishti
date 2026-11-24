@@ -67,7 +67,7 @@ def read(path) -> dict[str, str]:
     p = check(path)
     out: dict[str, str] = {}
     prefix = ""
-    for n, raw in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+    for n, raw in enumerate(p.read_text(encoding="utf-8-sig").splitlines(), 1):     # utf-8-sig: a byte-order mark (Notepad) is dropped
         line = raw.strip()
         if not line or line.startswith(("#", ";")):
             continue

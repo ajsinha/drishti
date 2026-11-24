@@ -141,7 +141,6 @@ def test_row12_stale_folder_variables_are_warned_one_by_one_ignored_and_nothing_
 
 # ---- row 13: DRISHTI_PYTHON names a Python that is gone -----------------------------------------------------------------------------
 
-@pytest.mark.xfail(reason="lane A: row 13 (setup says 'Drishti is ready.' while DRISHTI_PYTHON names a Python that is gone; P4 wants one [FAIL])", strict=False)
 def test_row13_setup_with_a_gone_drishti_python_is_a_fail(tmp_path):
     person = Run(tmp_path, DRISHTI_PYTHON=tmp_path / "gone" / "python")
     r = person("setup")
@@ -185,7 +184,6 @@ def test_row16_a_data_folder_elsewhere_is_kept_and_todo_until_it_exists(person):
 
 # ---- row 17: a dev.ini saved by Notepad, or unreadable ------------------------------------------------------------------------------
 
-@pytest.mark.xfail(reason="lane A: row 17 (a dev.ini with a byte-order mark is 'cannot be read' and moved aside; F6 wants it read)", strict=False)
 def test_row17_a_dev_ini_saved_by_notepad_bom_and_crlf_is_read_normally(person):
     person("setup")
     raw = person.ini.read_text(encoding="utf-8")
@@ -211,7 +209,6 @@ def test_row17_an_unreadable_dev_ini_is_moved_aside_never_a_traceback(person):
 
 # ---- row 18: a file that cannot be moved ----------------------------------------------------------------------------------------
 
-@pytest.mark.xfail(reason="lane A: row 18 (a dev.ini that cannot be moved gives the catch-all '[FAIL] PermissionError ... details in a log', no 'could not be moved' and no Fix)", strict=False)
 def test_row18_a_dev_ini_that_cannot_be_moved_is_one_fail_and_is_not_written_over(person):
     person.ini.parent.mkdir(parents=True)
     person.ini.write_text("[drishti]\ndrishti.home=/somewhere/else\n", encoding="utf-8")
@@ -275,7 +272,6 @@ def test_row41_an_old_java_is_a_fail_naming_21_and_where_it_came_from(tmp_path):
     assert r.returncode == 1 and "Traceback" not in r.text
 
 
-@pytest.mark.xfail(reason="lane A: row 41 / E1 (setup's closing '[FAIL] Drishti runs on Java 21 or newer ...' line carries no 'Fix:')", strict=False)
 def test_row41_the_old_java_line_carries_a_fix(tmp_path):
     person = Run(tmp_path, JAVA_HOME=fake_java(tmp_path / "jdk 17", 17))
     assert not problems(person("setup", "--check"))
@@ -306,7 +302,6 @@ def test_row44_printed_commands_paste_whole_with_a_space_in_the_path(tmp_path):
 
 # ---- row 48: a data folder that cannot be written --------------------------------------------------------------------------------------
 
-@pytest.mark.xfail(reason="lane A: row 48 (a folder that cannot be written gives the catch-all '[FAIL] PermissionError ... details in a log'; R/E1 want '<folder> is not writable' with a Fix)", strict=False)
 def test_row48_a_folder_that_cannot_be_written_is_one_fail_with_a_fix(tmp_path):
     ro = tmp_path / "read only"
     ro.mkdir()

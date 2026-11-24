@@ -154,6 +154,25 @@ def test_row49_start_all_checks_the_console_port_before_the_server(tmp_path, mon
     assert "[FAIL] port 17999" in capsys.readouterr().err
 
 
+def test_start_all_takes_both_ports_from_the_settings_file(monkeypatch):
+    import launchcli
+    import consolestart
+    seen = {}
+    monkeypatch.setattr(serverstart, "profiled", lambda a: ("", {"server.port": "18997", "console.server.port": "17997"}))
+    monkeypatch.delenv("DRISHTI_PORT", raising=False)
+    monkeypatch.delenv("DRISHTI_CONSOLE_PORT", raising=False)
+    monkeypatch.setattr(consolestart, "prepared_python", lambda ns: sys.executable)
+    monkeypatch.setattr(procs, "port_in_use", lambda port: seen.setdefault("checked", port) and False)
+    monkeypatch.setattr(serverstart, "start", lambda ns: seen.setdefault("server", ns.port) and 0)
+    monkeypatch.setattr(consolestart, "start", lambda ns: seen.update(console=ns.port, url=ns.server) or 0)
+    p = argparse.ArgumentParser()
+    launchcli.add_options(p, "start", "all")
+    a = p.parse_args([])
+    a.what = "all"
+    assert launchcli.cmd_start(a, []) == 0
+    assert seen == {"checked": 17997, "server": 18997, "console": 17997, "url": ["http://127.0.0.1:18997"]}
+
+
 # ---- S8, S9: setup is idempotent and ends with its verdict (row 02) -------------------------------------------------------------------
 
 def test_row02_setup_a_second_time_changes_no_byte_and_runs_no_pip(tmp_path, monkeypatch, capsys):

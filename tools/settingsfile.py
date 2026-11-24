@@ -83,13 +83,18 @@ def move_to_dated(files, edir: Path, folder: Path | None = None) -> Path:
     """Moves ``files`` into ``folder`` (a new :func:`dated_folder` of ``edir`` when None) and returns it; nothing is overwritten or
     deleted. A file another program holds open (Windows) raises :class:`MovedError` naming it, the files before it already moved."""
     import shutil
-    folder = folder or dated_folder(edir)
+    try:
+        folder = folder or dated_folder(edir)
+    except OSError as e:                            # the settings folder itself may not be written (read only, another account's)
+        names = ", ".join(str(f) for f in files)
+        raise MovedError(f"{names} could not be moved: {edir} is not writable ({e.strerror or e}). Fix: check you may write to {edir} "
+                         f"(or move {names} away yourself) and run the command again") from None
     for f in files:
         try:
             shutil.move(str(f), str(folder / Path(f).name))
         except OSError as e:
-            raise MovedError(f"{f} could not be moved to {folder} ({e.strerror or e}): close the program that holds it open and run the "
-                             f"command again") from None
+            raise MovedError(f"{f} could not be moved to {folder} ({e.strerror or e}). Fix: close the program that has {Path(f).name} "
+                             f"open, or check you may write to {folder}, and run the command again") from None
     return folder
 
 

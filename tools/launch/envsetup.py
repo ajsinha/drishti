@@ -184,6 +184,14 @@ def _setup(a, env: dict, argv: list | None, run, pack: "pylibs.Pack | None", rea
     line("ok" if ok else "FAIL", "python", f"{sys.executable} {v.major}.{v.minor}.{v.micro}" + ("" if ok else f": Drishti needs Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]} or newer"))
     if not ok:
         problems.append(f"install Python {MIN_PYTHON[0]}.{MIN_PYTHON[1]}+ (python.org; Windows: winget install Python.Python.3.13)")
+    # DRISHTI_PYTHON beats drishti.python everywhere (procs.tools_python): one naming a Python that is gone breaks every start
+    named_py = (env.get("DRISHTI_PYTHON") or "").strip()
+    if named_py and not Path(named_py).expanduser().is_file():
+        gone = f"DRISHTI_PYTHON={named_py} is not there (start console, the cluster and the feeds would run it)"
+        fix = (f"delete DRISHTI_PYTHON {'in Environment Variables' if procs.windows() else 'from your shell profile'} (setup writes "
+               f"{pylibs.SETTING} into your settings file), or point it at a Python that exists")
+        line("FAIL", "DRISHTI_PYTHON", f"{gone}. Fix: {fix}")
+        problems.append(fix)
     # a DRISHTI_* folder variable naming another folder (an old setx): reported, never used (the settings file is the one place for roots)
     original = dict(env)
     here = javacmd.REPO.resolve()
@@ -237,7 +245,8 @@ def _setup(a, env: dict, argv: list | None, run, pack: "pylibs.Pack | None", rea
             line("ok", "java", f"{j['java']}  Java {j['version']}  (from {j['why']})")
         else:
             line("FAIL", "java", j["problem"] + (f"  ({j['java']}, from {j['why']})" if j["java"] else ""))
-            problems.append("install a JDK 21 (Temurin) and set drishti.java.home in your settings file (or DRISHTI_JAVA_HOME) to its folder, or pass --java-home")
+            problems.append(f"install Java 21 (a JDK, e.g. Temurin) and set JAVA_HOME to its folder, or set drishti.java.home in {ini} "
+                            "(or DRISHTI_JAVA_HOME) to it, or pass --java-home")
         # the settings folder and dev.ini
         if custom:
             line("ok" if ini.is_file() else "FAIL", "settings file", f"{ini}  (named by --settings: kept as it is; no dev.ini is made in {edir})"
@@ -272,10 +281,17 @@ def _setup(a, env: dict, argv: list | None, run, pack: "pylibs.Pack | None", rea
             line("todo", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}; outside this checkout): {', '.join(missing)} missing")
             todo.append(procs.command("setup", "--data-dir", str(data)) + "  (makes the layout of your data folder outside this checkout)")
         elif missing and not check:
-            for d in DATA_LAYOUT:
-                (data / d).mkdir(parents=True, exist_ok=True)
-            copy_readmes(home, data)
-            line("made", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}): made {', '.join(missing)}")
+            try:
+                for d in DATA_LAYOUT:
+                    (data / d).mkdir(parents=True, exist_ok=True)
+                copy_readmes(home, data)
+                line("made", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}): made {', '.join(missing)}")
+            except PermissionError as e:             # a folder this account may not write: named, with the fix (never the catch-all)
+                folder = Path(e.filename).parent if e.filename else data
+                why = f"{folder} is not writable ({e.strerror or e})"
+                fix = f"check you may write to {folder} (or close the program that has it open), or pass --data-dir <a folder you may write>"
+                line("FAIL", "data (DRISHTI_DATA_DIR)", f"{data}: {why}. Fix: {fix}")
+                problems.append(fix)
         elif missing:
             line("todo", "data (DRISHTI_DATA_DIR)", f"{data}  ({roots['data'][1]}): {', '.join(missing)} missing")
             todo.append(f"make the data folder's {', '.join(missing)}")

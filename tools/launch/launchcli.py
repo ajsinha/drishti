@@ -86,8 +86,9 @@ def add_options(p: argparse.ArgumentParser, verb: str, what: str) -> None:
         p.add_argument("--wait", type=int, default=90, metavar="SECONDS", help="how long to wait for the health answer (default 90)")
         p.add_argument("--name", help="a name for this console when several run from one data folder (run/console-<name>.pid)")
     else:
-        p.add_argument("--server-port", type=int, default=procs.DEFAULT_SERVER_PORT, help="the server's port (default 18480)")
-        p.add_argument("--console-port", type=int, help="the console's port (default 17480)")
+        p.add_argument("--server-port", type=int, help="the server's port (default server.port of the settings files, else DRISHTI_PORT, else 18480)")
+        p.add_argument("--console-port", type=int, help="the console's port (default DRISHTI_CONSOLE_PORT, else console.server.port of the "
+                       "settings files, else 17480)")
         p.add_argument("--heap", metavar="SIZE", help="the server's heap (-Xmx)")
         p.add_argument("--java-home", metavar="DIR", help="the JDK (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then the PATH)")
 
@@ -139,17 +140,24 @@ def cmd_start(a, extra) -> int:
         return _run(consolestart.start, a)
     # all: one server and one console on this machine, in the background, the console pointed at the server's LAN address
     # on one machine the console talks to the server over loopback (no proxy, no VPN or adapter change in the way); the addresses
-    # printed for people stay the real ones
-    console = _console_ns(a, port=a.console_port, background=True, server=[f"http://127.0.0.1:{a.server_port}"])
+    # printed for people stay the real ones. The ports in each one's own order (serverstart.start, consolestart.start), so start all and
+    # start server / start console pick the same ones: server.port and console.server.port of the settings files count here too
+    keys = serverstart.profiled(a)[1]
+    env = os.environ
+    if getattr(a, "env_file", None):
+        env = dict(os.environ)
+        procs.load_env_file(a.env_file, env)
+    sport = int(a.server_port or (keys.get("server.port") or "").strip() or env.get("DRISHTI_PORT") or procs.DEFAULT_SERVER_PORT)
+    cport = int(a.console_port or env.get("DRISHTI_CONSOLE_PORT") or (keys.get("console.server.port") or "").strip() or procs.DEFAULT_CONSOLE_PORT)
+    console = _console_ns(a, port=cport, background=True, server=[f"http://127.0.0.1:{sport}"])
     rc = _run(lambda ns: consolestart.prepared_python(ns) and 0, console)   # the console's Python first: an unprepared one stops before the server starts
     if rc:
         return rc
-    cport = int(a.console_port or procs.DEFAULT_CONSOLE_PORT)
     if procs.port_in_use(cport):                  # both ports before either starts (no server left without its console)
         print(procs.fail(f"port {cport}", "is in use by another process", f"stop it, or {procs.command('start', 'all', '--console-port', '<another port>')}"),
               file=sys.stderr, flush=True)
         return 3
-    rc = _run(serverstart.start, _server_ns(a, port=a.server_port, background=True))
+    rc = _run(serverstart.start, _server_ns(a, port=sport, background=True))
     if rc:
         return rc
     return _run(consolestart.start, console)

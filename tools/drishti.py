@@ -1299,6 +1299,12 @@ def main(argv: list[str] | None = None) -> int:
         import procs
         print(procs.fail("libraries", f"{what} is not installed in this Python ({sys.executable})", procs.setup_line()), file=sys.stderr)
         return 2
+    except PermissionError as e:          # a file held open by another program, or a folder this account may not write (E1: with a Fix)
+        f = pathlib.Path(e.filename) if e.filename else None
+        folder = f.parent if f is not None else "the folder"
+        print(f"[FAIL] {f or 'a file'}: {folder} is not writable or the file is in use ({e.strerror or e}). Fix: close the program that "
+              f"has {f.name if f is not None else 'it'} open, or check you may write to {folder}, and run the command again", file=sys.stderr)
+        return 1
     except FileNotFoundError as e:
         print(f"[FAIL] {e.filename or e}: no such file", file=sys.stderr)
         return 2
