@@ -147,9 +147,15 @@ def find(items: list, wanted: str) -> Launcher:
     raise procs.LaunchError(procs.fail(f'launcher "{wanted}"', "no launcher has that name", _fix()), 1)
 
 
-def run(l: Launcher, java_finder=None) -> int:
-    """Runs the launcher's command in its folder with the environment it names (on top of this process's); the child's exit code."""
+def run(l: Launcher, java_finder=None, value: str | None = None) -> int:
+    """Runs the launcher's command in its folder with the environment it names (on top of this process's); the child's exit code. A launcher
+    that asks the IDE user for a value ($Prompt$, e.g. the file to load) takes it from --input; without it, one [FAIL] says how."""
     words = l.argv()
+    if any("$Prompt$" in w for w in words):
+        if not value:
+            raise procs.LaunchError(procs.fail(f'launcher "{l.name}"', "it asks for a value (in the IDE: a prompt)",
+                                               procs.command("launchers", "--run", l.name, "--input", "<value>")), 1)
+        words = [w.replace("$Prompt$", value) for w in words]
     if words[0] == "java":
         import javacmd
         words[0] = (java_finder or javacmd.find_java)(None, l.java)
@@ -167,7 +173,7 @@ def main(a, home: Path) -> int:
     try:
         items = load(home)
         if a.run is not None:
-            return run(find(items, a.run))
+            return run(find(items, a.run), value=getattr(a, "input", None))
         print(listing(items))
         return 0
     except procs.LaunchError as e:

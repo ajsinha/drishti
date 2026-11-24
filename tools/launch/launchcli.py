@@ -350,6 +350,7 @@ def register(groups, add) -> None:
     lg.add_argument("--envs-dir", metavar="DIR", help="the settings folder (default ~/drishti-envs)")
     lg.add_argument("--list", action="store_true", help="print every committed launcher by group with the exact command it runs and its working folder (read from the run-configs/*.run.xml files)")
     lg.add_argument("--run", metavar="NAME", help='run the launcher called NAME (the whole name or a prefix naming one), exactly as its file holds it: its folder, command and environment; e.g. --run "Drishti: run server (demo)"')
+    lg.add_argument("--input", metavar="VALUE", help="with --run: the value a launcher asks for in the IDE (for example the file to load)")
     lg.set_defaults(func=lambda a, extra: __import__("launchers").main(a), cmd=None)
 
     st = groups.add_parser("status", help="status: the resolved home, data, modules and java; then every process started with drishti.py start",

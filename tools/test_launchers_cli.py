@@ -91,3 +91,18 @@ def test_a_unique_prefix_and_the_exact_name_win():
     assert launchrun.find(items(), "Drishti: run console").name == "Drishti: run console"   # exact, though a prefix of three more
     assert launchrun.find(items(), "run server (demo").name == "Drishti: run server (demo)"
     assert launchrun.find(items(), "Drishti: build m").name == "Drishti: build modules"
+
+
+def test_a_launcher_that_prompts_needs_input(monkeypatch, tmp_path):
+    """--run of a launcher holding the IDE's $Prompt$ takes the value from --input; without it one [FAIL] with the command to use."""
+    import launchrun, procs, pytest
+    l = launchrun.Launcher.__new__(launchrun.Launcher)
+    monkeypatch.setattr(l, "argv", lambda: ["python", "tools/drishti.py", "lake", "build", "--from", "$Prompt$"], raising=False)
+    for k, v in (("name", "Drishti: run loader"), ("group", "PyCharm-console-data"), ("cwd", tmp_path), ("env", {}), ("java", None)):
+        object.__setattr__(l, k, v) if hasattr(type(l), "__dataclass_fields__") else setattr(l, k, v)
+    with pytest.raises(procs.LaunchError) as e:
+        launchrun.run(l)
+    assert "--input" in str(e.value) and "Fix:" in str(e.value)
+    seen = {}
+    monkeypatch.setattr(launchrun.subprocess, "run", lambda argv, **kw: seen.setdefault("argv", argv) and type("R", (), {"returncode": 0})())
+    assert launchrun.run(l, value="my.jsonl") == 0 and seen["argv"][-1] == "my.jsonl"
