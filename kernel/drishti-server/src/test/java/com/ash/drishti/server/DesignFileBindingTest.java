@@ -143,7 +143,7 @@ class DesignFileBindingTest {
         assertThat(info.path("dir").asText()).isEqualTo("drishti-bind-dev/ana");
         assertThat(info.toString()).doesNotContain(System.getProperty("java.io.tmpdir"));
         JsonNode admin = ok(mvc.perform(get("/api/v1/builder/designs/binding").header("Authorization", as("root", "admin"))));
-        assertThat(admin.path("absoluteDir").asText()).endsWith("drishti-bind-dev/root");
+        assertThat(Path.of(admin.path("absoluteDir").asText())).isAbsolute().endsWith(Path.of("drishti-bind-dev", "root"));   // the server's own path form
     }
 
     /** S2-05 and S2-07: a symbolic link is never followed; a name the file system refuses is a clean 400, a long body a 413. */
