@@ -17,7 +17,7 @@
 
 Examples of reading Drishti's data from outside it: Python notebooks, Java, JDBC and Excel. Each one **only reads** (the Flight service refuses every write), **through Arrow
 Flight** as the person a token belongs to (entitlements, masks, limits, audit: [Flight guide](../../docs/guides/FLIGHT_GUIDE.md)), **keeps the token out of the code**, and runs on the
-**demo lake's synthetic data**, also as a test (`drishti-console/tests/test_client_examples.py`; Java when `DRISHTI_EXAMPLES_JAVA_CP` names its jars).
+**demo lake's synthetic data**, also as a test (`drishti-console/tests/test_client_examples.py`).
 
 ## Before you start
 Flight on (Admin → Engines → Arrow Flight, [guide section 2](../../docs/guides/FLIGHT_GUIDE.md#2-turning-it-on)) and a token with the scope `data:read` ([section 3](../../docs/guides/FLIGHT_GUIDE.md#3-tokens-and-scopes-step-by-step)) in a file only you can read.
@@ -43,7 +43,7 @@ export DRISHTI_FLIGHT_CA=/path/to/ca.pem                              # the CA o
 
 ## Java (`java/`) and Excel (`excel/`)
 
-Java 17+ source launcher, no project; the Flight jars (19.0.0, the server's own) go in `examples/clients/java/lib/`:
+Java 17+ source launcher, no project; the Flight jars (19.0.0, the server's own) go in a `lib/` folder beside the programs:
 `mvn -f examples/clients/java/pom.xml dependency:copy-dependencies -DoutputDirectory=lib` (or `flight-core`, `arrow-memory-netty` and their dependencies from Maven Central).
 
 ```bash
