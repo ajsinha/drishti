@@ -62,10 +62,18 @@ class DesignServiceTest {
         DesignService s = service(dir, props(5, 5, 1, 5));
         StoredDesign d = s.create("ann", "Mine", "trade", null, "rachana: 1\n", "");
         s.addSamples("ann", d.id, List.of(doc("a.json", "{\"a\":1}")));
+        boolean posix = dir.getFileSystem().supportedFileAttributeViews().contains("posix");
         try (var all = Files.walk(dir)) {
             for (Path p : (Iterable<Path>) all::iterator) {
-                String mode = PosixFilePermissions.toString(Files.getPosixFilePermissions(p));
-                assertThat(mode).as(p.toString()).matches(Files.isDirectory(p) ? "rwx------" : "rw-------");
+                if (posix) {
+                    String mode = PosixFilePermissions.toString(Files.getPosixFilePermissions(p));
+                    assertThat(mode).as(p.toString()).matches(Files.isDirectory(p) ? "rwx------" : "rw-------");
+                } else {                                                     // Windows: the access list names the owner alone
+                    var acl = Files.getFileAttributeView(p, java.nio.file.attribute.AclFileAttributeView.class).getAcl();
+                    var owner = Files.getOwner(p);
+                    assertThat(acl).as(p.toString()).isNotEmpty().allMatch(e -> e.principal().equals(owner)
+                            && e.type() == java.nio.file.attribute.AclEntryType.ALLOW);
+                }
             }
         }
     }
@@ -74,8 +82,7 @@ class DesignServiceTest {
     void userNamesAndIdsCannotEscapeTheStore() {
         DesignService s = service(dir.resolve("designs"), props(5, 5, 1, 5));
         StoredDesign d = s.create("..", "x", "trade", null, "", "");
-        assertThat(Files.exists(dir.resolve("designs").resolve("_2e.").resolve(d.id).resolve("design.json"))
-                || Files.exists(dir.resolve("designs").resolve("_2e_2e").resolve(d.id).resolve("design.json"))).isTrue();
+        assertThat(dir.resolve("designs").resolve("_2e_2e").resolve(d.id).resolve("design.json")).exists();
         assertThatThrownBy(() -> s.get("ann", "../../etc")).isInstanceOf(DrishtiException.class);
         assertThat(new FileDesignStore(dir.resolve("designs")).users()).containsExactly("..");
         try (var top = Files.list(dir)) {
@@ -203,5 +210,34 @@ class DesignServiceTest {
         assertThat(s.deleteScratch("ann")).isEqualTo(3);
         assertThat(s.list("ann")).hasSize(2).allMatch(x -> !x.design().scratch);
         assertThat(s.deleteScratch("bob")).isZero();
+    }
+
+    /**
+     * Every user name is one folder of its own, the same on every operating system: separators, a drive's colon, names Windows keeps for
+     * devices, and a last dot or space (Windows drops them, so two names would share a folder) never reach the file system as they are.
+     */
+    @Test
+    void everyUserNameIsOneFolderOfItsOwnOnEveryOperatingSystem() {
+        List<String> names = List.of("..", ".", "a/b", "a\\b", "../x", "..\\x", "C:", "c:\\x", "CON", "con", "nul.txt", "Com1", "LPT9.log",
+                "ann.", "ann", "ann ", " ann", "a.b", "ann..");
+        java.util.Set<String> folders = new java.util.HashSet<>();
+        for (String n : names) {
+            String f = FileDesignStore.escape(n);
+            assertThat(f).as(n).matches("[A-Za-z0-9._-]+").doesNotEndWith(".").doesNotStartWith(".")
+                    .doesNotMatch("(?i)(con|prn|aux|nul|com[0-9]|lpt[0-9])(\\..*)?");
+            assertThat(FileDesignStore.unescape(f)).as(f).isEqualTo(n);
+            assertThat(folders.add(f.toLowerCase(java.util.Locale.ROOT))).as("one folder each: " + n).isTrue();
+        }
+        DesignService s = service(dir.resolve("designs"), props(50, 5, 1, 5));
+        for (String n : names) {
+            StoredDesign d = s.create(n, "x", "trade", null, "", "");
+            assertThat(s.get(n, d.id).owner).isEqualTo(n);
+        }
+        assertThat(new FileDesignStore(dir.resolve("designs")).users()).containsExactlyInAnyOrderElementsOf(names);
+        try (var top = Files.list(dir)) {
+            assertThat(top.map(p -> p.getFileName().toString())).containsExactly("designs");
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
     }
 }
