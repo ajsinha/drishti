@@ -189,14 +189,11 @@ class ComputeWritesApiTest {
         assertThat(id).as("the pool's requirements wait for approval").isNotNull();
         assertThat(mvc.perform(post("/api/v1/approvals/compute/" + id + "/approve").header("X-Drishti-User", "admin-two").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"comment\":\"pure Python, ours\"}")).andReturn().getResponse().getStatus()).isEqualTo(200);
-        JsonNode built = ok(as(post("/api/v1/admin/compute/pools/risk/build"), "admin-one"));
-        assertThat(built.get("reused").asBoolean()).isFalse();
-        assertThat(Files.isDirectory(Path.of(built.get("dir").asText()))).isTrue();
-        assertThat(built.get("log").toString()).contains("built");
-        // again: the same environment, never rebuilt in place
-        JsonNode again = ok(as(post("/api/v1/admin/compute/pools/risk/build"), "admin-one"));
-        assertThat(again.get("reused").asBoolean()).isTrue();
-        assertThat(again.get("id").asText()).isEqualTo(built.get("id").asText());
+        // approved, the build CHECKS the pool's interpreter and installs nothing (owner rule 2026-11-23): the test Python lacks the pool's
+        // pinned requirement, so the build is refused naming it and the pip command the operator may run himself
+        MvcResult checked = as(post("/api/v1/admin/compute/pools/risk/build"), "admin-one");
+        refused(checked, 409, "installs nothing");
+        assertThat(checked.getResponse().getContentAsString()).contains("lacks").contains("pip install");
 
         // the sample engine on its pool: a real worker answers; a pool that does not load it refuses
         JsonNode t = ok(as(post("/api/v1/admin/compute/pools/sample/test"), "admin-one"));
