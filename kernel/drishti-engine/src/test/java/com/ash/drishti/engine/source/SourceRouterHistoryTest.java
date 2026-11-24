@@ -167,4 +167,16 @@ class SourceRouterHistoryTest {
         assertThat(router.undatedSources("trade")).containsExactly("api");
         assertThat(router.history(request()).days()).isEmpty();
     }
+
+    /** A connect that timed out (a peer that is down behind Windows' firewall, which answers no refusal) is unreachable, not a slow answer. */
+    @Test
+    void aConnectTimeOutIsAnUnreachablePeerAndARequestTimeOutIsASlowOne() {
+        Exception connect = new java.io.IOException("call failed", new java.net.http.HttpConnectTimeoutException("HTTP connect timed out"));
+        assertThat(SourceHistory.connectionFailed(connect)).isTrue();
+        assertThat(SourceHistory.timedOut(connect)).isFalse();
+        Exception slow = new java.net.http.HttpTimeoutException("request timed out");
+        assertThat(SourceHistory.timedOut(slow)).isTrue();
+        assertThat(SourceHistory.connectionFailed(slow)).isFalse();
+        assertThat(SourceHistory.connectionFailed(new java.net.ConnectException("Connection refused"))).isTrue();
+    }
 }
