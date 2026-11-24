@@ -156,7 +156,7 @@ public final class LoadStore {
         return packs.computeIfAbsent(pack, p -> {
             Path f = file(p);
             try {
-                return Files.isRegularFile(f) ? json.readValue(f.toFile(), Doc.class) : new Doc(null, null);
+                return Files.isRegularFile(f) ? json.readValue(java.nio.file.Files.readAllBytes(f), Doc.class) : new Doc(null, null);
             } catch (IOException e) {
                 throw new UncheckedIOException("cannot read " + f, e);
             }

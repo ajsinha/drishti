@@ -662,7 +662,7 @@ public class DrishtiLiveTables {
     /** The top-level fields of one contract file ({@code fields} and {@code nested}); empty when it cannot be read or names none. */
     static Optional<Set<String>> contractFields(Path file) {
         try {
-            return contractFields(new ObjectMapper(new YAMLFactory()).readTree(file.toFile()));
+            return contractFields(new ObjectMapper(new YAMLFactory()).readTree(java.nio.file.Files.readAllBytes(file)));
         } catch (IOException e) {
             return Optional.empty();
         }
@@ -701,7 +701,7 @@ public class DrishtiLiveTables {
             Path f = p.dir().resolve("contracts").resolve(kind + ".contract.yaml");
             if (Files.isRegularFile(f)) {
                 try {
-                    return Optional.of(new ObjectMapper(new YAMLFactory()).readTree(f.toFile()));
+                    return Optional.of(new ObjectMapper(new YAMLFactory()).readTree(java.nio.file.Files.readAllBytes(f)));
                 } catch (IOException e) {
                     return Optional.empty();
                 }

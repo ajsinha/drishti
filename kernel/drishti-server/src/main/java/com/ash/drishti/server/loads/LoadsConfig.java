@@ -166,7 +166,7 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
                 return Map.of();
             }
             try {
-                Map<String, Object> m = yaml.readValue(f.toFile(), new TypeReference<Map<String, Object>>() {});
+                Map<String, Object> m = yaml.readValue(java.nio.file.Files.readAllBytes(f), new TypeReference<Map<String, Object>>() {});
                 return m == null ? Map.of() : m;
             } catch (IOException e) {
                 throw new UncheckedIOException("cannot read " + f, e);

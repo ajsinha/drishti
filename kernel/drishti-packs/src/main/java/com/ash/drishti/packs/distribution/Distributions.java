@@ -308,7 +308,7 @@ public final class Distributions {
 
     private static JsonNode tree(Path file) {
         try {
-            JsonNode n = YAML.readTree(file.toFile());
+            JsonNode n = YAML.readTree(java.nio.file.Files.readAllBytes(file));
             if (n == null || !n.isObject()) {
                 throw new IllegalStateException("distribution file " + file + " is not a YAML mapping");
             }

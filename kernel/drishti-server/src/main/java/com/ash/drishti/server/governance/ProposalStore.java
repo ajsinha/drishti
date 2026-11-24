@@ -75,7 +75,7 @@ public final class ProposalStore {
             Files.createDirectories(this.dir);
             try (Stream<Path> files = Files.list(this.dir)) {
                 for (Path f : files.filter(p -> p.getFileName().toString().matches("P-\\d+\\.json")).toList()) {
-                    Proposal p = json.readValue(f.toFile(), Proposal.class);
+                    Proposal p = json.readValue(java.nio.file.Files.readAllBytes(f), Proposal.class);
                     byId.put(p.id(), p);
                     next.accumulateAndGet(Long.parseLong(p.id().substring(2)), Math::max);
                 }

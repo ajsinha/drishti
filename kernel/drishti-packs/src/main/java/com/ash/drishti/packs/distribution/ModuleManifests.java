@@ -212,7 +212,7 @@ public final class ModuleManifests {
 
     private static JsonNode tree(Path f) {
         try {
-            JsonNode n = YAML.readTree(f.toFile());
+            JsonNode n = YAML.readTree(java.nio.file.Files.readAllBytes(f));
             return n == null ? YAML.createObjectNode() : n;
         } catch (IOException e) {
             throw new IllegalStateException("module manifest " + f + " cannot be read: " + e.getMessage(), e);

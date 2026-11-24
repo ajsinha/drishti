@@ -102,7 +102,7 @@ public class VarConfiguration {
             if (p.manifest().get("system-baskets") instanceof Map<?, ?> m && m.get("seed") != null) {
                 Path file = p.resolve(String.valueOf(m.get("seed")));
                 try {
-                    Object doc = VarSystemBasketEdit.YAML.readValue(file.toFile(), Object.class);
+                    Object doc = VarSystemBasketEdit.YAML.readValue(java.nio.file.Files.readAllBytes(file), Object.class);
                     String actor = "system (seed)";
                     int n = svc.saved().system().seed(doc, actor, (action, b) -> svc.audit(actor, "var-system-basket-" + action, b.id(),
                             "seeded from " + p.name() + "/" + m.get("seed") + " version=" + b.version() + " type=" + b.type()));

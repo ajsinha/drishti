@@ -74,7 +74,7 @@ public class ReactiveConfiguration {
             if (!Files.isRegularFile(file)) {
                 return false;
             }
-            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(file.toFile(), Map.class);
+            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(java.nio.file.Files.readAllBytes(file), Map.class);
             Object c = doc == null ? null : doc.get("compute");
             return c instanceof Map<?, ?> m && "true".equalsIgnoreCase(String.valueOf(((Map<String, Object>) m).get("in-process-java")).trim());
         } catch (java.io.IOException | RuntimeException e) {

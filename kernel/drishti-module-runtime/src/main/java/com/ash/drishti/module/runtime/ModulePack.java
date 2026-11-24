@@ -132,7 +132,7 @@ public final class ModulePack {
     @SuppressWarnings("unchecked")
     private static Map<String, Object> yamlMap(Path f) {
         try {
-            Object o = YAML.readValue(f.toFile(), Object.class);
+            Object o = YAML.readValue(java.nio.file.Files.readAllBytes(f), Object.class);
             return o instanceof Map<?, ?> m ? (Map<String, Object>) m : null;
         } catch (IOException e) {
             throw new PackException(f + ": " + firstLine(e.getMessage()));

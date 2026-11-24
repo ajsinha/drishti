@@ -376,7 +376,7 @@ public final class YamlAccessStore implements AccessStore {
 
     private static Map<String, Object> readMap(Path f) {
         try {
-            Map<String, Object> m = YAML.readValue(f.toFile(), YAML.getTypeFactory().constructMapType(LinkedHashMap.class, String.class, Object.class));
+            Map<String, Object> m = YAML.readValue(java.nio.file.Files.readAllBytes(f), YAML.getTypeFactory().constructMapType(LinkedHashMap.class, String.class, Object.class));
             return m == null ? Map.of() : m;
         } catch (IOException e) {
             throw new UncheckedIOException("cannot read: " + e.getMessage(), e);

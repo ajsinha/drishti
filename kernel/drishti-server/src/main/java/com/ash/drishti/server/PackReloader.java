@@ -512,7 +512,7 @@ public final class PackReloader implements AutoCloseable {
             Path f = p.resolve(String.valueOf(rel));
             if (Files.isRegularFile(f)) {
                 try {
-                    yaml.readTree(f.toFile());
+                    yaml.readTree(java.nio.file.Files.readAllBytes(f));
                 } catch (IOException e) {
                     throw new IllegalStateException(p.dir().relativize(f) + " is not valid YAML: " + firstLine(e.getMessage()));
                 }

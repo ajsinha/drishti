@@ -466,7 +466,7 @@ public final class PlacementService {
     /** Every plan, oldest first. */
     public List<Plan> plans() {
         try {
-            return Files.isRegularFile(plansFile) ? JSON.readValue(plansFile.toFile(), new TypeReference<List<Plan>>() { }) : List.of();
+            return Files.isRegularFile(plansFile) ? JSON.readValue(java.nio.file.Files.readAllBytes(plansFile), new TypeReference<List<Plan>>() { }) : List.of();
         } catch (IOException e) {
             LOG.warn("placement: {} does not read: {}", plansFile, e.getMessage());
             return List.of();

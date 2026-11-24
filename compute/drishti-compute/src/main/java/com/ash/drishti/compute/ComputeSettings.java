@@ -125,7 +125,7 @@ public record ComputeSettings(boolean enabled, String python, Path root, Path sc
             return parse(Map.of(), dataDir, node, resolve, "defaults (no " + file + ")");
         }
         try {
-            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(file.toFile(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(java.nio.file.Files.readAllBytes(file), new TypeReference<Map<String, Object>>() {});
             return parse(doc == null ? Map.of() : doc, dataDir, node, resolve, file.toString());
         } catch (IOException e) {
             throw new IllegalArgumentException(file + " is not valid YAML: " + e.getMessage(), e);

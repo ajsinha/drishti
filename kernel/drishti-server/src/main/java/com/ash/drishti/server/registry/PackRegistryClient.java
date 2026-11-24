@@ -118,7 +118,7 @@ public final class PackRegistryClient {
     public Optional<JsonNode> installed(String name) {
         Path mark = installed.resolve(name).resolve(MARK);
         try {
-            return Files.isRegularFile(mark) ? Optional.of(json.readTree(mark.toFile())) : Optional.empty();
+            return Files.isRegularFile(mark) ? Optional.of(json.readTree(java.nio.file.Files.readAllBytes(mark))) : Optional.empty();
         } catch (IOException e) {
             return Optional.empty();
         }
