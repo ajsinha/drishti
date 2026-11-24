@@ -50,6 +50,9 @@ jobs:
           done
       - name: Build Drishti (packages the server jar and the modules, no tests)
         run: ./mvnw -B -q package -DskipTests
+      # the About catalogue as the server loads it from the shipped packs: the drill was the first to run these (about 2 minutes here)
+      - name: About and catalogue tests (AboutPacksTest, ExplainAboutTest)
+        run: ./mvnw -B -q verify -pl testing/drishti-modules-it -am -Dtest=AboutPacksTest,ExplainAboutTest -Dsurefire.failIfNoSpecifiedTests=false
       - name: The Lake Python wheel (built from the Lake tag, as the pin in lib/lake-wheel.pin says) and the console's requirements
         run: |
           pip install uv
