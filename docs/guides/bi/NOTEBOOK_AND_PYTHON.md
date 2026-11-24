@@ -1009,10 +1009,7 @@ There are two ways to give the pool that environment:
 * **`environment: system`** (as shipped): the site's interpreter. Install the pinned versions into it, for example
   `python3 -m pip install --require-hashes --no-deps -r config/compute/locks/python.lock`. Before any run the server asks the pool for its
   interpreter's versions and refuses every run, naming each package, while one differs from its pin.
-* **A locked environment**: `environment: { python: "3.13", lock: locks/python.lock, index: <name> }`. The environment is built under the
-  data folder from exactly those files by hash (offline, from the named package source in `compute.indexes`, never public PyPI unless the
-  site names it), read-only once built, and checked at every worker start. Build it from Admin → Compute (or automatically with
-  `compute.build: on-approval`).
+* **A locked environment**: `environment: { python: "3.13", lock: locks/python.lock, index: <name> }`. Drishti does not build it: the operator installs those pinned libraries into the Python the pool runs (`drishti.python`) with pip, and the pool checks them against the lock at every worker start; a missing one is an error naming it and the pip command.
 
 **To add or change a library** (for example `statsmodels`, `scikit-learn` or `polars`):
 

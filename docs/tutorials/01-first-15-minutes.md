@@ -146,7 +146,8 @@ cd drishti
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64     # your Java 21 or newer
 export PATH="$JAVA_HOME/bin:$PATH"
 ./mvnw -q package -DskipTests -pl :drishti-app -am
-python3 tools/drishti.py setup        # the libraries into this Python (from ~/drishti-wheels)
+(cd drishti-console && python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt)   # you install the libraries
+python3 tools/drishti.py setup        # checks them: "Drishti is ready."
 ```
 
 (The Python is yours: the system's, a dedicated one, or a virtual environment you made yourself; Drishti makes none.)
@@ -1275,7 +1276,7 @@ days*.
 | You see | Do this |
 |---|---|
 | The build says `Drishti needs Java 21 or newer` | `JAVA_HOME` is older than 21; point it at 21 or newer and run the build again |
-| `lake demo` says `No module named 'drishti_lake'` | `python3 tools/drishti.py setup` with the same Python: it installs the libraries from the wheel pack |
+| `lake demo` says `No module named 'drishti_lake'` | the same Python lacks the libraries: run the pip command `setup` prints (`python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt` in `drishti-console`); Drishti installs nothing |
 | The sign-in page says the password is wrong | the development password is `drishti-dev-admin123` until you change it; five wrong tries lock the account for 15 minutes |
 | Every page says `DRS-5010 missing bearer token` | the console was started without `DRISHTI_TOKEN_SECRET` (or with another value than the server's): start it as in Step 2 |
 | A view says *No data held for that date* | the demo lakes are not built, or were built for other dates: run `lake demo` again (a running server re-reads them) |

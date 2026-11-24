@@ -104,7 +104,8 @@ From the `drishti` folder (every command below runs from it):
 cd ~/IdeaProjects/drishti-platform/drishti
 uv build --wheel ../drishti-lake/python --out-dir lib/wheels           # the Lake wheel first (section 2 explains it): the requirements name it
 python tools/lake/lakewheel.py                                         # exit 0 and (ok): lib/wheels holds exactly the pinned wheel
-python3 tools/drishti.py setup              # the libraries into this Python (from ~/drishti-wheels; --index: your package index)
+python3 -m pip install --no-index --find-links ~/drishti-wheels -r drishti-console/requirements.txt   # YOU install the libraries (Drishti runs no pip)
+python3 tools/drishti.py setup              # checks them ("Drishti is ready."), writes the settings file and drishti.python
 python3 -m pip install -r drishti-console/requirements-test.txt   # a developer's test extras, into the same Python
 python3 -m playwright install chromium        # the browser tests' Chromium, once
 python3 tools/drishti.py doctor
@@ -112,7 +113,7 @@ python3 tools/drishti.py doctor
 
 The Lake wheel comes first because `requirements.txt` installs `drishti-lake==<version>` from `lib/wheels`, and no package index has it; `../drishti-lake`
 must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release i7g` leaves it there). On Windows Drishti never makes a virtual
-environment: the Python you run it with holds the libraries: `py -3.13 tools\drishti.py setup`, then
+environment: the Python you run it with holds the libraries, which you install: `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r drishti-console\requirements.txt`, then `py -3.13 tools\drishti.py setup` checks them, then
 `py -3.13 -m pip install -r drishti-console\requirements-test.txt`; Playwright's browsers go into the
 user's profile, no administrator rights needed.
 
@@ -181,21 +182,21 @@ The whole path on the command line, nothing but Java 21 and Python 3.11+ (3.13 t
 unzipped platform folder (`C:\Users\you\drishti-platform`, holding `build_all.py` and `drishti\`); Linux and macOS are the same with
 `python3` and `/`, where `python3` is a dedicated Python 3.13 for Drishti (for example `/opt/python3.13/bin/python3.13`): the operating
 system's own `python3` of Debian or Ubuntu is *externally managed* (PEP 668) and setup refuses it in one line. Unzip the offline wheel
-pack (built for Python 3.13) into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`) first.
+pack (built for Python 3.13) into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`) first and install it yourself, once (Windows: `cd "<drishti>\drishti-console"` then `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt`; Linux and macOS the same with `python3.13` and `/`); Drishti never installs Python packages, `setup` only checks them.
 
 | Step | Windows (`cmd`) | Linux and macOS |
 |---|---|---|
 | 1. Build everything (the products, then Drishti's jar and modules; no tests) | `py -3.13 build_all.py --bundle . --skip-tests` | `python3 build_all.py --bundle . --skip-tests` |
 | ... or Drishti alone (the products already in `~/.m2`) | `cd drishti` then `mvnw.cmd -B clean package -DskipTests -Dspotless.check.skip=true` | `cd drishti && ./mvnw -B clean package -DskipTests -Dspotless.check.skip=true` |
-| 2. Prepare the machine (settings file, data folder, the libraries of THIS Python from the wheel pack) | `cd drishti` then `py -3.13 tools\drishti.py setup` | `cd drishti && python3 tools/drishti.py setup` |
+| 2. Prepare the machine (settings file, data folder, checks the libraries of THIS Python) | `cd drishti` then `py -3.13 tools\drishti.py setup` | `cd drishti && python3 tools/drishti.py setup` |
 | 3. The demo lake (about 15 minutes, 3.4 GB) | `py -3.13 tools\drishti.py lake demo --engine java` | `python3 tools/drishti.py lake demo --engine java` |
 | 4. Start the server and the console | `py -3.13 tools\drishti.py start all --demo` | `python3 tools/drishti.py start all --demo` |
 | ... see them, stop them | `py -3.13 tools\drishti.py status`, `py -3.13 tools\drishti.py stop all` | `python3 tools/drishti.py status`, `python3 tools/drishti.py stop all` |
 | 5. Use it | open `http://localhost:17480`, sign in as `drishti-dev-admin` / `drishti-dev-admin123`, type `VAR BANK` and press Enter | the same |
 | ... or prove it on the command line | `py -3.13 tools\drishti.py doctor --acceptance` | `python3 tools/drishti.py doctor --acceptance` |
 
-**You should see** in step 2 `[made] libraries` (or `[  ok]`), `drishti.python=<this Python>` and, as the last next step,
-`start all --demo`: while a `[FAIL]` remains the next steps name the fix instead (a missing wheel pack: `setup --wheels <folder>`). Step
+**You should see** in step 2 `[  ok] libraries`, `drishti.python=<this Python>`, "Drishti is ready." and, as the last next step,
+`start all --demo`: while a `[FAIL]` remains the next steps name the fix instead (a missing library: the pip command to run). Step
 4 ends with `console: up on http://<address>:17480` and runs the console on the Python setup wrote (`drishti.python`); it never makes
 an environment or installs anything. In step 5 `VAR BANK` shows the bank's 99% one-day VaR **167,372,692** and expected shortfall
 **210,131,972**. No command needs `--settings`: every `tools/drishti.py` command takes `~/drishti-envs/dev.ini` by itself when that file

@@ -515,7 +515,7 @@ kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/DISTRIBUTIONS
 |---|---|---|
 | JDK | 21 or newer (any vendor; Java 21 is the production target) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [CLUSTER_GUIDE.md](../architecture/ARCHITECTURE.md#14-concurrency-and-performance)). |
 | Python | 3.13 ([the minimum and why](OPERATIONS_GUIDE.md#21-prerequisites)) | The console and the tools. CI uses 3.13. |
-| The offline wheel pack | the release's | `python3 tools/drishti.py setup` installs the libraries from it (`~/drishti-wheels`, or `--wheels`) into the Python you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself). |
+| The offline wheel pack | the release's | you install the libraries from it with `python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt` (in `drishti-console`) into the Python you run Drishti with; `setup` only checks them (the system's, a dedicated one, or a virtual environment you made yourself). |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, Cassandra, ScyllaDB, ActiveMQ, RabbitMQ, MinIO) and `deploy/docker/compose.yaml`. |
 
 Set `JAVA_HOME` in every terminal:
@@ -533,7 +533,8 @@ You should see `Java version: 21…` in the output. Maven itself comes with the 
 
 ```bash
 git clone https://github.com/drishti-platform/drishti.git && cd drishti
-python3 tools/drishti.py setup                                     # the libraries into this Python from ~/drishti-wheels
+(cd drishti-console && python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt)   # you install the libraries
+python3 tools/drishti.py setup                                     # checks them
 ./mvnw -q package -DskipTests -pl :drishti-app -am                 # 1 min 12 s with ~/.m2 filled
 python3 tools/drishti.py lake demo           # about 15 min (943 s): 86 Delta tables, sixty days, under data/delta/demo
 ```

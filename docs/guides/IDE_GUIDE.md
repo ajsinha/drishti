@@ -146,10 +146,9 @@ A later plain `setup` keeps that `dev.ini` (its `drishti.home` is this clone) an
 
 1. From the clone: `python3 tools/drishti.py setup --check` (Windows `py -3.13 tools\drishti.py setup --check`) lists what is missing and changes nothing.
 2. `python3 tools/drishti.py setup` makes it from `config/settings.examples/dev.ini` with this machine's paths filled in, makes the data
-   folder, writes the JVM arguments files, and checks the libraries of **the Python it runs with**, installing what is missing into that
-   Python from the offline wheel pack (`~/drishti-wheels`, Windows `%USERPROFILE%\drishti-wheels`, found by itself; or `--wheels <folder>`).
-   Drishti makes no virtual environment: the Python is yours. It is two parts that also run alone: `setup drishti` (the settings, data folder and JVM
-   files; no Python libraries) and `setup libs` ([2.2](#22-python-for-the-console-and-the-tools-pycharm)). `--check` works for all of them.
+   folder, writes the JVM arguments files, and only CHECKS the libraries of **the Python it runs with**: when something is missing it prints the exact pip command for you to run
+   ([2.2](#22-python-for-the-console-and-the-tools-pycharm)), and when all is in order it prints "Drishti is ready." Drishti installs no Python
+   package, and makes no virtual environment: the Python is yours. `--check` changes nothing.
    In PyCharm, no terminal is needed: **Drishti: setup** (section 4.3) runs it on the project interpreter. You should see `[made] settings file …/drishti-envs/dev.ini`,
    `[made] JVM options … jvm-demo.args, jvm-qa.args, jvm-samples.args`, `[made] libraries …` (or `[  ok]`) and `drishti.python=<that Python>`;
    while a `[FAIL]` or `[todo]` remains, the next steps name the fix first and never `start`. A `dev.ini` already there that names
@@ -195,36 +194,32 @@ What each key does and the other ways to make it: [DEPLOYMENT_AND_QA_GUIDE.md �
 ### 2.2 Python for the console and the tools (PyCharm)
 
 The console and `tools/drishti.py` need Python 3.11 or later with Drishti's packages. **One Python, yours**: the Python you run Drishti with
-(the system's, a dedicated one, or a virtual environment you made yourself) must have the libraries; setup checks them and installs from the offline wheel pack. Drishti makes no virtual environment.
+(the system's, a dedicated one, or a virtual environment you made yourself) must have the libraries; you install them from the offline wheel pack, and setup checks them. Drishti installs no package and makes no virtual environment.
 
 Any Python 3.11 or later on the machine works as the interpreter: a python.org install, a company-packaged Python, conda, or the
 one your team already uses. Drishti needs only its packages installed in it.
 
 1. Find its path. Windows: `py -0p` lists every installed Python with its path (for example
    `C:\Users\you\AppData\Local\Programs\Python\Python313\python.exe`); Linux and macOS: `which python3`.
-2. Put Drishti Lake's pinned Python wheel in `lib/wheels` (the requirements name it and no index has it; the commands are in `lib/lake-wheel.pin` and [QUICKSTART_DEVELOPERS.md section 1.3](../QUICKSTART_DEVELOPERS.md#13-the-consoles-environment); `python tools/lake/lakewheel.py` checks it). Then, with that Python, once, from the clone:
+2. Put Drishti Lake's pinned Python wheel in `lib/wheels` (the requirements name it and no index has it; the commands are in `lib/lake-wheel.pin` and [QUICKSTART_DEVELOPERS.md section 1.3](../QUICKSTART_DEVELOPERS.md#13-the-consoles-environment); `python tools/lake/lakewheel.py` checks it). Then install the libraries yourself, once, with that Python. Unzip the offline wheel pack into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`). Windows:
+   `cd "<drishti>\drishti-console"` then `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt`; Linux and macOS: `cd <drishti>/drishti-console`
+   then `python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt` (or your own Python). Then, from the clone:
 
    ```bash
-   <that python> tools/drishti.py setup              # the settings, then the Lake wheel and drishti-console/requirements.txt into THAT python
-   <that python> tools/drishti.py setup --check      # names every library that is missing or has the wrong version (exit 1)
+   <that python> tools/drishti.py setup              # the settings, JVM files and drishti.python; CHECKS the libraries ("Drishti is ready.")
+   <that python> tools/drishti.py setup --check      # names every library that is missing or has the wrong version (exit 1); changes nothing
    <that python> -m pip install -r drishti-console/requirements-polars.txt    # only for tools/mrloader
    ```
 
-   `setup` is `setup drishti` + `setup libs` (`--system` is accepted for old commands and changes nothing). The Python needs nothing
-   installed beforehand, not even PyYAML: with a wheel pack setup installs the libraries first, then runs itself again in that Python.
-   Setup writes the Python it ran with as `drishti.python` in `dev.ini` (when absent, or when it names a missing Python;
+   Drishti never runs pip: not `setup`, not `start`, not the server's compute environments. When a library is missing, setup prints that same pip command
+   for the Python that ran it. `setup` needs nothing installed beforehand, not even PyYAML. Setup writes the Python it ran with as `drishti.python` in `dev.ini` (when absent, or when it names a missing Python;
    another Python you named is kept), so `start console`, the cluster, the feed schedules and the server's Python work (the data
    feeds' Run now, the compute pool, the pivot Python functions) run in the same Python; `DRISHTI_PYTHON` overrides it. On Windows pip uses
    the Windows certificate store, so it works behind a company proxy (a company package index goes in `%APPDATA%\pip\pip.ini`, Linux
-   `~/.config/pip/pip.conf`). No administrator rights: add `--user` to a plain `pip`, or use a Python of your own.
+   `~/.config/pip/pip.conf`, for a pip command without `--no-index`). No administrator rights: add `--user` to a plain `pip`, or use a Python of your own.
 
-   **Setup installs only what is missing** from `requirements.txt` and from `config/compute/locks/python.lock` (the server's compute pool needs the lock's numpy, pandas, pyarrow, scipy ...; the wheel pack carries both), and never runs pip when every library is already there.
-   **Offline by default**: unzip the wheel pack into `~/drishti-wheels` (Windows `C:\Users\you\drishti-wheels`) and run `py -3.13 tools\drishti.py setup`:
-   it finds that folder by itself and says so in one line (or `--wheels <folder or the pack's .zip>`; `DRISHTI_WHEELS` is the same setting for
-   scripts). Only that folder is used (`pip --no-index --find-links`), the Lake wheel first; a wheel the folder lacks is named and nothing is
-   installed. With no wheel pack, a missing library is a `[FAIL]` line and the first next step is `setup --wheels <folder>`; setup touches
-   no network unless you pass `--index` (pip then uses the package index of `pip.ini`; when it fails, setup says why in one sentence:
-   login rejected 401/403, not reachable, a library missing). In PyCharm: the launcher **Drishti: setup** (or **Drishti: setup (package index)**).
+   The check covers `requirements.txt` and `config/compute/locks/python.lock` (the server's compute pool needs the lock's numpy, pandas, pyarrow, scipy ...; the wheel pack carries both): the server's
+   compute environments run with `drishti.python` as it is, and a missing library is an error naming it and the pip command. In PyCharm: the launcher **Drishti: setup**.
 3. Choose it in PyCharm (section 2.3, step 2). Every Python launcher then uses it: they store no interpreter path of their own.
 
 The command-line tools in `tools/mrloader/` use Polars; the one Python may not carry it: either
@@ -238,8 +233,7 @@ or later with Polars, NumPy and PyYAML) in their own run configuration. The deta
 2. **Settings → Project → Python Interpreter**: choose your Python, the one setup prepared (**Add Interpreter → Add Local Interpreter →
    System Interpreter**, or an environment you made yourself: Windows `C:\Users\you\AppData\Local\Programs\Python\Python313\python.exe`,
    Linux `/opt/python3.13/bin/python3.13`). When PyCharm offers to create a virtual environment, **Cancel**: the
-   launchers use whatever interpreter you choose here and name none of their own. Run **Drishti: setup** (or `py -3.13 tools\drishti.py setup`), which makes the settings and installs the libraries
-   (the Lake wheel first) into that interpreter from `%USERPROFILE%\drishti-wheels`. PyCharm's *Package requirement ... is not satisfied*
+   launchers use whatever interpreter you choose here and name none of their own. Install the libraries into that interpreter with the pip command above, then run **Drishti: setup** (or `py -3.13 tools\drishti.py setup`), which makes the settings and checks the libraries. PyCharm's *Package requirement ... is not satisfied*
    banner means the same thing: run **Drishti: setup**. An old `dev.ini` or JVM arguments file from another copy is moved into a dated
    folder in `drishti-envs` (`replaced-<date>`) and a fresh one written (section 2.1): nothing to do by hand. The launchers use the project's interpreter; the server uses `drishti.python` of
    `dev.ini` (written by setup), else `python` (Windows) or `python3`, or the one `DRISHTI_PYTHON` names. `start console` and `start all`
@@ -425,8 +419,7 @@ default server, 17480 default console, 18580 and 17580 the QA pair, 17481 the Fi
 
 | Name | What it runs | What it is | Use it when |
 |---|---|---|---|
-| **Drishti: setup** | `drishti.py setup`, `dev.ini` only | prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): checked, what is missing installed offline from the wheel pack in `~/drishti-wheels` (it makes `dev.ini`, so it names none) | after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing |
-| **Drishti: setup (package index)** | `drishti.py setup --index`, `dev.ini` only | the same, installing what is missing from your configured package index instead of the wheel pack | no wheel pack, and pip may reach your package index |
+| **Drishti: setup** | `drishti.py setup`, `dev.ini` only | prepare this machine: `~/drishti-envs/dev.ini`, the data folder, the JVM options, then CHECKS the libraries of the project interpreter (the Python that runs this launcher, written as `drishti.python`): what is missing is printed as the pip command to run, nothing is installed (it makes `dev.ini`, so it names none) | after a clone, after a pull that changed `requirements.txt`, or when start says a library is missing |
 | **Drishti: check setup** | `drishti.py setup --check`, `dev.ini` only | what setup would do, changing nothing: the settings file, the data folder and the libraries of the project interpreter, name by name | before setup, or to see why a launcher refuses |
 
 **Drishti-python 2 Data**
@@ -643,9 +636,8 @@ wrong. Each step says what you should see; if you do not, the row of section 6 i
 3. **Check `C:\Users\you\drishti-envs\`** (section 2.1): run `py -3.13 tools\drishti.py setup` once (again after a pull that changed the
    launchers). *You should see* `dev.ini` with `drishti.home` naming this clone, `drishti.data.dir` `<clone>/data`, `drishti.modules.home`
    `<clone>/modules`, and `drishti.java.home` a JDK 21 folder (forward slashes), and beside it `jvm-demo.args`, `jvm-samples.args` and
-   `jvm-qa.args`, and `drishti.python` naming the Python you ran setup with; setup's `libraries` line is `[  ok]` or `[made]` (the
-   libraries from `C:\Users\you\drishti-wheels`; no virtual environment is made), and its next steps end with `start all --demo`. A `[FAIL] libraries`
-   line: unzip the wheel pack into `C:\Users\you\drishti-wheels` and run setup again. Only the arguments files missing or naming an old data folder: `py -3.13 tools\drishti.py --settings
+   `jvm-qa.args`, and `drishti.python` naming the Python you ran setup with; setup's `libraries` line is `[  ok]` (no virtual environment is made, and nothing is installed), and its next steps end with `start all --demo`. A `[FAIL] libraries`
+   line: run the pip command it prints (the wheel pack unzipped into `C:\Users\you\drishti-wheels`: `py -3.13 -m pip install --no-index --find-links "C:\Users\you\drishti-wheels" -r requirements.txt` in `drishti-console`) and run setup again. Only the arguments files missing or naming an old data folder: `py -3.13 tools\drishti.py --settings
    C:\Users\you\drishti-envs\dev.ini launchers --machine` writes them again. *If not:* recipe F; for the Java line, recipe E; a server
    launcher that says *could not open …jvm-demo.args*: recipe G.
 4. **PyCharm: Build demo lakes** (section 2.4), with no server running. *You should see* `lake writer: java (asked for)`, the tables,
@@ -736,7 +728,7 @@ then run the tasks **Drishti: build demo lakes**, **Drishti: run server (demo)**
 | You need | How |
 |---|---|
 | **JDK 21** | Linux `/usr/lib/jvm/java-21-openjdk-amd64`, macOS `/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home`, Windows `C:\jdk-21` |
-| **Python 3.13** with the libraries | `py -3.13 tools\drishti.py setup` (Linux `python3 tools/drishti.py setup`) with the wheel pack in `~/drishti-wheels` ([QUICKSTART_DEVELOPERS.md section 1.3](../QUICKSTART_DEVELOPERS.md#13-the-consoles-environment)) |
+| **Python 3.13** with the libraries | your pip command from the wheel pack in `~/drishti-wheels` (`py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt` in `drishti-console`; Linux `python3.13` and `/`), then `tools/drishti.py setup` checks ([QUICKSTART_DEVELOPERS.md section 1.3](../QUICKSTART_DEVELOPERS.md#13-the-consoles-environment)) |
 | **VS Code** with the extensions the workspace recommends | Extension Pack for Java (`vscjava.vscode-java-pack`), Python (`ms-python.python`, `ms-python.debugpy`, `ms-python.vscode-pylance`), YAML (`redhat.vscode-yaml`); VS Code offers them when the workspace opens |
 | The platform's other repositories, built and installed | tools, Rachana and Lake from their tags into `~/.m2`, in that order (`build_all.py --release <name>` does it) ([QUICKSTART_DEVELOPERS.md section 2](../QUICKSTART_DEVELOPERS.md#2-build)); their versions: the index repository's [COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md) |
 
@@ -816,7 +808,7 @@ Linux and macOS: `python3` and `/`):
 
 ```bat
 mvnw.cmd -B clean package -DskipTests -Dspotless.check.skip=true      &rem  Drishti: build all
-py -3.13 tools\drishti.py setup                                       &rem  Drishti: setup (the libraries of this Python, from %USERPROFILE%\drishti-wheels)
+py -3.13 tools\drishti.py setup                                       &rem  Drishti: setup (checks the libraries of this Python)
 py -3.13 tools\drishti.py lake demo --engine java                     &rem  Drishti: build demo lakes
 py -3.13 tools\drishti.py start all --demo                            &rem  Drishti: run server (demo) + Drishti: run console
 py -3.13 tools\drishti.py status

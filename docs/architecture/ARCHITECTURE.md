@@ -2635,13 +2635,11 @@ A pool's `environment` is either `system` (the site's interpreter, `compute.pyth
   distribution files. It is written once by `tools/python_lock.py` from a `name==version` list (for the pool `python`:
   `config/compute/locks/python.in` → `python.lock`), reading the hashes from the package index's JSON API, reviewed and committed; it is
   never resolved again at install time.
-* **One environment per lock.** Its id is the sha256 of (Python version, platform, lock file); pools and connectors with the same lock share
-  it. It is built under `<data dir>/compute/envs/<env id>/` (wheels cache `<data dir>/compute/wheels/`), never in a system location or
-  `/tmp`: `pip install --target <env>/site --require-hashes --no-deps --only-binary=:all:` (a library folder, no virtual environment) from approved sources only (`shipped` wheels,
-  a named index in `compute.indexes`, or a local path; public PyPI only when the site names it). No source builds, no resolution.
-* **Read-only and verified.** The built folder is made read-only and a manifest of hashes is checked at every worker start; a changed file
-  stops the worker (`DOWN` in Health, the file named). A new lock is a new environment; the old one stays until nothing uses it. A failed
-  build leaves no environment and names the wheel.
+* **The Python is the operator's.** The pool's workers run with `drishti.python` as it is: Drishti never installs a Python package, not
+  at setup, not at start, not for the pool (no `pip --target`, no library folder it builds). The operator installs the libraries of
+  `requirements.txt` into that Python with the pip command (`python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt`
+  in `drishti-console`; `setup` checks and prints it). A library that is missing or at another version than the lock is a clear error that
+  names it and the pip command, and the pool does not start its work.
 * **The pin check for the pool `python`.** The allow-list `drishti.bi.report.python-packages` offers only what `python.lock` pins (a test
   holds the two together). With `environment: system`, the server asks the pool (`about`) for its interpreter's versions before any run and
   refuses every run, naming each package, while one differs from its pin.
@@ -2657,7 +2655,7 @@ changed the file (four eyes; `requested-by:` names them). Each decision is an au
 every node sees them, and a revocation refuses new requests at once. A connector whose requirements are not all approved stays off (state
 `NOT_APPROVED`, *waiting for approval of N requirements*). Java libraries are checked by sha256, scanned for native code (a jar with a
 `.so`, `.dll` or `.dylib`, or `native: true`, may run only in a Java worker) and staged under `<data dir>/compute/jars/<sha256>/`.
-Environments are built manually or on approval (`compute.build`). A signed pack's wheels and jars still need approval.
+A signed pack's wheels and jars still need approval; Python libraries are only checked against the lock, never installed by Drishti.
 
 ### 29.7 Windows
 
