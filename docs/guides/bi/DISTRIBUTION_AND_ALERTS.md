@@ -18,7 +18,7 @@
 
 > Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
 
-Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](MODELS_AND_DATASETS_FOR_REPORTS.md) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · **Distribution, subscriptions and alerts** · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · [The Notebook and Python](NOTEBOOK_AND_PYTHON.md) · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
+Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](TABLES_AND_MODELS.md#models-and-datasets-for-reports) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · **Distribution, subscriptions and alerts** · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · [The Notebook and Python](NOTEBOOK_AND_PYTHON.md) · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
 
 The Reports page and scheduled searches, export (PDF, PNG, Excel, CSV), subscriptions, webhooks and text messages, alerts on numbers, and embedding a report; with the tutorials for BI that runs itself and for scheduled searches.
 
@@ -436,11 +436,11 @@ yet), and **as YAML** (what the UI writes, which you can keep in git).
 
 A dataset keeps its rows in layers it builds from the source. They are rebuilt when a data load arrives ([tutorial 12](../../tutorials/12-a-day-of-bank-data.md)), when someone
 asks, and on a **schedule** set on the dataset. A dataset is one table of the **model layer** (`rachana: 2`): it says where the rows come from and
-what one row is, and its measures live in a **model** over it ([BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads)).
+what one row is, and its measures live in a **model** over it ([BI_GUIDE.md section 23](TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads)).
 
 **In the UI** there are two ways to set the schedule, and neither needs the YAML:
 
-- **In the dataset wizard** (**Models → New dataset**, the wizard of [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](MODELS_AND_DATASETS_FOR_REPORTS.md#110-a-table-of-your-own-step-by-step)):
+- **In the dataset wizard** (**Models → New dataset**, the wizard of [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](TABLES_AND_MODELS.md#110-a-table-of-your-own-step-by-step)):
   on the *Columns* step choose **Refresh** *business days at 06:30* (or *when new data loads*); the YAML of the *Save* step shows the line it writes,
   `refresh: business-days 06:30`.
 - **On the dataset's own page**, when it has no schedule: the **Refresh** section says *No refresh schedule* and, for an author who may edit the draft,

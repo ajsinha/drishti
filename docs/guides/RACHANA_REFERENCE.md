@@ -2343,7 +2343,7 @@ any panel.
 
 This is the first of the three tiles of the trading pack's counterparty, portfolio, legal-entity and index pages (7, 30 and 90 days).
 You should see, for `CP-NORTHPLAINS` on the business date 2026-10-16, `+2,272,287` in the positive colour with `7 events` under it; the
-30-day tile reads `−62,072,389` (449 events). The runnable version with a `delta` is the [metric example](examples/metric.md); its
+30-day tile reads `−62,072,389` (449 events). The runnable version with a `delta` is the [metric example](examples/README.md#metric); its
 catalogue entry is [Panels: the twenty-two kinds, and developing a new one](#metric).
 
 #### map
@@ -2405,7 +2405,7 @@ clicked. Under the map, *Open a country* lists the same places as links (the way
 
 This is the world-economy pack's `economy` Sutra. You should see, for `ECON ECON-AUS`, the world shaded by GDP per capita with
 Australia highlighted; every country with an economy page (`ECON-ABW`, `ECON-AFG` …) opens it. The runnable version is the
-[map example](examples/map.md); its catalogue entry is [Panels: the twenty-two kinds, and developing a new one](#map). A BI report's map visual draws with the same shapes
+[map example](examples/README.md#map); its catalogue entry is [Panels: the twenty-two kinds, and developing a new one](#map). A BI report's map visual draws with the same shapes
 and drills from the world to a country and its regions:
 [REPORT_FILE_FORMAT_STATEMENTS.md](bi/REPORT_FILE_FORMAT_STATEMENTS.md#14-the-map-funnel-histogram-box-plot-and-bubble).
 
@@ -3749,7 +3749,7 @@ Every box on a Drishti screen is a **panel**, and every panel is one of twenty-t
 - **Writing a Sutra?** The full list of every option, format and tone is the [Rachana reference](#panels); this page links to it per kind and does not repeat it.
 - **Adding a kind to Drishti itself?** [Developing a panel kind](#developing-a-panel-kind), the last part of this page, walks through it with `metric`.
 - **Building screens in the workbench?** [Screen designer and the Build workbench](#screen-designer-and-the-build-workbench) shows the palette and the inspector for every kind.
-- **Examples.** Each kind's YAML below is a panel of a working example in [examples/](examples/README.md): the [all-panels showcase](examples/all-panels-showcase.md) has all twenty-two, [metric](examples/metric.md) has the tiles. Open any of them in the workbench (Build, New, Examples) and press the `?` in a panel's heading to come back here: it opens the section of its kind (`/help/rachana-reference#kv`).
+- **Examples.** Each kind's YAML below is a panel of a working example in [examples/](examples/README.md): the [all-panels showcase](examples/README.md#all-panels-showcase) has all twenty-two, [metric](examples/README.md#metric) has the tiles. Open any of them in the workbench (Build, New, Examples) and press the `?` in a panel's heading to come back here: it opens the section of its kind (`/help/rachana-reference#kv`).
 
 
 A cell whose text is a web address (`https://...` or `http://...`, no spaces) is drawn as a link that opens in a new tab (`rel="noopener noreferrer nofollow"`), cut with an ellipsis, with the whole address as its title; the headlines of the news connector use it.
@@ -5832,13 +5832,13 @@ Everything the mouse does has a key. Changes are announced in a live region for 
 
 Each example in `docs/guides/examples/` opens as your own copy (*Create → Examples*, or the **Open in the workbench** link on *Help → Examples*). Each has a note on what to look for and which lines to copy. For each family below: open the copy, click the panel named, look at its inspector, then try the exercise.
 
-#### Key figures, key/value and status: [all-panels-showcase](examples/all-panels-showcase.md)
+#### Key figures, key/value and status: [all-panels-showcase](examples/README.md#all-panels-showcase)
 
 ![kv and status panels in the showcase](img/designer/30-family-facts.jpg)
 
 Select **terms** (a `kv`) and **ops** (a `status`). Exercise: drag the field `currency` onto **terms** and watch a new line appear; click the **title line** and change the pill; click the **strip** and add a figure by dropping `maturityDate` on it.
 
-#### Tables, the tree table and pivot row groups: [tree-table](examples/tree-table.md), [pivot-row-groups](examples/pivot-row-groups.md)
+#### Tables, the tree table and pivot row groups: [tree-table](examples/README.md#tree-table), [pivot-row-groups](examples/README.md#pivot-with-row-groups)
 
 ![A table whose rows hold child rows](img/designer/31-family-tables.jpg)
 
@@ -5848,37 +5848,37 @@ The tree table has `children` and `expand` options; the shape tree marks the lis
 
 In the pivot, `by` lists the row groups, `across` the columns. Exercise: reorder the entries of `by` and watch the subtotals regroup.
 
-#### Time series, line and area: [exposure-profile](examples/exposure-profile.md)
+#### Time series, line and area: [exposure-profile](examples/README.md#exposure-profile)
 
 ![An area chart over tenor](img/designer/33-family-series.jpg)
 
 Drop a `series` field on empty canvas: the first suggestion is a line chart with `x` and `y` filled. Exercise: set `limit` to an expression such as `$.LIMIT` to draw the limit line.
 
-#### Market data, candlestick and surface: [market-charts](examples/market-charts.md)
+#### Market data, candlestick and surface: [market-charts](examples/README.md#market-charts)
 
 ![Candlestick, line and surface panels](img/designer/34-family-market.jpg)
 
 The candlestick needs `open`, `high`, `low` and `close`; the surface needs `rows` and `y` (the other axis). Exercise: bind a different field to `close` and see the Tests matrix flag the samples that lack it.
 
-#### Risk, histogram, scatter and gauge: [risk-distribution](examples/risk-distribution.md)
+#### Risk, histogram, scatter and gauge: [risk-distribution](examples/README.md#risk-distribution)
 
 ![Histogram, scatter and gauge](img/designer/35-family-risk.jpg)
 
 Exercise: change the histogram's `bins`; drag the gauge's right edge to make it narrower and watch the others reflow.
 
-#### P&L, waterfall and horizontal bars: [pnl-explain](examples/pnl-explain.md)
+#### P&L, waterfall and horizontal bars: [pnl-explain](examples/README.md#pl-explain)
 
 ![A P&L waterfall and sensitivity bars](img/designer/36-family-pnl.jpg)
 
 The `waterfall`'s `sum` names the step that is the total; the `hbar` panel draws a bar per row. Exercise: change `fmt` to see signed numbers; set `tone` to `sign` on the bars.
 
-#### Relationships, graph, tabs and links: [relationships](examples/relationships.md)
+#### Relationships, graph, tabs and links: [relationships](examples/README.md#relationships)
 
 ![A group graph, tabs per netting set and linked entities](img/designer/37-family-relationships.jpg)
 
 `tabs` makes one tab per element of `each`; its body, and the `panels:` it may hold (a table of each leg's cashflows, say), are panels of their own (edit them in the YAML tab: a panel inside a tab is not a canvas target). Exercise: change `tabTitle` to another expression.
 
-#### Operations, timeline and ladder: [operations-status](examples/operations-status.md)
+#### Operations, timeline and ladder: [operations-status](examples/README.md#operations-status)
 
 ![Status, lifecycle timeline and coupon ladder](img/designer/38-family-operations.jpg)
 

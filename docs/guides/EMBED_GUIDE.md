@@ -49,6 +49,7 @@ What each screen contains is the **ViewModel**, the server's JSON of a screen al
 12. [Troubleshooting by code](#12-troubleshooting-by-code)
 13. [Drishti Elements libraries in your own app](#13-drishti-elements-libraries-in-your-own-app)
 14. [Moving an AG Grid Enterprise pivot app](#14-moving-an-ag-grid-enterprise-pivot-app)
+15. [Use Rachana and Elements in your own app, and GenUI](#15-use-rachana-and-elements-in-your-own-app-and-genui)
 
 ## 1. What you need
 
@@ -834,8 +835,65 @@ the release tree, is in its own docs: [USING.md](https://github.com/drishti-plat
 [contracts](https://github.com/drishti-platform/drishti-elements/blob/main/docs/CONTRACTS.md) a server answers (the live set, the errors, the
 data capabilities). A Drishti console serves the pinned copy under `/static/vendor/drishti-elements/<version>/` and its gallery at `/elements`.
 
+### Names a host page sees
+
+The console's scripts and styles keep out of a host's way: every static file we wrote is named `drishti_<name>` (`drishti_tables.js`,
+`drishti_tokens.css`), our scripts set one global, `window.Drishti`, custom events are `drishti:<what>`, custom elements `drishti-<name>`
+and storage keys start `drishti`. The names a published renderer or Elements version uses are its contract and stay as they are while it
+is served: the globals `drishtiModules`, `drishtiBi` and `drishtiGeo`, the classes and data- attributes of its markup, and the addresses
+it loads (`/static/js/<name>.js` and the embed routes' `/js/<name>.js` answer with the `drishti_` file). The developer guide
+([DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#static-asset-names-and-the-one-namespace)) has the rules.
+
 ## 14. Moving an AG Grid Enterprise pivot app
 
 Drishti Elements' grid takes AG Grid Enterprise-shaped options through its adapter (`createGridFromAgOptions`); the mapping, what is
 covered and what is not, is in its [MOVING_FROM_AG_GRID.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/MOVING_FROM_AG_GRID.md).
 
+## 15. Use Rachana and Elements in your own app, and GenUI
+
+This guide is Drishti's side: how a page of yours embeds a Drishti view. Using the screen language and the widget libraries in an application
+that has no Drishti server at all, and streaming generated screens into an app (GenUI), are the products' own guides, and they are the one
+home of those subjects:
+
+- [Rachana and Elements in your own app](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide3/docs/guides/IN_YOUR_APP.md): the
+  renderer and the libraries, from one import to a screen of your own, with no copy of them here.
+- [GenUI](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide3/docs/guides/GENUI.md): a screen streamed to the page as it is
+  composed, its links intact, and the tool suggestions for an assistant that composes it.
+
+Drishti uses the same renderer (section 6) and the same libraries (section 13); what Drishti adds is the server's views, its sign-in
+(section 4) and its data.
+
+## Drishti Elements in React, Vue and Angular
+
+Three host pages, one per framework, each embedding `<drishti-view>` for a signed-in user. They are the examples of [section 7.1](#71-the-sample-pages); `tests/test_embed_frameworks_browser.py` runs all three in Chromium.
+
+| Folder | Framework | How it runs without a build step |
+|---|---|---|
+| `react/` | React 18.3.1 | the UMD builds, `createElement` (the JSX is in the comments) |
+| `vue/` | Vue 3.5.43 | the runtime-only global build (no template compiler, so no `eval`), render functions |
+| `angular/` | Angular 18.2.14 | the ES-module builds through an import map and the JIT compiler, a standalone zoneless component |
+
+`host.js` (the token provider, the demo sign-in) and `sample.css` are shared.
+
+### Run them
+
+1. **Fetch the framework builds** (they are not in the repository; MIT; once, needs `node`/`npm` and the npm registry; offline afterwards):
+
+   ```bash
+   bash docs/guides/examples/embed/fetch-vendor.sh              # all three; or: --only react | vue | angular
+   ```
+
+   They are written to `docs/guides/examples/embed/vendor/` (git-ignored). The pages load them from there: no CDN.
+
+2. **Start Drishti with embedding on and the demo host**, as in [tools/elements-demo/README.md](../../tools/elements-demo/README.md) (register the host application with the scopes `embed:view embed:about`).
+
+3. **Open** `http://127.0.0.1:17968/samples/react/`, `/samples/vue/` or `/samples/angular/` (the demo host serves this folder at `/samples/`, under a strict content-security policy: no inline script and only the console beyond itself).
+
+The Angular page is the exception to "strict": Angular has no UMD build, so it needs an inline import map and the JIT compiler (`'unsafe-eval'`); the demo host relaxes its policy for `/samples/angular/` alone. A real Angular application is built ahead of time (`ng build`) and needs neither: the component and its template are the same (`schemas: [CUSTOM_ELEMENTS_SCHEMA]`).
+
+### What each page shows
+
+* The page's own box for an entity id (the host decides what a pick means; the element just draws it).
+* The view (`<drishti-view>`), with its **About this page** side sheet, with the page's own live indicator (the `drishti:state` event) and a masked-fields badge (`drishti:masked`).
+
+Events with a colon are bound with `addEventListener` in all three (Vue and Angular read the colon in a template), in `onMounted`, `ngAfterViewInit` or an effect.

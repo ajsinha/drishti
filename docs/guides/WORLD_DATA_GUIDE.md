@@ -2045,7 +2045,7 @@ A counterparty's `ECONOMY` is a link column of its data contract ([`config/packs
 The economy record takes the IMF series' latest *actual* year for debt, never a projection.
 
 Further: the [Economies primer](../knowledge/world.md#2-economies) and the pack's guide,
-[world-economy.md](../../modules/economy/packs/world-economy/guides/world-economy.md).
+[world-economy.md](#world-economy-pack).
 
 ### Step 2 · Its outlook, its peers and who governs it
 
@@ -2116,7 +2116,7 @@ classes is keyed by one ticker: `USEQ GOOGL` is *Alphabet Inc.*, CIK `0001652044
 The ratios worked out on the page (net margin, revenue growth) and a sector's totals with the currency rule are
 [the groupings tutorial, steps 4 and 5](bi/GROUPINGS_AND_ANALYTICS.md#step-4--a-sector-and-the-currency-rule).
 
-Further: the pack's guide, [us-equities.md](../../modules/capital-markets/packs/us-equities/guides/us-equities.md).
+Further: the pack's guide, [us-equities.md](#the-us-equities-pack).
 
 #### Part C · Funds and ETFs
 
@@ -2599,7 +2599,7 @@ us-equities company `AAPL` (Part B) and to 949 ISINs.
 How a group is computed from its entities, every group and the type-ahead, and a country's entities are
 [the groupings tutorial, steps 1 to 3](bi/GROUPINGS_AND_ANALYTICS.md#step-1--an-ownership-group-from-its-entities).
 
-Further: the pack's guide, [gleif.md](../../config/packs/core/gleif/guides/gleif.md).
+Further: the pack's guide, [gleif.md](#the-gleif-pack).
 
 #### Part E · News and markets
 
@@ -2643,7 +2643,7 @@ in *(snapshot captured <date>)* and the quote and headline pages show a **Snapsh
 *off (served from the snapshot)*, or *off (offline mode)* on the quick-start server. Turning them on (`DRISHTI_NEWS_ENABLED=true`,
 `DRISHTI_YFINANCE_ENABLED=true`) sends each name and ticker you open to Google and Yahoo.
 
-Further: the pack's guide, [news-and-markets.md](../../modules/economy/packs/news-and-markets/guides/news-and-markets.md);
+Further: the pack's guide, [news-and-markets.md](#the-news-and-markets-pack-sample);
 holding the news in memory only is [tutorial 16, Part D](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-d--news-held-in-memory-only).
 
 ### Next steps
@@ -2942,3 +2942,1127 @@ More: [section 7](../guides/WORLD_DATA_GUIDE.md#7-changing-what-is-pulled).
 - [External data](../guides/WORLD_DATA_GUIDE.md): write a feed of your own.
 - [Data lake and data load](../guides/DATA_LAKE_GUIDE.md): the lakes the feeds load.
 - [Access model](../architecture/ACCESS_MODEL.md): modules, lenses and functions.
+
+## The gleif pack
+
+Legal Entity Identifiers (LEI) and **who owns whom**, from GLEIF: 9,937 legal entities in 590 ownership groups across
+133 countries, retrieved from GLEIF's golden copy of 2026-10-25. The groups are those of the us-equities companies (their
+ultimate parent with every entity it consolidates) and of 107 large financial institutions: the FSB's global systemically
+important banks, other large banks, insurers, asset managers and market infrastructures. Everything is published data under
+**CC0**, not samples.
+
+The pack is **off by default**: add it to the packs a server loads, `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif`
+(it needs no other pack; with `us-equities` on, a company and its LEI record link both ways).
+
+![The entity page: JPMorgan Chase & Co. with a child opened beside its children table](../../config/packs/core/gleif/guides/images/gleif-entity.jpg)
+
+### What you can open
+
+| Type | Opens | Examples |
+|---|---|---|
+| `LEI <code>` | an entity: key facts, addresses, registration and renewal (late renewal flagged), its parents chain (an org chart from the ultimate parent down to it), its children (a click opens the child's summary beside), BICs and ISINs, the us-equities company | `LEI 8I5DZWZKVSZI1NUHU748`, `LEI HWUPKR0MPOU8FGXBT394` |
+| `LEIG <code>` | a group, computed from the entities when asked: the ultimate parent with its whole tree (a tree grid, or an org chart), counts by country and legal form, no member cap; a click on a member opens it beside | `LEIG 8I5DZWZKVSZI1NUHU748`; `LEIG ALL` lists every group and searches the entities |
+| `LEIC <country>` | a country, computed from the entities when asked: every entity of the pack there, the groups present, legal forms and cities | `LEIC US`, `LEIC GB`; `LEIC ALL` lists every country |
+| `LEIR <id>` | one relationship: child, parent, direct or ultimate, status, periods, accounting standard | `LEIR LEIREL-<child LEI>-DIRECT`, from an entity |
+| `LEIM <identifier>` | an ISIN, BIC or MIC and the LEI it maps to | a BIC or ISIN from an entity page |
+
+A bare LEI (twenty characters) opens its entity.
+
+### The data
+
+| Kind | Documents | What one holds |
+|---|---|---|
+| `lei-entity` | 9,937 | legal name and other names, legal form (ELF), category, jurisdiction, legal and headquarters addresses, entity and registration status, created, first registered, last updated, next renewal (late renewals flagged), the managing LOU, BICs, the ISIN count, OpenCorporates id, the direct and ultimate parent, the parents chain, the direct children, reporting exceptions |
+| `lei-relationship` | 9,347 | one consolidation relationship of an entity to its direct parent (or, when none is in the pack, its ultimate parent): status, relationship and accounting periods, accounting standard, the record's registration and renewal |
+| `lei-group` | computed (590 and `ALL`) | an ultimate parent with its tree (a tree table), every member, counts by country and legal form; `ALL` lists the groups. Computed from the entities when asked by the derived connector `gleif-groupings` (since 2.9.2): nothing is stored |
+| `lei-country` | computed (133 and `ALL`) | the entities of one legal-address country, the groups present, legal forms and cities; `ALL` lists the countries. Computed like the groups |
+| `lei-mapping` | 3,381 | an identifier and its LEI: every BIC and MIC of the entities, and up to 5 ISINs of each seed entity |
+
+**The cap.** The committed data keeps at most 50 entities a group, the nearest levels first (the size of the snapshot); 86 groups are
+larger in GLEIF and their page says so (`MEMBERS_IN_GLEIF`, from the ultimate parent's `GLEIF_GROUP_SIZE`). The computation itself has no
+cap: a group page counts and lists every entity of the group the lake holds. The formulas are in
+[README.md](bi/README.md). A wider build of any group goes to the data folder (*Refreshing the data*). The groups are built from the
+consolidation relationships only (`IS_DIRECTLY_CONSOLIDATED_BY`, `IS_ULTIMATELY_CONSOLIDATED_BY`); fund management, sub-fund, feeder
+and branch relationships are not ownership and are left out. A member whose direct parent is not reported hangs under the ultimate
+parent in the tree. An entity with no reported parent may carry a reporting exception (controlled by natural persons, not
+consolidated, no known person) which its page shows.
+
+**The ownership trees.** Both hierarchies are drawn by drishti-tree (Drishti Elements), from the server's rows, every name a link.
+An entity's **parents chain** (`PAR`, F2) is one chain: the ultimate parent at the top, each parent over the one below it, the entity
+itself at the foot (highlighted), so it opens as an **org chart**; **Tree grid** shows the same rows as a table with the relationship,
+the level and the LEI. A group's **tree** (`TREE`, F2) branches, so it opens as the **tree grid** (two levels open, a filter that keeps
+the ancestors of a match), with **Org chart** a click away. A relationship (`LEIR`) is one child and one parent, shown as the pair.
+
+**Late renewal.** An LEI must be renewed every year. A registration whose next renewal date has passed, or which GLEIF lists as
+`LAPSED`, is flagged *Late* on its page, in its group and in its country; 2,288 of the pack's entities are late today.
+
+Segments of the groups: US equities 485, Bank 66, G-SIB 17, Insurer 16, Asset manager 7, Market infrastructure 4.
+
+**Where the data lives.** The documents are committed as Drishti's standard test data: one gzipped JSON Lines snapshot per
+kind, `data/testdata/gleif/<kind>/<kind>.<date>.jsonl.gz`, listed in `data/testdata/testdata.yaml`. `python3 tools/drishti.py lake demo`
+(or `python3 tools/build_demo_lakes.py`) builds them into the demo lake, the same documents on every business day it holds, and the
+pack's Delta connector `gleif-store` serves them. Nothing is served by the demo connector: a server with `DRISHTI_DEMO_ENABLED=false`
+opens every page of the pack from the lake. The pack's `samples/` folder keeps only a few reference documents for this guide and the
+README.
+
+### Links
+
+An entity links to its direct and ultimate parent, its group, its country, its parent relationship (F7) and its identifiers; a relationship to
+its child, parent and group; a group to its ultimate parent's entity and its country; an identifier to its entity. With the
+`us-equities` pack on, an entity whose LEI is a us-equities company's links to the company (`486` do), and the company's page links
+back to the LEI record (its LEI in the key facts, and F5). A `core` legal entity or counterparty whose LEI matches links too
+(0 today: core's entities are a fictional bank's).
+
+### Data sources and licence
+
+| Source | What | Licence |
+|---|---|---|
+| GLEIF LEI API (`api.gleif.org/api/v1`): `lei-records`, `entity-legal-forms`, `countries`, `lei-issuers` | each entity's level 1 record; legal form names; country names; LOU names | CC0 1.0 |
+| GLEIF golden copy, level 2 (`goldencopy.gleif.org`): relationship records and reporting exceptions | who consolidates whom, direct and ultimate; why a parent is not reported | CC0 1.0 |
+| GLEIF mapping files (`mapping.gleif.org`): BIC, ISIN, MIC, OpenCorporates to LEI | identifiers of the entities | CC0 1.0 (BIC mapping with SWIFT, ISIN with ANNA) |
+
+GLEIF publishes the LEI data free of charge under CC0 1.0: anyone may use it without restriction. **Attribution is appreciated**:
+"Source: GLEIF, the Global Legal Entity Identifier Foundation, LEI data, retrieved 2026-10-25"
+([GLEIF's terms](https://www.gleif.org/en/meta/lei-data-terms-of-use)).
+
+### Refreshing the data
+
+The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guide: `docs/guides/WORLD_DATA_GUIDE.md`, gleif):
+
+```bash
+python3 tools/drishti.py feed status gleif                       # its last runs: last success, rows, failures
+python3 tools/drishti.py feed run gleif --dry-run            # what would be fetched; changes nothing
+python3 tools/drishti.py feed run gleif --snapshot                      # the network (about 90 MB of golden copy, 45 MB of mapping files, 70 API calls), then make.py and --check
+python3 tools/drishti.py feed run gleif --snapshot --offline            # rebuild the pack from the cache only
+python3 tools/drishti.py feed run gleif --snapshot -- --scope GROUP:<LEI>,COUNTRY:LU,NAME:allianz   # a wider build in the data folder, not this pack
+```
+
+`python3 tools/drishti.py feed run gleif` (Linux, macOS) and `py -3.13 tools\drishti.py feed run gleif` (Windows) run the same command. Underneath it are the generator's two
+steps, which can also be run by hand:
+
+```bash
+python3 tools/packgen/gleif/fetch.py --cache data/cache/gleif     # the network
+python3 tools/packgen/gleif/make.py --cache data/cache/gleif      # writes data/testdata/gleif/, samples/ and this guide
+python3 tools/packgen/gleif/make.py --check                       # no network: the pack matches its generator
+```
+
+After a refresh, rebuild the lake so the server reads the new snapshot: `python3 tools/drishti.py lake demo` (or
+`python3 tools/build_demo_lakes.py`), then restart the server or let it pick the tables up at its next refresh.
+
+The picture above is made by `tools/packgen/gleif/shot.py` (its own scratch server and console on 18760 and 18761).
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `LEI` | `lei-entity` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `drishti.py feed run gleif` | `data/testdata/gleif/lei-entity/` → `lake demo` → connector `gleif-store` |
+| `LEIG` | `lei-group` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](bi/README.md) | nothing to load: computed from its inputs when asked |
+| `LEIR` | `lei-relationship` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `drishti.py feed run gleif` | `data/testdata/gleif/lei-relationship/` → `lake demo` → connector `gleif-store` |
+| `LEIC` | `lei-country` | computed by Drishti: the derived connector gleif-groupings over the kind lei-entity; see the [Groupings and analytics guide](bi/README.md) | nothing to load: computed from its inputs when asked |
+| `LEIM` | `lei-mapping` | external: GLEIF LEI API: LEI records, legal forms, countries, LEI issuers (CC0 1.0 (attribution appreciated)); GLEIF golden copy, level 2: relationship records and reporting exceptions (CC0 1.0 (attribution appreciated)); GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI (CC0 1.0) — refreshed by `drishti.py feed run gleif` | `data/testdata/gleif/lei-mapping/` → `lake demo` → connector `gleif-store` |
+
+#### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| GLEIF LEI API: LEI records, legal forms, countries, LEI issuers | https://api.gleif.org/api/v1 | CC0 1.0 (attribution appreciated) | no | `python3 tools/drishti.py feed run gleif -- api` |
+| GLEIF golden copy, level 2: relationship records and reporting exceptions | https://goldencopy.gleif.org | CC0 1.0 (attribution appreciated) | no | `python3 tools/drishti.py feed run gleif -- golden` |
+| GLEIF mapping files: BIC, ISIN, MIC and OpenCorporates to LEI | https://mapping.gleif.org | CC0 1.0 | no | `python3 tools/drishti.py feed run gleif -- mapping` |
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status gleif                               # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run gleif --dry-run                        # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run gleif                                  # pull today's data and load it into the lake `referencelake` (what the daily schedule runs)
+python3 tools/drishti.py feed run gleif --snapshot                       # refresh the committed pack instead: data/testdata/gleif, samples/ and this guide, then make.py --check
+python3 tools/drishti.py feed run gleif --snapshot --offline             # the same from the download cache only
+python3 tools/drishti.py feed run gleif -- --scope NAME:allianz,CAP:200  # a widened pull of more entities
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run gleif` on Linux and macOS, `py -3.13 tools\drishti.py feed run gleif` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
+## The funds pack
+
+The **200 largest US mutual funds and ETFs by net assets** with their holdings, from SEC public data: each fund's Form N-PORT
+report (holdings with CUSIP, ISIN and LEI, derivatives and their counterparties, three months of flows and returns), its Form N-CEN
+census (ETF facts, adviser, custodian, auditor, authorised participants) and its prospectus risk/return summary (expense ratio,
+turnover, calendar-year returns). Everything is published data retrieved on 2026-10-26; the N-PORT reports are dated 2026-05-31 to 2026-07-31.
+No prices or NAV history. The full guide, with the data contract of every kind and where the data comes from, is
+`docs/guides/WORLD_DATA_GUIDE.md`; the world data tutorial, Part C walks through it.
+
+The pack is **off by default**: add it to the packs a server loads, after `us-equities` (its holdings link to the companies there):
+`DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds`.
+
+![The FUND page: Invesco QQQ's fact sheet, its look-through and its index tabs](../../modules/capital-markets/packs/funds/guides/images/funds-fund.jpg)
+
+### What you can open
+
+| Type | Opens | Examples |
+|---|---|---|
+| `FUND <ticker>` | a fund or ETF: the fact sheet; tabs **Look-through holdings** and **vs its index** | `FUND QQQ`, `FUND VTI` (also `FUND VTSAX`: any share class), `FUND SPY`, `FUND AGG` |
+| `FUND <field>=<value>` | a search of the funds | `FUND TYPE=ETF`, `FUND EXPENSE_RATIO<0.05`, `FUND INDEX_ID=SP500` |
+| `HELD <ticker>` | the funds holding a us-equities company, by value | `HELD AAPL`, `HELD NVDA` |
+| `TRACK <index>` | the funds tracking a us-equities index | `TRACK SP500`, `TRACK NDX`, `TRACK DJIA` |
+
+With `us-equities` on, a company page (`USEQ AAPL`) has the tabs **Held by funds** and **Fund ownership**, and an index page
+(`IDX SP500`) lists the ETFs and funds tracking it.
+
+### The data
+
+| Kind | Documents | What one holds |
+|---|---|---|
+| `fund` | 200 | identity and share classes, census facts, fees and returns, flows, concentration, holdings by asset type, issuer type, country and SIC division, derivatives and counterparties, the 600 largest holdings (with the totals of the rest), the fund against its index |
+| `fund-holder` | 586 | one us-equities company: every fund that holds it, its weight, value and shares in each |
+| `index-funds` | 3 | one us-equities index: the funds that track it, with net assets, expense ratio and active share |
+
+Holdings kept: 73,577 of 411,796 (a fund keeps its 600 largest; the reverse look-through counts every one). Funds by type: Mutual fund 117, ETF 50, Mutual fund with an ETF share class 31, ETF (unit investment trust) 2.
+
+**Where the data lives.** The documents are committed as Drishti's standard test data, gzipped JSON Lines under
+`data/testdata/funds/<kind>/` (the fund kind in parts of about 1.2 MB, 5.7 MB in all), listed in `data/testdata/testdata.yaml`.
+`python3 tools/drishti.py lake demo` (or `python3 tools/build_demo_lakes.py`) builds them into the demo lake and the pack's Delta
+connector `funds-store` serves them; nothing is served by the demo connector. `samples/` keeps a few reference documents.
+
+### Data sources and licences
+
+| Source | What | Licence |
+|---|---|---|
+| SEC Form N-PORT data sets (quarterly, about 450 MB) | holdings, derivatives, counterparties, flows, monthly returns | Public domain (U.S. Government work) |
+| SEC Form N-CEN data sets (quarterly, about 6 to 16 MB) | ETF facts, service providers, authorised participants, share classes | Public domain |
+| SEC mutual fund prospectus risk/return summary data sets (quarterly) | expense ratio, management fee, turnover, calendar-year returns | Public domain |
+| SEC `company_tickers_mf.json` and `company_tickers_exchange.json` | share class tickers; a unit investment trust's ticker | Public domain |
+| Nasdaq Trader symbol directory | which tickers are ETFs, and where they list | Public directory file |
+| GLEIF golden copy, level 2 relationships | managed by, sub-fund of, feeder to | CC0 1.0 |
+
+The SEC asks for a descriptive User-Agent with a contact and at most 10 requests a second; the funds feed uses the same setting
+as the us-equities pack (`DRISHTI_FEEDS_USER_AGENT`). **Not included:** index weights (proprietary to the index providers; the index tab
+computes market-cap weights from SEC data and says so), prices and NAV history, non-US funds and money market funds (they file Form
+N-MFP, not N-PORT).
+
+### Refreshing the data
+
+```bash
+python3 tools/drishti.py feed status funds                 # its last runs: last success, rows, failures
+python3 tools/drishti.py feed run funds --dry-run      # what would be fetched; changes nothing
+python3 tools/drishti.py feed run funds --snapshot                # the downloads (about 700 MB, kept in the data folder), then make.py and --check
+python3 tools/packgen/funds/make.py --check              # no network: the pack matches its generator
+```
+
+`python3 tools/drishti.py feed run funds` (Linux, macOS) and `py -3.13 tools\drishti.py feed run funds` (Windows) run the same script. The downloads stay in the data folder
+(`<data>/datafeeds/sources/cache/funds`), never in git. After a refresh, rebuild the lake: `python3 tools/drishti.py lake demo`.
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `FUND` | `fund` | external: SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) (public domain (US Government work); SEC fair access policy); SEC Form N-CEN data sets (ETF facts, service providers, authorised participants) (public domain (US Government work); SEC fair access policy); SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns) (public domain (US Government work); SEC fair access policy); SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json) (public domain (US Government work)); Nasdaq Trader symbol directory (which tickers are ETFs) (public symbol directory files); GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to) (CC0 1.0) — refreshed by `drishti.py feed run funds` | `data/testdata/funds/fund/` → `lake demo` → connector `funds-store` |
+| `HELD` | `fund-holder` | external: SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) (public domain (US Government work); SEC fair access policy) — refreshed by `drishti.py feed run funds` | `data/testdata/funds/fund-holder/` → `lake demo` → connector `funds-store` |
+| `TRACK` | `index-funds` | external: SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) (public domain (US Government work); SEC fair access policy); SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns) (public domain (US Government work); SEC fair access policy) — refreshed by `drishti.py feed run funds` | `data/testdata/funds/index-funds/` → `lake demo` → connector `funds-store` |
+
+#### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| SEC Form N-PORT data sets (holdings, derivatives, counterparties, flows, monthly returns) | https://www.sec.gov/data-research/sec-markets-data/form-n-port-data-sets | public domain (US Government work); SEC fair access policy | no | `python3 tools/drishti.py feed run funds -- nport` |
+| SEC Form N-CEN data sets (ETF facts, service providers, authorised participants) | https://www.sec.gov/data-research/sec-markets-data/form-n-cen-data-sets | public domain (US Government work); SEC fair access policy | no | `python3 tools/drishti.py feed run funds -- ncen` |
+| SEC mutual fund prospectus risk/return summary data sets (expense ratio, turnover, calendar-year returns) | https://www.sec.gov/data-research/sec-markets-data/mutual-fund-prospectus-riskreturn-summary-data-sets | public domain (US Government work); SEC fair access policy | no | `python3 tools/drishti.py feed run funds -- rr` |
+| SEC ticker files (company_tickers_mf.json, company_tickers_exchange.json) | https://www.sec.gov/file/company-tickers | public domain (US Government work) | no | `python3 tools/drishti.py feed run funds -- tickers` |
+| Nasdaq Trader symbol directory (which tickers are ETFs) | https://www.nasdaqtrader.com/dynamic/SymDir/ | public symbol directory files | no | `python3 tools/drishti.py feed run funds -- nasdaq` |
+| GLEIF golden copy level 2: fund relationships (managed by, sub-fund of, feeder to) | https://goldencopy.gleif.org | CC0 1.0 | no | `python3 tools/drishti.py feed run funds -- gleif` |
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status funds                                  # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run funds --dry-run                           # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run funds                                     # pull today's data and load it into the lake `capitalmarket` (what the daily schedule runs)
+python3 tools/drishti.py feed run funds --snapshot                          # refresh the committed pack instead: data/testdata/funds, samples/, the README and this guide, then make.py --check
+python3 tools/drishti.py feed run funds --snapshot --offline                # the same from the downloads only (about 700 MB in <data>/datafeeds/sources/cache/funds)
+python3 tools/drishti.py feed run funds -- --scope FUNDS:300,HOLDINGS:1000  # a widened pull of more funds and holdings
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run funds` on Linux and macOS, `py -3.13 tools\drishti.py feed run funds` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
+## The us-equities pack
+
+Public data on the companies of the **Dow Jones Industrial Average, the Nasdaq-100 and the S&P 500**: 586 companies with their
+SEC filings, ten years of annual financials from their XBRL filings, their LEI, their SIC sector and the indexes they belong to.
+Everything here is published data, not samples, retrieved on 2026-10-24; prices are not included (see *Prices: internal use only*).
+
+The pack is **off by default**: add it to the packs a server loads, `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities`
+(it needs no other pack; with `world-economy` and `news-and-markets` on, its companies link to them).
+
+![The company page: Apple Inc., with its latest filing opened beside the filings](../../modules/capital-markets/packs/us-equities/guides/images/us-equities-company.jpg)
+
+### What you can open
+
+| Type | Opens | Examples |
+|---|---|---|
+| `USEQ <ticker>` | a company: key facts, financials table and chart, recent filings (a click opens one beside), index memberships | `USEQ AAPL`, `USEQ JPM`, `USEQ BRK-B` |
+| `IDX <index>` | an index's members, filterable; a click opens the member's summary beside | `IDX SP500`, `IDX NDX`, `IDX DJIA`, `IDX BANKS-US`, `IDX BANKS-CA`, `IDX BANKS-UK` |
+| `SIC <code>` | a sector (Standard Industrial Classification), computed from the companies when asked: its companies by revenue, totals of the USD reporters | `SIC 3674`, `SIC 6021`; `SIC ALL` lists every code |
+| `EDGAR <form>` | the filings browser: the latest filings, all or of one form; a click opens the filing beside | `EDGAR ALL`, `EDGAR 10-K`, `EDGAR 8-K`, `EDGAR 4`, `EDGAR DEF-14A` |
+| `FILING <accession>` | one filing: form, dates, 8-K items and its EDGAR links | from a company's filings |
+| `FACT <ticker>-<concept>` | one financial concept of a company over ten fiscal years | `FACT AAPL-REVENUE`, `FACT MSFT-NET-INCOME` |
+| `PXH PX-<ticker>` | the price history, **live only, off as shipped** | `PXH PX-AAPL` |
+
+The concepts are `REVENUE`, `NET-INCOME`, `ASSETS`, `LIABILITIES`, `EQUITY`, `EPS-DILUTED` and `SHARES-OUTSTANDING`.
+
+### The data
+
+| Kind | Documents | What one holds |
+|---|---|---|
+| `us-company` | 586 | CIK, ticker, exchange and listing market, SIC with its description and division, state of incorporation, fiscal year end, LEI, headquarters, founded, website, index memberships, the latest year's figures, ten years of financials, the latest 20 filings |
+| `index-membership` | 6 | the members of the S&P 500, Nasdaq-100, Dow and Russell 2000 as their tracking ETF (SPY, QQQ, DIA, IWM) reports holding them, and the bank lists, with their sector and latest revenue; members by sector |
+| `sic-sector` | computed (194 codes and `ALL`) | the companies of one SIC code ranked by revenue; `ALL` lists every code. Computed from the companies when asked by the derived connector `us-equities-groupings` (since 2.9.2): nothing is stored |
+| `filing-feed` | 6 | the latest 300 filings of the companies, all forms or one |
+| `filing` | 11,691 | one filing: form, filing and report dates, document, 8-K items, links to the document and its EDGAR index |
+| `financial-fact` | 4,026 | one concept of one company: up to ten annual values with the change, the XBRL tag and the filing each came from |
+| `price-history` | live only | the quote, a year of daily prices and the analytics computed from them when read (returns, volatility, drawdown, beta against the benchmark), from the price connector when a site switches it on; nothing is stored |
+
+Members per index or list: Dow Jones Industrial Average 30, Nasdaq-100 99, S&P 500 495, Major US banks 39, Canadian banks 6, Major UK banks 4. The bank lists (BANKS-US, BANKS-CA, BANKS-UK) are kept by Drishti (`LISTS` in
+`tools/packgen/us_equities/fetch.py`) and hold banks that file with the SEC. Annual values are those of the annual reports (10-K, or
+a foreign filer's 20-F or 40-F, in the currency it reports in: `CURRENCY`; totals over many companies add USD reporters only): a flow (revenue, net income, EPS) for a period of a
+year, a balance (assets, liabilities, equity) at the year end, the latest filing winning when a figure was restated. A fiscal year is the
+calendar year its period ends in. Where a filer reports no total assets for a year, they are its total equity and liabilities; where it reports no
+total liabilities line, it is derived as liabilities and equity less total
+equity. Banks and insurers report revenue under several tags; where none of the standard ones is filed the revenue is left empty.
+
+**Where the data lives.** The documents are committed as Drishti's standard test data: one gzipped JSON Lines snapshot per
+kind, `data/testdata/us-equities/<kind>/<kind>.<date>.jsonl.gz`, listed in `data/testdata/testdata.yaml`. `python3 tools/drishti.py lake demo`
+(or `python3 tools/build_demo_lakes.py`) builds them into the demo lake, the same documents on every business day it holds, and the
+pack's Delta connector `us-equities-store` serves them. Nothing is served by the demo connector: a server with `DRISHTI_DEMO_ENABLED=false`
+opens every page of the pack from the lake. The pack's `samples/` folder keeps only a few reference documents for this guide and the
+README.
+
+### Links
+
+A company links to its filings, its financial facts, its SIC sector, its indexes, the United States economy (`world-economy`, for a
+company with a US business address), its market watch page (`news-and-markets`, for the twenty companies there) and to a `core`
+legal entity whose LEI is the company's (0 match today: core's entities are a fictional bank's). A filing and a fact link
+back to their company; an index and a sector to their members. With the `gleif` pack on, the company's LEI (key facts, and F5)
+opens its LEI record, and the record links back to the company.
+
+### Data sources and licences
+
+| Source | What | Licence |
+|---|---|---|
+| SEC EDGAR: `company_tickers_exchange.json`, `submissions/CIK##########.json`, `api/xbrl/companyfacts` | tickers, CIK, names, SIC, addresses, filings (metadata and links only), annual XBRL facts | Public domain (U.S. Government work). Fetched under the SEC's fair access policy: a descriptive User-Agent with a contact, under 10 requests a second |
+| Nasdaq Trader symbol directory (`nasdaqlisted.txt`, `otherlisted.txt`) | the listing market | Public directory file |
+| GLEIF LEI records | the LEI, legal name and registration status | CC0 1.0 |
+| SEC Form N-PORT of SPY, QQQ, DIA and IWM (read from the funds pack's download cache) | index membership: the stocks each tracking ETF holds on its report date | Public domain (U.S. Government work) |
+| Wikidata | headquarters, founded, website, LEI, the date a member joined its index | CC0 1.0 |
+
+**Not included:** index weights and index levels (proprietary to S&P Dow Jones Indices and Nasdaq), GICS sectors (proprietary to MSCI and
+S&P; the pack uses SIC, which the SEC publishes) and prices. Index membership is what the index's tracking ETF reported holding on
+its N-PORT report date (each index page names the fund, the date and the filing), so it lags a change by up to a quarter; a company
+since taken private or merged is listed in the index page's note, not as a member. Until 2.9.3 membership came from Wikidata, whose
+lists were out of date (the S&P 500 lacked Exxon Mobil, BlackRock and about 80 others); the companies Wikidata still lists but no
+tracking ETF holds stay in the pack, in no index.
+
+### Prices: internal use only
+
+!!! warning "Internal use only"
+    Free price feeds forbid redistribution. The pack ships **no price data**: `price-history` is read live by the `us-equities-prices`
+    connector (Yahoo Finance's public chart endpoint, the yfinance plugin), **off as shipped**. Switch it on only for internal
+    demonstrations (`DRISHTI_US_EQUITIES_PRICES_ENABLED=true`, or Admin, Connectors); every ticker you open is then sent to Yahoo. Raise
+    it before any client or external use, as for the IMF data of the world-economy pack.
+
+### Refreshing the data
+
+The pack's data feed fetches, builds and checks in one step, and loads its lake every day (guide: `docs/guides/WORLD_DATA_GUIDE.md`, us-equities):
+
+```bash
+python3 tools/drishti.py feed status us-equities                 # its last runs: last success, rows, failures
+python3 tools/drishti.py feed run us-equities --dry-run      # what would be fetched; changes nothing
+python3 tools/drishti.py feed run us-equities --snapshot                # the network (about 1,100 SEC and 500 GLEIF calls), then make.py and --check
+python3 tools/drishti.py feed run us-equities --snapshot -- --scope TSLA,FILINGS:40,YEARS:15   # a wider build in the data folder, not this pack
+```
+
+`python3 tools/drishti.py feed run us-equities` (Linux, macOS) and `py -3.13 tools\drishti.py feed run us-equities` (Windows) run the same command. Underneath it are the
+generator's two steps, which can also be run by hand:
+
+```bash
+python3 tools/packgen/us_equities/fetch.py --cache data/cache/us-equities     # the network: about 1,100 SEC requests and 500 GLEIF lookups
+python3 tools/packgen/us_equities/make.py --cache data/cache/us-equities      # writes data/testdata/us-equities/, samples/ and this guide
+python3 tools/packgen/us_equities/make.py --check                              # no network: the pack matches its generator
+```
+
+`fetch.py` keeps what it downloaded (delete a file to fetch it again) and reduces each company's XBRL facts to the annual values of the
+seven concepts, so the cache stays small. Prices are never part of a refresh into the pack: the script's `prices` source writes a
+snapshot to the data folder only (internal use only). Set `DRISHTI_FEEDS_USER_AGENT` to your own name and contact before running it.
+
+After a refresh, rebuild the lake so the server reads the new snapshot: `python3 tools/drishti.py lake demo` (or
+`python3 tools/build_demo_lakes.py`), then restart the server or let it pick the tables up at its next refresh.
+
+The picture
+above is made by `tools/packgen/us_equities/shot.py` (its own scratch server and console on 18742 and 18743).
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `USEQ` | `us-company` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy); Wikidata: index membership and company facts (CC0 1.0); Nasdaq Trader symbol directory (public symbol directory files); GLEIF LEI records (each company's LEI) (CC0 1.0) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/us-company/` → `lake demo` → connector `us-equities-store` |
+| `IDX` | `index-membership` | external: Wikidata: index membership and company facts (CC0 1.0) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/index-membership/` → `lake demo` → connector `us-equities-store` |
+| `SIC` | `sic-sector` | computed by Drishti: the derived connector us-equities-groupings over the kind us-company; see the [Groupings and analytics guide](bi/README.md) | nothing to load: computed from its inputs when asked |
+| `EDGAR` | `filing-feed` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/filing-feed/` → `lake demo` → connector `us-equities-store` |
+| `FILING` | `filing` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/filing/` → `lake demo` → connector `us-equities-store` |
+| `FACT` | `financial-fact` | external: SEC EDGAR: tickers, submissions, XBRL company facts (public domain (US Government work); EDGAR fair access policy) — refreshed by `drishti.py feed run us-equities` | `data/testdata/us-equities/financial-fact/` → `lake demo` → connector `us-equities-store` |
+| `PXH` | `price-history` | external: Yahoo Finance daily prices (the us-equities-prices connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `drishti.py feed run us-equities` | read live by connector `us-equities-prices` (plugin `None`) when it is switched on; nothing is committed |
+
+#### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| SEC EDGAR: tickers, submissions, XBRL company facts | https://data.sec.gov | public domain (US Government work); EDGAR fair access policy | no | `python3 tools/drishti.py feed run us-equities -- sec` |
+| Wikidata: index membership and company facts | https://query.wikidata.org/sparql | CC0 1.0 | no | `python3 tools/drishti.py feed run us-equities -- wikidata` |
+| Nasdaq Trader symbol directory | https://www.nasdaqtrader.com/dynamic/SymDir/ | public symbol directory files | no | `python3 tools/drishti.py feed run us-equities -- nasdaq` |
+| GLEIF LEI records (each company's LEI) | https://api.gleif.org/api/v1 | CC0 1.0 | no | `python3 tools/drishti.py feed run us-equities -- gleif` |
+| Yahoo Finance daily prices (the us-equities-prices connector) | https://finance.yahoo.com | Yahoo terms: personal use, no redistribution | **yes** | `python3 tools/drishti.py feed run us-equities -- prices` |
+
+**Internal only:** Yahoo Finance daily prices (the us-equities-prices connector). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status us-equities                          # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run us-equities --dry-run                   # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run us-equities                             # pull today's data and load it into the lake `capitalmarket` (what the daily schedule runs)
+python3 tools/drishti.py feed run us-equities --snapshot                  # refresh the committed pack instead: data/testdata/us-equities, samples/ and this guide, then make.py --check
+python3 tools/drishti.py feed run us-equities --snapshot --offline        # the same from the download cache only
+python3 tools/drishti.py feed run us-equities -- --scope TSLA,FILINGS:40  # a widened pull of more companies and filings
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run us-equities` on Linux and macOS, `py -3.13 tools\drishti.py feed run us-equities` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
+## The central-banks pack
+
+**Policy rates and the market series around them**, part of the **economy module**'s public sector (the Public sector lens): FRED (the Federal
+Reserve Bank of St. Louis) for the Federal Reserve and US markets, the Bank of Canada's Valet API for Canada. The central-banks feed pulls
+them daily into the `worldlake` lake.
+
+| Type | Shows |
+|---|---|
+| `CBANK CBANK-FED <GO>` | the Federal Reserve: the target range's upper limit, the date and size of its last move, two years of the policy rate, every series of the bank with its latest value and change; its press releases one link away |
+| `CBANK CBANK-BOC <GO>` | the Bank of Canada: the target for the overnight rate, CORRA, Canada's 2- and 10-year yields, USD/CAD |
+| `CBSER CBSER-FRED-DGS10 <GO>` | one series: its history, the latest value, the change on the day and the year, the window's high and low |
+| `CBNK <GO>` | the pack's overview |
+
+**FRED needs a free API key**: register at https://fred.stlouisfed.org/docs/api/api_key.html and set `DRISHTI_FRED_API_KEY` where the feed
+runs (never in a file). Without it the feed exits 3 and says so; the Bank of Canada's series need no key. The series are the feed's
+selection (`config/feeds/central-banks.yaml`); a series of FRED with a third-party copyright needs its own internal-only flag there. The
+domain, the lens, the feeds and their licences: the [Public sector guide](WORLD_DATA_GUIDE.md).
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `CBANK` | `central-bank` | external: FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) (FRED API terms; the default series are US government works (public domain)); Bank of Canada Valet API (Bank of Canada terms: free use with attribution) — refreshed by `drishti.py feed run central-banks` | the daily feed `central-banks` → `<data>/delta/worldlake/centralbank/central-bank/` (lake `worldlake`) → connector `centralbank-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `CBSER` | `rate-series` | external: FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) (FRED API terms; the default series are US government works (public domain)); Bank of Canada Valet API (Bank of Canada terms: free use with attribution) — refreshed by `drishti.py feed run central-banks` | the daily feed `central-banks` → `<data>/delta/worldlake/centralbank/rate-series/` (lake `worldlake`) → connector `centralbank-store`; nothing is committed but a few documents in `samples/` for the tests |
+
+#### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) | https://api.stlouisfed.org/fred | FRED API terms; the default series are US government works (public domain) | no | `python3 tools/drishti.py feed run central-banks` |
+| Bank of Canada Valet API | https://www.bankofcanada.ca/valet | Bank of Canada terms: free use with attribution | no | `python3 tools/drishti.py feed run central-banks` |
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status central-banks            # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run central-banks --dry-run     # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run central-banks               # pull today's data and load it into the lake `worldlake` (what the daily schedule runs)
+python3 tools/drishti.py feed run central-banks --load inbox  # the same through the data inbox (FRED needs DRISHTI_FRED_API_KEY; without it the Bank of Canada still loads)
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run central-banks` on Linux and macOS, `py -3.13 tools\drishti.py feed run central-banks` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
+<!-- /data-sections -->
+
+## The gdelt-events pack
+
+**What the world's news reported about each country**, from the GDELT Project's daily event files, part of the **economy module**'s public sector
+(the Public sector lens; the World lens shows it too). The gdelt-events feed reads each day's file once (about 7 MB zipped, streamed,
+never kept), reduces it to per-country aggregates and loads them into the `newslake` lake.
+
+| Type | Shows |
+|---|---|
+| `GDELT GDELT-USA <GO>` | the United States yesterday: events whose first actor is the US, mentions, average tone and its change on the 30-day window, Goldstein scale, the conflict share; tone by day; events by CAMEO category; the world map shaded by tone (a country opens its page); the most-mentioned stories, each a link |
+| `GDLT <GO>` | the pack's overview |
+
+**Reading it**: tone is GDELT's sentiment of the reporting articles (below zero, negative coverage), weighted by mentions; the Goldstein
+scale rates the event types from -10 (conflict) to +10 (cooperation); a country is the CAMEO country code of the event's first actor. The
+feed keeps 30 days of aggregates (`config/feeds/gdelt-events.yaml`). The domain, the lens, the feeds and their licences: the
+[Public sector guide](WORLD_DATA_GUIDE.md).
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `GDELT` | `event-country` | external: GDELT 1.0 daily event files (GDELT terms: free for any use with a citation) — refreshed by `drishti.py feed run gdelt-events` | the daily feed `gdelt-events` → `<data>/delta/newslake/gdelt/event-country/` (lake `newslake`) → connector `gdelt-store`; nothing is committed but a few documents in `samples/` for the tests |
+
+#### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| GDELT 1.0 daily event files | https://data.gdeltproject.org/events/ | GDELT terms: free for any use with a citation | no | `python3 tools/drishti.py feed run gdelt-events` |
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status gdelt-events                  # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run gdelt-events --dry-run           # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run gdelt-events                     # pull today's data and load it into the lake `newslake` (what the daily schedule runs)
+python3 tools/drishti.py feed run gdelt-events --since 2026-11-01  # read the GDELT days from this date (a run reads at most a week by default)
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run gdelt-events` on Linux and macOS, `py -3.13 tools\drishti.py feed run gdelt-events` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
+<!-- /data-sections -->
+
+## The national-statistics pack
+
+**Statistics Canada's headline statistics** by vector from its Web Data Service, part of the **economy module**'s public sector (the Public sector
+lens). The national-statistics feed pulls them daily (after the 08:30 Eastern releases) into the `worldlake` lake.
+
+| Type | Shows |
+|---|---|
+| `NSTAT NSTAT-V41690973 <GO>` | the consumer price index: the latest value and period, the change on the month and on the year in per cent, the release time, five years of history |
+| `NSTAT NSTAT-V2062815 <GO>` | the unemployment rate, seasonally adjusted |
+| `STCAN <GO>` | the pack's overview |
+
+A vector is one series of one table; the vectors pulled are the feed's selection (`config/feeds/national-statistics.yaml`), one line each
+with its title, unit and topic. Other national statistical offices (the BLS, the BEA, Eurostat, the ONS) join as later feeds of the same
+pack. The domain, the lens, the feeds and their licences: the [Public sector guide](WORLD_DATA_GUIDE.md).
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `NSTAT` | `statistics-series` | external: Statistics Canada Web Data Service (Statistics Canada Open Licence) — refreshed by `drishti.py feed run national-statistics` | the daily feed `national-statistics` → `<data>/delta/worldlake/statistics/statistics-series/` (lake `worldlake`) → connector `statistics-store`; nothing is committed but a few documents in `samples/` for the tests |
+
+#### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| Statistics Canada Web Data Service | https://www150.statcan.gc.ca/t1/wds/rest | Statistics Canada Open Licence | no | `python3 tools/drishti.py feed run national-statistics` |
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status national-statistics            # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run national-statistics --dry-run     # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run national-statistics               # pull today's data and load it into the lake `worldlake` (what the daily schedule runs)
+python3 tools/drishti.py feed run national-statistics --load inbox  # the same through the data inbox: the server loads it
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run national-statistics` on Linux and macOS, `py -3.13 tools\drishti.py feed run national-statistics` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
+<!-- /data-sections -->
+
+## The news-and-markets pack (sample)
+
+One sample pack in two parts: **news** (topics and their headlines) and **markets** (listed companies, quotes and price history).
+A country topic or a company links to its country's economy when the `world-economy` pack is on (`economy` field), and a `core` counterparty
+links to its own headlines (`newsId`), so `CPTY CP-NORTHBRIDGE` shows a *Headlines* link here.
+
+### News
+
+A sample pack: fifteen topics (central banks, countries, companies and themes), and for each the news about it, **computed when you open the page**
+by the [news connector](../connectors/types/news/README.md) from Google News. The topic list is static reference data in `samples/news-topic.jsonl`
+(written by `tools/make_samples.py`); the headlines are live.
+
+!!! warning "Off until you turn it on, and names leave your network when you do"
+    The connector is disabled as shipped. Turn it on with `DRISHTI_NEWS_ENABLED=true` (or Admin, Connectors, `news`). From then on the name of every topic
+    you open is sent to `news.google.com`. Pages that read the headlines also need `drishti.graph.link-budget` above its 40 ms default
+    (for example `2s`), otherwise the first view of a topic shows its headline panels as pending and the next one (within ten minutes) shows them.
+
+#### Kinds
+
+| Mnemonic | Opens | Identifiers |
+|---|---|---|
+| `TOPIC` | a topic: its page shows the headlines | `TOPIC-FED`, `TOPIC-ECB`, `TOPIC-BOE`, `TOPIC-BOJ`, `TOPIC-INFLATION`, `TOPIC-RATES`, `TOPIC-OIL`, `TOPIC-BITCOIN`, `TOPIC-AI`, `TOPIC-CLIMATE`, `TOPIC-INDIA`, `TOPIC-GERMANY`, `TOPIC-BRAZIL`, `TOPIC-DEUTSCHE-BANK`, `TOPIC-TOYOTA` |
+| `NEWS` | the headlines for any name, not only the topics | `NEWS-<name with underscores>`, for example `NEWS-Bitcoin` |
+
+#### Finding things
+
+| Command | Does |
+|---|---|
+| `TOPIC TOPIC-FED <GO>` | Opens the Federal Reserve topic. |
+| `TOPIC fed <GO>` | A pick list by name or alias: *Fed*, *FOMC* and *Powell* all find the Federal Reserve. |
+| `TOPIC category=Country <GO>` | Lists the country topics. |
+| `FORM news-and-markets <GO>` | The search form: id, name, other names, category, edition. |
+| `NEWS NEWS-Bitcoin <GO>` | The headlines for any name; underscores stand for spaces. |
+
+#### What you will see
+
+A topic page has the headlines newest first (published, source, headline, and the article's address as a link that opens in a new tab), a bar per
+source, **how the headlines were chosen** (the relevance, duplicates and limit steps and how many each dropped), and **everything the feed returned**
+for the name with no relevance filter, so the two can be compared. A topic with an edition (`TOPIC-DEUTSCHE-BANK`: `de-DE`, `TOPIC-TOYOTA`: `ja-JP`)
+reads that country's Google News. Where a topic has other names, the relevance filter counts them (the connector template carries them as
+`aliases.*`, written from the same list as the samples).
+
+While the connector is off the headline panels are empty and say `waiting for NEWS-...`; the page's own note says how to turn it on.
+
+#### Changing it
+
+- **Topics:** edit the list in `tools/make_samples.py` and run `python3 modules/economy/packs/news-and-markets/tools/make_samples.py`; it rewrites `samples/` and the
+  alias block of the connector template in `pack.yaml`. The connector file `config/connectors/news.yaml` is written once from the template and is yours
+  after that; add `aliases.<Name_with_underscores>` lines to it for new topics.
+- **Filters:** `relevance`, `allow-sources`, `deny-sources`, `max-items`, `cache-ttl-seconds` and the rest in the connector file; see [NEWS.md](../connectors/types/news/README.md#settings).
+- **Another pack's entity:** give it a field holding `NEWS-<name>` and a panel with `source: "link($.newsId, 'news')"`; the companies here do so.
+
+#### Who can see it
+
+Role `news-analyst`: kinds `news-topic` and `news`.
+
+This is a sample pack: it is hidden from business users when `drishti.packs.samples` is `developers`, and it demonstrates a connector that
+is code rather than a store. See [Domain packs](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which).
+
+### Markets
+
+A sample pack: twenty well-known listed companies, each with a **quote and a price chart** computed on demand by the
+[yfinance connector](../connectors/types/yfinance/README.md) and the **news about the company** computed on demand by the
+[news connector](../connectors/types/news/README.md). The company list (ticker, name, other names,
+exchange, sector, country) is static reference data in `samples/listed-company.jsonl`, written by `modules/economy/packs/news-and-markets/tools/make_samples.py`.
+
+!!! warning "Internal demonstrations only; off until you turn it on"
+    Yahoo's chart endpoint is **unofficial** and its terms restrict its use: do not use this pack in production or redistribute what it shows. Both connectors are
+    disabled as shipped. `DRISHTI_YFINANCE_ENABLED=true` sends each ticker you open to Yahoo; `DRISHTI_NEWS_ENABLED=true` sends each company name to Google.
+    Pages that read them also need `drishti.graph.link-budget` above its 40 ms default (for example `2s`), otherwise the first view of a company shows its quote
+    and headline panels as pending and the next one shows them.
+
+#### Offline: the committed snapshot
+
+With no internet (a demonstration laptop) the pack still works: the repository keeps a real snapshot of every company's quote (a year of
+daily bars) and of the companies' and topics' headlines, captured through these same connectors (`drishti.py testdata capture-market`,
+[data/testdata/README.md](../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline)). `drishti.py lake demo`
+builds it into `news/quote` and `news/news`, which `news-store` serves whenever the live connectors are off, and always in **offline
+mode** (`DRISHTI_OFFLINE=true`, set by the run configuration **Drishti: run server (demo)**): the `news` and `yfinance` connectors then
+never start, and Admin → Connectors shows them *off (offline mode)*. With offline mode off and the live connectors switched off (as
+shipped: `DRISHTI_NEWS_ENABLED` and `DRISHTI_YFINANCE_ENABLED` unset) it is the same: their kinds are read from `news-store`, and Admin →
+Connectors shows them *off (served from the snapshot)*. A lake built before the snapshot was committed has no `news/news` or `news/quote`
+table: the topic and company pages then have no headlines and a headline page says *news-store has no table for it yet*; build it again
+with `drishti.py lake demo --only news-and-markets`. The pages are the same; the quote's *As of* and the headlines'
+*Fetched* end in *(snapshot captured <date>)*, and the quote and headline pages show a **Snapshot** note. The data belongs to Yahoo
+Finance, Google News and the publishers, and is shown for demonstration only.
+
+#### Kinds
+
+| Mnemonic | Opens | Identifiers |
+|---|---|---|
+| `CO` | a listed company | `CO-AAPL`, `CO-MSFT`, `CO-GOOGL`, `CO-AMZN`, `CO-NVDA`, `CO-TSLA`, `CO-META`, `CO-NFLX`, `CO-JPM`, `CO-BAC`, `CO-GS`, `CO-XOM`, `CO-CVX`, `CO-SHEL`, `CO-MRK`, `CO-PFE`, `CO-WMT`, `CO-KO`, `CO-DIS`, `CO-BA` |
+| `QUOTE` | the quote and price history of any ticker | `QUOTE-<symbol>`, for example `QUOTE-AAPL`, `QUOTE-^GSPC` |
+| `NEWS`, `TOPIC` | the news part | see [News](#news) above |
+
+#### Finding things
+
+| Command | Does |
+|---|---|
+| `CO CO-AAPL <GO>` | Opens Apple: quote, chart, headlines. |
+| `CO google <GO>` | A pick list by name or alias: *Google* finds Alphabet. |
+| `CO sector=Energy <GO>` | Lists the energy companies. |
+| `FORM news-and-markets <GO>` | The search form: id, ticker, name, other names, exchange, sector, country. |
+| `QUOTE QUOTE-MSFT <GO>` | The quote and the table of bars for any ticker. |
+| `NWMK <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
+
+#### What you will see
+
+A company page has a strip (ticker, exchange, sector, country, other names, a link to the quote), the **Quote** (price, currency, change in money and percent,
+whether the market is open, the day and 52-week ranges, volume, market cap when Yahoo gives it, as-of time), a **closing-price line** for the last six months,
+the **headlines** newest first with links that open the article in a new tab, and a bar per source. `F7` opens the quote, `F8` the full headline view with the
+steps that chose them. The quote view adds the daily bars as a table.
+
+With a connector off, its panels are empty and say `waiting for QUOTE-AAPL` or `waiting for NEWS-Apple`; the page's own note says how to turn them on. With
+Yahoo or Google unreachable the panels read `source failed`-style errors, and Admin, Connectors shows the connector `DOWN` with the reason; an unknown
+ticker is simply not found.
+
+#### Changing it
+
+- **Companies:** edit the list in `modules/economy/packs/news-and-markets/tools/make_samples.py` and run it (it also rewrites the aliases of the news connector template).
+- **History:** `range` and `interval` in `config/connectors/yfinance.yaml` (for example `1y` and `1wk`); caching and retries in the same file; see [YFINANCE.md](../connectors/types/yfinance/README.md#settings).
+- **Percent format:** the pack defines `pc2` (a value already in percent, with a sign and ` %`).
+
+#### Who can see it
+
+Role `market-analyst`: kinds `listed-company`, `quote`, `news-topic` and `news` .
+
+This is a sample pack of the kind `drishti.packs.samples` can hide from business users. See [Domain packs](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which).
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `TOPIC` | `news-topic` | hand-written reference data: `python3 modules/economy/packs/news-and-markets/tools/make_samples.py` | `modules/economy/packs/news-and-markets/samples/` → `lake demo` → connector `news-store` |
+| `NEWS` | `news` | external: Google News RSS headlines (the news connector) (the headlines belong to their publishers; **internal only**) — refreshed by `drishti.py feed run news-and-markets` | `data/testdata/news-and-markets/news/` → `lake demo` → connector `news-store`; live through connector `news` (plugin `news`) when it is switched on (off as shipped) |
+| `CO` | `listed-company` | hand-written reference data: `python3 modules/economy/packs/news-and-markets/tools/make_samples.py` | `modules/economy/packs/news-and-markets/samples/` → `lake demo` → connector `news-store` |
+| `QUOTE` | `quote` | external: Yahoo Finance quotes and daily history (the yfinance connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `drishti.py feed run news-and-markets` | `data/testdata/news-and-markets/quote/` → `lake demo` → connector `news-store`; live through connector `yfinance` (plugin `yfinance`) when it is switched on (off as shipped) |
+
+#### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| Google News RSS headlines (the news connector) | https://news.google.com/rss | the headlines belong to their publishers | **yes** | `python3 tools/drishti.py feed run news-and-markets -- news` |
+| Yahoo Finance quotes and daily history (the yfinance connector) | https://finance.yahoo.com | Yahoo terms: personal use, no redistribution | **yes** | `python3 tools/drishti.py feed run news-and-markets -- quote` |
+
+**Internal only:** Google News RSS headlines (the news connector); Yahoo Finance quotes and daily history (the yfinance connector). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status news-and-markets                                   # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run news-and-markets --dry-run                            # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run news-and-markets                                      # pull today's data and load it into the lake `newslake` (what the daily schedule runs)
+python3 tools/drishti.py feed run news-and-markets --set server=http://localhost:18480  # through a running server's live connectors instead of a scratch server
+python3 tools/drishti.py feed run news-and-markets --snapshot --internal-ok             # replace the committed snapshot in data/testdata instead (internal demos only), then lake demo
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run news-and-markets` on Linux and macOS, `py -3.13 tools\drishti.py feed run news-and-markets` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+#### Generators
+
+| Generator | Writes | Check |
+|---|---|---|
+| `python3 modules/economy/packs/news-and-markets/tools/make_samples.py` | hand-written reference data (topics and listed companies) into the pack's samples/ | — |
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
+<!-- /data-sections -->
+
+## The oecd pack
+
+The **OECD members' business cycle, jobs, prices and growth** from the OECD Data Explorer's SDMX API, part of the **public-sector
+module** (the Public sector lens). The oecd feed pulls them daily into the `worldlake` lake.
+
+| Type | Shows |
+|---|---|
+| `OECD OECD-CAN <GO>` | Canada: the composite leading indicator, unemployment, inflation and GDP growth with their periods, each measure a link to its history, the 38 members on a map shaded by inflation |
+| `OECDS OECDS-USA-CLI <GO>` | the US composite leading indicator, month by month |
+| `OECDP <GO>` | the pack's overview |
+
+A measure is an SDMX dataflow and key in the feed's selection (`config/feeds/oecd.yaml`); add one with its dataflow, key, field, title and
+unit (the Data Explorer's "Developer API" button gives both). The domain, the lens, the feeds and their licences: the
+[Public sector guide](WORLD_DATA_GUIDE.md).
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `OECD` | `oecd-country` | external: OECD Data Explorer SDMX API (OECD terms: reuse with the source acknowledged (CC BY 4.0)) — refreshed by `drishti.py feed run oecd` | the daily feed `oecd` → `<data>/delta/worldlake/oecd/oecd-country/` (lake `worldlake`) → connector `oecd-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `OECDS` | `oecd-series` | external: OECD Data Explorer SDMX API (OECD terms: reuse with the source acknowledged (CC BY 4.0)) — refreshed by `drishti.py feed run oecd` | the daily feed `oecd` → `<data>/delta/worldlake/oecd/oecd-series/` (lake `worldlake`) → connector `oecd-store`; nothing is committed but a few documents in `samples/` for the tests |
+
+#### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| OECD Data Explorer SDMX API | https://sdmx.oecd.org/public/rest | OECD terms: reuse with the source acknowledged (CC BY 4.0) | no | `python3 tools/drishti.py feed run oecd` |
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status oecd            # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run oecd --dry-run     # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run oecd               # pull today's data and load it into the lake `worldlake` (what the daily schedule runs)
+python3 tools/drishti.py feed run oecd --load inbox  # the same through the data inbox: the server loads it
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run oecd` on Linux and macOS, `py -3.13 tools\drishti.py feed run oecd` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
+<!-- /data-sections -->
+
+## The official-news pack
+
+**Free official news**: the press releases and notices of central banks, regulators and governments from their own RSS, Atom and API
+feeds, part of the **economy module**'s public sector (the Public sector lens; the World lens shows them too). The official-news feed pulls them
+daily into the `newslake` lake; each release is a link to the original.
+
+| Type | Shows |
+|---|---|
+| `PRESS PRESS-FED <GO>` | the Federal Reserve Board's latest releases, newest first (a title opens the release, an address the original), the count by category, its terms |
+| `PRESS PRESS-FEDREG <GO>` | the US Federal Register's newest documents, with their type and agencies |
+| `PREL <id> <GO>` | one release: title, publisher, date, category, the feed's summary and the original's address |
+| `ONEWS <GO>` | the pack's overview |
+
+**Each publisher's terms are recorded** in the feed's YAML (`config/feeds/official-news.yaml`). The Federal Reserve, the SEC and the Federal
+Register publish US government works (public domain); the ECB and the Bank of Canada allow reuse with the source acknowledged. The Bank of
+England, OSFI and the Canada Gazette allow no commercial reuse without permission: their releases carry `INTERNAL_ONLY: true`, stay inside
+the organisation, and Export data refuses them. The domain, the lens, the feeds and their licences: the
+[Public sector guide](WORLD_DATA_GUIDE.md).
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `PRESS` | `release-source` | external: Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API) (public domain (US Government works)); Press releases of the European Central Bank and the Bank of Canada (RSS) (free reuse with the source acknowledged); News of the Bank of England and OSFI, the Canada Gazette (RSS) (non-commercial or internal use only without permission; **internal only**) — refreshed by `drishti.py feed run official-news` | the daily feed `official-news` → `<data>/delta/newslake/officialnews/release-source/` (lake `newslake`) → connector `officialnews-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `PREL` | `press-release` | external: Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API) (public domain (US Government works)); Press releases of the European Central Bank and the Bank of Canada (RSS) (free reuse with the source acknowledged); News of the Bank of England and OSFI, the Canada Gazette (RSS) (non-commercial or internal use only without permission; **internal only**) — refreshed by `drishti.py feed run official-news` | the daily feed `official-news` → `<data>/delta/newslake/officialnews/press-release/` (lake `newslake`) → connector `officialnews-store`; nothing is committed but a few documents in `samples/` for the tests |
+
+#### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| Press releases of the Federal Reserve, the SEC and the US Federal Register (RSS, API) | https://www.federalreserve.gov/feeds/press_all.xml | public domain (US Government works) | no | `python3 tools/drishti.py feed run official-news` |
+| Press releases of the European Central Bank and the Bank of Canada (RSS) | https://www.ecb.europa.eu/rss/press.html | free reuse with the source acknowledged | no | `python3 tools/drishti.py feed run official-news` |
+| News of the Bank of England and OSFI, the Canada Gazette (RSS) | https://www.bankofengland.co.uk/rss/news | non-commercial or internal use only without permission | **yes** | `python3 tools/drishti.py feed run official-news` |
+
+**Internal only:** News of the Bank of England and OSFI, the Canada Gazette (RSS). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status official-news            # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run official-news --dry-run     # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run official-news               # pull today's data and load it into the lake `newslake` (what the daily schedule runs)
+python3 tools/drishti.py feed run official-news --load inbox  # the same through the data inbox: the server loads it
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run official-news` on Linux and macOS, `py -3.13 tools\drishti.py feed run official-news` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
+<!-- /data-sections -->
+
+## The world-development pack
+
+World Bank **World Development Indicators** by country and year, part of the **economy module**'s public sector (the Public sector lens). The
+world-development feed pulls them daily from the World Bank's API into the `worldlake` lake; nothing is read live and nothing large is
+committed.
+
+| Type | Shows |
+|---|---|
+| `WDI WDI-CAN <GO>` | Canada's profile: region, income group, capital, population, GDP per head; every indicator's latest value (a row opens its history); the world map shaded by GDP per head (a country opens its profile) |
+| `WDIS WDIS-IND-NY_GDP_MKTP_KD_ZG <GO>` | India's real GDP growth by year, with the World Bank's definition |
+| `WDEV <GO>` | the pack's overview |
+
+The indicators pulled are the feed's selection (`config/feeds/world-development.yaml`): population, GDP per head, GDP growth, inflation,
+unemployment, life expectancy, poverty, access to electricity, internet use and central government debt, for every economy over fifteen
+years. Add an indicator with one line there (its World Bank code, the profile field it fills and its unit). The domain, the lens, the
+feeds and their licences: the [Public sector guide](WORLD_DATA_GUIDE.md).
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `WDI` | `development-profile` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-profile/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `WDIS` | `development-series` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-series/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
+
+#### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| World Bank World Development Indicators API (v2), pulled only by the world-development feed | https://api.worldbank.org/v2 | CC BY 4.0 | no | `python3 tools/drishti.py feed run world-development` |
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status world-development                  # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run world-development --dry-run           # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run world-development                     # pull today's data and load it into the lake `worldlake` (what the daily schedule runs)
+python3 tools/drishti.py feed run world-development --load inbox        # the same through the data inbox: the server loads it
+python3 tools/drishti.py feed run world-development --since 2026-01-01  # pull again although the World Bank has not changed (after editing the indicators)
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run world-development` on Linux and macOS, `py -3.13 tools\drishti.py feed run world-development` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+
+<!-- /data-sections -->
+
+## World economy pack
+
+Real public economic data for about 200 economies: output, growth, prices, jobs, debt and external balance (World Bank, IMF, CIA World Factbook), IMF forecasts, and World Bank regions and income groups; and governments and societies: government type, office holders, elections, parties with seats, and social and governance indicators (CIA World Factbook, World Bank, UNDP).
+
+The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0), the IMF World Economic Outlook (reuse with attribution), and the CIA World Factbook (public domain). Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income group, labour market, fiscal position, IMF forecast and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` (see docs/guides/DATA_GUIDE.md). The IMF figures (the forecasts, and the debt and net lending behind each fiscal position) are for **internal demonstrations only**: the IMF requires its permission for commercial use, so raise it before any client or external use (docs/guides/DATA_GUIDE.md, licence note).
+
+The data is published data, not samples: the CIA World Factbook (public domain) for governments, office holders, elections and parties, the World Bank World Development Indicators and Worldwide Governance Indicators (CC BY 4.0), and the UNDP Human Development Index (CC BY 3.0 IGO). Texts are shown as the sources publish them; every document names its source, dataset, retrieval date and licence in its Data source panel. Opinion polls and bills have no open global dataset, so this pack has no such kinds. A jurisdiction's page opens with a map: the country is highlighted on the world and a click on any other country opens that country's page (a country the pack holds no jurisdiction for is not clickable and says so on hover); the shapes ship with the console, nothing is fetched from the internet. Refresh with `tools/realdata/realdata.py` (see docs/guides/WORLD_DATA_GUIDE.md).
+
+A counterparty of the core pack names its country of risk (`COUNTRY_OF_RISK`) and links to that country's economy (`ECONOMY`), so `CPTY CP-NORTHBRIDGE` opens the United States economy in one click.
+
+**Extends:** nothing · **Kinds:** 13
+
+Enable it with `DRISHTI_PACKS=world-economy` (the packs it extends come with it).
+
+### Finding things
+
+Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start of one, or a search, then `<GO>`. Shown here for economies; the same works for every mnemonic.
+
+| Command | Does |
+|---|---|
+| `ECON <id> <GO>` | Opens that economy. A bare identifier works too: its prefix (`ECON-…`) tells Drishti the kind. |
+| `ECON <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
+| `ECON <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
+| `ECON <GO>` | Lists every economy. |
+| `FORM world-economy <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
+| `WRLD <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
+
+### Where the data comes from
+
+| Connector | Folder | Kinds |
+|---|---|---|
+| `macro-store` | `data/delta/demo/macro/` | `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `region-economy` |
+| `civic-store` | `data/delta/demo/civic/` | `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator` |
+| `macro-groupings` | computed when asked (plugin `derived`) | `country-group` |
+
+### Kinds
+
+| Kind | Name | Mnemonic | Identifiers | What it is |
+|---|---|---|---|---|
+| `economy` | Economy | `ECON` | `ECON-…` | An economy: output, growth, prices, jobs, debt and external balance, and output by sector, from World Bank, IMF and CIA data. |
+| `macro-indicator` | Macro indicator | `MACRO` | `MACRO-…` | One headline statistic of one economy: the series, the latest value, the change and the rank among economies. |
+| `economic-forecast` | Economic forecast | `FCST` | `FCST-…` | The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031. |
+| `labour-market` | Labour market | `LABR` | `LABR-…` | Unemployment, participation, youth and female labour, and employment and output by sector. |
+| `fiscal-position` | Fiscal position | `FISC` | `FISC-…` | Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP. |
+| `country-group` | Country group | `ECG` | `ECG-…` | A World Bank region or income group (or the world), computed from its member economies when asked: output, population, growth, inflation and its largest economies. |
+| `region-economy` | Region economy | `REGE` | `REGE-…` | A state or territory (ISO 3166-2): population, GDP and GDP per head. An illustrative sample, rounded from public figures, not for reporting. |
+| `jurisdiction` | Jurisdiction | `JUR` | `JUR-…` | A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP. |
+| `party` | Party | `PARTY` | `PARTY-…` | A political party that won seats in the lower chamber at the most recent election, with the chamber's full result. |
+| `office-holder` | Office holder | `OFFC` | `OFFC-…` | The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled. |
+| `election` | Election | `ELEC` | `ELEC-…` | The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one. |
+| `region` | World region | `REGN` | `REGN-…` | A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it. |
+| `social-indicator` | Social indicator | `SOCI` | `SOCI-…` | A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law. |
+
+#### Economy (`economy`)
+
+An economy: output, growth, prices, jobs, debt and external balance, and output by sector, from World Bank, IMF and CIA data.
+
+**Fields its Sutra reads:** `NAME`, `REGION_NAME`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `GROWTH`, `INFLATION`, `UNEMPLOYMENT`, `DEBT_TO_GDP`, `CURRENT_ACCOUNT`, `GROWTH_PATH`, `SECTORS`, `GDP_PATH`, `PROVENANCE`.
+
+**Links:** `REGION_GROUP` → Region (`country-group`), `INCOME_GROUP` → Income group (`country-group`), `LABOUR` → Labour market (`labour-market`), `FISCAL` → Fiscal position (`fiscal-position`), `OUTLOOK` → IMF forecast (`economic-forecast`), `INDICATORS` → Indicators (`macro-indicator`).
+
+#### Macro indicator (`macro-indicator`)
+
+One headline statistic of one economy: the series, the latest value, the change and the rank among economies.
+
+**Fields its Sutra reads:** `NAME`, `LATEST`, `UNIT`, `LATEST_YEAR`, `PREVIOUS`, `RANK`, `HISTORY`, `FACTS`, `PROVENANCE`.
+
+**Links:** `ECONOMY` → Economy (`economy`).
+
+#### Economic forecast (`economic-forecast`)
+
+The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031.
+
+**Fields its Sutra reads:** `ECONOMY_NAME`, `VINTAGE`, `GROWTH_2027`, `INFLATION_2027`, `DEBT_2030`, `PROJECTIONS`, `PATH`, `PROVENANCE`.
+
+**Links:** `ECONOMY` → Economy (`economy`).
+
+#### Labour market (`labour-market`)
+
+Unemployment, participation, youth and female labour, and employment and output by sector.
+
+**Fields its Sutra reads:** `ECONOMY_NAME`, `UNEMPLOYMENT`, `PARTICIPATION`, `YOUTH_UNEMPLOYMENT`, `EMPLOYMENT_RATIO`, `FEMALE_PARTICIPATION`, `UNEMPLOYMENT_PATH`, `BY_SECTOR`, `PROVENANCE`.
+
+**Links:** `ECONOMY` → Economy (`economy`).
+
+#### Fiscal position (`fiscal-position`)
+
+Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP.
+
+**Fields its Sutra reads:** `ECONOMY_NAME`, `DEBT`, `BALANCE`, `REVENUE`, `SPENDING`, `MILITARY`, `RATIOS`, `DEBT_PATH`, `BALANCE_PATH`, `PROVENANCE`.
+
+**Links:** `ECONOMY` → Economy (`economy`).
+
+#### Country group (`country-group`)
+
+A World Bank region or income group (or the world), computed from its member economies when asked: output, population, growth, inflation and its largest economies.
+
+**Fields its Sutra reads:** `NAME`, `GROUP_TYPE`, `ECONOMIES`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `POPULATION_M`, `GROWTH`, `INFLATION`, `TOP_ECONOMIES`, `GDP_PATH`, `PROVENANCE`.
+
+**Links:** `MEMBER_ECONOMIES` → Economies (`economy`).
+
+#### Region economy (`region-economy`)
+
+A state or territory (ISO 3166-2): population, GDP and GDP per head. An illustrative sample, rounded from public figures, not for reporting.
+
+**Fields its Sutra reads:** `NAME`, `REGION_CODE`, `COUNTRY_NAME`, `POPULATION_M`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `FACTS`, `PROVENANCE`.
+
+**Links:** `ECONOMY` → Economy (`economy`).
+
+#### Jurisdiction (`jurisdiction`)
+
+A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP.
+
+**Fields its Sutra reads:** `NAME`, `CAPITAL`, `GOVERNMENT_TYPE`, `POPULATION_M`, `AREA_KM2`, `CURRENCY`, `LEGISLATURE`, `INDICATORS`, `PROFILE`, `PARTIES_LISTED`, `PROVENANCE`.
+
+**Links:** `REGION` → World region (`region`), `CHIEF_OF_STATE` → Chief of state (`office-holder`), `HEAD_OF_GOVERNMENT` → Head of government (`office-holder`), `LAST_ELECTION` → Last election (`election`), `ELECTIONS` → Elections (`election`), `PARTIES` → Parties with seats (`party`), `SOCIAL_INDICATORS` → Indicators (`social-indicator`).
+
+#### Party (`party`)
+
+A political party that won seats in the lower chamber at the most recent election, with the chamber's full result.
+
+**Fields its Sutra reads:** `NAME`, `COUNTRY_NAME`, `SEATS`, `SEAT_SHARE`, `CHAMBER`, `ELECTION_DATE`, `RESULTS`, `PROVENANCE`.
+
+**Links:** `ELECTION` → Election (`election`), `JURISDICTION` → Country (`jurisdiction`).
+
+#### Office holder (`office-holder`)
+
+The chief of state or head of government of a country as the CIA World Factbook publishes them, with how the office is filled.
+
+**Fields its Sutra reads:** `COUNTRY_NAME`, `ROLE`, `HOLDER`, `SINCE`, `GOVERNMENT_TYPE`, `MANDATE`, `PROVENANCE`.
+
+**Links:** `JURISDICTION` → Country (`jurisdiction`).
+
+#### Election (`election`)
+
+The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one.
+
+**Fields its Sutra reads:** `TITLE`, `DATE_TEXT`, `SYSTEM`, `WINNER`, `NEXT_ELECTION`, `RESULTS`, `SUMMARY`, `PROVENANCE`.
+
+**Links:** `JURISDICTION` → Country (`jurisdiction`).
+
+#### World region (`region`)
+
+A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it.
+
+**Fields its Sutra reads:** `NAME`, `COUNTRIES`, `POPULATION_M`, `LIFE_EXPECTANCY`, `WOMEN_PARLIAMENT`, `INTERNET`, `GOVERNMENT_TYPES`, `LIFE_TREND`, `INTERNET_TREND`, `PROVENANCE`.
+
+**Links:** `MEMBER_STATES` → Countries (`jurisdiction`).
+
+#### Social indicator (`social-indicator`)
+
+A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law.
+
+**Fields its Sutra reads:** `NAME`, `LATEST`, `UNIT`, `LATEST_YEAR`, `CHANGE_5Y`, `SOURCE_NAME`, `SERIES`, `BY_REGION`, `MEANING`, `PROVENANCE`.
+
+**Links:** `JURISDICTION` → Country (`jurisdiction`).
+
+### Who can see it
+
+Role `economist`: kinds `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `country-group`, `region-economy`, raw JSON.
+Role `analyst`: kinds `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator`, raw JSON.
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `ECON` | `economy` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `MACRO` | `macro-indicator` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `FCST` | `economic-forecast` | external: IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `LABR` | `labour-market` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `FISC` | `fiscal-position` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `ECG` | `country-group` | computed by Drishti: the derived connector macro-groupings over the kind economy; see the [Groupings and analytics guide](bi/README.md) | nothing to load: computed from its inputs when asked |
+| `REGE` | `region-economy` | external: US Census Bureau population estimates and BEA state GDP (rounded by hand, illustrative) (public domain (US Government work)) — refreshed by `tools/packgen/world/make.py` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `JUR` | `jurisdiction` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)); World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+| `PARTY` | `party` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+| `OFFC` | `office-holder` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+| `ELEC` | `election` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+| `REGN` | `region` | external: World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+| `SOCI` | `social-indicator` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); UNDP Human Development Index (CC BY 3.0 IGO) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+
+#### External sources
+
+| Source | Where | Licence | Internal only | Refresh |
+|---|---|---|---|---|
+| World Bank World Development Indicators API (v2), pulled only by the world-development feed | https://api.worldbank.org/v2 | CC BY 4.0 | no | `python3 tools/drishti.py feed run world-development` |
+| World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) | https://api.worldbank.org/v2 | CC BY 4.0 | no | `python3 tools/drishti.py feed run world-economy -- worldbank` |
+| IMF World Economic Outlook (DataMapper) | https://www.imf.org/external/datamapper/api/v1 | IMF terms: reuse with attribution; commercial reuse needs the IMF's permission | **yes** | `python3 tools/drishti.py feed run world-economy -- imf` |
+| US Census Bureau population estimates and BEA state GDP (rounded by hand, illustrative) | https://www.census.gov/programs-surveys/popest.html | public domain (US Government work) | no | `tools/packgen/world/make.py` (typed into the generator; no fetch) |
+| CIA World Factbook (the factbook.json mirror at a pinned commit) | https://github.com/factbook/factbook.json | public domain (the mirror CC0 1.0) | no | `python3 tools/drishti.py feed run world-economy -- factbook` |
+| UNDP Human Development Index | https://hdr.undp.org/data-center/documentation-and-downloads | CC BY 3.0 IGO | no | `python3 tools/drishti.py feed run world-economy -- undp` |
+
+**Internal only:** IMF World Economic Outlook (DataMapper). The terms restrict reuse or forbid redistribution: the data is for internal demonstrations only, never written into a committed folder without `--internal-ok`, and must be raised with the owner before any client or external use.
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status world-development                  # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run world-development --dry-run           # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run world-development                     # pull today's data and load it into the lake `worldlake` (what the daily schedule runs)
+python3 tools/drishti.py feed run world-development --load inbox        # the same through the data inbox: the server loads it
+python3 tools/drishti.py feed run world-development --since 2026-01-01  # pull again although the World Bank has not changed (after editing the indicators)
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run world-development` on Linux and macOS, `py -3.13 tools\drishti.py feed run world-development` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+python3 tools/drishti.py feed status world-economy                        # its last runs: last success, rows, failures (offline: the run ledger)
+python3 tools/drishti.py feed run world-economy --dry-run                 # what would be fetched and loaded; changes nothing
+python3 tools/drishti.py feed run world-economy                           # pull today's data and load it into the lake `worldlake` (what the daily schedule runs)
+python3 tools/drishti.py feed run world-economy -- --no-imf               # the same without any IMF data, for anything shown outside the organisation
+python3 tools/drishti.py feed run world-economy --snapshot --internal-ok  # refresh the committed dataset and pack instead (they carry IMF data: internal demos only)
+```
+
+The same with the Python you run Drishti with: `python3 tools/drishti.py feed run world-economy` on Linux and macOS, `py -3.13 tools\drishti.py feed run world-economy` on Windows (every argument is passed on); the daily schedule entries: `drishti.py feed schedule --cron` (or `--systemd`, `--windows`) ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)).
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

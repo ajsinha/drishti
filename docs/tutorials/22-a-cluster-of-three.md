@@ -41,7 +41,7 @@ The outputs of the command line below were captured on this version; paths are s
 without the steps, use `deploy/stack/` at the repository's root: `python tools/drishti.py start cluster` starts three servers (your own stack on 18480 with
 the demo lakes, and two more on 18791 and 18792 with synthetic ENDUR, CALYPSO and MUREX trades) and a console on 17480 given the first
 alone; `drishti.py status --cluster deploy/stack/stack.yaml` shows the members and `drishti.py stop cluster` stops them by process id. The secrets are made on the first start and stay out of git.
-See [deploy/stack/README.md](../../deploy/stack/README.md).
+See [deploy/stack/README.md](../guides/CLUSTER_GUIDE.md#deploystack-a-ready-made-local-drishtinet-cluster).
 
 ## What you will learn
 

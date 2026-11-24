@@ -18,7 +18,7 @@
 
 > Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
 
-Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](MODELS_AND_DATASETS_FOR_REPORTS.md) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · [Distribution, subscriptions and alerts](DISTRIBUTION_AND_ALERTS.md) · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · **The Notebook and Python** · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
+Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](TABLES_AND_MODELS.md#models-and-datasets-for-reports) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · [Distribution, subscriptions and alerts](DISTRIBUTION_AND_ALERTS.md) · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · **The Notebook and Python** · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
 
 Where code runs; the Notebook (SQL and Python cells, extract, save, promote, profile); Python measures and visuals; Transforms and the Transform editor; the command line, the sandbox, limits and how an administrator turns Python on; with the tutorial.
 
@@ -1422,7 +1422,7 @@ You should see, beside the button, that a Python Transform draft was saved in yo
 cell's `result` is returned, and the next step is *a dataset of its table: source: { python: <this item>, inputs: { <name>: <a model query> } }, one
 input per parameter of run(), in this order*. Open the draft, **Check the Python**, publish it, and make that dataset. Nothing is published by promoting.
 
-**In the UI** the Python dataset is the dataset wizard's source **A Python Transform** ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](MODELS_AND_DATASETS_FOR_REPORTS.md#110-a-table-of-your-own-step-by-step)):
+**In the UI** the Python dataset is the dataset wizard's source **A Python Transform** ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](TABLES_AND_MODELS.md#110-a-table-of-your-own-step-by-step)):
 **Models → New dataset**, choose the Transform by its title, give each input of `run()` its model query (a model, the fields and the measures to hand
 over), and list the columns the Transform returns with their types; **Preview** runs it for you before you save. **From the YAML** it is the
 `source: { python: ..., inputs: { ... } }` above; **Make it a model** on its page puts a model over it, where its measures go.
@@ -1640,3 +1640,49 @@ The steps run where every Python item runs, on the server's compute pool; the sn
 | the Transform editor's steps do not run | running them needs `bi-author`; the page still writes the YAML |
 | `DRS-9108 the kind 'trade' has no column [X]` | a field the kind does not have; the message lists the kind's columns |
 | `DRS-9026 connector 'x' is not running` | the input names a connector that is off; leave it empty to read whichever serves the kind |
+
+## Compute demo pack
+
+Sample pack for reactive connectors: three books of synthetic P&L strips (250 scenario days each) and the sum of a book's paths computed when it is asked for, by a Python engine in a compute pool (path-sum) and by its Java twin in the server (path-sum-java), with progress on the screen and a state per panel. Synthetic numbers only. Not loaded unless named in DRISHTI_PACKS.
+
+**Code:** `CMPD` · **Kinds:** 4 · enable it with `DRISHTI_PACKS=compute-demo` (a sample pack; `drishti.packs.samples` hides it from business users).
+
+### Using it
+
+| Type | Shows |
+|---|---|
+| `PBOOK BOOK-RATES <GO>` | A book's path computed twice: by the Python engine and by the Java engine, with progress |
+| `PSTRIP STRIP-FX-001 <GO>` | One strip: its 250 scenario P&Ls |
+| `PSUMJ BOOK-FX <GO>` | The computed answer itself, with its stamp (parameters ride on the id: BOOK-FX~delay-ms=50) |
+
+| Command | Kind | Opens |
+|---|---|---|
+| `PBOOK` | `path-book` | Path book |
+| `PSTRIP` | `path-strip` | P&L strip |
+| `PSUM` | `path-sum` | Book path (Python) |
+| `PSUMJ` | `path-sum-java` | Book path (Java) |
+
+A book's page asks both engines for the sum of its strips' paths: the Python engine runs in the compute pool `sample` (`config/compute/compute.yaml`), the Java twin in the server; each panel shows its own progress and state. Parameters ride on the id (`BOOK-FX~delay-ms=50`). How reactive connectors work: [DATA_ARCHITECTURE.md](../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors).
+
+### Data retrieval
+
+Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by its data feed (each source, its licence and worked examples on the [External data](../WORLD_DATA_GUIDE.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
+
+| Command | Kind | Origin | How it reaches Drishti |
+|---|---|---|---|
+| `PBOOK` | `path-book` | synthetic: `python3 config/packs/core/compute-demo/tools/make_samples.py` | `config/packs/core/compute-demo/samples/` → `lake demo` → connector `compute-demo-store` |
+| `PSTRIP` | `path-strip` | synthetic: `python3 config/packs/core/compute-demo/tools/make_samples.py` | `config/packs/core/compute-demo/samples/` → `lake demo` → connector `compute-demo-store` |
+| `PSUM` | `path-sum` | computed by Drishti: the reactive connector path-sum-python (python engine); see the [reactive connectors](../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) | nothing to load: computed from its inputs when asked |
+| `PSUMJ` | `path-sum-java` | computed by Drishti: the reactive connector path-sum-java (java engine); see the [reactive connectors](../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) | nothing to load: computed from its inputs when asked |
+
+#### Generators
+
+| Generator | Writes | Check |
+|---|---|---|
+| `python3 config/packs/core/compute-demo/tools/make_samples.py` | synthetic P&L strips (a seeded random walk) into the pack's samples/ | — |
+
+#### Into the lake, checking, offline
+
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../CLI_REFERENCE.md)).
+- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
+- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).

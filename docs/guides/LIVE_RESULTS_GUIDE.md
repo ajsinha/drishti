@@ -19,7 +19,7 @@ One engine shows any set of records **live**: a snapshot read from the durable s
 arrives. Blotters, FORM search results, bare mnemonics (`POS`, `TRD`, `NEWS`), monitors, drill-through and previews all run on it; a SQL or
 BI table is the static case of the same grid. A blotter is a **declaration**, a YAML file; a new blotter (trades, positions, exposure,
 inventory) is a configuration job, not a project. Drishti is the analytics layer next to a bank's systems: a blotter sends no orders. The engine is part of the platform, so FORM search, mnemonics
-and blotters work in every distribution; the trade blotter and the source systems are the [trading module's](../../modules/trading/docs/guide.md).
+and blotters work in every distribution; the trade blotter and the source systems are the [trading module's](BANK_DATA_GUIDE.md#the-trading-module).
 
 ## Contents
 
@@ -53,7 +53,7 @@ RabbitMQ, ActiveMQ), merged **by key and version**, plus an optional edit path a
 | A monitor, drill-through, a preview | the same table, opened from another page |
 | A SQL or BI table | the static grid: the same component without the live channel |
 
-The trading module's trade blotter is the first declaration ([the trading module](../../modules/trading/docs/guide.md)).
+The trading module's trade blotter is the first declaration ([the trading module](BANK_DATA_GUIDE.md#the-trading-module)).
 
 ## 2. The page
 

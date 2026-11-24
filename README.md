@@ -121,13 +121,13 @@ Details: [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md).
 |---|---|
 | install and verify, Windows, Linux, macOS | [DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md); the platform's `START_HERE_<OS>.pdf` |
 | change the code | [QUICKSTART_DEVELOPERS.md](docs/QUICKSTART_DEVELOPERS.md), [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md), [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md) |
-| run on Linux in production | [PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) |
+| run on Linux in production | [OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md#production-deployment-linux) |
 | find every command and option | [CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md) |
 | use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [tutorials](docs/tutorials/README.md) |
 | build a pack, a screen or a module | [BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md) |
 | everything else | [docs/README.md](docs/README.md) |
 
-The main documents also come as PDFs: [Deploy and verify](docs/DEPLOYMENT_AND_QA_GUIDE.pdf), [developer quickstart](docs/QUICKSTART_DEVELOPERS.pdf), [production deployment](docs/PRODUCTION_DEPLOYMENT.pdf), [cluster guide](docs/guides/CLUSTER_GUIDE.pdf), [kernel and modules](docs/architecture/KERNEL_AND_MODULES.pdf), [distributions](docs/architecture/DISTRIBUTIONS.pdf) and [how it fits](HOW_IT_FITS.pdf).
+The main documents also come as PDFs: [Deploy and verify](docs/DEPLOYMENT_AND_QA_GUIDE.pdf), [developer quickstart](docs/QUICKSTART_DEVELOPERS.pdf) and [how it fits](HOW_IT_FITS.pdf): the documents handed to someone who has no running Drishti yet. Every other guide is read in Help, and `python3 tools/docs/md_to_pdf.py docs/X.md out.pdf` makes a PDF of any one.
 
 ## By the numbers
 

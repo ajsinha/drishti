@@ -18,7 +18,7 @@
 
 > Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
 
-Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · **Reports and the designer** · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](MODELS_AND_DATASETS_FOR_REPORTS.md) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · [Distribution, subscriptions and alerts](DISTRIBUTION_AND_ALERTS.md) · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · [The Notebook and Python](NOTEBOOK_AND_PYTHON.md) · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
+Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · **Reports and the designer** · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](TABLES_AND_MODELS.md#models-and-datasets-for-reports) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · [Distribution, subscriptions and alerts](DISTRIBUTION_AND_ALERTS.md) · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · [The Notebook and Python](NOTEBOOK_AND_PYTHON.md) · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
 
 What a report is, getting in, the four powers, the catalogue and workspaces, the viewer, which date a report reads, BI Studio and the report designer, Python in reports and the settings and problem codes; with the first-report tutorial.
 
@@ -1101,7 +1101,7 @@ measures:
 ```
 
 and the report (`config/bi/reports/banking/pnl-vs-exposure.report.yaml`) only says `model: trading-risk@1`. When the two numbers live in **two models**
-(each with its own row rules), a report can still read both side by side and link their fields: that is [Part B](MODELS_AND_DATASETS_FOR_REPORTS.md#part-b--several-datasets-in-one-report).
+(each with its own row rules), a report can still read both side by side and link their fields: that is [Part B](TABLES_AND_MODELS.md#part-b--several-datasets-in-one-report).
 The same table made by a Python Transform is in [the Notebook tutorial](NOTEBOOK_AND_PYTHON.md); the reference is
 [ARCHITECTURE.md §28](../../architecture/ARCHITECTURE.md#281-the-table-layer-and-models-in-rachana) and [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](REPORT_FILE_FORMAT_STATEMENTS.md#113-reports-over-several-models).
 
@@ -1310,8 +1310,8 @@ Latin America & Caribbean                          12
 ```
 
 A draft model answers its owner (and is listed as `draft` by `bi model list`); a report on it is published once the model is. The reference for the
-wizard's every step is [BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads) and
-[BI_GUIDE.md](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
+wizard's every step is [BI_GUIDE.md section 23](TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads) and
+[BI_GUIDE.md](TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
 `rachana: 1` datasets, which the upgrade converts to models ([tutorial 21](../../tutorials/21-run-it-in-production.md)).
 
 #### Notes: saving safely, and more than one dataset
@@ -1322,7 +1322,7 @@ wizard's every step is [BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.
 
 ### Step 14 · Models: from a pack dataset to a report
 
-The **model layer** ([BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads)): every
+The **model layer** ([BI_GUIDE.md section 23](TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads)): every
 kind of every pack is a dataset already, and a model is a few of them joined. This step goes from the pack's **Trade valuation** (one row per trade
 per business date, with its desk, MTM and P&L, in the `market-risk` pack) to a model of trades and desks with a row rule, published, analysed and
 watched. The numbers are from the demo lake (15,000 trade valuations over ten desks).
@@ -1444,9 +1444,9 @@ condition: {type: threshold, op: above, value: 1000000}
 
 ### Next steps
 
-- [BI_GUIDE.md](README.md) for every page of the BI area, [BI_GUIDE.md](REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) for every visual and its wells (sections 3 and 6 are the map and the slicers), [BI_GUIDE.md](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads) for writing a dataset, and [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17](MODELS_AND_DATASETS_FOR_REPORTS.md#19-worked-examples-the-shipped-models-row-rules-and-masks) for
+- [BI_GUIDE.md](README.md) for every page of the BI area, [BI_GUIDE.md](REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) for every visual and its wells (sections 3 and 6 are the map and the slicers), [BI_GUIDE.md](TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads) for writing a dataset, and [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 17](TABLES_AND_MODELS.md#19-worked-examples-the-shipped-models-row-rules-and-masks) for
   a stack with four people, row rules and masks at work, and the Model view.
-- [BI_GUIDE.md sections 23 and 24](MODELS_AND_DATASETS_FOR_REPORTS.md#14-measures-the-expression-language) for models and the model designer, [RACHANA_REFERENCE.md › Rachana-EL expressions](../../guides/RACHANA_REFERENCE.md#rachana-el-expressions) for measures (fifty-odd recipes), [API_REFERENCE.md › Drishti SQL](../../guides/API_REFERENCE.md#8-drishti-sql-apiv1bisql) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](NOTEBOOK_AND_PYTHON.md#4-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../../guides/USER_GUIDE.md#the-notebook) for extracts and promotion.
+- [BI_GUIDE.md sections 23 and 24](TABLES_AND_MODELS.md#14-measures-the-expression-language) for models and the model designer, [RACHANA_REFERENCE.md › Rachana-EL expressions](../../guides/RACHANA_REFERENCE.md#rachana-el-expressions) for measures (fifty-odd recipes), [API_REFERENCE.md › Drishti SQL](../../guides/API_REFERENCE.md#8-drishti-sql-apiv1bisql) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](NOTEBOOK_AND_PYTHON.md#4-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../../guides/USER_GUIDE.md#the-notebook) for extracts and promotion.
 - [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](REPORT_FILE_FORMAT_STATEMENTS.md#4-statements-paginated-reports-page-exact-one-per-reader): every key of a statement and how the layout decides where a page breaks.
 - [BI_GUIDE.md](DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions): schedules, recipients and retries of a subscription.
 - [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 21](REPORT_FILE_FORMAT_STATEMENTS.md#3-field-parameters): field parameters in every kind of well.
@@ -1455,11 +1455,11 @@ condition: {type: threshold, op: above, value: 1000000}
 - [BI_GUIDE.md](DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions): export formats (PDF, PNG, Excel, CSV), subscriptions in depth, alerts on numbers, boards, embedding a report in another web application.
 - [USER_GUIDE.md › Scheduled reports](DISTRIBUTION_AND_ALERTS.md#11-the-reports-page-and-scheduled-searches) is the reference for the CSV reports.
 - Tutorial 1, Part C made the search; tutorial 12 told Drishti when the data lands, which is what `after-load` waits for.
-- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](LIVE_REPORTS_AND_BOARDS.md#2-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](MODELS_AND_DATASETS_FOR_REPORTS.md#17-live-tables) is the live-table reference.
+- [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](LIVE_REPORTS_AND_BOARDS.md#2-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](TABLES_AND_MODELS.md#17-live-tables) is the live-table reference.
 - [DEMO_CONNECTOR.md](../../../docs/connectors/types/demo/README.md) and [../guides/DATA_GUIDE.md section 11](../../guides/DATA_GUIDE.md#11-the-demo-data) say exactly what ticks and how.
 - [The Notebook tutorial](NOTEBOOK_AND_PYTHON.md): Python in a measure, a visual and a notebook.
 - [BI_GUIDE.md](GOVERNANCE_AND_AI.md#2-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
-- [BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads): models, their contract and their versions.
+- [BI_GUIDE.md section 23](TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads): models, their contract and their versions.
 - [ADMIN_GUIDE.md](../../guides/ADMIN_GUIDE.md): roles and users in depth; tutorial 21 summarises them.
 
 ### If something goes wrong
@@ -1473,7 +1473,7 @@ condition: {type: threshold, op: above, value: 1000000}
 | Publish is not offered | the report is in **My workspace**: move it to a shared workspace first |
 | a visual says `DRS-9020` | a slicer or a selection cannot reach that visual through the dataset's relationships |
 | a number is `•••` | the dataset masks it for your role; the report is working as it should |
-| `DRS-9196` on a dataset made of others (`from:` or `derived:`) | a composed or derived dataset, which BI does not read: write it as a model ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11](MODELS_AND_DATASETS_FOR_REPORTS.md#13-relationships-and-how-a-question-joins)) |
+| `DRS-9196` on a dataset made of others (`from:` or `derived:`) | a composed or derived dataset, which BI does not read: write it as a model ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 11](TABLES_AND_MODELS.md#13-relationships-and-how-a-question-joins)) |
 | `DRS-9021` "the join key ... is masked for you" | a source masks the column the join is made on; join on an unmasked key such as an id |
 | a slicer does not filter a visual of another dataset | no `link` in the report says the two fields are the same ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 16](REPORT_FILE_FORMAT_STATEMENTS.md#113-reports-over-several-models)) |
 | a dataset with amounts guessed a *dimension* | another dataset references it: change its role to *fact* with the select on its box (step 16) |

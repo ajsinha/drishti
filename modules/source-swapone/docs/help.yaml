@@ -17,5 +17,5 @@ sections:
 - id: source-swapone
   title: Source SwapOne
   pages:
-  - title: 'Source SwapOne'
-    file: guide.md
+  - title: Source SwapOne
+    file: ../guides/BANK_DATA_GUIDE.md

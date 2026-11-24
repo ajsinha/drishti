@@ -233,7 +233,7 @@ env-file for your own secrets, a cluster of several servers with `--node`, the c
 and what to do when a command stops with an error: [DEPLOYMENT_AND_QA_GUIDE.md › section 7](DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console)
 and [CLI_REFERENCE.md](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti).
 A cluster of three servers and a console on this machine, from one file: `python tools/drishti.py start cluster`, `python tools/drishti.py status --cluster deploy/stack/stack.yaml`, `python tools/drishti.py stop cluster`
-([deploy/stack/README.md](../deploy/stack/README.md)). From the IDEs: [IDE_GUIDE.md](guides/IDE_GUIDE.md). Why each
+([deploy/stack/README.md](guides/CLUSTER_GUIDE.md#deploystack-a-ready-made-local-drishtinet-cluster)). From the IDEs: [IDE_GUIDE.md](guides/IDE_GUIDE.md). Why each
 setting: [OPERATIONS_GUIDE.md › Start the server](guides/OPERATIONS_GUIDE.md#25-start-the-server) and
 [› Start the console](guides/OPERATIONS_GUIDE.md#26-start-the-console).
 

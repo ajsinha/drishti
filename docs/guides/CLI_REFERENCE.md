@@ -2380,8 +2380,8 @@ deploy/aws/delta-s3/delta-s3.sh check --bucket acme-drishti-lake --prefix delta 
 
 Their tests need no AWS account (`python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3`: botocore's
 Stubber, an in-memory S3, Delta tables written by the deltalake package). They have not been run against AWS: no AWS account is
-available to the build, and the live run waits for an AWS sandbox account. The guides: [`deploy/aws/s3-tables/README.md`](../../deploy/aws/s3-tables/README.md)
-and [`deploy/aws/delta-s3/README.md`](../../deploy/aws/delta-s3/README.md).
+available to the build, and the live run waits for an AWS sandbox account. The guides: [`deploy/aws/s3-tables/README.md`](CLUSTER_GUIDE.md#deployawss3-tables-the-s3-tables-connectors-aws-resources)
+and [`deploy/aws/delta-s3/README.md`](CLUSTER_GUIDE.md#deployawsdelta-s3-the-delta-lake-on-s3-connectors-aws-resources).
 
 ### 7.15 lake delete: whole business dates out of a table
 
@@ -3446,7 +3446,7 @@ console the migration's state is on Admin → **BI** (items that could not be co
 ### `bi model`, `bi mq`: models and model queries
 
 What the model designer and a report's visuals do, over REST as the token's user (the server checks every model and answers every query with your row
-rules and masks; [MODELS_AND_DATASETS_FOR_REPORTS.md section 23](bi/MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads)). Reads need no scope.
+rules and masks; [TABLES_AND_MODELS.md section 23](bi/TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads)). Reads need no scope.
 
 ```
 drishti.py bi model list [--kind model|implicit|compat]          the models and datasets you may read, with the name@major a query uses
