@@ -17,9 +17,9 @@
 
 | ADR | Title |
 |---|---|
-| [001](#adr-001-backend-is-a-spring-boot-application) | Backend is a spring boot application |
-| [002](#adr-002-layout-is-sutra-plus-inference) | Layout is sutra plus inference |
-| [003](#adr-003-sutra-is-yaml-with-a-closed-expression-language) | Sutra is yaml with a closed expression language |
+| [001](#adr-001-backend-is-a-spring-boot-application) | Backend is a Spring Boot application |
+| [002](#adr-002-layout-is-sutra-plus-inference) | Layout is Sutra plus inference |
+| [003](#adr-003-sutra-is-yaml-with-a-closed-expression-language) | Sutra is YAML with a closed expression language |
 | [004](#adr-004-server-returns-a-view-model) | Server returns a view model |
 | [005](#adr-005-server-sent-events-for-live-updates) | Server sent events for live updates |
 | [006](#adr-006-vendored-front-end-without-a-build-pipeline) | Vendored front end without a build pipeline |
@@ -41,7 +41,7 @@
 
 ADRs are amended, never rewritten. Each decision below keeps its number; `DECISIONS.md#adr-NNN-...` is the address.
 
-## ADR-001: Backend is a spring boot application
+## ADR-001: Backend is a Spring Boot application
 
 | Status | Date | Decider |
 |---|---|---|
@@ -56,7 +56,7 @@ Drishti ships **only** as the Spring Boot application `drishti-server`. It is ne
 ### Consequences
 There is one deployable, and Spring configuration, metrics and lifecycle are available everywhere. We give up embeddability, which no user needs. ArchUnit enforces one-way module dependencies and a Spring-free SPI.
 
-## ADR-002: Layout is sutra plus inference
+## ADR-002: Layout is Sutra plus inference
 
 | Status | Date | Decider |
 |---|---|---|
@@ -71,7 +71,7 @@ A view layout is the merge of a declarative Sutra (optional) and inferred panels
 ### Consequences
 Unknown data renders on day one. The inference cost is paid once per data shape, and warm requests only bind values.
 
-## ADR-003: Sutra is yaml with a closed expression language
+## ADR-003: Sutra is YAML with a closed expression language
 
 | Status | Date | Decider |
 |---|---|---|
@@ -107,7 +107,7 @@ The same model feeds the console, API clients and golden tests, and live patches
 The ViewModel's structure, standard and use are defined in [VIEWMODEL.md](VIEWMODEL.md), with its JSON Schema at
 `GET /api/v1/viewmodel/schema`.
 
-## ADR-005: Server sent events for live updates
+## ADR-005: Server-sent events for live updates
 
 | Status | Date | Decider |
 |---|---|---|

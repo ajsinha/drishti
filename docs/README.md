@@ -49,7 +49,6 @@ If you will change the code, start with [QUICKSTART_DEVELOPERS.md](QUICKSTART_DE
 | [contracts/](contracts/README.md) | the data contracts: the shared rules (keys, types, dates, signs, vectors, validation), the computed measures' contracts, and [the contract of every command](contracts/packs/README.md) (one YAML file per mnemonic beside its pack) |
 | [admin/](admin/) | running Drishti: operations (with Drishti\*net, compute workers and lake maintenance), configuration, users and roles, editions, AI (model providers and MCP), performance, and the runbooks |
 | [lenses/mockups/](lenses/mockups/) | the lens mock-ups; the lens product document is [architecture/LENSES.md](architecture/LENSES.md): one product document per lens: Drishti Risk, Trading, Market and World (built), the proposed Drishti Oversight for market risk oversight, the proposed MR Cube and CCR Cube (risk cubes on one shared core, with their data contracts) the proposed CRO lens (the Chief Risk Officer's appetite view, with its mock-ups and build checklist) and the proposed CIO lens (the risk data estate and BCBS 239, with its mock-ups and build checklist); who uses each, their questions, what it answers today, the gaps and the proposals |
-| [qa/](../CHANGELOG.md) | quality assurance: the history of every run (findings, fixes, commits) and the Windows QA script |
 | [architecture/](architecture/) | how Drishti is built: the architecture, the BI design (with the W1 model specification, Rūpaka and BI runs), the data architecture (live updates, history queries, Iceberg, reactive connectors, the content store, the database), the client renderer (with Elements and GenUI), a design study of Figma to Sutra ([FIGMA_INTEGRATION.md](plans/FIGMA_INTEGRATION.md)), the ViewModel contract, collaboration, VaR sharding, resources and scale, cluster deployment (with Drishti\*net, AWS, the Delta lake in S3 and super scale), the implementation plan, [high-performance native integration and Java 25](plans/HIGH_PERFORMANCE_NATIVE.md) (the roadmap: BLAS, the Vector API, native libraries, embedded columnar engines), the [scale strategy](guides/CLUSTER_GUIDE.md#14-scale-strategy-for-one-server) (millions of trades a day, a year of history) and the [decision records](architecture/DECISIONS.md) (ADRs, one document); what is built only, a design not built is in `plans/` |
 | [plans/](plans/) | the designs not built (counterparty engines, financial crime, IFRS 9 ECL, high-performance native, Figma integration): frozen until built, then folded into a guide and deleted |
 | [requirements/](requirements/), [publications/](publications/) | the reference mockups and logo; the design-and-evidence presentation |
@@ -465,14 +464,12 @@ Twelve working Sutras with their data, introduced in [guides/examples/README.md]
 
 [DECISIONS.md](architecture/DECISIONS.md) holds the 21 architecture decision records, one section each (ADR-001 to ADR-022; 011 was superseded by 017); the index is at its top.
 
-### Quality assurance runs (`qa/`)
+### Quality assurance
 
-One summary of every run (what was tested, findings by severity, how each was fixed, the commits); the round reports, activity logs and
-scripts are in the repository's history. The Windows QA script is a live procedure and stays.
+The history of every QA run is in the [CHANGELOG](../CHANGELOG.md); the Windows QA script is a live procedure and stays.
 
 | Document | What it holds |
 |---|---|
-| [qa/QA_HISTORY.md](../CHANGELOG.md) | every QA round, soak and documentation verification (2026-10-01 to 2026-10-21): when, on what, what it found and what was fixed, with the commits; the round reports are in git |
 | [DEPLOYMENT_AND_QA_GUIDE.md › Offline QA](DEPLOYMENT_AND_QA_GUIDE.md#12-offline-qa-with-your-own-trade-files) | the QA and demo script for an offline Windows machine with your own ENDUR files |
 
 ### Records

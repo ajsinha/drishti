@@ -48,6 +48,7 @@ GENERATORS: list[tuple[str, list[str], list[str]]] = [
     ("the IDE launchers and IDE_GUIDE section 4", ["tools/drishti.py", "launchers"], ["tools/drishti.py", "launchers", "--check"]),
     ("the guides' data sections", ["tools/docs/guide_data.py"], ["tools/docs/guide_data.py", "--check"]),
     ("the pack guides' Help addresses (console help.yaml moved:)", ["tools/docs/pack_guide_moves.py"], ["tools/docs/pack_guide_moves.py", "--check"]),
+    ("docs/guides/BANK_DATA_GUIDE.md (the trading products catalogue)", ["tools/docs/trading_products.py"], ["tools/docs/trading_products.py", "--check"]),
     ("docs/README.md (the Help map)", ["tools/docs/help_map.py"], ["tools/docs/help_map.py", "--check"]),
     ("the docs corpus tables", ["tools/docs/corpus.py", "--write"], ["tools/docs/corpus.py", "--check"]),
 ]

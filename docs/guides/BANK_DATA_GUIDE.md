@@ -891,6 +891,8 @@ The pack's commands, connectors, kinds, roles and data contracts are generated i
 
 ## Trading products
 
+<!-- trading-products:begin -->
+
 The trading pack covers **125 products** in ten asset classes. Each has its own Sutra, matched on the trade's `PRODUCT_TYPE`, laid out as a deal screen (ticket, legs side by side with their flows and resets, events, payments); Calypso and Murex book them. The table says what each product is in the model the samples were generated from: its terms, schedule, the market data it is valued with and its risk measures (the valuation is market-risk's trade valuation, `TVAL`). `TRD PRODUCT_TYPE=<product type> <GO>` lists the trades in one product.
 
 | Asset class | Products |
@@ -922,7 +924,7 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 | Constant maturity swap | `CMS_SWAP` | swap | cashflows | `ir-curve`, `ir-curve`, [`ir-vol-cube`](../contracts/packs/market-data.md#example-market-data-ir-vol-cube) ([contract](../contracts/packs/market-data.md#irv-swaption-volatility-cube-ir-vol-cube)) | DV01, Vega |
 | Forward rate agreement | `FRA` | linear | fixings | `ir-curve`, `ir-curve` | DV01 |
 | Short-term interest rate future | `STIR_FUTURE` | future | — | `ir-curve` | DV01 |
-| Government bond future | `BOND_FUTURE` | future | — | `ir-curve`, `bond`, [`repo-curve`](../contracts/packs/market-data.md#example-market-data-repo-curve) ([contract](../contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | DV01 |
+| Government bond future | `BOND_FUTURE` | future | — | `ir-curve`, [`bond`](../contracts/packs/market-data.md#example-market-data-bond) ([contract](../contracts/packs/market-data.md#bnd-bond-security-master-bond)), [`repo-curve`](../contracts/packs/market-data.md#example-market-data-repo-curve) ([contract](../contracts/packs/market-data.md#repo-repo-curve-repo-curve)) | DV01 |
 | Interest rate cap | `CAP` | option | fixings | `ir-curve`, `ir-curve`, [`cap-vol-surface`](../contracts/packs/market-data.md#example-market-data-cap-vol-surface) ([contract](../contracts/packs/market-data.md#cpv-capfloor-volatility-surface-cap-vol-surface)) | DV01, Vega |
 | Interest rate floor | `FLOOR` | option | fixings | `ir-curve`, `ir-curve`, `cap-vol-surface` | DV01, Vega |
 | Interest rate collar | `COLLAR` | option | fixings | `ir-curve`, `ir-curve`, `cap-vol-surface` | DV01, Vega |
@@ -1081,7 +1083,7 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 | Product | PRODUCT_TYPE | Family | Schedule | Market data | Risk |
 |---|---|---|---|---|---|
-| Equity position | `EQ_CASH` | position | — | `equity`, [`dividend-curve`](../contracts/packs/market-data.md#example-market-data-dividend-curve) ([contract](../contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | Delta |
+| Equity position | `EQ_CASH` | position | — | [`equity`](../contracts/packs/market-data.md#example-market-data-equity) ([contract](../contracts/packs/market-data.md#eq-equity-equity)), [`dividend-curve`](../contracts/packs/market-data.md#example-market-data-dividend-curve) ([contract](../contracts/packs/market-data.md#div-dividend-curve-dividend-curve)) | Delta |
 | Equity forward | `EQ_FORWARD` | linear | — | `equity`, `dividend-curve`, `ir-curve` | Delta |
 | Single-stock future | `EQ_FUTURE_SINGLE` | future | — | `equity`, `dividend-curve` | Delta |
 | Equity index future | `EQ_INDEX_FUTURE` | future | — | [`equity-index`](../contracts/packs/market-data.md#example-market-data-equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)), `dividend-curve` | Delta |
@@ -1330,6 +1332,7 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 **Worst-of note** (`WORST_OF_NOTE`): Coupon and redemption depend on the worst of several stocks. Terms: `coupon` (Coupon), `basketSize` (Stocks), `barrier` (Barrier).
 
 **Credit basket note** (`CREDIT_BASKET_NOTE`): Nth-to-default note on a small basket. Terms: `coupon` (Coupon), `nth` (Nth default), `basketSize` (Names).
+<!-- trading-products:end -->
 
 ## The trading module
 
