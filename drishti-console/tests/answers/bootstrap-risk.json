@@ -1246,7 +1246,7 @@
     "api" : [ "/api/v1/admin/data-out" ],
     "cluster" : true,
     "console" : [ "/admin/data-out", "/admin/api/data-out" ],
-    "help" : [ "flight-guide" ],
+    "help" : [ "integration-guide" ],
     "here" : true,
     "id" : "flight",
     "landings" : [ ],
