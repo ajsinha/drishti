@@ -135,7 +135,7 @@ async def packs(request) -> list[Item]:
 async def ui_kit(request) -> list[Item]:
     answer = await request.app.state.backend.ui_kit(ident(request))
     return [Item("ui-kit", str(f.get("name")), str(f.get("kind") or "fragment"), "shipped",
-                 "/help/rachana-reference#fragments-and-the-ui-kit")
+                 "/help/rachana-reference#3a-the-drishti-ui-kit")
             for f in _rows(answer, "fragments", "items") if isinstance(f, dict) and f.get("name")]
 
 
