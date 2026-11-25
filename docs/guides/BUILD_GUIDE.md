@@ -3005,82 +3005,7 @@ Preview it against another counterparty (`CP-NORTHPLAINS`): the same layout serv
 
 ## 13. Rachana-EL step by step
 
-Every `bind`, `rows`, `where` and `highlight` is a Rachana-EL expression. This section builds them up against the Murex swap `MX-20000001` (look at it
-with `curl -s -H "$AUTH" $DRISHTI/entities/trade/MX-20000001/raw | python3 -m json.tool`; its shape is in [section 6.1](#61-the-shape-of-the-document)).
-Every function is in [FUNCTIONS.md](FUNCTIONS.md) and the [reference](RACHANA_REFERENCE.md#functions).
-
-**Paths.**
-
-| You write | You get | Why |
-|---|---|---|
-| `$.QUANTITY` | `242000000` | a field of the document |
-| `$.LEGS[0].LEG_TYPE` | `FIXED` | `[0]` is the first element |
-| `$.LEGS[-1].INDEX.NAME` | `AONIA` | `[-1]` is the last; `.` walks into objects |
-| `$.LEGS[0].CASH_FLOWS[1].PAYMENT_DATE` | `2027-06-29` | array, object, array, field: as deep as the data goes |
-| `$.LEGS[1].CASH_FLOWS[0].RESETS[0].RATE` | `0.035376` | four levels down: the first fixing of the floating leg |
-| `$.COUNTERPARTY` | `CP-MERIDIAN-RE` | a reference: `link($.COUNTERPARTY, 'counterparty')` opens it |
-| `$['TRADE_ID']` | `MX-20000001` | brackets: for a field whose name has a hyphen (`$['day-count']`; `$.day-count` would subtract) |
-| `$.QUANTTY` | *(empty)* | a misspelt field is empty, never an error: check spelling in the preview |
-
-**Rows: `@` and `#index`.** Inside `rows:`, `each:` or a filter, `@` is the current element and `#index` its position (from 0): `bind: "@.RATE"` is each
-row's own rate; `highlight: "@.PAYMENT_DATE == first($.EVENTS[?@.EVENT_DATE > today()]).EVENT_DATE"` lights the next payment;
-`tabTitle: "'Leg ' + @.LEG_ID"` reads `Leg 1`, `Leg 2`.
-
-**Filters.** `[?condition]` keeps the elements for which the condition holds:
-
-| Expression | Result for `MX-20000001` |
-|---|---|
-| `size($.EVENTS)` | `42` |
-| `size($.EVENTS[?@.EVENT_TYPE == 'CASH_SETTLEMENT'])` | `35`: one per payment of either leg |
-| `size($.EVENTS[?!nonblank(@.LEG_ID)])` | `7`: the deal's own events (booked, confirmed, cleared, amended…) |
-| `size($.EVENTS[?nonblank(@.AMOUNT) && @.EVENT_DATE > today()])` | `29` on the business date 2026-10-16: the cash events still to come |
-| `first($.LEGS[?@.LEG_TYPE == 'FLOAT']).INDEX.NAME` | `AONIA`: the floating leg, wherever it sits (`$.LEGS[?…][0]` is the same) |
-| `$.LEGS[?@.LEG_ECONOMIC_TYPE == 'Pay'][0].LEG_ID` | `2`: the first leg we pay |
-| `$.LEGS[?@.LEG_TYPE == 'FLOAT'].INDEX.NAME` | *(empty)*: a filter gives a list; take an element first (`first(...)`, `[0]`) |
-| `$.LEGS[*].LEG_ID` | the list `[1, 2]`: **projection**, a field of every element (what a control's `options` read) |
-| `size(flatten($.LEGS[*].CASH_FLOWS))` | `35`: every period of every leg as one list (`size($.LEGS[1].CASH_FLOWS)` is `28`) |
-| `size(flatten($.LEGS[1].CASH_FLOWS[*].RESETS))` | `90`: every fixing of the floating leg |
-| `size(flatten($.LEGS[1].CASH_FLOWS[*].RESETS)[?!nonblank(@.RATE)])` | `75`: fixings of the floating leg not yet known |
-
-The extracts write a missing value as empty text (`"AMOUNT": ""`), so test for a value with `nonblank(...)`, which skips `""` and spaces as well as null,
-not with `coalesce`, which keeps it.
-
-**Functions.**
-
-| Before | After | Shows |
-|---|---|---|
-| `bind: $.QUANTITY, fmt: amount0` | `bind: "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')"` | `AUD 242,000,000` |
-| `bind: "$.LEGS[0].NOTIONAL + $.LEGS[1].NOTIONAL"` | `bind: "sum($.LEGS, 'NOTIONAL')", fmt: amount0` | `484,000,000` |
-| `bind: "coalesce($.PACKAGE_ID, 'none')"` (empty text is kept) | `bind: "nonblank($.PACKAGE_ID, 'none')"` | `none` |
-| `where: "$.TRADE_STATUS == 'amended'"` (never true: case matters) | `where: "lower($.TRADE_STATUS) == 'amended'"` | true for `AMENDED` |
-| `where: "$.PRODUCT_SUB_TYPE == 'swap'"` | `where: "contains($.PRODUCT_SUB_TYPE, 'swap')"` | `contains` and `startsWith` ignore case |
-| `bind: $.TRADER_ID` | `bind: "link($.TRADER_ID, 'trader', $.TRADER_FIRST_NAME + ' ' + $.TRADER_LAST_NAME)"` | `A. Shah`, a link to the trader |
-| a total per year the data does not carry | `rows: "group($.EVENTS[?nonblank(@.AMOUNT) && nonblank(@.LEG_ID)], 'EVENT_DATE', 'AMOUNT', 'year')"` | one row a year, `2025 −3,713,969` first |
-| days to maturity | `bind: "days(today(), $.MATURITY_DATE)"` | `2079` on 2026-10-16 |
-
-There is no list literal (`['AUD', 'NZD']` does not compile).
-
-**Formats and tones.** `fmt:` decides how a value reads; `tone:` its colour:
-
-| Value | `fmt` | `tone` | Shows |
-|---|---|---|---|
-| `242000000` | `amount0` | | `242,000,000` |
-| `242000000` | `signed0` | `sign` | `+242,000,000`, positive colour |
-| `-155245` | `signed0` | `sign` | `−155,245`, negative colour (a true minus sign) |
-| `0.040829` | `pct4` | | `4.0829%` |
-| `0.040829` | `price4` | | `0.0408` (a price per unit: no scaling) |
-| `242000000` | `compact` | | `242.0m` |
-| `2025-07-25` | `dmy` | | `25 Jul 2025` |
-| `AMENDED` / `Pending` | | `status` | `ok` colour / `warn` colour |
-
-`tone: status` reads the words: *fail*, *reject*, *dispute*, *breach* are bad; *pending*, *unmatched*, *warn* a warning; anything else fine. So it suits
-confirmation and settlement statuses, not a credit rating (`CCC` would show as fine).
-
-**Conditions** combine with `&&`, `||` and `!`, and choose with `? :` (`bind: "$.BUY_SELL_CODE == 'B' ? 'Buy' : 'Sell'"`). Three things to know:
-`<`, `>`, `<=`, `>=` compare numbers as numbers and texts as text, so ISO dates order correctly (`@.PAYMENT_DATE < today()` tells a paid flow from one to
-come), and anything against empty is false; `||` gives `true` or `false`, not a value (`$.STRATEGY || 'n/a'` shows `true`: use `nonblank`); `+` adds
-only when both sides are numbers, otherwise it joins text (`'1' + 1` is `11`), and a missing value in arithmetic gives `NaN` (wrap it,
-`nonblank($.QUANTTY, 0) * 2`).
+Every `bind`, `rows`, `where` and `highlight` is a Rachana-EL expression. The step-by-step build-up (paths, `@` and `#index`, filters and projection, functions, formats and tones, conditions) is [Rachana, Writing Sutras, 13. Rachana-EL, step by step](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#13-rachana-el-step-by-step), on a small order document. In Drishti the document to try it on is the Murex swap `MX-20000001`: look at it with `curl -s -H "$AUTH" $DRISHTI/entities/trade/MX-20000001/raw | python3 -m json.tool` (its shape is in [section 6.1](#61-the-shape-of-the-document)). Every function is in [FUNCTIONS.md](FUNCTIONS.md) and the [reference](RACHANA_REFERENCE.md#functions).
 
 ## 14. A trade view, built step by step
 
@@ -3299,19 +3224,7 @@ when it is not true the panel is left out, with no empty box. The shipped `endur
 
 ### 14.7 Placing panels: `layout:` and phones
 
-Without `layout:` panels flow (main column, `area: right` column, `span` and `height`). To place them yourself, draw the screen as named areas and put
-each panel in one (`area: trades`):
-
-```yaml
-layout: { areas: ["head head", "trades detail"], columns: [7, 5], split: { between: [trades, detail] }, tabs: [detail], phone: [head, detail, trades] }
-```
-
-Or keep the flow and group panels in folding **sections** (`layout.sections`, `section:` on a panel); `order:` sorts panels; `user-can-arrange: true` lets
-each reader drag and resize panels for themselves. `sutra lint` checks it (`DRS-2059`); every key is in
-[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections). **On a phone** a reader gets only the panels that matter there:
-give each heavy panel a phone tier (`phone: must`, `phone: { tier: glance, rows: 5, columns: [Trade, MTM], sort: -MTM }`, `phone: more`, `phone: desk`)
-and the screen a `phone: { order, default, summary }` ([section 32](#32-designing-for-phones),
-[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#phone-what-goes-to-a-phone)).
+Without `layout:` panels flow (main column, `area: right` column, `span` and `height`); to place them yourself draw the screen as named areas, or group panels in folding sections, and give each heavy panel a phone tier: [Rachana, Writing Sutras, 9. Layout: placing panels](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#9-layout-placing-panels). `sutra lint` checks it (`DRS-2059`); the Drishti side is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections) and [section 32](#32-designing-for-phones).
 
 Put the blocks of 14.2 to 14.6 under one `panels:` and you have a complete trade view. The [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated)
 is the same layout with every line commented, and `modules/banking/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses,
@@ -3728,54 +3641,8 @@ You rarely need to write these by hand: the **Sutra designer** ([section 25](#25
 
 ## 21. Expandable row groups: pivot `by` lists and tree tables
 
-Two opt-in features let rows hold rows; both open one level at a time with a ▸/▾ toggle, and `expand` sets how many levels show at first.
-
-**Row groups of a pivot.** `by` takes one field, or a **list** (at most six) for nested groups:
-
-```yaml
-  - id: nested
-    kind: pivot
-    title: The desk's MTM by book, family and currency
-    source: "link($.TT_GROUP, 'desk')"
-    rows: $.POSITIONS
-    by: [BOOK, FAMILY]            # two levels: the book, then its product families
-    across: CURRENCY
-    value: MTM
-    fmt: compact
-    tone: sign
-    expand: 1                     # only the books, closed; 2 opens one level; all opens every level
-```
-
-You should see one row per book with its subtotal (`BOOK-RATES-1 6.0bn`), each opening to its families (`swap 6.2bn`, `linear −161.2m`…), across `EUR`,
-`USD`, `CHF`, `GBP`, `JPY` and `CAD`. Group rows aggregate the underlying rows (an `avg` subtotal is the average of all its rows). Heat shading is not
-drawn on nested pivots. A number, an empty list or a list of non-names as `by` is `DRS-2029`.
-
-**A tree table.** When each row *carries its own children*, say which with `children`, an expression over the row:
-
-```yaml
-  - id: flows
-    kind: table
-    title: Floating leg, cash flows opening to their resets
-    rows: $.LEGS[1].CASH_FLOWS
-    children: "@.RESETS"          # the rows nested under this one, to any depth (limit 12)
-    expand: 1
-    columns:
-      - { label: Flow / reset, bind: "nonblank(@.FLOW_ID, @.RESET_ID)" }
-      - { label: Start, bind: "@.START_DATE", fmt: date }
-      - { label: Payment / reset date, bind: "nonblank(@.PAYMENT_DATE, @.RESET_DATE)", fmt: date }
-      - { label: Rate, bind: "@.RATE", fmt: pct4 }
-```
-
-You should see the 28 floating periods (`20000001008 · 2025-07-28 · 2025-09-29 · 3.5377%` first), each with a ▸ that opens its fixings (`R-1 ·
-2025-07-28 · 2025-07-28 · 3.5376%` …). Child rows are another kind of row, so a column reads whichever field is there with `nonblank`. `total: true` sums
-only the rows **without** children. A tree table is not sorted, paged or given per-column filters, and its filter keeps the ancestors of matching rows.
-`ladder` takes the same two keys. When each level is a different thing with its own columns, use **`levels`** instead (one level at a time with a
-breadcrumb: [section 9.6](#96-drill-down-leg--cash-flow--resets),
-[levels](RACHANA_REFERENCE.md#levels-drill-down-level-by-level)).
-
-A pivot **aggregates** rows by fields you name; a tree table or `levels` **shows** a hierarchy the document already has. Runnable versions:
-[pivot-row-groups](examples/README.md#pivot-row-groups) and [tree-table](examples/README.md#tree-table). Do not confuse the **`pivot` panel kind** with the **`pivot:`
-option** that gives a table a user-driven Pivot.
+Two opt-in features let rows hold rows: a **pivot** with a `by` list (nested groups with subtotals) and a **tree table** (`children`); `expand` sets how many levels open first. How to write them, with an example of each: [Rachana, Panel kinds, Row groups](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#row-groups-pivot-by-lists-and-tree-tables). In Drishti, when each level is a different thing use `levels`
+([section 9.6](#96-drill-down-leg--cash-flow--resets), [levels](RACHANA_REFERENCE.md#levels-drill-down-level-by-level)); runnable versions: [pivot-row-groups](examples/README.md#pivot-row-groups) and [tree-table](examples/README.md#tree-table). Do not confuse the **`pivot` panel kind** with the **`pivot:` option** that gives a table a user-driven Pivot.
 
 ## 22. Dates, live data, imperfect data and controls
 
@@ -3826,16 +3693,7 @@ panels:
     value: MTM
 ```
 
-1. A control is `{ id, kind, label, ... }`. `options` is a list or an expression (`"$.TRADES[*].PRODUCT"`: every trade's product, without repeats);
-   `placement: header` with `panel: trades` puts it in that panel's header (the default, `strip`, puts it under the title; `side` is a bar at the side).
-2. A panel reads the value with `where:` (a condition on each row), `limit:`, `rows:` or a `${ctl.id}` in its `title`. The server computes the rows with
-   the value. `oneOf(@.PRODUCT, ctl.product)` treats an empty multi-select as "everything"; `within(@.EVENT_DATE, ctl.when)` tests a date or number against
-   a `from..to` range.
-3. A dropdown value is text, a multi-select a list, a one-handle `slider` a **number** (empty when the slider has no scale; with `range: true` it is
-   `from..to` text), a `top-n` a whole number.
-4. Using a control you did not declare is `DRS-2036`; a default that does not fit the kind is `DRS-2039`.
-5. `on-select: { by: asset, field: ASSET, filter: [trades] }` on a `table`, `ladder` or `hbar` lets a click set a control: click the *Rates* bar and the
-   member trades show only rates.
+Declaring controls, reading `ctl.<id>` in `where`, `limit`, `rows` and `title`, the value of each kind and `on-select` (a click on a bar or row sets a control): [Rachana, Writing Sutras, 10. Controls](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#10-controls-letting-the-reader-choose). A reference to a control the Sutra does not declare is `DRS-2036`; a default that does not fit the kind is `DRS-2039`.
 
 **Try it.** Open `NSET NS-MERIDIAN-RE-NY <GO>`: the table reads *Member trades (343 of 343)* with a net of `+99,704,064`; choose *Asset class Rates* and set
 the slider to 250m, and the title gains `· Rates`. From the command line, with the values in the address:
@@ -4243,11 +4101,7 @@ masked is not offered, and a carried value that is masked makes the hint say *Hi
 
 ### 28.5 The expressions
 
-Rules and hints use a small language, the same in the browser (instantly) and on the server (the authority): the fields by id, a lookup's carried values
-(`counterparty.LIMIT`), numbers (`30_000_000` and `1e6` too), `'text'`, `true`, `false`, `null`, `today`; `+ - * /`; `== != < <= > >=` (numbers as
-numbers, anything else as text, so ISO dates compare); `and or not`; brackets; `empty(x)`, `len(x)`, `abs(x)`, `min(a, b)`, `max(a, b)`. An empty value
-makes a sum or a comparison empty, and a rule that comes out empty holds: `required` says what is missing, not every rule. A rule that reads a lookup's
-carried value is checked in the browser only; the server checks it again when it writes.
+Rules and hints use a small expression language, the same in the browser and on the server: [Rachana, Writing Sutras, 11. Forms, the rule language](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#11-forms-letting-people-edit-records). A rule that reads a lookup's carried value is checked in the browser only; the server checks it again when it writes.
 
 ### 28.6 Checking a form
 
@@ -5146,12 +5000,7 @@ On a phone a page does not get every panel. Each panel has a **phone tier**, set
 
 ### 32.1 Phone tiers: must, glance, more, desk
 
-| Tier | On a phone | Loaded | Live | Typical panels |
-|---|---|---|---|---|
-| **must** | in full, at the top in the phone order | with the page | yes | the header, key figures, status and breaches, the one table the page is about |
-| **glance** | a compact form with *Show all* | with the page, the compact data only | yes, staying compact | ranked bars, a history chart as a sparkline, a long table as its first rows |
-| **more** | a row under *More on this page*, loaded in place when tapped (bound as the viewer, with the page's controls, Sutra and date) | on tap | once loaded | contributions, cash-flow ladders, provenance, checks, secondary tables, notes |
-| **desk** | named under *On desktop*, with the page's link to copy | never on a phone | no | designers, wide pivot grids, multi-chart dashboards, wide editing forms |
+The four tiers (`must`, `glance`, `more`, `desk`), the compact options and the kind defaults: [Rachana, Writing Sutras, Phone tiers](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#phone-tiers).
 
 - A page always has a **must** panel: with none configured, its first panel is must.
 - A **tablet** (640 to 1000 px) keeps the page's layout less the desk panels, which wait under *More on this page*. A **desktop** is unchanged, and *Show

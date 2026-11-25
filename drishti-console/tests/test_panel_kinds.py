@@ -110,7 +110,9 @@ def test_each_kind_has_a_picture_options_linked_to_the_reference_and_a_yaml_exam
         body = by_kind[kind]
         assert f"](img/panels/kind-{kind}.jpg)" in body, kind
         assert f"**The keys of `{kind}`.**" in body, kind                 # the catalogue entry and the kind's keys: one section
-        for label in ("Use it when:", "Not when:", "Key options:", "Empty when", "Masked:", "No access:", "Live:", "Phone:", "CSV:"):
+        general = ("Use it when:", "Not when:", "Key options:")       # the general kinds' three moved to Drishti Rachana's PANEL_KINDS.md (one linked line); links and provenance are Drishti's
+        assert "Use it when, not when, key options and every option of" in body or all(label in body for label in general), kind
+        for label in ("Empty when", "Masked:", "No access:", "Live:", "Phone:", "CSV:"):
             assert label in body, (kind, label)
         yaml = re.search(r"```yaml\n(.*?)\n```", body, re.S)
         assert yaml and f"kind: {kind}" in yaml.group(1), kind
