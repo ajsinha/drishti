@@ -410,7 +410,7 @@ final class ConnectorInstance implements SourcePlugin {
         delegate.close();
     }
 
-    // a connector writes with its plugin's write path (ADMIN_GUIDE.md section 5.4): the instance is the plugin, so it passes it on
+    // a connector writes with its plugin's write path (ADMIN_GUIDE.md section 28.4): the instance is the plugin, so it passes it on
 
     @Override
     public java.util.Optional<String> writeKey() {

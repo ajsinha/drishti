@@ -1540,7 +1540,7 @@ variable, as everywhere in the file.
 #### Writes: saving to the source
 
 A connector may declare `writes:`: named commands that change a record in its source, used by write-back's `source` target
-([APPROVALS_GUIDE.md › The design and its reasons, section 5.4](ADMIN_GUIDE.md#284-writing-to-a-source-writes); the administrator's guide
+([ADMIN_GUIDE.md section 28.4](ADMIN_GUIDE.md#284-writing-to-a-source-writes); the administrator's guide
 [APPROVALS_GUIDE.md section 13](ADMIN_GUIDE.md#284-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
 may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
 (`reply` or `next-load`) and `timeout:`. Only the JDBC plugin writes ([JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record));

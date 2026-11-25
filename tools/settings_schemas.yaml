@@ -283,7 +283,7 @@ schemas:
       - { key: kinds, type: list, default: "what the plugin reports", meaning: "The kinds it serves" }
       - { key: settings, type: map, default: "{}", meaning: "The plugin's settings, as the tables above (every plugin, the shared tls.* and proxy.*, the plugin's own)" }
       - { key: "settings.*", type: map, meaning: "One setting of the plugin" }
-      - { key: writes, type: map, default: "{}", meaning: "Named commands that write an approved change back to the source (ADMIN_GUIDE.md section 5.4): JDBC or Kafka; off until an administrator switches the connector's writes on" }
+      - { key: writes, type: map, default: "{}", meaning: "Named commands that write an approved change back to the source (ADMIN_GUIDE.md section 28.4): JDBC or Kafka; off until an administrator switches the connector's writes on" }
       - { key: "writes.*", type: map, meaning: "One command: kind, params, confirm (reply, ack-topic, next-load), timeout, and the plugin's block (jdbc or kafka)" }
       - { key: "writes.*.confirm", type: string, default: reply, meaning: "How the write is confirmed: reply, ack-topic or next-load" }
       - { key: "writes.*.kafka", type: map, meaning: "The Kafka block (docs/guides/USER_GUIDE.md, Live results and blotters: Writing back to the record's own source): topic, shape, version-field, changed-by, changed-at, change-id-field" }

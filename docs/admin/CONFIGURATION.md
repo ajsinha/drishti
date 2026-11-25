@@ -5627,7 +5627,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `kinds` | list | `what the plugin reports` |  | the connector | The kinds it serves | live (the connector restarts) |  | admin |
 | `settings` | map | `{}` |  | the connector | The plugin's settings, as the tables above (every plugin, the shared tls.\* and proxy.\*, the plugin's own) | live (the connector restarts) |  | admin |
 | `settings.*` | map | none |  | the connector | One setting of the plugin | live (the connector restarts) |  | admin |
-| `writes` | map | `{}` |  | the connector | Named commands that write an approved change back to the source (ADMIN\_GUIDE.md section 5.4): JDBC or Kafka; off until an administrator switches the connector's writes on | live (the connector restarts) |  | admin |
+| `writes` | map | `{}` |  | the connector | Named commands that write an approved change back to the source (ADMIN\_GUIDE.md section 28.4): JDBC or Kafka; off until an administrator switches the connector's writes on | live (the connector restarts) |  | admin |
 | `writes.*` | map | none |  | the connector | One command: kind, params, confirm (reply, ack-topic, next-load), timeout, and the plugin's block (jdbc or kafka) | live (the connector restarts) |  | admin |
 | `writes.*.confirm` | string | `reply` |  | the connector | How the write is confirmed: reply, ack-topic or next-load | live (the connector restarts) |  | admin |
 | `writes.*.kafka` | map | none |  | the connector | The Kafka block (docs/guides/USER\_GUIDE.md, Live results and blotters: Writing back to the record's own source): topic, shape, version-field, changed-by, changed-at, change-id-field | live (the connector restarts) |  | admin |

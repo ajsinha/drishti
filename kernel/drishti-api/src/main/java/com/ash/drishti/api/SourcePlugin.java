@@ -428,7 +428,7 @@ public interface SourcePlugin extends AutoCloseable {
 
     /**
      * The key of a {@code writes:} command's block this plugin performs ({@code jdbc}, {@code rest}), or empty when it is read-only
-     * (ADMIN_GUIDE.md › The design and its reasons, section 5.4: {@code write} is implemented once per plugin, never per source system). A connector whose plugin has
+     * (ADMIN_GUIDE.md section 28.4: {@code write} is implemented once per plugin, never per source system). A connector whose plugin has
      * none cannot have {@code writes:}.
      */
     default java.util.Optional<String> writeKey() {
