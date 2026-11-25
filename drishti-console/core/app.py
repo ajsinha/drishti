@@ -728,7 +728,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(live_routes.router)              # the live tables: /live/<name> and /api/rdp (the Data Protocol, the grid's live mode)
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
-    app.include_router(render_routes.router)            # the client-side renderer's playground (EMBED_GUIDE.md section 13)
+    app.include_router(render_routes.router)            # the client-side renderer's playground (INTEGRATION_GUIDE.md section 13)
     app.include_router(elements_routes.router)          # the Drishti Elements gallery (Drishti Elements' docs/DESIGN.md)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
@@ -764,7 +764,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (ADMIN_GUIDE.md)
     from routes import config_editor_routes
     app.include_router(config_editor_routes.router)     # Admin -> Configuration: every setting in three tiers, changes proposed (OPERATIONS_GUIDE.md)
-    app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (FLIGHT_GUIDE.md)
+    app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (INTEGRATION_GUIDE.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)
     app.include_router(lake_routes.router)
@@ -791,6 +791,6 @@ def create_app(settings: Settings) -> FastAPI:
     if app.state.embed.enabled:                   # off by default: nothing under /embed/ exists otherwise
         from routes import embed_signin_routes, embed_v2_routes
 
-        app.include_router(embed_signin_routes.router)       # the renderer's optional sign-in window (auth: 'popup', EMBED_GUIDE.md 10.1)
+        app.include_router(embed_signin_routes.router)       # the renderer's optional sign-in window (auth: 'popup', INTEGRATION_GUIDE.md 10.1)
         app.include_router(embed_v2_routes.router)           # the embed API v2: the ViewModel as JSON, the renderer, Elements 2.x
     return app

@@ -145,7 +145,8 @@ def dependents(kind: str, all_maps: dict) -> list[str]:
     return sorted({m.kind for ms in all_maps.values() for m in ms if kind in m.after})
 
 
-def page(kind: str, ms: list[KindMapping], all_maps: dict) -> str:
+def page(kind: str, ms: list[KindMapping], all_maps: dict, n: int = 0) -> str:
+    """One kind's section; its numbered headings carry the kind's number in the index (n.1, n.2 ...) so that no two headings share one."""
     m = ms[0]
     c = m.contract
     notes = comments(m.path)
@@ -153,18 +154,18 @@ def page(kind: str, ms: list[KindMapping], all_maps: dict) -> str:
     rel = m.path.relative_to(ROOT).as_posix()
     run_opts = " --source-system SYSTEM" if "{$source_system}" in json.dumps(m.fields) else ""
     lines = [f"## {kind}: {c.doc.get('title', kind)} (from CSV)", "",
-             "### 1. What it is and who reads it", "", m.about, "", _md(c.doc.get("description", "")), "",
+             f"### {n}.1 What it is and who reads it", "", m.about, "", _md(c.doc.get("description", "")), "",
              f"- **Contract:** `{c.path.relative_to(ROOT).as_posix()}` (pack `{c.pack}`, class `{c.klass}`), key `{c.key}`.",
              f"- **Mapping:** `{rel}` (source `{m.source}`); wave {WAVES.get(kind, '-')} of the CSV loaders.",
              f"- **Grain:** {_md(c.doc.get('grain', ''))}", "",
-             "### 2. The command", "", "```bash",
+             f"### {n}.2 The command", "", "```bash",
              f"python3 tools/mrloader/csv_load.py --kind {kind} --csv FILE{child_opts}{run_opts} --date YYYY-MM-DD --dry-run   # check; write nothing",
              f"python3 tools/mrloader/csv_load.py --kind {kind} --csv FILE{child_opts}{run_opts} --date YYYY-MM-DD --inbox     # convert and hand to the data inbox",
              f"python3 tools/mrloader/csv_load.py --kind {kind} --template                                       # the header and an example row",
              "```", "",
              f"In a day file: `{kind}: {{csv: \"FILE\"" + "".join(f", child: {{{n}: \"FILE\"}}" for n in m.children) + "}`. "
              "A bank's own column names: a mapping file of its own, given with `--mapping FILE`.", "",
-             "### 3. The CSV, column by column", "",
+             f"### {n}.3 The CSV, column by column", "",
              f"The file's format: delimiter `{m.dialect.delimiter}`, encoding `{m.dialect.encoding}`, decimal `{m.dialect.decimal}`, thousands "
              f"`{m.dialect.thousands}`, dates `{m.dialect.dates}` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). "
              "Column names compare upper-cased, other characters as `_`.", ""]
@@ -176,7 +177,7 @@ def page(kind: str, ms: list[KindMapping], all_maps: dict) -> str:
                   f"{'rejected (NO_CHILDREN)' if spec.get('empty', 'reject') == 'reject' else 'kept'}; never twice the same "
                   f"{', '.join(spec.get('unique') or []) or 'row'}.", ""]
         lines += column_table(m, n, notes)
-    lines += ["", "### 4. A sample", ""]
+    lines += ["", f"### {n}.4 A sample", ""]
     sample = SAMPLES / f"{kind}.csv"
     expected = SAMPLES / f"{kind}.expected.jsonl"
     if sample.is_file():
@@ -185,12 +186,12 @@ def page(kind: str, ms: list[KindMapping], all_maps: dict) -> str:
     if expected.is_file():
         first = expected.read_text(encoding="utf-8").splitlines()[0]
         lines += [f"The first record of `tools/mrloader/samples/{kind}.expected.jsonl` (records are written in key order):", "", "```json", first, "```", ""]
-    lines += ["### 5. What is not loaded", ""]
+    lines += [f"### {n}.5 What is not loaded", ""]
     gone = [f"| `{k}` | a column of this name | {_md(v)} |" for k, v in m.refuse_columns.items()]
     gone += [f"| `{k}` | a required field left out | {_md(v)} |" for k, v in m.omit.items()]
     gone += [f"| `{n}` | derived | {_md(f.get('note', 'Drishti computes it'))} |" for n, f in c.fields.items() if f.get("presence") == "derived"]
     lines += (["| Name | What | Why |", "|---|---|---|", *gone] if gone else ["Nothing: every field the CSV gives is loaded."]) + [""]
-    lines += ["### 6. Checks", "",
+    lines += [f"### {n}.6 Checks", "",
               f"- **A rejected row:** `on-reject: {m.on_reject}`" + (f", `max-rejects: {m.max_rejects}`" if m.max_rejects else "") + " ("
               + ("any rejected row refuses the whole kind: fix the file and run again" if m.on_reject == "refuse" else
                  "rejected rows are listed and the rest loads") + "). A duplicate key always refuses it.",
@@ -206,22 +207,22 @@ def page(kind: str, ms: list[KindMapping], all_maps: dict) -> str:
     lines += ["", "Reject codes it can give: " + ", ".join(f"`{x}`" for x in ["MISSING_REQUIRED", *types, "BAD_ENUM", "BAD_PATTERN",
                                                                          "DUPLICATE_KEY", "EXCEL_ERROR", "FORMULA", "BAD_ROW_SHAPE"]) + ".",
               "Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.", ""]
-    lines += ["### 7. Before and after", "",
+    lines += [f"### {n}.7 Before and after", "",
               f"- **Load first:** {', '.join(f'`{x}`' for x in m.after) or 'nothing'}.",
               f"- **Then:** {', '.join(f'`{x}`' for x in dependents(kind, all_maps)) or 'nothing depends on it'}.", "",
-              "### 8. Repeat, restate, remove", "",
+              f"### {n}.8 Repeat, restate, remove", "",
               f"- **Again for the same date:** the same command; the date's `{kind}` rows are replaced as a whole (`mode: replace`).",
               "- **Restate a past date:** run with that `--date`" + (" and `--restatement 1` (then 2 ...)" if "RESTATEMENT" in m.fields else "")
               + "; to change one row, send the whole file again.",
               f"- **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind {kind} --date YYYY-MM-DD --dry-run` (then without `--dry-run`).",
               ""]
     risky = [n for n in m.fields if (m.contract.field(n) or {}).get("type") in ("id", "date") and m.fields[n].get("from")]
-    lines += ["### 9. Spreadsheet warnings", ""]
+    lines += [f"### {n}.9 Spreadsheet warnings", ""]
     lines += ([f"- `{n}`: " + ("an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros "
                                 "lost are not detectable without `pad:`)" if (m.contract.field(n) or {}).get("type") == "id"
                                 else "a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates")
                for n in risky] or ["None of this kind's columns is at risk."]) + [""]
-    lines += ["### 10. Source variants", ""]
+    lines += [f"### {n}.10 Source variants", ""]
     if len(ms) == 1:
         lines.append("None shipped. A source with other column names gets a mapping file `kinds/" + kind + ".<source>.yaml` (or a site's own, by `--mapping`).")
     for v in ms[1:]:
@@ -268,7 +269,7 @@ def expected() -> dict[Path, str]:
     all_maps = mappings()
     from mrloader.hooks import DEFAULT_ORDER
     rank = {k: i for i, k in enumerate(DEFAULT_ORDER)}
-    body = [page(k, all_maps[k], all_maps) for k in sorted(all_maps, key=lambda k: (rank.get(k, 99), k))]
+    body = [page(k, all_maps[k], all_maps, i) for i, k in enumerate(sorted(all_maps, key=lambda k: (rank.get(k, 99), k)), 1)]
     return {OUT: index(all_maps) + "\n" + "\n".join(body)}
 
 

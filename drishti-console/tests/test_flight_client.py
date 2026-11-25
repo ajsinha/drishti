@@ -15,7 +15,7 @@
 """The Python Flight client (clients/python/drishti_flight.py) against a stand-in Flight service over TLS (a throw-away CA): the token at
 the handshake and the session after it, a plan of two parts read from their nodes in parallel, a node down served by the next, a live
 stream with its sequences and resume, refusals with Drishti's codes, pandas and polars. The real service is tested end to end in the
-heavy run (FLIGHT_GUIDE.md, "Testing")."""
+heavy run (INTEGRATION_GUIDE.md, "Testing")."""
 import datetime
 import json
 import sys

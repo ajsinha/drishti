@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The embed API (docs/guides/EMBED_GUIDE.md › Drishti Elements: the design, section 19; EMBED_GUIDE.md section 13): the ViewModel as JSON for the client-side
+"""The embed API (docs/guides/INTEGRATION_GUIDE.md › Drishti Elements: the design, section 19; INTEGRATION_GUIDE.md section 13): the ViewModel as JSON for the client-side
 renderer and Elements 2.x. The one embed module: its guards, its lifecycle headers and its live channel are here and nowhere else.
 
 A bearer embed token on every data call (verified, masked, counted as that user), CORS by the exact origins of the host applications the server

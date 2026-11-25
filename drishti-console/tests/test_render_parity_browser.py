@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Parity: the client-side renderer shows what the console's macros show (docs/guides/EMBED_GUIDE.md section 14).
+"""Parity: the client-side renderer shows what the console's macros show (docs/guides/INTEGRATION_GUIDE.md section 14).
 
 Each ViewModel is drawn two ways, the console's server HTML and the library (Drishti Elements' painter behind render()) in a blank page,
 and compared for content, not markup (the painter's DOM and look are its own): every text of the console's cells, fields and strip is in
@@ -39,7 +39,7 @@ pytest.importorskip("playwright.async_api", reason="needs Playwright (pip instal
 pytestmark = [pytest.mark.browser, pytest.mark.spread]
 WIDTHS = (390, 1280)
 
-# What differs on purpose, each with its reason (EMBED_GUIDE.md section 14.3). Applied before comparing.
+# What differs on purpose, each with its reason (INTEGRATION_GUIDE.md section 14.3). Applied before comparing.
 INTENTIONAL = {
     "unknown-kind": "a kind neither side draws: the console draws an empty body, the painter a titled panel that says so",
     "console-chrome": "texts of the console's own chrome around a panel (its help '?', the download menu, the filter row, Chart any table): "

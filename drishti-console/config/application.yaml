@@ -53,7 +53,7 @@ ui:
   # the drawer opens. Costs the server one explain (a re-run of the view, cached for drishti.explain.cache-ttl) per page view;
   # set false on a busy installation and the labels are underlined when the drawer is first opened.
   about_prefetch: ${DRISHTI_ABOUT_PREFETCH:true}
-  # The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): Customize on every entity page and Describe under Build -> New screen. A
+  # The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 3.31): Customize on every entity page and Describe under Build -> New screen. A
   # user's changes are their own Design, never the pack's Sutra. Off: pages and the screen designer are exactly as before.
   designer: ${DRISHTI_UI_DESIGNER:false}
   # The phone display (docs/guides/BUILD_GUIDE.md): each panel of a page goes to a phone as must (shown in full, first), glance
@@ -132,7 +132,7 @@ ui:
     - { title: Exposure, cmd: EXP BANK, pack: counterparty-risk, icon: shield-shaded }
     - { title: Funds and ETFs, cmd: FUND SPY, pack: funds, icon: pie-chart }
     - { title: Data map, cmd: DATAMAP, icon: diagram-3 }
-# Embedded views for other web applications (docs/guides/EMBED_GUIDE.md). OFF by default: with enabled false nothing under
+# Embedded views for other web applications (docs/guides/INTEGRATION_GUIDE.md). OFF by default: with enabled false nothing under
 # /embed/ is served and no middleware behaves differently. Host applications are registered at the SERVER (Admin API
 # /api/v1/admin/embed/apps; drishti.embed.* there), which makes the tokens and checks every call; the console only serves the
 # embed routes and learns the registered origins (CORS) from the server, cached origins_ttl_seconds. Embedded calls always mask.
@@ -149,7 +149,7 @@ embed:
   recheck_seconds: 60              # an open stream asks the server this often whether its token still passes (user, app, scopes)
   token_grace_seconds: 30          # after a token expires, how long the stream waits for a fresh one before gone DRS-8001
   compress_min_bytes: 512          # payloads smaller than this are sent uncompressed (br if the browser accepts it and brotli is installed, else gzip)
-  # The renderer's optional sign-in window (auth: 'popup', EMBED_GUIDE.md 10.1): a registered host page WITHOUT a backend signs its user in
+  # The renderer's optional sign-in window (auth: 'popup', INTEGRATION_GUIDE.md 10.1): a registered host page WITHOUT a backend signs its user in
   # through single sign-on (auth.oidc, PKCE) in a window opened on a click; the server makes the embed token (drishti.embed.sign-in-window).
   sign_in:
     enabled: ${DRISHTI_EMBED_SIGN_IN:true}       # needs auth.oidc.enabled; off: the window answers DRS-8003 and pages keep the token exchange

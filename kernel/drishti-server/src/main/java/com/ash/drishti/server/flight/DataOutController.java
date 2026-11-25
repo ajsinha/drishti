@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Admin → Data out (docs/guides/FLIGHT_GUIDE.md, "Admin → Data out"; mock-ups A and B, docs/architecture/mockups/data-out/): one API for
+ * Admin → Data out (docs/guides/INTEGRATION_GUIDE.md, "Admin → Data out"; mock-ups A and B, docs/architecture/mockups/data-out/): one API for
  * both views of the screen, the page (A) and the map of clients and nodes (B).
  * <ul>
  *   <li>{@code GET /api/v1/admin/data-out}: {@code {service: {enabled, running, port, tls, mutualTls, memory: {used, cap}, problem, forms},

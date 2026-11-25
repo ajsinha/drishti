@@ -2836,7 +2836,7 @@ panels:
 `sutra:` is lower-case letters, digits and hyphens, starting with a letter; `version:` a plain integer; `priority: 20` puts it ahead of the `core` pack's
 `counterparty` Sutra (priority 10); `kind: kv` is a label/value grid, and each column's `bind` says where its value comes from.
 
-**In the UI.** Open **Create → New screen**, bring `CP-MERIDIAN-RE` as a stored entity (kind `counterparty`; [Start: bring data](RACHANA_REFERENCE.md#1-start-bring-data))
+**In the UI.** Open **Create → New screen**, bring `CP-MERIDIAN-RE` as a stored entity (kind `counterparty`; [Start: bring data](RACHANA_REFERENCE.md#31-start-bring-data))
 and choose *an empty Sutra*. In the **YAML** tab replace the text with the YAML above and press **Ctrl+Enter**. The **Design** tab shows a view titled
 `CP-MERIDIAN-RE` with one panel, *Identity*: `Name Meridian Reinsurance Ltd`, `LEI 549300HGCM5CFCB6ZB96`. A preview always uses the text in the editor,
 whatever its `match` says, and writes no file.
@@ -3287,7 +3287,7 @@ $DRISHTI/studio/settings` answers `{"save": true, "approve": true, "review": tru
 
 1. In the workbench, type a note for the reviewer (*What changed?*) and press **Submit for review** (or **Ctrl+S**). The Sutra is checked as it stands;
    with problems nothing is submitted. Otherwise the status line says `Submitted counterparty-mine v1 for review as <id>`
-   ([Saving and proposing](RACHANA_REFERENCE.md#22-saving-and-proposing)).
+   ([Saving and proposing](RACHANA_REFERENCE.md#322-saving-and-proposing)).
 2. An approver opens **Views → Approvals** (`/approvals`), sees the proposal with a diff against the live version, and approves or rejects it (a
    rejection needs a reason). Panel blocks that only changed place are listed as moves, with the remaining edits as a line diff.
 3. With security on and `drishti.governance.four-eyes` on (the default), the author cannot approve their own proposal (`DRS-2007`). If someone changed
@@ -3726,7 +3726,7 @@ A Sutra says what matters; inference fills in only what it leaves out:
 Inference never adds to columns you wrote: list one column and the panel shows exactly what you listed. *How this view was built* says
 `Sutra irs-fixfloat v1 + inference` whenever inference helped, and an *inferred* tag on a panel says why; a document no Sutra matches is laid out entirely
 by inference ([the rules and their scoring](RACHANA_REFERENCE.md#sutra-and-inference-together)). To start a Sutra from what inference made, use the
-workbench's **auto-design** ([Auto-design](RACHANA_REFERENCE.md#7-auto-design-and-its-alternatives)) or `sutra design` and `sutra gen`
+workbench's **auto-design** ([Auto-design](RACHANA_REFERENCE.md#37-auto-design-and-its-alternatives)) or `sutra design` and `sutra gen`
 ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 ![The draft inference makes of a bond trade, beside a short Sutra on the same document](img/sutras/s05-inference-vs-sutra.jpg)
@@ -3809,15 +3809,15 @@ the checks run as you type. Its full manual is [RACHANA_REFERENCE.md](RACHANA_RE
 
 | You are doing | In the workbench | Section |
 |---|---|---|
-| starting from data, a schema, an example or an existing Sutra | **Create → New screen** | [§1](RACHANA_REFERENCE.md#1-start-bring-data) |
-| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 19 (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer) |
-| writing the YAML by hand, with completion and a check as you type | the **YAML** tab (or **Split**, with the screen beside it) | [§9](RACHANA_REFERENCE.md#9-the-yaml-tab-the-split-view-and-the-summary) |
-| seeing what is wrong, with the code and the line | the **Problems** tab | [§10](RACHANA_REFERENCE.md#10-problems) |
-| checking every panel against every sample | the **Tests** tab: ok / empty / error / no access | [§11](RACHANA_REFERENCE.md#11-tests-as-you-type) |
-| trying a layout on a document that is not a sample | **Preview with a file…** | [§12](RACHANA_REFERENCE.md#12-preview-with-a-file) |
-| reading what the Sutra applies to, its strip and panels | the **Summary** tab | [§9](RACHANA_REFERENCE.md#9-the-yaml-tab-the-split-view-and-the-summary) |
-| comparing with the live version, rebasing when it moved | **Versions** | [§21](RACHANA_REFERENCE.md#21-diff-and-versions) |
-| going live | **Submit for review**, then an approver | [§22](RACHANA_REFERENCE.md#22-saving-and-proposing) |
+| starting from data, a schema, an example or an existing Sutra | **Create → New screen** | [§1](RACHANA_REFERENCE.md#31-start-bring-data) |
+| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#331-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 19 (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer) |
+| writing the YAML by hand, with completion and a check as you type | the **YAML** tab (or **Split**, with the screen beside it) | [§9](RACHANA_REFERENCE.md#39-the-yaml-tab-the-split-view-and-the-summary) |
+| seeing what is wrong, with the code and the line | the **Problems** tab | [§10](RACHANA_REFERENCE.md#310-problems) |
+| checking every panel against every sample | the **Tests** tab: ok / empty / error / no access | [§11](RACHANA_REFERENCE.md#311-tests-as-you-type) |
+| trying a layout on a document that is not a sample | **Preview with a file…** | [§12](RACHANA_REFERENCE.md#312-preview-with-a-file) |
+| reading what the Sutra applies to, its strip and panels | the **Summary** tab | [§9](RACHANA_REFERENCE.md#39-the-yaml-tab-the-split-view-and-the-summary) |
+| comparing with the live version, rebasing when it moved | **Versions** | [§21](RACHANA_REFERENCE.md#321-diff-and-versions) |
+| going live | **Submit for review**, then an approver | [§22](RACHANA_REFERENCE.md#322-saving-and-proposing) |
 
 ![The Tests tab: every panel against every sample; an empty cell is a field the sample lacks](img/sutras/s04-tests-tab.jpg)
 
@@ -3830,7 +3830,7 @@ your *samples* render, not that every real document will: keep a thin sample.
 ### 25.1 Pack fragments from the Build workbench
 
 Design a Sutra in the workbench (from JSON samples, a JSON Schema, or an existing Sutra) and **ship** it as a pack fragment: *Ship → Export as a pack
-fragment* downloads a zip you can put in `config/packs/` ([Pack fragments: export and import](RACHANA_REFERENCE.md#24-pack-fragments-export-and-import)).
+fragment* downloads a zip you can put in `config/packs/` ([Pack fragments: export and import](RACHANA_REFERENCE.md#324-pack-fragments-export-and-import)).
 An export of the help-desk ticket Sutra:
 
 ![The Ship menu of the workbench: export as a pack fragment, import a pack, read-only link](img/packs/06-workbench-export.jpg)
@@ -4121,7 +4121,7 @@ is not a time zone, a `default` expression that reads a missing field. The JSON 
   trades the form above, with the lookup and the limit hint. The notional is `money`: in the trades' own currency when they carry one, else in the
   book's currency, else USD.
 
-See [The Sutra designer](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid).
+See [The Sutra designer](RACHANA_REFERENCE.md#331-the-sutra-designer-customize-describe-outline-and-grid).
 
 ## 29. Around the pack: inheritance, versions, the registry, live reload, deploy
 
@@ -5265,7 +5265,7 @@ drishti:
 ```
 
 A person with this role (and no other that opens trades) sees only SwapOne's trades in `TRD`, search and the blotter; a trade of another system is
-*not found*. Aggregates (VaR, BI totals) keep their own scope model ([ACCESS_MODEL.md section 10](../architecture/KERNEL_AND_MODULES.md#1910-row-rules)).
+*not found*. Aggregates (VaR, BI totals) keep their own scope model ([ACCESS_MODEL.md section 19.10](../architecture/KERNEL_AND_MODULES.md#1910-row-rules)).
 
 You should see, signed in as that person, only `SW1-…` ids in `TRD`, and *not found* for a trade of another system.
 

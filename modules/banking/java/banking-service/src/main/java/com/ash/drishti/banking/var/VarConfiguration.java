@@ -241,7 +241,7 @@ public class VarConfiguration {
         return v;
     }
 
-    /** VaR's vectors for Arrow Flight ({@code form: measure}, docs/guides/FLIGHT_GUIDE.md): the engine's figures, read as the person. */
+    /** VaR's vectors for Arrow Flight ({@code form: measure}, docs/guides/INTEGRATION_GUIDE.md): the engine's figures, read as the person. */
     @Bean
     com.ash.drishti.server.flight.FlightForm varFlightForm(VarService svc, VarViews views) {
         return new VarFlightForm(svc, views);

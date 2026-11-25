@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The launchers' direct-memory arithmetic (tools/lake/memory_caps.py; FLIGHT_GUIDE.md section 10): 256 MB, plus the in-memory lake's
+"""The launchers' direct-memory arithmetic (tools/lake/memory_caps.py; INTEGRATION_GUIDE.md section 10): 256 MB, plus the in-memory lake's
 stores, plus Arrow's budget (the exchange's 512 MB or DRISHTI_ARROW_EXCHANGE_MB, plus Flight's memory.total-mb only when its engine is
 on); each launcher asks the one place and passes Arrow's share as -Ddrishti.arrow.max-bytes."""
 import pathlib

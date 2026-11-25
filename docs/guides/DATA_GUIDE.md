@@ -50,25 +50,25 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [12. Troubleshooting](#12-troubleshooting)
     - [13. FAQ](#13-faq)
 2. [Data formats: JSON Lines is the standard](#2-data-formats-json-lines-is-the-standard)
-    - [1. The rule](#1-the-rule)
-    - [2. The row forms](#2-the-row-forms)
-    - [3. Reading: JSONL first, JSON still, CSV deprecated](#3-reading-jsonl-first-json-still-csv-deprecated)
-    - [4. Going out: JSON Lines beside every export](#4-going-out-json-lines-beside-every-export)
-    - [5. What stays as it is, and the guard](#5-what-stays-as-it-is-and-the-guard)
-    - [6. Arrow to the browser, where it pays](#6-arrow-to-the-browser-where-it-pays)
-    - [7. Archives: zip and tarballs](#7-archives-zip-and-tarballs)
-    - [8. Feeds: the table and business date of a file](#8-feeds-the-table-and-business-date-of-a-file)
+    - [2.1 The rule](#21-the-rule)
+    - [2.2 The row forms](#22-the-row-forms)
+    - [2.3 Reading: JSONL first, JSON still, CSV deprecated](#23-reading-jsonl-first-json-still-csv-deprecated)
+    - [2.4 Going out: JSON Lines beside every export](#24-going-out-json-lines-beside-every-export)
+    - [2.5 What stays as it is, and the guard](#25-what-stays-as-it-is-and-the-guard)
+    - [2.6 Arrow to the browser, where it pays](#26-arrow-to-the-browser-where-it-pays)
+    - [2.7 Archives: zip and tarballs](#27-archives-zip-and-tarballs)
+    - [2.8 Feeds: the table and business date of a file](#28-feeds-the-table-and-business-date-of-a-file)
 3. [Using Drishti with Databricks Delta Lake or Apache Iceberg](#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg): in [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)
 4. [External data: where it comes from and how to refresh it](#4-external-data-where-it-comes-from-and-how-to-refresh-it): its own guide, [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)
 5. [Schema to pack: generate a pack from JSON Schema](#5-schema-to-pack-generate-a-pack-from-json-schema)
 6. [Export data: download a dataset](#6-export-data-download-a-dataset)
-    - [1. What a dataset is](#1-what-a-dataset-is)
-    - [2. The selection](#2-the-selection)
-    - [3. How the rows are read: pushdown and streaming](#3-how-the-rows-are-read-pushdown-and-streaming)
-    - [4. Entitlements, masks, internal-only data and the audit](#4-entitlements-masks-internal-only-data-and-the-audit)
-    - [5. The API](#5-the-api)
-    - [6. The command line](#6-the-command-line)
-    - [7. Settings](#7-settings)
+    - [6.1 What a dataset is](#61-what-a-dataset-is)
+    - [6.2 The selection](#62-the-selection)
+    - [6.3 How the rows are read: pushdown and streaming](#63-how-the-rows-are-read-pushdown-and-streaming)
+    - [6.4 Entitlements, masks, internal-only data and the audit](#64-entitlements-masks-internal-only-data-and-the-audit)
+    - [6.5 The API](#65-the-api)
+    - [6.6 The command line](#66-the-command-line)
+    - [6.7 Settings](#67-settings)
 7. [The data inbox: drop files and they load](#7-the-data-inbox-drop-files-and-they-load): in [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)
 8. [Connectors](#8-connectors)
     - [8.1 One file per connector](#81-one-file-per-connector)
@@ -742,7 +742,7 @@ there, Drishti simply has not been told. Until it is, expectations will (rightly
 the repository gzips large files). Every generator writes it, every loader reads it, and every export and download offers it. This
 page says what that means for data coming in, data going out, and the files Drishti keeps.
 
-### 1. The rule
+### 2.1 The rule
 
 - **One JSON object per line.** No array around the lines, no commas between them, no blank lines needed (a blank line is skipped).
   A document may be as deep as it likes, as long as it stays on its line.
@@ -751,7 +751,7 @@ page says what that means for data coming in, data going out, and the files Dris
   is the model: it writes `trade_<system>.<date>.jsonl.gz` (the load rules' name), then `lake build` loads them, each under its name's date. Running a loader never rewrites a pack's samples,
   its Sutra tests or the sample feed.
 
-### 2. The row forms
+### 2.2 The row forms
 
 | Form | One line is | Written by | Read by |
 |---|---|---|---|
@@ -776,12 +776,12 @@ Where the generators put their output:
 | `tools/realdata/normalise.py` | `tools/realdata/dataset/*.jsonl` (a country, group, series or Factbook profile a line) and the `meta.json` manifest |
 | the sample feed | `<data>/feeds/fixing.jsonl` (one fixing series a line: `FIX SOFR-HISTORY`) |
 
-### 3. Reading: JSONL first, JSON still, CSV deprecated
+### 2.3 Reading: JSONL first, JSON still, CSV deprecated
 
 The readers keep what they accept: the file connector reads `<kind>.jsonl` (dated `<yyyy-MM-dd>/<kind>.jsonl`) and one file per
 entity (`<kind>/<id>.json`); `lake build`, `build_demo_lakes.py`, `data ingest` and the Java loaders read JSON Lines and JSON arrays
 (gzipped or not), and `lake build`, `build_demo_lakes.py`, `load_rows.py`, `convert` and the parallel lake loader read them inside a
-`.zip`, `.tar.gz`, `.tgz` or `.tar` archive too ([section 7](#7-archives-zip-and-tarballs)); the demo connector reads
+`.zip`, `.tar.gz`, `.tgz` or `.tar` archive too ([section 2.7](#27-archives-zip-and-tarballs)); the demo connector reads
 `samples/<kind>.jsonl` and the older `samples/<kind>/<id>.json`.
 
 **CSV input is deprecated** and will be removed in a later release. Today only the file connector reads CSV (a feed file
@@ -797,7 +797,7 @@ python3 tools/drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-docum
 python3 tools/drishti.py convert data/feeds/settlement          # settlement.jsonl, the file name as "id"
 ```
 
-### 4. Going out: JSON Lines beside every export
+### 2.4 Going out: JSON Lines beside every export
 
 Every export and download offers JSON Lines beside the formats it already has: **CSV, Excel, PDF and PNG all stay**, and CSV downloads
 are a normal option (the deprecation is for data coming in). A JSONL download is **one row a line, keyed by the same column names
@@ -819,7 +819,7 @@ file). The setting is `drishti.var.official.jsonl` and `drishti.ccr.exposure.off
 and `exposure/official/<date>-trades-v<n>.jsonl` (a header line, then a row a line). Records written as `.json` keep their `.json`
 and are read as they are: the store is append-only, nothing is rewritten. A single record or capture stays one JSON document.
 
-### 5. What stays as it is, and the guard
+### 2.5 What stays as it is, and the guard
 
 Not data, so not JSONL, and they stay as they are: manifests (`testdata.yaml`, `MANIFEST.json`, `meta.json`), application state files,
 map GeoJSON, run reports, and storage internals (Delta and Iceberg Parquet, the BI store, the hot files, Arrow between the server
@@ -832,7 +832,7 @@ data file they write is JSON Lines, and reads the source of every generator for 
 `cache-index.json`, `trackers.json`, `expect.yaml` …) and the loaders. `tools/test_exports_offer_jsonl.py` checks that every export
 entry point (server, console route, UI menu, command line) offers JSON Lines.
 
-### 6. Arrow to the browser, where it pays
+### 2.6 Arrow to the browser, where it pays
 
 JSON Lines is the data standard (above); **Apache Arrow** is the in-memory and wire format where it pays:
 it reaches the browser too, for the answers it was measured to win on, and nowhere else.
@@ -845,7 +845,7 @@ it reaches the browser too, for the answers it was measured to win on, and nowhe
 | BI answers to the console's Python, Explore and Perspective-era clients | `?format=arrow` on `POST /bi/reports/{id}/query` and `POST /bi/mq`: the raw rows | 2.1 |
 | **Any JSON answer of the two endpoints below, to any client that asks** | `Accept: application/vnd.apache.arrow.stream`: the JSON answer itself, its table as the record batch, the rest in the schema's metadata | built |
 | **The VaR explorer's contribution tables by position and by trade, in the browser** | read with Arrow JS (vendored) into typed columns | built |
-| **Any program: Python, Java, JDBC tools, any Arrow Flight client** | Arrow Flight on its own port: kinds, models, pivot views, VaR vectors, the in-memory lake, streams ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)) | built |
+| **Any program: Python, Java, JDBC tools, any Arrow Flight client** | Arrow Flight on its own port: kinds, models, pivot views, VaR vectors, the in-memory lake, streams ([INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)) | built |
 
 **Where it deliberately is not.** The **VaR hot files** stay Drishti's own layout (float32 position rows in hierarchy order, memory-mapped,
 float64 node totals): summing vectors runs near the machine's memory bandwidth, which Arrow's framing would not improve. **The lake** stays
@@ -867,7 +867,7 @@ search page**.
 
 The console passes the server's Arrow through unchanged and writes no Arrow of its own: when the server answers JSON (an answer given in
 time by a BI run, a table Arrow is not written with) the browser gets that JSON, which `Drishti.fetchTable` reads as well. A Python
-program reads Drishti's data through Arrow Flight ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)). In the browser, **`Drishti.fetchTable(url, opts)`** (`/static/js/drishti_table.js`) asks with
+program reads Drishti's data through Arrow Flight ([INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)). In the browser, **`Drishti.fetchTable(url, opts)`** (`/static/js/drishti_table.js`) asks with
 `Accept: application/vnd.apache.arrow.stream, application/json;q=0.9` when the page loaded Arrow JS and `application/json` otherwise,
 and returns one column-oriented table whichever format came back: `names`, `length`, `column(name)` (a `Float64Array` for numbers, NaN
 for a null; an array for text), `value(name, i)` (the cell as JSON has it), `answer()` (the whole JSON answer, equal cell for cell). Types:
@@ -919,11 +919,11 @@ Equality is tested in `drishti-server` `ArrowAnswersTest`, `tests/test_arrow_ans
 fallback) and `tests/test_arrow_browser.py` (the explorer drawn the same from Arrow and from JSON, without Arrow JS, on a phone, no other
 host asked).
 
-### 7. Archives: zip and tarballs
+### 2.7 Archives: zip and tarballs
 
 Archives (`.zip`, `.tar`, `.tar.gz`, `.tgz`), what each loader makes of them and the guards: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [section 11](DATA_LAKE_GUIDE.md#11-archives-zip-and-tar).
 
-### 8. Feeds: the table and business date of a file
+### 2.8 Feeds: the table and business date of a file
 
 The table, business date and mode of every file, for every loader: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [section 5](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
@@ -948,7 +948,7 @@ Taking data **out** of Drishti, a dataset and a day at a time: `EXPORT <GO>` (Vi
 `drishti.py data get`. It is download only: rows are never shown in a grid. The screen itself, panel by panel, is in
 [USER_GUIDE.md (Export data)](USER_GUIDE.md#export-data).
 
-### 1. What a dataset is
+### 6.1 What a dataset is
 
 A dataset is a **stored kind** of a loaded pack that a connector serves ([`trade-valuation`](../contracts/packs/market-risk.md#example-market-risk-trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)), `trade`, [`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set))); computed kinds (VaR, EE
 and PFE, the what-ifs) hold no rows and are not listed. For each the view shows:
@@ -961,7 +961,7 @@ and PFE, the what-ifs) hold no rows and are not listed. For each the view shows:
 | columns | the data contract's fields; a kind without a contract: the source's columns, else the fields of a few of its entities |
 | internal only | the kind is in `drishti.data-view.internal-only` (the IMF, Yahoo and news-headline kinds, [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) |
 
-### 2. The selection
+### 6.2 The selection
 
 A selection is the **columns** (all by default) and any number of **filter lines**, every line joined by AND. It is deliberately not SQL:
 no joins, no grouping, no expressions. A line is written the same way on the screen's address, in the API and in the CLI:
@@ -992,7 +992,7 @@ FROM trade-valuation  -- 2026-09-30
 WHERE DESK = 'DESK-COMM' AND PRODUCT_TYPE IN ('ComSwap', 'ComFut') AND MTM > 1000000
 ```
 
-### 3. How the rows are read: pushdown and streaming
+### 6.3 How the rows are read: pushdown and streaming
 
 The rows are **streamed** from the connector to the file, never held whole in memory, on the server or in the console:
 
@@ -1009,7 +1009,7 @@ Either way every row is checked against every line, so the answer is the same. T
 pushdown, to give both numbers (*412 of 12,076 on the date*); it stops at `drishti.data-view.count-budget` (60 s) and then says *at least*.
 The size is estimated by compressing the selected rows as the download will (the first 4 MB, the ratio applied to the rest).
 
-### 4. Entitlements, masks, internal-only data and the audit
+### 6.4 Entitlements, masks, internal-only data and the audit
 
 - **Entitlements.** Only datasets the person may open are listed or read: their role opens the kind, the pack is on for them, and the
   command is on (Admin → Functions); an edition or lens that hides the kind's command hides the dataset. The same rules as every other screen.
@@ -1022,7 +1022,7 @@ The size is estimated by compressing the selected rows as the download will (the
 - **Audit.** Every download writes one audit record when it ends: actor, action `data.download`, the dataset, and `date=...; columns=...;
   where=...; rows=N; complete` (or `incomplete` when the stream broke off). Admin → Audit lists them.
 
-### 5. The API
+### 6.5 The API
 
 All under `/api/v1`, for any signed-in person (a personal token too); the edition's `DATA` word and `drishti.data-view.enabled` switch it off
 (`404 DRS-4023`, `403 DRS-5002`).
@@ -1045,7 +1045,7 @@ zcat trade-valuation_2026-09-30.jsonl.gz | head -2
 {"TRADE_ID":"1000431","DESK":"DESK-COMM","MTM":2004112}
 ```
 
-### 6. The command line
+### 6.6 The command line
 
 `drishti.py data get` does the same from a terminal ([CLI_REFERENCE.md](CLI_REFERENCE.md#data-get-a-dataset-as-jsonlgz-export-data)):
 
@@ -1057,17 +1057,17 @@ python3 tools/drishti.py data get trade-valuation --date 2026-09-30 \
     --columns TRADE_ID,PRODUCT_TYPE,DESK,MTM --where "DESK = DESK-COMM" --where "MTM > 1000000" -o tval.jsonl.gz
 ```
 
-### 7. Settings
+### 6.7 Settings
 
 | Setting | Default | What it does |
 |---|---|---|
-| `drishti.data-view.enabled` | `true` | the API on or off (the edition feature `data` presets it) |
-| `drishti.data-view.internal-only` | the IMF, Yahoo and news-headline kinds | the datasets marked internal only |
-| `drishti.data-view.internal-only-download` | `true` | `false` refuses them (the edition feature `internal-only-data: off` presets it) |
-| `drishti.data-view.count-budget` | `PT60S` | the longest a row count reads before answering *at least* |
-| `drishti.data-view.batch-rows` | `8192` | rows a column read hands over at a time |
-| `drishti.data-view.list-limit` | `200000` | most entities read from a source that cannot read a day in one pass |
-| `drishti.data-view.read-budget` | `PT30S` | one listing, or one chunk of 500 entities, from such a source |
+| [`drishti.data-view.enabled`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `true` | the API on or off (the edition feature `data` presets it) |
+| [`drishti.data-view.internal-only`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | the IMF, Yahoo and news-headline kinds | the datasets marked internal only |
+| [`drishti.data-view.internal-only-download`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `true` | `false` refuses them (the edition feature `internal-only-data: off` presets it) |
+| [`drishti.data-view.count-budget`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `PT60S` | the longest a row count reads before answering *at least* |
+| [`drishti.data-view.batch-rows`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `8192` | rows a column read hands over at a time |
+| [`drishti.data-view.list-limit`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `200000` | most entities read from a source that cannot read a day in one pass |
+| [`drishti.data-view.read-budget`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `PT30S` | one listing, or one chunk of 500 entities, from such a source |
 | console `features.data` | `true` | the page, the menu item and the word in the console |
 | console `data_view.*` | 30, 90, 300 s | how long the console waits for the list, a count, and between two parts of a download |
 
@@ -1724,7 +1724,7 @@ the plugin defaults.
 
 A literal value, a value as the default inside the reference (`${X:fallback}`) and a password inside a URL (`jdbc:…//user:pw@host`, `?password=…`)
 are **refused** by Admin → Connectors, the API and the CLI with the reason and the name to use (real output in
-[section 10](#910-the-cli)). A hand-edited file that breaks this still loads (so a running site is not stopped by an edit), and the page
+[section 9.10](#910-the-cli)). A hand-edited file that breaks this still loads (so a running site is not stopped by an edit), and the page
 shows a note on the connector.
 
 **TLS.** Plugins that talk to a server over the network read one shared set of `tls.*` settings, and the form shows them as a **TLS**
@@ -2507,6 +2507,20 @@ literal credential is refused and **Test connection** says it did not try. **His
 page's zone and hides Test and Save (restoring is its own button). A file connector made from a generated template says in its
 description to set `root` (or the `DRISHTI_FILES_ROOT` environment variable); its page repeats it with the root now in effect.
 
+### 9.15 Rules every connector README shares
+
+Each plugin's README (`plugins/drishti-plugin-<x>/README.md`) holds that store's own facts; these rules are the same for all of them.
+
+- **Packing.** A plugin is a module of the platform build (`drishti-plugin-<x>`), packed into the server jar with nothing to copy; a
+  driver of your own goes into `lib/ext/`. A connector file in `config/connectors/` with `plugin: <x>` turns it on (ready-made files:
+  `config/connectors.examples/`). Build, enabling and commands are in this section.
+- **Commands.** In the READMEs, `drishti.py` stands for `python3.13 tools/drishti.py` (Windows `py -3.13 tools\drishti.py`), run from the
+  Drishti folder (the repository root, or the install folder of a release).
+- **Loader input.** Loader rows are one JSON line per entity per day, in the same files and folders as for every loader
+  ([Table mode: loading](../../plugins/drishti-plugin-jdbc/README.md#table-mode-loading)).
+- **Business dates come from outside the row**, by the same rules for every loader: [the load rules](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)
+  and [the PostgreSQL loader's list](../../plugins/drishti-plugin-jdbc/README.md#table-mode-loading).
+
 ## 10. TLS and the outbound proxy
 
 Every connector that talks to a server over the network reads its TLS configuration from the same keys, under the
@@ -2631,7 +2645,7 @@ The key may be written as any of these (the first line of the file says which):
 | `-----BEGIN EC PRIVATE KEY-----` | SEC1 EC, with its curve | `openssl ecparam -genkey` |
 
 An old OpenSSL-encrypted traditional key (it has a `Proc-Type: 4,ENCRYPTED` header) is not supported; the error shows the
-command that converts it ([section 7](#107-making-and-converting-certificates-and-keys)).
+command that converts it ([section 10.7](#107-making-and-converting-certificates-and-keys)).
 
 **A keystore** (the usual form on a Java estate):
 
@@ -2865,7 +2879,7 @@ local issuer certificate)` means the CA you gave is not the issuer (or the chain
 | `Received fatal alert: certificate_required` / `peer not authenticated` | the server demands a client certificate and none was sent | set `tls.cert-file` and `tls.key-file`, or `tls.keystore` |
 | `certificate has expired` / `NotAfter` | a certificate in the chain is past its date | rotate ([10.10](#1010-rotation)); the start-up warning named it |
 | `Connection reset` right after connecting | the server expects TLS and the client sent plain text, or the reverse | check the address scheme and port (Kafka SSL listener, ActiveMQ `ssl://`, RabbitMQ 5671) |
-| the start-up messages of [section 8](#108-start-up-checks-and-their-messages) | a file or a password | fix the named setting |
+| the start-up messages of [section 10.8](#108-start-up-checks-and-their-messages) | a file or a password | fix the named setting |
 
 The JVM can log the whole handshake: start the server with `-Djavax.net.debug=ssl:handshake` for one run (it is verbose; do
 not leave it on).

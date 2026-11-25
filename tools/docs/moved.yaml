@@ -98,10 +98,12 @@ moved:
   - {from: 'docs/contracts/samples/us-equities.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'docs/contracts/samples/world-development.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'docs/contracts/samples/world-economy.md', to: '', how: delete, note: 'deleted outright'}
+  - {from: 'docs/guides/EMBED_GUIDE.md', to: 'docs/guides/INTEGRATION_GUIDE.md', how: merge}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md', to: 'docs/guides/INTEGRATION_GUIDE.md', how: merge}
   - {from: 'docs/guides/PVF_LOADING.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: rename}
   - {from: 'docs/guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md', to: 'docs/guides/bi/TABLES_AND_MODELS.md', how: merge}
   - {from: 'docs/guides/examples/all-panels-showcase.md', to: 'docs/guides/examples/README.md', how: merge}
-  - {from: 'docs/guides/examples/embed/README.md', to: 'docs/guides/EMBED_GUIDE.md', how: merge}
+  - {from: 'docs/guides/examples/embed/README.md', to: 'docs/guides/INTEGRATION_GUIDE.md', how: merge}
   - {from: 'docs/guides/examples/exposure-profile.md', to: 'docs/guides/examples/README.md', how: merge}
   - {from: 'docs/guides/examples/level-1-2-panels.md', to: 'docs/guides/examples/README.md', how: merge}
   - {from: 'docs/guides/examples/linked-sources.md', to: 'docs/guides/examples/README.md', how: merge}
@@ -335,3 +337,275 @@ moved:
   - {from: 'docs/architecture/THIN_CONSOLE_DESIGN.md#101-the-migration-checklist', to: 'docs/architecture/THIN_CONSOLE_DESIGN.md#9101-the-migration-checklist', how: redirect, note: 'renumbered'}
   - {from: 'docs/architecture/THIN_CONSOLE_DESIGN.md#102-the-var-and-exposure-family-step-9-2911e-the-migration-checklist', to: 'docs/architecture/THIN_CONSOLE_DESIGN.md#9102-the-var-and-exposure-family-step-9-2911e-the-migration-checklist', how: redirect, note: 'renumbered'}
   - {from: 'docs/architecture/THIN_CONSOLE_DESIGN.md#103-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-no-bespoke-ui', to: 'docs/architecture/THIN_CONSOLE_DESIGN.md#9103-every-designer-editor-and-authoring-tool-on-the-kit-the-standing-rule-no-bespoke-ui', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables', to: 'docs/architecture/DATA_ARCHITECTURE.md#315-two-connectors-drishti-tables-and-external-tables', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#16-vector-columns-and-orphan-files', to: 'docs/architecture/DATA_ARCHITECTURE.md#316-vector-columns-and-orphan-files', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#1-the-ask-in-one-paragraph', to: 'docs/architecture/DATA_ARCHITECTURE.md#41-the-ask-in-one-paragraph', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#2-decisions-this-design-rests-on', to: 'docs/architecture/DATA_ARCHITECTURE.md#42-decisions-this-design-rests-on', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#3-four-kinds-of-connector', to: 'docs/architecture/DATA_ARCHITECTURE.md#43-four-kinds-of-connector', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#4-what-a-reactive-connector-is', to: 'docs/architecture/DATA_ARCHITECTURE.md#44-what-a-reactive-connector-is', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#5-the-connector-file', to: 'docs/architecture/DATA_ARCHITECTURE.md#45-the-connector-file', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#6-the-request-and-its-lifecycle', to: 'docs/architecture/DATA_ARCHITECTURE.md#46-the-request-and-its-lifecycle', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#61-the-request', to: 'docs/architecture/DATA_ARCHITECTURE.md#461-the-request', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#62-the-lifecycle', to: 'docs/architecture/DATA_ARCHITECTURE.md#462-the-lifecycle', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#7-triggers-computing-on-events', to: 'docs/architecture/DATA_ARCHITECTURE.md#47-triggers-computing-on-events', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#71-from-an-event-to-the-scopes-it-affects', to: 'docs/architecture/DATA_ARCHITECTURE.md#471-from-an-event-to-the-scopes-it-affects', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#72-what-a-trigger-may-and-may-not-do', to: 'docs/architecture/DATA_ARCHITECTURE.md#472-what-a-trigger-may-and-may-not-do', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#8-point-in-time-stamping-ordering-and-idempotence', to: 'docs/architecture/DATA_ARCHITECTURE.md#48-point-in-time-stamping-ordering-and-idempotence', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#81-the-stamp-on-every-result', to: 'docs/architecture/DATA_ARCHITECTURE.md#481-the-stamp-on-every-result', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#82-the-pin', to: 'docs/architecture/DATA_ARCHITECTURE.md#482-the-pin', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#83-ordering', to: 'docs/architecture/DATA_ARCHITECTURE.md#483-ordering', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#84-idempotence', to: 'docs/architecture/DATA_ARCHITECTURE.md#484-idempotence', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#9-isolation-two-users-never-see-each-others-answers', to: 'docs/architecture/DATA_ARCHITECTURE.md#49-isolation-two-users-never-see-each-others-answers', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#91-the-rules', to: 'docs/architecture/DATA_ARCHITECTURE.md#491-the-rules', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#92-two-traders-two-amendments-the-same-second', to: 'docs/architecture/DATA_ARCHITECTURE.md#492-two-traders-two-amendments-the-same-second', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#93-pushing-one-recomputed-result-to-many-viewers', to: 'docs/architecture/DATA_ARCHITECTURE.md#493-pushing-one-recomputed-result-to-many-viewers', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#10-coalescing-incremental-recompute-and-back-pressure', to: 'docs/architecture/DATA_ARCHITECTURE.md#410-coalescing-incremental-recompute-and-back-pressure', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#101-coalescing-bursts', to: 'docs/architecture/DATA_ARCHITECTURE.md#4101-coalescing-bursts', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#102-incremental-recompute', to: 'docs/architecture/DATA_ARCHITECTURE.md#4102-incremental-recompute', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#103-back-pressure-and-fairness', to: 'docs/architecture/DATA_ARCHITECTURE.md#4103-back-pressure-and-fairness', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#11-caching', to: 'docs/architecture/DATA_ARCHITECTURE.md#411-caching', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#12-one-screen-many-connectors', to: 'docs/architecture/DATA_ARCHITECTURE.md#412-one-screen-many-connectors', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#121-an-example-the-desk-var-screen', to: 'docs/architecture/DATA_ARCHITECTURE.md#4121-an-example-the-desk-var-screen', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#122-one-as-of-for-the-whole-screen', to: 'docs/architecture/DATA_ARCHITECTURE.md#4122-one-as-of-for-the-whole-screen', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#123-cross-connector-joins', to: 'docs/architecture/DATA_ARCHITECTURE.md#4123-cross-connector-joins', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#124-partial-failure-per-panel', to: 'docs/architecture/DATA_ARCHITECTURE.md#4124-partial-failure-per-panel', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#13-failure', to: 'docs/architecture/DATA_ARCHITECTURE.md#413-failure', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#14-several-servers-drishtinet', to: 'docs/architecture/DATA_ARCHITECTURE.md#414-several-servers-drishtinet', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#15-observability-and-audit', to: 'docs/architecture/DATA_ARCHITECTURE.md#415-observability-and-audit', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#16-the-spi-and-the-apis', to: 'docs/architecture/DATA_ARCHITECTURE.md#416-the-spi-and-the-apis', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#161-java-spi-planned', to: 'docs/architecture/DATA_ARCHITECTURE.md#4161-java-spi-planned', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#162-http-api-planned', to: 'docs/architecture/DATA_ARCHITECTURE.md#4162-http-api-planned', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#17-configuration-reference', to: 'docs/architecture/DATA_ARCHITECTURE.md#417-configuration-reference', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#18-build-plan', to: 'docs/architecture/DATA_ARCHITECTURE.md#418-build-plan', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#19-tests-1', to: 'docs/architecture/DATA_ARCHITECTURE.md#419-tests', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#20-open-questions-for-the-product-owner', to: 'docs/architecture/DATA_ARCHITECTURE.md#420-open-questions-for-the-product-owner', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#21-built-r1-to-r4', to: 'docs/architecture/DATA_ARCHITECTURE.md#421-built-r1-to-r4', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#22-how-the-var-engine-plugs-in', to: 'docs/architecture/DATA_ARCHITECTURE.md#422-how-the-var-engine-plugs-in', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#1-the-problem', to: 'docs/architecture/DATA_ARCHITECTURE.md#51-the-problem', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#2-the-interface', to: 'docs/architecture/DATA_ARCHITECTURE.md#52-the-interface', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#3-backends', to: 'docs/architecture/DATA_ARCHITECTURE.md#53-backends', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#4-configuration', to: 'docs/architecture/DATA_ARCHITECTURE.md#54-configuration', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#5-designs-the-first-user', to: 'docs/architecture/DATA_ARCHITECTURE.md#55-designs-the-first-user', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#6-several-servers', to: 'docs/architecture/DATA_ARCHITECTURE.md#56-several-servers', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#7-tests', to: 'docs/architecture/DATA_ARCHITECTURE.md#57-tests', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#8-next-steps-what-is-still-kept-on-one-node', to: 'docs/architecture/DATA_ARCHITECTURE.md#58-next-steps-what-is-still-kept-on-one-node', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#9-bi-content-and-bi-runs', to: 'docs/architecture/DATA_ARCHITECTURE.md#59-bi-content-and-bi-runs', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#10-collaboration-notes-and-the-admin-data', to: 'docs/architecture/DATA_ARCHITECTURE.md#510-collaboration-notes-and-the-admin-data', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#101-several-documents-one-change-txcontentstore', to: 'docs/architecture/DATA_ARCHITECTURE.md#5101-several-documents-one-change-txcontentstore', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#102-notes', to: 'docs/architecture/DATA_ARCHITECTURE.md#5102-notes', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#103-collaboration-drishticollabstore-content-default-jpa-or-file-for-one-node', to: 'docs/architecture/DATA_ARCHITECTURE.md#5103-collaboration-drishticollabstore-content-default-jpa-or-file-for-one-node', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#104-admin-data-in-the-identity-database', to: 'docs/architecture/DATA_ARCHITECTURE.md#5104-admin-data-in-the-identity-database', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#105-governance-proposals-drishtigovernancestore-content-default-file-for-one-node', to: 'docs/architecture/DATA_ARCHITECTURE.md#5105-governance-proposals-drishtigovernancestore-content-default-file-for-one-node', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#106-load-history-drishtiloadsstore-content-default-file-for-one-node', to: 'docs/architecture/DATA_ARCHITECTURE.md#5106-load-history-drishtiloadsstore-content-default-file-for-one-node', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#107-left-on-each-node-on-purpose', to: 'docs/architecture/DATA_ARCHITECTURE.md#5107-left-on-each-node-on-purpose', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#108-backup', to: 'docs/architecture/DATA_ARCHITECTURE.md#5108-backup', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#11-ui-written-configuration-shared-overlays-built-for-load-overrides', to: 'docs/architecture/DATA_ARCHITECTURE.md#511-ui-written-configuration-shared-overlays-built-for-load-overrides', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#1-the-decision', to: 'docs/architecture/DATA_ARCHITECTURE.md#61-the-decision', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#2-what-lives-in-it-and-what-does-not', to: 'docs/architecture/DATA_ARCHITECTURE.md#62-what-lives-in-it-and-what-does-not', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#3-sqlite-or-postgresql', to: 'docs/architecture/DATA_ARCHITECTURE.md#63-sqlite-or-postgresql', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#4-no-migrations-two-complete-schema-files', to: 'docs/architecture/DATA_ARCHITECTURE.md#64-no-migrations-two-complete-schema-files', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#5-the-schema-version-stamp', to: 'docs/architecture/DATA_ARCHITECTURE.md#65-the-schema-version-stamp', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#6-switching-and-upgrading-db-copy', to: 'docs/architecture/DATA_ARCHITECTURE.md#66-switching-and-upgrading-db-copy', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#7-configuration-configdbdatabaseyaml-planned', to: 'docs/architecture/DATA_ARCHITECTURE.md#67-configuration-configdbdatabaseyaml-planned', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#8-several-servers', to: 'docs/architecture/DATA_ARCHITECTURE.md#68-several-servers', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#9-today-and-the-change', to: 'docs/architecture/DATA_ARCHITECTURE.md#69-today-and-the-change', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#10-build-plan', to: 'docs/architecture/DATA_ARCHITECTURE.md#610-build-plan', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#11-tests', to: 'docs/architecture/DATA_ARCHITECTURE.md#611-tests', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#12-decisions-product-owner-2026-10-20', to: 'docs/architecture/DATA_ARCHITECTURE.md#612-decisions-product-owner-2026-10-20', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#1-reused-never-rewritten', to: 'docs/architecture/DATA_ARCHITECTURE.md#71-reused-never-rewritten', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#2-safety-by-construction', to: 'docs/architecture/DATA_ARCHITECTURE.md#72-safety-by-construction', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#3-the-load-rules-principles-and-decisions', to: 'docs/architecture/DATA_ARCHITECTURE.md#73-the-load-rules-principles-and-decisions', how: redirect, note: 'renumbered'}
+  - {from: 'docs/architecture/DATA_ARCHITECTURE.md#4-the-inbox-screen-and-its-tests', to: 'docs/architecture/DATA_ARCHITECTURE.md#74-the-inbox-screen-and-its-tests', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#1-the-rule', to: 'docs/guides/DATA_GUIDE.md#21-the-rule', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#2-the-row-forms', to: 'docs/guides/DATA_GUIDE.md#22-the-row-forms', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#3-reading-jsonl-first-json-still-csv-deprecated', to: 'docs/guides/DATA_GUIDE.md#23-reading-jsonl-first-json-still-csv-deprecated', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#4-going-out-json-lines-beside-every-export', to: 'docs/guides/DATA_GUIDE.md#24-going-out-json-lines-beside-every-export', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#5-what-stays-as-it-is-and-the-guard', to: 'docs/guides/DATA_GUIDE.md#25-what-stays-as-it-is-and-the-guard', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays', to: 'docs/guides/DATA_GUIDE.md#26-arrow-to-the-browser-where-it-pays', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#7-archives-zip-and-tarballs', to: 'docs/guides/DATA_GUIDE.md#27-archives-zip-and-tarballs', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#8-feeds-the-table-and-business-date-of-a-file', to: 'docs/guides/DATA_GUIDE.md#28-feeds-the-table-and-business-date-of-a-file', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#1-what-a-dataset-is', to: 'docs/guides/DATA_GUIDE.md#61-what-a-dataset-is', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#2-the-selection', to: 'docs/guides/DATA_GUIDE.md#62-the-selection', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#3-how-the-rows-are-read-pushdown-and-streaming', to: 'docs/guides/DATA_GUIDE.md#63-how-the-rows-are-read-pushdown-and-streaming', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#4-entitlements-masks-internal-only-data-and-the-audit', to: 'docs/guides/DATA_GUIDE.md#64-entitlements-masks-internal-only-data-and-the-audit', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#5-the-api', to: 'docs/guides/DATA_GUIDE.md#65-the-api', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#6-the-command-line', to: 'docs/guides/DATA_GUIDE.md#66-the-command-line', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DATA_GUIDE.md#7-settings', to: 'docs/guides/DATA_GUIDE.md#67-settings', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#17-a-modules-console-part', to: 'docs/guides/DEVELOPER_GUIDE.md#17a-a-modules-console-part', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#1-start-bring-data', to: 'docs/guides/RACHANA_REFERENCE.md#31-start-bring-data', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#2-the-workbench-at-a-glance', to: 'docs/guides/RACHANA_REFERENCE.md#32-the-workbench-at-a-glance', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#3-the-data-pane-samples-shape-palette', to: 'docs/guides/RACHANA_REFERENCE.md#33-the-data-pane-samples-shape-palette', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#4-the-canvas-and-the-grid', to: 'docs/guides/RACHANA_REFERENCE.md#34-the-canvas-and-the-grid', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#5-add-a-panel', to: 'docs/guides/RACHANA_REFERENCE.md#35-add-a-panel', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#6-drop-a-field-suggestions-and-binding', to: 'docs/guides/RACHANA_REFERENCE.md#36-drop-a-field-suggestions-and-binding', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#7-auto-design-and-its-alternatives', to: 'docs/guides/RACHANA_REFERENCE.md#37-auto-design-and-its-alternatives', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#8-the-inspector', to: 'docs/guides/RACHANA_REFERENCE.md#38-the-inspector', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#9-the-yaml-tab-the-split-view-and-the-summary', to: 'docs/guides/RACHANA_REFERENCE.md#39-the-yaml-tab-the-split-view-and-the-summary', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#10-problems', to: 'docs/guides/RACHANA_REFERENCE.md#310-problems', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#11-tests-as-you-type', to: 'docs/guides/RACHANA_REFERENCE.md#311-tests-as-you-type', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#12-preview-with-a-file', to: 'docs/guides/RACHANA_REFERENCE.md#312-preview-with-a-file', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#13-undo-redo-and-revisions', to: 'docs/guides/RACHANA_REFERENCE.md#313-undo-redo-and-revisions', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#14-phone-width-and-themes', to: 'docs/guides/RACHANA_REFERENCE.md#314-phone-width-and-themes', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#15-keyboard-reference', to: 'docs/guides/RACHANA_REFERENCE.md#315-keyboard-reference', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#16-worked-examples-one-per-panel-family', to: 'docs/guides/RACHANA_REFERENCE.md#316-worked-examples-one-per-panel-family', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#17-troubleshooting', to: 'docs/guides/RACHANA_REFERENCE.md#317-troubleshooting', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#18-limits', to: 'docs/guides/RACHANA_REFERENCE.md#318-limits', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#19-studio-users-where-things-went', to: 'docs/guides/RACHANA_REFERENCE.md#319-studio-users-where-things-went', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#20-the-command-palette', to: 'docs/guides/RACHANA_REFERENCE.md#320-the-command-palette', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#21-diff-and-versions', to: 'docs/guides/RACHANA_REFERENCE.md#321-diff-and-versions', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#22-saving-and-proposing', to: 'docs/guides/RACHANA_REFERENCE.md#322-saving-and-proposing', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#23-end-to-end-from-a-folder-of-json-to-a-live-screen', to: 'docs/guides/RACHANA_REFERENCE.md#323-end-to-end-from-a-folder-of-json-to-a-live-screen', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#24-pack-fragments-export-and-import', to: 'docs/guides/RACHANA_REFERENCE.md#324-pack-fragments-export-and-import', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#25-sharing-a-design-read-only', to: 'docs/guides/RACHANA_REFERENCE.md#325-sharing-a-design-read-only', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#26-the-command-line-and-ci', to: 'docs/guides/RACHANA_REFERENCE.md#326-the-command-line-and-ci', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#27-binding-a-design-to-a-file-development-servers', to: 'docs/guides/RACHANA_REFERENCE.md#327-binding-a-design-to-a-file-development-servers', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#28-troubleshooting-shipping', to: 'docs/guides/RACHANA_REFERENCE.md#328-troubleshooting-shipping', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#29-limits-of-shipping', to: 'docs/guides/RACHANA_REFERENCE.md#329-limits-of-shipping', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#30-keyboard-reference-for-shipping', to: 'docs/guides/RACHANA_REFERENCE.md#330-keyboard-reference-for-shipping', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid', to: 'docs/guides/RACHANA_REFERENCE.md#331-the-sutra-designer-customize-describe-outline-and-grid', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#32-reference-the-shape-engine-auto-design-and-the-builder-api', to: 'docs/guides/RACHANA_REFERENCE.md#332-reference-the-shape-engine-auto-design-and-the-builder-api', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#321-the-shape-the-json-schema-extractor', to: 'docs/guides/RACHANA_REFERENCE.md#3321-the-shape-the-json-schema-extractor', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#322-auto-design', to: 'docs/guides/RACHANA_REFERENCE.md#3322-auto-design', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#323-the-builder-api', to: 'docs/guides/RACHANA_REFERENCE.md#3323-the-builder-api', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#324-security-limits-and-accessibility', to: 'docs/guides/RACHANA_REFERENCE.md#3324-security-limits-and-accessibility', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#1-the-title-line', to: 'docs/guides/RACHANA_REFERENCE.md#41-the-title-line', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#2-the-strip-key-figures-under-the-title', to: 'docs/guides/RACHANA_REFERENCE.md#42-the-strip-key-figures-under-the-title', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#3-the-panels', to: 'docs/guides/RACHANA_REFERENCE.md#43-the-panels', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#4-what-would-change-the-result', to: 'docs/guides/RACHANA_REFERENCE.md#44-what-would-change-the-result', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#1-the-ask', to: 'docs/guides/RACHANA_REFERENCE.md#51-the-ask', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#2-what-exists-already', to: 'docs/guides/RACHANA_REFERENCE.md#52-what-exists-already', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#3-principles', to: 'docs/guides/RACHANA_REFERENCE.md#53-principles', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#4-where-it-appears', to: 'docs/guides/RACHANA_REFERENCE.md#54-where-it-appears', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#5-ui-sketches', to: 'docs/guides/RACHANA_REFERENCE.md#55-ui-sketches', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#51-desktop-wide-popup-about-92-vw--86-vh-at-least-960--600', to: 'docs/guides/RACHANA_REFERENCE.md#551-desktop-wide-popup-about-92-vw--86-vh-at-least-960--600', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#52-phone-full-screen', to: 'docs/guides/RACHANA_REFERENCE.md#552-phone-full-screen', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#53-moments', to: 'docs/guides/RACHANA_REFERENCE.md#553-moments', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#6-chart-types-and-settings', to: 'docs/guides/RACHANA_REFERENCE.md#56-chart-types-and-settings', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#7-smart-defaults', to: 'docs/guides/RACHANA_REFERENCE.md#57-smart-defaults', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#8-the-component-and-its-api', to: 'docs/guides/RACHANA_REFERENCE.md#58-the-component-and-its-api', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#81-files', to: 'docs/guides/RACHANA_REFERENCE.md#581-files', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#82-opening-a-chart', to: 'docs/guides/RACHANA_REFERENCE.md#582-opening-a-chart', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#83-the-source-adapter-what-a-table-hands-over', to: 'docs/guides/RACHANA_REFERENCE.md#583-the-source-adapter-what-a-table-hands-over', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#84-the-adapters', to: 'docs/guides/RACHANA_REFERENCE.md#584-the-adapters', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#85-what-the-component-does-with-them', to: 'docs/guides/RACHANA_REFERENCE.md#585-what-the-component-does-with-them', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#9-the-settings-model-and-saved-arrangements', to: 'docs/guides/RACHANA_REFERENCE.md#59-the-settings-model-and-saved-arrangements', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#91-the-settings-document', to: 'docs/guides/RACHANA_REFERENCE.md#591-the-settings-document', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#92-where-a-saved-arrangement-is-kept', to: 'docs/guides/RACHANA_REFERENCE.md#592-where-a-saved-arrangement-is-kept', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#10-what-it-charts-rows-filters-masks', to: 'docs/guides/RACHANA_REFERENCE.md#510-what-it-charts-rows-filters-masks', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#11-big-tables-chart-all-n', to: 'docs/guides/RACHANA_REFERENCE.md#511-big-tables-chart-all-n', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#111-records-sutra-tables', to: 'docs/guides/RACHANA_REFERENCE.md#5111-records-sutra-tables', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#112-search', to: 'docs/guides/RACHANA_REFERENCE.md#5112-search', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#113-bi-runs', to: 'docs/guides/RACHANA_REFERENCE.md#5113-bi-runs', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#12-actions-export-save-promote-open-in-bi', to: 'docs/guides/RACHANA_REFERENCE.md#512-actions-export-save-promote-open-in-bi', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#121-export', to: 'docs/guides/RACHANA_REFERENCE.md#5121-export', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#122-save-reset', to: 'docs/guides/RACHANA_REFERENCE.md#5122-save-reset', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#123-promote-to-sutra-authors-sutra-tables-only', to: 'docs/guides/RACHANA_REFERENCE.md#5123-promote-to-sutra-authors-sutra-tables-only', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#124-open-in-bi', to: 'docs/guides/RACHANA_REFERENCE.md#5124-open-in-bi', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#13-keys', to: 'docs/guides/RACHANA_REFERENCE.md#513-keys', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#14-themes-and-accessibility', to: 'docs/guides/RACHANA_REFERENCE.md#514-themes-and-accessibility', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#15-edge-cases', to: 'docs/guides/RACHANA_REFERENCE.md#515-edge-cases', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#16-endpoints', to: 'docs/guides/RACHANA_REFERENCE.md#516-endpoints', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#17-settings', to: 'docs/guides/RACHANA_REFERENCE.md#517-settings', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#18-build-steps-c1c10', to: 'docs/guides/RACHANA_REFERENCE.md#518-build-steps-c1c10', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#19-tests', to: 'docs/guides/RACHANA_REFERENCE.md#519-tests', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#191-unit-node-testtablechartenginepy-the-engines-answer-stood-in-the-figures-themselves-in-pivotapitest-and-rowsprovidertest', to: 'docs/guides/RACHANA_REFERENCE.md#5191-unit-node-testtablechartenginepy-the-engines-answer-stood-in-the-figures-themselves-in-pivotapitest-and-rowsprovidertest', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#192-server', to: 'docs/guides/RACHANA_REFERENCE.md#5192-server', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#193-browser-testtablechartbrowserpy-one-test-process-10k-trades-at-most', to: 'docs/guides/RACHANA_REFERENCE.md#5193-browser-testtablechartbrowserpy-one-test-process-10k-trades-at-most', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#194-masks-testtablechartmasksbrowserpy-and-server-cases', to: 'docs/guides/RACHANA_REFERENCE.md#5194-masks-testtablechartmasksbrowserpy-and-server-cases', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#20-docs-to-update-when-it-is-built', to: 'docs/guides/RACHANA_REFERENCE.md#520-docs-to-update-when-it-is-built', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#21-what-the-real-code-changed', to: 'docs/guides/RACHANA_REFERENCE.md#521-what-the-real-code-changed', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#22-decisions-on-the-open-questions-product-owner-2026-10-20', to: 'docs/guides/RACHANA_REFERENCE.md#522-decisions-on-the-open-questions-product-owner-2026-10-20', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#23-c1-drishtitable-chart-enginejs', to: 'docs/guides/RACHANA_REFERENCE.md#523-c1-drishtitable-chart-enginejs', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/RACHANA_REFERENCE.md#24-the-console-wiring-c3-c6-c7', to: 'docs/guides/RACHANA_REFERENCE.md#524-the-console-wiring-c3-c6-c7', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#embed-drishti-in-your-pages', to: 'docs/guides/INTEGRATION_GUIDE.md#1-embed-drishti-in-your-pages', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#1-what-you-need', to: 'docs/guides/INTEGRATION_GUIDE.md#11-what-you-need', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#2-turn-embedding-on-and-register-your-application', to: 'docs/guides/INTEGRATION_GUIDE.md#12-turn-embedding-on-and-register-your-application', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#21-switch-embedding-on', to: 'docs/guides/INTEGRATION_GUIDE.md#121-switch-embedding-on', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#22-register-a-host-application', to: 'docs/guides/INTEGRATION_GUIDE.md#122-register-a-host-application', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#23-the-cors-allow-list', to: 'docs/guides/INTEGRATION_GUIDE.md#123-the-cors-allow-list', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#3-five-minutes-a-static-page', to: 'docs/guides/INTEGRATION_GUIDE.md#13-five-minutes-a-static-page', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#4-how-a-user-gets-in', to: 'docs/guides/INTEGRATION_GUIDE.md#14-how-a-user-gets-in', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#41-the-token-exchange', to: 'docs/guides/INTEGRATION_GUIDE.md#141-the-token-exchange', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#42-a-page-without-a-backend-the-sign-in-window', to: 'docs/guides/INTEGRATION_GUIDE.md#142-a-page-without-a-backend-the-sign-in-window', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#43-inside-drishtis-console', to: 'docs/guides/INTEGRATION_GUIDE.md#143-inside-drishtis-console', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#5-the-elements-one-by-one', to: 'docs/guides/INTEGRATION_GUIDE.md#15-the-elements-one-by-one', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#51-the-reference', to: 'docs/guides/INTEGRATION_GUIDE.md#151-the-reference', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#drishti-view', to: 'docs/guides/INTEGRATION_GUIDE.md#drishti-view', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#drishti-panel', to: 'docs/guides/INTEGRATION_GUIDE.md#drishti-panel', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#52-elements-2x-drawn-by-the-renderer', to: 'docs/guides/INTEGRATION_GUIDE.md#152-elements-2x-drawn-by-the-renderer', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#6-drishti-render-one-import-one-call', to: 'docs/guides/INTEGRATION_GUIDE.md#16-drishti-render-one-import-one-call', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#61-the-quick-start', to: 'docs/guides/INTEGRATION_GUIDE.md#161-the-quick-start', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#62-sources-and-the-handle', to: 'docs/guides/INTEGRATION_GUIDE.md#162-sources-and-the-handle', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#63-options', to: 'docs/guides/INTEGRATION_GUIDE.md#163-options', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#64-events', to: 'docs/guides/INTEGRATION_GUIDE.md#164-events', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#65-navigation-in-place', to: 'docs/guides/INTEGRATION_GUIDE.md#165-navigation-in-place', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#66-live-updates-and-streamed-screens', to: 'docs/guides/INTEGRATION_GUIDE.md#166-live-updates-and-streamed-screens', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#67-errors', to: 'docs/guides/INTEGRATION_GUIDE.md#167-errors', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#68-the-playground', to: 'docs/guides/INTEGRATION_GUIDE.md#168-the-playground', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#7-react-angular-and-vue', to: 'docs/guides/INTEGRATION_GUIDE.md#17-react-angular-and-vue', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#71-the-sample-pages', to: 'docs/guides/INTEGRATION_GUIDE.md#171-the-sample-pages', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#8-theming-and-sizing', to: 'docs/guides/INTEGRATION_GUIDE.md#18-theming-and-sizing', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#9-your-pages-content-security-policy', to: 'docs/guides/INTEGRATION_GUIDE.md#19-your-pages-content-security-policy', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle', to: 'docs/guides/INTEGRATION_GUIDE.md#110-versions-integrity-and-lifecycle', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#101-where-the-library-is-served', to: 'docs/guides/INTEGRATION_GUIDE.md#1101-where-the-library-is-served', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#102-integrity-and-sri', to: 'docs/guides/INTEGRATION_GUIDE.md#1102-integrity-and-sri', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#103-contracts-and-lifecycle', to: 'docs/guides/INTEGRATION_GUIDE.md#1103-contracts-and-lifecycle', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#104-the-npm-package-layout', to: 'docs/guides/INTEGRATION_GUIDE.md#1104-the-npm-package-layout', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#11-cookbook', to: 'docs/guides/INTEGRATION_GUIDE.md#111-cookbook', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#12-troubleshooting-by-code', to: 'docs/guides/INTEGRATION_GUIDE.md#112-troubleshooting-by-code', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app', to: 'docs/guides/INTEGRATION_GUIDE.md#113-drishti-elements-libraries-in-your-own-app', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#names-a-host-page-sees', to: 'docs/guides/INTEGRATION_GUIDE.md#names-a-host-page-sees', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#14-moving-an-ag-grid-enterprise-pivot-app', to: 'docs/guides/INTEGRATION_GUIDE.md#114-moving-an-ag-grid-enterprise-pivot-app', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#15-use-rachana-and-elements-in-your-own-app-and-genui', to: 'docs/guides/INTEGRATION_GUIDE.md#115-use-rachana-and-elements-in-your-own-app-and-genui', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#drishti-elements-in-react-vue-and-angular', to: 'docs/guides/INTEGRATION_GUIDE.md#116-drishti-elements-in-react-vue-and-angular', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#run-them', to: 'docs/guides/INTEGRATION_GUIDE.md#run-them', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#what-each-page-shows', to: 'docs/guides/INTEGRATION_GUIDE.md#what-each-page-shows', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#data-out-drishtis-data-to-any-client-with-arrow-flight', to: 'docs/guides/INTEGRATION_GUIDE.md#2-data-out-drishtis-data-to-any-client-with-arrow-flight', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#1-when-to-use-flight', to: 'docs/guides/INTEGRATION_GUIDE.md#21-when-to-use-flight', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#2-turning-it-on', to: 'docs/guides/INTEGRATION_GUIDE.md#22-turning-it-on', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#3-tokens-and-scopes-step-by-step', to: 'docs/guides/INTEGRATION_GUIDE.md#23-tokens-and-scopes-step-by-step', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#4-what-can-be-read-and-how-each-is-named', to: 'docs/guides/INTEGRATION_GUIDE.md#24-what-can-be-read-and-how-each-is-named', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#5-the-request-path', to: 'docs/guides/INTEGRATION_GUIDE.md#25-the-request-path', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#6-the-cluster-endpoints-parallel-reads-a-node-down', to: 'docs/guides/INTEGRATION_GUIDE.md#26-the-cluster-endpoints-parallel-reads-a-node-down', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#7-live-streams-and-resuming', to: 'docs/guides/INTEGRATION_GUIDE.md#27-live-streams-and-resuming', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#8-limits-and-what-a-refusal-says', to: 'docs/guides/INTEGRATION_GUIDE.md#28-limits-and-what-a-refusal-says', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#9-audit-and-admin--data-out', to: 'docs/guides/INTEGRATION_GUIDE.md#29-audit-and-admin--data-out', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#10-operations', to: 'docs/guides/INTEGRATION_GUIDE.md#210-operations', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#11-troubleshooting-the-ten-most-likely-errors', to: 'docs/guides/INTEGRATION_GUIDE.md#211-troubleshooting-the-ten-most-likely-errors', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#12-flight-sql-sql-over-the-bi-models-from-jdbc-and-odbc-tools', to: 'docs/guides/INTEGRATION_GUIDE.md#212-flight-sql-sql-over-the-bi-models-from-jdbc-and-odbc-tools', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#13-testing', to: 'docs/guides/INTEGRATION_GUIDE.md#213-testing', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#arrow-flight-reference', to: 'docs/guides/INTEGRATION_GUIDE.md#214-arrow-flight-reference', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#1-the-calls', to: 'docs/guides/INTEGRATION_GUIDE.md#2141-the-calls', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#2-the-request', to: 'docs/guides/INTEGRATION_GUIDE.md#2142-the-request', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#3-the-forms', to: 'docs/guides/INTEGRATION_GUIDE.md#2143-the-forms', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#31-kind', to: 'docs/guides/INTEGRATION_GUIDE.md#21431-kind', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#32-model', to: 'docs/guides/INTEGRATION_GUIDE.md#21432-model', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#33-pivot', to: 'docs/guides/INTEGRATION_GUIDE.md#21433-pivot', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#34-measure', to: 'docs/guides/INTEGRATION_GUIDE.md#21434-measure', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#35-lake', to: 'docs/guides/INTEGRATION_GUIDE.md#21435-lake', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#4-errors', to: 'docs/guides/INTEGRATION_GUIDE.md#2144-errors', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#5-limits', to: 'docs/guides/INTEGRATION_GUIDE.md#2145-limits', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#6-flight-sql', to: 'docs/guides/INTEGRATION_GUIDE.md#2146-flight-sql', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#7-clients', to: 'docs/guides/INTEGRATION_GUIDE.md#2147-clients', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#71-python', to: 'docs/guides/INTEGRATION_GUIDE.md#21471-python', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#72-java', to: 'docs/guides/INTEGRATION_GUIDE.md#21472-java', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program', to: 'docs/guides/INTEGRATION_GUIDE.md#21473-jdbc-dbeaver-datagrip-any-jdbc-program', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#74-odbc-excel-power-bi-tableau', to: 'docs/guides/INTEGRATION_GUIDE.md#21474-odbc-excel-power-bi-tableau', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#111-before-you-start', to: 'docs/guides/INTEGRATION_GUIDE.md#31-before-you-start', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#112-your-first-five-calls', to: 'docs/guides/INTEGRATION_GUIDE.md#32-your-first-five-calls', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel', to: 'docs/guides/INTEGRATION_GUIDE.md#33-clients-scripts-notebooks-and-excel', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#make-a-token', to: 'docs/guides/INTEGRATION_GUIDE.md#make-a-token', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#python', to: 'docs/guides/INTEGRATION_GUIDE.md#python', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#excel', to: 'docs/guides/INTEGRATION_GUIDE.md#excel', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#any-other-language', to: 'docs/guides/INTEGRATION_GUIDE.md#any-other-language', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#114-who-you-are-authentication', to: 'docs/guides/INTEGRATION_GUIDE.md#34-who-you-are-authentication', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#security-off-local-development', to: 'docs/guides/INTEGRATION_GUIDE.md#security-off-local-development', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#security-on-production', to: 'docs/guides/INTEGRATION_GUIDE.md#security-on-production', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#how-the-console-does-it', to: 'docs/guides/INTEGRATION_GUIDE.md#how-the-console-does-it', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#minting-a-token-for-a-script', to: 'docs/guides/INTEGRATION_GUIDE.md#minting-a-token-for-a-script', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#what-roles-allow', to: 'docs/guides/INTEGRATION_GUIDE.md#what-roles-allow', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#field-masks', to: 'docs/guides/INTEGRATION_GUIDE.md#field-masks', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#115-which-day-the-business-date', to: 'docs/guides/INTEGRATION_GUIDE.md#35-which-day-the-business-date', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#116-when-something-goes-wrong-errors', to: 'docs/guides/INTEGRATION_GUIDE.md#36-when-something-goes-wrong-errors', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#117-answers-as-arrow-the-accept-header', to: 'docs/guides/INTEGRATION_GUIDE.md#37-answers-as-arrow-the-accept-header', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#118-scripting-recipes', to: 'docs/guides/INTEGRATION_GUIDE.md#38-scripting-recipes', how: redirect, note: 'merged into the integration guide'}

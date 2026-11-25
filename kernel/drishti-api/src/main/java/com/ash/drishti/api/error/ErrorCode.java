@@ -683,7 +683,7 @@ public enum ErrorCode {
     BUSY_PIVOT_VIEW("DRS-9507", 503),
     /** Busy protection: an Arrow Flight read did not start (Arrow memory of the process near its cap, or the server very busy); retry later. */
     BUSY_FLIGHT("DRS-9506", 503),
-    /** Arrow Flight (docs/guides/FLIGHT_GUIDE.md): no token, an unknown, expired or revoked token, or a browser session (never accepted). */
+    /** Arrow Flight (docs/guides/INTEGRATION_GUIDE.md): no token, an unknown, expired or revoked token, or a browser session (never accepted). */
     FLIGHT_UNAUTHENTICATED("DRS-5601", 401),
     /** Arrow Flight: the token lacks the {@code data:read} scope for the domain asked, or the person it acts for may not read it. */
     FLIGHT_SCOPE("DRS-5602", 403),

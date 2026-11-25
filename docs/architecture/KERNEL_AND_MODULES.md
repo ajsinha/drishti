@@ -101,7 +101,7 @@ them or off the glue between them. The names below are used throughout; *the ker
 |---|---|---|
 | G1 | **A domain-free kernel**: general BI and aggregation (packs runtime, Sutras, Rachana, Pivot, BI, tables and models, lakes, connectors, search, Explain, approvals, security, cluster, Elements core) that serves a bank, a hospital or a genome lab unchanged | the kernel boots and serves BI, Pivot and its own reference data with **no module installed**; `tools/domain_strings_allowed.yaml` is empty |
 | G2 | **Modules built and shipped separately**, like Linux kernel modules: one signed file (`.dmod`) per module, compiled against the kernel API only, dropped into a configured folder | the banking module is built in its own build against the SDK jars and passes its suite against the kernel alone |
-| G3 | **A module carries everything its capability needs**: Java compute, services and API; Python compute; packs (kinds, contracts, Sutras, samples); console routes, templates, the domain Elements library, CSS on the theme tokens; lenses, functions, Home cards; feeds; Help, guides, tutorials, glossary; settings schema; licence feature | removing `banking.dmod` leaves no banking word, page, file, Help page, engine or API anywhere ([ACCESS_MODEL.md section 6](#196-guarantees-as-tests), extended to "not installed") |
+| G3 | **A module carries everything its capability needs**: Java compute, services and API; Python compute; packs (kinds, contracts, Sutras, samples); console routes, templates, the domain Elements library, CSS on the theme tokens; lenses, functions, Home cards; feeds; Help, guides, tutorials, glossary; settings schema; licence feature | removing `banking.dmod` leaves no banking word, page, file, Help page, engine or API anywhere ([ACCESS_MODEL.md section 19.6](#196-guarantees-as-tests), extended to "not installed") |
 | G4 | **The kernel controls connectors.** A module declares the *data* it needs (kinds and contracts); the site binds its configured connectors and lake tables to them | no host or credential in any module file, and no connector outside its read-only templates, whose site values are `${...}` placeholders (a packager check, C9); Admin → Data bindings shows every need and what serves it |
 | G5 | **White label by configuration**: one distribution file picks modules, brand, theme, lenses, Home and docs | `drishti.finance` and a sample `drishti.genomics` boot from configuration only, from the same kernel build |
 | G6 | **VaR exactly equal** through every phase | the VaR check, bit for bit, at the 509 and 250 windows |
@@ -118,7 +118,7 @@ them or off the glue between them. The names below are used throughout; *the ker
 ### 1.4 Principles
 
 1. **The kernel knows no domain.** No banking word, engine id, kind, path or package in kernel code, templates, scripts or styles. The
-   rule-4 check of [DOMAIN_MODULES.md section 4](#214-the-dependency-rules) becomes a gate with an empty allow list.
+   rule-4 check of [DOMAIN_MODULES.md section 21.4](#214-the-dependency-rules) becomes a gate with an empty allow list.
 2. **One way. Banking ships as a module like any other.** No privileged module, no "built-in" path. Economy and capital markets are
    content-only modules packaged the same way. The kernel's own reference data (calendar, GLEIF) stays kernel content.
 3. **Modules reach the kernel only through the kernel API** (section 2.2): versioned SPIs and services, the Rachana grammar, the
@@ -334,7 +334,7 @@ the trading landings reach the banking module's VaR and exposure engines through
 | Kernel-only | Why |
 |---|---|
 | Connector plugins (`SourcePlugin`), storage providers, the lake formats | the site's data, credentials and network belong to the site's administrators; one place to secure and audit them (G4) |
-| Identity, RBAC, the licence check, the registry's model | one trust point ([ACCESS_MODEL.md section 2](#192-one-registry-asked-by-every-layer)) |
+| Identity, RBAC, the licence check, the registry's model | one trust point ([ACCESS_MODEL.md section 19.2](#192-one-registry-asked-by-every-layer)) |
 | The Python runtime, its lock file and sandbox | one runtime ([ARCHITECTURE.md section 29.1](ARCHITECTURE.md#291-one-python-runtime)) |
 | In the Drishti Console, never in a module: the shell, menus, Help centre, search, Drishti Elements and every vendored library | one look, one search, one Help, one controlled set of UI statics (section 11) |
 | The database schema files | no migrations, two complete schema files; modules keep state in files under their data folder or in kinds |
@@ -515,7 +515,7 @@ Representative stub files with real-looking content:
 |---|---|---|
 | `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `<drishti.home>/modules` | the modules folder: one `<id>-<version>.dmod` file per module (files directly in it only); read by the module boot at start, read-only to the server |
 | `drishti.modules.trust` | `config/trust/publishers/` | publisher certificates the site trusts |
-| `drishti.modules.<id>.enabled` | `true` | the existing switch ([ACCESS_MODEL.md section 8](#198-as-built-the-backend-phase-1-of-the-split)) |
+| `drishti.modules.<id>.enabled` | `true` | the existing switch ([ACCESS_MODEL.md section 19.8](#198-as-built-the-backend-phase-1-of-the-split)) |
 | `drishti.lib.path` | `${drishti.home}/lib/ext` | **the site's shared jars, Tomcat `lib/` style** (kept on an upgrade; `<home>/lib` holds Drishti's own jar): every jar there is loaded at start into one shared *lib* class loader (section 4.4); restart to pick up changes |
 | `drishti.modules.dev` | `false` | **development only**: the module source folders of the modules folder are the modules, loaded unverified; Health marks each *development (unverified)*; refused in a cluster and in a production distribution |
 | `drishti.modules.sources` | `false` | **the kernel's own tests of the shipped files**: the module source folders of the modules folder are the modules, read (manifests, packs, console parts, data needs) and not loaded as code, because the module's classes are already on the class path |
@@ -1184,7 +1184,7 @@ One YAML file, `config/distributions/drishti.<name>.yaml` (chosen by `--distribu
 brand and theme, which lenses and Home, which docs, which default bindings. It folds today's scattered product settings
 (`drishti.edition`, `ui.product`, `ui.copyright`, `drishti.branding.*`, the lens files' `title`, the old default pack list) into
 one place, **as the one way**: the old keys are read for one release, each named on Health as deprecated. Built:
-[DISTRIBUTIONS.md section 10](#2010-how-it-works-as-built).
+[DISTRIBUTIONS.md section 20.10](#2010-how-it-works-as-built).
 
 **Kernel and console.** The same file format serves both blocks. On a kernel it decides **what is loaded** (modules, default bindings); on
 a Drishti Console it decides **the presentation** (brand, theme, lenses, Home, the modules shown, docs). A console in front of several
@@ -1774,7 +1774,7 @@ answers the thin console adds are the ones a Java console would ask too.
 | **Static files and Elements** | **unchanged**: the files under `web/static` (Elements libraries, the vendored libraries with `VENDOR.md`, CSS on tokens, images, Calc, the gallery) move as they are and are served by the console with immutable caching, SRI and CSP. Elements is governed as the one controlled set of UI statics (section 11). |
 | **Sessions** | **Spring Session JDBC**. A single console uses **SQLite** (a file under its data folder). Several consoles use **PostgreSQL**, the site's one database. **No migrations**: the session tables are written into the two complete schema files (`schema-sqlite.sql`, `schema-postgres.sql`), `initialize-schema: never`, and the connection settings sit in `config/db/database.yaml`, not in `application.yaml` (the database rules). The session holds the console's state only: the person, their per-kernel server sessions and tokens (encrypted attributes), CSRF, the current kernel and lens. The kernel's session (`/api/v1/auth/sessions`) stays the authority on who the person is. |
 | **Security** | **Spring Security**: today's sign-in (the console verifies a password through the identity kernel's `POST /api/v1/auth/login` with its service token and never sees a hash), the session cookie (`HttpOnly`, `Secure`, `SameSite=Lax`), CSRF on every non-GET, the same-origin check, the security headers and CSP from one filter chain. Per-request kernel tokens are minted per kernel (10.6). **Enterprise SSO** (OIDC first, SAML 2.0, optional LDAP and Kerberos) in the same chain: section 10.11. |
-| **Talking to kernels** | `KernelClient`: one per kernel connection, on the JDK `HttpClient` (HTTP/2, a pool per kernel), with Spring's `RestClient` on top. Page handlers fan out on virtual threads (`Executors.newVirtualThreadPerTaskExecutor()`, structured as one task per question, with a deadline per page). Server answers stream through unchanged (JSON, JSON Lines, Arrow IPC, xlsx), and the console never converts JSON to Arrow (today's rule in `core/arrow_answer.py`). Sticky routing by selection token and the entry-node discovery of `backend.urls` move as they are (`core/backend.py`, `core/cluster.py`). **Later, Arrow Flight** for bulk reads ([FLIGHT_GUIDE.md](../guides/FLIGHT_GUIDE.md)): the client gains a Flight path behind the same interface. |
+| **Talking to kernels** | `KernelClient`: one per kernel connection, on the JDK `HttpClient` (HTTP/2, a pool per kernel), with Spring's `RestClient` on top. Page handlers fan out on virtual threads (`Executors.newVirtualThreadPerTaskExecutor()`, structured as one task per question, with a deadline per page). Server answers stream through unchanged (JSON, JSON Lines, Arrow IPC, xlsx), and the console never converts JSON to Arrow (today's rule in `core/arrow_answer.py`). Sticky routing by selection token and the entry-node discovery of `backend.urls` move as they are (`core/backend.py`, `core/cluster.py`). **Later, Arrow Flight** for bulk reads ([INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md)): the client gains a Flight path behind the same interface. |
 | **Live channel** | today's `/api/channel` (server-sent events relayed from the kernels) is served by the console on a virtual thread per connection, so thousands of open tabs cost no platform threads. A tab receives only events for its person, kernel and modules (session isolation). |
 | **Configuration** | `config/console/application.yaml` (the console's own settings: listen address, the `kernels:` list, distribution, limits); database settings in `config/db/database.yaml`; secrets as `${secret:…}` references. Example: [examples/console/application.yaml](kernel-and-modules/examples/console/application.yaml). Every key goes into [CONFIGURATION.md](../admin/CONFIGURATION.md) (the one-config-document rule). |
 
@@ -1888,7 +1888,7 @@ the person's row rules), **never in the console**.
 | `core/notebook.py` (304 lines), `routes/notebook_routes.py` (317) | the notebook's document (YAML cells), the masked extract and the SQL cell. The console already runs no code: SQL and Python cells run on the kernel | the document handling and pages move to the Java console (group G10). **Python cells stay on the kernel's Python workers.** SQL cells stay on the kernel. |
 | `core/transform_editor.py` (202), `routes/transform_routes.py` (140) | turns a Transform spec into a Python item and a dataset, and **parses Python source back into steps with `ast`** | the page moves to the console. **The parse and generate steps move to a kernel Python worker** as a tooling call (`POST /api/v1/python/transform/parse` and `/render`), because they need a Python parser and the console has none. |
 | `routes/python_routes.py` (72) | pages and proxies for Python items | Java controllers (G10). The items run where they run today, on the kernel. |
-| `core/arrow_answer.py` | passes the kernel's Arrow bytes through unchanged; `decode` for tests and scripts | the Java console passes the bytes through the same way. `decode` stays only in the test helpers and the Python client. Arrow Flight later retires the hand-written writers ([FLIGHT_GUIDE.md](../guides/FLIGHT_GUIDE.md)). |
+| `core/arrow_answer.py` | passes the kernel's Arrow bytes through unchanged; `decode` for tests and scripts | the Java console passes the bytes through the same way. `decode` stays only in the test helpers and the Python client. Arrow Flight later retires the hand-written writers ([INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md)). |
 | `web/static/calc/*.py` with `drishti_calc-worker.js` | **Calc: Pyodide (CPython on WebAssembly) in a Web Worker of the person's browser**, reading data through the page with the person's session | **kept as it is**: it is client-side. The Java console serves `/pyodide/<version>/` and `/static/calc/` as vendored static files, and `routes/calc_routes.py` (109 lines, the reads as the person) becomes a Java controller. |
 | Python compute packs, BI Python visuals and measures | already in the kernel's Python pool | unchanged (section 4.6) |
 | Feeds and their refresh scripts | feed runs scheduled by the kernel; standalone `.py` scripts with `.sh` and `.ps1` launchers | feed runs on kernel Python workers placed with the module's `feeds` part; the standalone scripts stay tools for administrators |
@@ -2310,7 +2310,7 @@ A failure names the surface and the leftover (*search still finds "Variant explo
 
 ### 13.2 The licence
 
-The signed licence of [ACCESS_MODEL.md section 7](#197-what-is-built-when) (built in i, after the security discussion)
+The signed licence of [ACCESS_MODEL.md section 19.7](#197-what-is-built-when) (built in i, after the security discussion)
 names **features**; each module's `licence.feature` must be in it (V5). Limits (`positions`, `nodes`, `users`) are read by the registry and
 offered to the module through `ModuleContext.licence()` (read-only, the module cannot change them). The licence check is the kernel's;
 modules know nothing of it beyond the limits.
@@ -2389,7 +2389,7 @@ console, and Java context builders become available as an option for later modul
 
 ### 14.3 Banking step by step (P1–P2)
 
-1. Survey again; freeze the boundary list (refresh [DOMAIN_MODULES.md section 2](#212-the-boundary-list)).
+1. Survey again; freeze the boundary list (refresh [DOMAIN_MODULES.md section 21.2](#212-the-boundary-list)).
 2. Create `drishti-kernel-api`; move the SPI interfaces (package rename `com.ash.drishti.kernel.api.*`; the old types deleted, not
    aliased: banking is the only implementer and moves in the same branch).
 3. Banking's `pom.xml` depends on `drishti-kernel-api` (`provided`) and drops `drishti-server`; fix each compile error by a kernel API

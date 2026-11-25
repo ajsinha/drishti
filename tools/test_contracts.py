@@ -117,7 +117,7 @@ class TheRepository(unittest.TestCase):
         for kind, entry in pol["retiring"].items():
             c = by_kind[kind]
             self.assertEqual((c["status"], c["class"], c["retiring-in"], c["replaced-by"]),
-                             ("retiring", "computed", str(entry["release"]), "docs/contracts/" + entry["contract"]), kind)
+                             ("retiring", "computed", str(entry["release"]), C.contract_path(entry["contract"])), kind)
         for kind, entry in pol["split"].items():
             c = by_kind[kind]
             self.assertEqual(c["status"], "active", kind)
@@ -335,6 +335,13 @@ class Drafts(unittest.TestCase):
             self.assertEqual(c["key"], ["GADGET_ID"])                                        # from the catalogue's example id
             self.assertTrue(any("catalogue" in r for r in c["review"]))
             self.assertEqual(c["cadence"], {"frequency": "static", "due": "to be confirmed"})
+
+    def test_a_contract_name_resolves_to_where_the_document_lives(self):
+        self.assertEqual(C.contract_path("NSET.md"), "docs/plans/contracts/NSET.md")      # not built: planned
+        self.assertEqual(C.contract_path("TVAL.md"), "docs/plans/contracts/TVAL.md")
+        self.assertEqual(C.contract_path("FRTB.md"), "docs/contracts/FRTB.md")           # built: stays
+        self.assertEqual(C.contract_path("SIMM.md"), "docs/contracts/SIMM.md")
+        self.assertTrue((C.ROOT / C.contract_path("NSET.md")).is_file() and (C.ROOT / C.contract_path("FRTB.md")).is_file())
 
     def test_a_retiring_kind_marks_its_figures_derived(self):
         with MiniPack() as m:

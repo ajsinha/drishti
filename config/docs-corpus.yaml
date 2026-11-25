@@ -192,12 +192,13 @@ files:
   - {path: 'docs/guides/DATA_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/DATA_LAKE_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/DEVELOPER_GUIDE.md', class: keep, lane: A}
-  - {path: 'docs/guides/EMBED_GUIDE.md', class: keep, lane: A}
+  - {path: 'docs/guides/EMBED_GUIDE.md', class: merge, lane: B}
   - {path: 'docs/guides/EXPOSURE_GUIDE.md', class: keep, lane: A}
-  - {path: 'docs/guides/FLIGHT_GUIDE.md', class: keep, lane: A}
+  - {path: 'docs/guides/FLIGHT_GUIDE.md', class: merge, lane: B}
   - {path: 'docs/guides/FRTB_SA_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/FUNCTIONS.md', class: generate, lane: B, tool: 'FunctionCataloguePage'}
   - {path: 'docs/guides/IDE_GUIDE.md', class: keep, lane: A}
+  - {path: 'docs/guides/INTEGRATION_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/LIVE_RESULTS_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/OPERATIONS_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/PVF_LOADING.md', class: rename, lane: A}

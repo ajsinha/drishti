@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""The client renderer on a page that is not the console (EMBED_GUIDE.md sections 7.4, 12 and 16): the host part's options, in a blank page
+"""The client renderer on a page that is not the console (INTEGRATION_GUIDE.md sections 7.4, 12 and 16): the host part's options, in a blank page
 under the console's CSP on one made-up origin (render_harness.py), Chromium. Every panel is drawn by Drishti Elements' painter, which has
 its own tables, tabs, pivots and data tables: ``behaviours: 'console'`` adds the painter's table tools (Drishti Elements' tableTools: the
 per-column filter funnels and Chart any table, drawn inside the container; no console script is loaded). ``about: true`` draws About this page from JSON in a side

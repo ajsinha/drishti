@@ -78,56 +78,56 @@ and the per-store documents; VaR's intake is the parallel lake loader ([section 
     - [21. Where the code forced a change from the agreed design](#21-where-the-code-forced-a-change-from-the-agreed-design)
     - [22. Open questions](#22-open-questions)
 3. [lake-iceberg: Apache Iceberg on iceberg-core](#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)
-    - [15. Two connectors: Drishti tables and external tables](#15-two-connectors-drishti-tables-and-external-tables)
-    - [16. Vector columns and orphan files](#16-vector-columns-and-orphan-files)
+    - [3.15 Two connectors: Drishti tables and external tables](#315-two-connectors-drishti-tables-and-external-tables)
+    - [3.16 Vector columns and orphan files](#316-vector-columns-and-orphan-files)
 4. [Reactive connectors](#4-reactive-connectors)
-    - [1. The ask, in one paragraph](#1-the-ask-in-one-paragraph)
-    - [2. Decisions this design rests on](#2-decisions-this-design-rests-on)
-    - [3. Four kinds of connector](#3-four-kinds-of-connector)
-    - [4. What a reactive connector is](#4-what-a-reactive-connector-is)
-    - [5. The connector file](#5-the-connector-file)
-    - [6. The request and its lifecycle](#6-the-request-and-its-lifecycle)
-    - [7. Triggers: computing on events](#7-triggers-computing-on-events)
-    - [8. Point-in-time stamping, ordering and idempotence](#8-point-in-time-stamping-ordering-and-idempotence)
-    - [9. Isolation: two users never see each other's answers](#9-isolation-two-users-never-see-each-others-answers)
-    - [10. Coalescing, incremental recompute and back-pressure](#10-coalescing-incremental-recompute-and-back-pressure)
-    - [11. Caching](#11-caching)
-    - [12. One screen, many connectors](#12-one-screen-many-connectors)
-    - [13. Failure](#13-failure)
-    - [14. Several servers (Drishti*net)](#14-several-servers-drishtinet)
-    - [15. Observability and audit](#15-observability-and-audit)
-    - [16. The SPI and the APIs](#16-the-spi-and-the-apis)
-    - [17. Configuration reference](#17-configuration-reference)
-    - [18. Build plan](#18-build-plan)
-    - [19. Tests](#19-tests-1)
-    - [20. Open questions for the product owner](#20-open-questions-for-the-product-owner)
-    - [21. Built: R1 to R4](#21-built-r1-to-r4)
-    - [22. How the VaR engine plugs in](#22-how-the-var-engine-plugs-in)
+    - [4.1 The ask, in one paragraph](#41-the-ask-in-one-paragraph)
+    - [4.2 Decisions this design rests on](#42-decisions-this-design-rests-on)
+    - [4.3 Four kinds of connector](#43-four-kinds-of-connector)
+    - [4.4 What a reactive connector is](#44-what-a-reactive-connector-is)
+    - [4.5 The connector file](#45-the-connector-file)
+    - [4.6 The request and its lifecycle](#46-the-request-and-its-lifecycle)
+    - [4.7 Triggers: computing on events](#47-triggers-computing-on-events)
+    - [4.8 Point-in-time stamping, ordering and idempotence](#48-point-in-time-stamping-ordering-and-idempotence)
+    - [4.9 Isolation: two users never see each other's answers](#49-isolation-two-users-never-see-each-others-answers)
+    - [4.10 Coalescing, incremental recompute and back-pressure](#410-coalescing-incremental-recompute-and-back-pressure)
+    - [4.11 Caching](#411-caching)
+    - [4.12 One screen, many connectors](#412-one-screen-many-connectors)
+    - [4.13 Failure](#413-failure)
+    - [4.14 Several servers (Drishti*net)](#414-several-servers-drishtinet)
+    - [4.15 Observability and audit](#415-observability-and-audit)
+    - [4.16 The SPI and the APIs](#416-the-spi-and-the-apis)
+    - [4.17 Configuration reference](#417-configuration-reference)
+    - [4.18 Build plan](#418-build-plan)
+    - [4.19 Tests](#419-tests)
+    - [4.20 Open questions for the product owner](#420-open-questions-for-the-product-owner)
+    - [4.21 Built: R1 to R4](#421-built-r1-to-r4)
+    - [4.22 How the VaR engine plugs in](#422-how-the-var-engine-plugs-in)
 5. [The content store: user content every node reaches](#5-the-content-store-user-content-every-node-reaches)
-    - [1. The problem](#1-the-problem)
-    - [2. The interface](#2-the-interface)
-    - [3. Backends](#3-backends)
-    - [4. Configuration](#4-configuration)
-    - [5. Designs: the first user](#5-designs-the-first-user)
-    - [6. Several servers](#6-several-servers)
-    - [7. Tests](#7-tests)
-    - [8. Next steps: what is still kept on one node](#8-next-steps-what-is-still-kept-on-one-node)
-    - [9. BI content and BI runs](#9-bi-content-and-bi-runs)
-    - [10. Collaboration, notes and the admin data](#10-collaboration-notes-and-the-admin-data)
-    - [11. UI-written configuration: shared overlays (built for load overrides)](#11-ui-written-configuration-shared-overlays-built-for-load-overrides)
+    - [5.1 The problem](#51-the-problem)
+    - [5.2 The interface](#52-the-interface)
+    - [5.3 Backends](#53-backends)
+    - [5.4 Configuration](#54-configuration)
+    - [5.5 Designs: the first user](#55-designs-the-first-user)
+    - [5.6 Several servers](#56-several-servers)
+    - [5.7 Tests](#57-tests)
+    - [5.8 Next steps: what is still kept on one node](#58-next-steps-what-is-still-kept-on-one-node)
+    - [5.9 BI content and BI runs](#59-bi-content-and-bi-runs)
+    - [5.10 Collaboration, notes and the admin data](#510-collaboration-notes-and-the-admin-data)
+    - [5.11 UI-written configuration: shared overlays (built for load overrides)](#511-ui-written-configuration-shared-overlays-built-for-load-overrides)
 6. [The one Drishti database (design, not built)](#6-the-one-drishti-database-design-not-built)
-    - [1. The decision](#1-the-decision)
-    - [2. What lives in it, and what does not](#2-what-lives-in-it-and-what-does-not)
-    - [3. SQLite or PostgreSQL](#3-sqlite-or-postgresql)
-    - [4. No migrations: two complete schema files](#4-no-migrations-two-complete-schema-files)
-    - [5. The schema version stamp](#5-the-schema-version-stamp)
-    - [6. Switching and upgrading: `db copy`](#6-switching-and-upgrading-db-copy)
-    - [7. Configuration: config/db/database.yaml (planned)](#7-configuration-configdbdatabaseyaml-planned)
-    - [8. Several servers](#8-several-servers)
-    - [9. Today and the change](#9-today-and-the-change)
-    - [10. Build plan](#10-build-plan)
-    - [11. Tests](#11-tests)
-    - [12. Decisions (product owner, 2026-10-20)](#12-decisions-product-owner-2026-10-20)
+    - [6.1 The decision](#61-the-decision)
+    - [6.2 What lives in it, and what does not](#62-what-lives-in-it-and-what-does-not)
+    - [6.3 SQLite or PostgreSQL](#63-sqlite-or-postgresql)
+    - [6.4 No migrations: two complete schema files](#64-no-migrations-two-complete-schema-files)
+    - [6.5 The schema version stamp](#65-the-schema-version-stamp)
+    - [6.6 Switching and upgrading: `db copy`](#66-switching-and-upgrading-db-copy)
+    - [6.7 Configuration: config/db/database.yaml (planned)](#67-configuration-configdbdatabaseyaml-planned)
+    - [6.8 Several servers](#68-several-servers)
+    - [6.9 Today and the change](#69-today-and-the-change)
+    - [6.10 Build plan](#610-build-plan)
+    - [6.11 Tests](#611-tests)
+    - [6.12 Decisions (product owner, 2026-10-20)](#612-decisions-product-owner-2026-10-20)
 7. [Loading: the data inbox and the load rules (internal)](#7-loading-the-data-inbox-and-the-load-rules-internal)
 8. [The lake file: one description of every lake](#8-the-lake-file-one-description-of-every-lake)
 9. [The in-memory lake: Delta tables that never touch a disk](#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk)
@@ -674,7 +674,7 @@ normally create rules from the console's Alerts page; see [USER_GUIDE.md](../gui
 
 ### Live BI: a report's live tables
 
-Business intelligence uses this machinery too (Rūpaka phase 5, [ARCHITECTURE.md §28](ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) section 12; the pages are [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md) section 18). A dataset table with `mode: live` ([MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/TABLES_AND_MODELS.md#17-live-tables)) is **fed by the same
+Business intelligence uses this machinery too (Rūpaka phase 5, [ARCHITECTURE.md §28](ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) section 12; the pages are [TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md) section 18). A dataset table with `mode: live` ([TABLES_AND_MODELS.md](../guides/bi/TABLES_AND_MODELS.md#17-live-tables)) is **fed by the same
 topics**: for each entity of its kind the engine subscribes through the source layer (the connector's `subscribe`, the same call a live view makes), applies each change to an in-memory table by key (batched every 100 ms, so ticks coalesce as they do for a view), and keeps a counter that grows with
 every change. It is **not** a view stream: it carries no panel patches and costs the entities' topics one more listener (`TopicHub`), not one more source subscription; a dataset that names a connector (`source: { connector: ... }`) subscribes through that connector directly instead, for a stream that keeps no state but ticks what a store serves.
 
@@ -1877,7 +1877,7 @@ Status: **built.** The engine is part of Drishti Lake ([github.com/drishti-platf
 
 **Proof.** `IcebergSpecInteropTest` runs both ways against the Apache Iceberg library (kept in test scope only, with Hadoop): the library writes every transform with every special partition character, position and equality deletes, and Drishti reads every row; Drishti writes every special partition character and the library reads every row. `PyicebergReadsNativeTest` and `NativeReadInteropTest` do the same against pyiceberg.
 
-### 15. Two connectors: Drishti tables and external tables
+### 3.15 Two connectors: Drishti tables and external tables
 
 The product owner (2026-10-20): Drishti needs **a connector for Iceberg tables Drishti writes and one for Iceberg tables
 it does not write**. Both run on `lake-iceberg` (the `iceberg` connector also on the `library` engine; `iceberg-external` refuses it); they differ in what they expect of a table.
@@ -1904,7 +1904,7 @@ was 15.1 *Configuration* is its [section 2](../../plugins/drishti-plugin-iceberg
 [README](../../plugins/drishti-plugin-iceberg-external/README.md)); 15.5 *Tests* is its
 [section 12](../../plugins/drishti-plugin-iceberg-external/README.md#how-it-is-tested).
 
-### 16. Vector columns and orphan files
+### 3.16 Vector columns and orphan files
 
 **`list<double>` columns.** The layout's vector column (`layout.<kind>.vectors`, a P&L vector of 509 values) is an optional
 `list<double>` whose elements are optional: field ids are assigned after the promoted columns, the column's then its element's. The
@@ -1944,15 +1944,15 @@ Other connectors, reviewed against the rule that each format or protocol comes f
 ## 4. Reactive connectors
 
 Status: **R1 to R4 built and built (2026-10-26); R5 and R6 planned, in no release yet.** Designed with the product owner (2026-10-24). What is built, and
-where it differs from the design below, is in [section 21](#21-built-r1-to-r4); the reference for people who write and run reactive
+where it differs from the design below, is in [section 4.21](#421-built-r1-to-r4); the reference for people who write and run reactive
 connectors is [the reactive connector's README](../connectors/types/reactive/README.md) and [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector).
-Everything named below that section 21 does not list as built is **planned**. Related designs:
+Everything named below that section 4.21 does not list as built is **planned**. Related designs:
 [README.md](../guides/bi/README.md) (the workers that run the computations, `requires:` and approval),
 [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) (a saved change
 can trigger a computation), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms) (screens that read many sources), [section 1](#1-live-updates) (how results reach
 the screen), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the connector SPI).
 
-### 1. The ask, in one paragraph
+### 4.1 The ask, in one paragraph
 
 Today a connector brings data that already exists somewhere: a lake, a database, a queue, a web service. The product owner wants
 connectors that **compute** their answer: a VaR for any group of trades, a what-if price for a trade that is not booked, the effect of
@@ -1961,19 +1961,19 @@ message on Kafka, a schedule). Packs stay exactly as they are (kinds, routes, sc
 libraries it needs. A screen can combine as many connectors as it likes: stored data, live data and computed data side by side, all
 for the same business date, and each panel says on its own if its source failed.
 
-### 2. Decisions this design rests on
+### 4.2 Decisions this design rests on
 
 | # | Decision (product owner, 2026-10-24) | What it means here |
 |---|---|---|
 | 1 | **Packs stay as they are.** "Connector can be reactive, on demand, static, whatever it is." | No computation and no library is declared in a pack. A pack names kinds, routes each kind to a connector and draws screens. |
-| 2 | **A connector may be static, live, on-demand or reactive.** | One `mode:` per connector file ([section 3](#3-four-kinds-of-connector)). |
-| 3 | **A pack combines results from as many connectors as it wishes.** | Per-panel `source:` already exists ([RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 6](../guides/RACHANA_REFERENCE.md#6-sources-over-several-packs)); this design adds parameters, one pinned as-of per screen, and per-panel failure ([section 12](#12-one-screen-many-connectors)). |
-| 4 | **Reactive connectors compute on request and on events** (a write-back, a Kafka change, a schedule). | `triggers:` ([section 7](#7-triggers-computing-on-events)) with coalescing, incremental recompute, point-in-time stamps, ordering, idempotence and back-pressure. |
-| 5 | **Two users' write-backs or requests never mix their responses.** | A correlation id on every request and event, per-user sandboxes, cache keys that include the viewer's rights, masks applied per recipient ([section 9](#9-isolation-two-users-never-see-each-others-answers)). |
+| 2 | **A connector may be static, live, on-demand or reactive.** | One `mode:` per connector file ([section 4.3](#43-four-kinds-of-connector)). |
+| 3 | **A pack combines results from as many connectors as it wishes.** | Per-panel `source:` already exists ([RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 6](../guides/RACHANA_REFERENCE.md#6-sources-over-several-packs)); this design adds parameters, one pinned as-of per screen, and per-panel failure ([section 4.12](#412-one-screen-many-connectors)). |
+| 4 | **Reactive connectors compute on request and on events** (a write-back, a Kafka change, a schedule). | `triggers:` ([section 4.7](#47-triggers-computing-on-events)) with coalescing, incremental recompute, point-in-time stamps, ordering, idempotence and back-pressure. |
+| 5 | **Two users' write-backs or requests never mix their responses.** | A correlation id on every request and event, per-user sandboxes, cache keys that include the viewer's rights, masks applied per recipient ([section 4.9](#49-isolation-two-users-never-see-each-others-answers)). |
 | 6 | **The connector declares `requires:`** (Python, Java, plugins); an administrator approves before use. | The block, the locked environments and the approval are in [README.md](../guides/bi/README.md). |
 | 7 | **Python runs out of process, Java stays on 21, no FFI, no embedded CPython.** | A reactive connector's code runs in a worker process, never inside the server ([README.md](../guides/bi/README.md)). |
 
-### 3. Four kinds of connector
+### 4.3 Four kinds of connector
 
 | Mode | What `fetch` means | Data lives | History (a picked business date) | Pushes changes | Examples today |
 |---|---|---|---|---|---|
@@ -1989,17 +1989,17 @@ for the same business date, and each panel says on its own if its source failed.
   the light pattern of [the developer guide](../guides/DEVELOPER_GUIDE.md#1011-connectors-that-compute-data-on-demand).
   A reactive connector is for computations that are heavy, parameterised, need their own libraries, or must react to events.
 
-### 4. What a reactive connector is
+### 4.4 What a reactive connector is
 
 A reactive connector is **a connector whose answer is a computation**. It has five parts:
 
 | Part | Says | Section |
 |---|---|---|
-| **kinds** | the kinds it answers (`var-result`, `var-contribution`, `what-if` …), each with its parameters and the shape of its result | [5](#5-the-connector-file) |
-| **inputs** (`reads:`) | which kinds of which connectors it reads, always **as the requesting user** | [6](#6-the-request-and-its-lifecycle) |
+| **kinds** | the kinds it answers (`var-result`, `var-contribution`, `what-if` …), each with its parameters and the shape of its result | [5](#45-the-connector-file) |
+| **inputs** (`reads:`) | which kinds of which connectors it reads, always **as the requesting user** | [6](#46-the-request-and-its-lifecycle) |
 | **engine** | where the code runs: a Python worker, a Java worker, or (trusted, light code only) in the server's own process | [README.md](../guides/bi/README.md) |
 | **requires** | the libraries the engine needs, pinned, approved by an administrator | [README.md](../guides/bi/README.md) |
-| **triggers** | the events on which results are recomputed and pushed | [7](#7-triggers-computing-on-events) |
+| **triggers** | the events on which results are recomputed and pushed | [7](#47-triggers-computing-on-events) |
 
 Everything that already consumes connectors works on it without change: a Sutra panel's `source:`, BI datasets, history queries,
 entitlements and masks, Drishti\*net routing, Admin → Connectors and Health, the README standard. That is why the execution unit is a
@@ -2022,7 +2022,7 @@ connector and not a new concept.
                      Kafka message, schedule, new load           each subscriber, re-masked for each
 ```
 
-### 5. The connector file
+### 4.5 The connector file
 
 A reactive connector is a connector file in `config/connectors/` like any other (the file name is its name). The plugin is the
 generic planned `reactive` plugin; what is specific to the computation is configuration plus the code the `engine:` names.
@@ -2040,7 +2040,7 @@ kinds:
       confidence: { type: decimal, default: 0.99, allowed: [0.95, 0.975, 0.99] }
       horizon:    { type: int, default: 1, allowed: [1, 10] }
       method:     { type: enum, default: historical, options: [historical, age-weighted, filtered] }
-      whatif:     { type: sandbox-ref, required: false }   # a private what-if sandbox of the requester (section 9)
+      whatif:     { type: sandbox-ref, required: false }   # a private what-if sandbox of the requester (section 4.9)
     result: { schema: schemas/var-result.v1.json }
   var-contribution: { params: { scope: { type: scope, required: true }, by: { type: enum, options: [child, position, risk-class] } } }
   var-path:         { params: { scope: { type: scope, required: true } } }     # the 509 scenario P&Ls
@@ -2060,7 +2060,7 @@ requires:                               # bi/README.md section 4; nothing runs u
     version: "3.12"
     lock: requires/var-engine.lock      # pinned wheels with sha256
   java: []
-triggers:                               # section 7
+triggers:                               # section 4.7
   - on: write-back
     kinds: [trade]
     affects: "scopes_of(trade.TT_BOOK)"           # the book and every node above it
@@ -2074,8 +2074,8 @@ triggers:                               # section 7
     zone: America/New_York
     affects: "subscribed"                         # only scopes someone is watching
     recompute: [var-result]
-coalesce: { quiet: 250ms, max-wait: 2s }          # section 10
-cache:   { results: 20000, bytes: 512MB, ttl: 8h, store: disk }  # section 11
+coalesce: { quiet: 250ms, max-wait: 2s }          # section 4.10
+cache:   { results: 20000, bytes: 512MB, ttl: 8h, store: disk }  # section 4.11
 limits:  { timeout: 30s, timeout-batch: 10m, max-inflight-per-user: 4, max-scope-positions: 5000000 }
 history: { dated: true }                          # a picked business date computes on that date's inputs
 ```
@@ -2090,9 +2090,9 @@ history: { dated: true }                          # a picked business date compu
 - **Off until approved.** A reactive connector whose `requires:` is not approved loads as *waiting for approval*: Admin → Connectors
   says so, Health says `DOWN: requirements not approved`, and panels reading its kinds say *This computation is not approved yet*.
 
-### 6. The request and its lifecycle
+### 4.6 The request and its lifecycle
 
-#### 6.1 The request
+#### 4.6.1 The request
 
 The connector SPI's "the id is the question" is kept, but a reactive kind takes **typed parameters** too. A Sutra panel names them
 with a planned `params:` key on `source:`:
@@ -2116,29 +2116,29 @@ Inside the server every read of a reactive kind becomes one **compute request**:
   "connector": "var-engine", "kind": "var-result",
   "id": "DESK:RATES-NY",
   "params": { "confidence": 0.99, "horizon": 1, "method": "historical" },
-  "asOf": { "businessDate": "2026-10-23", "knownAt": null, "pin": "pin-7f3c…" },     // section 8
-  "viewer": { "user": "asha", "roles": ["risk"], "viewSignature": "vs-91a2…" },      // section 9
+  "asOf": { "businessDate": "2026-10-23", "knownAt": null, "pin": "pin-7f3c…" },     // section 4.8
+  "viewer": { "user": "asha", "roles": ["risk"], "viewSignature": "vs-91a2…" },      // section 4.9
   "origin": { "type": "panel", "screen": "desk/var-explorer", "panel": "headline" }, // or trigger, api, bi
-  "class": "interactive"                     // interactive | event | batch (section 10)
+  "class": "interactive"                     // interactive | event | batch (section 4.10)
 }
 ```
 
-#### 6.2 The lifecycle
+#### 4.6.2 The lifecycle
 
 | Step | What happens | Where |
 |---|---|---|
 | 1. **Receive** | The router sends the read to the connector the kind is routed to, exactly as today. | server |
 | 2. **Authorise** | The viewer's roles may open the kind; the viewer holds the planned `compute` power for computed kinds; the scope is within the viewer's entitlements ([VAR_GUIDE.md section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit)). Refused in words, before any work. | server |
-| 3. **Pin the as-of** | The request's as-of is resolved to concrete input versions (the Delta table version of `pnl-vector` for the date, the edit-log watermark), once, and recorded as a **pin** ([section 8](#8-point-in-time-stamping-ordering-and-idempotence)). | server |
-| 4. **Key** | The canonical key: connector, kind, id, normalised params, pin, the viewer's **view signature** ([section 9](#9-isolation-two-users-never-see-each-others-answers)), engine version, environment lock hash. | server |
-| 5. **Cache and single flight** | A cached result for the key is answered at once. A request for a key already being computed **joins** that computation (one computation, many waiters, each answered under its own request id). | server, then the key's owner node ([section 14](#14-several-servers-drishtinet)) |
-| 6. **Admit** | The request takes a slot in its class's queue; a full queue answers *busy, try again* (interactive) or waits (event, batch) ([section 10](#10-coalescing-incremental-recompute-and-back-pressure)). | server |
+| 3. **Pin the as-of** | The request's as-of is resolved to concrete input versions (the Delta table version of `pnl-vector` for the date, the edit-log watermark), once, and recorded as a **pin** ([section 4.8](#48-point-in-time-stamping-ordering-and-idempotence)). | server |
+| 4. **Key** | The canonical key: connector, kind, id, normalised params, pin, the viewer's **view signature** ([section 4.9](#49-isolation-two-users-never-see-each-others-answers)), engine version, environment lock hash. | server |
+| 5. **Cache and single flight** | A cached result for the key is answered at once. A request for a key already being computed **joins** that computation (one computation, many waiters, each answered under its own request id). | server, then the key's owner node ([section 4.14](#414-several-servers-drishtinet)) |
+| 6. **Admit** | The request takes a slot in its class's queue; a full queue answers *busy, try again* (interactive) or waits (event, batch) ([section 4.10](#410-coalescing-incremental-recompute-and-back-pressure)). | server |
 | 7. **Read the inputs as the user** | Each `reads:` kind is read through the normal router **as the requesting viewer**: kinds, row entitlements and field masks applied before a byte reaches the computation. Bulk inputs travel as Arrow (the existing `scan` SPI). | server |
 | 8. **Compute** | The request, the inputs and a scratch folder go to a worker of the connector's pool. The worker never fetches data itself and holds no credentials. | worker ([README.md](../guides/bi/README.md)) |
 | 9. **Progress** | A long computation sends partial results (*desks 7 of 12 done*, a first estimate) on the requester's live channel; the panel paints them, marked *computing 58%*. | worker → server → console |
 | 10. **Stamp, validate, cache** | The result is validated against the kind's schema, stamped (pin, computedAt, engine and environment), and cached under its key. | server |
 | 11. **Answer** | The result goes to the request id that asked, and to every request id that joined it, each masked for its own viewer. | server |
-| 12. **Audit** | Who asked what, with which pin, how long it took, which result hash ([section 15](#15-observability-and-audit)). | server |
+| 12. **Audit** | Who asked what, with which pin, how long it took, which result hash ([section 4.15](#415-observability-and-audit)). | server |
 
 **Timeout.** An interactive request has a budget (`limits.timeout`, 30 s by default). If the panel's own wait (the view's link budget,
 `drishti.graph.link-budget`) passes first, the panel is drawn *computing* and fills itself from the live channel when the result
@@ -2147,7 +2147,7 @@ lands; the computation is not abandoned because a page was drawn.
 **Cancel.** A request is cancelled when every waiter has gone (the panel closed, the page left, a new selection replaced it). A
 computation already running in a worker is stopped only if it is interactive and nobody else joined it.
 
-### 7. Triggers: computing on events
+### 4.7 Triggers: computing on events
 
 A reactive connector recomputes **without being asked** when a declared trigger fires, and pushes the new result to the screens that
 watch it.
@@ -2160,7 +2160,7 @@ watch it.
 | `data-version` | a static connector's data version moves for a kind and date (a new lake load is published) | kind, business date, old and new version | the overnight vectors land: every cached result of that date is stale, the watched ones recompute |
 | `schedule` | a cron expression, in a named zone | the tick time | refresh the watched scopes every 15 minutes in trading hours |
 
-#### 7.1 From an event to the scopes it affects
+#### 4.7.1 From an event to the scopes it affects
 
 Each trigger says which results it affects with `affects:`:
 
@@ -2173,20 +2173,20 @@ Each trigger says which results it affects with `affects:`:
 Only affected results that **somebody is watching** are recomputed at once; the others are only marked stale and recompute on their
 next read. A trigger never computes for a screen nobody has open.
 
-#### 7.2 What a trigger may and may not do
+#### 4.7.2 What a trigger may and may not do
 
 - It recomputes **shared** results (a book's VaR as seen by the risk role) and pushes them; it never recomputes a user's private
   what-if sandbox, which changes only when its owner acts.
 - It runs under the **connector's service identity** for reading inputs that every subscriber shares, and the result is then
-  **re-masked per subscriber** before it is pushed ([section 9.3](#93-pushing-one-recomputed-result-to-many-viewers)). A subscriber
+  **re-masked per subscriber** before it is pushed ([section 4.9.3](#493-pushing-one-recomputed-result-to-many-viewers)). A subscriber
   whose rights produce a different view signature gets a result computed for that signature (one per distinct signature, not one per
   person).
 - It is **idempotent**: an event already processed (same change id, same Kafka offset, same schedule tick) is ignored
-  ([section 8](#8-point-in-time-stamping-ordering-and-idempotence)).
+  ([section 4.8](#48-point-in-time-stamping-ordering-and-idempotence)).
 
-### 8. Point-in-time stamping, ordering and idempotence
+### 4.8 Point-in-time stamping, ordering and idempotence
 
-#### 8.1 The stamp on every result
+#### 4.8.1 The stamp on every result
 
 ```json
 "stamp": {
@@ -2210,14 +2210,14 @@ next read. A trigger never computes for a screen nobody has open.
 The stamp is what *How this view was built* shows for a computed panel, and what makes a number **reproducible**: the same pin, the
 same environment and the same engine give the same result hash.
 
-#### 8.2 The pin
+#### 4.8.2 The pin
 
-When a request (or a screen, [section 12.2](#122-one-as-of-for-the-whole-screen)) is resolved, the server records a **pin**: the
+When a request (or a screen, [section 4.12.2](#4122-one-as-of-for-the-whole-screen)) is resolved, the server records a **pin**: the
 concrete version of every input for the business date at that moment. A pin is small (a few hundred bytes), kept for the request's
 life and, for results that are cached or audited, with the result. Two panels of one screen that share a pin computed on the same
 data, whatever loads arrive while they run.
 
-#### 8.3 Ordering
+#### 4.8.3 Ordering
 
 - Results for one key are **versioned by their watermark**: the input versions, edit-log seqs and offsets they include. A result is
   newer than another if every watermark is at least as high and one is higher.
@@ -2228,18 +2228,18 @@ data, whatever loads arrive while they run.
   partition** in offset order. Across lanes and partitions there is no order to keep: a result simply includes a set of
   watermarks.
 
-#### 8.4 Idempotence
+#### 4.8.4 Idempotence
 
 Every event has an id (the change id, `connector/partition/offset`, `schedule/<tick>`, `data-version/<kind>/<date>/<version>`). The
 connector keeps the ids of processed events per key for `triggers.dedupe-window` (default 24 h). An event seen again (a redelivered
 Kafka message, a resent change after a fail-over) is ignored. Recomputing is itself idempotent: the same pin gives the same result.
 
-### 9. Isolation: two users never see each other's answers
+### 4.9 Isolation: two users never see each other's answers
 
 The product owner's question (2026-10-24): *if two users write back or ask at the same time, can their responses mix?* No. Five rules
 make sure of it.
 
-#### 9.1 The rules
+#### 4.9.1 The rules
 
 1. **Every request and every event has a correlation id** (`requestId`, the change id). A result is delivered only to the request ids
    that asked for it or joined it, over the requester's own live channel. There is no broadcast of a computed result to "everyone on
@@ -2257,7 +2257,7 @@ make sure of it.
    between requests ([bi/README.md section 7](ARCHITECTURE.md#292-pools-and-workers)); a Python global, a cached object or a temp
    file of one request is never seen by the next.
 
-#### 9.2 Two traders, two amendments, the same second
+#### 4.9.2 Two traders, two amendments, the same second
 
 Asha (RATES-NY) amends MX-50000001 at 14:02:11.200; Ben (also RATES-NY) books CLY-30000002 at 14:02:11.350. Both changes apply in the
 edit log (different lanes, `L17:3412` and `L42:988`).
@@ -2271,10 +2271,10 @@ edit log (different lanes, `L17:3412` and `L42:988`).
 - The **incremental impact** is attributed per event: the connector computes the vector of the scope before and after each event, in
   watermark order, and sends each submitter the difference for **their** event, under their change id. Ben never receives Asha's
   impact, and neither receives the other's private what-ifs.
-- The **shared** number is one result for the scope and signature, coalesced over both events ([section 10](#10-coalescing-incremental-recompute-and-back-pressure)),
+- The **shared** number is one result for the scope and signature, coalesced over both events ([section 4.10](#410-coalescing-incremental-recompute-and-back-pressure)),
   stamped with both watermarks, so a reader can tell exactly which changes it includes.
 
-#### 9.3 Pushing one recomputed result to many viewers
+#### 4.9.3 Pushing one recomputed result to many viewers
 
 ```
  trigger (event) ─▶ affected keys ─▶ for each key: group the subscribers by view signature
@@ -2284,9 +2284,9 @@ edit log (different lanes, `L17:3412` and `L42:988`).
 
 Subscribers are the open live channels that read the key (section 1's one subscription per entity, kept per key and signature).
 
-### 10. Coalescing, incremental recompute and back-pressure
+### 4.10 Coalescing, incremental recompute and back-pressure
 
-#### 10.1 Coalescing bursts
+#### 4.10.1 Coalescing bursts
 
 A burst of events for one key (twenty amendments to one book in a second) must not mean twenty computations.
 
@@ -2295,10 +2295,10 @@ A burst of events for one key (twenty amendments to one book in a second) must n
   has arrived. A steady stream therefore still yields a result every two seconds.
 - **At most one computation per key at a time**; events that arrive during it cause **exactly one more** afterwards (the same rule
   section 1 uses for view rebuilds, [section 1, guarantees](#guarantees-and-limits)).
-- Per-event impacts ([section 9.2](#92-two-traders-two-amendments-the-same-second)) are still computed per event, because they are
+- Per-event impacts ([section 4.9.2](#492-two-traders-two-amendments-the-same-second)) are still computed per event, because they are
   cheap (a difference of vectors), even when the shared result is coalesced.
 
-#### 10.2 Incremental recompute
+#### 4.10.2 Incremental recompute
 
 A connector may declare that a kind is **incremental**: given the previous result and the events since, it can produce the new result
 without starting again. For VaR this is natural: the P&L vector of a scope is a sum, so an amended trade changes the scope's vector by
@@ -2307,7 +2307,7 @@ The connector's entry point receives `previous` (result plus stamp) and `events`
 events are too many or of a kind it cannot apply incrementally. Every Nth incremental result (`incremental.verify-every`, default 50)
 is checked against a full recompute in the background; a difference beyond tolerance is a health warning and the full result wins.
 
-#### 10.3 Back-pressure and fairness
+#### 4.10.3 Back-pressure and fairness
 
 | Class | Who | Queue | When full |
 |---|---|---|---|
@@ -2320,11 +2320,11 @@ is checked against a full recompute in the background; a difference beyond toler
   over `limits.max-scope-positions` is refused before any read, with the size in the message, or sent as a BI run job
   ([ARCHITECTURE.md §28](ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)) if the caller allows.
 
-### 11. Caching
+### 4.11 Caching
 
 | Tier | Holds | Key | Invalidated by |
 |---|---|---|---|
-| **in memory** (per node) | recent results | the key of [section 6.2](#62-the-lifecycle) step 4 | a trigger that affects the key; size and age limits |
+| **in memory** (per node) | recent results | the key of [section 4.6.2](#462-the-lifecycle) step 4 | a trigger that affects the key; size and age limits |
 | **on disk** (`store: disk`) | expensive results, under `<data dir>/compute/results/<connector>/` | the same | the same; a restart keeps it |
 | **inputs** | Arrow batches of inputs read for a pin (the P&L vectors of a desk) | connector, kind, scope, pin, signature | a new data version of the input |
 
@@ -2333,17 +2333,17 @@ is checked against a full recompute in the background; a difference beyond toler
 - **The engine version and the environment hash are in the key**: upgrading the VaR package or a pinned wheel never serves a result
   computed by the previous code.
 - **Single flight** (one computation per key, others join) holds within a node and, through the key's owner
-  ([section 14](#14-several-servers-drishtinet)), across a cluster.
+  ([section 4.14](#414-several-servers-drishtinet)), across a cluster.
 - **Never cached:** a result that failed validation, a partial result, a private sandbox's result beyond the owner's session
   (sandbox results live with the sandbox, not in the shared cache).
 - `purgeCaches()` (Admin → Caches, as for every connector) drops all three tiers.
 
-### 12. One screen, many connectors
+### 4.12 One screen, many connectors
 
 A pack already combines connectors: each kind is routed to one connector, and each panel can name its own `source:`. This design
 makes combining **computed** results first-class.
 
-#### 12.1 An example: the desk VaR screen
+#### 4.12.1 An example: the desk VaR screen
 
 ```yaml
 # modules/banking/packs/market-risk/sutras/pages/desk-var.v1.sutra.yaml       (planned)
@@ -2374,7 +2374,7 @@ panels:
 
 Five panels, three kinds of connector, one screen. Nothing in the pack names a library or a worker.
 
-#### 12.2 One as-of for the whole screen
+#### 4.12.2 One as-of for the whole screen
 
 - **`consistency: snapshot`** (planned; the default for screens with a computed panel): when the screen is opened the server
   resolves **one pin** for the business date and every panel's source is read and computed against it. The strip says *as of
@@ -2387,7 +2387,7 @@ Five panels, three kinds of connector, one screen. Nothing in the pack names a l
 - The view model carries each panel's pin; a panel computed on a different pin from the screen's (it could not be computed on the
   screen's pin in time) is marked *computed on newer data* in amber, never presented as consistent.
 
-#### 12.3 Cross-connector joins
+#### 4.12.3 Cross-connector joins
 
 Two ways, and the design keeps both:
 
@@ -2397,7 +2397,7 @@ Two ways, and the design keeps both:
    the lake and intraday vectors computed from Kafka trades), the connector reads them all as the user, on one pin, and returns one
    result. The join is the connector's code and is tested with it.
 
-#### 12.4 Partial failure, per panel
+#### 4.12.4 Partial failure, per panel
 
 Each panel has its own state, drawn in place, never as an error page:
 
@@ -2412,7 +2412,7 @@ Each panel has its own state, drawn in place, never as an error page:
 
 The other panels are unaffected. *How this view was built* lists each panel's source, pin, state and request id.
 
-### 13. Failure
+### 4.13 Failure
 
 | What fails | What happens | What the user sees |
 |---|---|---|
@@ -2426,7 +2426,7 @@ The other panels are unaffected. *How this view was built* lists each panel's so
 A connector whose error rate passes `limits.circuit` (default 50% over one minute) opens its **circuit**: requests are answered from
 the cache (marked stale) or refused, for 30 s, then one probe is let through. Health shows `DEGRADED: circuit open`.
 
-### 14. Several servers (Drishti*net)
+### 4.14 Several servers (Drishti*net)
 
 - **Who computes a key:** the key's **owner node**, chosen on the Drishti\*net ring by the key's hash among the nodes that serve the
   connector ([CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)). Any node receiving a request forwards it to the owner (signed, on behalf of the
@@ -2438,7 +2438,7 @@ the cache (marked stale) or refused, for 30 s, then one probe is let through. He
   trigger (results are reproducible from their pins, so nothing is wrong, only late). Private sandboxes are kept in the content store
   ([section 5](#5-the-content-store-user-content-every-node-reaches)), so they survive a node.
 
-### 15. Observability and audit
+### 4.15 Observability and audit
 
 - **Admin → Compute** (planned): per reactive connector, its pools and workers (busy, idle, memory, requests served, recycled),
   queues per class (depth, oldest wait), latency (p50, p95, p99 per kind), cache hit rate, coalescing ratio (events in, computations
@@ -2449,13 +2449,13 @@ the cache (marked stale) or refused, for 30 s, then one probe is let through. He
 - **Audit:** every computed answer delivered to a person is an audit entry: who, which kind and id, params, pin, signature, result
   hash, duration, and the trigger if any. What-if sandboxes record every change and computation. Entries are signed like all audit
   entries and kept as the site's audit retention says.
-- ***How this view was built*** on a computed panel shows the stamp of [section 8.1](#81-the-stamp-on-every-result) in words: *VaR
+- ***How this view was built*** on a computed panel shows the stamp of [section 4.8.1](#481-the-stamp-on-every-result) in words: *VaR
   computed by var-engine (drishti-var 0.1.0) at 14:02:13 over 18,412 P&L vectors of 2026-10-23 (lake version 41) and 3 changes
   applied since (L17:3412, L42:988)*.
 
-### 16. The SPI and the APIs
+### 4.16 The SPI and the APIs
 
-#### 16.1 Java SPI (planned)
+#### 4.16.1 Java SPI (planned)
 
 The generic `reactive` plugin implements `SourcePlugin` once; what differs per connector is behind a small interface, implemented by
 the worker bridge (Python, Java worker) or by trusted in-process Java code:
@@ -2478,7 +2478,7 @@ The built interface is the platform's one `ComputeEngine`: the same type also ca
 `memoryBytes`, `threadPrefixes`, `running`) for the engine registry (ADMIN_GUIDE section 21); a reactive engine uses only the
 computation methods, a switched engine only the switch.
 
-#### 16.2 HTTP API (planned)
+#### 4.16.2 HTTP API (planned)
 
 Panels and BI read reactive kinds through the existing view and source paths; nothing new is needed for them. For programs:
 
@@ -2492,7 +2492,7 @@ Panels and BI read reactive kinds through the existing view and source paths; no
 
 A token needs the planned `compute` scope. The CLI gains `drishti.py compute run|status|cancel` (planned).
 
-### 17. Configuration reference
+### 4.17 Configuration reference
 
 | Key (connector file) | Default | Meaning |
 |---|---|---|
@@ -2517,18 +2517,18 @@ A token needs the planned `compute` scope. The CLI gains `drishti.py compute run
 The worker pools themselves are configured once per site, in the planned `config/compute/compute.yaml`
 ([bi/README.md section 13](ARCHITECTURE.md#292-pools-and-workers)).
 
-### 18. Build plan
+### 4.18 Build plan
 
 | Step | Delivers | Accepted when |
 |---|---|---|
 | R1 (**built**) | the `reactive` plugin and `ComputeEngine` SPI; typed `params:` on `source:` (lint, view model); the compute request, key, pin and stamp; cache and single flight on one node; an **in-process Java** test engine | a panel reads a computed kind with params; two panels asking the same key cause one computation; a new data version gives a new key |
 | R2 (**built**) | the worker bridge to the Python pool ([NOTEBOOK_AND_PYTHON.md](../guides/bi/NOTEBOOK_AND_PYTHON.md) steps C1–C3); progress on the live channel; per-panel states | a Python engine computes a result for a panel, with *computing N%* shown, and a crash shows `failed` in that panel only |
 | R3 (**built**; `write-back` from the edit log since W6/W7, 2026-10-25, and through the events API) | triggers: `write-back`, `live`, `data-version`, `schedule`; `affects:`; coalescing; ordering by watermark; dedupe | 200 events for one key in a second cause at most 2 computations; an older result never replaces a newer; a redelivered event is ignored |
-| R4 (**built**, except per-event impacts: W6/V5) | isolation: view signatures in keys, per-recipient masks on push, per-event impacts, private sandboxes | the two-traders test of [section 19](#19-tests-1) passes |
+| R4 (**built**, except per-event impacts: W6/V5) | isolation: view signatures in keys, per-recipient masks on push, per-event impacts, private sandboxes | the two-traders test of [section 4.19](#419-tests) passes |
 | R5 (planned) | `consistency: snapshot` and `freshest`; *Newer data · Update all* | a screen of five panels on three connectors shows one pin; an applied edit offers *Update all* and re-pins all panels together |
 | R6 (planned) | Drishti\*net: key owners, forwarding, cluster single flight, trigger routing; Admin → Compute; audit; circuit and quarantine | three nodes, one key requested on each at once: one computation; a node killed mid-computation: the next read recomputes on the new owner |
 
-### 19. Tests
+### 4.19 Tests
 
 - **Isolation (the product owner's question):** two users with different entitlements request the same scope at the same instant; each
   receives only the result for their own signature, under their own request id; a third user with the first user's rights shares the
@@ -2544,7 +2544,7 @@ The worker pools themselves are configured once per site, in the planned `config
 - **Windows:** everything except the native QuantLib-Java worker runs on the Windows QA machine
   ([bi/README.md section 12](ARCHITECTURE.md#297-windows)).
 
-### 20. Open questions for the product owner
+### 4.20 Open questions for the product owner
 
 1. **Default consistency.** Should every screen with a computed panel default to `consistency: snapshot` (one pin, *Update all*), or
    should `freshest` be the default and snapshot opt-in?
@@ -2558,14 +2558,14 @@ The worker pools themselves are configured once per site, in the planned `config
 6. **In-process Java engines.** Allow trusted, light Java engines inside the server process (with their own classloader), or require
    every engine to run in a worker?
 
-### 21. Built: R1 to R4
+### 4.21 Built: R1 to R4
 
 Built on the compute workers C1 to C3 ([README.md](../guides/bi/README.md)). The reference is
 [the reactive connector's README](../connectors/types/reactive/README.md); the sample is the `compute-demo` pack (not loaded by default).
 
 | Part | Implementation | Where |
 |---|---|---|
-| SPI | `ComputeEngine`, `EngineManifest`, `EngineRequest`, `EngineInputs` (documents by input name), `EngineResult` (rows, tables, meta), `EngineProgress`, `EngineException`, `ComputeEvent`, `Viewer`, `ComputeRef` (the id with its parameters). The names differ from section 16.1 (`Engine…` rather than `Compute…`) so they do not clash with drishti-compute's worker types | `drishti-api`, `com.ash.drishti.api.compute` |
+| SPI | `ComputeEngine`, `EngineManifest`, `EngineRequest`, `EngineInputs` (documents by input name), `EngineResult` (rows, tables, meta), `EngineProgress`, `EngineException`, `ComputeEvent`, `Viewer`, `ComputeRef` (the id with its parameters). The names differ from section 4.16.1 (`Engine…` rather than `Compute…`) so they do not clash with drishti-compute's worker types | `drishti-api`, `com.ash.drishti.api.compute` |
 | Plugin | `reactive` (built-in, `ReactiveSourcePlugin`), `ReactiveConnector` (the lifecycle), `ReactiveSpec`, `ParamSpec`, `ResultCache`, `Coalescer`, `SeenEvents`, `Watermark`, `Triggers`, `Sandboxes`, `RequestEvents`, `ReactiveHub` (the host the server installs) | `drishti-compute`, `com.ash.drishti.compute.reactive` |
 | Connector file | the design's keys at the top level (`mode`, `kinds` with `params`, `reads`, `engine`, `triggers`, `coalesce`, `cache`, `limits`, `history`, `incremental`); refused on any other plugin. Added: `kinds.<k>.compute` (the engine's name for the kind), `engine.split`/`chunk-rows`/`reduce` (fan-out), `engine.version`, `limits.wait`, `limits.max-input-rows`, `limits.dedupe-window` (the design's `triggers.dedupe-window`), `reads[].ids` and `{inputs.<as>.<FIELD>}` (a read takes its ids from an earlier one) | `ConnectorFiles` |
 | Templates | single braces: `{id}`, `{params.x}`, `{inputs.book.MEMBERS}`, `{payload.BOOK_ID}`, `{entity}`; `${NAME}` stays an environment variable | `Templates` |
@@ -2578,7 +2578,7 @@ Built on the compute workers C1 to C3 ([README.md](../guides/bi/README.md)). The
 | Isolation | request ids per read, events to the owner only, view signature in keys, inputs masked per viewer, a recomputed result read again by each watcher through their own view, private sandboxes (`sbx-…`, frozen copies), live views rebuilt on behalf of their viewer | `RequestEvents`, `ViewerExecutor` |
 | HTTP and CLI | `POST /api/v1/compute/{connector}/{kind}`, `GET …/requests/{id}/stream`, `DELETE …/requests/{id}`, `POST …/events`, sandboxes, `GET /api/v1/admin/compute/reactive`; `drishti.py compute` `run`, `cancel`, `event`, `sandboxes`, `reactive` | `ReactiveController`, `tools/computecli.py` |
 
-**Not built yet:** per-event impacts for each submitter (section 9.2, with W6 and V5); the result cache on disk (`cache.store: disk`);
+**Not built yet:** per-event impacts for each submitter (section 4.9.2, with W6 and V5); the result cache on disk (`cache.store: disk`);
 `consistency:` and *Update all* (R5); key owners, forwarding, cluster single flight, quarantine and the circuit (R6); a JSON schema file
 per kind; a `compute` power (any role that may open the kind may compute it); the designer's awareness of parameters (a source with
 `params:` is kept as written).
@@ -2588,12 +2588,12 @@ connector 4.7 µs at p50 (p99 9.6 µs); a miss with an engine that does nothing 
 trivial engine) 2.3 ms; through the server, one computed panel from the cache 2.7 ms, the same as a plain panel (2.6 ms); the
 compute-demo book screen, two computed sources and two 250-point charts, 5.0 ms. A panel never waits longer than `limits.wait`.
 
-### 22. How the VaR engine plugs in
+### 4.22 How the VaR engine plugs in
 
 The VaR engine ([VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives), steps V0 to V3) becomes the `var-engine` reactive connector (R5/V4) without new
 machinery:
 
-1. **The file.** `config/connectors/var-engine.yaml` with `plugin: reactive`, the kinds of section 5 (`var-result`, `var-contribution`,
+1. **The file.** `config/connectors/var-engine.yaml` with `plugin: reactive`, the kinds of section 4.5 (`var-result`, `var-contribution`,
    `var-path`, `var-history`, `what-if`) and their `params:` (`scope` as `type: scope`, `confidence` as `decimal` with `allowed`,
    `horizon` as `int`, `method` as `enum`, `whatif` as `sandbox-ref`), and `result:` rules (`required: [VAR, ES]`).
 2. **The engine, either of two ways.**
@@ -2622,14 +2622,14 @@ Status: **built (Designs; BI content and BI runs; collaboration and notes; embed
 [section 6](#6-the-one-drishti-database-design-not-built) (the one Drishti database), [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (`config/store/store.yaml`).
 
-### 1. The problem
+### 5.1 The problem
 
 User content (screen-designer Designs, workspace drafts, BI items, run records, shares, schedules, settings) was saved on the
 node that served the request. In a Drishti*net cluster, when the console fails over to another node, that node has none of it,
 and the user sees `404 DRS-5006 no design`. Content must be reachable from every node, and two nodes editing the same item at
 the same moment must never silently lose one of the edits.
 
-### 2. The interface
+### 5.2 The interface
 
 One small interface, `com.ash.drishti.identity.content.ContentStore` (drishti-identity, beside the Drishti database code that
 already owns user state). Documents, not SQL: a key names one item; the store keeps its bytes and an opaque version.
@@ -2641,16 +2641,16 @@ already owns user state). Documents, not SQL: a key names one item; the store ke
 | `list(prefix)` → keys | Every key starting with `prefix`, sorted. |
 | `delete(key, expectedVersion)` → boolean | Compare-and-set delete; false when there was nothing; a stale version is `409 DRS-5057`. |
 | `changes(since)` → `Changes{keys, cursor}` | Keys written or deleted after `since` (epoch ms), for polling caches. At least once: pass `cursor` back next time (less a small margin for clock skew across nodes); a key may repeat. Push is a later addition for backends that have it (Postgres `LISTEN`, S3 events). |
-| `root()` | Where the store is, as text (the cluster check, section 6). |
+| `root()` | Where the store is, as text (the cluster check, section 5.6). |
 
 Keys are `/`-separated paths such as `designs/<owner>/<id>/design.json`: 1 to 16 segments, each 1 to 120 UTF-8 bytes, any
 Unicode, no empty, `.` or `..` segment, no control characters, no `\`. A bad key is `400 DRS-5058`. `putLatest(key, bytes)` is a
 helper (read the version, put, retry a few times) for writes whose last writer may win (sample documents).
 
-### 3. Backends
+### 5.3 Backends
 
 Chosen in their own file, `config/store/store.yaml` (never `application.yaml`; the file is named by `drishti.store.file`),
-examples in `config/store.examples/`. Every backend passes the same contract test suite (section 7).
+examples in `config/store.examples/`. Every backend passes the same contract test suite (section 5.7).
 
 **filesystem (the default).** Root `<data folder>/fstore` (`data/fstore`). An item is one file, `items/<encoded key>`; its version
 is the SHA-256 of its bytes, so the data file alone is the truth and no read can see bytes and version out of step. A write goes
@@ -2673,13 +2673,13 @@ Drishti database itself (the usual choice) or at a database of its own. The vers
 create, `If-Match: <etag>` for an update; `412` or `409` answers `DRS-5057`. A delete compares the ETag (a HEAD, then `If-Match`)
 and writes a tombstone `<prefix>/tombstones/<key>`. `changes` lists by LastModified (second resolution). Works with AWS S3
 (conditional writes) and compatible stores that honour the headers, such as MinIO; tested against an in-process S3 stand-in
-that honours the conditional headers, Adobe S3Mock in the test JVM, and the MinIO server binary on Linux (section 7).
+that honours the conditional headers, Adobe S3Mock in the test JVM, and the MinIO server binary on Linux (section 5.7).
 
 **Delta / Iceberg: not primary, design only.** They are poor at single-key compare-and-set and at small hot documents. Later they
 may be an optional **history/audit sink**: a writer tails `changes`, appends `(key, version, bytes or hash, at, by)` to a Delta or
 Iceberg table, and BI can query who changed what and when. Not built.
 
-### 4. Configuration
+### 5.4 Configuration
 
 ```yaml
 # config/store/store.yaml
@@ -2706,7 +2706,7 @@ s3:
 A missing file or key means the default shown. `config/store.examples/` has `laptop.yaml` (filesystem), `cluster-nfs.yaml`
 (filesystem on a shared mount), `postgres.yaml` and `s3.yaml`.
 
-### 5. Designs: the first user
+### 5.5 Designs: the first user
 
 `drishti.builder.designs.store` is now `content` by default: Designs are kept in the content store as
 `designs/<owner>/<id>/design.json` and `designs/<owner>/<id>/samples/<hash of name>.json`. `ContentDesignStore` implements the
@@ -2715,7 +2715,7 @@ version and every save is a compare-and-set against it, so two nodes saving the 
 `409 DRS-5057` (changed elsewhere: reload and try again). The older `file` (`data/designs`) and `jpa` stores can still be named,
 for one node only.
 
-### 6. Several servers
+### 5.6 Several servers
 
 Every node of a cluster must use the **same** store configuration. A filesystem store on a cluster needs a **shared mount**
 (NFS, EFS, SMB) at the same root on every node; a local `data/fstore` per node gives each node its own content again. Each node
@@ -2725,7 +2725,7 @@ pointing at one store. A node also logs its store at INFO (`content store: files
 cannot see the other nodes' records, so that case is caught by the log line and this rule, not by the check (next step: carry
 the root in the Drishti*net capability digest and compare it there). Postgres and S3 need no shared disk.
 
-### 7. Tests
+### 5.7 Tests
 
 `ContentStoreContract` (drishti-identity tests) runs against every backend: concurrent creates and concurrent updates of one key
 (exactly one wins, the rest `DRS-5057`), conflict codes, list by prefix, delete (stale and current), changes (puts and deletes),
@@ -2754,34 +2754,34 @@ serving its community binaries (dl.min.io answers `410 Gone`), so put a binary y
 `ContentDesignStoreTest`: two in-process nodes on one filesystem root (a Design saved through A is read and updated through B;
 concurrent saves give one conflict; owners stay isolated) and the import (idempotent, folder renamed, marker for the database).
 
-### 8. Next steps: what is still kept on one node
+### 5.8 Next steps: what is still kept on one node
 
 Already shared between nodes, not through this store: users, roles and API tokens (IdentitySync); `drishti_preference` (settings,
 saved searches, layouts, pivots, workspaces) and sessions (StateSync, ReplicatedPreferences).
 
 The ordered migration list (the inventory of content kept on one node only, 2026-10-21). Items marked done are in the content store
-(sections 5, 9 and 10); the rest move one at a time behind the same interface:
+(sections 5.5, 5.9 and 5.10); the rest move one at a time behind the same interface:
 
-1. **Designer drafts** (Designs): done, section 5. Versions, About, form and share live inside the record; ids are random 12-hex.
-2. **BI workspaces and items:** done, section 9. `BiStore`, the `drishti_bi_*` tables (workspace, member, item, version, revision, event,
+1. **Designer drafts** (Designs): done, section 5.5. Versions, About, form and share live inside the record; ids are random 12-hex.
+2. **BI workspaces and items:** done, section 5.9. `BiStore`, the `drishti_bi_*` tables (workspace, member, item, version, revision, event,
    user_item, usage, setting).
-3. **BI runs:** done, section 9. The `drishti_bi_run*` rows, and results and snapshots under `<data>/bi-runs`.
-4. **Notes:** done (section 10.2). Notes live in comment threads.
-5. **Collaboration:** done (section 10.3): threads, comments, revisions, mentions, follows, note links, shares and recipients, inbox,
+3. **BI runs:** done, section 5.9. The `drishti_bi_run*` rows, and results and snapshots under `<data>/bi-runs`.
+4. **Notes:** done (section 5.10.2). Notes live in comment threads.
+5. **Collaboration:** done (section 5.10.3): threads, comments, revisions, mentions, follows, note links, shares and recipients, inbox,
    outbox, holds and seals. Still per node: the access log (`drishti_access`, who read what), next.
 6. **Alerts and monitors:** NOT copied, on purpose (each node evaluates its own).
 7. **Embed apps** (`drishti_embed_app`), **pack switches** (`drishti_pack_state`), **audit** (`drishti_audit` and `audit.jsonl`):
-   done (section 10.4).
-8. **Files:** governance proposals (`<data>/governance`): done (section 10.5); load history (`<data>/loads`): done (section 10.6).
+   done (section 5.10.4).
+8. **Files:** governance proposals (`<data>/governance`): done (section 5.10.5); load history (`<data>/loads`): done (section 5.10.6).
    Next, in this order: report outputs (`<data>/reports`), designer bound files (`<data>/dev-sutras`), pack admin state (`<data>/packs/*`, `uninstalled`,
    `admin/bi-hidden.txt`; a pack jar stays a local file materialised from the store, the store being the truth). UI-written config
-   (`config/connectors`, `config/bi`): done for connectors and data loads overrides, section 11.
+   (`config/connectors`, `config/bi`): done for connectors and data loads overrides, section 5.11.
 9. **BI store Parquet:** a derived cache. Never migrated.
 
-Then: a read cache driven by `changes`, push for Postgres and S3, the root in the Drishti*net capability digest (section 6), and
+Then: a read cache driven by `changes`, push for Postgres and S3, the root in the Drishti*net capability digest (section 5.6), and
 the optional Delta/Iceberg history sink (section 3).
 
-### 9. BI content and BI runs
+### 5.9 BI content and BI runs
 
 `drishti.bi.store` and `drishti.bi.runs.store` are `content` by default: BI workspaces, items and their history, and BI runs with their
 results, live in the content store, so every node of a cluster sees the same BI content and the same runs. `ContentBiStore` implements
@@ -2823,7 +2823,7 @@ yet, so two nodes never take the same number. Marks and the day's views are read
 from a per-node snapshot of the prefix at most `drishti.bi.store-list-ttl` old (default `1s`); documents whose version did not change are not
 parsed again, and this node's own writes drop the snapshot at once. A single item, workspace or run is always read from the store. A
 listing on another node may lag by the TTL; an edit never does (the compare-and-set decides). Next: a snapshot refreshed from `changes`
-instead of a re-list, once `changes` is cheap on every backend (section 8).
+instead of a re-list, once `changes` is cheap on every backend (section 5.8).
 
 **Events and usage.** Governance events are per-item documents (`events/<seq>`): they are rare, belong to the item's audit trail, and must
 be the same on every node. Views are append-heavy, so each node counts into its own document per day (`bi/usage/<day>/<node>.json`): no two
@@ -2845,13 +2845,13 @@ A has its status and result read on B (never across signatures); a dead node's r
 finished; renew only by the holder and a loser's late save dropped; a share made on A seen on B; a schedule claimed once; the import of rows
 and the result folder. `RunClusterTest` runs its two servers on one content store root.
 
-### 10. Collaboration, notes and the admin data
+### 5.10 Collaboration, notes and the admin data
 
 Each moved store keeps its interface, so the services above it (rights, limits, retention, holds, seals) are unchanged; a switch per
 type names the old store for one node only. Nothing is imported at start: the content store starts empty, and an old table or folder is
 not read by a node that uses `content`.
 
-#### 10.1 Several documents, one change: `TxContentStore`
+#### 5.10.1 Several documents, one change: `TxContentStore`
 
 Collaboration writes several documents for one action (a share, its recipients' indexes, their inbox rows; a comment, its index
 entries). Two choices were open: one document per aggregate, or ordered compare-and-set writes with a recoverable intent record. Both
@@ -2874,12 +2874,12 @@ are used:
 - **Sequences** (inbox rows, outbox deliveries, holds, proposals) are counter documents (`…/counters/<name>`) advanced by
   compare-and-set outside any transaction: cluster-wide, never reused, never rolled back (a failed transaction leaves a gap).
 
-#### 10.2 Notes
+#### 5.10.2 Notes
 
 Notes already live in comment threads (the deprecated `/notes` API is a facade over them), so they moved with collaboration. A note's
 number is a create of `collab/note-links/<number>`: two nodes adding a note at once cannot take one number (the loser takes the next).
 
-#### 10.3 Collaboration (`drishti.collab.store`: `content`, default; `jpa` or `file` for one node)
+#### 5.10.3 Collaboration (`drishti.collab.store`: `content`, default; `jpa` or `file` for one node)
 
 | Key | Holds |
 |---|---|
@@ -2899,7 +2899,7 @@ number is a create of `collab/note-links/<number>`: two nodes adding a note at o
 
 The revision chains keep their hashes, so `GET /admin/collab/verify` verifies them.
 
-#### 10.4 Admin data in the identity database
+#### 5.10.4 Admin data in the identity database
 
 | Data | Switch | Key |
 |---|---|---|
@@ -2912,18 +2912,18 @@ The revision chains keep their hashes, so `GET /admin/collab/verify` verifies th
 and newest hash, so removed newest lines show. A read merges every node's segments newest first; the compliance verifier walks each
 node's chain. The node is `drishti.net.node-id` (else host and port).
 
-#### 10.5 Governance proposals (`drishti.governance.store`: `content`, default; `file` for one node)
+#### 5.10.5 Governance proposals (`drishti.governance.store`: `content`, default; `file` for one node)
 
 `governance/proposals/P-NNNNNN.json`, numbered from `governance/counters/proposals` read from the
 store every time. A decision is a compare-and-set: two approvers on two nodes cannot both decide one proposal (the second gets
 `PROPOSAL_CONFLICT`).
 
-#### 10.6 Load history (`drishti.loads.store`: `content`, default; `file` for one node)
+#### 5.10.6 Load history (`drishti.loads.store`: `content`, default; `file` for one node)
 
 `loads/<pack>.json` (the announcements and late flags of one pack), read every time and changed by compare-and-set with a retry on a
 fresh read, so two nodes receiving announcements at once lose none, a batch announced on one node is a duplicate on the other, and
 a late notice goes out once. A pack's old file `<data>/loads/<pack>.json` is imported the first time the pack is read (the document's
-existence is the marker) and left in place. Per-pack overrides saved through Admin are the shared documents `loads/config/<pack>.yaml` (section 11; `drishti.loads.config-store`: `content`, default, or `file`); the folder `<data>/loads/config` is imported once (`system/imports/loads-config.json`) and kept.
+existence is the marker) and left in place. Per-pack overrides saved through Admin are the shared documents `loads/config/<pack>.yaml` (section 5.11; `drishti.loads.config-store`: `content`, default, or `file`); the folder `<data>/loads/config` is imported once (`system/imports/loads-config.json`) and kept.
 
 #### 10.6a The VaR engine's baskets: people's and the system's
 
@@ -2944,19 +2944,19 @@ exported (`drishti.py var baskets import | export`); the demo's come from the ma
 store to the one Drishti database ([section 6](#6-the-one-drishti-database-design-not-built)) moves both scopes together, as rows of
 `drishti_content`.
 
-#### 10.7 Left on each node, on purpose
+#### 5.10.7 Left on each node, on purpose
 
 Alerts and monitors (each node evaluates its own); the BI store's Parquet (a derived cache); users, roles, tokens and preferences
 (IdentitySync and StateSync already share them).
 
-#### 10.8 Backup
+#### 5.10.8 Backup
 
 The content store root (`data/fstore`, or the `drishti_content` table, or the bucket) is now the backup of everything above, together
 with the identity database for what is still there (users, roles, tokens, preferences, access log). Copy it with the server stopped,
 or take a filesystem snapshot: every item is one file written by rename, so a copy taken while it runs holds whole items, but a
 multi-document change may be half in (its intent record under `system/tx/` is copied too, and the next start finishes it).
 
-### 11. UI-written configuration: shared overlays (built for load overrides)
+### 5.11 UI-written configuration: shared overlays (built for load overrides)
 
 The decision (2026-10-21): **Admin updates are shared across the cluster; the files stay the base (GitOps), and every edit made
 through Admin or the UI is an overlay in the content store that every node reads.** (Option 2 of the four that were listed: one
@@ -2971,7 +2971,7 @@ over only when its version moved. One walk of the store per interval, however ma
 **Data loads overrides** (`drishti.loads.config-store`: `content`, default; `file`): `loads/config/<pack>.yaml`, read on every use,
 saved by compare-and-set.
 
-**`config/bi`**: nothing is written there by the UI (BI content is in the store, section 9), so there is nothing to share.
+**`config/bi`**: nothing is written there by the UI (BI content is in the store, section 5.9), so there is nothing to share.
 
 **Not built yet (next):** the pack admin state (`packs/added.yaml`, `packs/installed/` archives materialised to a local cache on each
 node, `packs/settings/`, `packs/deploy-history.jsonl`, `packs/samples-mode`, `<data>/uninstalled/`, `<data>/admin/bi-hidden.txt`), with
@@ -2990,7 +2990,7 @@ was front-loaded from it. Related:
 [APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) (the edit log, lanes and overlays that live here), [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) (several servers),
 [CONFIGURATION.md](../admin/CONFIGURATION.md) (the settings).
 
-### 1. The decision
+### 6.1 The decision
 
 All relational state that Drishti owns lives in **one database**, the *Drishti database*. Identity already lives in one;
 the write-back edit log, its lanes, overlays and Drishti-owned data live in the same one, and so does anything relational added later.
@@ -2998,7 +2998,7 @@ There is no second store to back up, secure, size or switch.
 
 - **PostgreSQL is the long-term choice** (several servers, a real deployment, backups by the bank's DBAs).
 - **SQLite is the default**, for single-node setups: a Windows laptop, a demo machine, a developer. One file, nothing to install.
-- **You switch by configuration at any time**, through the planned `drishti.py db copy` (section 6). The code path is the same on both: the
+- **You switch by configuration at any time**, through the planned `drishti.py db copy` (section 6.6). The code path is the same on both: the
   same tables, the same SQL (with the few dialect differences kept in the two schema files and one small dialect class).
 
 ```
@@ -3007,40 +3007,40 @@ There is no second store to back up, secure, size or switch.
   (one pool,           │           shares, threads, alerts, BI workspaces …           (today)        │
    config/db/          │ write-back: drishti_edit_lane, drishti_edit_log, overlays, owned kinds      │
    database.yaml)      │                                                                     │
-                       │ drishti_schema: the version stamp (section 5)                               │
+                       │ drishti_schema: the version stamp (section 6.5)                               │
                        └────────────── SQLite file (default)  or  PostgreSQL (long term) ────────────┘
 
   not here:  DuckDB (the BI engine: compute) · the lakes (Delta, Iceberg) · RocksDB caches · source systems
 ```
 
-### 2. What lives in it, and what does not
+### 6.2 What lives in it, and what does not
 
 | Lives in the Drishti database | Does not |
 |---|---|
 | Identity: users, roles, packs per user, preferences, API tokens, sessions, the audit trail | **DuckDB**, the BI engine: it is compute over the lakes and BI files, rebuilt from them, never a system of record |
 | Collaboration: notes, shares, threads, comments, mentions, inbox and outbox | The **lakes** (Delta, Iceberg): source data, written only by the loader (`lake build`, `lake publish`) |
-| BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are read only by a node on `jpa` ([section 5](#5-the-content-store-user-content-every-node-reaches) section 9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([section 5](#5-the-content-store-user-content-every-node-reaches)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
-| Write-back (built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) sections 5, 7, 11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
-| Compute approvals (built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([README.md](../guides/bi/README.md) section 6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
+| BI workspaces, items, versions, usage and BI runs only with `drishti.bi.store: jpa` / `drishti.bi.runs.store: local` (one node); by default they live in the content store and the `drishti_bi_*` and `drishti_bi_run*` tables are read only by a node on `jpa` ([section 5](#5-the-content-store-user-content-every-node-reaches) section 6.9); the content store's table `drishti_content` when `config/store/store.yaml` says `sqlite` or `postgres` ([section 5](#5-the-content-store-user-content-every-node-reaches)) | **Caches** (RocksDB, layout and fingerprint caches): derived, safe to delete |
+| Write-back (built): `drishti_edit_lane`, `drishti_edit_log`, `drishti_edit_request` (changes awaiting approval), `drishti_overlay`, `drishti_owned`, `drishti_edit_version` (each record's version) and `drishti_edit_cursor` (how far the reactive triggers and a follower of an edit primary have read each lane) ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) sections 6.5, 6.7, 6.11 and 19). New tables only: the schema version does not move | **Source systems** (ENDUR, CALYPSO, MUREX, connector databases): Drishti reads them, and writes to them only through a connector's `writes:` |
+| Compute approvals (built): `drishti_compute_request` (requests to approve what a connector or pool requires) and `drishti_compute_approval` (the approved items, revocable) ([README.md](../guides/bi/README.md) section 6.6) | Locked Python environments, staged jars and request scratch folders: files under `<data dir>/compute/` |
 | Administrators' switches (built): `drishti_switch` (commands and packs on or off, each with its hybrid-logical-clock stamp and node) and `drishti_switch_log` (every change, with who and why); the system of record that Drishti*net gossip spreads ([ADMIN_GUIDE.md (Functions)](../guides/ADMIN_GUIDE.md#206-where-it-is-kept)). New tables only: the schema version does not move | |
 | Anything relational added later | Files that are documents by nature (Sutras, packs, connector and net configuration): they stay files under `config/` |
 
 The rule for a new feature: **state Drishti owns and must not lose, with rows and keys, goes in the Drishti database.** A feature
 never opens its own SQLite file or its own schema.
 
-### 3. SQLite or PostgreSQL
+### 6.3 SQLite or PostgreSQL
 
 | | SQLite (default) | PostgreSQL (long term) |
 |---|---|---|
 | For | one server: a laptop, Windows, a demo, a developer | several servers, production, managed backups |
 | Install | nothing: a file under the data folder | a PostgreSQL 14+ server (or RDS / Aurora PostgreSQL) |
 | Writers | one at a time (WAL: readers never wait; `busy_timeout`, `IMMEDIATE` transactions) | many |
-| Several Drishti servers | each has its own file; nothing is shared (write-back: section 8 and APPROVALS_GUIDE.md › The design and its reasons, section 11) | all share one database: identity, roles and the edit log are cluster-wide |
+| Several Drishti servers | each has its own file; nothing is shared (write-back: section 6.8 and APPROVALS_GUIDE.md › The design and its reasons, section 11) | all share one database: identity, roles and the edit log are cluster-wide |
 | Backup | copy the file with the server stopped, or the planned `drishti.py db copy` to a new file | the DBA's backups, point-in-time recovery |
 
 The two are equals in the code: every query is tested on both; neither is a "test" database.
 
-### 4. No migrations: two complete schema files
+### 6.4 No migrations: two complete schema files
 
 **No database migrations, ever.** No Flyway, no Liquibase, no numbered `ALTER` scripts, no column fix-ups in Java.
 
@@ -3052,7 +3052,7 @@ The two are equals in the code: every query is tested on both; neither is a "tes
   `TEXT`↔`VARCHAR`, `INTEGER` 0/1↔`BOOLEAN`, `INTEGER PRIMARY KEY AUTOINCREMENT`↔`BIGSERIAL`), the same primary, unique and foreign keys
   and the same indexes. A change to one file without the other fails the build.
 - A change to an **existing table's shape** (a column added, removed, retyped, a key changed) is made in both files, bumps the schema
-  version (section 5), and is reached by an existing database through `db copy` (section 6), never by an `ALTER`.
+  version (section 6.5), and is reached by an existing database through `db copy` (section 6.6), never by an `ALTER`.
 
 ```
  release N                       release N+1 (a column added to drishti_note)
@@ -3066,7 +3066,7 @@ The two are equals in the code: every query is tested on both; neither is a "tes
 Why: a complete file is the truth you can read in one place; there is no chain of scripts to replay, reorder or repair, and SQLite's
 limited `ALTER TABLE` never shapes the design.
 
-### 5. The schema version stamp
+### 6.5 The schema version stamp
 
 A one-row table holds the stamp:
 
@@ -3090,7 +3090,7 @@ At start, after the idempotent apply:
 
 The version moves only when an existing table changes shape; a release that only adds tables keeps it.
 
-### 6. Switching and upgrading: `db copy`
+### 6.6 Switching and upgrading: `db copy`
 
 Switching from SQLite to PostgreSQL, from PostgreSQL to another PostgreSQL, or upgrading across a schema version is **one command**:
 
@@ -3110,7 +3110,7 @@ drishti.py db copy --from config/db/database.yaml --to config/db/database.postgr
 The source is never changed, so going back is pointing `database.yaml` at it again. `--check` does everything except the writes and
 reports what would be copied. Admin → Database shows the kind, the version, the size per table and the command for a copy.
 
-### 7. Configuration: `config/db/database.yaml` (planned)
+### 6.7 Configuration: `config/db/database.yaml` (planned)
 
 The database has its own file, like `config/connectors/` and `config/net/`, never in `application.yaml`. `application.yaml` keeps only
 the pointer:
@@ -3149,9 +3149,9 @@ pool:
   the `pool:` above.
 - The password is only ever a `${ENV}` placeholder (the same rule as connector files).
 
-### 8. Several servers
+### 6.8 Several servers
 
-| Setup | The Drishti database | Write-back's edit log ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) section 11) |
+| Setup | The Drishti database | Write-back's edit log ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) section 6.11) |
 |---|---|---|
 | one server | SQLite (or PostgreSQL) | in the same database |
 | several servers, PostgreSQL | **one shared database**: identity and the edit log cluster-wide | in it: the full guarantee |
@@ -3161,7 +3161,7 @@ pool:
 PostgreSQL is what makes a cluster one system for everything Drishti owns; a cluster on SQLite works, and Admin → Edits and
 Admin → Database say plainly what is not shared.
 
-### 9. Today and the change
+### 6.9 Today and the change
 
 | Today | After item 0 |
 |---|---|
@@ -3170,7 +3170,7 @@ Admin → Database say plainly what is not shared.
 | settings in `application.yaml` under `drishti.identity.database-*` | `config/db/database.yaml` (planned); a pointer in `application.yaml` |
 | no stamp, no parity test | `drishti_schema` and the parity test |
 
-### 10. Build plan
+### 6.10 Build plan
 
 | Step | What | Accepted when |
 |---|---|---|
@@ -3180,10 +3180,10 @@ Admin → Database say plainly what is not shared.
 | 0.4 | planned: `drishti.py db copy` (and `--check`), the refusal on a version mismatch, Admin → Database | SQLite → PostgreSQL → SQLite round trip gives identical rows; a mismatched stamp refuses to start with the command named |
 | 0.5 | docs: CONFIGURATION, the admin guide, a tutorial step (UI, CLI, YAML) | the docs tests pass |
 
-The edit-log tables of write-back ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) section 7) are added to both files in W1, on this base (built
+The edit-log tables of write-back ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) section 6.7) are added to both files in W1, on this base (built
 2026-10-25, in the files under `drishti-identity` until they move; the parity test covers them).
 
-### 11. Tests
+### 6.11 Tests
 
 - **Parity:** the two files define the same tables, columns, keys and indexes.
 - **Idempotent:** applying the schema twice changes nothing; a new table is created on an existing database.
@@ -3192,7 +3192,7 @@ The edit-log tables of write-back ([APPROVALS_GUIDE.md](ARCHITECTURE.md#31-colla
   server blocks the copy.
 - **Upgrade:** an older data folder starts with its users and settings; the old environment names still reach PostgreSQL.
 
-### 12. Decisions (product owner, 2026-10-20)
+### 6.12 Decisions (product owner, 2026-10-20)
 
 1. **One Drishti database** for all Drishti-owned relational state: identity, the write-back edit log, lanes, overlays and owned data,
    and anything relational later. PostgreSQL long term; SQLite the default for single-node setups; switch by configuration at any time.
@@ -3212,7 +3212,7 @@ The user-facing behaviour (the lake file, the inbox's folders and cycle, the `.r
 Delta … a separate Maven module; it can work as a thread in the server"); the load rules decided 2026-11-04; the per-lake folders, the
 demo move and the `.ready` file's `lake:` decided 2026-11-07.
 
-### 1. Reused, never rewritten
+### 7.1 Reused, never rewritten
 
 | Need | Reused | As |
 |---|---|---|
@@ -3228,7 +3228,7 @@ the lock and its heartbeat), `Ledger`, `Routes`, `ReadyNote`, `LoaderProcess` (t
 Inbox screen), `RowForms`, `Signal`. The server keeps the wiring (`server.dataload.DataLoadConfiguration`, `DataLoadController`).
 `ArchitectureRulesTest` holds the module off the server, Spring, any table format and any storage: only the loader writes a table.
 
-### 2. Safety by construction
+### 7.2 Safety by construction
 
 - **One runner**: the owner node only, plus `inbox.lock` (created atomically, a heartbeat; a lock older than three intervals is taken over
   and logged). **Runs never overlap**: a due cycle while a run holds the lock is recorded as skipped.
@@ -3248,7 +3248,7 @@ Inbox screen), `RowForms`, `Signal`. The server keeps the wiring (`server.datalo
 - **The warning** for a load into a lake no connector reads (`Cycle.unread`) comes from the packs' `lakesRead()`; null when the server
   cannot say.
 
-### 3. The load rules: principles and decisions
+### 7.3 The load rules: principles and decisions
 
 The business date comes from outside the data (command line, `.ready`, name, business today), never from a row; a plain file is one
 table and one date, a tar the one container for several; the `.ready` file is the control file; nothing is guessed; every load can be
@@ -3273,7 +3273,7 @@ generators write dated names or tars with date folders; the conversion was check
 | D5 | The same file again | skipped by SHA-256; a changed file with the same name is loaded |
 | D7 | Which nodes run it | the owner only, plus the folder lock |
 
-### 4. The Inbox screen and its tests
+### 7.4 The Inbox screen and its tests
 
 The screen is mock-up A of three ([A](mockups/dataload-inbox/A.html), [B](mockups/dataload-inbox/B.html),
 [C](mockups/dataload-inbox/C.html)), chosen 2026-11-03: a status board whose columns follow the folders. It draws only the server's words
@@ -3730,8 +3730,8 @@ the server table, the spill and heap advice: [BENCHMARK.md section 7](../admin/B
 
 ## 11. Arrow Flight: Drishti's data to any client
 
-How the Flight service is built. Turning it on, tokens, the cluster, limits and operations: [FLIGHT_GUIDE.md](../guides/FLIGHT_GUIDE.md);
-every request form and the clients: [FLIGHT_GUIDE.md](../guides/FLIGHT_GUIDE.md).
+How the Flight service is built. Turning it on, tokens, the cluster, limits and operations: [INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md);
+every request form and the clients: [INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md).
 
 ### 11.1 Principles
 

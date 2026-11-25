@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""How the client-side renderer is distributed (docs/guides/EMBED_GUIDE.md section 13).
+"""How the client-side renderer is distributed (docs/guides/INTEGRATION_GUIDE.md section 13).
 
 The library lives in one folder per version, ``web/static/render/<version>/``: the entries ``drishti-render.js`` and ``drishti-elements.js``,
 the host part ``m/*.js`` (Drishti's: where a ViewModel comes from, sign-in, navigation, About; every panel is drawn by Drishti Elements'

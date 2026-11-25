@@ -179,40 +179,10 @@ root or set `DRISHTI_DELTA_ROOT`, switch the pack on with `DRISHTI_PACKS`". New 
 `data ingest --from new-days --pack data/build/my-bank-1.0.0/pack/my-bank --lake <the lake>`. The details are in
 [section 5](#pack-make-everything-in-one-folder) and [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#812-pack-make-one-folder-to-deploy).
 
-## 1. What it is
-
-`tools/drishti.py` is a thin, honest front door. It adds no new engine: each command either runs something that already
-exists (the Java `sutra` tool in the server's jar, the generators and loaders under `tools/`) or calls a REST endpoint the
-server already has. What it adds is one place to look, one `--help` per command, one set of exit codes and, where it helps
-scripts, `--json`.
-
-| Group | What it is for | Runs | Needs |
-|---|---|---|---|
-| `sutra` | shape, design, lint, test and preview Sutras; `gen` drafts one Sutra per group of JSON Lines | the Java tool in the exec jar; `tools/sutragen.py` | JDK 21+, the exec jar |
-| `pack` | create a pack from JSON Lines, check it in CI, find missing help text, sign and publish it, install one from a registry | `tools/packgen/pack_from_jsonl.py`, the Java tool, `tools/packreg/packreg.py`; REST for `install` | PyYAML; a server for `install` |
-| `data` | write your JSON Lines into a Delta lake or the file store; load the demo data into any store | `tools/ingest_jsonl.py`, `tools/storeload.py` | `deltalake` + `pyarrow` for Delta |
-| `server` | health, and pack list / load / unload / on / off on a running server | REST `/api/v1/admin/...` | a server, an administrator |
-| `admin` | `capacity`: the single-node capacity planner the server serves, evaluated (`--live` with this server's figures), or its formula workbook | REST `/api/v1/admin/capacity`; `tools/capacitycli.py` | a server, an administrator, PyYAML |
-| `design` | the Screen Designer's designs: create, save, check, propose, approve, export, import, bind | REST `/api/v1/builder/designs`, `/api/v1/sutras/proposals` | a server |
-| `docs` | regenerate the guides' screenshots | `tools/docs/screenshots.py` | Playwright |
-
-Concepts used throughout (each is explained in its own guide; this one only links to them):
-
-- A **pack** is a folder: `pack.yaml`, Sutras, samples, tests, help text.
-  [BUILD_GUIDE.md](BUILD_GUIDE.md).
-- A **Sutra** is the YAML that says how one kind of document is shown. [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies).
-- A **design** is a Sutra in progress in the Screen Designer, with its samples and its history of edits.
-  [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench).
-- A **dated store** is where a pack reads documents *per business date*: a Delta lake or the file connector's
-  `<root>/<domain>/<date>/<kind>.jsonl` files.
-- A pack becomes known to a running server in **four ways**: its folder is copied into the packs folder the server watches (`pack deploy`, `pack make`'s `pack/<name>`: the server checks it and loads it by itself, no restart), the server is started with it in `DRISHTI_PACKS` (a restart),
-  an administrator loads it in **Admin → Packs** (at once), or it is installed from a registry.
-  `drishti.py pack new --load`, `server packs load` and `pack install` are the command-line forms of the last two.
-  [BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs) has the rules.
-
 Run the program from the repository root, or from anywhere with its path, with the Python you run Drishti with (its libraries,
-PyYAML, deltalake and pyarrow among them, installed with the two pip commands; `setup` checks them). Many examples write `python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that does not write a Delta lake;
-`drishti.py` in the output is the same program.
+PyYAML, deltalake and pyarrow among them, installed with the two pip commands; `setup` checks them). Many examples write
+`python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that does not write a Delta lake; `drishti.py` in the
+output is the same program.
 
 **`drishti.py --help`** (captured on a fresh clone)
 
@@ -225,6 +195,10 @@ positional arguments:
   GROUP
     sutra       The Sutra tool: shape, design, lint, test, preview (Java) and
                 gen (one Sutra per group of JSON Lines)
+    module      Modules: pack a folder into a reproducible .dmod, verify a
+                package and run the conformance checks C1-C14, inspect one;
+                run one module alone (the server jar's own packer and
+                verifier)
     pack        Packs: generate from JSON Lines, check in CI, find missing
                 help text, publish and install
     data        Data: ingest your own JSON Lines into a lake or files store;
@@ -234,32 +208,94 @@ positional arguments:
     connector   Connectors over REST (Admin -> Connectors): list, get, apply a
                 YAML file, test, enable, delete (administrator; a token needs
                 packs:admin)
+    net         Drishti*net's config/net/ folder: list, check, add a peer, set
+                a setting (local files); members of a running server
     design      Screen Designer designs over REST: create, edit, check,
-                propose, approve, ship (anyone may design; approving needs an
-                approver)
+                propose, ship (anyone may design; a proposal is decided in
+                approvals)
     docs        Documentation tooling
     doctor      doctor: is this machine ready (Java, jar, Python, directories,
                 ports, and with --server the token)
     bi          Business intelligence (Rupaka) over REST: workspaces and the
                 catalogue, as the token's user sees them (a write needs the
                 bi:write scope)
+    history     history: one entity over business days (a table newest first,
+                changed cells marked *)
+    convert     convert: CSV, a JSON array or a folder of .json files into
+                JSON Lines (one object a line)
+    compute     compute: reactive connectors (ask for a computed kind, cancel,
+                send an event, sandboxes)
+    change      change: write-back (propose a change, submit a form's draft,
+                list, history; decide in approvals)
+    edits       edits: Admin -> Edits (where the edit log lives, lanes,
+                warnings, connector writes)
+    approvals   approvals: the one queue of four-eyes items (list, show,
+                approve, reject, withdraw, ask)
+    var         var: the VaR engine as you see it (show, parts, path, history,
+                tree, status, captures, baskets, what-if)
+    exposure    exposure: the exposure engine as you see it (show, parts,
+                tree, profile, distribution, captures, what-if)
+    sens        sens: position sensitivities summed for any scope, and the
+                factor dictionary
+    frtb        frtb: FRTB-SA of any scope (SBM by class and scenario, DRC,
+                RRAO), its steps and contributions
+    play        play: the playgrounds from the command line (play frtb, play
+                simm; PLAY VAR is drishti.py var playground)
+    simm        simm: ISDA SIMM per netting set (collect and post), the list,
+                the steps, against the counterparty's call
+    pivot       pivot: any table or VaR as a pivot computed by the server:
+                run, estimate, export, saved views
+    admin       Administration over REST (administrators): the capacity
+                planner, the compute engines
+    dataload    dataload status|run|retry|ready|undo: the data inbox (files
+                dropped in <data>/dataload/inbox, loaded into the lake)
+    feed        feed list|run|status|schedule: pull external data (GLEIF, SEC,
+                IMF, ...) and load it into the lakes
+    calc        calc install: the Python runtime of Calc (Pyodide), pinned and
+                verified, served by the console itself
+    dev         dev bicompute-unit: developer checks that need no Maven
+    contract    contract: the data contract of every command (list, show,
+                check, docs, bootstrap)
+    tables      Virtual tables and models: list, check, preview, lineage,
+                offer
     view        A rendered entity view in the terminal, as the caller's token
                 sees it (masks apply)
+    setup       setup [drishti|libs]: prepare this machine and CHECK the
+                libraries of the Python you run Drishti with (setup installs
+                nothing and makes no virtual environment)
+    build       build jar|modules|all|sdk: the server jar (copied into
+                <home>/lib) and the modules (packages in <home>/modules), with
+                Maven, never install
+    start       start server|console|all|cluster: start Drishti (Java 21+, the
+                jar of <home>/lib, logs and pid files under the data folder)
+    stop        stop server|console|all|cluster: stop by the pid files only
+                (never by name)
+    node        node drain|undrain|status|wait-ready: one server's drain
+                before a stop and its readiness (CLUSTER_GUIDE.md 4.6)
+    launchers   launchers [--check|--machine|--list|--run NAME]: the IDE
+                launchers and IDE_GUIDE section 4 from
+                tools/launch/launchers.yaml; this machine's JVM arguments
+                files
+    status      status: the resolved home, data, modules and java; then every
+                process started with drishti.py start
     lake        Delta lakes: build one from a large JSON export (memory flat,
                 safe to re-run), scan an export, status, maintain
+    testdata    The committed test data (data/testdata): capture the news-and-
+                markets pack's real market snapshot for offline demos
     completion  completion: print a shell completion script (bash, zsh,
                 powershell)
 
 options:
   -h, --help    show this help message and exit
 
-    python3 tools/drishti.py <group> <command> [options]          (Windows: py -3.13 tools\drishti.py ...; the one Python, its libraries from setup)
+    python3 tools/drishti.py <group> <command> [options]          (Windows: py tools\drishti.py ...; the one Python, its libraries from setup)
 
-Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
+Groups: setup (prepare this machine), build (jar: the server jar into <home>/lib), start, stop and status (server, console, all, cluster;
+every OS, by pid files), sutra (the Java `sutra` tool, plus `sutra gen`), module (pack a folder; verify, check, inspect a .dmod with the server jar's verifier; deploy, plan, apply, list, remove, disable, enable, upgrade, run), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
 publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
-lake (build a Delta lake from a large JSON export, scan, status, maintain), view (get, explain), doctor, completion, design (the Screen Designer's designs over
+lake (build a Delta lake from a large JSON export, scan, status, maintain), feed (pull external data into the lakes: list, run, status, schedule), testdata (capture-market: a real offline snapshot), view (get, explain), history (an entity over business days), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
-Needs Python 3.13 and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
+Needs Python 3.11+ (3.13 is what the wheel packs target) and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_REFERENCE.md.
 
 Exit codes: 0 ok, 1 problems found (a failing check, a server that said no, an unreachable server), 2 usage (a bad option,
@@ -298,12 +334,10 @@ then the newest `lib/drishti-server-*-exec.jar` of the install (`<home>/lib`; ma
 
 **Environment variables** the program reads:
 
-| Variable | Meaning | Default |
-|---|---|---|
-| `JAVA_HOME` | the JDK that runs it | `/usr/lib/jvm/java-21-openjdk-amd64`, then `java` on the `PATH` |
-| `DRISHTI_SERVER` | the server's base URL | `http://localhost:18480` |
-| `DRISHTI_TOKEN` | the bearer token (never printed) | none |
-| `DRISHTI_USER` | the user name sent when the server has sign-in off | none |
+- `JAVA_HOME`: the JDK that runs it (default `/usr/lib/jvm/java-21-openjdk-amd64`, then `java` on the `PATH`).
+- `DRISHTI_SERVER`: the server's base URL (default `http://localhost:18480`).
+- `DRISHTI_TOKEN`: the bearer token (never printed; default none).
+- `DRISHTI_USER`: the user name sent when the server has sign-in off (default none).
 
 The Java commands run **from the repository root** (the engine reads `./config/packs` and `./sutras` relative to it), so every path
 you give is made absolute first: use paths relative to *your* current directory as you normally would.
@@ -721,7 +755,7 @@ in `config/connectors/`), and the official VaR and exposure captures, the demo t
 Drishti*net are off. The site's lakes (`DRISHTI_DELTA_ROOT`, `DRISHTI_ICEBERG_ROOT`, `DRISHTI_FILES_ROOT`, `DRISHTI_FEEDS`, each
 defaulting under `DRISHTI_DATA_DIR` or `data/`) and its added and installed packs are still read. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
 CI wiring are also in section 15 of the [Sutra developer guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check); the workbench's own use of the same command is in
-[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#26-the-command-line-and-ci).
+[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#326-the-command-line-and-ci).
 
 ## 5. `pack`: make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install
 
@@ -1411,7 +1445,7 @@ are written beside their parent in all three stores.
 else its name's date (`trade.2026-11-03.jsonl`: kind `trade`, 2026-11-03), else the business today. A document's own date field never
 decides; documents whose own date differs are loaded and counted (*1 row of trade.2026-11-03.jsonl carried another date in AS_OF; loaded
 under 2026-11-03*). `--date-from name` refuses a file whose name carries no date. `--mode` defaults to `append`. `lake build` and the data
-inbox follow the same rules ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-feeds-the-table-and-business-date-of-a-file)).
+inbox follow the same rules ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#28-feeds-the-table-and-business-date-of-a-file)).
 
 The curves of the test data into the files store of the `curves-demo` pack made [above](#pack-new-a-complete-pack-from-json-lines)
 (its `ingest:` block gives the key `CURVE_ID` and the date `AS_OF`; `--kind` because the file names are not kinds):
@@ -1685,7 +1719,7 @@ the Delta connector reads:
 * one row per document: `id` (`--key`, a dotted path), `doc` (the **whole** document as JSON: nested arrays such as `LEGS[]` and
   `LEGS[].CASH_FLOWS[]` stay inside it, as the Sutras expect), `business_date` (each file's: `--as-of`, else its `.ready` file's
   `business-date:`, else its name's date, `trades.2026-11-03.jsonl.gz`, else the business today; a document's own `--date` field is only
-  counted when it differs: [DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-feeds-the-table-and-business-date-of-a-file));
+  counted when it differs: [DATA_GUIDE.md section 2.8](DATA_GUIDE.md#28-feeds-the-table-and-business-date-of-a-file));
 * partitioned by `business_date` and then any number of **classifier** columns (`--partition-by PRODUCT_TYPE[,DESK...]`, up to
   four), as Hive folders `business_date=2026-10-16/PRODUCT_TYPE=ComSwap/`;
 * **promoted** columns (`--promote COUNTERPARTY,PORTFOLIO,QUANTITY`): real columns a reader filters on without parsing the
@@ -1711,7 +1745,7 @@ bounded by rows (`--batch-rows`, 50,000) and bytes (`--batch-mb`, 128). The stag
 files, go in a folder beside the lake (never the system temp folder), removed when the run ends. Sizing a large load: [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md).
 
 **Archives.** An archive is read in place, its JSON Lines members in name order, by the rule every loader shares
-([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): other members are skipped with a note; a build writes one
+([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#27-archives-zip-and-tarballs)): other members are skipped with a note; a build writes one
 table, so an archive's folders, if it has any, must all be that table's name (`--table`, else the kind), and any other folder is
 refused and named; an archive that breaks Lake's archive rule is refused whole before a row is read ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#rules-that-apply-to-every-load)). A reject names its member:
 `trades.zip!/part-2.jsonl:14`. `tools/build_demo_lakes.py --endur-dir` takes the same feeds (`trade_endur.2026-10-28.jsonl.zip`, or a tar
@@ -2203,7 +2237,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 
 | Key | Default | Meaning |
 |---|---|---|
-| `source.files` | (required) | a file, a folder (its `*.jsonl`, `*.ndjson`, `*.json`, `*.gz`, `*.zst` and archives `*.zip`, `*.tar.gz`, `*.tgz`, `*.tar`), or a glob (`/data/pv/*.jsonl.gz`, `C:\pv\cob-*.jsonl`, `**` for any depth; on S3 in the last segment: `s3://bucket/pv/2026-10-28/*.jsonl.gz`); a list for several. An archive is read in place by the archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): its JSON Lines members in name order, one reader taking the archive in one pass |
+| `source.files` | (required) | a file, a folder (its `*.jsonl`, `*.ndjson`, `*.json`, `*.gz`, `*.zst` and archives `*.zip`, `*.tar.gz`, `*.tgz`, `*.tar`), or a glob (`/data/pv/*.jsonl.gz`, `C:\pv\cob-*.jsonl`, `**` for any depth; on S3 in the last segment: `s3://bucket/pv/2026-10-28/*.jsonl.gz`); a list for several. An archive is read in place by the archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#27-archives-zip-and-tarballs)): its JSON Lines members in name order, one reader taking the archive in one pass |
 | `source.dataset` | the archive's name | an archive without folders is one dataset named after the file (`trade.tar.gz` → `trade`); this names it instead (`--dataset NAME`) |
 | `source.archive.max-mb`, `max-ratio`, `max-members` | `lake.archive.*` | the archive caps; the rule and the defaults are Lake's ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#rules-that-apply-to-every-load)) |
 | `source.archive.validate` | `rows` | with several datasets: `rows` reads and checks every dataset (a dry run) before the first commit, so one that would fail stops the run with nothing loaded; `structure` checks the archives' listing only |
@@ -2213,7 +2247,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 | `source.format` | `jsonl` | JSON Lines (the data standard); `.gz` and `.zst` decompressed as streams, multi-member gzip included |
 | `source.pack`, `source.connector` | none | a pack folder (as `--pack`): the connector's domain and table, `layout.<kind>.columns`, `vectors`, `flatten`, `ingest.<kind>.key` and `date`; the keys below win |
 | `source.id` | `id` (or the pack's) | the id field (`--key`), a dotted path |
-| `source.as-of` | none | one business date for every file of the input; else each file's: its `.ready` file's `business-date:`, its name's date (`<table>.<YYYY-MM-DD>.jsonl.gz`), the business today; a tar's members their folders' ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-feeds-the-table-and-business-date-of-a-file)) |
+| `source.as-of` | none | one business date for every file of the input; else each file's: its `.ready` file's `business-date:`, its name's date (`<table>.<YYYY-MM-DD>.jsonl.gz`), the business today; a tar's members their folders' ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#28-feeds-the-table-and-business-date-of-a-file)) |
 | `source.date` | the pack's | a row's own date field: never the partition, only counted when it differs from its file's date (`fileDates`, `otherDateRows`, `dateNotes` in the summary) |
 | `--as-of`, `--table`, `--pack`, `--kind`, `--mode`, `--key`, `--date-from`, `--plan`, `--run-id` | | the command line's options over the file: `source.as-of`, `target.table`, `source.pack`, `target.kind`, `target.mode` (`append`, the default, or `replace`), `source.id`, `source.date-from`, a dry run; `--run-id` gives the run's id (its rows' `_load_id` is `<run-id>.<n>`; the data inbox passes one for every table of an archive) |
 | `source.date-from` | `auto` | `auto` as above; `name`: a file whose name carries no date (and no `as-of`, no `.ready` date) refuses the load |
@@ -2380,8 +2414,8 @@ deploy/aws/delta-s3/delta-s3.sh check --bucket acme-drishti-lake --prefix delta 
 
 Their tests need no AWS account (`python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3`: botocore's
 Stubber, an in-memory S3, Delta tables written by the deltalake package). They have not been run against AWS: no AWS account is
-available to the build, and the live run waits for an AWS sandbox account. The guides: [`deploy/aws/s3-tables/README.md`](CLUSTER_GUIDE.md#deployawss3-tables-the-s3-tables-connectors-aws-resources)
-and [`deploy/aws/delta-s3/README.md`](CLUSTER_GUIDE.md#deployawsdelta-s3-the-delta-lake-on-s3-connectors-aws-resources).
+available to the build, and the live run waits for an AWS sandbox account. The guides: [`docs/guides/CLUSTER_GUIDE.md`](CLUSTER_GUIDE.md#deployawss3-tables-the-s3-tables-connectors-aws-resources)
+and [`docs/guides/CLUSTER_GUIDE.md`](CLUSTER_GUIDE.md#deployawsdelta-s3-the-delta-lake-on-s3-connectors-aws-resources).
 
 ### 7.15 lake delete: whole business dates out of a table
 
@@ -2770,7 +2804,7 @@ Options of `start server`, `start console` and `start all`:
 | `--home`, `--data-dir`, `--java-home` | the roots and the JDK, as above (`start console` has no `--java-home`) |
 | `--env-file FILE` | `KEY=VALUE` lines put into the process's environment; secrets stay off the command line and are never printed |
 | `--demo` | the demo profile, `config/profiles/demo.ini` (the offline demo on the lakes; the file **Drishti: run server (demo)** names), with development secrets and the `drishti-dev-admin` account: not for production |
-| `--distribution NAME` | `risk`, `finance`, `genomics`, `all` or a file path (`DRISHTI_DISTRIBUTION`; [DISTRIBUTIONS.md](../architecture/KERNEL_AND_MODULES.md)) |
+| `--distribution NAME` | `risk`, `finance`, `genomics`, `all` or a file path (`DRISHTI_DISTRIBUTION`; [KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md)) |
 | `--background` | detach: log and pid file under `logs/` and `run/` |
 | `--port PORT` | the server's port (default `server.port` of the settings files, else `DRISHTI_PORT`, else 18480); the console's (default `DRISHTI_CONSOLE_PORT`, else `console.server.port`, else 17480). `start all` has `--server-port` and `--console-port` |
 | `--heap SIZE` | the server's `-Xmx` (default `drishti.launch.heap` of the settings files: 4g in the demo profile; else 2g) |
@@ -3232,7 +3266,7 @@ drishti.py convert bundle.zip                          bundle/trade.jsonl, bundl
 | `--force` | replace an existing output file |
 | `--dataset NAME` | an archive without folders: the name of its one dataset, so of the output (default: the archive's name, `trade.tar.gz` → `trade.jsonl`) |
 
-An archive (`.zip`, `.tar.gz`, `.tgz`, `.tar`) is read by the loaders' archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)):
+An archive (`.zip`, `.tar.gz`, `.tgz`, `.tar`) is read by the loaders' archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#27-archives-zip-and-tarballs)):
 without folders, its JSON Lines members become one file; with folders one level deep, one file per folder in the folder `--out` names
 (default: the archive's name beside it); other members are skipped with a note, and an unsafe or mixed archive is refused.
 
@@ -3245,7 +3279,7 @@ without folders, its JSON Lines members become one file; with folders one level 
 
 The same designs the **Build** workbench shows, from a terminal or a pipeline: create one from samples and/or a Sutra file,
 check it against every sample, save edits made in your editor, send it for review, and let an approver decide. Everything the
-screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-saving-and-proposing); the endpoints are in
+screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#322-saving-and-proposing); the endpoints are in
 [API_REFERENCE.md](API_REFERENCE.md).
 
 | Command | Does | Endpoint |
@@ -3697,7 +3731,7 @@ with `--window` keeps the comparison ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#1
 
 The same designs the **Build** workbench shows, from a terminal or a pipeline: create one from samples and/or a Sutra file,
 check it against every sample, save edits made in your editor, send it for review, and let an approver decide. Everything the
-screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-saving-and-proposing); the endpoints are in
+screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#322-saving-and-proposing); the endpoints are in
 [API_REFERENCE.md](API_REFERENCE.md).
 
 ### `exposure`: the exposure engine
@@ -3919,7 +3953,7 @@ forms). `--check` fails when it is stale; a console test runs the same check.
 Drishti Elements (the JavaScript libraries the console draws with) is a separate project vendored at a pinned version; its own
 `tools/elements/cli.py pack|dist` builds a packed pair of files or the release tree
 ([USING.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/USING.md)). Drishti has no `elements` command; how the console
-holds the pin and how to move it: [ELEMENTS_IN_DRISHTI.md](../architecture/THIN_CONSOLE_DESIGN.md).
+holds the pin and how to move it: [THIN_CONSOLE_DESIGN.md](../architecture/THIN_CONSOLE_DESIGN.md).
 
 ### `feed`: the data feeds
 
@@ -4050,7 +4084,7 @@ of Parquet.
 | `tools/drill-known.txt` | the console tests the drill accepts when they fail: one line each, its pytest id, a `|` and the reason; reported at the end of the lane, never hidden |
 | `tools/sizing_planner.py` | reads the planner's one file, `kernel/drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [CLUSTER_GUIDE.md section 9.7](CLUSTER_GUIDE.md#155-the-sizing-planner)), the server's workbook template (`kernel/drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`kernel/drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [section 8](#admin-capacity-admin--capacity-from-a-terminal) |
-| `tools/domain_strings.py` | the domain boundaries' rule 4 ([DOMAIN_MODULES.md](../architecture/KERNEL_AND_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
+| `tools/domain_strings.py` | the domain boundaries' rule 4 ([KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
 | `tools/version.py` | the product version from its one home, `.mvn/maven.config`: `python3 tools/version.py` prints it (`<version>`), `--tag` the release tag (`v<version>`, an i-step written `i_<n>`), `--check <tag>` fails when a tag is not the version's; every tool that names the version reads it here |
 | `tools/code_cap.py` | the one line cap of a code file (`CODE_LINE_CAP`, 2,500): the Python guards import it and the Java `SourceFileSizeTest` reads it; a documentation page has its own cap |
 | `tools/resolved.py` | where every pack, module and connector is, as the server's resolver says (`java -jar <server jar> resolve --json`, no server running): the tools and generators ask it, never a folder of their own; the answer is kept under `<data>/tmp/resolved/` until an input changes (the packs and modules folders, the switch files, the connectors, the override folders of `drishti.overrides.dir`) |

@@ -2171,17 +2171,17 @@ jar, as an environment variable, or as a `--key=value` argument ([CONFIGURATION.
 
 | Key | Default | Raise it when | Lower it when |
 |---|---|---|---|
-| `drishti.sources.fetch-timeout` | `10s` | a healthy but slow source makes views fail with `DRS-1004`; keep the console's `backend.timeout_seconds` (15) longer | you prefer a fast failure to a slow view |
-| `drishti.graph.link-budget` | `40ms` | linked entities often show *pending* although their source is fine (each step adds that much to a view's worst case) | views must appear faster even if more links are pending |
-| `drishti.engine.layout-cache-size` | `10000` | `timings.layout` is high on warm views (many data shapes or Sutra versions) | memory is tight and you have few shapes |
-| `drishti.engine.fingerprint-cache-size` | `100000` | many live entities tick at once (one entry per entity and generation) | memory is tight |
-| `drishti.engine.bind-parallelism` | `0` (cores) | — | the server shares its cores; set a fixed number |
-| `drishti.live.frame` | `50ms` | CPU is high under many fast-ticking entities | you need fresher frames and have CPU |
-| `drishti.live.max-streams` | `20000` | a big server with many viewers | protect a small server from a burst of tabs |
-| `drishti.commands.suggest-budget` | `30ms` | type-ahead misses entities from a slow source | typing feels sluggish |
-| `drishti.commands.suggest-limit` (`DRISHTI_SUGGEST_LIMIT`) | `25` | users want a longer list | many users type at once on a small server |
-| `drishti.search.max-scan` | `20000` | searches report `partial` because a kind has more entities | searches over huge kinds load the source too much |
-| `drishti.search.budget` | `3s` | searches over slow sources report `partial` | — |
+| [`drishti.sources.fetch-timeout`](../admin/CONFIGURATION.md#server-reference) | `10s` | a healthy but slow source makes views fail with `DRS-1004`; keep the console's `backend.timeout_seconds` (15) longer | you prefer a fast failure to a slow view |
+| [`drishti.graph.link-budget`](../admin/CONFIGURATION.md#server-reference) | `40ms` | linked entities often show *pending* although their source is fine (each step adds that much to a view's worst case) | views must appear faster even if more links are pending |
+| [`drishti.engine.layout-cache-size`](../admin/CONFIGURATION.md#server-reference) | `10000` | `timings.layout` is high on warm views (many data shapes or Sutra versions) | memory is tight and you have few shapes |
+| [`drishti.engine.fingerprint-cache-size`](../admin/CONFIGURATION.md#server-reference) | `100000` | many live entities tick at once (one entry per entity and generation) | memory is tight |
+| [`drishti.engine.bind-parallelism`](../admin/CONFIGURATION.md#server-reference) | `0` (cores) | — | the server shares its cores; set a fixed number |
+| [`drishti.live.frame`](../admin/CONFIGURATION.md#server-reference) | `50ms` | CPU is high under many fast-ticking entities | you need fresher frames and have CPU |
+| [`drishti.live.max-streams`](../admin/CONFIGURATION.md#server-reference) | `20000` | a big server with many viewers | protect a small server from a burst of tabs |
+| [`drishti.commands.suggest-budget`](../admin/CONFIGURATION.md#server-reference) | `30ms` | type-ahead misses entities from a slow source | typing feels sluggish |
+| [`drishti.commands.suggest-limit`](../admin/CONFIGURATION.md#server-reference) (`DRISHTI_SUGGEST_LIMIT`) | `25` | users want a longer list | many users type at once on a small server |
+| [`drishti.search.max-scan`](../admin/CONFIGURATION.md#server-reference) | `20000` | searches report `partial` because a kind has more entities | searches over huge kinds load the source too much |
+| [`drishti.search.budget`](../admin/CONFIGURATION.md#server-reference) | `3s` | searches over slow sources report `partial` | — |
 
 Which stage is slow tells you which knob: `fetch` (the source: a disk cache or a larger cache helps lake and stream connectors), `layout`
 (the layout cache), `links` (the link budget), `bind` (a Sutra with very large tables or heavy expressions).
@@ -2409,9 +2409,9 @@ The repository is public, so no secret is ever in it. `secrets.env` holds three:
 
 | Name | Used by | What it signs |
 |---|---|---|
-| `DRISHTI_TOKEN_SECRET` | every server and the console | the tokens the console mints for its users |
-| `DRISHTI_SESSION_SECRET` | every server and the console | the console's session cookie |
-| `DRISHTI_NET_SECRET` | every server | every call between the nodes (the cluster key; `node.yaml` names it, `secret: ${DRISHTI_NET_SECRET}`) |
+| [`DRISHTI_TOKEN_SECRET`](../admin/CONFIGURATION.md#every-placeholder) | every server and the console | the tokens the console mints for its users |
+| [`DRISHTI_SESSION_SECRET`](../admin/CONFIGURATION.md#every-placeholder) | every server and the console | the console's session cookie |
+| [`DRISHTI_NET_SECRET`](../admin/CONFIGURATION.md#every-placeholder) | every server | every call between the nodes (the cluster key; `node.yaml` names it, `secret: ${DRISHTI_NET_SECRET}`) |
 
 `start cluster` makes any that is missing (32 random bytes from Python's `secrets` module, the same on Windows) and keeps it, so sessions and tokens survive restarts. They reach the
 processes through their environment only; no command prints them. To use your own, copy `secrets.env.example` to `secrets.env` and fill

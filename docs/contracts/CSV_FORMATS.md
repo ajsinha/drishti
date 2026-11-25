@@ -52,7 +52,7 @@ The scenario PVs, the scenario set and the scenario FX of the PVF source are wri
 
 ## legal-entity: Bank legal entity (from CSV)
 
-### 1. What it is and who reads it
+### 1.1 What it is and who reads it
 
 The bank's own legal entities, one row each: name, LEI, jurisdiction and regulator. The names behind the LEGAL hierarchy's nodes.
 
@@ -62,7 +62,7 @@ The bank's own booking entity.
 - **Mapping:** `tools/mrloader/kinds/legal-entity.yaml` (source `canonical`); wave 1 of the CSV loaders.
 - **Grain:** One row per bank legal entity per business date, keyed by ENTITY_ID.
 
-### 2. The command
+### 1.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind legal-entity --csv FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -72,7 +72,7 @@ python3 tools/mrloader/csv_load.py --kind legal-entity --template               
 
 In a day file: `legal-entity: {csv: "FILE"}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 1.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -84,7 +84,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `JURISDICTION` | yes | `JURISDICTION` | upper-cased; text, kept as written | The country the entity is incorporated and regulated in, ISO 3166-1 alpha-2. | ISO 3166-1 alpha-2 (DE, GB, US) |
 | `REGULATOR` | no | `REGULATOR` | as written | The entity's prudential and conduct regulators, separated by ' / ' (ECB / BaFin, PRA / FCA …). | optional: "PRA / FCA" |
 
-### 4. A sample
+### 1.4 A sample
 
 The first rows of `tools/mrloader/samples/legal-entity.csv` (synthetic):
 
@@ -100,7 +100,7 @@ The first record of `tools/mrloader/samples/legal-entity.expected.jsonl` (record
 {"ENTITY_ID":"LE-CDADMM-H4705","NAME":"Drishti Bank Canada","LEI":"54930E36905CFA5EB092","JURISDICTION":"CA","REGULATOR":"OSFI"}
 ```
 
-### 5. What is not loaded
+### 1.5 What is not loaded
 
 | Name | What | Why |
 |---|---|---|
@@ -111,7 +111,7 @@ The first record of `tools/mrloader/samples/legal-entity.expected.jsonl` (record
 | `DESKS` | derived | the reverse of the desk's LEGAL_ENTITY link, derived by Drishti; a master file does not carry it |
 | `BOOKS` | derived | a roll-up Drishti computes from the books, desks and trade valuations; a master file does not carry it and an upstream value is ignored |
 
-### 6. Checks
+### 1.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `ENTITY_ID` per business date.
@@ -121,29 +121,29 @@ The first record of `tools/mrloader/samples/legal-entity.expected.jsonl` (record
 Reject codes it can give: `MISSING_REQUIRED`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### 1.7 Before and after
 
 - **Load first:** nothing.
 - **Then:** `counterparty`, `counterparty-group`, `desk`, `netting-set`.
 
-### 8. Repeat, restate, remove
+### 1.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `legal-entity` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind legal-entity --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### 1.9 Spreadsheet warnings
 
 - `ENTITY_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `JURISDICTION`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 
-### 10. Source variants
+### 1.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/legal-entity.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## desk: Desk (from CSV)
 
-### 1. What it is and who reads it
+### 2.1 What it is and who reads it
 
 The bank's desks, one row each: name, head, the legal entity it books in and its asset classes. The names behind the desk nodes.
 
@@ -153,7 +153,7 @@ A trading desk: books, limits and risk results.
 - **Mapping:** `tools/mrloader/kinds/desk.yaml` (source `canonical`); wave 1 of the CSV loaders.
 - **Grain:** One row per desk per business date, keyed by DESK_ID.
 
-### 2. The command
+### 2.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind desk --csv FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -163,7 +163,7 @@ python3 tools/mrloader/csv_load.py --kind desk --template                       
 
 In a day file: `desk: {csv: "FILE"}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 2.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -175,7 +175,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `LEGAL_ENTITY` | yes | `LEGAL_ENTITY` | upper-cased, other characters `-`; prefixed `LE-` unless it has it; text, kept as written | The bank's legal entity the desk books in: an ENTITY_ID of the core pack's legal-entity kind (LE-…). |  |
 | `ASSET_CLASSES` | no | `ASSET_CLASSES` | a list, `\|` between values | The asset classes the desk trades (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, ...). | optional: Rates\|FX |
 
-### 4. A sample
+### 2.4 A sample
 
 The first rows of `tools/mrloader/samples/desk.csv` (synthetic):
 
@@ -191,7 +191,7 @@ The first record of `tools/mrloader/samples/desk.expected.jsonl` (records are wr
 {"DESK_ID":"DESK-CREDIT-FLOW-HKG","NAME":"Credit Flow Hong Kong","HEAD":"E. Lam","LEGAL_ENTITY":"LE-MARKETS-INC","ASSET_CLASSES":["Credit"]}
 ```
 
-### 5. What is not loaded
+### 2.5 What is not loaded
 
 | Name | What | Why |
 |---|---|---|
@@ -202,7 +202,7 @@ The first record of `tools/mrloader/samples/desk.expected.jsonl` (records are wr
 | `MTM` | derived | a roll-up Drishti computes from the trade valuations of the desk's books; a master file does not carry it and an upstream value is ignored |
 | `POSITIONS` | derived | a roll-up Drishti computes from the trade valuations of the desk's books; a master file does not carry it and an upstream value is ignored |
 
-### 6. Checks
+### 2.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `DESK_ID` per business date.
@@ -212,29 +212,29 @@ The first record of `tools/mrloader/samples/desk.expected.jsonl` (records are wr
 Reject codes it can give: `MISSING_REQUIRED`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### 2.7 Before and after
 
 - **Load first:** `legal-entity`.
 - **Then:** `book`, `desk-pnl`, `trade-valuation`.
 
-### 8. Repeat, restate, remove
+### 2.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `desk` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind desk --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### 2.9 Spreadsheet warnings
 
 - `DESK_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `LEGAL_ENTITY`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 
-### 10. Source variants
+### 2.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/desk.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## book: Book (from CSV)
 
-### 1. What it is and who reads it
+### 3.1 What it is and who reads it
 
 The bank's books (booking portfolios), one row each: name, desk and classification. The names behind the book nodes.
 
@@ -244,7 +244,7 @@ A trading book: owner desk, trades and risk.
 - **Mapping:** `tools/mrloader/kinds/book.yaml` (source `canonical`); wave 1 of the CSV loaders.
 - **Grain:** One row per book per business date, keyed by BOOK_ID.
 
-### 2. The command
+### 3.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind book --csv FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -254,7 +254,7 @@ python3 tools/mrloader/csv_load.py --kind book --template                       
 
 In a day file: `book: {csv: "FILE"}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 3.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -267,7 +267,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `REGULATORY_BOOK` | no | `REGULATORY_BOOK` | as written | Trading book or banking book, as the book is classified for regulatory capital. | optional: "Trading book" |
 | `VOLCKER` | no | `VOLCKER` | as written | The book's Volcker-rule permitted activity (e.g. Market making). | optional: "Market making" |
 
-### 4. A sample
+### 3.4 A sample
 
 The first rows of `tools/mrloader/samples/book.csv` (synthetic):
 
@@ -283,7 +283,7 @@ The first record of `tools/mrloader/samples/book.expected.jsonl` (records are wr
 {"BOOK_ID":"BOOK-PORT-100000","NAME":"Rates Trading-Lon book 1","DESK":"DESK-RATES-TRADING-LON","ACCOUNTING_TREATMENT":"Fair value (FVTPL)","REGULATORY_BOOK":"Trading book","VOLCKER":"Market making"}
 ```
 
-### 5. What is not loaded
+### 3.5 What is not loaded
 
 | Name | What | Why |
 |---|---|---|
@@ -296,7 +296,7 @@ The first record of `tools/mrloader/samples/book.expected.jsonl` (records are wr
 | `DV01` | derived | a roll-up Drishti computes from the book's sensitivities; a master file does not carry it and an upstream value is ignored |
 | `TOP_TRADES` | derived | a roll-up Drishti computes from the book's trade valuations; a master file does not carry it and an upstream value is ignored |
 
-### 6. Checks
+### 3.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `BOOK_ID` per business date.
@@ -305,23 +305,23 @@ The first record of `tools/mrloader/samples/book.expected.jsonl` (records are wr
 Reject codes it can give: `MISSING_REQUIRED`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### 3.7 Before and after
 
 - **Load first:** `desk`.
 - **Then:** `trade-valuation`.
 
-### 8. Repeat, restate, remove
+### 3.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `book` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind book --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### 3.9 Spreadsheet warnings
 
 - `BOOK_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `DESK`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 
-### 10. Source variants
+### 3.10 Source variants
 
 #### `pvf`: `tools/mrloader/kinds/book.pvf.yaml`
 
@@ -339,7 +339,7 @@ Only the rows valid on the date are read (`VALID_DT` <= date < `VALID_TO_DT`).
 
 ## counterparty-group: Counterparty group (from CSV)
 
-### 1. What it is and who reads it
+### 4.1 What it is and who reads it
 
 The counterparty groups (ultimate parents), one row each: name and the group's own approved limit. Members come from the counterparties.
 
@@ -349,7 +349,7 @@ Economic group of related counterparties (obligor group).
 - **Mapping:** `tools/mrloader/kinds/counterparty-group.yaml` (source `canonical`); wave 2 of the CSV loaders.
 - **Grain:** One row per counterparty group per business date, keyed by GROUP_ID.
 
-### 2. The command
+### 4.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind counterparty-group --csv FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -359,7 +359,7 @@ python3 tools/mrloader/csv_load.py --kind counterparty-group --template         
 
 In a day file: `counterparty-group: {csv: "FILE"}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 4.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -369,7 +369,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `NAME` | yes | `NAME` | as written | The group's name: its ultimate parent's name. |  |
 | `LIMIT` | no | `LIMIT` | a number (decimal `.`) | The group's own approved credit limit (DATA_ARCHITECTURE.md section 12: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than | optional: the group's own approved limit, USD |
 
-### 4. A sample
+### 4.4 A sample
 
 The first rows of `tools/mrloader/samples/counterparty-group.csv` (synthetic):
 
@@ -385,7 +385,7 @@ The first record of `tools/mrloader/samples/counterparty-group.expected.jsonl` (
 {"GROUP_ID":"GRP-ALDERSHOT","NAME":"Aldershot Pension Group","LIMIT":300000000.0}
 ```
 
-### 5. What is not loaded
+### 4.5 What is not loaded
 
 | Name | What | Why |
 |---|---|---|
@@ -394,7 +394,7 @@ The first record of `tools/mrloader/samples/counterparty-group.expected.jsonl` (
 | `UTILISATION` | derived | limit use, computed by the exposure engine; never loaded |
 | `MEMBERS` | derived | the reverse of the counterparty's GROUP link, derived by Drishti; a master file does not carry it |
 
-### 6. Checks
+### 4.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `GROUP_ID` per business date.
@@ -402,28 +402,28 @@ The first record of `tools/mrloader/samples/counterparty-group.expected.jsonl` (
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_NUMBER`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### 4.7 Before and after
 
 - **Load first:** `legal-entity`.
 - **Then:** `counterparty`.
 
-### 8. Repeat, restate, remove
+### 4.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `counterparty-group` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind counterparty-group --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### 4.9 Spreadsheet warnings
 
 - `GROUP_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 
-### 10. Source variants
+### 4.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/counterparty-group.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## counterparty: Counterparty (from CSV)
 
-### 1. What it is and who reads it
+### 5.1 What it is and who reads it
 
 The bank's counterparties, one row each, from the client master: names, ratings, country, group and the legal entity facing it; no exposure figure.
 
@@ -433,7 +433,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 - **Mapping:** `tools/mrloader/kinds/counterparty.yaml` (source `canonical`); wave 2 of the CSV loaders.
 - **Grain:** One row per counterparty per business date, keyed by COUNTERPARTY_ID.
 
-### 2. The command
+### 5.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind counterparty --csv FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -443,7 +443,7 @@ python3 tools/mrloader/csv_load.py --kind counterparty --template               
 
 In a day file: `counterparty: {csv: "FILE"}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 5.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -468,7 +468,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `EMIR_CLASSIFICATION` | no | `KYC.EMIR_CLASSIFICATION` | as written | The counterparty's EMIR class: FC (financial counterparty) or NFC- (non-financial below the clearing threshold). |  |
 | `PD_1Y` | no | `KYC.PD_1Y` | a fraction (0.05) | The one-year probability of default implied by RATING, as a fraction (0.0004 is 0.04%). | a fraction: 0.0004 is 0.04% |
 
-### 4. A sample
+### 5.4 A sample
 
 The first rows of `tools/mrloader/samples/counterparty.csv` (synthetic):
 
@@ -484,7 +484,7 @@ The first record of `tools/mrloader/samples/counterparty.expected.jsonl` (record
 {"COUNTERPARTY_ID":"CP-ALDERSHOT-FUND","NAME":"Aldershot Pension Fund","LEI":"54934B9136D3D0B07F46","RATING":"AA-","SECTOR":"Pensions","COUNTRY":"GB","TYPE":"Pension fund","COUNTRY_OF_RISK":"GB","GROUP":"GRP-ALDERSHOT","CREDIT_LIMIT":"LIM-ALDERSHOT-FUND","LEGAL_ENTITY":"LE-GMO-SPOG","KYC":{"STATUS":"Approved","RISK_RATING":"Standard","LAST_REVIEW":"2026-03-14","EMIR_CLASSIFICATION":"FC","PD_1Y":0.0004}}
 ```
 
-### 5. What is not loaded
+### 5.5 What is not loaded
 
 | Name | What | Why |
 |---|---|---|
@@ -495,7 +495,7 @@ The first record of `tools/mrloader/samples/counterparty.expected.jsonl` (record
 | `NETTING_SETS` | derived | the reverse of the netting set's COUNTERPARTY link, derived by Drishti; a master file does not carry it |
 | `HIERARCHY` | derived | the legal graph, derived by Drishti from the group, agreements, CSAs and netting sets |
 
-### 6. Checks
+### 5.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `COUNTERPARTY_ID` per business date.
@@ -508,18 +508,18 @@ The first record of `tools/mrloader/samples/counterparty.expected.jsonl` (record
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_DATE`, `BAD_NUMBER`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### 5.7 Before and after
 
 - **Load first:** `legal-entity`, `counterparty-group`.
 - **Then:** `agreement`, `credit-limit`, `netting-set`.
 
-### 8. Repeat, restate, remove
+### 5.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `counterparty` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind counterparty --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### 5.9 Spreadsheet warnings
 
 - `COUNTERPARTY_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `GROUP`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
@@ -528,13 +528,13 @@ Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows
 - `CREDIT_CURVE`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `KYC.LAST_REVIEW`: a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates
 
-### 10. Source variants
+### 5.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/counterparty.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## agreement: Master agreement (from CSV)
 
-### 1. What it is and who reads it
+### 6.1 What it is and who reads it
 
 The master agreements (ISDA and others), one row each: type, governing law, close-out netting and the elections.
 
@@ -544,7 +544,7 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 - **Mapping:** `tools/mrloader/kinds/agreement.yaml` (source `canonical`); wave 2 of the CSV loaders.
 - **Grain:** One row per master agreement per business date, keyed by AGREEMENT_ID.
 
-### 2. The command
+### 6.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind agreement --csv FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -554,7 +554,7 @@ python3 tools/mrloader/csv_load.py --kind agreement --template                  
 
 In a day file: `agreement: {csv: "FILE"}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 6.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -573,7 +573,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `ADDITIONAL_TERMINATION_EVENTS` | no | `ELECTIONS.ADDITIONAL_TERMINATION_EVENTS` | as written | Further events, such as a downgrade, that let a party end the trades. |  |
 | `PROTOCOLS` | no | `ELECTIONS.PROTOCOLS` | as written | The ISDA protocols both parties adhered to, which amend the agreement. |  |
 
-### 4. A sample
+### 6.4 A sample
 
 The first rows of `tools/mrloader/samples/agreement.csv` (synthetic):
 
@@ -589,7 +589,7 @@ The first record of `tools/mrloader/samples/agreement.expected.jsonl` (records a
 {"AGREEMENT_ID":"AGR-ALDERSHOT-FUND-ISDA","TYPE":"ISDA 2002 Master","GOVERNING_LAW":"English","SIGNED":"2015-12-10","CLOSE_OUT_NETTING":"Enforceable","COUNTERPARTY":"CP-ALDERSHOT-FUND","ELECTIONS":{"AUTOMATIC_EARLY_TERMINATION":false,"SET_OFF":true,"TERMINATION_CURRENCY":"USD"}}
 ```
 
-### 5. What is not loaded
+### 6.5 What is not loaded
 
 | Name | What | Why |
 |---|---|---|
@@ -597,7 +597,7 @@ The first record of `tools/mrloader/samples/agreement.expected.jsonl` (records a
 | `COUNTERPARTY_NAME` | derived | the NAME of the agreement's COUNTERPARTY, looked up by Drishti; a master file does not carry it |
 | `CSAS` | derived | the reverse of the CSA's AGREEMENT link, derived by Drishti; a master file does not carry it |
 
-### 6. Checks
+### 6.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `AGREEMENT_ID` per business date.
@@ -607,30 +607,30 @@ The first record of `tools/mrloader/samples/agreement.expected.jsonl` (records a
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_BOOLEAN`, `BAD_DATE`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### 6.7 Before and after
 
 - **Load first:** `counterparty`.
 - **Then:** `csa`.
 
-### 8. Repeat, restate, remove
+### 6.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `agreement` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind agreement --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### 6.9 Spreadsheet warnings
 
 - `AGREEMENT_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `SIGNED`: a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates
 - `COUNTERPARTY`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 
-### 10. Source variants
+### 6.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/agreement.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## csa: Credit support annex (from CSV)
 
-### 1. What it is and who reads it
+### 7.1 What it is and who reads it
 
 The credit support annexes, one row each: thresholds, minimum transfer amounts, independent amount, margin frequency and period of risk.
 
@@ -640,7 +640,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 - **Mapping:** `tools/mrloader/kinds/csa.yaml` (source `canonical`); wave 2 of the CSV loaders.
 - **Grain:** One row per credit support annex per business date, keyed by CSA_ID.
 
-### 2. The command
+### 7.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind csa --csv FILE --child ELIGIBLE=FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -650,7 +650,7 @@ python3 tools/mrloader/csv_load.py --kind csa --template                        
 
 In a day file: `csa: {csv: "FILE", child: {ELIGIBLE: "FILE"}}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 7.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -679,7 +679,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `ASSET` | yes | `ELIGIBLE[].ASSET` | as written | An asset the counterparty may deliver as collateral. |  |
 | `HAIRCUT` | yes | `ELIGIBLE[].HAIRCUT` | a fraction (0.05) | The share taken off the asset's value when it is counted as collateral. | a fraction: 0.02 is 2% |
 
-### 4. A sample
+### ELIGIBLE.4 A sample
 
 The first rows of `tools/mrloader/samples/csa.csv` (synthetic):
 
@@ -695,7 +695,7 @@ The first record of `tools/mrloader/samples/csa.expected.jsonl` (records are wri
 {"CSA_ID":"CSA-ALDERSHOT-FUND","MARGIN_TYPE":"VM","THRESHOLD_US":10000000.0,"THRESHOLD_THEM":10000000.0,"MTA":500000,"INDEPENDENT_AMOUNT":0.0,"FREQUENCY":"Daily","CSA_CURRENCY":"USD","MTA_US":500000.0,"MTA_THEM":500000.0,"MARGIN_FREQUENCY_DAYS":1,"MPOR_DAYS":10,"LEGAL_ENTITY":"LE-GMO-SPOG","AGREEMENT":"AGR-ALDERSHOT-FUND-ISDA","COUNTERPARTY":"CP-ALDERSHOT-FUND","ELIGIBLE":[{"ASSET":"USD cash","HAIRCUT":0.0},{"ASSET":"UST 1-5Y","HAIRCUT":0.02}]}
 ```
 
-### 5. What is not loaded
+### ELIGIBLE.5 What is not loaded
 
 | Name | What | Why |
 |---|---|---|
@@ -704,7 +704,7 @@ The first record of `tools/mrloader/samples/csa.expected.jsonl` (records are wri
 | `NETTING_SETS` | derived | the reverse of the netting set's CSA link, derived by Drishti; a master file does not carry it |
 | `COLLATERAL_BALANCES` | derived | the reverse of the collateral balance's CSA link, derived by Drishti; a master file does not carry it |
 
-### 6. Checks
+### ELIGIBLE.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `CSA_ID` per business date.
@@ -717,31 +717,31 @@ The first record of `tools/mrloader/samples/csa.expected.jsonl` (records are wri
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_INTEGER`, `BAD_NUMBER`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### ELIGIBLE.7 Before and after
 
 - **Load first:** `agreement`.
 - **Then:** `netting-set`.
 
-### 8. Repeat, restate, remove
+### ELIGIBLE.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `csa` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind csa --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### ELIGIBLE.9 Spreadsheet warnings
 
 - `CSA_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `LEGAL_ENTITY`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `AGREEMENT`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `COUNTERPARTY`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 
-### 10. Source variants
+### ELIGIBLE.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/csa.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## netting-set: Netting set (from CSV)
 
-### 1. What it is and who reads it
+### 8.1 What it is and who reads it
 
 The netting sets, one row each: the counterparty, the legal entity, the agreement and CSA, and whether netting is enforceable. Terms and links only.
 
@@ -751,7 +751,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 - **Mapping:** `tools/mrloader/kinds/netting-set.yaml` (source `canonical`); wave 2 of the CSV loaders.
 - **Grain:** One row per netting set per business date, keyed by NETTING_SET_ID.
 
-### 2. The command
+### 8.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind netting-set --csv FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -761,7 +761,7 @@ python3 tools/mrloader/csv_load.py --kind netting-set --template                
 
 In a day file: `netting-set: {csv: "FILE"}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 8.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -776,7 +776,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `LEGAL_ENTITY` | yes | `LEGAL_ENTITY` | upper-cased, other characters `-`; prefixed `LE-` unless it has it; text, kept as written | The bank's legal entity on the bank's side of the set: an ENTITY_ID of the core pack's legal-entity kind (LE-…). |  |
 | `NETTING_ENFORCEABLE` | yes | `NETTING_ENFORCEABLE` | true/false, Y/N, 1/0 | true when a legal opinion confirms close-out netting is enforceable for the set; false treats the trades gross. | true when close-out netting holds in law |
 
-### 4. A sample
+### 8.4 A sample
 
 The first rows of `tools/mrloader/samples/netting-set.csv` (synthetic):
 
@@ -792,7 +792,7 @@ The first record of `tools/mrloader/samples/netting-set.expected.jsonl` (records
 {"NETTING_SET_ID":"NS-ALDERSHOT-FUND","COUNTERPARTY":"CP-ALDERSHOT-FUND","AGREEMENT":"AGR-ALDERSHOT-FUND-ISDA","CSA":"CSA-ALDERSHOT-FUND","CREDIT_LIMIT":"LIM-ALDERSHOT-FUND","COLLATERAL_BALANCE":"COLL-ALDERSHOT-FUND","LEGAL_ENTITY":"LE-GMO-SPOG","NETTING_ENFORCEABLE":true}
 ```
 
-### 5. What is not loaded
+### 8.5 What is not loaded
 
 | Name | What | Why |
 |---|---|---|
@@ -808,7 +808,7 @@ The first record of `tools/mrloader/samples/netting-set.expected.jsonl` (records
 | `TRADES` | derived | a roll-up Drishti computes from the set's trade valuations; a master file does not carry it and an upstream value is ignored |
 | `BY_ASSET` | derived | a roll-up Drishti computes from the set's trade valuations; a master file does not carry it and an upstream value is ignored |
 
-### 6. Checks
+### 8.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `NETTING_SET_ID` per business date.
@@ -823,18 +823,18 @@ The first record of `tools/mrloader/samples/netting-set.expected.jsonl` (records
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_BOOLEAN`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### 8.7 Before and after
 
 - **Load first:** `csa`, `counterparty`, `legal-entity`.
 - **Then:** `collateral-balance`, `trade-valuation`.
 
-### 8. Repeat, restate, remove
+### 8.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `netting-set` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind netting-set --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### 8.9 Spreadsheet warnings
 
 - `NETTING_SET_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `COUNTERPARTY`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
@@ -844,13 +844,13 @@ Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows
 - `COLLATERAL_BALANCE`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `LEGAL_ENTITY`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 
-### 10. Source variants
+### 8.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/netting-set.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## collateral-balance: Collateral balance (from CSV)
 
-### 1. What it is and who reads it
+### 9.1 What it is and who reads it
 
 Today's collateral per netting set and CSA: one record a balance, its holdings (asset, direction, market value, haircut) a list.
 
@@ -860,7 +860,7 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 - **Mapping:** `tools/mrloader/kinds/collateral-balance.yaml` (source `canonical`); wave 2 of the CSV loaders.
 - **Grain:** One row per collateral balance per business date, keyed by BALANCE_ID.
 
-### 2. The command
+### 9.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind collateral-balance --csv FILE --child POSITIONS=FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -870,7 +870,7 @@ python3 tools/mrloader/csv_load.py --kind collateral-balance --template         
 
 In a day file: `collateral-balance: {csv: "FILE", child: {POSITIONS: "FILE"}}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 9.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -890,7 +890,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `MARKET_VALUE` | yes | `POSITIONS[].MARKET_VALUE` | a number (decimal `.`) | The current market value of the asset before the haircut. |  |
 | `HAIRCUT` | yes | `POSITIONS[].HAIRCUT` | a fraction (0.05) | The share taken off the market value to allow for the price moving before the asset can be sold. The CSA sets it by asset type and maturity. |  |
 
-### 4. A sample
+### POSITIONS.4 A sample
 
 The first rows of `tools/mrloader/samples/collateral-balance.csv` (synthetic):
 
@@ -906,7 +906,7 @@ The first record of `tools/mrloader/samples/collateral-balance.expected.jsonl` (
 {"BALANCE_ID":"COLL-ALDERSHOT-FUND","AS_OF":"2026-11-18","CSA":"CSA-ALDERSHOT-FUND","NETTING_SET":"NS-ALDERSHOT-FUND","POSITIONS":[{"ASSET":"USD cash","DIRECTION":"Received","MARKET_VALUE":800000.0,"HAIRCUT":0.0},{"ASSET":"UST 1-5Y","DIRECTION":"Posted","MARKET_VALUE":2800000.0,"HAIRCUT":0.02}]}
 ```
 
-### 5. What is not loaded
+### POSITIONS.5 What is not loaded
 
 | Name | What | Why |
 |---|---|---|
@@ -918,7 +918,7 @@ The first record of `tools/mrloader/samples/collateral-balance.expected.jsonl` (
 | `POSTED` | derived | a roll-up Drishti computes from the balance's POSITIONS (market value less haircut); a master file does not carry it and an upstream value is ignored |
 | `NET` | derived | a roll-up Drishti computes from the balance's POSITIONS (market value less haircut); a master file does not carry it and an upstream value is ignored |
 
-### 6. Checks
+### POSITIONS.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `BALANCE_ID` per business date.
@@ -928,31 +928,31 @@ The first record of `tools/mrloader/samples/collateral-balance.expected.jsonl` (
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_DATE`, `BAD_NUMBER`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### POSITIONS.7 Before and after
 
 - **Load first:** `netting-set`.
 - **Then:** nothing depends on it.
 
-### 8. Repeat, restate, remove
+### POSITIONS.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `collateral-balance` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind collateral-balance --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### POSITIONS.9 Spreadsheet warnings
 
 - `BALANCE_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `AS_OF`: a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates
 - `CSA`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `NETTING_SET`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 
-### 10. Source variants
+### POSITIONS.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/collateral-balance.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## credit-limit: Credit limit (from CSV)
 
-### 1. What it is and who reads it
+### 10.1 What it is and who reads it
 
 The approved credit limit of each counterparty: the measure, the amount and optional tenor buckets. Use and status are computed.
 
@@ -962,7 +962,7 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 - **Mapping:** `tools/mrloader/kinds/credit-limit.yaml` (source `canonical`); wave 2 of the CSV loaders.
 - **Grain:** One row per credit limit per business date, keyed by LIMIT_ID.
 
-### 2. The command
+### 10.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind credit-limit --csv FILE --child BUCKETS=FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -972,7 +972,7 @@ python3 tools/mrloader/csv_load.py --kind credit-limit --template               
 
 In a day file: `credit-limit: {csv: "FILE", child: {BUCKETS: "FILE"}}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 10.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -992,7 +992,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `BUCKET` | yes | `BUCKETS[].BUCKET` | upper-cased | The range of years to maturity the limit is split into; exposure on trades that mature within it is counted against it. | 0-1Y, 1-3Y ... |
 | `LIMIT` | yes | `BUCKETS[].LIMIT` | a number (decimal `.`) | The limit that applies to this tenor bucket. |  |
 
-### 4. A sample
+### BUCKETS.4 A sample
 
 The first rows of `tools/mrloader/samples/credit-limit.csv` (synthetic):
 
@@ -1008,7 +1008,7 @@ The first record of `tools/mrloader/samples/credit-limit.expected.jsonl` (record
 {"LIMIT_ID":"LIM-ALDERSHOT-FUND","MEASURE":"PFE 95 peak","LIMIT":220000000.0,"COUNTERPARTY":"CP-ALDERSHOT-FUND","APPROVED_BY":"Credit Risk Committee","REVIEW_DUE":"2027-03-19","BUCKETS":[{"BUCKET":"0-1Y","LIMIT":140000000.0},{"BUCKET":"1-5Y","LIMIT":100000000.0},{"BUCKET":"5Y+","LIMIT":160000000.0}]}
 ```
 
-### 5. What is not loaded
+### BUCKETS.5 What is not loaded
 
 | Name | What | Why |
 |---|---|---|
@@ -1020,7 +1020,7 @@ The first record of `tools/mrloader/samples/credit-limit.expected.jsonl` (record
 | `UTILISATION` | derived | limit use, computed by the exposure engine; never loaded |
 | `STATUS` | derived | limit use, computed by the exposure engine; never loaded |
 
-### 6. Checks
+### BUCKETS.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `LIMIT_ID` per business date.
@@ -1029,30 +1029,30 @@ The first record of `tools/mrloader/samples/credit-limit.expected.jsonl` (record
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_DATE`, `BAD_NUMBER`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### BUCKETS.7 Before and after
 
 - **Load first:** `counterparty`.
 - **Then:** nothing depends on it.
 
-### 8. Repeat, restate, remove
+### BUCKETS.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `credit-limit` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind credit-limit --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### BUCKETS.9 Spreadsheet warnings
 
 - `LIMIT_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `COUNTERPARTY`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `REVIEW_DUE`: a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates
 
-### 10. Source variants
+### BUCKETS.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/credit-limit.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## risk-factor: Risk factor dictionary (from CSV)
 
-### 1. What it is and who reads it
+### 11.1 What it is and who reads it
 
 The risk-factor dictionary: each factor's standard name, parts, FRTB and SIMM mapping, liquidity horizon and the source systems' names for it.
 
@@ -1062,7 +1062,7 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 - **Mapping:** `tools/mrloader/kinds/risk-factor.yaml` (source `canonical`); wave 1 of the CSV loaders.
 - **Grain:** One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR.
 
-### 2. The command
+### 11.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind risk-factor --csv FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -1072,7 +1072,7 @@ python3 tools/mrloader/csv_load.py --kind risk-factor --template                
 
 In a day file: `risk-factor: {csv: "FILE"}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 11.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -1106,7 +1106,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | (none) | no | `BUSINESS_DATE` | built: `{$business_date}`; a date (YYYY-MM-DD, or YYYYMMDD) | The business date of the delivery (YYYY-MM-DD); the lake's partition. |  |
 | `SOURCE` | yes | `SOURCE` | as written | The system the dictionary row came from. | the factor master that sent it |
 
-### 4. A sample
+### 11.4 A sample
 
 The first rows of `tools/mrloader/samples/risk-factor.csv` (synthetic):
 
@@ -1122,11 +1122,11 @@ The first record of `tools/mrloader/samples/risk-factor.expected.jsonl` (records
 {"RISK_FACTOR":"CM/PRICE/BRENT","FACTOR_TYPE":"PRICE","RISK_CLASS":"COMM","QUALIFIER":"BRENT","UNDERLYING":"BRENT","FRTB_BUCKET":"2","SIMM_RISK_CLASS":"Commodity","SIMM_BUCKET":"2","LIQUIDITY_HORIZON":20,"SOURCE_NAMES":["CM.PRICE.BRENT"],"VALID_FROM":"2026-01-02","BUSINESS_DATE":"2026-11-18","SOURCE":"synthetic-factor-master"}
 ```
 
-### 5. What is not loaded
+### 11.5 What is not loaded
 
 Nothing: every field the CSV gives is loaded.
 
-### 6. Checks
+### 11.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `RISK_FACTOR` per business date.
@@ -1134,31 +1134,31 @@ Nothing: every field the CSV gives is loaded.
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_BOOLEAN`, `BAD_DATE`, `BAD_INTEGER`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### 11.7 Before and after
 
 - **Load first:** nothing.
 - **Then:** `position-sensitivity`.
 
-### 8. Repeat, restate, remove
+### 11.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `risk-factor` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind risk-factor --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### 11.9 Spreadsheet warnings
 
 - `RISK_FACTOR`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `PROXY_OF`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `VALID_FROM`: a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates
 - `VALID_TO`: a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates
 
-### 10. Source variants
+### 11.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/risk-factor.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## var-limit: VaR limit of a hierarchy node (from CSV)
 
-### 1. What it is and who reads it
+### 12.1 What it is and who reads it
 
 The VaR limit of a hierarchy node or a system basket, for one business date: the full set of limits every day.
 
@@ -1168,7 +1168,7 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 - **Mapping:** `tools/mrloader/kinds/var-limit.yaml` (source `canonical`); wave 1 of the CSV loaders.
 - **Grain:** One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>).
 
-### 2. The command
+### 12.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind var-limit --csv FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -1178,7 +1178,7 @@ python3 tools/mrloader/csv_load.py --kind var-limit --template                  
 
 In a day file: `var-limit: {csv: "FILE"}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 12.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -1195,7 +1195,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `VALID_FROM` | no | `VALID_FROM` | empty: `{$business_date}`; a date (YYYY-MM-DD, or YYYYMMDD) | The first date the limit is valid (YYYY-MM-DD). Informational. |  |
 | `VALID_TO` | no | `VALID_TO` | a date (YYYY-MM-DD, or YYYYMMDD) | The last date the limit is valid (YYYY-MM-DD); null while it is open-ended. Informational. | empty: open-ended |
 
-### 4. A sample
+### 12.4 A sample
 
 The first rows of `tools/mrloader/samples/var-limit.csv` (synthetic):
 
@@ -1211,7 +1211,7 @@ The first record of `tools/mrloader/samples/var-limit.expected.jsonl` (records a
 {"HIERARCHY":"LEGAL","NODE_ID":"LEGAL~LE-CDADMM-H4705/DESK-VOL-POSITIONING-CRCHI-TOR","LIMIT_ID":"VL-LEGAL~LE-CDADMM-H4705/DESK-VOL-POSITIONING-CRCHI-TOR","LIMIT_VAR":4700000.0,"CURRENCY":"USD","HORIZON":"1D","CONFIDENCE":0.99,"BUSINESS_DATE":"2026-11-18","VALID_FROM":"2026-01-02"}
 ```
 
-### 5. What is not loaded
+### 12.5 What is not loaded
 
 | Name | What | Why |
 |---|---|---|
@@ -1219,7 +1219,7 @@ The first record of `tools/mrloader/samples/var-limit.expected.jsonl` (records a
 | `LIMIT_USE` | a column of this name | limit use is computed |
 | `UTILISATION` | a column of this name | limit use is computed |
 
-### 6. Checks
+### 12.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `LIMIT_ID` per business date.
@@ -1228,30 +1228,30 @@ The first record of `tools/mrloader/samples/var-limit.expected.jsonl` (records a
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_DATE`, `BAD_NUMBER`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### 12.7 Before and after
 
 - **Load first:** `scenario-pv`.
 - **Then:** nothing depends on it.
 
-### 8. Repeat, restate, remove
+### 12.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `var-limit` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind var-limit --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### 12.9 Spreadsheet warnings
 
 - `NODE_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `VALID_FROM`: a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates
 - `VALID_TO`: a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates
 
-### 10. Source variants
+### 12.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/var-limit.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## position-sensitivity: Position sensitivities (from CSV)
 
-### 1. What it is and who reads it
+### 13.1 What it is and who reads it
 
 The sensitivities of each position (or trade) to its risk factors, from the bank's risk run: one record a position, its sensitivities a list.
 
@@ -1261,7 +1261,7 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 - **Mapping:** `tools/mrloader/kinds/position-sensitivity.yaml` (source `canonical`); wave 1 of the CSV loaders.
 - **Grain:** One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure.
 
-### 2. The command
+### 13.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind position-sensitivity --csv FILE --child SENSITIVITIES=FILE --source-system SYSTEM --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -1271,7 +1271,7 @@ python3 tools/mrloader/csv_load.py --kind position-sensitivity --template       
 
 In a day file: `position-sensitivity: {csv: "FILE", child: {SENSITIVITIES: "FILE"}}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 13.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -1317,7 +1317,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `SHOCK_SIZE` | no | `SENSITIVITIES[].SHOCK_SIZE` | a fraction (0.05) | The curvature shock applied (required on CURVATURE_UP and CURVATURE_DOWN), checked against the risk weight of the factor's bucket (MAR21.5, MAR21.98 to MAR21.101); a different shock is a warning. | needed on the two curvature measures |
 | `IMPLIED_VOL` | no | `SENSITIVITIES[].IMPLIED_VOL` | a fraction (0.05) | The implied volatility of a VEGA element, for the vega risk sensitivity (vega × implied volatility, MAR21.25). |  |
 
-### 4. A sample
+### SENSITIVITIES.4 A sample
 
 The first rows of `tools/mrloader/samples/position-sensitivity.csv` (synthetic):
 
@@ -1333,11 +1333,11 @@ The first record of `tools/mrloader/samples/position-sensitivity.expected.jsonl`
 {"GRAIN":"POSITION","POSITION_ID":"POS-PVF-200000000","SOURCE_SYSTEM":"SYNTHETIC-RISK","SENSITIVITY_ID":"SENS-POS-PVF-200000000-B-SENS-2026-11-18-01","BUSINESS_DATE":"2026-11-18","BATCH_ID":"B-SENS-2026-11-18-01","RUN_KIND":"FULL","COMPUTED_AT":"2026-11-18T22:00:00Z","RESTATEMENT":0,"STATUS":"ok","LEGAL_ENTITY":"LE-GMO-SPOG","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES-TRADING-LON","TT_BOOK":"BOOK-PORT-100000","PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"Swap","TRADE_STATUS":"VALIDATED","MATURITY_DATE":"2033-06-15","CURRENCY":"USD","SENSITIVITIES":[{"RISK_FACTOR":"IR/CURVE/USD/SOFR/2Y","MEASURE":"DV01","VALUE":-45041.07,"CURRENCY":"USD","TENOR":"2Y"},{"RISK_FACTOR":"IR/CURVE/USD/SOFR/5Y","MEASURE":"DV01","VALUE":-27891.82,"CURRENCY":"USD","TENOR":"5Y"},{"RISK_FACTOR":"IR/CURVE/USD/SOFR/10Y","MEASURE":"DV01","VALUE":5666.49,"CURRENCY":"USD","TENOR":"10Y"}]}
 ```
 
-### 5. What is not loaded
+### SENSITIVITIES.5 What is not loaded
 
 Nothing: every field the CSV gives is loaded.
 
-### 6. Checks
+### SENSITIVITIES.6 Checks
 
 - **A rejected row:** `on-reject: skip`, `max-rejects: 1%` (rejected rows are listed and the rest loads). A duplicate key always refuses it.
 - **Unique:** `SENSITIVITY_ID` per business date.
@@ -1354,18 +1354,18 @@ Nothing: every field the CSV gives is loaded.
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_DATE`, `BAD_INTEGER`, `BAD_NUMBER`, `BAD_TIMESTAMP`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### SENSITIVITIES.7 Before and after
 
 - **Load first:** `risk-factor`, `scenario-pv`.
 - **Then:** nothing depends on it.
 
-### 8. Repeat, restate, remove
+### SENSITIVITIES.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `position-sensitivity` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date` and `--restatement 1` (then 2 ...); to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind position-sensitivity --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### SENSITIVITIES.9 Spreadsheet warnings
 
 - `POSITION_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `TRADE_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
@@ -1378,13 +1378,13 @@ Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows
 - `MATURITY_DATE`: a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates
 - `SENSITIVITIES[].RISK_FACTOR`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 
-### 10. Source variants
+### SENSITIVITIES.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/position-sensitivity.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## trade-valuation: Trade valuation (from CSV)
 
-### 1. What it is and who reads it
+### 14.1 What it is and who reads it
 
 Each trade's valuation of the day from the risk engine: its netting set, counterparty, book, status, notional and MtM.
 
@@ -1394,7 +1394,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 - **Mapping:** `tools/mrloader/kinds/trade-valuation.yaml` (source `canonical`); wave 2 of the CSV loaders.
 - **Grain:** One row per trade valuation per business date, keyed by VALUATION_ID.
 
-### 2. The command
+### 14.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind trade-valuation --csv FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -1404,7 +1404,7 @@ python3 tools/mrloader/csv_load.py --kind trade-valuation --template            
 
 In a day file: `trade-valuation: {csv: "FILE"}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 14.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -1432,7 +1432,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `MATURITY_DATE` | yes | `MATURITY_DATE` | a date (YYYY-MM-DD, or YYYYMMDD) | The trade's maturity date. |  |
 | `VALUATION_DATE` | no | `VALUATION_DATE` | empty: `{$business_date}`; a date (YYYY-MM-DD, or YYYYMMDD) | The date the trade is valued on: the business date of the file. |  |
 
-### 4. A sample
+### 14.4 A sample
 
 The first rows of `tools/mrloader/samples/trade-valuation.csv` (synthetic):
 
@@ -1448,11 +1448,11 @@ The first record of `tools/mrloader/samples/trade-valuation.expected.jsonl` (rec
 {"TRADE_ID":"7000001","VALUATION_ID":"TVAL-7000001","SOURCE_SYSTEM":"MUREX","PRODUCT_TYPE":"Swap","PRODUCT_GROUP":"Rates","PORTFOLIO":"BOOK-PORT-100000","DESK":"DESK-RATES-TRADING-LON","COUNTERPARTY":"CP-ALDERSHOT-FUND","NETTING_SET":"NS-ALDERSHOT-FUND","BUY_SELL_CODE":"S","TRADE_STATUS":"VALIDATED","CURRENCY":"USD","NOTIONAL":101000000.0,"MTM":-3304000.0,"MTM_CURRENCY":"USD","TRADE_DATE":"2025-06-20","MATURITY_DATE":"2027-07-31","VALUATION_DATE":"2026-11-18"}
 ```
 
-### 5. What is not loaded
+### 14.5 What is not loaded
 
 Nothing: every field the CSV gives is loaded.
 
-### 6. Checks
+### 14.6 Checks
 
 - **A rejected row:** `on-reject: skip`, `max-rejects: 1%` (rejected rows are listed and the rest loads). A duplicate key always refuses it.
 - **Unique:** `VALUATION_ID`, `TRADE_ID` per business date.
@@ -1464,18 +1464,18 @@ Nothing: every field the CSV gives is loaded.
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_DATE`, `BAD_NUMBER`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### 14.7 Before and after
 
 - **Load first:** `netting-set`, `book`, `desk`.
 - **Then:** nothing depends on it.
 
-### 8. Repeat, restate, remove
+### 14.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `trade-valuation` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind trade-valuation --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### 14.9 Spreadsheet warnings
 
 - `TRADE_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `VALUATION_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
@@ -1488,13 +1488,13 @@ Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows
 - `MATURITY_DATE`: a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates
 - `VALUATION_DATE`: a date: a spreadsheet may rewrite it to the machine's locale; declare `csv.dates` or export ISO dates
 
-### 10. Source variants
+### 14.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/trade-valuation.<source>.yaml` (or a site's own, by `--mapping`).
 
 ## desk-pnl: Desk P&L: actual and hypothetical (daily) (from CSV)
 
-### 1. What it is and who reads it
+### 15.1 What it is and who reads it
 
 Each desk's actual (clean) and hypothetical P&L of the day, in USD, for the VaR backtest: one row per desk and legal entity.
 
@@ -1504,7 +1504,7 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 - **Mapping:** `tools/mrloader/kinds/desk-pnl.yaml` (source `canonical`); wave 1 of the CSV loaders.
 - **Grain:** One row per desk (and its legal entity) per BUSINESS_DATE, keyed by DESK_PNL_ID (DPNL-<DESK_ID>-<BUSINESS_DATE>).
 
-### 2. The command
+### 15.2 The command
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind desk-pnl --csv FILE --date YYYY-MM-DD --dry-run   # check; write nothing
@@ -1514,7 +1514,7 @@ python3 tools/mrloader/csv_load.py --kind desk-pnl --template                   
 
 In a day file: `desk-pnl: {csv: "FILE"}`. A bank's own column names: a mapping file of its own, given with `--mapping FILE`.
 
-### 3. The CSV, column by column
+### 15.3 The CSV, column by column
 
 The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, dates `YYYY-MM-DD` (declared in the mapping's `csv:` block over `kinds/shared/csv.yaml`; never guessed). Column names compare upper-cased, other characters as `_`.
 
@@ -1531,7 +1531,7 @@ The file's format: delimiter `,`, encoding `utf-8`, decimal `.`, thousands `,`, 
 | `SOURCE` | yes | `SOURCE` | as written | The system the row came from (the finance ledger or the front-office P&L system); demo-finance on the test data. |  |
 | `AS_OF` | no | `AS_OF` | empty: `{$computed_at}`; ISO-8601 with a zone | When the source produced the figures (UTC). A restated day is sent again with a later AS_OF; the lake's newest row wins. |  |
 
-### 4. A sample
+### 15.4 A sample
 
 The first rows of `tools/mrloader/samples/desk-pnl.csv` (synthetic):
 
@@ -1547,11 +1547,11 @@ The first record of `tools/mrloader/samples/desk-pnl.expected.jsonl` (records ar
 {"DESK_ID":"DESK-CREDIT-FLOW-HKG","LEGAL_ENTITY":"LE-MARKETS-INC","DESK_PNL_ID":"DPNL-DESK-CREDIT-FLOW-HKG-2026-11-18","BUSINESS_DATE":"2026-11-18","ACTUAL_PNL":-647000.0,"HYPOTHETICAL_PNL":-443000.0,"FEES_AND_COMMISSIONS":298000.0,"CURRENCY":"USD","SOURCE":"synthetic-finance","AS_OF":"2026-11-18T22:00:00Z"}
 ```
 
-### 5. What is not loaded
+### 15.5 What is not loaded
 
 Nothing: every field the CSV gives is loaded.
 
-### 6. Checks
+### 15.6 Checks
 
 - **A rejected row:** `on-reject: refuse` (any rejected row refuses the whole kind: fix the file and run again). A duplicate key always refuses it.
 - **Unique:** `DESK_PNL_ID` per business date.
@@ -1561,22 +1561,22 @@ Nothing: every field the CSV gives is loaded.
 Reject codes it can give: `MISSING_REQUIRED`, `BAD_DATE`, `BAD_NUMBER`, `BAD_TIMESTAMP`, `EXCEL_NUMBER_ID`, `BAD_ENUM`, `BAD_PATTERN`, `DUPLICATE_KEY`, `EXCEL_ERROR`, `FORMULA`, `BAD_ROW_SHAPE`.
 Each line of `<kind>.<date>.rejects.csv` gives FILE, ROW (as a spreadsheet shows it), KEY, COLUMN, FIELD, VALUE, REASON, WHY, FIX.
 
-### 7. Before and after
+### 15.7 Before and after
 
 - **Load first:** `desk`.
 - **Then:** nothing depends on it.
 
-### 8. Repeat, restate, remove
+### 15.8 Repeat, restate, remove
 
 - **Again for the same date:** the same command; the date's `desk-pnl` rows are replaced as a whole (`mode: replace`).
 - **Restate a past date:** run with that `--date`; to change one row, send the whole file again.
 - **Remove the date:** `python3 tools/drishti.py lake delete --lake LAKE --kind desk-pnl --date YYYY-MM-DD --dry-run` (then without `--dry-run`).
 
-### 9. Spreadsheet warnings
+### 15.9 Spreadsheet warnings
 
 - `DESK_ID`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 - `LEGAL_ENTITY`: an id: export the column as text (a long id saved as a number, `2.00001E+11`, is refused; leading zeros lost are not detectable without `pad:`)
 
-### 10. Source variants
+### 15.10 Source variants
 
 None shipped. A source with other column names gets a mapping file `kinds/desk-pnl.<source>.yaml` (or a site's own, by `--mapping`).

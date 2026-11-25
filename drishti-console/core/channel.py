@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One live channel: everything live one caller needs on ONE connection (docs/guides/EMBED_GUIDE.md, build step 4).
+"""One live channel: everything live one caller needs on ONE connection (docs/guides/INTEGRATION_GUIDE.md, build step 4).
 
 Extracted from the console's ``/api/channel`` so the embed stream (``/embed/v2/channel``) runs the very same logic. The class
 knows no cookies, requests or session: the identity it runs as, the callable that turns an upstream event into what the
@@ -124,7 +124,7 @@ class ChannelSession:
         """The upstream stream of one subscription and whether it is a view (its events are rendered); ``(None, False)`` for an unknown one."""
         if sub.startswith(("view:", "vm:")) and "/" in sub:
             # view:kind/id?ctl.leg=L2: the stream is built with the reader's controls. vm: is the same stream for a page the client-side
-            # renderer draws (EMBED_GUIDE.md 16): its panel patches stay panels (JSON), with no HTML; view: gets the console's HTML
+            # renderer draws (INTEGRATION_GUIDE.md 16): its panel patches stay panels (JSON), with no HTML; view: gets the console's HTML
             base, ctl = controls.split_subscription(sub)
             kind, _, id_ = base.partition(":")[2].partition("/")
             more = {"controls": ctl} if ctl else {}

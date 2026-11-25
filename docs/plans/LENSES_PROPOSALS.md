@@ -795,7 +795,7 @@ settings; date and filters shared:
 
 **Built as Sutra panels.** The landing keeps its bar, meta line and switch; its body becomes a Sutra-drawn view of a page kind
 `market-quality` whose id is the business date (`MDQ 2026-09-30` opens the same page), painted by the one renderer
-([EMBED_GUIDE.md](../guides/EMBED_GUIDE.md)). Each view is one Sutra of that kind (`market-quality`,
+([INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md)). Each view is one Sutra of that kind (`market-quality`,
 `market-quality-impact`, `market-quality-checks`), selected as `?sutra=` selects a Sutra
 ([RACHANA_REFERENCE](../guides/RACHANA_REFERENCE.md#events-sources-and-children-sutra-next)); the opened exception is a Sutra Next child of
 the exceptions table. **VaR at stake** is a computed kind `market-data-at-stake` (id the item, `params: { incremental }`) served by the
@@ -1184,7 +1184,7 @@ and debt, its LEI group's parent, its latest filing), internal only: the Risk le
 World row.
 
 **Embedding.** An entity page (`ECON CAN`, `LEIG …`) can be shown on an intranet page by the client renderer, with the optional sign-in
-window ([EMBED_GUIDE.md section 10.1](../guides/EMBED_GUIDE.md#42-a-page-without-a-backend-the-sign-in-window));
+window ([INTEGRATION_GUIDE.md section 10.1](../guides/INTEGRATION_GUIDE.md#142-a-page-without-a-backend-the-sign-in-window));
 the World landings are not Sutras and cannot be embedded until a "home" Sutra kind exists. Internal-only data stays internal on any host.
 
 ## 5. Oversight lens (proposals, designs and data)
@@ -1882,7 +1882,7 @@ modellability ([D9](#6611-d9-the-factor-dictionary-risk-factor-and-the-bucket-gr
 
 - **Power Query:** a REST endpoint per saved view with the token in the header (the pattern exists for search). Tableau and Power BI
   through REST and Arrow. **Open decision** (recommended): no XMLA/MDX endpoint for Excel pivot tables and XLCubed (a product of its own).
-- **Embedding:** a `cube-view` screen kind of the client renderer ([EMBED_GUIDE.md](../guides/EMBED_GUIDE.md)), so
+- **Embedding:** a `cube-view` screen kind of the client renderer ([INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md)), so
   `render(el, {kind: 'cube-view', id: 'asha/morning'})` draws a saved view; the host receives `drishti:navigate` on drill. Not built.
 - **Phone tiers:** **must** the headline (VaR, ES, limit use) and the pivot's first five rows by the first measure, totals pinned;
   **glance** the sparkline column and the histogram as a strip; **more** explain, provenance, the waterfall; **desk** the pivot editor,

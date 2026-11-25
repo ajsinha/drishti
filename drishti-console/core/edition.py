@@ -109,7 +109,7 @@ def _kinds_word(kind: str) -> str:
 
 
 def hidden_hint(edition, kind: str = "") -> str:
-    """What to do about ``DRS-4023`` (a view refused because the distribution leaves its kind out), said plainly (EMBED_GUIDE.md 10): never
+    """What to do about ``DRS-4023`` (a view refused because the distribution leaves its kind out), said plainly (INTEGRATION_GUIDE.md 10): never
     "check the kind and id", which sends a person hunting for a typo that is not there. A lens never hides, so it is never the reason."""
     what = _kinds_word(kind)
     outer = getattr(edition, "outer", None) if getattr(edition, "lens", False) else edition

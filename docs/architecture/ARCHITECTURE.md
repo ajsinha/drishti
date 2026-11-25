@@ -300,7 +300,7 @@ Each row names what to change for a common need and the document that explains i
 | Tell Drishti a batch of data landed (refresh, verify, tell people, flag late data) | `POST /api/v1/packs/{pack}/loads` from your ETL; what a pack expects is its `loads:` section | [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) |
 | Reach a source over TLS or through a proxy | `tls.*` and `proxy:` in the connector file | [DATA_GUIDE.md section 10](../guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy), [DATA_GUIDE.md section 10 (proxy)](../guides/DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers) |
 | Make a dataset, report or board (business intelligence) | YAML files in `config/bi/` (watched) or the BI pages (workspaces, designer, Model view); the query runs on the server over DuckDB with the reader's masks and row rules | [README.md](../guides/bi/README.md), [MODELS_AND_DATASETS_FOR_REPORTS.md](../guides/bi/TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads), [REPORT_FILE_FORMAT_STATEMENTS.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers), [ARCHITECTURE.md §28](#28-business-intelligence-on-the-table-layer) |
-| Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [EMBED_GUIDE.md](#30-the-client-renderer-and-drishti-elements) |
+| Show a view inside another web application | register the application in Admin → Embedding; the page uses `<drishti-view>` | [INTEGRATION_GUIDE.md](#30-the-client-renderer-and-drishti-elements) |
 | Use a language model, or an MCP tool server | a provider file in `config/ai/` or `config/mcp/` and `drishti.ai.enabled` / `drishti.mcp.enabled` (both off by default) | [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers), [AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) |
 | Run several servers as one (Drishti\*net) | the files of `config/net/` (`node.yaml` with `enabled: true` and the cluster key, a seed in `peers/`), or Admin → Cluster → Files; members advertise a real address, never a loopback one | [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [tutorial 22](../tutorials/22-a-cluster-of-three.md) |
 | Lay a report out on paper (a statement, one per recipient) | `layout: statement` on a report page and the report's `statement:`; BI Studio's Paper tab | [STATEMENTS.md](../guides/bi/REPORT_FILE_FORMAT_STATEMENTS.md#4-statements-paginated-reports-page-exact-one-per-reader) |
@@ -1068,7 +1068,7 @@ The main endpoints; [API_REFERENCE.md](../guides/API_REFERENCE.md) lists every o
 | `GET`/`POST`/`PUT` | `/bi/…` | Rūpaka: workspaces, datasets, models and the model query, Drishti SQL, reports (format schemas, themes; boards are report pages), Python, governance |
 | `GET`/`POST`/`PUT` | `/net/…` | Drishti\*net between nodes (signed with the cluster key: gossip, digest, fetch, search, group, subscribe, state) and for administrators (members, files, capabilities, access, security, explain, traffic) ([OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)) |
 | `POST` | `/ai/chat` · `/ai/mcp/{server}/tools/{tool}` | the AI and MCP layers (off by default) |
-| `POST` | `/embed/token` and the `embed:` scopes | embedded views for other web applications ([EMBED_GUIDE.md](#30-the-client-renderer-and-drishti-elements)) |
+| `POST` | `/embed/token` and the `embed:` scopes | embedded views for other web applications ([INTEGRATION_GUIDE.md](#30-the-client-renderer-and-drishti-elements)) |
 
 Errors are RFC 7807 `application/problem+json` with a `code` (`DRS-nnnn`) member, for example:
 
@@ -1082,7 +1082,7 @@ Errors are RFC 7807 `application/problem+json` with a `code` (`DRS-nnnn`) member
 Every answer is **JSON** unless a client asks otherwise. A client that sends `Accept: application/vnd.apache.arrow.stream` gets
 **Arrow IPC** where the server offers it, cell for cell the same table, with the rest of the answer in the schema metadata. Anything
 Arrow cannot carry falls back to JSON, and nothing changes for a client that does not ask. Where each format is used, and why
-(measured 2026-10-30; [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](../guides/DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays)):
+(measured 2026-10-30; [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 2.6](../guides/DATA_GUIDE.md#26-arrow-to-the-browser-where-it-pays)):
 
 | Boundary | Format | Why |
 |---|---|---|
@@ -2674,7 +2674,7 @@ test between the two. Base VaR needs neither: it adds precomputed vectors.
 ## 30. The client renderer and Drishti Elements
 
 How other web applications show Drishti screens without an iframe, and how the code that draws them is built. The how-to for host
-developers (the elements, tokens, the sign-in window, the render API, theming, versions) is [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md);
+developers (the elements, tokens, the sign-in window, the render API, theming, versions) is [INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md);
 the screen contract both renderers draw is [VIEWMODEL.md](VIEWMODEL.md); the JavaScript component libraries are [ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/v3.3.2-ide3/docs/DESIGN.md).
 Decisions: [ADR-021](DECISIONS.md) (embedding, the token, served versions) and
 [ADR-022](DECISIONS.md) (one renderer in the browser).
@@ -2844,7 +2844,7 @@ against every renderer version before it ships, and a hostile ViewModel (markup 
 Drishti Elements is two things with one name: the **embedding elements** above, and the **component libraries** (drishti-core,
 -inputs, -grid, -chart, -data, -insight, -renderer, -risk) that the console, the renderer and outside applications all draw with. The
 libraries' design (their APIs, the grid and its pivot, the AG Grid-style adapter, the chart spec and maps, packaging and licensing, the
-guards) is [ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/v3.3.2-ide3/docs/DESIGN.md); using them in another application is [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md) chapters 13 and 14.
+guards) is [ELEMENTS.md](https://github.com/drishti-platform/drishti-elements/blob/v3.3.2-ide3/docs/DESIGN.md); using them in another application is [INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md) chapters 13 and 14.
 The renderer is library 7, so "no bespoke UI" holds for embeds too: a fix in a component reaches the console, the renderer and every host
 at once.
 
