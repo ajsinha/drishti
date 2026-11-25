@@ -2280,7 +2280,7 @@ The record holds 250 scopes on the test data: 74 netting sets, 23 counterparties
 three hierarchies, every one built from the exposure paths' promoted columns: 43 of MGMT (`DIVISION > DESK > TT_BOOK`), 45 of LEGAL
 (`LEGAL_ENTITY > DESK > TT_BOOK`) and 43 of the limit letters (`LIMIT_LETTER > DESK`, `LL:LL~LL-0011` among them). It is also appended to the tables `risk-results/exposure-official` and `risk-results/exposure-official-cpty`
 of the lake: Delta by default (`"published": "… (Delta version 0)"`), Iceberg with `drishti.ccr.exposure.official.format: iceberg`
-([EXPOSURE_GUIDE.md section 20](../guides/EXPOSURE_GUIDE.md); [tutorial 16, Part E](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg) for VaR's). A
+([EXPOSURE_GUIDE.md section 20](../guides/EXPOSURE_GUIDE.md); [tutorial 16, Part E](../tutorials/23-the-risk-lake-on-iceberg.md) for VaR's). A
 second capture of the same run is `unchanged`; a new run of the date makes `resultVersion` 2. `--capture` is for administrators.
 
 The settings (`kernel/drishti-server/src/main/resources/application.yaml`):
@@ -2309,7 +2309,7 @@ published tables in the lake.
   API ([section 11](../guides/EXPOSURE_GUIDE.md#11-the-api)), the data contract (Part II) and how a date is held in memory and on disk
   ([section 26](../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file)).
 - Load your own simulator's run: the columns are in [EXPOSURE_GUIDE.md section 15](../guides/EXPOSURE_GUIDE.md#15-inputs-from-upstream-engines);
-  send the data-load signal ([tutorial 12](../tutorials/12-a-day-of-bank-data.md)) and the date is reloaded and captured officially.
+  send the data-load signal ([tutorial 12](../tutorials/16-load-your-own-data-into-a-new-lake.md)) and the date is reloaded and captured officially.
 - Compare with VaR: [the VaR tutorial, Part A](VAR_GUIDE.md#part-a--historical-var-from-the-bank-to-a-trade) walks the same way from the bank to a trade for market risk.
 
 ### If something goes wrong

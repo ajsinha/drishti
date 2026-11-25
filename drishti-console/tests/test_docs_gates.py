@@ -52,6 +52,11 @@ def _written(value) -> bool:
     return isinstance(value, str) and value.endswith(".md")
 
 
+def _tutorials(f) -> list[str]:
+    """A feature's tutorial files: its tutorial, then its `tutorial-parts:` (a long tutorial split into focused tasks of 15 to 30 minutes each)."""
+    return ([f["tutorial"]] if _written(f.get("tutorial")) else []) + [p for p in f.get("tutorial-parts") or [] if _written(p)]
+
+
 def _pages(rel: str) -> list[Path]:
     """The files of a guide or tutorial: the file itself, or, for a guide folder (docs/guides/<folder>/README.md, the index of subpages
     each with its own tutorial part), every page of the folder. A guide folder counts as ONE guide in the register, the caps and Help."""
@@ -63,6 +68,7 @@ def _pages(rel: str) -> list[Path]:
 
 def _customer_docs() -> list[Path]:
     out = [q for f in FEATURES for k in ("guide", "tutorial") if _written(f.get(k)) for q in _pages(f[k])]
+    out += [DOCS / p for f in FEATURES for p in f.get("tutorial-parts") or []]
     return out + sorted((DOCS / "knowledge").glob("*.md"))
 
 
@@ -82,11 +88,14 @@ def test_every_feature_has_one_guide_and_one_tutorial_and_they_exist():
             assert v, f"{f['id']}: no {key}"
             if _written(v):
                 assert (DOCS / v).is_file(), f"{f['id']}: {v} does not exist"
+                if key == "tutorial":
+                    for part in f.get("tutorial-parts") or []:
+                        assert (DOCS / part).is_file(), f"{f['id']}: tutorial part {part} does not exist"
             else:
                 assert v == "none" and key == "tutorial" or v.startswith("after "), f"{f['id']}: {key}: {v!r} (a path, or 'after <release>')"
         assert f.get("domain") in {"core", "banking", "capitalmarkets", "economy"}, f["id"]
     guides = [f["guide"] for f in FEATURES if _written(f.get("guide"))]
-    tutorials = [f["tutorial"] for f in FEATURES if _written(f.get("tutorial"))]
+    tutorials = [q for f in FEATURES for q in _tutorials(f)]
     assert len(tutorials) == len(set(tutorials))
     # i7n: a guide may hold several features' parts (Administration has the AI set-up and write-back; the User guide has live results; the Integration guide has embed and data out); a tutorial is one feature's
     assert len(set(guides)) >= len(guides) - 4, "more than four features share a guide: merge the features, not the guides"
@@ -94,7 +103,7 @@ def test_every_feature_has_one_guide_and_one_tutorial_and_they_exist():
 
 
 def test_every_guide_and_tutorial_on_disk_is_in_the_register():
-    named = {f[k] for f in FEATURES for k in ("guide", "tutorial") if _written(f.get(k))} | REFERENCES
+    named = {f[k] for f in FEATURES for k in ("guide", "tutorial") if _written(f.get(k))} | {q for f in FEATURES for q in _tutorials(f)} | REFERENCES
     for p in sorted((DOCS / "guides").glob("*.md")):
         assert f"guides/{p.name}" in named, f"docs/guides/{p.name} is neither a feature's guide nor a reference (config/docs-features.yaml)"
     for d in sorted(p for p in (DOCS / "guides").iterdir() if p.is_dir() and p.name not in NOT_GUIDE_FOLDERS and any(p.glob("*.md"))):     # a guide folder: its README.md is the register's guide
@@ -144,6 +153,8 @@ def test_help_lists_user_documents_only_and_their_domains_agree_with_the_registe
         for k in ("guide", "tutorial"):
             if _written(f.get(k)):
                 by_doc[f[k]] = f
+        for q in _tutorials(f):
+            by_doc[q] = f
     for r in _help_rows():
         doc = str(r.get("doc") or "")
         assert not doc.startswith("architecture/") or r.get("roles") or doc in REFERENCES, f"Help lists an internal document: {r['slug']} ({doc})"
@@ -167,7 +178,7 @@ def test_pages_within_their_budgets():
     for f in FEATURES:
         for key, budget in (("guide", "budget"), ("tutorial", "tutorial-budget")):
             if _written(f.get(key)) and f.get(budget):
-                n = sum(len(q.read_text(encoding="utf-8").splitlines()) for q in _pages(f[key]))
+                n = sum(len(q.read_text(encoding="utf-8").splitlines()) for q in [*_pages(f[key]), *([DOCS / p for p in f.get("tutorial-parts") or []] if key == "tutorial" else [])])
                 if n > 1.1 * int(f[budget]):
                     over.append(f"{f[key]} {n}/{f[budget]}")
     if over:

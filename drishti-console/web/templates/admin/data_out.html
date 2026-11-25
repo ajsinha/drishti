@@ -20,7 +20,7 @@
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-{# Admin -> Data out (docs/guides/INTEGRATION_GUIDE.md section 9): one screen, two views of the same answer (GET /admin/api/data-out), switched by
+{# Admin -> Data out (docs/guides/INTEGRATION_GUIDE.md section 2.9): one screen, two views of the same answer (GET /admin/api/data-out), switched by
    the toggle: the page (mock-up A, the default) and the map of clients and nodes (mock-up B). The service bar, the node cards, the stream
    detail and Stop are shared by both views; drishti_admin-data-out.js draws everything from the JSON below and refreshes it every 5 seconds. #}
 <div class="adm dout" data-dout data-dout-view="{{ view }}">

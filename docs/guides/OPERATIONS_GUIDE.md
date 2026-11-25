@@ -21,7 +21,7 @@ configure it, deploy and promote packs and roll them back, keep it safe, watch i
 upgrade it, and what to do when something goes wrong (four runbooks, the troubleshooting tables and the error codes). Where a
 command prints something, the text after **You should see** is what a healthy system prints. It does not teach the product: the first
 quarter of an hour in it is [tutorial 1, Part A](../tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around), and running it for a team is
-[tutorial 21](../tutorials/21-run-it-in-production.md). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md); this
+[tutorial 21](../DEPLOYMENT_AND_QA_GUIDE.md). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md); this
 guide names the ones a task needs. Several servers acting as one, sizing and tuning are in [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md);
 users, roles, editions and the engine switches in [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
 
@@ -1259,7 +1259,7 @@ Never write into the folder the server reads while it is half-finished: write el
   lake or partitions, copy **the Parquet files first and `_delta_log/` last** (the log makes files visible):
   `rsync -a stage/trading/trade_endur/ live/trading/trade_endur/ --exclude _delta_log && rsync -a stage/trading/trade_endur/_delta_log/ live/trading/trade_endur/_delta_log/`
   (for `s3a://` the same order with `aws s3 sync`). A whole lake: `mv lake lake.old && mv lake.new lake`. Keep times when copying (`cp -p`,
-  `rsync -t`): *known at* reads them. Keep local test loads small ([DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data)).
+  `rsync -t`): *known at* reads them. Keep local test loads small ([BANK_DATA_GUIDE.md section 9](BANK_DATA_GUIDE.md#9-the-demo-data)).
 
 ### 8.8 Check it after a deploy
 
@@ -1718,7 +1718,7 @@ health checks need no change.
   prompt holds the page's labels, the glossary, the pack's guide text and the question, no value; with `values: shown` also the page's sentence
   with the figures the asking user may see. A masked field is never in it. The model gets no tools; document values are marked untrusted data.
   The question is written to the access log (action `ask`) unless `log-questions: false`; answers only with `log-answers: true`. The model, endpoint
-  and key are a provider file (`config/ai/<name>.yaml`, the key as `${ENV}`; [AI_GUIDE.md](ADMIN_GUIDE.md)); an endpoint you do not control sees every
+  and key are a provider file (`config/ai/<name>.yaml`, the key as `${ENV}`; [ADMIN_GUIDE.md › 27 AI: model providers and MCP servers](ADMIN_GUIDE.md#27-ai-model-providers-and-mcp-servers)); an endpoint you do not control sees every
   question. If it is down the drawer says so (`DRS-4008`).
 
 ## 12. Collaboration, reports and people's data
@@ -2504,7 +2504,7 @@ person asking, sending a Python engine's work to `engine.pool` (`engine.split` s
 server: Drishti's own always, any other only with `compute.in-process-java: true` after review. `GET /api/v1/admin/compute/reactive` (`drishti.py
 compute reactive`) lists each one's kinds, engine, readiness, cache, coalescing and latency. Triggers fire on `POST /api/v1/compute/events`
 (administrators and service tokens); loads reach `data-version` triggers by themselves. Audit: `compute.answer`, `compute.failed`, `compute.event`.
-The `compute-demo` pack brings two samples ([tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)).
+The `compute-demo` pack brings two samples ([tutorial 19, Part C](../tutorials/25-computed-panels.md)).
 
 | You see | Do |
 |---|---|
@@ -3216,7 +3216,7 @@ so most problems clear once the cause is fixed.
 | `connection leak suspected in the … pool` | a connection held longer than `pool-leak-threshold` (60 s); the line carries the borrower's stack. A legitimately long statement: raise the threshold for that connector; the same line for short work: the code leaks, report it with the stack |
 | An AI provider shows ERROR, an MCP server DOWN | ERROR: it could not be set up (type not installed, an `${ENV}` unset): fix it, or **Retry now** on Admin → AI. DOWN: the last call failed; it is reconnected on the schedule. With `drishti.ai.watch: off` nothing is retried |
 | An AI provider answers `HTTP 401 (authentication failed …)` or 403 | in order: the variable the file names is set **in the server's process** (Admin → AI says `no api key: set GROQ_API_KEY`); the key belongs to the vendor and `base-url`; Azure `auth: entra`: tenant, client id, secret; Bedrock 403: credentials, region or the account's model access; `no AWS credentials`: the SDK's chain found none |
-| `rate limited` (HTTP 429) | the vendor's limit for the key: raise it, spread features over two providers, add `retries: 2` to the provider file, or lower Drishti's per-user limits ([AI_GUIDE.md](ADMIN_GUIDE.md#2714-policy)); Bedrock `ThrottlingException` is the account's quota |
+| `rate limited` (HTTP 429) | the vendor's limit for the key: raise it, spread features over two providers, add `retries: 2` to the provider file, or lower Drishti's per-user limits ([ADMIN_GUIDE.md › 27.1.4 Policy](ADMIN_GUIDE.md#2714-policy)); Bedrock `ThrottlingException` is the account's quota |
 | "could not be reached" with a private CA, or "the proxy refused the request" | `tls.ca-file` names the CA of the **server's** certificate; mutual TLS adds `tls.cert-file`/`tls.key-file`; a certificate with only a Common Name fails (re-issue with a SAN); behind a proxy `proxy.url`, `proxy.username`, `proxy.password` and `CONNECT` allowed ([DATA_GUIDE.md section 10](DATA_GUIDE.md#1011-troubleshooting)) |
 | Too many retry lines in the log | the log has failures 1, 2, 4, 8…; raise `drishti.retry.max` (or per area), or `drishti.retry.enabled: false` |
 
@@ -3448,7 +3448,7 @@ codes whose cause or fix needs more than the meaning.
 | `DRS-2057` | an event or source reference is wrong (a panel named in `@panel.event` or a `source:` that does not exist, a cycle, a panel called `parent`, a trigger not supported): `sutra lint` names the panel and line |
 | `DRS-2059` | a Sutra's `layout:` does not read (an unknown key, columns off the 12-unit grid, an area or section the picture lacks): [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections) |
 | `DRS-2061` | a pack's `history:` block is wrong (the message names the key); the kind keeps the default history meanwhile: fix it and run `sutra lint <pack-dir>` |
-| `DRS-4015` | the AI layer or the MCP client is off: `drishti.ai.enabled` / `drishti.mcp.enabled` and a provider ([AI_GUIDE.md](ADMIN_GUIDE.md#271-model-providers)) |
+| `DRS-4015` | the AI layer or the MCP client is off: `drishti.ai.enabled` / `drishti.mcp.enabled` and a provider ([ADMIN_GUIDE.md › 27.1 Model providers](ADMIN_GUIDE.md#271-model-providers)) |
 | `DRS-4016` | the AI provider or MCP server failed or timed out: Admin → AI shows its health; check its URL, key variable and TLS |
 | `DRS-4017` | over the AI rate or cost limit for your user: wait, or an administrator raises the policy limit |
 | `DRS-4019` | the model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |

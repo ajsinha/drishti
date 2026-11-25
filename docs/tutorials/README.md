@@ -20,7 +20,7 @@ Hands-on, one worked example per major feature. Every tutorial uses the demo dat
 netting sets, market data and risk), the public data of the world packs, and a few small files in [data/](data/). Every field is UPPER_SNAKE (`TRADE_ID`,
 `COUNTERPARTY`, `QUANTITY`), as production data is. Each step says what to do **in the UI**, gives the real command and its real output **from the command line** wherever a
 command exists, shows the YAML it produces, shows a real screenshot, and tells you what you should see. Each ends with next steps and what to do when something goes wrong.
-A tutorial that covers several related tasks is in parts (Part A, Part B ...); each part can be done on its own day, and its steps are numbered on from the part before.
+A tutorial is one task of 15 to 30 minutes; the few that have two parts say so, and each part can be done on its own day. Every tutorial numbers its steps from 1.
 
 They are written for someone who has never used Drishti. The reference documents ([USER_GUIDE.md](../guides/USER_GUIDE.md), [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) and the rest of [guides/](../guides/)) say everything;
 the tutorials say what to do first.
@@ -36,7 +36,11 @@ For everyone: sign in, find anything, share it, see an entity over time. Begin h
 
 | # | Tutorial | You will | Time | Status |
 |---|---|---|---|---|
-| 1 | [Your first 15 minutes](01-first-15-minutes.md) | Part A: install, build the demo lakes, start, sign in, open a trade, search, try the form, look at BI, make a token; Part B: mnemonics, type-ahead, links, a past date against Live, Compare; Part C: a search by form with regular expressions, amounts, dates and checkbox dropdowns, saved as a search and a monitor; Part D: share a filtered view, discuss it, mention a colleague, read the inbox; Part E: an entity over time (`TRD 1000015 30`, `3M`, `YTD`), changes only and DIFF, a day as it was, an equity's chart, a pack's `history:` block | 1 h 50 min | written |
+| 1 | [Your first 15 minutes](01-first-15-minutes.md) | install, build the demo lakes, start with sign-in on, sign in, open a trade, search, try the form, look at BI, make a token for the command line | 25 min | written |
+| 2 | [Look up anything](02-look-up-anything.md) | mnemonics, type-ahead, one entity or a pick list, links, a past date against Live, Compare, a different domain | 20 min | written |
+| 3 | [Query by form](03-query-by-form.md) | a search by filling in boxes, the search the form wrote, a regular expression, a saved search and a monitor | 20 min | written |
+| 4 | [Share and collaborate](04-share-and-collaborate.md) | a second user, a filtered view shared, the recipient's access, a discussion with a mention, a reply | 25 min | written |
+| 5 | [An entity over time](05-an-entity-over-time.md) | a range after an id, the history table, changes only and DIFF, a day as it was, an equity's chart, the `history:` block, export and a link, limits | 30 min | written |
 
 ### Risk engines
 
@@ -60,14 +64,17 @@ The AI assistant and corrections with four eyes. The pivot engine, tables and mo
 
 ### Data in and out
 
-A day of bank data, connecting a source, a lake of your own, and data out to any client. The world's public data is in the [world data guide](../guides/WORLD_DATA_GUIDE.md#tutorial-world-data-economies-companies-funds-entities-and-news), with the [public sector](../guides/WORLD_DATA_GUIDE.md#tutorial-public-sector-data-and-free-news).
+Connecting a source, a lake of your own and loading it every day, the data inbox, news in memory, Iceberg, and data out to any client. The world's public data is in the [world data guide](../guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen), with the [public sector](../guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen).
 
 | # | Tutorial | You will | Time | Status |
 |---|---|---|---|---|
-| 12 | [A day of bank data: load it daily](12-a-day-of-bank-data.md) | expectations, the data-load signal from the command line and the API, a failed batch, the history and what is due, an alert for a missing day, a day taken back out | 30 min | written |
+| 13 | [One file per lake](13-one-file-per-lake.md) | the demo lake's file, a connector that names a lake, a load that follows the lake file, a contradicting `--partition-by` refused, an append table, `lake check` | 20 min | written |
+| 14 | [Load files with the data inbox](14-load-files-with-the-data-inbox.md) | the inbox on, a routing rule, a file and its `.ready` marker, `ready.all`, a failed file retried, the outbox and the ledger | 30 min | written |
 | 15 | [Connect your data](15-connect-your-data.md) | a file connector in Admin → Connectors and from the command line, no password in a connector, TLS, a proxy, a pool, Test and retry | 30 min | written |
-| 16 | [Load your own data into a new lake](16-load-your-own-data-into-a-new-lake.md) | Part A: a new lake (`config/lakes/risklake.yaml`), routed, loaded with `.ready` files, the connectors pointed at it, a load undone; Part B: one file per lake, append tables, `lake check`; Part C: the data inbox; Part D: news held in memory only; Part E: the risk lake and the official results on Iceberg | 1 h 45 min | written |
+| 16 | [Load your own data into a new lake](16-load-your-own-data-into-a-new-lake.md) | Part A: a new lake (`config/lakes/risklake.yaml`), routed, loaded with `.ready` files, the connectors pointed at it, a load undone; Part B: load it every day: expectations, the data-load signal from the command line and the API, a failed batch, what is due, an alert for a missing day, a day taken back out | 55 min | written |
 | 17 | [Data out: from a token to a pandas DataFrame of a desk's VaR scenario P&L](17-data-out-with-arrow-flight.md) | Arrow Flight on, a token with `data:read`, a desk's scenario P&L in pandas, the same in Java and through JDBC, a live stream resumed, Admin → Data out | 20 min | written |
+| 18 | [News held in memory only](18-news-held-in-memory.md) | `mem://news`, the replenish jobs and the warm-up, what the guard refuses, a refill, the cap and Health, back to the disk lake | 20 min | written |
+| 23 | [The risk lake and the official results on Iceberg](23-the-risk-lake-on-iceberg.md) | `--store risk=iceberg`, the official results published to Iceberg, each table's format in Admin → Lakes, back to Delta | 20 min | written |
 
 ### Build
 
@@ -75,17 +82,18 @@ Packs and screens, and Drishti inside your own applications. Adding a source sys
 
 | # | Tutorial | You will | Time | Status |
 |---|---|---|---|---|
-| 19 | [Build a pack and a screen](19-build-a-pack-and-a-screen.md) | Part A: a pack from a schema and a folder, deployed and rolled back, `pack make`; Part B: a screen in the Build workbench and on a live page with the Sutra designer (Customize, Describe, Outline, Grid); Part C: computed panels on a reactive connector | 2 h 10 min | written |
-| 20 | [Embed Drishti](20-embed-drishti.md) | a host application registered, a view and a report in its page under a strict CSP, tokens and limits, search and About elements, React, Vue and Angular samples | 40 min | written |
+| 19 | [Build a pack and a screen](19-build-a-pack-and-a-screen.md) | Part A: a pack from a schema and a folder, deployed and rolled back, `pack make`; Part B: a screen in the Build workbench: tabs, a slider, About this page, a map, the Sutra checked from the command line | 70 min | written |
+| 24 | [Customize a live page](24-customize-a-live-page.md) | the Sutra designer: Customize, a linked record on a click, a refresh, a form beside the table, Describe, Outline and Grid | 35 min | written |
+| 25 | [Computed panels: a reactive connector](25-computed-panels.md) | the compute workers and the sample pack, a panel that computes, the same from the command line, a refused parameter, an event that recomputes | 25 min | written |
+| 20 | [Embed Drishti](20-embed-drishti.md) | a host application registered, a view and a report in its page under a strict CSP, tokens and limits, search and About elements, React, Vue and Angular samples | 30 min | written |
 
 ### Operate
 
-Production settings, backups, health and upgrades; several servers as one.
+Several servers as one, with health and a rolling upgrade. The single-server production checklist (security, users, tokens, backups, memory, health, upgrade, taking something out) is section 14 of the [deployment and QA guide](../DEPLOYMENT_AND_QA_GUIDE.md#14-a-production-checklist-step-by-step).
 
 | # | Tutorial | You will | Time | Status |
 |---|---|---|---|---|
-| 21 | [Run it in production](21-run-it-in-production.md) | security on, your own administrator, roles and BI powers, tokens, backups, heap and pools, health, upgrades and roll back, taking something out safely | 60 min | written |
-| 22 | [A cluster of three (Drishti\*net)](22-a-cluster-of-three.md) | `config/net/` with the CLI and the UI, three servers from one seed, a trade only one holds, a console with several servers, who may reach which node, drain and stop a node | 45 min | written |
+| 22 | [A cluster of three (Drishti\*net)](22-a-cluster-of-three.md) | `config/net/` with the CLI and the UI, three servers from one seed, a trade only one holds, a console with several servers, who may reach which node, drain and stop a node | 40 min | written |
 
 ### Trader: your first 10 minutes
 
@@ -93,18 +101,18 @@ A path through steps of the tutorials above, for someone who trades or watches a
 step 1).
 
 1. Sign in and find your way around: [tutorial 1, steps 3 and 4](01-first-15-minutes.md#step-3--sign-in).
-2. Open a trade, follow its links, and look at another day: [tutorial 1, steps 12 to 15](01-first-15-minutes.md#step-12--open-one-entity-or-pick-from-many).
-3. See what changed on a trade over the last 30 days: [tutorial 1, steps 27 to 29](01-first-15-minutes.md#step-27--a-range-after-the-id).
+2. Open a trade, follow its links, and look at another day: [tutorial 2, steps 3 to 6](02-look-up-anything.md#step-3--open-one-entity-or-pick-from-many).
+3. See what changed on a trade over the last 30 days: [tutorial 5, steps 1 to 3](05-an-entity-over-time.md#step-1--a-range-after-the-id).
 4. Your desk's VaR, down to a trade, and who makes it: [the VaR tutorial, steps 2 to 4](../guides/VAR_GUIDE.md#step-2--drill-down-from-the-bank-to-a-trade).
 5. What a hedge would do before you deal: [the VaR tutorial, step 11](../guides/VAR_GUIDE.md#step-11--what-would-a-hedge-do-the-what-if).
 6. Your trades by product, as a pivot: [the pivot tutorial, steps 1 and 2](../guides/bi/PIVOT.md#step-1--a-first-pivot-of-the-trades).
 
 ## What you need once
 
-Tutorials 1 to 3 need only [tutorial 1](01-first-15-minutes.md): Java 21 or newer, Python 3.13 ([the minimum](../guides/OPERATIONS_GUIDE.md#21-prerequisites)), `uv`, git, the demo lakes built (`lake demo`, about 15 minutes), and
+Tutorials 1 to 5 need only [tutorial 1](01-first-15-minutes.md): Java 21 or newer, Python 3.13 ([the minimum](../guides/OPERATIONS_GUIDE.md#21-prerequisites)), `uv`, git, the demo lakes built (`lake demo`, about 15 minutes), and
 the server and console started with sign-in on: the quick-start environment of [data/testdata/README.md](../../data/testdata/README.md), which the IDE run configurations
 **Drishti: build demo lakes**, **Drishti: run server (demo)** and **Drishti: run console** set up in three clicks. Later tutorials say what else they need. For the command line you need a
-personal API token (tutorial 1, Step 9) in `DRISHTI_TOKEN`.
+personal API token ([tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line)) in `DRISHTI_TOKEN`.
 
 Run commands from the repository root with the console's Python (`python3 tools/drishti.py ...`). Where a tutorial shows output, it was captured from
 a fresh clone on the seven-day demo lakes, built on Saturday 17 October 2026 (**2026-10-07 to 2026-10-16**), unless the tutorial says
@@ -123,7 +131,7 @@ The pictures are made, not drawn: `tools/docs/screenshots.py --guide tNN` (one s
 | `data/desk-quotes/<date>/desk-quote.jsonl` | ten business days of six desk quotes each (kind `desk-quote`: `quote` belongs to the news-and-markets pack) | tutorials 15 and 19 |
 | `data/schemas/desk-quote.schema.json` | the JSON Schema of a desk quote | tutorial 19, Part A |
 | `data/connectors/` | a file connector, a PostgreSQL connector aimed at a port where nothing listens, and a file Drishti refuses | tutorial 15 |
-| `data/desks/*.json`, `data/desk-book.sutra.yaml` | three desks with currencies and trades, and the screen designed for them | tutorial 19, Part B |
+| `data/desks/*.json`, `data/desk-book.sutra.yaml` | three desks with currencies and trades, and the screen designed for them | tutorial 19, Part B and tutorial 24 |
 | `data/slicer-kinds.report.yaml` | a report with a list, a dropdown and a range slicer and a top-N donut | the reports tutorial, Part A |
 | `data/trades-daily.dataset.yaml`, `data/trades-daily.model.yaml`, `data/desk-check.report.yaml`, `data/smtp-catcher.py` | a dataset that refreshes itself every business morning, the model over it, a report that says what its numbers must be; a mail catcher for trying subscriptions and alerts | the reports tutorial, Part D |
 | `data/live-desk.mq.yaml`, `data/night-desk.report.yaml` | a model query over the live table, with its SQL; a board of three live tiles (a report with a board page) | the reports tutorial, Part F |
@@ -131,7 +139,7 @@ The pictures are made, not drawn: `tools/docs/screenshots.py --guide tNN` (one s
 | `data/notional-by-desk.python.yaml`, `data/desk-python.report.yaml` | a Python visual and a report that uses it | the Notebook tutorial |
 | `data/endur-trades-cleaned.python.yaml`, `data/endur-trades-cleaned.dataset.yaml` | the Python item the Transform editor writes for ENDUR trades, cleaned, and its dataset | the Notebook tutorial |
 | `data/ai/mock.yaml`, `data/ai/local-model.yaml` | the mock AI provider with rules for the tutorials, and a provider with nothing listening | tutorial 10 |
-| `data/pools.py` | the connection-pool sum | tutorial 21 |
+| `data/pools.py` | the connection-pool sum | the [production checklist](../DEPLOYMENT_AND_QA_GUIDE.md#14-a-production-checklist-step-by-step) |
 | `data/cp-risk.model.yaml`, `data/cp-risk-view.report.yaml`, `data/cp-table.python.yaml`, `data/cp-table.dataset.yaml`, `data/cp-risk-extracts.notebook.yaml` | one model with two facts, a report on it, a Python Transform and its dataset over two model queries, and the notebook of the join trap | the reports tutorial, Part B |
 | `data/desk-params.model.yaml`, `data/monthly-statement.report.yaml` | a model with two field parameters and a statement on it | the reports tutorial, Part C |
 | `data/risklake/make_day.py` | a day of synthetic, Endur-style trades, positions' scenario PVs (509 scenarios) and VaR nodes, named by the load rules, with each file's rows and SHA-256 | tutorial 16, Part A |

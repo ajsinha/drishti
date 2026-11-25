@@ -812,7 +812,7 @@ data (`drishti.updateChart`), swaps every other panel for the console-rendered `
 Elements 2.x and the embed API v2 receive the
 ViewModel itself and draw it with Drishti Render ([INTEGRATION_GUIDE.md › Drishti Elements: the design, section 19](../guides/INTEGRATION_GUIDE.md#152-elements-2x-drawn-by-the-renderer)).
 
-The client-side renderer ([INTEGRATION_GUIDE.md section 7](ARCHITECTURE.md#302-the-renderer-on-drishti-elements-painter)) ports every row of this
+The client-side renderer ([ARCHITECTURE.md section 30.2](ARCHITECTURE.md#302-the-renderer-on-drishti-elements-painter)) ports every row of this
 table to `static/render/<version>/m/` and is compared with these macros by `tests/test_render_parity_browser.py` and, on the console's
 own page in both modes, `tests/test_render_console_browser.py`. In phase 2 (built) the console's entity page draws with it when
 a client mode (since retired) is on, and Elements 2.0 do; the macros stay as the `server` path and are retired later
@@ -859,7 +859,7 @@ yet) and 2 are built, 3 and 4 are not; item 5 is ADR-022. The proposals, which t
 4. **Deprecation before removal**: a field to be removed stays for one minor with `"deprecated": true` in the schema.
 5. **The client-side renderer revisits ADR-021's decision** ("no second renderer"): done, [ADR-022](DECISIONS.md)
    (one renderer, in the browser; the console moves onto it in phase 2), with parity tests that compare its output with the console's
-   macros for every kind, every pack Sutra and the edge cases of this document (INTEGRATION_GUIDE.md section 14).
+   macros for every kind, every pack Sutra and the edge cases of this document (ARCHITECTURE.md section 30.8).
 
 ---
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Data out (/admin/data-out; docs/guides/INTEGRATION_GUIDE.md section 9; mock-ups A and B of docs/architecture/mockups/data-out/): the
+"""Admin → Data out (/admin/data-out; docs/guides/INTEGRATION_GUIDE.md section 2.9; mock-ups A and B of docs/architecture/mockups/data-out/): the
 Arrow Flight service of this server in two views of one screen over one API, the page (A, the default) and the map of clients and nodes
 (B), switched by a toggle. Both draw from ``GET /api/v1/admin/data-out``; Stop is ``POST …/streams/{id}/stop``. Administrators only; the
 paths are the engine ``flight``'s, so with the engine off everywhere the screen is gone (core/engines.py)."""

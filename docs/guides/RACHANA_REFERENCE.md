@@ -2288,13 +2288,13 @@ made before this was kept, is unchanged. The values are not copied data: they on
 
 ## Forms (`form:` on a panel)
 
-Not to be confused with the pack search form below: a panel's `form:` lets people edit the records the panel shows, or start new ones, and keeps what they type as **drafts**; with `save:` it also submits them as change requests (write-back). A use carries it to the one panel it brings. The worked guide is [APPROVALS_GUIDE.md](ADMIN_GUIDE.md); the design is Sutra Next: fragments, events, children, sources, layout and forms, its section 10.
+Not to be confused with the pack search form below: a panel's `form:` lets people edit the records the panel shows, or start new ones, and keeps what they type as **drafts**; with `save:` it also submits them as change requests (write-back). A use carries it to the one panel it brings. The worked guide is [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run); the design is Sutra Next: fragments, events, children, sources, layout and forms, its section 10.
 
 The keys of a form and of a field, the field types, the rule language and what is checked (`DRS-2058`, `RCH-2058` in Rachana): [Rachana, Writing Sutras, 11. Forms](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#11-forms-letting-people-edit-records). Drishti adds these:
 
 | Key | Meaning |
 |---|---|
-| `save` | `{kind, target, connector, command, create, approval, reason}`: write-back, where **Submit** sends the draft. `target` (required): `overlay` (a correction kept beside the source's value), `owned` (the record itself) or `source` (a connector's `writes:` command: `command` for an edit, `create` for a new record, required with `new: drawer`); `kind` the records' kind (the page's kind when absent); `connector` (the one connector of the kind that writes when absent); `approval` `none` \| `one` \| `two` (the site may ask for more); `reason` `required` \| `optional`. Without `save:` the form keeps drafts only ([APPROVALS_GUIDE.md section 4a](USER_GUIDE.md#submitting-a-change)) |
+| `save` | `{kind, target, connector, command, create, approval, reason}`: write-back, where **Submit** sends the draft. `target` (required): `overlay` (a correction kept beside the source's value), `owned` (the record itself) or `source` (a connector's `writes:` command: `command` for an edit, `create` for a new record, required with `new: drawer`); `kind` the records' kind (the page's kind when absent); `connector` (the one connector of the kind that writes when absent); `approval` `none` \| `one` \| `two` (the site may ask for more); `reason` `required` \| `optional`. Without `save:` the form keeps drafts only ([USER_GUIDE.md › Submitting a change](USER_GUIDE.md#submitting-a-change)) |
 | field `type: lookup` | `options: {source: {pack, kind, where \| search, limit}, value, label, carry}`: the choices read from a pack's kind as the viewer may see them, `carry` the values hints read as `<field>.<VALUE>` |
 | field `type: entity` | `options: {source: {pack, kind, where \| search, limit}, label, carry}`: a linked record of any pack's kind picked by search: its id is kept (or the field `value` names) and its `label` shown, a masked value never offered |
 | `editable-by` | a list of roles; only these roles may change the field; anyone else sees it locked ("locked: you can view, not change"); `roles` on the form is the default for every field without its own |
@@ -4587,7 +4587,7 @@ Still to come: a server-side `every` scheduler pushing over the live channel to 
 ### 10. Forms and data entry
 
 **Built (phase 5, 2.7.x; drafts only, the write is phase 6).** A panel (or a use, which carries it to the one panel it brings) says how
-people edit its records or start new ones with `form:`. The worked guide is [APPROVALS_GUIDE.md](ADMIN_GUIDE.md); every
+people edit its records or start new ones with `form:`. The worked guide is [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run); every
 key is in [Forms (form: on a panel)](#forms-form-on-a-panel).
 
 ```yaml
@@ -4642,7 +4642,7 @@ panels:
   `edit trades beside|in the cells` and `new trade in a drawer` write it (Screen designer and the Build workbench, its section 31).
 - **On the packs**: the book desk's trades (beside and a New trade drawer) and a credit limit's buckets (cells).
 
-- **The richer fields (built, 2.7.x)** ([APPROVALS_GUIDE.md, money, a date and time, a linked record](BUILD_GUIDE.md#282-money-a-date-and-time-a-linked-record-a-worked-out-default)):
+- **The richer fields (built, 2.7.x)** ([BUILD_GUIDE.md › 28.2 Money, a date and time, a linked record, a worked-out default](BUILD_GUIDE.md#282-money-a-date-and-time-a-linked-record-a-worked-out-default)):
   `money` is an amount typed as `1.5m`, `250k` or `1,000,000` in a fixed currency (`currency: USD`) or the one another field holds
   (`currency: ccy`); `datetime` is a date and a time in a named time zone (`tz`, UTC when absent); `entity` links a record of any
   pack's kind (`options: { source: { pack, kind }, label }`), its id kept and its label shown, found by a live search
@@ -4785,7 +4785,7 @@ docstring warnings; neither fails on a docstring warning yet (it will, under `--
 
 ## Screen designer and the Build workbench
 
-New to the workbench? Follow [tutorial 19, Part B · Design a screen](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page) (and [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) to build a pack), with a picture of every step. This page is the reference for everything the workbench does, by mouse or keyboard.
+New to the workbench? Follow [tutorial 19, Part B · Design a screen](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench) (and [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) to build a pack), with a picture of every step. This page is the reference for everything the workbench does, by mouse or keyboard.
 
 
 You have JSON documents (trades, shipments, patients, sensor readings) and you want a screen for them. The **workbench** (*Create → New screen*, then the design's page) is where you make it: bring your files, let Drishti draft a first screen, then **drag panels and fields onto the real screen**, size them on the grid, fill their options in a form, and watch every sample of your data against it while you work. The result is an ordinary Sutra (the layout file Drishti reads), and the YAML is one tab away when you want it.
@@ -5708,7 +5708,7 @@ credit limits and shows the limit after the trade as it is typed.
 ![Editing a credit limit's buckets in the cells](img/designer/form-cells.jpg)
 
 Saving keeps a **draft** for each person; nothing is sent to the source until it is submitted. Rules, masks and roles, the keys of the cells and the
-drawer are in [APPROVALS_GUIDE.md](ADMIN_GUIDE.md).
+drawer are in [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run).
 
 ![The New trade drawer](img/designer/form-drawer.jpg)
 
@@ -7423,7 +7423,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one) | the Chart icon on tables (*How a panel behaves*), `chart: false` on a table, and the new `chart` panel kind with its options, states and CSV |
 | this document, [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) | the `chart` kind's options; promotion from the popup |
 | `config/help.yaml` | the context help card `table-chart: user-guide#chart-any-table`, and the popup's `?` links it |
-| [Tutorial 1, Part E](../tutorials/01-first-15-minutes.md#part-e--an-entity-over-time) and the tables tutorial | a section *Chart it* with UI, keys and the resulting YAML of a promoted chart panel, with screenshots (desktop and phone) |
+| [Tutorial 1, Part E](../tutorials/05-an-entity-over-time.md) and the tables tutorial | a section *Chart it* with UI, keys and the resulting YAML of a promoted chart panel, with screenshots (desktop and phone) |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | the planned `drishti.charts.*` (with C2; none was built yet) |
 | [API_REFERENCE.md](API_REFERENCE.md) | `for=chart`, `/api/v1/me/charts`, `bi/drafts/from-chart` |
 | [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet) N7 | `charts` among the replicated namespaces |
@@ -8001,7 +8001,7 @@ drishti:
 ```
 
 - **Where it runs.** On the server (`AskService` in `com.ash.drishti.server.explain`), so credentials stay in the
-  server's configuration and the console stays a thin proxy. **Ask runs on the AI layer** ([AI_GUIDE.md](ADMIN_GUIDE.md#271-model-providers)):
+  server's configuration and the console stays a thin proxy. **Ask runs on the AI layer** ([ADMIN_GUIDE.md › 27.1 Model providers](ADMIN_GUIDE.md#271-model-providers)):
   `AskService` builds the prompt and calls the `LlmGateway` with feature `ask`; which provider, model and client library
   answers is a provider file in `config/ai`, not Ask's concern. Set `drishti.ai.enabled: true`, write
   `config/ai/<name>.yaml`, and point Ask at it with `drishti.explain.ask.model: <provider>/<model>`; the policy (masking of

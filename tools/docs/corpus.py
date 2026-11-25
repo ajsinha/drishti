@@ -123,6 +123,8 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"docs/strategy/COMPETITIVE_ANALYSIS\.md", "keep", "A", "", ""),
     (r"docs/strategy/COMPETITIVE_LANDSCAPE\.md", "merge", "A", "docs/strategy/COMPETITIVE_ANALYSIS.md", ""),
     (r"docs/tutorials/README\.md", "generate", "A", "", "tools/docs/help_map.py"),
+    (r"docs/tutorials/12-a-day-of-bank-data\.md", "merge", "A", "docs/tutorials/16-load-your-own-data-into-a-new-lake.md", ""),
+    (r"docs/tutorials/21-run-it-in-production\.md", "merge", "A", "docs/DEPLOYMENT_AND_QA_GUIDE.md", ""),
     (r"docs/tutorials/\d\d-[^/]+\.md", "keep", "A", "", ""),
     (r"drishti-console/README\.md", "note", "C", "", ""),
     (r"drishti-console/web/guides/developer\.md", "merge", "A", GL + "API_REFERENCE.md", ""),

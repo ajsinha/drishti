@@ -36,8 +36,8 @@ def test_every_rule_row_matches_and_totals_are_the_plans():
     rows, unmatched = corpus.build()
     assert unmatched == []
     n = corpus.counts(rows)
-    assert len(rows) == 400
-    assert (n["merge"], n["delete"], n["generate"], n["move"], n["rename"], n["connector"]) == (103, 64, 94, 5, 2, 22)
+    assert len(rows) == 410
+    assert (n["merge"], n["delete"], n["generate"], n["move"], n["rename"], n["connector"]) == (105, 64, 94, 5, 2, 22)
     assert len({r[0] for r in rows}) == len(rows)
 
 
@@ -126,8 +126,8 @@ def test_merge_audit_finds_a_lost_heading_and_a_lost_block_and_honours_the_log()
 
 def test_merge_audit_over_the_tree_finds_nothing_missing_with_both_merge_logs(capsys):
     d = ROOT / "tools" / "docs"
-    assert merge_audit.main(["--show", "0", "--log", str(d / "merge_log_A.txt"), "--log", str(d / "merge_log_B.txt"), "--log", str(d / "merge_log_N_A.txt"), "--log", str(d / "merge_log_N_B.txt")]) == 0
-    assert "125 merged sources audited, 0 items not found" in capsys.readouterr().out
+    assert merge_audit.main(["--show", "0", "--log", str(d / "merge_log_A.txt"), "--log", str(d / "merge_log_B.txt"), "--log", str(d / "merge_log_N_A.txt"), "--log", str(d / "merge_log_N_B.txt"), "--log", str(d / "merge_log_N_T.txt"), "--log", str(d / "merge_log_N_L.txt")]) == 0
+    assert "127 merged sources audited, 0 items not found" in capsys.readouterr().out
 
 
 # i7m, plan section 5: a document's appended parts take the next numbers, so no two headings of one level carry the same leading number

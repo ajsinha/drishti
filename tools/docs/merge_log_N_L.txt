@@ -1,0 +1,2 @@
+# Lane leftovers merge log (documentation content pass, i7n): items deliberately not carried over.
+# <old path> | <heading or first line of the block> | <the place that already says it>

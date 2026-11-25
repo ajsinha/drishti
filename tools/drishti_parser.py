@@ -249,7 +249,7 @@ def build_parser(h) -> argparse.ArgumentParser:
                     "  drishti.py data load --store postgres jdbc:postgresql://localhost:5433/drishti --trades 10000 --user u --password p\n"
                     "  drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1\n"
                     "Each store's own options (--keep-days, --ttl-days, --create, ...) are listed in tools/storeload.py and docs/guides/CLI_REFERENCE.md; "
-                    "the loader's heap is DRISHTI_LOADER_HEAP (default 4g). Keep local runs small (10,000 trades); see docs/guides/DATA_GUIDE.md section 11.")
+                    "the loader's heap is DRISHTI_LOADER_HEAP (default 4g). Keep local runs small (10,000 trades); see docs/guides/BANK_DATA_GUIDE.md section 9.")
     dl.add_argument("--store", required=True, choices=LOADERS)
     dl.add_argument("target", nargs="*", help="the store's root, URL or database (its default when omitted; mongodb takes a URI and a database, "
                                                 "aerospike hosts and a namespace, cassandra contact points and a datacenter)")

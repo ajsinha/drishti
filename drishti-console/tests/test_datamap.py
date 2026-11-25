@@ -136,5 +136,5 @@ def test_datamap_in_the_type_ahead_the_views_menu_and_help(client, shipped):
     assert s[0]["mnemonic"] == "DATAMAP" and s[0]["href"] == "/datamap?q=coun" and s[0]["complete"] == "DATAMAP coun"
     page = client.get("/t").text
     assert 'href="/datamap"' in page and "Every kind of data, how it joins and how much there is · also DATAMAP &lt;GO&gt;" in page
-    guide = client.get("/help/user-guide").text
-    assert 'id="the-data-map"' in guide
+    guide = client.get("/help/cli-guide").text
+    assert 'id="205-the-data-map"' in guide

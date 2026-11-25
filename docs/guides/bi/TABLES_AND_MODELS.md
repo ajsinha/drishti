@@ -1306,7 +1306,7 @@ The environment, the sign-in and the token are those of [Reports, Before you sta
 
 - [Part A](REPORTS.md#part-a--your-first-bi-report) done (reports, workspaces, models)
   and [the Notebook tutorial](NOTEBOOK_AND_PYTHON.md) for Python and the Notebook. You sign in as the development administrator, who holds `bi-author`.
-- Step 21 uses two colleagues; make them in **Admin → Users** ([tutorial 21](../../tutorials/21-run-it-in-production.md)): `rita` with a role `risk` (raw power on, BI power `bi`), and `hana` with a role `desk-head` (raw power **off**, BI power `bi`) and **Desk** `DESK-FX`.
+- Step 21 uses two colleagues; make them in **Admin → Users** ([tutorial 21](../../DEPLOYMENT_AND_QA_GUIDE.md)): `rita` with a role `risk` (raw power on, BI power `bi`), and `hana` with a role `desk-head` (raw power **off**, BI power `bi`) and **Desk** `DESK-FX`.
 - A shared workspace called **Exposure desk** (**Workspaces → New workspace**): a model and a report are published from a shared workspace; a private one cannot publish.
 - The Python you run Drishti with, from tutorial 1, Part A (it carries `pandas` and `pyarrow`), for steps 18, 20 and 22.
 - **The numbers.** Every number below (`15,000` trade valuations, MTM `3,210,381,877`, P&L `90,804,863`, `76` netting sets with computed

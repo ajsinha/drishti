@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin -> Data out in a real browser (INTEGRATION_GUIDE.md section 9; mock-ups A and B), over a real server with the engine flight on
+"""Admin -> Data out in a real browser (INTEGRATION_GUIDE.md section 2.9; mock-ups A and B), over a real server with the engine flight on
 (TLS from a throw-away PKI, any free port) and a console:
 
 - the page view (the default): the service bar says running, TLS on, the Arrow memory; the nodes with their real addresses (never
@@ -22,7 +22,7 @@
 
 ``DRISHTI_DATA_OUT_SHOTS=DIR`` saves the guide's screenshots there (light theme): page.png, map.png. Skipped when Playwright, Chromium,
 the built server jar, a JDK or the cryptography package is missing. A live read on the map is checked by the heavy run's three-node end
-to end (INTEGRATION_GUIDE.md section 12)."""
+to end (INTEGRATION_GUIDE.md section 2.13)."""
 import os
 from pathlib import Path
 
