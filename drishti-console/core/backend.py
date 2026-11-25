@@ -289,7 +289,7 @@ class BackendClient:
 
     async def live_query(self, q: str, ident=None) -> dict:
         """A search as a query on a live table (``GET /api/v1/rdp/searches``): ``{table, query, live, page, search}``, the first page read
-        for the person (docs/guides/LIVE_RESULTS_GUIDE.md section 7)."""
+        for the person (docs/guides/USER_GUIDE.md, Live results and blotters: The engine: snapshot, deltas, scale, retention)."""
         return await self._get("/rdp/searches", ident, q=q)
 
     async def live_kind(self, word: str, ident=None, offset: int = 0, limit: int = 100, sort: str = "", descending: bool = False) -> dict:

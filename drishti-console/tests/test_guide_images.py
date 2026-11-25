@@ -141,7 +141,7 @@ def test_every_picture_the_designer_guide_shows_exists():
 def test_the_guide_covers_the_whole_workbench_and_has_a_worked_example_per_family():
     text = GUIDE.read_text()
     for s in SECTIONS:
-        assert re.search(rf"^### \d+\. {re.escape(s)}", text, re.M), s         # the designer guide's sections, a part of the reference since 2.9.7
+        assert re.search(rf"^### \d+(?:\.\d+)*\.? {re.escape(s)}", text, re.M), s         # the designer guide's sections, a part of the reference since 2.9.7
     for name in FAMILIES:
         assert name in text and f"<!-- example: {name} -->" in (ROOT / "docs" / "guides" / "examples" / "README.md").read_text(encoding="utf-8"), name
     for kind in ("kv", "status", "table", "pivot", "line", "area", "candlestick", "surface", "histogram", "scatter", "gauge", "waterfall", "hbar", "graph", "links",

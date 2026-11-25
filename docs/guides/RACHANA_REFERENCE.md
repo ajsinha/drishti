@@ -2288,13 +2288,13 @@ made before this was kept, is unchanged. The values are not copied data: they on
 
 ## Forms (`form:` on a panel)
 
-Not to be confused with the pack search form below: a panel's `form:` lets people edit the records the panel shows, or start new ones, and keeps what they type as **drafts**; with `save:` it also submits them as change requests (write-back). A use carries it to the one panel it brings. The worked guide is [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md); the design is Sutra Next: fragments, events, children, sources, layout and forms, its section 10.
+Not to be confused with the pack search form below: a panel's `form:` lets people edit the records the panel shows, or start new ones, and keeps what they type as **drafts**; with `save:` it also submits them as change requests (write-back). A use carries it to the one panel it brings. The worked guide is [APPROVALS_GUIDE.md](ADMIN_GUIDE.md); the design is Sutra Next: fragments, events, children, sources, layout and forms, its section 10.
 
 The keys of a form and of a field, the field types, the rule language and what is checked (`DRS-2058`, `RCH-2058` in Rachana): [Rachana, Writing Sutras, 11. Forms](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#11-forms-letting-people-edit-records). Drishti adds these:
 
 | Key | Meaning |
 |---|---|
-| `save` | `{kind, target, connector, command, create, approval, reason}`: write-back, where **Submit** sends the draft. `target` (required): `overlay` (a correction kept beside the source's value), `owned` (the record itself) or `source` (a connector's `writes:` command: `command` for an edit, `create` for a new record, required with `new: drawer`); `kind` the records' kind (the page's kind when absent); `connector` (the one connector of the kind that writes when absent); `approval` `none` \| `one` \| `two` (the site may ask for more); `reason` `required` \| `optional`. Without `save:` the form keeps drafts only ([APPROVALS_GUIDE.md section 4a](APPROVALS_GUIDE.md#4-submitting-a-change)) |
+| `save` | `{kind, target, connector, command, create, approval, reason}`: write-back, where **Submit** sends the draft. `target` (required): `overlay` (a correction kept beside the source's value), `owned` (the record itself) or `source` (a connector's `writes:` command: `command` for an edit, `create` for a new record, required with `new: drawer`); `kind` the records' kind (the page's kind when absent); `connector` (the one connector of the kind that writes when absent); `approval` `none` \| `one` \| `two` (the site may ask for more); `reason` `required` \| `optional`. Without `save:` the form keeps drafts only ([APPROVALS_GUIDE.md section 4a](USER_GUIDE.md#submitting-a-change)) |
 | field `type: lookup` | `options: {source: {pack, kind, where \| search, limit}, value, label, carry}`: the choices read from a pack's kind as the viewer may see them, `carry` the values hints read as `<field>.<VALUE>` |
 | field `type: entity` | `options: {source: {pack, kind, where \| search, limit}, label, carry}`: a linked record of any pack's kind picked by search: its id is kept (or the field `value` names) and its `label` shown, a masked value never offered |
 | `editable-by` | a list of roles; only these roles may change the field; anyone else sees it locked ("locked: you can view, not change"); `roles` on the form is the default for every field without its own |
@@ -4587,7 +4587,7 @@ Still to come: a server-side `every` scheduler pushing over the live channel to 
 ### 10. Forms and data entry
 
 **Built (phase 5, 2.7.x; drafts only, the write is phase 6).** A panel (or a use, which carries it to the one panel it brings) says how
-people edit its records or start new ones with `form:`. The worked guide is [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md); every
+people edit its records or start new ones with `form:`. The worked guide is [APPROVALS_GUIDE.md](ADMIN_GUIDE.md); every
 key is in [Forms (form: on a panel)](#forms-form-on-a-panel).
 
 ```yaml
@@ -5708,7 +5708,7 @@ credit limits and shows the limit after the trade as it is typed.
 ![Editing a credit limit's buckets in the cells](img/designer/form-cells.jpg)
 
 Saving keeps a **draft** for each person; nothing is sent to the source until it is submitted. Rules, masks and roles, the keys of the cells and the
-drawer are in [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md).
+drawer are in [APPROVALS_GUIDE.md](ADMIN_GUIDE.md).
 
 ![The New trade drawer](img/designer/form-drawer.jpg)
 
@@ -8001,7 +8001,7 @@ drishti:
 ```
 
 - **Where it runs.** On the server (`AskService` in `com.ash.drishti.server.explain`), so credentials stay in the
-  server's configuration and the console stays a thin proxy. **Ask runs on the AI layer** ([AI_GUIDE.md](AI_GUIDE.md#1-model-providers)):
+  server's configuration and the console stays a thin proxy. **Ask runs on the AI layer** ([AI_GUIDE.md](ADMIN_GUIDE.md#271-model-providers)):
   `AskService` builds the prompt and calls the `LlmGateway` with feature `ask`; which provider, model and client library
   answers is a provider file in `config/ai`, not Ask's concern. Set `drishti.ai.enabled: true`, write
   `config/ai/<name>.yaml`, and point Ask at it with `drishti.explain.ask.model: <provider>/<model>`; the policy (masking of

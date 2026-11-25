@@ -229,7 +229,7 @@ On the committed demo every check is clean; the checks are proved on crafted bad
 book: none of its packs links into the bank's own data. Three landings (World desk, Explorer, World map) on a teal accent; set-up:
 [ADMIN_GUIDE.md section 16.4](../guides/ADMIN_GUIDE.md#164-drishti-world). **Licensing first:** the IMF figures, Yahoo prices and Google News headlines
 are **internal only**, shown inside the bank; any showing outside needs a decision first
-([WORLD_DATA_GUIDE.md section 9](../guides/WORLD_DATA_GUIDE.md#9-licences-and-internal-only-data)). Proposals WL1 to WL12 are candidates in
+([WORLD_DATA_GUIDE.md section 19.9](../guides/WORLD_DATA_GUIDE.md#199-licences-and-internal-only-data)). Proposals WL1 to WL12 are candidates in
 the plan's Lens product candidates.
 
 ### 4.2 What it answers today
@@ -245,7 +245,7 @@ the plan's Lens product candidates.
 | LEI records, groups (ultimate parent and up to 50 consolidated entities), relationships, mappings, late renewals (`LEI`, `LEIG`, `LEIR`, `LEIC`, `LEIM`); company and LEI linked both ways | **Built**, CC0; changes over time: WL6 | [gleif README](../../config/packs/core/gleif/README.md) |
 | The 200 largest US funds and ETFs: holdings, derivatives and counterparties, flows, returns, N-CEN facts; who holds a company, what tracks an index (`FUND`, `HELD`, `TRACK`) | **Built**, public domain; newest N-PORT only (WL7); no NAV history | [funds README](../../modules/capital-markets/packs/funds/README.md) |
 | BI: `world-economics-economies`, `region-economics-regions` and their reports | **Partly built** (companies, funds, entities: WL8) | `world.yaml` `bi` |
-| One standalone refresh script per pack (`status`, `refresh --dry-run`, `refresh`) | **Built**; a freshness card and schedule: WL11 | [WORLD_DATA_GUIDE.md section 2](../guides/WORLD_DATA_GUIDE.md#2-the-feeds) |
+| One standalone refresh script per pack (`status`, `refresh --dry-run`, `refresh`) | **Built**; a freshness card and schedule: WL11 | [WORLD_DATA_GUIDE.md section 19.2](../guides/WORLD_DATA_GUIDE.md#192-the-feeds) |
 | A lens beside the others on a full instance (`drishti.lenses: default`) | **Built** | [ADMIN_GUIDE.md section 14](../guides/ADMIN_GUIDE.md#14-offer-lenses-to-people) |
 | A change feed ("since yesterday"); news relevance; a coverage list; hiding internal-only sources | **Not built** (WL4, WL5, WL9, WL10, WL12) | section 4.3 |
 
@@ -286,7 +286,7 @@ Panel by panel in [section 4.4.1](../plans/LENSES_PROPOSALS.md#441-the-world-lan
 | Index levels (WL1) | the Yahoo snapshot | the index owner's terms | **yes** | index levels | by capture |
 | G7, G20 membership (WL2) | world-economy | public fact | no | groups | on change |
 
-Every source at a glance: [WORLD_DATA_GUIDE.md section 11](../guides/WORLD_DATA_GUIDE.md#11-every-external-source-at-a-glance). The committed
+Every source at a glance: [WORLD_DATA_GUIDE.md section 19.11](../guides/WORLD_DATA_GUIDE.md#1911-every-external-source-at-a-glance). The committed
 IMF forecasts and the Yahoo and Google snapshot are for internal demos; before any external or client use, rebuild without them or get
 permission. Nothing World shows from Yahoo may be redistributed, screenshots in external decks included. World needs no bank data.
 
@@ -320,7 +320,7 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 | Stress: stored definitions and results per desk; the bank's P&L per scenario and each desk's stress limit use (derived) | **Partly** (no stress engine for any scope) | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived), [STR.md](../plans/contracts/STR.md) |
 | Concentration: VaR of any slice | **Partly**: scope words, rules and `WHERE:`; no concentration view | [VAR_GUIDE section 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute) |
 | Counterparty exposure and credit limits (read for concentration) | **Built** | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) |
-| Alerts on numbers; comment threads anchored to the data; write-back approval with four eyes | **Built** (a person sets each alert) | [USER_GUIDE, Alerts](../guides/USER_GUIDE.md#alerts), [ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion), [APPROVALS_GUIDE section 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue) |
+| Alerts on numbers; comment threads anchored to the data; write-back approval with four eyes | **Built** (a person sets each alert) | [USER_GUIDE, Alerts](../guides/USER_GUIDE.md#alerts), [ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion), [APPROVALS_GUIDE section 10](../guides/USER_GUIDE.md#the-approvals-queue) |
 | Certified BI reports; entitlements and audit per answer | **Built** | [REPORTS_GUIDE, certification](../guides/bi/GOVERNANCE_AND_AI.md#24-certification-and-endorsement), [VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
 | P&L explain by cause; PLA test; FRTB internal models | **Not built** (P&L explain stored per desk as read, `PNL`) | [PNL.md](../plans/contracts/PNL.md), [REGULATORY_VAR_REPORTING section 8.1](../guides/REGULATORY_VAR_REPORTING.md#81-coverage-report-by-report) |
 
@@ -479,14 +479,14 @@ hardest families from trade-grain data (VaR at any scope; PFE by counterparty an
 | Compare with an earlier capture; component VaR | **Built** | [VAR_GUIDE 6](../guides/VAR_GUIDE.md#6-captures-and-compare) |
 | VaR change explanation by cause (RO1) | **Built** for VaR; exposure, liquidity and capital reasons not built | [VAR_GUIDE 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained) |
 | A breach as a record; one limit catalogue (RO2, RO3) | **Not built**, designed ([section 5.3](../plans/LENSES_PROPOSALS.md#53-gaps-and-proposals)) | — |
-| Temporary limit increases with four eyes | **Not built**; the pattern exists in write-back approval | [APPROVALS_GUIDE 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue) |
+| Temporary limit increases with four eyes | **Not built**; the pattern exists in write-back approval | [APPROVALS_GUIDE 10](../guides/USER_GUIDE.md#the-approvals-queue) |
 | Comments anchored to data; alerts on numbers | **Built**; alerts are set per person, not from a catalogue | [ARCHITECTURE](ARCHITECTURE.md#31-collaboration-write-back-and-approvals), [USER_GUIDE, alerts](../guides/USER_GUIDE.md#alerts-on-numbers) |
 | LCR, NSFR, survival horizon; CET1, RWA | **Not built** (balance-sheet roadmap; stored SA-CCR and FRTB charges are partial RWA inputs only) | |
 | Financed emissions | **Not built**; climate stays out of scope as a computed measure | — |
 | News, market moves, macro signals | **Built** (World and Market lenses; IMF data internal only) | [ADMIN_GUIDE 16.4](../guides/ADMIN_GUIDE.md#164-drishti-world) |
 | News relevance to the book; VaR at stake of a move | **Not built** (WL9, [section 4.3](../plans/LENSES_PROPOSALS.md#43-gaps-and-proposals); ML1, [section 3.3](../plans/LENSES_PROPOSALS.md#33-gaps-and-proposals)) | — |
 | Data health: late loads by expectation | **Partly**: late loads built; the safe-to-quote rule not built | [DATA_GUIDE 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data) |
-| Ask in words | **Partly**: *Ask about this page* and BI's *ask the data*; an answer across engines not built; AI off in every lens today | [AI 7](../guides/AI_GUIDE.md#7-ask-on-the-ai-layer) |
+| Ask in words | **Partly**: *Ask about this page* and BI's *ask the data*; an answer across engines not built; AI off in every lens today | [AI 7](../guides/ADMIN_GUIDE.md#2717-ask-on-the-ai-layer) |
 | Time travel | **Partly**: official records per date; "as at the last board" across every metric not built | [VAR_GUIDE 7](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
 
 The demo's connected group `GRP-NORTHBRIDGE` has one member and a stored group limit; nothing in the code names a risk appetite, an
@@ -523,19 +523,19 @@ change and incidents, Ask, and an **evidence pack** for a supervisor or audit.
 | BI lineage and impact; official VaR and exposure records for any past date | **Built** | [REPORTS_GUIDE 32](../guides/bi/GOVERNANCE_AND_AI.md#2-publishing-and-governance-versions-review-certification-lineage-impact-environments), [VAR_GUIDE 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | The configuration in one generated document, in the UI with value and origin | **Built** | [CONFIGURATION](../admin/CONFIGURATION.md#every-setting) |
 | Audit log (sign-ins, failures, locks, users, roles, tokens, packs, connectors, load settings, cache purges, secret rotations) | **Built** | [USER_MANAGEMENT, audit](../guides/ADMIN_GUIDE.md#26-read-the-audit-log) |
-| Write-back audit and four-eyes approval | **Built** | [APPROVALS_GUIDE 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue) |
+| Write-back audit and four-eyes approval | **Built** | [APPROVALS_GUIDE 10](../guides/USER_GUIDE.md#the-approvals-queue) |
 | Access log of every answered read, 90 days | **Built** | [USER_MANAGEMENT, access log](../guides/ADMIN_GUIDE.md#8-who-looked-at-what-the-access-log), [OPERATIONS 9b](../guides/OPERATIONS_GUIDE.md#114-what-leaves-the-server-ask-the-access-log-and-ai) |
 | Usage analytics by lens, screen and desk; an entitlement report as of a date | **Not built**; the access log does not record lens or screen | — |
 | Roles and powers; commands turned off by an administrator | **Built** | [ADMIN_GUIDE 3](../guides/ADMIN_GUIDE.md#3-roles) |
 | Secrets inventory with ages and a rotation policy | **Partly**: secrets from environment or files, embed secrets rotated and audited; no inventory | [OPERATIONS 9c](../guides/OPERATIONS_GUIDE.md#811-permissions-ownership-and-registry-keys) |
-| Internal-only rule for public sources | **Built** as a rule and switch; a report of where each is shown not built | [EXTERNAL_DATA 9](../guides/WORLD_DATA_GUIDE.md#9-licences-and-internal-only-data) |
+| Internal-only rule for public sources | **Built** as a rule and switch; a report of where each is shown not built | [EXTERNAL_DATA 9](../guides/WORLD_DATA_GUIDE.md#199-licences-and-internal-only-data) |
 | Admin → Health; Prometheus, Grafana, suggested alerts; platform metrics and alerts | **Built** | [OPERATIONS 13.2](../guides/OPERATIONS_GUIDE.md#132-admin--health), [13.4](../guides/OPERATIONS_GUIDE.md#134-prometheus-grafana-and-the-suggested-alerts), [13.6](../guides/OPERATIONS_GUIDE.md#135-platform-metrics-and-alert-rules) |
 | Drishti's own history of those metrics | **Not built** (CIO4) | [RESOURCES_AND_SCALE 8.3](../guides/CLUSTER_GUIDE.md#159-seeing-it-admin--caches-health--disk-metrics-and-alerts) |
 | Cluster gossip, VaR sharding with replicas and zones; disk caps and the cache budget | **Built** | [CLUSTER_DEPLOYMENT 4.1](ARCHITECTURE.md#321-membership-by-gossip-swim-over-http), [RESOURCES_AND_SCALE 14](ARCHITECTURE.md#3212-bounded-resources-inside-one-server) |
 | Readiness, drain, the rolling upgrade runner; the N and N−1 rule | **Built**; N and N−1 planned (CD4) | [CLUSTER_DEPLOYMENT 18](../guides/CLUSTER_GUIDE.md) |
 | A history of releases and upgrades per node | **Partly**: each server reports its version; no history | [OPERATIONS 15](../guides/OPERATIONS_GUIDE.md#18-upgrades-and-rollback) |
 | Incidents; cloud cost; a BCBS 239 scorecard | **Not built** | — |
-| Ask | **Partly**: *Ask about this page* and BI's *ask the data*, off by default; across loads, checks, audit and incidents not built | [AI 7](../guides/AI_GUIDE.md#7-ask-on-the-ai-layer) |
+| Ask | **Partly**: *Ask about this page* and BI's *ask the data*, off by default; across loads, checks, audit and incidents not built | [AI 7](../guides/ADMIN_GUIDE.md#2717-ask-on-the-ai-layer) |
 
 ## 10. The lens mechanism: the design
 

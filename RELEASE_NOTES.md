@@ -13,6 +13,16 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7n: release notes
+
+*A documentation release on i7m: the guide merges.* No product behaviour changes.
+
+- **Integration in one guide:** embedding Drishti, data out over Arrow Flight and the developer API are one guide, `INTEGRATION_GUIDE.md`.
+- **Fewer, fuller guides:** AI set-up, approvals and live results live in the Administration and User guides; guide numbering is consistent and every link resolves.
+- **One rules section for connectors;** settings tables link the configuration document; planned AI parts sit in `docs/plans`.
+
+---
+
 # Drishti 2.9.11.i7m: release notes
 
 *A documentation release on i7l: structure first. The guide merges and tutorial rewrites are the next release (i7n).* No product behaviour

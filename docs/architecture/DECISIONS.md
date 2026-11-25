@@ -560,7 +560,7 @@ no WebAssembly build, and running it in a browser would mean a large download an
 4. **The UX reaches it through the server**: `drishti.pricer` in Calc, a Valuation panel bound by Sutras, and a
    what-if drawer; later, overnight batches into the lake.
 
-Design: [AI_GUIDE.md](../guides/AI_GUIDE.md#4-server-side-pricing-the-quant-service-proposed).
+Design: [AI_GUIDE.md](../plans/QUANT_SERVICE.md).
 
 ### Consequences
 - One more container to deploy; without it, pricing is reported as not configured and nothing else changes.

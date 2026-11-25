@@ -64,3 +64,7 @@ intended:
     why: "i7n lane B: the anchor and renumbering tool (renumber.py), the contract link of the command catalogue follows docs/plans/contracts, and the Help address of the Flight and embed guides is the integration guide (config, the Data out page link, the engine catalogue)"
     paths: ["tools/docs/renumber.py", "tools/command_catalog.py", "config/docs-features.yaml", "drishti-console/web/templates/admin/data_out.html",
             "kernel/drishti-server/src/main/resources/engines/catalogue.yaml"]
+  - decision: I7N
+    why: "i7n lane A: the new documentation tools (the BI navigation strip, the Markdown link repair after a merge); a citation of a guide's numbered section names the merged section by its title"
+    paths: ["tools/docs/bi_nav.py", "tools/settings_catalogue.py", "drishti-console/web/templates/admin/feeds.html", "tools/docs/relink_md.py", "tools/docs/guide_settings.py", "tools/docs/guide_settings.yaml", "tools/knowledge.py", "tools/docs/generate.py", "drishti-console/core/backend.py", "drishti-console/core/live_results.py",
+            "drishti-console/web/templates/terminal/_live_attrs.html", "kernel/drishti-server/src/main/resources/application.yaml"]

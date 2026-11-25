@@ -703,10 +703,10 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_ASK_ENDPOINT` | `drishti.explain.ask.endpoint` | empty | **Deprecated** (a provider file in `config/ai` replaces it; it still works, as provider `ask`, with a start-up warning). The model endpoint URL for Ask. |
 | `DRISHTI_ASK_MODEL` | `drishti.explain.ask.model` | empty | The model Ask uses: a logical model of the AI layer (`provider/model`); with the deprecated `endpoint`, the model id sent to it. |
 | `DRISHTI_ASK_KEY` | `drishti.explain.ask.api-key` | empty | **Deprecated** with `endpoint`: put `api-key: ${ENV}` in the provider file. The model endpoint credential (environment only; never logged). |
-| `DRISHTI_AI_ENABLED` | `drishti.ai.enabled` | `false` | Turn on the LLM provider layer ([AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers)): provider files in `drishti.ai.dir` are read and models become callable. Off: no file is read and no model is called. |
-| `DRISHTI_AI_DIR` | `drishti.ai.dir` | `<config>/ai` | The folder of provider files, one YAML per provider (type, `base-url`, `api-key: ${ENV}`, models with logical names). Watched and reloaded live (`drishti.ai.watch`: `auto` / `poll` / `off`, `poll-ms`). Provider types, their keys and one copy-paste file each: [AI_GUIDE.md › Model providers, section 11](../guides/AI_GUIDE.md#11-more-providers-the-way-sajhamcpserver-has-them); examples `config/ai/<type>.yaml.example`, all `enabled: false`. |
+| `DRISHTI_AI_ENABLED` | `drishti.ai.enabled` | `false` | Turn on the LLM provider layer ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#271-model-providers)): provider files in `drishti.ai.dir` are read and models become callable. Off: no file is read and no model is called. |
+| `DRISHTI_AI_DIR` | `drishti.ai.dir` | `<config>/ai` | The folder of provider files, one YAML per provider (type, `base-url`, `api-key: ${ENV}`, models with logical names). Watched and reloaded live (`drishti.ai.watch`: `auto` / `poll` / `off`, `poll-ms`). Provider types, their keys and one copy-paste file each: [ADMIN_GUIDE.md section 27.1.11](../guides/ADMIN_GUIDE.md#27111-more-providers-the-way-sajhamcpserver-has-them); examples `config/ai/<type>.yaml.example`, all `enabled: false`. |
 | `DRISHTI_AI_DEFAULT_MODEL` | `drishti.ai.default-model` | empty | The model used when a call names none: `provider/model`, or a model name only one provider has. |
-| `DRISHTI_MCP_ENABLED` | `drishti.mcp.enabled` | `false` | Turn on the MCP client ([AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)): server files in `drishti.mcp.dir` are read and their tools become callable through the policy. |
+| `DRISHTI_MCP_ENABLED` | `drishti.mcp.enabled` | `false` | Turn on the MCP client ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#272-the-mcp-client-other-servers-tools-behind-drishtis-policy)): server files in `drishti.mcp.dir` are read and their tools become callable through the policy. |
 | `DRISHTI_MCP_DIR` | `drishti.mcp.dir` | `<config>/mcp` | The folder of MCP server files, one YAML per server (transport, `url`, `headers` as `${ENV}`, `allowed-tools`). Watched and reloaded live. |
 | `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:./data/identity/drishti.db` | The identity database (users, roles, workspaces, audit); SQLite by default, or `jdbc:postgresql://…`. |
 | `DRISHTI_IDENTITY_DB_USER` | `drishti.identity.database-user` | empty | Its user. |
@@ -984,8 +984,8 @@ a new root-absolute URL that skips them. A restart applies a change. The proxy s
 
 The server's `drishti.ai.policy.*` and `drishti.mcp.*` settings and the console's `ai.policy.*` and `mcp.*` settings
 (server names with hyphens, console names with underscores). Everything is off unless `drishti.ai.enabled` /
-`drishti.mcp.enabled` (console `ai.enabled` / `mcp.enabled`) is true; see [AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers)
-and [AI_GUIDE.md](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy).
+`drishti.mcp.enabled` (console `ai.enabled` / `mcp.enabled`) is true; see [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#271-model-providers)
+and [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#272-the-mcp-client-other-servers-tools-behind-drishtis-policy).
 
 | Server | Console | Default | Meaning |
 |---|---|---|---|
@@ -1365,7 +1365,7 @@ servers). The environment variables of this section are in the [environment vari
 | `roles.<role>.author` | `false` | May save Sutras from Studio (a proposal when governance is on). |
 | `roles.<role>.approve` | `false` | May approve or reject proposed Sutras. |
 | `roles.<role>.admin` | `false` | May manage users, read the audit log, approve Sutras. |
-| `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([USER_GUIDE.md](../guides/USER_GUIDE.md#9-roles-who-may-use-calc)). |
+| `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([USER_GUIDE.md](../guides/bi/CALC.md#9-roles-who-may-use-calc)). |
 | `roles.<role>.layout` | `true` | May customise layouts: layout mode (`Alt+L`) and personal layouts ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). On unless set to `false`; the bundled `viewer` sets it to `false`. |
 | `roles.<role>.collaborate` | `true` | May share, comment and mention ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). On unless set to `false`; a role saved by an earlier release keeps it without a migration. |
 | `roles.<role>.compliance` | `false` | May read any share, place and release legal holds, export the collaboration record and verify hash chains (`/admin/collab/holds`, `/exports`, `/verify`). Not implied by `admin`: grant it to the compliance role. Moderation, retention runs and permanent removal are `admin`. |
@@ -1563,7 +1563,7 @@ comes from the environment only, and the model gets no tools. See [the privacy n
 |---|---|---|
 | `enabled` | `false` (`DRISHTI_ASK_ENABLED`) | The global switch. While `false` no network call is ever attempted and `POST …/ask` answers `404 DRS-4007`. |
 | `packs` | `[]` | The packs where the box is drawn (per-pack opt-in); empty means none. `DRISHTI_EXPLAIN_ASK_PACKS=market-risk,counterparty-risk`. |
-| `model` | empty (`DRISHTI_ASK_MODEL`) | The model Ask uses: a logical model of the AI layer, `<provider>/<model>` (a provider file in `drishti.ai.dir` with its `type`, `base-url` and `api-key: ${ENV}`; [AI_GUIDE.md](../guides/AI_GUIDE.md)). |
+| `model` | empty (`DRISHTI_ASK_MODEL`) | The model Ask uses: a logical model of the AI layer, `<provider>/<model>` (a provider file in `drishti.ai.dir` with its `type`, `base-url` and `api-key: ${ENV}`; [ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md)). |
 | `values` | `labels-only` | `labels-only` sends labels, definitions and structure, never a rendered value of the page. `shown` also sends the page's rendered sentence (its figures, as the asking user may see them). A value masked for the user is never sent in either mode. |
 | `max-question-chars` | `500` | Longer questions are refused (`400`). |
 | `max-prompt-kb` | `24` | The whole prompt; the pack guide text is cut first, then glossary entries. |
@@ -1686,7 +1686,7 @@ The start logs `content store: <backend> <root> (settings <file>)`.
 
 ### Write-back: `config/edit/`
 
-Write-back ([APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals); the administrator's guide [APPROVALS_GUIDE.md, for administrators](../guides/APPROVALS_GUIDE.md#7-for-administrators-switching-write-back-on)) has its own folder, named by
+Write-back ([ADMIN_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals); the administrator's guide [APPROVALS_GUIDE.md, for administrators](../guides/ADMIN_GUIDE.md#281-switching-write-back-on)) has its own folder, named by
 `drishti.edit.file` (`DRISHTI_EDIT_FILE`, default `<config>/edit/edit.yaml`; its siblings `lanes.yaml`, `policy.yaml` and `retention.yaml`
 are read from the same folder). A missing file or key means the default. **Off as shipped**: `edit.enabled: false`, so no change is
 accepted anywhere and no Submit is drawn; a fresh install or an upgrade is read-only. The edit log, lanes, approvals, overlays and owned
@@ -1794,7 +1794,7 @@ Not in the bundled file; the defaults apply until you set them.
 
 ### `drishti.calc` — Python in the browser
 
-Calc ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)) runs Python in the user's browser; the server never runs the code. It
+Calc ([USER_GUIDE.md](../guides/bi/CALC.md)) runs Python in the user's browser; the server never runs the code. It
 decides who may use it (roles with `calc`), keeps each user's snippets, and serves whole columns of a day.
 
 | Key | Default | Meaning |
@@ -2066,7 +2066,7 @@ Times are in `drishti.business-date.zone`, business days by `drishti.business-da
 
 ### `drishti.bi.ai` — BI with AI (stage 2)
 
-The BI hooks on the AI layer ([GOVERNANCE_AND_AI.md section 29](../guides/bi/GOVERNANCE_AND_AI.md#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number)). They also need `drishti.ai.enabled` (off by default) and a provider ([AI_GUIDE.md](../guides/AI_GUIDE.md#1-model-providers));
+The BI hooks on the AI layer ([GOVERNANCE_AND_AI.md section 29](../guides/bi/GOVERNANCE_AND_AI.md#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number)). They also need `drishti.ai.enabled` (off by default) and a provider ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#271-model-providers));
 the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring helpers `bi-suggest`, `bi-explain-checks` and `bi-helper`, and a subscription's narrative summary `subscription-narrative` (`drishti.ai.policy.features`, above).
 
 | Setting | Default | Meaning |
@@ -2908,7 +2908,7 @@ Whether a design can save Sutra files is decided by the server (`drishti.rachana
 
 | Key | Default | Meaning |
 |---|---|---|
-| `labs.calc` | `false` (`DRISHTI_LABS_CALC`) | Labs: Calc, a scratch pad in the browser that never publishes. Off (as shipped): no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)). |
+| `labs.calc` | `false` (`DRISHTI_LABS_CALC`) | Labs: Calc, a scratch pad in the browser that never publishes. Off (as shipped): no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([USER_GUIDE.md](../guides/bi/CALC.md)). |
 
 ### `layouts`
 
@@ -2926,7 +2926,7 @@ Whether a design can save Sutra files is decided by the server (`drishti.rachana
 
 The Python runtime is a folder, not a setting: `drishti-console/web/static/vendor/pyodide/`, installed by
 `python tools/drishti.py calc install` and served at `/pyodide/<version>/` when present
-([USER_GUIDE.md](../guides/USER_GUIDE.md#12-installing-the-python-runtime)).
+([USER_GUIDE.md](../guides/bi/CALC.md#12-installing-the-python-runtime)).
 
 ---
 
@@ -3211,7 +3211,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
-| `drishti.edit.file` | string | `<config>/edit/edit.yaml` | `DRISHTI_EDIT_FILE` | server | Write-back (docs/guides/APPROVALS\_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. | restart |  | admin |
+| `drishti.edit.file` | string | `<config>/edit/edit.yaml` | `DRISHTI_EDIT_FILE` | server | Write-back (docs/guides/ADMIN\_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. | restart |  | admin |
 
 #### `drishti.live-sets`
 
@@ -3761,7 +3761,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
 |---|---|---|---|---|---|---|---|---|
 | `drishti.explain.ask.enabled` | boolean | `false` | `DRISHTI_ASK_ENABLED` | server | turn on Ask about this page (also needs drishti.ai.enabled; list packs in drishti.explain.ask.packs) | restart |  | admin |
-| `drishti.explain.ask.model` | string | empty | `DRISHTI_ASK_MODEL` | server | the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/AI\_GUIDE.md) | restart |  | admin |
+| `drishti.explain.ask.model` | string | empty | `DRISHTI_ASK_MODEL` | server | the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/ADMIN\_GUIDE.md) | restart |  | admin |
 | `drishti.explain.ask.packs` | list | `[]` |  | server | packs where the Ask box is on; empty = none (per-pack opt-in) | restart |  | admin |
 | `drishti.explain.ask.values` | string | `labels-only` |  | server | labels-only \| shown: whether the page's rendered text (values) goes into the prompt; masked values never do | restart |  | admin |
 | `drishti.explain.ask.max-question-chars` | integer | `500` |  | server | longer questions are refused (400) | restart |  | admin |
@@ -5627,10 +5627,10 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `kinds` | list | `what the plugin reports` |  | the connector | The kinds it serves | live (the connector restarts) |  | admin |
 | `settings` | map | `{}` |  | the connector | The plugin's settings, as the tables above (every plugin, the shared tls.\* and proxy.\*, the plugin's own) | live (the connector restarts) |  | admin |
 | `settings.*` | map | none |  | the connector | One setting of the plugin | live (the connector restarts) |  | admin |
-| `writes` | map | `{}` |  | the connector | Named commands that write an approved change back to the source (APPROVALS\_GUIDE.md section 5.4): JDBC or Kafka; off until an administrator switches the connector's writes on | live (the connector restarts) |  | admin |
+| `writes` | map | `{}` |  | the connector | Named commands that write an approved change back to the source (ADMIN\_GUIDE.md section 5.4): JDBC or Kafka; off until an administrator switches the connector's writes on | live (the connector restarts) |  | admin |
 | `writes.*` | map | none |  | the connector | One command: kind, params, confirm (reply, ack-topic, next-load), timeout, and the plugin's block (jdbc or kafka) | live (the connector restarts) |  | admin |
 | `writes.*.confirm` | string | `reply` |  | the connector | How the write is confirmed: reply, ack-topic or next-load | live (the connector restarts) |  | admin |
-| `writes.*.kafka` | map | none |  | the connector | The Kafka block (docs/guides/LIVE\_RESULTS\_GUIDE.md section 8): topic, shape, version-field, changed-by, changed-at, change-id-field | live (the connector restarts) |  | admin |
+| `writes.*.kafka` | map | none |  | the connector | The Kafka block (docs/guides/USER\_GUIDE.md, Live results and blotters: Writing back to the record's own source): topic, shape, version-field, changed-by, changed-at, change-id-field | live (the connector restarts) |  | admin |
 | `writes.*.kafka.*` | string | none |  | the connector | One key of the Kafka block | live (the connector restarts) |  | expert |
 
 #### A lake file: `config/lakes/<lake>.yaml` (docs/guides/DATA_LAKE_GUIDE.md)
@@ -6065,7 +6065,7 @@ Every BI question as a bounded, visible job ([ARCHITECTURE.md §28](../architect
 
 ### Write-back: `config/edit/`
 
-Write-back's four files ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md): the administrator's guide and, in its section 16, the design); `drishti.edit.file` names `edit.yaml`, the others sit beside it.
+Write-back's four files ([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md): the administrator's part is section 28, the using part [the User guide's Approvals](../guides/USER_GUIDE.md#approvals)); `drishti.edit.file` names `edit.yaml`, the others sit beside it.
 
 #### `edit.yaml`
 
@@ -6217,7 +6217,7 @@ The rules each server evaluates against its own metrics ([OPERATIONS_GUIDE.md](.
 
 ### Data feeds: `config/feeds/<feed>.yaml`
 
-One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys (environment variables only) ([WORLD_DATA_GUIDE.md section 7](../guides/WORLD_DATA_GUIDE.md#7-the-feed-file-every-key)); read by `drishti.py feed` at every run. The keys below are those of the annotated `gleif.yaml`; `keys:` names API keys as `${ENV}`.
+One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys (environment variables only) ([WORLD_DATA_GUIDE.md section 19.7](../guides/WORLD_DATA_GUIDE.md#197-the-feed-file-every-key)); read by `drishti.py feed` at every run. The keys below are those of the annotated `gleif.yaml`; `keys:` names API keys as `${ENV}`.
 
 #### A feed file: `config/feeds/<feed>.yaml`
 
@@ -6372,7 +6372,7 @@ The site's brand for pages built with the Drishti UI kit (`drishti.ui-kit.dir`).
 
 ### AI providers and MCP servers: `config/ai/`, `config/mcp/`
 
-One YAML per provider in `config/ai/` and per MCP server in `config/mcp/`, for the server (`drishti.ai.dir`, `drishti.mcp.dir`) and the console (`ai.dir`, `mcp.dir`); the folders are looked at every few seconds, so a changed file needs no restart. Every key a shipped example (`*.yaml.example`) uses ([AI_GUIDE.md › Model providers](../guides/AI_GUIDE.md#1-model-providers), [AI_GUIDE.md › The MCP client](../guides/AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)).
+One YAML per provider in `config/ai/` and per MCP server in `config/mcp/`, for the server (`drishti.ai.dir`, `drishti.mcp.dir`) and the console (`ai.dir`, `mcp.dir`); the folders are looked at every few seconds, so a changed file needs no restart. Every key a shipped example (`*.yaml.example`) uses ([ADMIN_GUIDE.md › Model providers](../guides/ADMIN_GUIDE.md#271-model-providers), [ADMIN_GUIDE.md › The MCP client](../guides/ADMIN_GUIDE.md#272-the-mcp-client-other-servers-tools-behind-drishtis-policy)).
 
 #### A provider file: `config/ai/<name>.yaml`
 
@@ -6449,7 +6449,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_ARTIFACTS_CONSOLE_PORT` | screenshot tools | none | tools | The console port of the artifacts screenshots |
 | `DRISHTI_ARTIFACTS_SERVER_PORT` | screenshot tools | none | tools | The server port of the artifacts screenshots |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | server | turn on Ask about this page (also needs drishti.ai.enabled; list packs in drishti.explain.ask.packs) |
-| `DRISHTI_ASK_MODEL` | `drishti.explain.ask.model` | empty | server | the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/AI\_GUIDE.md) |
+| `DRISHTI_ASK_MODEL` | `drishti.explain.ask.model` | empty | server | the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/ADMIN\_GUIDE.md) |
 | `DRISHTI_ASYNC_TIMEOUT` | `spring.mvc.async.request-timeout` | `30m` | server | how long a streamed answer may take: a workbook download (the VaR Playground, the Why it moved working, the capacity workbook), a BI export; an answer cut at this limit arrives incomplete |
 | `DRISHTI_AUDIT_FILE` | `drishti.identity.audit-file` | `<data>/identity/audit.jsonl` | server | the file audit log's file |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | console | off for local development |
@@ -6513,7 +6513,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_DUCKDB_MEMORY` | duckdb connector file | `1GB` | packs | The shared DuckDB instance's memory limit |
 | `DRISHTI_DUCKDB_PATH` | duckdb connector file | `data/duckdb/drishti.duckdb` | packs | The duckdb connector file's file (one file, a schema per domain) |
 | `DRISHTI_EDIT_ENABLED` | `edit.enabled` (write-back) | `false` | write-back | the write-back switch: false refuses every change (UI, CLI, API) and shows no Submit |
-| `DRISHTI_EDIT_FILE` | `drishti.edit.file` | `<config>/edit/edit.yaml` | server | Write-back (docs/guides/APPROVALS\_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. |
+| `DRISHTI_EDIT_FILE` | `drishti.edit.file` | `<config>/edit/edit.yaml` | server | Write-back (docs/guides/ADMIN\_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml). Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only. |
 | `DRISHTI_EMBED_ENABLED` | `drishti.embed.enabled`, `embed.enabled` | `false` | console, server | off: no token endpoint, embed tokens refused. Needs drishti.security.enabled |
 | `DRISHTI_EMBED_KEY_FILE` | `drishti.embed.signing-key` | empty | server | PEM with a PKCS#8 EC PRIVATE KEY and a PUBLIC KEY block (ES256); empty = generated at start |
 | `DRISHTI_EMBED_SIGN_IN` | `embed.sign_in.enabled` | `true` | console | needs auth.oidc.enabled; off: the window answers DRS-8003 and pages keep the token exchange |

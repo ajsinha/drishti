@@ -133,7 +133,7 @@ feeds:
       - ["--snapshot", "refresh the committed pack instead: data/testdata/funds, samples/, the README and this guide, then make.py --check"]
       - ["--snapshot --offline", "the same from the downloads only (about 700 MB in <data>/datafeeds/sources/cache/funds)"]
       - ["-- --scope FUNDS:300,HOLDINGS:1000", "a widened pull of more funds and holdings"]
-  # the public-sector module's feeds (WORLD_DATA_GUIDE.md section 5)
+  # the public-sector module's feeds (WORLD_DATA_GUIDE.md section 20.5)
   world-development:
     examples:
       - ["--load inbox", "the same through the data inbox: the server loads it"]

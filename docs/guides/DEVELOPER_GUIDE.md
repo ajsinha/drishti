@@ -93,7 +93,7 @@ inbox nor the in-memory lake, the disk cache sees nothing of `common`, and so on
 | `drishti-engine` | `engine`, `graph` | Sources and routing (including a **union** of connectors that serve one kind together), the view pipeline, binding, the ViewModel, commands and type-ahead, search, history, impact, business dates, live topics; entity references (which fields link to which kinds) and link badges. | `ViewPipeline`, `source.SourceRegistry`, `source.SourceRouter`, `source.ConnectorInstance`, `bind.Binder`, `view.ViewModel`, `view.PanelData`, `live.TopicHub`, `live.ViewStream`, `command.CommandParser`, `search.StructuredSearch` |
 | `drishti-identity` | `identity` | Users, passwords, roles, lockout, preferences, pack switches and the audit trail, in SQLite or PostgreSQL through JPA. | `UserService`, `JpaUserStore`, `RoleStore`, `PackStateStore`, `JpaAuditLog`, `IdentityDatabase`, `db.IdentityRepositories` |
 | `drishti-packs` | `packs` | Loads the enabled packs and turns them into the lowest-precedence property source; writes connector files from the packs' templates. | `PackLoader`, `PackLineage`, `PackEnvironmentPostProcessor` (registered in `META-INF/spring.factories`), `ConnectorBootstrap` |
-| `drishti-ai` | `ai` | The LLM provider layer and the MCP client: providers (Anthropic, OpenAI-compatible through Spring AI, a mock), model registry, call policy, prompt masking, MCP clients over streamable HTTP. Depends on `api` and `common` only (`ArchitectureRulesTest.aiLayerDependsOneWay`). **Off by default**; see [AI_GUIDE.md](AI_GUIDE.md#1-model-providers) and [AI_GUIDE.md](AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy). | `LlmGateway`, `LlmRegistry`, `LlmProvider`, `AnthropicProvider`, `SpringAiOpenAiProvider`, `McpGateway`, `McpRegistry`, `McpClient` |
+| `drishti-ai` | `ai` | The LLM provider layer and the MCP client: providers (Anthropic, OpenAI-compatible through Spring AI, a mock), model registry, call policy, prompt masking, MCP clients over streamable HTTP. Depends on `api` and `common` only (`ArchitectureRulesTest.aiLayerDependsOneWay`). **Off by default**; see [AI_GUIDE.md](ADMIN_GUIDE.md#271-model-providers) and [AI_GUIDE.md](ADMIN_GUIDE.md#272-the-mcp-client-other-servers-tools-behind-drishtis-policy). | `LlmGateway`, `LlmRegistry`, `LlmProvider`, `AnthropicProvider`, `SpringAiOpenAiProvider`, `McpGateway`, `McpRegistry`, `McpClient` |
 | `drishti-lake-host` | `lakehost` | Drishti's side of Drishti Lake (the product's jars: `lake-api`, `lake-io`, `lake-config`, `lake-delta`, `lake-iceberg`, `lake-files`, `lake-load`, `lake-memory`; its own repository, its own gate). `DrishtiLakeCatalog`: the shipped lakes (every jar's and live module's `drishti/lakes/shipped.txt`), the packs' files from the one resolution, the connectors' templates, the named lake writers and the modules' `ReadyRule` extensions. `DrishtiLake`: the one `LakeRuntime` of the process, built once from the server's settings (`lake.*`, `LAKE_*`) with the catalog and the `mem://` storage. `DrishtiLakeCli load` and `check`: the loader and `LakeCheck` with that runtime (the server's loader child process and `tools/drishti.py lake` start it). `LakeReads`: opens a connector's lake through the product's read API and maps a failed read to `UnreadableData`. | `DrishtiLakeCatalog`, `DrishtiLake`, `DrishtiLakeCli`, `LakeReads` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check; and the conformance checks C1–C14 ([§1.6](#16-the-module-sdk): `module.conformance`, run by `ModuleCli` in the server jar). Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `tool.ModuleTool`, `tool.ModuleConformance`, `KernelLibraries`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
@@ -625,7 +625,7 @@ of `drishti.py start all --demo` (`tools/launch/devsecrets.py`, the one place th
 lacking a library stops at once with the `setup` line.
 
 For Calc (Python on a view, `Alt+C`), install its runtime once: `python tools/drishti.py calc install` (about 340 MB downloaded to
-`~/.cache/drishti/`, 53 MB kept; see [USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)). Without it the console runs
+`~/.cache/drishti/`, 53 MB kept; see [USER_GUIDE.md](bi/CALC.md#12-installing-the-python-runtime)). Without it the console runs
 as usual, `GET /healthz` says `"pythonRuntime": "not installed: run python tools/drishti.py calc install"` and the Calc panel says how to install it.
 
 The console reads `drishti-console/config/application.yaml`, then `drishti-console/config/application.local.yaml` if present
@@ -936,7 +936,7 @@ WebAssembly (Pyodide) and it can fetch nothing but static files and the runtime 
 session).
 For Pyodide, `python tools/drishti.py calc install` downloads a pinned release, checks its SHA-256 and unpacks what Calc needs into
 `drishti-console/web/static/vendor/pyodide/` (git-ignored); the console serves it at `/pyodide/<version>/`
-([USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)).
+([USER_GUIDE.md](bi/CALC.md#12-installing-the-python-runtime)).
 
 So templates may not contain inline `<script>` blocks, `on…=` handlers or `style=` attributes, and nothing may load from another origin.
 `drishti-console/tests/test_assets_policy.py` checks all of this. Behaviour goes in a file under `web/static/js/`, wired by `data-*`
@@ -3523,7 +3523,7 @@ while the module is on. The rules (no canvas, svg or colour of its own; tones fr
 
 ### 12.6a How to create a blotter (a live table)
 
-A blotter is a declaration, not code: one live table of Rachana's engine ([Live results and blotters](LIVE_RESULTS_GUIDE.md#11-make-a-new-blotter), with a complete inventory example and the declaration format in [section 6](LIVE_RESULTS_GUIDE.md#6-the-declaration)).
+A blotter is a declaration, not code: one live table of Rachana's engine ([Live results and blotters](USER_GUIDE.md#make-a-new-blotter), with a complete inventory example and the declaration format in [section 6](USER_GUIDE.md#the-declaration)).
 
 1. In your module, add `blotters/<name>.live.yaml`: `rachana: 1`, `live-table`, the `kind`, `snapshot` and `stream` (the kind), an optional
    `where` (Rachana-EL over the row), `key`, `version`, `columns`, `links`, `retention` and, for edits, `edit:` (a Rachana form with
@@ -3531,7 +3531,7 @@ A blotter is a declaration, not code: one live table of Rachana's engine ([Live 
    is the worked example.
 2. List it in `module.yaml` (`blotters: {folder: blotters, list: [<name>]}`) and the kind in `data/needs.yaml`.
 3. The site binds the kind (`config/bindings.yaml`: `read:` the store, `live:` the messaging connector) and, for edits, gives the connector a
-   `writes:` command ([APPROVALS_GUIDE.md section 10](APPROVALS_GUIDE.md#10-writing-to-a-source-writes)).
+   `writes:` command ([APPROVALS_GUIDE.md section 10](ADMIN_GUIDE.md#284-writing-to-a-source-writes)).
 4. Check it: `GET /api/v1/rdp/tables` lists it (a declaration set aside is listed in Admin, with why); `POST /api/v1/rdp/tables/<name>/query`
    answers its rows.
 

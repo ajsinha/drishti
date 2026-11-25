@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""Every "rows of records" result is a query on a live table (docs/guides/LIVE_RESULTS_GUIDE.md section 7): a FORM's result and the search
+"""Every "rows of records" result is a query on a live table (docs/guides/USER_GUIDE.md, Live results and blotters: The engine: snapshot, deltas, scale, retention): a FORM's result and the search
 page's are the server's search opened on a table of the kind (``GET /api/v1/rdp/searches``: the table, the query with its filter tree, sort
 and limit, the first page, the search's summary), following the kind's changes on the live business date and a static snapshot of any
 other day. This module is the one place the console turns such a page into what a result table draws: the search's summary (columns,

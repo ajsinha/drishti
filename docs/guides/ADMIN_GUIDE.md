@@ -243,7 +243,7 @@ Changes to roles, settings, workspaces, members and items are in the audit log (
 
 ### 3.5 Calc
 
-Calc ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)) runs Python in the user's browser on the view they are looking at.
+Calc ([USER_GUIDE.md](bi/CALC.md)) runs Python in the user's browser on the view they are looking at.
 
 - **Who:** holders of a role with `calc`. Tick *Use Calc* in the role's dialog (Admin → Roles), or `calc: true` in configuration or a pack.
 - **What it reads:** only what the user could open by clicking. Every read goes through the console with the user's session; roles, packs
@@ -374,7 +374,7 @@ drishti:
 
 A page that shows Drishti views but has **no backend of its own** (a static intranet page, a SharePoint page) cannot run the token exchange
 of [section 7](#7-embedding-host-applications). With single sign-on on, it can use the renderer's **sign-in window** (`auth: 'popup'`;
-[EMBED_GUIDE.md](EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)): the page shows *Sign in to see this*; on the click, one small window runs this same
+[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md#113-drishti-elements-libraries-in-your-own-app)): the page shows *Sign in to see this*; on the click, one small window runs this same
 single sign-on and the page gets a short-lived, read-only, masked embed token, as from the exchange.
 
 What to set, once:
@@ -395,7 +395,7 @@ storage or a cookie in the page; the provider's refresh token is sealed by the c
 ## 6. API tokens
 
 People read Drishti from scripts, notebooks and Excel with personal API tokens they make on **My account → API tokens**
-([API_REFERENCE.md, clients](DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel)). What an administrator needs to know:
+([API_REFERENCE.md, clients](INTEGRATION_GUIDE.md#33-clients-scripts-notebooks-and-excel)). What an administrator needs to know:
 
 - **A token acts as its owner**, with the owner's roles and packs at the time of each call, and, unless it was made with a **write scope**,
   **only reads**: every `GET`, and the `POST`s that carry a query and change nothing, listed in `drishti.security.token-read-posts` (the
@@ -424,7 +424,7 @@ People read Drishti from scripts, notebooks and Excel with personal API tokens t
 ## 7. Embedding host applications
 
 Another web application (a CRM, a portal) can show live Drishti views in its own pages with `<drishti-view>`
-([EMBED_GUIDE.md](EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app)), without an iframe. An administrator allows it, one **host application** at a time.
+([INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md#113-drishti-elements-libraries-in-your-own-app)), without an iframe. An administrator allows it, one **host application** at a time.
 Embedding is off until `drishti.embed.enabled` is on ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications));
 register applications on **Admin → Embedding** (`/admin/embedding`), or with the API
 ([API_REFERENCE.md](API_REFERENCE.md#24-embedding-views-in-another-web-application)), for example:
@@ -1255,7 +1255,7 @@ How the engines are built is in [ARCHITECTURE.md section 27](../architecture/ARC
 | `mr-cube` | the market-risk cube on the pivot engine ([PIVOT_SCALE_AND_CUBES.md section 29](bi/PIVOT_SCALE_AND_CUBES.md#7-the-mr-cube-preset)) | `DRISHTI_MR_CUBE_ENABLED` | on | `MCUBE`, `/mcube` |
 | `memory-lake` | Delta tables held in memory only, with their replenish jobs ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)) | `DRISHTI_MEMORY_LAKE_ENABLED` | off (it needs stores configured) | Admin → Lakes' Memory tab, `drishti.py lake memory`, `mem://` stores |
 | `dataload` | the data inbox: files dropped in its inbox with a `.ready` marker are loaded into the lake ([DATA_GUIDE.md](DATA_GUIDE.md)) | `DRISHTI_DATALOAD_ENABLED` | off | the inbox and its loads |
-| `flight` | Arrow Flight, data out to any client ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)) | `DRISHTI_FLIGHT_ENABLED` | off | the Flight port |
+| `flight` | Arrow Flight, data out to any client ([INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)) | `DRISHTI_FLIGHT_ENABLED` | off | the Flight port |
 | `openblas` | linear algebra on the bundled OpenBLAS; off: the pure-Java kernels, the same figures | `DRISHTI_OPENBLAS_ENABLED` | off | nothing hidden: on switches the many-scope sums to OpenBLAS live, after a self-test; `drishti.py server blas` |
 
 The compute workers are not an engine: they keep their own file, `config/compute/compute.yaml`, and switch, `compute.enabled`. Neither are
@@ -1619,7 +1619,7 @@ A module that is switched off answers `404` on its pages and API (*Not available
 Alert rules that use either show *paused · needs module X*; nothing saved is deleted, and the module back, it works again.
 
 **What the console shows of a module.** Its console part (its pages under `/m/<id>/`, menu entries, Home cards, command words, Help
-section, AI tools; [DEVELOPER_GUIDE.md section 1.7](DEVELOPER_GUIDE.md#17-a-modules-console-part)) appears on every console within
+section, AI tools; [DEVELOPER_GUIDE.md section 1.7](DEVELOPER_GUIDE.md#17a-a-modules-console-part)) appears on every console within
 `modules.parts_refresh_seconds` (5) of the server's start, and goes when the module is
 switched off or its file taken out and the server restarted: an open page of it is frozen under the notice, Build's lists and Forms' saved searches keep saved Sutras, reports, dashboards, baskets and searches
 that use it with a *needs module X* chip (not openable until it is back). A part that carries its own copy of Drishti Elements or of a
@@ -1667,3 +1667,1023 @@ lists what the console hosts, what is gone and what it refused, with the reasons
 | An engine stays *restart needed* | `memory-lake` and `flight` start only at a server start | restart the server |
 | An engine shows *not installed* | its module is off | switch the module on ([section 22](#22-modules-on-or-off)) |
 | An engine's pages are missing from the Risk menu for some people | the engine's `opens:` does not name their role | add the role to its `opens:` in the banking jar's `META-INF/drishti/engines.yaml` (the console keeps no copy) |
+
+## 27. AI: model providers and MCP servers
+
+> **Off in this release.** The console of this release shows no AI page, menu item or button (no Admin → AI, no assistant, no
+> *Ask about this page*, no AI in BI), and the server's AI layer is **off**: one switch, `drishti.ai.enabled` (`false` as shipped),
+> turns all of it on together (the model providers, the MCP client, *Ask about this page* and the BI hooks each also need it). While it
+> is off no provider or MCP file is read, no key is asked for and no model is called; Admin → Health says **AI: off**.
+
+The server's AI layer has two parts, both built and both off by default: the **model providers** (27.1: one interface, one file per
+provider, seventeen vendor types beside `openai`, `anthropic`, `server` and `mock`) and the **MCP client** (27.2: other servers' tools,
+resources and prompts behind Drishti's policy; off until `drishti.mcp.enabled=true`). The pages that use the layer are
+[*Ask about this page*](USER_GUIDE.md#about-this-page) and BI's AI hooks
+([GOVERNANCE_AND_AI.md](bi/GOVERNANCE_AND_AI.md#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number)); the settings are in
+[CONFIGURATION.md](../admin/CONFIGURATION.md). The designs of AI management and of server-side pricing, which are not built, are in
+[AI_MANAGEMENT.md](../plans/AI_MANAGEMENT.md) and [QUANT_SERVICE.md](../plans/QUANT_SERVICE.md).
+
+### 27.1 Model providers
+
+Drishti talks to language models through its **own** interfaces. Which vendor, library or endpoint answers is a file in
+`config/ai/`, not a decision in a feature. Spring AI (`spring-ai-starter-model-openai`) is an implementation detail behind the
+`openai` provider type; no feature sees it. The layer is **off by default** (`drishti.ai.enabled=false`): while off, no
+provider file is read and no model is called. The console calls this layer only (section 27.1.8).
+MCP servers (tools a model or a feature can call) have a sibling layer: [27.2](#272-the-mcp-client-other-servers-tools-behind-drishtis-policy). Beyond `openai`, `anthropic` and `mock`, seventeen more provider types (Groq, Together, Fireworks, DeepSeek, xAI, OpenRouter, Perplexity, Hugging Face, vLLM, LM Studio, Mistral, any OpenAI-compatible server, Azure OpenAI, Gemini, Cohere, Ollama, AWS Bedrock) come from sajhamcpserver: [section 11](#27111-more-providers-the-way-sajhamcpserver-has-them).
+
+#### 27.1.1 The pieces (server, module `drishti-ai`)
+
+`drishti-ai` has no controllers and depends only on `drishti-api` (the shared `tls.*` module) and `drishti-common`; an ArchUnit
+rule (`aiLayerDependsOneWay`) keeps it that way. REST lives in `drishti-server`.
+
+| Type | Role |
+|---|---|
+| `LlmProvider` | One configured provider: `id()`, `type()`, `capabilities()`, `models()`, `chatModel(name)`, `embeddingModel(name)`. |
+| `LlmModel` / `EmbeddingModel` | A model by its logical name: `chat(ChatRequest)` returns a `ChatResponse`; `embed(texts)`. |
+| `ChatRequest` / `ChatResponse` | Provider-independent: model reference, system text, messages, tools, temperature, max tokens, JSON mode, timeout; text, tool calls, finish reason, `Usage` (tokens and cost). |
+| `Capability` | `chat`, `streaming`, `tool-calls`, `embeddings`, `json-mode`. A model lists what it can do; the gateway refuses a request that needs more (`UNSUPPORTED`). |
+| `ProviderFactory` | The extension point: `type()` and `create(ProviderConfig)`. |
+| `LlmRegistry` | Providers and models by logical name (`provider/model`, or a bare name only one provider has), health, `reload()`. |
+| `LlmPolicy` / `DefaultLlmPolicy` | Hooks before and after every call (section 27.1.4). |
+| `LlmGateway` | **The one door features use**: resolve the model, run the policy, apply the timeout, record health. |
+
+A feature calls it like this:
+
+```java
+ChatResponse r = gateway.chat(new CallContext(user, roles, "ask"),
+        ChatRequest.of("provider/model", systemText, userText, maxTokens, Duration.ofSeconds(15)));
+```
+
+Failures are `LlmException` with a kind (`CONFIG`, `NOT_FOUND`, `UNSUPPORTED`, `POLICY`, `RATE_LIMITED`, `TIMEOUT`, `FAILED`); the
+message never carries a key, a prompt or an upstream response body.
+
+#### 27.1.2 Provider files
+
+One YAML per provider in `drishti.ai.dir` (`DRISHTI_AI_DIR`, default `./config/ai`), watched and reloaded live like connectors
+(`drishti.ai.watch`: `auto` / `poll` / `off`). A bad file is listed with its reason (Admin -> AI) and the others still load.
+Files ending `.example` are ignored; copy one and drop the suffix. Ready-made: `config/ai/openai.yaml.example`,
+`anthropic.yaml.example`, `mock.yaml.example` (and `server.yaml.example` for the console).
+
+```yaml
+type: openai                         # the provider type (the factory); required
+enabled: true
+base-url: https://api.openai.com
+completions-path: /v1/chat/completions
+api-key: ${OPENAI_API_KEY}           # an ${ENV_NAME} placeholder ONLY; a literal key is refused and the file does not load
+timeout: 60s
+retries: 0
+default-model: fast                  # used when a call names no model and this is the provider the registry falls to
+header: {X-Team: red}                # extra headers; credential-looking ones (auth, key, token, secret) must be ${ENV}
+tls: {ca-file: /etc/drishti/ca.pem}  # the shared tls.* keys; https:// trusts the JVM's authorities unless told otherwise
+proxy:                               # optional outbound HTTP proxy (see "Outbound proxy" below); `proxy: none` goes direct
+  url: http://proxy.corp.example:3128
+  username: svc-drishti
+  password: ${PROXY_PASSWORD}   # ${ENV} only; a literal is refused and the file does not load
+  no-proxy: [localhost, .corp.example]
+models:
+  - name: fast                       # logical name: what features and policy refer to
+    id: gpt-4o-mini                  # the provider's own id
+    max-tokens: 400
+    temperature: 0.2
+    capabilities: [chat, tool-calls, json-mode]
+    cost-per-1k-input: 0.00015       # drives Usage.cost, audit and the daily cost limit
+    cost-per-1k-output: 0.0006
+```
+
+The provider name is the file name without its extension (or `name:`). A model is referred to as `provider/model` (for example
+`openai/fast`); a bare name works when only one provider has it. The registry default is `drishti.ai.default-model`
+(`DRISHTI_AI_DEFAULT_MODEL`), else the only chat model there is.
+
+##### 27.1.2.1 Outbound proxy
+
+A site that reaches the model endpoint only through a forward proxy puts a `proxy:` block in the provider file (`url`, `username`, `password` as `${ENV}`, `no-proxy`, `enabled`), or
+sets the site default once: `drishti.http.proxy.*` on the server, `DRISHTI_HTTP_PROXY_URL` and friends in the console. `proxy: none` in a file goes direct whatever the site says.
+`http://` and `https://` endpoints both go through an `http://` proxy; an https endpoint is tunnelled with `CONNECT`, so `tls.*` (a private CA, a client certificate) still applies to the
+endpoint itself. OpenAI-compatible and Anthropic providers use it on the server (the JDK HTTP client) and in the console (`httpx`). A literal `proxy.password` refuses the file without
+repeating it; a wrong proxy login is reported as a failure of the call without the password. Everything is in [DATA_GUIDE.md, the outbound proxy](DATA_GUIDE.md#proxy-9-the-console-ai-and-mcp-clients). Tested in
+`AiProxyTest` against a fake proxy on loopback. Admin -> AI does not display the proxy yet.
+
+##### 27.1.2.2 A provider that cannot be set up is retried
+
+A file that is well formed can still give a provider that cannot be built (its type is not installed, a setting the type needs is
+wrong, an `${ENV}` key is not set). It is listed in Admin -> AI as **ERROR** and **tried again by itself**: after `drishti.retry.ai.initial`
+(5 s), then twice as long each time, never longer than `drishti.retry.ai.max` (5 min), with jitter. The row says
+*failed - next retry in 20 s (attempt 3)* and the last error; an error that retrying cannot fix (a missing key, an unknown type, three
+refusals in a row) is retried only every `max`. A provider that was built is not tested until a call is made: if a call fails it
+shows **DOWN** until the next call goes through (every call is attempted afresh; there is no circuit breaker that holds calls back).
+A file that cannot be read (bad YAML, a literal key) is read again at every look at the folder (`drishti.ai.poll-ms`), so it clears the moment it is fixed.
+**Retry now** (Admin -> AI, `POST /api/v1/admin/retry/ai`, admin, audited as `ai-retry-now`; an API token needs the `packs:admin` scope) builds
+every failing provider at once. Failures are logged and audited on attempts 1, 2, 4, 8, ... (`ai-retry-failed`) and a recovery always
+(`ai-recovered`). Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings), `drishti.retry.*` and `drishti.retry.ai.*`.
+
+##### 27.1.2.3 Types shipped
+
+| `type` | Backed by | Settings beyond the common ones |
+|---|---|---|
+| `openai` | Spring AI 1.0.3 (`OpenAiApi`, `OpenAiChatModel`, `OpenAiEmbeddingModel`) over the JDK HTTP client | `base-url`, `completions-path`, `embeddings-path`, `header.*`, `retries`. Works with Azure OpenAI, vLLM, Ollama's OpenAI endpoint, LiteLLM, company gateways. Chat, tool calls, JSON mode, embeddings. |
+| `anthropic` | the JDK HTTP client (the former Ask provider, ported) | `base-url`, `messages-path`, `anthropic-version`, `header.*`. Spring AI's Anthropic starter is **not** used: one HTTP stack, one TLS module. |
+| `mock` | nothing | section 27.1.6 |
+
+Spring AI's own auto-configuration is switched off in `application.yaml` (`spring.ai.model.chat: none`, ...): Drishti builds
+the clients from the provider files, and nothing starts without a key. Spring AI 1.0.x is compiled for Java 17, so the
+enforcer rule `maxJdkVersion 21` still passes and production runs on JDK 21.
+
+#### 27.1.3 Add a provider in 30 minutes
+
+1. **Write the class** (10 minutes). Extend `BaseProvider` (it reads the model list from the file) and implement `chatModel`
+   (and `embeddingModel` if you can):
+
+   ```java
+   public final class AcmeProvider extends BaseProvider {
+       AcmeProvider(ProviderConfig c) { super(c, Set.of(Capability.JSON_MODE)); }
+
+       @Override public Optional<LlmModel> chatModel(String name) {
+           return find(name, false).map(info -> new LlmModel() {
+               public ModelInfo info() { return info; }
+               public ChatResponse chat(ChatRequest r) {
+                   // call Acme with config.baseUrl(), config.apiKey(), info.id(), maxTokens(r, info, 1024), systemText(r), r.messages()
+                   // map failures to LlmException(Kind.FAILED / TIMEOUT, "message without keys or prompts")
+                   return new ChatResponse(text, List.of(), info.id(), "stop", new Usage(in, out, info.cost(in, out)));
+               }
+           });
+       }
+
+       public static final class Factory implements ProviderFactory {
+           public String type() { return "acme"; }
+           public LlmProvider create(ProviderConfig c) { return new AcmeProvider(c); }
+       }
+   }
+   ```
+2. **Register it** (1 minute): either list `com.example.AcmeProvider$Factory` in
+   `META-INF/services/com.ash.drishti.ai.ProviderFactory` (a jar on the server's class path is enough), or declare the factory as a
+   Spring `@Bean`.
+3. **Write the file** (2 minutes): `config/ai/<name>.yaml` (here `acme.yaml`; the shipped providers are `config/ai/*.yaml.example`) with `type: acme`, `base-url`, `api-key: ${ACME_KEY}` and the models.
+   Anything extra you need goes in the file under your own keys; read it with `config.setting("key", default)` (nested maps are
+   flat: `a.b.c`, lists `a.0.b`).
+4. **Test it** (15 minutes) with the `StubServer` pattern from `kernel/drishti-ai/src/test/.../StubServer.java` (a loopback HTTP server, no
+   network) and the `mock` provider for everything that sits above you. Then Admin -> AI shows your provider and
+   `POST /api/v1/admin/ai/test` sends one real call.
+
+The console needs nothing: it calls the server's layer only.
+
+#### 27.1.4 Policy
+
+`drishti.ai.policy.*` (Admin does not edit these; they are configuration):
+
+| Setting | Meaning |
+|---|---|
+| `mask-redacted` (true) | Fields named in `drishti.security.redact` are masked in every prompt: `salary: 90000` becomes `salary: •••` (also `name=value` and `"name":"value"`). This is in addition to the masking a page already applied. |
+| `mask-patterns` | Extra regular expressions replaced by `•••` in every prompt (card numbers, ...). |
+| `audit` (true) | One access-log row per call, action `ai`: user, feature, `provider/model`, prompt and answer sizes, tokens, outcome, milliseconds. **Never the prompt or the answer.** |
+| `per-user-per-minute`, `per-user-per-day` | Call limits (0 = none); `features.<feature>.per-user-per-minute` overrides per feature. `RATE_LIMITED` (HTTP 429, DRS-4017). |
+| `cost-per-user-per-day` | Stops further calls once a user's cost (from the models' prices) reaches it. |
+| `features.<feature>.roles` | Roles allowed to use a feature; empty or absent = every signed-in user. `POLICY` (HTTP 403, DRS-4018). |
+
+Feature names: `ask`, `admin-test`, and `api:<name>` for callers of `POST /api/v1/ai/chat` (the prefix stops an API caller posing as a
+built-in feature). Replace the whole policy by providing your own `LlmPolicy` bean.
+
+#### 27.1.5 REST
+
+| Call | Who | What |
+|---|---|---|
+| `GET /api/v1/admin/ai` | admin | on/off, folder, provider types, providers with health, models, file errors, MCP servers. |
+| `GET /api/v1/admin/mcp/{server}/tools` | admin | an MCP server's tools ([27.2](#272-the-mcp-client-other-servers-tools-behind-drishtis-policy)). |
+| `POST /api/v1/admin/ai/test` `{model?, prompt?}` | admin | a real call through the policy; audited (`ai-test`); token scope `ai:admin`. |
+| `GET /api/v1/ai/models` | signed in | the models features may name. |
+| `POST /api/v1/ai/chat` `{model?, system?, messages? \| prompt?, temperature?, maxTokens?, jsonMode?, timeoutSeconds?, feature?}` | signed in | the feature-facing API (used by the console's `server` provider); token scope `ai:use`. |
+
+Errors: DRS-4015 off (404), DRS-4016 failed (502) or slow (504), DRS-4017 over a limit (429), DRS-4018 policy (403), DRS-4019 unknown
+model, provider or server (404). Health in Admin -> AI comes from configuration and from the calls seen: `OFF`, `ERROR` (the file
+or its type failed), `UNKNOWN` (no call yet), `UP`, `DOWN` (the last call failed). No probe is sent on its own; **Test** sends one.
+
+#### 27.1.6 The mock provider
+
+`type: mock` (server and console): deterministic, no network, so features and tests run end to end without a real model. Settings
+under `mock:`: `reply` (fixed text; omit to echo `echo: <last user message>`), `latency-ms`, `fail` (every call fails), `fail-every`
+(every Nth), `dimensions` (embedding size), and `rules` (the first whose regex is found in the last user message applies:
+`reply`, `tool` + `tool-args` for a tool-call script, `error`, `latency-ms`). Usage is characters / 4, priced by the model's
+`cost-per-1k-*`, so limits and audit can be exercised. `config/ai/mock.yaml.example` is a complete file.
+
+#### 27.1.7 Ask on the AI layer
+
+Ask about this page ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)) builds its prompt and calls the gateway with feature `ask`.
+Point it at a model with `drishti.explain.ask.model: <provider>/<model>`. The original settings (`endpoint`, `api`, `api-key`) are
+**deprecated but unchanged in behaviour**: they become provider `ask` (with the endpoint split into `base-url` and path), work even
+when `drishti.ai.enabled` is false, and log a warning at start. A provider file may not be named `ask` while they are set.
+
+##### 27.1.7.1 BI uses (stage 2 of Rūpaka)
+
+Seven features use the layer through `LLMFactory.model(...)` ([27.1.10](#27110-one-design-in-two-languages-the-sajhamcpserver-abstractions)): **`bi-draft`** (report from words), **`bi-ask`**
+(ask the data), **`bi-explain`** (the narrative of "explain this number", only when `drishti.bi.ai.values` is `aggregates`), **`bi-suggest`** (the designer copilot's visuals, wells and filters),
+**`bi-explain-checks`** (the Check panel's problems in plain words), **`bi-helper`** (the dataset helper's relationships, measures and column descriptions) and **`subscription-narrative`** (the written
+summary at the top of a subscription's email, made **as the recipient** from their own unmasked figures, only in `aggregates` mode). Each is a feature name for the policy (section 27.1.4), so masks,
+per-feature roles and limits, the cost limit and the audit row apply; each runs under the caller's identity and sends the dataset **model** (names, types, descriptions) and the person's words,
+never a row. Point them at a model with `drishti.bi.ai.model`. Details, settings, errors (`DRS-4020`: an answer that cannot be used) and tests: [GOVERNANCE_AND_AI.md section 29](bi/GOVERNANCE_AND_AI.md#1-ai-in-bi-report-from-words-ask-the-data-explain-this-number).
+
+#### 27.1.8 The console
+
+The console calls no model and no MCP server itself ([THIN_CONSOLE_DESIGN.md](../architecture/THIN_CONSOLE_DESIGN.md), step S7): keys,
+policy, masking, limits and audit have one home, the server. Console features call the console's `POST /api/ai/chat` (JSON only, signed
+in, feature `console:<name>`), which passes the call to the server's `POST /api/v1/ai/chat` as the person. **Admin -> AI** is a read-only
+page of the server's layer: on or off, providers with health and models, MCP servers and (one server at a time, by link) their tools,
+and the AI tools the hosted modules describe. **Test connection** beside a provider makes one live call to its first model on the server
+(`POST /api/v1/admin/ai/test`, audited there); **Retry now** asks the server to try again what failed. A site that configured a provider
+only on the console moves the file to the server's `config/ai` (the same format).
+
+#### 27.1.9 Tests
+
+`drishti-ai`: `AiProxyTest` (the proxy: credentials from the environment, the site default, `proxy: none`, no-proxy, a literal password refused), `LlmLayerTest` (mock, files, registry and reload, a stub OpenAI-compatible server incl. headers, cost and error
+handling, a stub Anthropic server, policy), `McpLayerTest`. `drishti-server`: `AiApiTest` (REST end to end with the mock),
+`AskEndToEndTest` and friends (Ask on the layer, incl. the legacy settings), `AskOffByDefaultTest`. None touches a network beyond
+loopback. The providers of section 27.1.11 have their own tests ([27.1.11.10](#2711110-tests)).
+
+#### 27.1.10 One design in two languages: the sajhamcpserver abstractions
+
+The AI layer exposes the **same abstractions as the user's other project, sajhamcpserver** (`sajha/ai/llm/`), in Java (`drishti-ai`, package
+`com.ash.drishti.ai.llm`; the console's Python copy was removed with the thin console, step S7), so that code written against one reads like code written against the other. sajhamcpserver is the model; nothing is imported from it. Two things differ on purpose: the
+extension field of a request and a response is **`drishti`** (sajhamcpserver's is `sajha`), and the Java names are the Python names in camelCase.
+
+**Layers.** Under the abstractions the *wire* providers are unchanged (`openai` through Spring AI, `anthropic`, `mock`, and in the console `server`): they speak the small request and response types of the
+earlier layers (`ChatRequest`, `ChatResponse`) and carry the HTTP, TLS and proxy code. `ProviderBase` implements `LLMProvider` over a wire provider and translates in one place
+(`Convert`). The provider file format (`config/ai/<name>.yaml`) is **unchanged**; `from_settings` takes the same block as a map.
+The policy (masks, audit, limits, feature roles: section 27.1.4) is applied by `GovernedModel`, which `LLMFactory.model()` hands out; so both the old `LlmGateway.chat` and the new `LLMModel`
+calls pass the same policy and count in the same health.
+
+| sajhamcpserver (Python) | Java (`com.ash.drishti.ai.llm`) | Role |
+|---|---|---|
+| `LLMModel` | `LLMModel` | one model: `info`, `chat_completions_create` / `chatCompletionsCreate`, `achat_completions_create` / `achatCompletionsCreate`, `chat_completions_stream` / `chatCompletionsStream`, `achat_completions_stream` / `achatCompletionsStream`, `embeddings_create` / `embeddingsCreate`, `aembeddings_create` / `aembeddingsCreate` |
+| `LLMProvider` | `LLMProvider` | `from_settings`, `active`, `models`, `model(name, kind)`, `chat_model(model_id, **options)`, `embedding_model`, `health`, `describe_config`, `close` (camelCase in Java; `from_settings` is `LLMProviderFactory.fromSettings`, found by type in `LLMProviders.fromSettings`, because a Java interface cannot require a static) |
+| `ChatModel`, `EmbeddingModel` | `ChatModel`, `EmbeddingModel` | base classes: implement `_create` / `_acreate` (Java `create`) or `_embed` / `_aembed` (Java `embed`); streaming is emulated from one completion |
+| `ProviderBase` | `ProviderBase` | `LLMProvider` over a wire provider |
+| `ChatCompletionRequest`, `ChatCompletion`, `ChatCompletionChunk` | same | OpenAI Chat Completions, typed (`coerce` builds a request from keyword fields; Java: `ChatCompletionRequest.coerce(map)`) |
+| `EmbeddingsRequest`, `EmbeddingsResponse`, `EmbeddingData`, `EmbeddingsUsage` | same | OpenAI Embeddings |
+| `ChatMessage`, `ToolCall`, `FunctionCall`, `ToolDefinition`, `FunctionDefinition`, `ResponseFormat`, `CompletionUsage`, `Choice`, `ChoiceDelta`, `ChunkChoice` | nested in `Canonical` | the parts |
+| `DrishtiRequest` (`context`, `trace_id`, `input_purpose`), `ResponseDrishti` (`provider`, `qualified_model`, `cost_usd`, `cached`, `latency_ms`, `trace_id`) | `DrishtiRequest`, `ResponseDrishti` | the extension fields; `context` is the caller (`CallContext`) the policy decides on |
+| `ModelInfo` (`id`, `provider`, `kind`, `capabilities`, `display_name`, `source`, `qualified_id`), `ModelCapabilities`, `HealthStatus` | same | catalogue entry; capability costs are per million tokens |
+| `register_provider`, `registered_providers`, `provider_class`, `load_class` | `LLMProviders.register`, `.registered`, `.fromSettings` | the provider-type registry (the shipped types are registered at start) |
+| `LLMFactory.model(name, *, kind, context)` -> `GovernedModel`, `.provider(name)`, `.provider_names()`, `.provider_types()` and the six passthrough calls | `LLMFactory.model(name, kind, context)`, `.provider`, `.providerNames`, `.providerTypes` and the passthroughs | the one door application code uses; policy applied |
+| `LLMError` and `RateLimited`, `ProviderUnavailable`, `AuthenticationFailed`, `ContextTooLong`, `ContentFiltered`, `UnsupportedFeature`, `ModelFailed`, `InvalidRequest`, `PolicyDenied`, `BudgetExceeded`, `NoModelAvailable`, `ConfigurationError` | `LlmException` with `Kind` | each Python class has a `kind` equal to the Java `Kind`: `FAILED`, `UNSUPPORTED`, `NOT_FOUND`, `POLICY`, `RATE_LIMITED`, `TIMEOUT`, `CONFIG` |
+| `BaseMCPTool` | `BaseMcpTool` | the tool base class: `execute`, `get_input_schema`, `get_output_schema` (abstract), `validate_arguments`, `execute_with_tracking`, `get_metrics`, `to_mcp_format`, `load_from_config`, `enable` / `disable` ([27.2](#272-the-mcp-client-other-servers-tools-behind-drishtis-policy) section 27.1.7) |
+
+```python
+factory = request.app.state.ai.llm                                   # an LLMFactory over the console's gateway and policy
+model = factory.model("default", context=CallContext(user, roles, "my-feature", ident))
+completion = await model.achat_completions_create(messages=[{"role": "user", "content": "hello"}])
+completion.text, completion.usage.total_tokens, completion.drishti.cost_usd
+```
+
+```java
+LLMModel model = factory.model("default", "chat", new CallContext(user, roles, "my-feature"));
+ChatCompletion c = model.chatCompletionsCreate(ChatCompletionRequest.of("default", "be brief", "hello"));
+c.text(); c.usage().totalTokens(); c.drishti().costUsd();
+```
+
+**What differs from sajhamcpserver, honestly.** Streaming is **emulated** (a completion cut into role, text and finish chunks; the signatures are final, the wire providers do not stream yet); the
+canonical request fields beyond those in `ChatCompletionRequest` (images, logprobs, ...) are not carried to the wire providers; Python's `**options` of `chat_model` and Java's options map are accepted
+and ignored; the fallback, cache, budget and breaker layers of sajhamcpserver's `Governor` are not built (Drishti's policy is section 27.1.4). The registry, factory and settings are the same shape; the layered
+environment overrides (`SAJHA_AI_*`) are Drishti's own `DRISHTI_AI_*` and the provider files.
+
+**Tests.** One shared scenario file, `kernel/drishti-ai/src/test/resources/contract/llm_contract.json` (catalogue, chat, tool call, a scripted failure, a stream, embeddings, refusals), is run against the mock
+by `LLMContractTest`; `BaseMcpToolTest` covers the tool base.
+
+#### 27.1.11 More providers, the way sajhamcpserver has them
+
+Seventeen provider types joined `openai`, `anthropic`, `server` and `mock`, mirroring `sajha/ai/llm/providers/*.py` of sajhamcpserver: the type names, the settings (sajha's `snake_case` fields are
+`kebab-case` keys of the provider file), the model catalogue and the presets. They sit on the same abstractions (section 27.1.10), in **both** languages, behind the same policy (masks, audit,
+limits, roles, labels-only: section 27.1.4). **Every one is off until you copy its example from `config/ai/<type>.yaml.example` to `config/ai/<name>.yaml`, set `enabled: true`** and
+`drishti.ai.enabled=true`.
+
+| `type:` | Vendor and API | Server (Java, `com.ash.drishti.ai`) |
+|---|---|---|
+| `groq`, `together`, `fireworks`, `deepseek`, `xai`, `openrouter`, `perplexity`, `huggingface`, `vllm`, `lmstudio`, `mistral`, `openai_compatible` | OpenAI Chat Completions | `OpenAiCompatProvider` | `openai_compat.py` |
+| `azure_openai` | Azure OpenAI: api key, bearer or Microsoft Entra ID | `AzureOpenAiProvider`, `EntraTokenSource` |
+| `gemini` | Google Gemini API (AI Studio) | `GeminiProvider` |
+| `cohere` | Cohere v2 | `CohereProvider` |
+| `ollama` | a local Ollama server, no key | `OllamaProvider` |
+| `bedrock` | Amazon Bedrock: Converse, InvokeModel, ListFoundationModels | `BedrockProvider` (AWS SDK v2) |
+
+**What every one of them does.**
+
+* **Chat** with text turns, a system text, tools (OpenAI-style `tool_calls` mapped to and from the vendor's shape), JSON mode, temperature and the max-token limit; **embeddings** where the API has them
+  (OpenAI-compatible, Azure, Gemini, Cohere, Ollama, Bedrock); the cost of a call from the catalogue prices.
+* **Streaming** is the layer's emulation (section 27.1.10): the signature is final, the wire call is one request.
+* **Model listing.** `models()` is the catalogue (`ai/llm_catalog.json`, mirrored from sajha's `catalog.py`, prices per million tokens) plus the file's `models:`; a file model with the same name wins, and
+  `catalogue: false` keeps only the file's. `liveModels()` asks the endpoint what it serves now and returns the ones not already listed, with source `live`: `GET /models`
+  for the keyless OpenAI-compatible servers (`vllm`, `lmstudio`, `openai_compatible`; `live-models: true` turns it on for others), `/api/tags` for Ollama, `/v1beta/models` for Gemini, `/v1/models` for Cohere,
+  `ListFoundationModels` for Bedrock. A vendor's new model id is a line in `models:`, never a code change. A logical name is the id with characters outside `A-Za-z0-9._-` replaced by `_`
+  (`openai/gpt-oss-20b` is `openai_gpt-oss-20b`); `groq/llama-3.3-70b-versatile` addresses a model as `<provider>/<logical name>`.
+* **Health.** `health()` never calls the network: it is *down* for `enabled: false` and for a missing key, credential or region (with the variable to set), else *ok*; once a certificate given by `tls.*` is
+  less than 30 days from expiry the text carries the sentence of [DATA_GUIDE.md section 10](DATA_GUIDE.md#109-certificate-expiry). `probe()` (Python also `aprobe()`) makes one cheap live call (the model list; Ollama
+  `/api/tags`) and answers the same shape; Admin shows both.
+* **`describe_config()`** shows the file with every secret as `********` (the key, `header.*` credentials, `proxy.password`, `aws-*`, `client-secret`, `tls.*` passwords); the file's other settings are shown as written.
+* **Keys only as `${ENV}`.** `api-key`, `aws-access-key-id`, `aws-secret-access-key`, `aws-session-token`, `client-secret` and the `tls.*` passwords accept an `${ENV_NAME}` placeholder or nothing; a literal is
+  refused at load, naming the setting. When `api-key` is left out, a preset reads the vendor's own variable (the table below).
+* **Proxy.** The shared `proxy.*` block (or the site default) applies to every call, an `https://` target tunnelled with CONNECT: [DATA_GUIDE.md, the outbound proxy](DATA_GUIDE.md#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers).
+* **TLS.** The shared `tls.*` block of the connectors applies to every provider type (section 27.1.11.9).
+* **Errors** name the cause and never carry the response body: HTTP 401/403 `(authentication failed ...)`, 404 `(not found: check base-url, the path and the model id)`, 429 kind `RATE_LIMITED`, a slow
+  endpoint kind `TIMEOUT`, anything else `FAILED`. `retries: n` tries again after a 5xx, a 429 or a connection failure.
+
+##### 27.1.11.1 OpenAI-compatible presets
+
+A preset is a base URL, a key variable and a catalogue; the code is the same. `openai_compatible` has none of them: give `base-url`.
+
+| `type:` | Default `base-url` | Key read from (when `api-key` is left out) | Needs a key | Embeddings |
+|---|---|---|---|---|
+| `groq` | `https://api.groq.com/openai/v1` | `GROQ_API_KEY` | yes | no |
+| `together` | `https://api.together.xyz/v1` | `TOGETHER_API_KEY` | yes | yes |
+| `fireworks` | `https://api.fireworks.ai/inference/v1` | `FIREWORKS_API_KEY` | yes | yes |
+| `deepseek` | `https://api.deepseek.com/v1` | `DEEPSEEK_API_KEY` | yes | no |
+| `xai` | `https://api.x.ai/v1` | `XAI_API_KEY` | yes | no |
+| `openrouter` | `https://openrouter.ai/api/v1` | `OPENROUTER_API_KEY` | yes | no |
+| `perplexity` | `https://api.perplexity.ai` | `PERPLEXITY_API_KEY`, `PPLX_API_KEY` | yes | no |
+| `huggingface` | `https://router.huggingface.co/v1` | `HF_TOKEN`, `HUGGING_FACE_HUB_TOKEN` | yes | no |
+| `vllm` | `http://localhost:8000/v1` | `VLLM_API_KEY` | no | yes |
+| `lmstudio` | `http://localhost:1234/v1` | `LMSTUDIO_API_KEY` | no | yes |
+| `mistral` | `https://api.mistral.ai/v1` | `MISTRAL_API_KEY` | yes | yes (`mistral-embed`) |
+| `openai_compatible` | none (required) | `api-key` only | no | yes |
+
+```yaml
+# config/ai/fast.yaml
+type: groq
+enabled: true
+api-key: ${GROQ_API_KEY}
+timeout: 60s
+default-model: llama-3.3-70b-versatile
+models:                                  # optional: add to or override the catalogue
+  - {name: gpt-oss, id: openai/gpt-oss-20b, capabilities: [chat, tool-calls, json-mode], cost-per-1k-input: 0.000075, cost-per-1k-output: 0.0003}
+```
+
+Settings: `base-url`, `completions-path` / `chat-path` (`/chat/completions`), `embeddings-path` (`/embeddings`), `max-tokens-param` (`max_tokens`; `max_completion_tokens` for a server that wants it; Mistral
+declares `max_tokens`), `live-models`, `models-path` (`/models`), `header.<Name>` (extra headers; a credential as `${ENV}`), `retries`, `proxy.*`, `tls.*`. A request goes to
+`POST {base-url}/chat/completions` with `Authorization: Bearer <key>`:
+
+```json
+{"model": "llama-3.3-70b-versatile", "messages": [{"role": "user", "content": "ping"}], "max_tokens": 1024, "stream": false}
+```
+
+Built: chat, tools, JSON object mode, embeddings, model list. Not built (the layer's request type does not carry them yet): `tool_choice` and the vendor spellings of it (`tool-choice-required`),
+`seed`, `parallel_tool_calls`, `reasoning_effort`, `strict` JSON schemas, images.
+
+##### 27.1.11.2 Azure OpenAI
+
+```yaml
+# config/ai/azure.yaml
+type: azure_openai
+enabled: true
+base-url: https://my-resource.openai.azure.com        # also AZURE_OPENAI_ENDPOINT
+api-style: v1                                          # v1: /openai/v1/chat/completions, the deployment as "model"
+auth: api_key                                          # api_key: the api-key header | bearer | entra
+api-key: ${AZURE_OPENAI_API_KEY}
+deployments:                                           # model id: deployment name; each is also a model of this provider
+  gpt-4o: my-gpt4o-deployment
+  text-embedding-3-small: my-embedding-deployment
+```
+
+`api-style: deployments` addresses `/openai/deployments/<deployment>/chat/completions?api-version=<api-version>` (`api-version` defaults to 2024-10-21). The limit is sent as
+`max_completion_tokens`. **Microsoft Entra ID** (`auth: entra`): `tenant-id`, `client-id`, `client-secret: ${AZURE_CLIENT_SECRET}` (the client-credentials grant) or `federated-token-file` (workload identity, the
+grant with a client assertion); `entra-mode: auto | client_secret | workload_identity`, `entra-scope` (`https://cognitiveservices.azure.com/.default`), `entra-authority`
+(`https://login.microsoftonline.com`). The token is cached until a minute before it expires and is fetched through the provider's own proxy and TLS settings. **Built in both languages without an SDK; managed identity
+(the instance metadata endpoint) is not built**, and a file that asks for it (`entra` with no secret and no federated file) is *down* with that sentence. Azure has no model-list call every key may make: the models
+are the `deployments` (and `models:`).
+
+##### 27.1.11.3 Gemini
+
+```yaml
+# config/ai/gemini.yaml
+type: gemini
+enabled: true
+api-key: ${GEMINI_API_KEY}              # GEMINI_API_KEY or GOOGLE_API_KEY is also read when this line is left out
+```
+
+`POST {base-url}/v1beta/models/<id>:generateContent` with `x-goog-api-key`; embeddings by `:batchEmbedContents` (`embedding-task-type`, default `RETRIEVAL_DOCUMENT`). `schema-mode: json_schema`
+sends tool schemas as `parametersJsonSchema`; `openapi` sends the OpenAPI subset as `parameters`. `api-version` (v1beta), `base-url` (also `GEMINI_BASE_URL`). **Vertex AI (`platform: vertex`) is not built**
+and is refused at load.
+
+##### 27.1.11.4 Mistral
+
+`type: mistral` is the OpenAI-compatible provider with Mistral's declarations (`max_tokens`, key `MISTRAL_API_KEY`, `mistral-embed`). Copy `config/ai/mistral.yaml.example`; the settings are those of 11.1.
+
+##### 27.1.11.5 Cohere
+
+```yaml
+type: cohere
+enabled: true
+api-key: ${COHERE_API_KEY}              # COHERE_API_KEY or CO_API_KEY is also read when this line is left out
+```
+
+`POST /v2/chat` and `/v2/embed` with a bearer key (`chat-path`, `embed-path`, `embedding-input-type` default `search_document`); the model list is `GET /v1/models`. The `document` tool-result format is not built.
+
+##### 27.1.11.6 Ollama
+
+```yaml
+type: ollama
+enabled: true
+base-url: http://localhost:11434         # also OLLAMA_HOST; a bare host:port gets http://
+timeout: 300s                            # a model that is not loaded yet is slow to answer
+options: {top_k: 40}
+```
+
+No key. `POST /api/chat` (`stream: false`; tool-call ids are made up as `call_<n>`), `/api/embed`; `options.<name>` (any runtime option), `num-ctx`, `keep-alive`, `think`. An optional `api-key` is sent as a bearer
+token, for a proxy in front of Ollama. `live_models()` lists what is pulled (`/api/tags`); `probe()` says `http://host:11434: 2 model(s) pulled`, or that it is not answering, without raising. `/api/show` capability
+detection is not built: declare `capabilities` in `models:`.
+
+##### 27.1.11.7 AWS Bedrock
+
+Built in **both** languages on the AWS SDKs, so the whole AWS credential chain works: environment keys, a shared-credentials `profile`, SSO, container and instance roles, web identity (IRSA). Java uses the
+SDK v2 modules `bedrockruntime` and `bedrock` (with the JDK's HTTP clients only, as the S3 connector does: no Netty); Python uses `boto3` (in `requirements.txt`).
+
+```yaml
+# config/ai/bedrock.yaml
+type: bedrock
+enabled: true
+region: us-east-1                        # also AWS_REGION / AWS_DEFAULT_REGION
+# profile: my-profile                    # else the default chain
+# aws-access-key-id: ${AWS_ACCESS_KEY_ID}
+# aws-secret-access-key: ${AWS_SECRET_ACCESS_KEY}
+# aws-session-token: ${AWS_SESSION_TOKEN}
+default-model: anthropic.claude-sonnet-5-5
+```
+
+Chat is the **Converse** API (`POST /model/<id>/converse`, system, messages, `inferenceConfig`, `toolConfig`); embeddings are **InvokeModel** (`/model/<id>/invoke`: Titan `inputText`, one call per text; Cohere Embed
+`texts`); the live list is `ListFoundationModels`. Settings: `region`, `profile`, the three `aws-*` keys as `${ENV}`, `base-url` (an endpoint override: a VPC endpoint, or a fake in a test), `control-url` (the
+same for the model list), `embedding-input-type`, `timeout`, `retries` (SDK standard retries), `proxy.*`, `tls.*`. Every request is signed with SigV4 by the SDK (the tests check the `Authorization` header's
+`AWS4-HMAC-SHA256 Credential=<key>/<date>/<region>/bedrock/aws4_request`, the date and the session token). Not built: guardrails, `additional-model-request-fields`, the `document` and image content blocks,
+and `tls.verify-hostname: false` (both AWS clients always check the name; the file is refused with that reason).
+
+##### 27.1.11.8 Keys, environment variables and what `describe_config()` shows
+
+```json
+{
+  "name": "fast",
+  "type": "groq",
+  "enabled": true,
+  "baseUrl": "https://api.groq.com/openai/v1",
+  "apiKey": "********",
+  "timeoutSeconds": 60.0,
+  "defaultModel": "llama-3.3-70b-versatile",
+  "models": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "..."],
+  "settings": {"catalogue": "true", "header.Authorization": "********", "header.X-Team": "red",
+               "proxy.password": "********", "proxy.url": "http://proxy.corp:3128", "proxy.username": "svc"},
+  "tls": []
+}
+```
+
+With the key variable unset, `health()` says `down` and what to set (captured): `{'status': 'down', 'detail': 'no api key: set GROQ_API_KEY (or api-key: ${ENV_NAME})'}`.
+
+##### 27.1.11.9 TLS: the same block as the connectors
+
+Every provider type (and the console's MCP client) reads the connectors' `tls:` block ([DATA_GUIDE.md section 10](DATA_GUIDE.md#10-tls-and-the-outbound-proxy) is the reference; in a provider file `tls:` is flattened to `tls.*` as everywhere):
+trust (`ca-file` as a PEM file or the PEM text, `truststore`, `trust-jvm-default`), a client identity for mutual TLS (`cert-file` + `key-file` + `key-password`, or `keystore`), `protocols`, `cipher-suites`,
+`verify-hostname` (on by default), `insecure-trust-all` (refused unless `DRISHTI_ALLOW_INSECURE_TLS=true`). Passwords are `${ENV}` placeholders or `...-password-file`, never literals. A `tls.*` key against an
+`http://` address is an error at load, never a silent downgrade. Through an HTTP proxy the same settings hold (CONNECT tunnel, TLS end to end). The expiry of every certificate given is read at start and shown in
+`health()` and `describe_config()["tls"]` (Admin → AI) as the connectors show it.
+
+```yaml
+type: vllm
+base-url: https://llm.bank.example:8443/v1
+tls:
+  ca-file: /etc/drishti/tls/bank-ca.pem
+  cert-file: /etc/drishti/tls/drishti.pem        # mutual TLS
+  key-file: /etc/drishti/tls/drishti.key
+  key-password-file: /run/secrets/drishti-key-password
+```
+
+Differences by language and type, honestly: the **server** reads the full set (PEM, PKCS12, JKS, all keys). The **console** reads PEM and **PKCS12** (a JKS store is refused with the `keytool -importkeystore` command that
+converts it), `protocols` as `TLSv1.2` / `TLSv1.3`, `cipher-suites` in OpenSSL names, and `trust-jvm-default` means the system's authorities. **Bedrock** takes the CA, the truststore and the client identity (both
+SDKs accept a trust and key manager or a bundle) but not `verify-hostname: false` or `protocols`. Hostname verification uses the address you connect to, so a private-CA certificate needs it as a SAN.
+
+##### 27.1.11.10 Tests
+
+No test touches a network beyond loopback.
+
+* Per provider, in both languages, against a fake server that speaks that API (`kernel/drishti-ai/src/test/java/com/ash/drishti/ai/FakeLlmServer.java`, `drishti-console/tests/llm_fakes.py`; the same rules: the last user text is
+  echoed, `weather` asks for the tool, `boom` is 500, `limit` is 429, `slow` sleeps): the request (path, auth header, body fields), a reply with usage and cost, a tool call, embeddings, the model list, 401, 429,
+  500 (the body never appears in the message), a timeout, retries, health, masking, the proxy, Azure's three auth modes and both address styles, Bedrock's SigV4 header and session token. `HttpProvidersTest`.
+* The **shared contract** `llm_contract_http.json` (catalogue, chat, tool call, system turn, 500, 429, stream, embeddings, refusals) runs against an OpenAI-compatible preset, Ollama, Gemini, Cohere and Bedrock in
+  `HttpProvidersContractTest`; the older `llm_contract.json` still runs against the mock.
+* **TLS** with a test CA (`TestPki`): the private CA is trusted only when configured, mutual TLS is refused without the client certificate and accepted with it (PEM, encrypted
+  key, PKCS12, JKS), the expiry note, the plain-address error, a CONNECT proxy tunnel, every provider type and Bedrock: `ProviderTlsTest`.
+* The catalogue file is `kernel/drishti-ai/src/main/resources/ai/llm_catalog.json` (one copy).
+
+### 27.2 The MCP client: other servers' tools, behind Drishti's policy
+
+Drishti can act as a client of **MCP (Model Context Protocol)** servers: list their tools, resources and prompts, call a tool, read a
+resource. Like the LLM layer ([27.1](#271-model-providers)) it is interface-driven, configured by one file per server,
+**off by default** (`drishti.mcp.enabled=false`), and lives on the server (`drishti-ai`, package `com.ash.drishti.ai`); the console calls
+no MCP server itself.
+
+#### 27.2.1 Interfaces
+
+| Type | Role |
+|---|---|
+| `McpClient` | One server connection: `connect()`, `tools()`, `resources()`, `prompts()`, `callTool(name, args)`, `readResource(uri)`, `close()`. |
+| `McpClientFactory` | The extension point per `transport:` value (ServiceLoader `META-INF/services/com.ash.drishti.ai.McpClientFactory`, or a Spring bean). |
+| `McpRegistry` | Servers by logical name, health, `reload()` (watched like connectors). Connections open on first use. |
+| `McpGateway` | The one door: policy, masking, audit, health around every call. |
+
+**Implementation choice.** Spring AI has MCP client starters, but they bring their own transports and sessions and an
+auto-configuration per server; the protocol part Drishti needs is small (JSON-RPC over HTTP), so `StreamableHttpMcpClient` is a
+~250-line client over the JDK HTTP client (httpx in the console) that shares the `tls.*` module and the policy. A heavier SDK can
+be added later as another `McpClientFactory` without touching callers.
+
+Transports: `streamable-http` (the MCP Streamable HTTP transport: one POST endpoint, JSON or Server-Sent-Events answers, the
+`Mcp-Session-Id` kept and sent back, `MCP-Protocol-Version` negotiated at `initialize`, session closed with DELETE), `mock` (in-process,
+scripted), and in the console `server` (delegates to the Drishti server). The legacy HTTP+SSE transport and stdio are not
+implemented (stdio would run a local process; not wanted on a server by default).
+
+#### 27.2.2 Server files
+
+One YAML per server in `drishti.mcp.dir` (`DRISHTI_MCP_DIR`, default `./config/mcp`), reloaded live:
+
+```yaml
+transport: streamable-http
+url: https://tools.example/mcp
+timeout: 30s
+headers:
+  Authorization: Bearer ${TOOLS_TOKEN}     # ${ENV} placeholders only; a credential header without one is refused
+allowed-tools: [calc_percentage_change]    # empty = all the server lists; others can be neither listed nor called
+tls: {ca-file: /etc/drishti/ca.pem}        # the shared tls.* keys
+proxy: {url: http://proxy.corp.example:3128, username: svc-drishti, password: ${PROXY_PASSWORD}}   # optional; `proxy: none` goes direct
+```
+
+##### 27.2.2.1 Outbound proxy
+
+A Streamable HTTP server is reached through the file's `proxy:` block, the site default (`drishti.http.proxy.*`; in the console the `DRISHTI_HTTP_PROXY_*` environment
+variables) or directly, exactly as an AI provider and a connector are: `http://` proxy, https servers tunnelled with `CONNECT` and keeping `tls.*`, the password an `${ENV}` placeholder
+(a literal refuses the file), a wrong login reported without the password. The initialize handshake, `tools/list`, calls and the closing DELETE all use it. Reference:
+[DATA_GUIDE.md, the outbound proxy](DATA_GUIDE.md#proxy-9-the-console-ai-and-mcp-clients). The `mock` transport has no network and ignores it.
+
+A server is **connected on first use**. Two things can go wrong, and both are retried by themselves (`drishti.retry.mcp.*`, defaults: 5 s,
+doubling, up to 5 min, jitter; the console has `retry.mcp.*`):
+
+- the file is fine but the server cannot be set up (its transport is not installed, a header's `${ENV}` is not set): Admin -> AI lists it **ERROR**
+  with *failed - next retry in Ns (attempt k)* and builds it again on the schedule;
+- the connection was lost (the last call failed, so the server shows **DOWN**): it is listed the same way, and when its retry is due the
+  client is closed and connected afresh (a new handshake). When that works the server is **UP** again and the line disappears; open
+  tool lists simply work on the next call. Calls made while it is down are still attempted (they are not held back).
+
+**Retry now** (Admin -> AI, `POST /api/v1/admin/retry/mcp`, admin, audited as `mcp-retry-now`) reconnects at once. Failures are logged and
+audited on attempts 1, 2, 4, 8, ... (`mcp-retry-failed`) and recoveries always (`mcp-recovered`). The console's MCP client does the same with `retry.mcp.*`.
+
+#### 27.2.3 Policy (`drishti.mcp.*`)
+
+| Setting | Meaning |
+|---|---|
+| `server-roles.[server]` | Roles allowed to use a server (absent = every signed-in user). |
+| `tool-roles.[server/tool]` | Roles allowed to see and call one tool. |
+| `server-features.[server]` | Features allowed to use a server. |
+| `audit` (true) | Access-log row per call, action `mcp`: user, feature, `server/tool`, sizes, outcome, ms. Never arguments or results. |
+| masking | Arguments named in `drishti.security.redact` are replaced by `•••`; string arguments and every result pass through the same masker (`drishti.ai.policy.mask-patterns`). |
+| timeouts | the file's `timeout`. |
+
+REST: `GET /api/v1/admin/mcp/{server}/tools` (admin), `POST /api/v1/ai/mcp/{server}/tools/{tool}` `{arguments, feature}` (signed in; token
+scope `ai:use`). Errors as the LLM layer (DRS-4015..4014). Admin -> AI lists the servers and, by link, their tools.
+
+#### 27.2.4 The mock server
+
+`transport: mock`: scripted tools (`mock.tools.N.{name, description, reply, error}`; `${arg}` in `reply` is replaced), resources
+(`uri`, `text`) and prompts, no network. `config/mcp/mock.yaml.example`.
+
+#### 27.2.5 Connecting to SAJHA (the user's MCP server)
+
+SAJHA (`sajhamcpserver`) serves one `/mcp` endpoint (Streamable HTTP, also SSE, WebSocket and stdio) for both spec eras, chosen per
+request; Drishti speaks the session-based 2025-11-25 one. Default `http://localhost:3002/mcp`. Anonymous callers see **no tools**
+by default, so Drishti needs a credential: an `X-API-Key` (Admin -> API keys in SAJHA) or `Authorization: Bearer <JWT>`. Copy
+`config/mcp/sajha.yaml.example` to `sajha.yaml` in the same folder, export `SAJHA_API_KEY`, set `drishti.mcp.enabled=true`.
+
+Verified live (a scratch copy of SAJHA on a spare port, its own virtualenv; the project itself untouched), with
+`kernel/drishti-ai/src/test/java/com/ash/drishti/ai/SajhaMcpLiveTest.java` (skipped unless `DRISHTI_SAJHA_MCP_URL` and `DRISHTI_SAJHA_MCP_KEY`
+are set) and the console client:
+
+```
+$ DRISHTI_SAJHA_MCP_URL=http://127.0.0.1:18991/mcp DRISHTI_SAJHA_MCP_KEY=<test key> ./mvnw -o -pl :drishti-ai test -Dtest=SajhaMcpLiveTest
+SAJHA tools: 501, e.g. [av_ad_line, av_adx, av_aroon, av_atr, av_balance_sheet]
+calc_percentage_change -> { "old_value": 80, "new_value": 100, "percentage_change": 25.0 }
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+```
+
+To repeat it by hand: copy the SAJHA project to a scratch folder (it writes `data/` and `logs/` next to itself), create a virtualenv,
+`pip install -r requirements.txt` (at the time of writing `sse-starlette<3` in that file conflicts with `mcp>=2.3`; relax it in the
+copy), seed SAJHA's own config/apikeys.json from its config/apikeys.json.example (files of the SAJHA project, not of this repository), then
+`SERVER_HOST=127.0.0.1 SERVER_PORT=18991 python run_sajha_web.py`, run the test above, and stop the process by its PID.
+
+#### 27.2.6 Tests
+
+`AiProxyTest` (the MCP client through a fake proxy, plain and `CONNECT` to a TLS server with its own CA), `McpLayerTest` (mock under policy: roles, masking, `allowed-tools`, credential headers; the Streamable HTTP client against a loopback
+stub: handshake, session id, JSON and event-stream answers, DELETE on close), `AiApiTest` (REST).
+
+#### 27.2.7 The tool base class
+
+A tool (something an MCP server serves, or a locally defined one) is written against `BaseMcpTool` (Java, `com.ash.drishti.ai.llm`), whose abstract methods and signatures
+are those of sajhamcpserver's `sajha/tools/base_mcp_tool.py`: `execute(arguments)`, `get_input_schema()` and `get_output_schema()` (Java: `execute`, `getInputSchema`, `getOutputSchema`). A tool is configured by a map
+(`name`, `description`, `version`, `enabled`), or `load_from_config(path)`; `validate_arguments` checks the required and (with `additionalProperties: false`) the known names; `execute_with_tracking` validates, runs
+and counts (`get_metrics`: calls, errors, last call, last error); `to_mcp_format()` is the `tools/list` entry. The client side (calling a remote server's tools, section 27.2.1) is unchanged. The mapping table of the whole
+layer is in [27.1](#271-model-providers), its 27.1.10.
+
+## 28. Write-back and approvals: switch on and run
+
+Write-back is the part of Drishti that lets people change records from forms, the command line and the API. Using it (correcting a record,
+drafts, submitting, the Approvals queue) is in the [User guide](USER_GUIDE.md#approvals); this section is for the administrator who switches it on
+and runs it.
+
+### 28.1 Switching write-back on
+
+#### 28.1.1 Off at three levels
+
+Write-back is **off as shipped**, at three levels, and the ones a change needs must all be on before anything is written:
+
+| Level | Off because | Turned on by |
+|---|---|---|
+| the site | `edit.enabled: false` in `config/edit/edit.yaml`: no change is accepted anywhere and no Submit is drawn | an administrator: `edit.enabled: true` (or `DRISHTI_EDIT_ENABLED=true`) and a restart |
+| the field | a field is editable only when a Sutra's `form:` has `save:` | a Sutra author, through review like any Sutra change ([BUILD_GUIDE.md](BUILD_GUIDE.md)); the trading pack's book desk ships with `save:` (corrections of a trade, one approver) |
+| the source | a connector writes to its source only when its file declares `writes:` and its writes are switched on | an administrator: the connector file's `writes:`, then **Switch on** in Admin → Edits (audited) ([28.4](#284-writing-to-a-source-writes)) |
+
+Corrections and owned records need the first two; an amendment sent to a source needs all three. A fresh install or an upgrade is
+read-only. With the site switch off, corrections applied earlier are still shown.
+
+#### 28.1.2 Switch it on
+
+```yaml
+# config/edit/edit.yaml
+edit:
+  enabled: true          # or leave ${DRISHTI_EDIT_ENABLED:false} and set the variable
+  log: auto
+```
+
+Restart the server. The start logs:
+
+```text
+write-back: on; edit log sqlite (auto: this node is alone), 64 lanes, node local
+```
+
+Then give the people who edit a role with the edit power (Admin → Roles → *Submit edits*; the shipped `admin` role has it), and the
+people who approve a role with the approve power, or name them in `policy.approver-roles`. Check it from the command line:
+
+```bash
+drishti.py edits status
+# {"enabled": true, "mode": "single", "store": "sqlite", "why": "auto: this node is alone", ...}
+```
+
+#### 28.1.3 The approval policy
+
+`config/edit/policy.yaml` decides:
+
+| Key | Says |
+|---|---|
+| `policy.approval.overlay` / `owned` / `source` | approvals a change needs per target: `none`, `one` or `two`. Shipped: `none`, `none`, `one` |
+| `policy.kinds.<kind>.approval.<target>` | a stricter rule for one kind |
+| `policy.approver-roles` | who approves; empty means holders of the approve power and administrators |
+| `policy.self-approval` | `false`: nobody approves their own change (four eyes) |
+| `policy.restate-role` | the role a change to a past business date (a restatement) needs |
+| `policy.override-role` | the role *Apply mine anyway* over a newer value needs |
+
+A form's `save.approval` may ask for more approvals than the policy, never fewer. Who may do what, in one place:
+
+| To | You need |
+|---|---|
+| submit any change | the **edit** power on one of your roles; a token also needs the **edit** scope |
+| edit a given field | a role the field allows (`editable-by` on the form's field) |
+| approve a change | an approver role or the approve power, and **never your own change** |
+| *Apply mine anyway* on a conflict | the override role; audited with the overwritten value |
+| change a past business date | the restate role |
+| switch a connector's writes on | administrator; audited, shown on Admin → Edits |
+
+Everything is checked again when the change is applied, not only when it is submitted: the switch, the edit power, the kind, the masks,
+the form's roles and read-only fields. A field hidden from a person can never be edited by them, and a change never reveals a hidden value
+(the difference shows the mask for fields the reader cannot see).
+
+### 28.2 The edit log, lanes and the cluster
+
+Every change is a row of the **edit log** (`drishti_edit_log`) in the Drishti database, acknowledged only after it is committed. Changes
+run in **lanes** (`lanes.lanes`, 64): a record always maps to the same lane, a lane applies one change at a time in its order, and lanes
+apply in parallel. So two changes to one record never happen at once, and a change is never lost once you are told it was received.
+
+Each lane has one owner node, taken in the database with a lease (`lanes.lane-lease`, 10 s). A node that lost its lane (cut off from the
+others, or paused) can no longer write anything for it. Where the edit log lives is set by `edit.log: auto`:
+
+| Setup | The edit log | When a node stops |
+|---|---|---|
+| one node | its SQLite Drishti database | it owns every lane; after a restart it takes its lanes back and applies what was acknowledged |
+| a cluster on PostgreSQL | the shared database; lanes spread over the members | another node takes the lanes after the lease, carries on from the last applied change and resends unconfirmed commands |
+| a cluster with `edit.primary` | the primary's SQLite; every other node forwards edits to it and copies its corrections | no failover: edits pause with a message while the primary is down; reading carries on |
+| a cluster with neither | none | edits are refused in the cluster (`DRS-9306`); reading carries on |
+
+A change can be submitted on any node; it is forwarded to its lane's owner. An explicit `edit.log` (`sqlite`, `postgres`) is checked at
+start: `postgres` needs a PostgreSQL Drishti database, `sqlite` in a cluster needs `edit.primary`; otherwise the server starts with
+editing off and says why. On AWS, use PostgreSQL (RDS, Aurora) for the Drishti database. Moving the edit primary is a configuration change
+made with the old one stopped.
+
+A lane deeper than `lanes.max-lane-depth` (1,000) refuses new changes with *busy, try again* (`503 DRS-9304`); the draft is kept.
+
+### 28.3 Admin → Edits
+
+**Admin → Edits** shows:
+
+- the store in use, and why (the auto rule), and this node;
+- each lane that has an owner or waiting changes: owner, epoch, lease, depth, oldest wait;
+- the warnings: an edit primary without failover, a lane whose oldest change waited past `lanes.lane-warn` (2 s), a lane with waiting
+  changes and no live owner, source commands not confirmed past `lanes.command-timeout` (30 s);
+- each connector that declares `writes:`: its commands, their problems, and the **Switch on** / **Switch off** for its writes;
+- the **open overlays**: every correction with the source's value beside it. An administrator may withdraw one; the views and the other
+  nodes are told at once.
+
+`drishti.py edits status` prints the same as JSON.
+
+### 28.4 Writing to a source: `writes:`
+
+A connector says **how** to change a record in its system; the Sutra's form (or a blotter's `edit:`) says **what** may change; the lane
+owner says **when** and in what order. The JDBC and Kafka plugins write (Kafka's `kafka:` commands: [Live results and blotters, writing back to the record's own source](USER_GUIDE.md#writing-back-to-the-records-own-source)); the file, Delta and Iceberg plugins never do (a lake is not written per change), and
+any other plugin is refused with *plugin … cannot write*.
+
+A command needs a **concurrency guard** (it changes the row only if it is still the version the person saw) and an **idempotency clause**
+(it recognises its own change id, so a resend is applied at most once):
+
+```yaml
+# config/connectors/trade-murex.yaml (excerpt)
+writes:
+  amend-notional:
+    kind: trade
+    params: [leg]
+    jdbc:
+      sql: >
+        UPDATE MX_TRADE_LEG SET NOTIONAL = :value, VERSION = VERSION + 1, DRISHTI_CHANGE_ID = :changeId
+         WHERE TRADE_ID = :entity AND LEG_NO = :leg AND VERSION = :basedOn
+      expect-rows: 1
+      already-applied: SELECT 1 FROM MX_TRADE_LEG WHERE TRADE_ID = :entity AND LEG_NO = :leg AND DRISHTI_CHANGE_ID = :changeId
+    confirm: reply           # reply | next-load (ack-topic is read as a reply until a messaging plugin writes)
+    timeout: 30s
+```
+
+| Key | Means |
+|---|---|
+| `kind` | the records the command changes |
+| `params` | extra parameters the form supplies (read from the row being edited) |
+| `jdbc.sql` | the statement, with bound parameters |
+| `jdbc.expect-rows` | the guard: any other row count means the record moved, and the change is *conflicted* |
+| `jdbc.already-applied` | the idempotency clause: a query that finds the change id already written |
+| `confirm` | when the change counts as applied at the source: the statement's `reply`, or the `next-load` showing the value |
+| `timeout` | after this, an unconfirmed command is listed on Admin → Edits |
+
+Drishti supplies `:entity`, `:kind`, `:businessDate`, `:value`, `:from`, `:basedOn`, `:changeId`, `:by`, `:reason`, `:at` and `:field`,
+plus the names in `params:`. Parameters are always bound, never pasted into the SQL. A command without its guard or idempotency clause, or
+naming a parameter that is neither, is refused when the connector loads: Admin → Connectors and Admin → Edits say why, and the connector
+stays read-only for it. A new record uses a `create:` command of the same connector, with the guard *the key does not exist yet*. A change
+of several fields sends one command per field, each with its own change id (`<id>#1`, `#2`).
+
+Commands go out through an **outbox**: the change is recorded as pending in the same transaction that applies it, then sent in order, one
+at a time per record, so a slow source never holds up the lane's other changes. After a failover the new owner resends what was not
+confirmed with the **same change id**, so the source applies it at most once. A source that cannot guard or de-duplicate (no version, no
+change-id column) is edited through corrections only.
+
+Once the file declares `writes:`, an administrator switches the connector's writes on in Admin → Edits (audited). The connector file's
+keys are in [DATA_GUIDE.md section 9](DATA_GUIDE.md#writes-saving-to-the-source) and the JDBC plugin's in
+[its README](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record).
+
+### 28.5 Audit and retention
+
+Every step is in the audit log:
+
+| Event | When |
+|---|---|
+| `edit-submitted`, `edit-withdrawn` | a change is submitted or withdrawn |
+| `edit-approved`, `edit-rejected`, `edit-self-approval-refused` | an approver decides; someone tries to approve their own |
+| `edit-applied`, `edit-conflicted`, `edit-refused` | the lane owner applies or refuses it |
+| `edit-confirmed`, `edit-refused-at-source` | the source answers a command |
+| `form-draft-closed` | a draft is closed with its change id |
+| `connector-writes-on`, `connector-writes-off` | an administrator switches a connector's writes |
+| `edit-overlay-withdrawn` | an administrator withdraws a correction |
+| `edit-log-purged` | finished entries past retention are deleted |
+
+Values of fields hidden from the submitter are written as the mask. Each edit-log row carries a SHA-256 digest over its place and body,
+so a changed row is evident. The log is kept `retention.keep` (7 years); finished entries older are deleted. A record's history is
+`drishti.py change history <kind> <id>` (or `GET /api/v1/entities/{kind}/{id}/history`).
+
+### 28.6 When something is wrong
+
+| You see | Why | Do |
+|---|---|---|
+| `403 DRS-9301` | editing is off | `edit.enabled: true`, restart |
+| `403 DRS-9302 … no Sutra's form with save: names it` | the field is not editable | a Sutra author adds `save:` to the form ([BUILD_GUIDE.md](BUILD_GUIDE.md)) |
+| `403 DRS-9302 … does not hold the edit power` | the person's roles | Admin → Roles: *Submit edits* |
+| `403 DRS-9302 … you submitted this change` | four eyes | another approver decides |
+| `503 DRS-9304` busy | the lane is deeper than `lanes.max-lane-depth` | try again; the draft is kept |
+| `503 DRS-9306 Edits are paused …` | the edit primary is down, or the cluster has no shared edit log | start the primary; for failover use PostgreSQL |
+| a change stays *queued* | no node owns its lane (Admin → Edits: a lane with waiting changes and no live owner) | check the server log for `edit lanes:`; a node takes the lane when its lease runs out |
+| *unconfirmed* commands | the source did not confirm within `lanes.command-timeout` | check the source; the outbox keeps resending with the same change id |
+| *Conflicted: the record moved* | the record changed since you opened it | open it again and edit from what is there now ([4.5](USER_GUIDE.md#when-the-record-moved-conflicted)) |
+| no **Submit…** on a form | the form has no `save:`, editing is off, or you lack the edit power | the three switches of [28.1.1](#2811-off-at-three-levels) |
+
+### 28.7 Settings and further reading
+
+- Every setting (`config/edit/edit.yaml`, `lanes.yaml`, `policy.yaml`, `retention.yaml`, and `drishti.approvals`):
+  [CONFIGURATION.md](../admin/CONFIGURATION.md#write-back-configedit).
+- Designing a form that submits (`form:`, `save:`, cells, the drawer, rules and hints, the designer, `sutra lint`):
+  [BUILD_GUIDE.md](BUILD_GUIDE.md); every key is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#forms-form-on-a-panel).
+- Recomputing on a change: a computed connector with a `write-back` trigger ([tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)).
+- The endpoints: [API_REFERENCE.md](API_REFERENCE.md). The commands: [CLI_REFERENCE.md](CLI_REFERENCE.md).
+- How it is built (lanes, fencing, the outbox, the applied event, the one queue): [ARCHITECTURE.md, section 31](../architecture/ARCHITECTURE.md).
+- The worked example: [tutorial 11](../tutorials/11-correct-and-approve.md).
+
+## 29. The Admin pages at a glance
+
+Admins see the **Admin** menu in the top bar. The admin pages also share a row of tabs, so you can move
+between them without the menu.
+
+| Page | Address | What you do there |
+|---|---|---|
+| Users | `/admin/users` | Create users; set roles and the packs each user may use; enable, disable, reset passwords |
+| Roles | `/admin/roles` | Define roles: the kinds each opens, and its powers |
+| Packs | `/admin/packs` | Switch a domain pack off or on for everyone; deploy an archive; see which connectors a pack reads through (**Data source**, read only) |
+| Artifacts | `/admin/artifacts` | Everything installed in one list (packs, connector files, shipped BI files): see what depends on each, **disable** it, **uninstall** it to an archive and **restore** it, install a BI file ([OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely)) |
+| Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
+| Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([API_REFERENCE.md (clients)](INTEGRATION_GUIDE.md#33-clients-scripts-notebooks-and-excel)) |
+| Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([ADMIN_GUIDE.md](ADMIN_GUIDE.md)) |
+| AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI_GUIDE.md](#271-model-providers)) |
+| Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)); its **Inbox** tab (`/admin/loads/inbox`, while the data inbox runs) is the inbox's status board: files waiting, the run loading table by table, the last cycles, failures with **Retry**, and **Load now** ([DATA_LAKE_GUIDE.md section 3.1](DATA_LAKE_GUIDE.md#31-the-data-inbox)) |
+| Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)) |
+| Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([INTEGRATION_GUIDE.md](../architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements)) |
+| BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [README.md](bi/README.md)) |
+| Ad-hoc scopes | `/admin/scopes` | Every person's saved VaR baskets (owner, name, scope, shared with, dates, size), filtered by owner; **Delete** any of them with an optional reason, audited and told to the owner ([OPERATIONS_GUIDE.md section 9b-2](OPERATIONS_GUIDE.md#126-deleting-peoples-var-baskets)) |
+| Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
+| Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |
+| Caches | `/admin/caches` | Every cache with where it lives and its size against its limit; **Purge** one, **Purge a date**, or **Purge all**, on this server or the whole cluster (safe at any time) |
+| Capacity | `/admin/capacity` | Today against the plan: heap, RAM, disk and cores each with a state and a headroom bar, **what breaks first** in words with the fix, this server beside the plan, growth ×1 to ×3; **Edit the plan** for the single-node planner (inputs, every result with its Why?, the settings and the JVM command line with Copy); **Download the working (.xlsx)**, a live formula workbook ([OPERATIONS_GUIDE.md 12.4](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan)) |
+
+### 29.1 Admin → Artifacts: install and uninstall safely
+
+*Admin → Artifacts* lists every pack, connector file and shipped BI file, with its status, origin, version and problems, and a filter (name, kind, status,
+origin; **/** focuses it). *Uninstall…* (here, and on the Packs, Connectors and BI pages) first asks what depends on the artifact. With nothing depending on it,
+it **moves** the folder or file to `data/uninstalled/<time>-<kind>-<name>/`; with dependants it is refused and **Disable instead** (keep it, switch it off) is the
+default; taking the dependants along needs the name typed. The **Uninstalled** tab restores an archive (refused if the name exists again, unless you replace it) or
+deletes it for good (name typed); archives older than 30 days are removed. *Install* uploads a BI file with a dry run first. Every action is audited, and no API
+token can do any of it. Full guide: [OPERATIONS_GUIDE.md section 18](OPERATIONS_GUIDE.md#10-admin--artifacts-install-and-uninstall-safely).
+
+### 29.2 Admin → Roles: what a role may do
+
+A role says which **kinds** of entity its holders may open, and which **powers** they have. The table lists
+every role with its kinds (or *every kind*), its powers, how many users hold it, and who changed it last.
+
+| Power | Lets its holders |
+|---|---|
+| raw JSON | see every field: nothing is masked for them, in the raw JSON (`F9`, **JSON**) or anywhere else ([Masked fields](USER_GUIDE.md#masked-fields)) |
+| author Sutras | save and propose Sutras from the workbench (designing and previewing there is open to everyone) |
+| approve Sutras | approve proposed Sutras in Reviews |
+| administer | use every admin page |
+| Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([section 9](bi/CALC.md#9-roles-who-may-use-calc)) |
+| BI (`bi`, `bi-author`, `bi-steward`, `bi-admin`) | four powers for Rūpaka, granted on roles ([REPORTS.md](bi/REPORTS.md#3-who-may-do-what-the-four-powers), [ADMIN_GUIDE.md](#34-bi-powers-rupaka)); the Roles form above lists only the first six powers |
+| layouts | use [layout mode](USER_GUIDE.md#layout-mode-arrange-a-view-your-way) (`Alt+L`) and keep personal layouts. On for every role unless unticked; the built-in `viewer` role does not have it |
+
+There is no power for [Pivot](USER_GUIDE.md#pivot-slice-a-table-your-way): anyone who may open a kind may arrange and save its pivots, as they
+may sort a table; promoting one to a Sutra needs **author Sutras** (and goes through review).
+
+Roles marked **built-in** come from the server's configuration and from packs (`viewer`, `author`,
+`approver`, `admin`, and pack roles such as `trader`, `credit-risk` or `economist`). They are shown read-only.
+
+Worked example: a role for credit analysts.
+
+1. Open *Admin → Roles* and click **New role**.
+2. **Name** `credit-analyst` (lower case, digits and hyphens); **Description** `Reads counterparties and
+   credit exposure`.
+3. Under *Add every kind of a pack*, click **Counterparty credit risk**: its kinds (`netting-set`,
+   [`credit-limit`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)), `cva`, …) fill the *Kinds it opens* box, one per line. Add `counterparty`
+   on a line of its own.
+4. Leave every power unticked, and click **Save**. The role appears in the table with `0` users.
+5. Open *Admin → Users*, edit a user, tick `credit-analyst` and save. At that user's next click, netting sets
+   open for them; a trade does not, and links to trades show disabled with the reason.
+
+Changes apply at the holder's next request and are written to the audit log. **Delete** is greyed while
+anyone holds the role (*Held by 1 user(s): take it away from them first*); the server answers `DRS-6009`
+if asked anyway. Roles only matter when sign-in is on. More in [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
+
+### 29.3 Admin → Packs: switching a pack off for everyone
+
+*Admin → Packs* lists every pack in the server's packs folder, one row each:
+
+| Column | Example |
+|---|---|
+| Pack | *Trading* `trading 1.0.0` |
+| What it brings | its description |
+| Builds on | `core, market-data`, and under it *needed by market-risk, counterparty-risk, …* |
+| Kinds | `1 (TRD)`: the number of kinds and the first four mnemonics |
+| Connectors | `trade-endur, trading-stream` |
+| Status | **on**, **off**, or **not loaded**; under it, the problem if the pack's files could not be used (the last good version keeps running) |
+| Changed | when and by whom it was last switched |
+
+A **Sample** badge beside the title marks a demonstration pack. **Load** and **Unload** take effect at once, with no restart; a pack folder you add,
+edit or delete on the server is picked up the same way (see [BUILD_GUIDE.md](BUILD_GUIDE.md#296-live-reload-the-packs-folder-is-watched)). Above the table, the
+*Sample packs* section says who sees samples and offers **Hide samples from business users**: only authors and administrators then see sample
+packs, everyone else has them filtered out as if switched off. *Hide samples from everyone* unloads them; *Show samples to everyone* brings them back.
+The choice is saved, applied at once and recorded in the audit log (`pack-samples`).
+
+Switching a pack **off** takes effect for every user at their next click: its kinds cannot be opened, its
+mnemonics and suggestions disappear, and it leaves every pack menu. Switching it **on** brings it all back.
+The choice is kept in the database, so it survives restarts, and each switch is in the audit log
+(`pack-disabled`, `pack-enabled`).
+
+Two safeguards keep packs consistent:
+
+- **A pack another switched-on pack builds on cannot be switched off.** Its **Switch off** button is greyed
+  with the reason (*Needed by market-risk, counterparty-risk: switch those off first*).
+- **Switching a pack on switches on what it builds on.** If you switched off `counterparty-risk`, then
+  `trading`, switching `counterparty-risk` on again switches `trading` (and anything it needs) on as well.
+
+Worked example: take operational risk away for everyone.
+
+1. Open *Admin → Packs*. The *News and markets* row says **on**; nothing builds on it.
+2. Click **Switch off**. The status turns to **off**, and *Changed* shows the time and your name.
+3. Type `TOPIC` in the command line: no suggestions come. In the box menu, the pack is gone.
+4. Open *Admin → Audit log*: the newest line is `pack-disabled news-and-markets` by you.
+5. Click **Switch on** to bring it back.
+
+**Not loaded** packs are folders on disk that the server did not load at start-up. Press **Load**: the server
+first checks the pack together with the loaded ones (a clash, such as the retired example pack `finance` beside `trading`, both defining `trade`, is refused
+with the reason and nothing changes), then records it and puts it to use at once: no restart, nobody is signed out, and
+open views carry on. The page confirms and refreshes. A pack loaded this way shows **Unload**, which takes it back the
+same way (not while another loaded pack builds on it). See
+[BUILD_GUIDE.md](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs).
+
+#### 29.3.1 One pack: its own page
+
+In the *Pack* column every title is a link (Tab to it, Enter opens it) to `/admin/packs/<name>`; *Builds on*, *needed by* and *Connectors* link to the
+packs and connectors they name. The page gathers what the list can only hint at:
+
+![Admin → Packs → one pack: status, kinds with their mnemonics, Sutras, connectors, loads and history](img/connector_files/12-pack-detail.jpg)
+
+- **Summary:** title, version, code, description, the **Sample** badge, who changed it and when, and the status: **on**, **off**, **not loaded**, or **refused**
+  (a pack whose files could not be used) with the reason and, when the server is trying again, *failed — next retry in Ns (attempt k)* and **Retry now**.
+  **Builds on** and **Needed by** are links to the other packs' pages. **Switch on/off** and **Load/Unload** are the list's buttons, with the same safeguards.
+- **Kinds and mnemonics:** each kind with its mnemonic, a link that **opens a record of the kind** (where the pack has one), a link to `FORM <pack>`
+  for that kind, and its form fields (declared in the pack's `form:` section, or *inferred*).
+- **Sutras:** the pack's Sutras with their versions, each with **Open in Build** (the Build workbench).
+- **Connectors it names:** state and kinds for each, a link to its page, and, for a name nothing defines, **missing** with a **Create** button that opens the editor
+  pre-filled from the pack's suggestion.
+- **Query by form and About:** how many kinds declare a form, how many carry About text and how many glossary terms.
+- **Data loads:** today's expectations and their state, the last load, and a link to the full [data loads page](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed).
+- **Deploy history:** the pack's deployments and rollbacks with **Roll back to this** for each kept version.
+
+#### 29.3.2 One connector: its own page
+
+In *Admin → Connectors* the connector name is a link to `/admin/connectors/<name>` (the *Used by* column links to the packs):
+
+![Admin → Connectors → one connector: summary, TLS certificates and their expiry, packs, settings, the file and its history](img/connector_files/11-connector-detail.jpg)
+
+It shows the plugin, where the connector is defined (file, pack or the deprecated `application.yaml`), whether it is on, its **status** and the plugin's own health,
+the time of its last update, and, when it failed, *next retry in Ns (attempt k)* with **Retry now**. **TLS** says whether it is on, which protocols, whether the
+host name is checked and, for every certificate the settings name, **when it expires** (a warning under 30 days, *expired* in red). Below: the kinds it serves, the
+packs and kinds that use it (links), the **settings in effect** with credentials masked as `***`, the file as read-only text and the kept earlier versions.
+**Edit** opens the same editor as the list, **Test connection** opens it on the Test tab and runs the test, **Compare or restore** opens the History tab,
+**Disable/Enable** and **Reset to pack default** (or **Delete**, for a file no pack suggests) work as on the list, with the same questions when packs use the connector.
+Both pages are for administrators, work in both themes and on a phone, where every link and button is at least 44 px:
+
+![The connector page on a phone](img/connector_files/13-connector-detail-phone.jpg) ![The pack page on a phone](img/connector_files/14-pack-detail-phone.jpg)
+
+### 29.4 Admin → Connectors → Index: reload type-ahead for a past day
+
+Worked example: a trade was corrected in last Friday's data and type-ahead for that date still misses it.
+
+1. Open *Admin → Connectors* and click the connector (for example `trading-lake`). Under **Index** every kind is listed by
+   business day with where it is held (memory or disk), its ids, size and when it was built, and the line above says when the
+   automatic check last ran, runs next and last found a change.
+2. Click **Reload** on Friday's row (or **Reload kind** for the kind, or **Reload all**). The row changes to
+   *rebuilding* with a progress message, then to *fresh* with a new build time. Type-ahead for that date keeps answering from
+   the old day until the new one is ready.
+3. If a reload of the connector is already running, the message says so; wait for it. If a day cannot be read, its row
+   shows *failed* and the reason, and the old day stays in use.
+
+*Admin → Health* has **Reload index** on each connector that keeps several days. Reloads are for administrators only and are
+written to the audit log. See [OPERATIONS_GUIDE.md section 12.2](OPERATIONS_GUIDE.md#144-the-multi-day-type-ahead-index).
+
+### 29.5 Admin → Health: is everything up?
+
+Worked example: check that every data source is up.
+
+1. Open *Admin → Health* (`/admin/health`). At the top is the overall state, **OK**, **DEGRADED** or
+   **DOWN**, and a summary. Below it, each connector (for example `trade-endur`, `market-store`, `demo`)
+   shows its state, reads, errors and p50/p99 read times. A Delta Lake connector whose folder is missing
+   shows `DOWN: no Delta tables under …`; one with a table or date it cannot read shows **DEGRADED** and names it
+   (`DEGRADED: cannot read trade 2026-09-30: …`).
+2. The page refreshes itself every 5 seconds. The same figures are at `GET /api/v1/admin/health` for
+   external monitoring:
+
+   ```bash
+   curl -s localhost:18480/api/v1/admin/health | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["status"], d["summary"])'
+   ```
+
+   You should see:
+
+   ```text
+   OK {'packs': 12, 'sources': 18, 'sourcesDown': 0, 'failedToStart': 0, 'packsWithProblems': 0}
+   ```
+
+3. A shorter list of sources, with their kinds and health, needs no admin rights:
+
+   ```bash
+   curl -s localhost:18480/api/v1/sources
+   ```
+
+A connector whose plugin is installed but has no settings (a Kafka connector without `topics`, a feed without
+`feed`) stays **idle**: it is not started and is not counted as failed. Anything else that is not **UP** is
+explained in [runbooks/source-down.md](OPERATIONS_GUIDE.md#201-source-down-or-slow). A connector a pack names but that has no file shows as *not configured* (its kinds answer `DRS-1011`);
+an administrator creates it in *Admin → Connectors*, and a connector file with a mistake is listed on Health as a bad file while the last good configuration keeps running.
+
+Managing users and roles is explained in [ADMIN_GUIDE.md](ADMIN_GUIDE.md).

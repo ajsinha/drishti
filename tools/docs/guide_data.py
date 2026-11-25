@@ -31,6 +31,7 @@ folder with no example on a contract page, or a link to a heading the guide does
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
@@ -120,7 +121,12 @@ def build(guide: dict, cons: dict) -> tuple[str, list[str]]:
     """The generated block of one guide (without the markers), and the problems found."""
     problems: list[str] = []
     num, rel = str(guide["number"]), _rel(guide["file"])
-    out = [f"### {num}.1 At a glance", "",
+    here = Path(guide["file"]).parent.as_posix()
+    to = lambda target: os.path.relpath(target, here)
+    out = ["Each dataset: what it is for, whether it is required and where its sample lives, linked to its data contract and its example "
+           f"([how to read these tables]({to('docs/contracts/README.md')}#17-the-data-tables-of-the-guides)). How files are named, dated and loaded: "
+           f"[DATA_LAKE_GUIDE.md]({to('docs/guides/DATA_LAKE_GUIDE.md')}#5-routing-business-dates-modes-repeats-and-undo).", "",
+           f"### {num}.1 At a glance", "",
            "| Dataset (kind) | What it is for | Required? | Sample files (`data/testdata/…`) | Guide |", "|---|---|---|---|---|"]
     subs: list[str] = []
     for i, ds in enumerate(guide["datasets"], start=2):

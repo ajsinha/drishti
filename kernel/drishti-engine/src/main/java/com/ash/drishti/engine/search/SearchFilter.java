@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * A search as a query on a live table (LIVE_TABLES LT-5, docs/guides/LIVE_RESULTS_GUIDE.md): the one compiler from Drishti's search
+ * A search as a query on a live table (LIVE_TABLES LT-5, docs/guides/USER_GUIDE.md): the one compiler from Drishti's search
  * grammar ({@link SearchQuery#pick}: {@code TRD where CURRENCY = eur and QUANTITY >= 100m order by QUANTITY desc limit 25},
  * {@code TRD MX-2*}) to the Data Protocol. The condition (its field names spelt as the kind spells them, text equality ignoring case,
  * amounts expanded) becomes a row condition in Rachana-EL ({@code @.QUANTITY}) and, through Rachana's {@link FilterTree}, the filter

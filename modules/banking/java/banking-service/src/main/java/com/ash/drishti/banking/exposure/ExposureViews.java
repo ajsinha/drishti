@@ -274,7 +274,7 @@ final class ExposureViews {
 
     // ---------------------------------------------------------------------------------------------------------------------- parts
 
-    /** The default parts of a scope (NSET.md section 8): a group or legal entity its counterparties, a counterparty its netting sets, a
+    /** The default parts of a scope (EXPOSURE_GUIDE.md section 4): a group or legal entity its counterparties, a counterparty its netting sets, a
      * netting set or trades their trades, any other scope the netting sets it touches. */
     static String childOf(String kind) {
         return switch (kind) {

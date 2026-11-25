@@ -34,7 +34,7 @@ Who reads what:
 | writing a pack by hand | sections [1](#1-what-a-pack-is) to [7](#7-modelling-content-vocabulary-about-text-help-facts-roles-calc) |
 | turning JSON files or a schema into a pack without writing files | sections [8](#8-the-pack-designer-create--new-pack) to [10](#10-a-pack-from-json-lines-pack-new), [a source system for an existing kind: the source system tutorial](BUILD_GUIDE.md), [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) |
 | writing the screens (Sutras) | sections [11](#11-what-a-sutra-is-and-when-one-applies) to [27](#27-common-mistakes-and-their-messages); every key, panel option, format and function is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench's manual in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
-| letting people edit records on a screen | [section 28](#28-forms-letting-people-edit-records); what happens to a change after that (submitting, approval, Admin → Edits) is in [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md) |
+| letting people edit records on a screen | [section 28](#28-forms-letting-people-edit-records); what happens to a change after that (submitting, approval, Admin → Edits) is in [APPROVALS_GUIDE.md](ADMIN_GUIDE.md) |
 | connecting a pack to a database, a lake or a queue | [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) and the per-connector pages they list |
 | changing Drishti's own code | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
 
@@ -664,7 +664,7 @@ published public data such as the us-equities and gleif packs):
 3. a Delta connector in the pack's `pack.yaml` serves them (`plugin: delta`, its `domain`, the kinds, `layout.<kind>.columns` for the fields
    searches and the search form filter on, `layout.<kind>.type-ahead` for the columns a name is found by).
 
-**Data a feed fills daily** (the economy module's public-sector packs: [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#5-the-feeds)) is never
+**Data a feed fills daily** (the economy module's public-sector packs: [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#205-the-feeds)) is never
 committed: the pack's Delta connector reads the lake its feed loads (`settings.lake: worldlake`, the feed file's `lake: worldlake` and a
 `datasets:` entry of the pack and kind), and `samples/` keep only a few reference documents. `PacksServedWithoutDemoTest` fails the build when a
 kind of a shipped pack has neither: no Delta connector with committed data, and none reading a lake an enabled feed fills with the kind.
@@ -1696,7 +1696,7 @@ answer is `?locale=` on the explain request, else the user's *Language of help t
 
 **Generated packs.** A generated pack's `config/about.yaml` is copied from a hand-kept source in the generator folder
 (`tools/packgen/banking/about/<pack>.yaml`, `tools/packgen/<generator>/about.yaml`): edit that source and regenerate. A pack built on public data
-has its refresh script in `tools/feeds/` ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#8-writing-a-feed)).
+has its refresh script in `tools/feeds/` ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#198-writing-a-feed)).
 
 **Check it.** Load the pack: a file with a problem lists it (`DRS-2040` to `DRS-2044`). Press `?` on an entity, also as a user whose role is not `raw`.
 `sutra lint modules/<module>/packs/<pack>` warns (`DRS-2046`, `DRS-2047`) about a `panels.<id>` that matches no panel and each field a Sutra shows that
@@ -1811,12 +1811,12 @@ roles:
 | `author` | may use the Build workbench and propose Sutras |
 | `approve` | may approve Sutra proposals |
 | `admin` | may administer users |
-| `calc` | may use Calc ([USER_GUIDE.md](USER_GUIDE.md#9-roles-who-may-use-calc)) |
+| `calc` | may use Calc ([USER_GUIDE.md](bi/CALC.md#9-roles-who-may-use-calc)) |
 
 The core always has `viewer`, `author`, `approver` and `admin`. Roles are given to users by an administrator
 ([ADMIN_GUIDE.md](ADMIN_GUIDE.md)); they take effect when security is on. A pack's roles appear in *Admin → Roles* marked
 **built-in**, read-only: change them in the pack (or its generator); an administrator can also define new roles there, with *Add every kind of a
-pack* buttons ([USER_GUIDE.md](USER_GUIDE.md#admin--roles-what-a-role-may-do)). Roles work on top of packs ([section 31.4](#314-who-sees-which-pack)).
+pack* buttons ([USER_GUIDE.md](ADMIN_GUIDE.md#292-admin--roles-what-a-role-may-do)). Roles work on top of packs ([section 31.4](#314-who-sees-which-pack)).
 
 **Field masks.** What is hidden is **site** configuration, not a pack key: `drishti.security.redact` names fields, and a role without `raw` sees every
 such field as `•••` on every path that shows or computes from its value (raw JSON, views, search, Impact, the type-ahead, alert rules, Calc, the
@@ -1832,7 +1832,7 @@ and the counterparty's identifier. Packs that carry personal or confidential fie
 ### 7.6 Calc: Python snippets
 
 Calc is a Python panel on any view (`Alt+C`): code that runs in the user's browser, reads the screen and Drishti with the user's own rights, and
-draws tables and charts ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)). A pack decides whether its kinds offer it, and may ship starters:
+draws tables and charts ([USER_GUIDE.md](bi/CALC.md)). A pack decides whether its kinds offer it, and may ship starters:
 
 ```yaml
 python:
@@ -1871,7 +1871,7 @@ import matplotlib.pyplot as plt
 
 The banking packs enable Calc with a library of 71 snippets (curves, FX, vol surfaces, options, bonds, credit, VaR and its backtest, stress, FRTB,
 exposure, CVA, collateral, SA-CCR, desks, books and counterparties), written by their generator from `tools/packgen/banking/snippets/<pack>/*.py`.
-Every one, with the sample entity it runs on, is in [USER_GUIDE.md › Snippet catalogue](USER_GUIDE.md#18-snippet-catalogue).
+Every one, with the sample entity it runs on, is in [USER_GUIDE.md › Snippet catalogue](bi/CALC.md#18-snippet-catalogue).
 
 ### Unbuilt work: the under-construction registry
 
@@ -3711,7 +3711,7 @@ button reproduces the screen; `remember: user` keeps the last choice in the brow
 a kind (`FORM trading <GO>`) is not a Sutra feature: it is the pack's `form:` section ([section 4.6](#46-form-the-search-form-of-a-kind)).
 
 **When a Sutra is not enough.** A Sutra is a fixed layout everyone sees. For a one-off question about the screen in front of you, `Alt+C` opens Calc,
-Python in the browser with the view's document and tables loaded ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)); for questions across many
+Python in the browser with the view's document and tables loaded ([USER_GUIDE.md](bi/CALC.md)); for questions across many
 entities, use BI ([NOTEBOOK_AND_PYTHON.md](bi/NOTEBOOK_AND_PYTHON.md)).
 
 ## 23. Sutra and inference together
@@ -3962,7 +3962,7 @@ A panel's `form:` lets people change the records it shows, or start new ones, wi
 
 Saving keeps a **draft** for each person, on the server. A form whose Sutra has `save:` also **submits** the draft as a change (a correction kept beside
 the source, an owned record, or an amendment sent through a connector, after approval where the policy asks): drafts, submitting, approval, Admin →
-Edits and switching write-back on are in [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md). This section is the author's side: declaring the form. The design is
+Edits and switching write-back on are in [APPROVALS_GUIDE.md](ADMIN_GUIDE.md). This section is the author's side: declaring the form. The design is
 [Forms and data entry](RACHANA_REFERENCE.md#10-forms-and-data-entry); every key is in [Forms](RACHANA_REFERENCE.md#forms-form-on-a-panel).
 
 ### 28.1 A form beside the table
@@ -5286,4 +5286,4 @@ You should see, while it is off, no `SW1-…` trade in `TRD` and no **SWAPONE fi
 A module of content only: a connector, a field map, an inbox rule and a section of the trade page, written from your file by the Pack designer and
 deployed like any module. Another system is the same steps with its own file. The reference is
 [BUILD_GUIDE.md section 8.9](../guides/BUILD_GUIDE.md#89-a-source-for-an-existing-kind); the layouts of the shared and the own table are in the
-[trading module's guide](../guides/LIVE_RESULTS_GUIDE.md).
+[trading module's guide](USER_GUIDE.md).

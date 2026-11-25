@@ -1540,8 +1540,8 @@ variable, as everywhere in the file.
 #### Writes: saving to the source
 
 A connector may declare `writes:`: named commands that change a record in its source, used by write-back's `source` target
-([APPROVALS_GUIDE.md › The design and its reasons, section 5.4](APPROVALS_GUIDE.md#10-writing-to-a-source-writes); the administrator's guide
-[APPROVALS_GUIDE.md section 13](APPROVALS_GUIDE.md#10-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
+([APPROVALS_GUIDE.md › The design and its reasons, section 5.4](ADMIN_GUIDE.md#284-writing-to-a-source-writes); the administrator's guide
+[APPROVALS_GUIDE.md section 13](ADMIN_GUIDE.md#284-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
 may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
 (`reply` or `next-load`) and `timeout:`. Only the JDBC plugin writes ([JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record));
 the File, Delta and Iceberg connectors never do (a lake is not written per edit) and every other plugin is refused (*plugin … cannot
@@ -2554,7 +2554,7 @@ Every connector with a network client reads these settings. This is what each do
 | [S3](../../plugins/drishti-plugin-s3/README.md#tls-for-the-s3-connector) | `https://` `endpoint` | yes | checked, not narrowed | **refused** (the AWS client always checks) | yes | an HTTPS stand-in S3 in the test process |
 | [MongoDB](../../plugins/drishti-plugin-mongodb/README.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` or `tls=true` in the `uri` | yes (also the log-in, `auth-mechanism: x509`) | checked, not narrowed | yes | yes | MongoDB 7 in Docker, `requireTLS`, x.509 user |
 | [PostgreSQL](../../plugins/drishti-plugin-jdbc/README.md#security-tls-and-credentials) (`jdbc:postgresql:`) | `tls.enabled` | yes (also the log-in, `cert` in `pg_hba.conf`) | yes | yes (`sslmode=require`) | yes | PostgreSQL 18 in Docker, `ssl=on` |
-| [AI providers](AI_GUIDE.md#119-tls-the-same-block-as-the-connectors) (every `type:` in `config/ai`, the console's AI and MCP clients) | `https://` `base-url` | yes | yes (the console: `TLSv1.2` / `TLSv1.3`, OpenSSL cipher names; Bedrock: no) | yes (Bedrock: **refused**) | yes (Admin → AI) | fake HTTPS servers with a test CA, mutual TLS and a CONNECT proxy tunnel, in Java and Python; the console reads PEM and PKCS12, not JKS |
+| [AI providers](ADMIN_GUIDE.md#271119-tls-the-same-block-as-the-connectors) (every `type:` in `config/ai`, the console's AI and MCP clients) | `https://` `base-url` | yes | yes (the console: `TLSv1.2` / `TLSv1.3`, OpenSSL cipher names; Bedrock: no) | yes (Bedrock: **refused**) | yes (Admin → AI) | fake HTTPS servers with a test CA, mutual TLS and a CONNECT proxy tunnel, in Java and Python; the console reads PEM and PKCS12, not JKS |
 | other JDBC drivers | not mapped: the driver's own options in the URL | | | | | documented only |
 | [Aerospike](../../plugins/drishti-plugin-aerospike/README.md#security) | `tls.enabled` | yes (also the log-in, `auth-mode: pki`) | yes | yes (no TLS name is given) | yes | unit tests of the wiring; the live check is a manual procedure (the server's TLS is Enterprise Edition) |
 | [Cassandra](../../plugins/drishti-plugin-cassandra/README.md#security) (also ScyllaDB; Astra: its bundle) | `tls.enabled` | yes | yes | yes | yes | Cassandra 5 in Docker, `client_encryption_options` with `require_client_auth: true` |
@@ -3034,8 +3034,8 @@ private CA.
 | [Delta](../../plugins/drishti-plugin-delta/README.md#outbound-proxy) over S3 | yes | the SDK's proxy configuration |
 | [Iceberg](../../plugins/drishti-plugin-iceberg/README.md#outbound-proxy) over S3 / REST catalog | yes | the REST catalog's own client (`rest.client.proxy.*`), the S3 file IO (SDK proxy configuration), Hadoop `fs.s3a.proxy.*` for path tables |
 | [Kafka](../../plugins/drishti-plugin-kafka/README.md#outbound-proxy) | the **schema registry** only (HTTP) | `HttpURLConnection` with the proxy and a per-connection authenticator. Brokers speak the Kafka protocol, not HTTP, and are not proxied |
-| AI providers: OpenAI-compatible, Anthropic ([AI_GUIDE.md](AI_GUIDE.md#outbound-proxy)) | yes | the JDK HTTP client (server), `httpx` (console) |
-| MCP Streamable HTTP clients ([AI_GUIDE.md](AI_GUIDE.md#outbound-proxy-1)) | yes | same |
+| AI providers: OpenAI-compatible, Anthropic ([AI_GUIDE.md](ADMIN_GUIDE.md#27121-outbound-proxy)) | yes | the JDK HTTP client (server), `httpx` (console) |
+| MCP Streamable HTTP clients ([AI_GUIDE.md](ADMIN_GUIDE.md#27221-outbound-proxy)) | yes | same |
 | JDBC, Redis, MongoDB, Aerospike, Cassandra, ActiveMQ, RabbitMQ, files, DuckDB | no | not HTTP: they speak their own protocols (use a TCP-level route if the site needs one) |
 
 When a connector's target is on the no-proxy list its health says so instead of claiming the proxy:

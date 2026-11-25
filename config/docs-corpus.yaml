@@ -181,9 +181,9 @@ files:
   - {path: 'docs/contracts/samples/world-development.md', class: delete, lane: B}
   - {path: 'docs/contracts/samples/world-economy.md', class: delete, lane: B}
   - {path: 'docs/guides/ADMIN_GUIDE.md', class: keep, lane: A}
-  - {path: 'docs/guides/AI_GUIDE.md', class: keep, lane: A}
+  - {path: 'docs/guides/AI_GUIDE.md', class: merge, lane: A}
   - {path: 'docs/guides/API_REFERENCE.md', class: keep, lane: A}
-  - {path: 'docs/guides/APPROVALS_GUIDE.md', class: keep, lane: A}
+  - {path: 'docs/guides/APPROVALS_GUIDE.md', class: merge, lane: A}
   - {path: 'docs/guides/BANK_DATA_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/BUILD_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/CLI_REFERENCE.md', class: keep, lane: A}
@@ -199,7 +199,7 @@ files:
   - {path: 'docs/guides/FUNCTIONS.md', class: generate, lane: B, tool: 'FunctionCataloguePage'}
   - {path: 'docs/guides/IDE_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/INTEGRATION_GUIDE.md', class: keep, lane: A}
-  - {path: 'docs/guides/LIVE_RESULTS_GUIDE.md', class: keep, lane: A}
+  - {path: 'docs/guides/LIVE_RESULTS_GUIDE.md', class: merge, lane: A}
   - {path: 'docs/guides/OPERATIONS_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/PVF_LOADING.md', class: rename, lane: A}
   - {path: 'docs/guides/RACHANA_REFERENCE.md', class: keep, lane: A}
@@ -208,6 +208,7 @@ files:
   - {path: 'docs/guides/USER_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/VAR_GUIDE.md', class: keep, lane: A}
   - {path: 'docs/guides/WORLD_DATA_GUIDE.md', class: keep, lane: A}
+  - {path: 'docs/guides/bi/CALC.md', class: keep, lane: A}
   - {path: 'docs/guides/bi/DISTRIBUTION_AND_ALERTS.md', class: keep, lane: A}
   - {path: 'docs/guides/bi/GOVERNANCE_AND_AI.md', class: keep, lane: A}
   - {path: 'docs/guides/bi/GROUPINGS_AND_ANALYTICS.md', class: keep, lane: A}
@@ -246,6 +247,7 @@ files:
   - {path: 'docs/lenses/mockups/ready-upload/README.md', class: merge, lane: B}
   - {path: 'docs/lenses/mockups/trading-blotter/README.md', class: merge, lane: B}
   - {path: 'docs/lenses/mockups/var-matured/README.md', class: merge, lane: B}
+  - {path: 'docs/plans/AI_MANAGEMENT.md', class: keep, lane: B}
   - {path: 'docs/plans/COUNTERPARTY_ENGINES.md', class: keep, lane: B}
   - {path: 'docs/plans/CSV_LOADERS.md', class: delete, lane: B}
   - {path: 'docs/plans/ELEMENTS_SPLIT_RUNBOOK.md', class: delete, lane: B}
@@ -259,6 +261,7 @@ files:
   - {path: 'docs/plans/IFRS9_ECL.md', class: keep, lane: B}
   - {path: 'docs/plans/LAUNCHER_REVIEW.md', class: delete, lane: B}
   - {path: 'docs/plans/LENSES_PROPOSALS.md', class: keep, lane: B}
+  - {path: 'docs/plans/QUANT_SERVICE.md', class: keep, lane: B}
   - {path: 'docs/plans/contracts/COLL.md', class: keep, lane: C}
   - {path: 'docs/plans/contracts/CVA.md', class: keep, lane: C}
   - {path: 'docs/plans/contracts/GRP.md', class: keep, lane: C}

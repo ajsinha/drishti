@@ -546,7 +546,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         return out;
     }
 
-    /** {@code kafka:} commands of a connector's {@code writes:} (docs/guides/APPROVALS_GUIDE.md section 10): see {@link KafkaWrites}. */
+    /** {@code kafka:} commands of a connector's {@code writes:} (docs/guides/ADMIN_GUIDE.md section 10): see {@link KafkaWrites}. */
     @Override
     public Optional<String> writeKey() {
         return Optional.of("kafka");

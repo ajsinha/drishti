@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Declarations are checked at load (docs/guides/LIVE_RESULTS_GUIDE.md section 6; the liveset engine's {@code LiveSetValidationTest},
+ * Declarations are checked at load (docs/guides/USER_GUIDE.md, Live results and blotters: The declaration; the liveset engine's {@code LiveSetValidationTest},
  * ported): named formats exist in formats.yaml, columns exist in the kind's data contract, an edit form names where its changes go; a bad
  * one is set aside and listed for Admin, never half-served. The shipped trade blotter ({@code trade.live.yaml}) passes against the trading
  * pack's contract and formats, and its edit rules carry the book's pattern.

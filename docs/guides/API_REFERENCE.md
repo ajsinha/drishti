@@ -452,7 +452,7 @@ a value is cut to 8,192 characters and a match that takes over 50 ms is `DRS-401
 ### 2.8a Live tables and blotters (`/rdp`)
 
 One engine behind every blotter and every FORM result: Rachana's live tables on the Data Protocol; the declarations, the merge by key and
-version, the edit gate and the write path are in [Live results and blotters](LIVE_RESULTS_GUIDE.md#9-the-api).
+version, the edit gate and the write path are in [Live results and blotters](USER_GUIDE.md#the-api).
 
 | Method | Path | What it does |
 |---|---|---|
@@ -557,7 +557,7 @@ curl -s $B/health/live
 
 ### 2.12 Form drafts
 
-What a person typed into a panel's `form:` ([APPROVALS_GUIDE.md](APPROVALS_GUIDE.md), RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10), kept for them on the
+What a person typed into a panel's `form:` ([APPROVALS_GUIDE.md](ADMIN_GUIDE.md), RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10), kept for them on the
 server; a form whose Sutra has `save:` submits it as change requests ([Write-back: changes](#213-write-back-changes)). Only the owner ever reads a draft. The console passes these through as `/api/drafts`.
 
 | Method | Path | Notes |
@@ -599,7 +599,7 @@ curl -s -X POST "$DRISHTI/api/v1/drafts" -H "Authorization: Bearer $TOKEN" -H 'C
 ### 2.13 Write-back: changes
 
 A change to a record's fields, submitted from a form's draft, the CLI (`drishti.py change`) or a program
-([APPROVALS_GUIDE.md](APPROVALS_GUIDE.md); the forms guide, [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md)). Off as
+([APPROVALS_GUIDE.md](ADMIN_GUIDE.md); the forms guide, [APPROVALS_GUIDE.md](ADMIN_GUIDE.md)). Off as
 shipped: with `edit.enabled: false` in `config/edit/edit.yaml` every write answers `403 DRS-9301`. A field is editable only when a Sutra's
 `form:` with `save:` names it; the caller needs the `edit` power on a role (Admin → Roles) and an API token the `edit` scope. The console
 passes these through as `/api/changes`.
@@ -760,7 +760,7 @@ for every kind until your pack does. An entry has the shape of a rule, for insta
 
 ### 2.15 Python in the browser (Calc) and test entities
 
-[USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view). The Python runs in the user's browser; the server only says who may use it, keeps the user's snippets and serves whole columns.
+[USER_GUIDE.md](bi/CALC.md). The Python runs in the user's browser; the server only says who may use it, keeps the user's snippets and serves whole columns.
 Calc needs the `calc` power and `drishti.calc.enabled` (the Labs switch, off as shipped).
 
 | Method | Path | Notes |
@@ -2054,8 +2054,8 @@ The server never runs Python; these calls tell the console's runner what to run,
 | `POST /bi/notebook/extract` (console) | signed in; the server decides what rows | body `{dataset, fields[, filters, dates]}` or `{report, page, visual, state}`: the reader's masked rows, cut to `bi.notebook.max_rows`: `{columns[{name, type, masked}], rows, rowCount, total, truncated, masked}`; `422 DRS-9070` | the console's own route: same-origin JSON and the session cookie, else `403 DRS-5002` / `DRS-5001`; no personal token. Reads through the server's model query (`token-read-posts`) |
 | `POST /bi/notebook/sql` (console) | signed in | body `{extract: {...as above}, sql}`: one Drishti SQL statement over the model the extract reads, run by the server as you (`POST /api/v1/bi/sql`): `{columns, rows, rowCount, truncated, ms, engine: server, plan, masked, model}`; `422 DRS-9070`, `413 DRS-9072` (text), the server's `DRS-9170` | as `/bi/notebook/extract` |
 | `POST /bi/notebook/check` (console) | signed in | body `{yaml}` or `{notebook}`: `{valid, problems, cells, notebook, yaml, notes}`: the page's way to read and write a `notebook` item's body; `notes` name the cells of a cut kind left out (a `slice`) | as `/bi/notebook/extract` |
-| `POST /bi/notebook/promote` (console) | signed in | body `{to: measure \| visual, name, source, columns}` (a Python item draft), `{to: transform, name, source, extracts}` (a Python Transform draft from a cell that joins extracts) or `{to: report, name, dataset, sql}` (a report visual, with `columns` and `qualified` to map the extract's names to the model's, and `target` and `page` to add it to an existing report draft you may edit): `{kind, title, yaml, notes, target, visual}`; nothing is stored, the page saves the draft with `POST /api/v1/bi/workspaces/me/items` (new) or `PUT /api/v1/bi/items/{id}` (existing) ([USER_GUIDE.md › The Notebook, section 6](bi/NOTEBOOK_AND_PYTHON.md#26-promote)) | as `/bi/notebook/extract` |
-| `POST /bi/notebook/profile` (console) | signed in | body `{extract: {...as above}}`: the extract's profile (no code of yours), `{kind: profile, rows, columns: [{name, type, looksLike?, nulls, nullPct, distinct, unique, min?, max?, mean?, top, histogram?}], inputRows, masked, ms}` ([USER_GUIDE.md › The Notebook, section 7](bi/NOTEBOOK_AND_PYTHON.md#27-profile)) | as `/bi/notebook/extract` |
+| `POST /bi/notebook/promote` (console) | signed in | body `{to: measure \| visual, name, source, columns}` (a Python item draft), `{to: transform, name, source, extracts}` (a Python Transform draft from a cell that joins extracts) or `{to: report, name, dataset, sql}` (a report visual, with `columns` and `qualified` to map the extract's names to the model's, and `target` and `page` to add it to an existing report draft you may edit): `{kind, title, yaml, notes, target, visual}`; nothing is stored, the page saves the draft with `POST /api/v1/bi/workspaces/me/items` (new) or `PUT /api/v1/bi/items/{id}` (existing) ([USER_GUIDE.md › The Notebook, section 2.6](bi/NOTEBOOK_AND_PYTHON.md#26-promote)) | as `/bi/notebook/extract` |
+| `POST /bi/notebook/profile` (console) | signed in | body `{extract: {...as above}}`: the extract's profile (no code of yours), `{kind: profile, rows, columns: [{name, type, looksLike?, nulls, nullPct, distinct, unique, min?, max?, mean?, top, histogram?}], inputRows, masked, ms}` ([USER_GUIDE.md › The Notebook, section 2.7](bi/NOTEBOOK_AND_PYTHON.md#27-profile)) | as `/bi/notebook/extract` |
 | `GET /bi/transform` (console) | signed in with the `bi` power | the Transform editor ([README.md](bi/README.md)); `?item=<python item>&dataset=<dataset item>` opens saved drafts | GET: a page |
 | `GET /bi/transform/snippets`, `POST /bi/transform/snippet` (console) | signed in | the snippets library; body `{id, params, inputs}`: the step a snippet makes, `{label, code, snippet}`, each value written as a literal (`DRS-9070` a bad value) | read |
 | `POST /bi/transform/compose`, `POST /bi/transform/parse` (console) | signed in | body `{spec}`: `{spec, source, python, dataset}` (the Python item's and the Python dataset's YAML); body `{python, dataset?}`: `{spec}` (YAML read back as steps) | read |
@@ -2236,7 +2236,7 @@ Review notices reach the inbox ([the inbox](#31-share-with-a-note-the-directory-
 
 ## 16. AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`
 
-Off by default (`drishti.ai.enabled`, `drishti.mcp.enabled`); [AI_GUIDE.md](AI_GUIDE.md#1-model-providers) and [AI_GUIDE.md](AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) are the references. While a layer is off every call below answers
+Off by default (`drishti.ai.enabled`, `drishti.mcp.enabled`); [AI_GUIDE.md](ADMIN_GUIDE.md#271-model-providers) and [AI_GUIDE.md](ADMIN_GUIDE.md#272-the-mcp-client-other-servers-tools-behind-drishtis-policy) are the references. While a layer is off every call below answers
 `404 DRS-4015`. Every call goes through the AI policy (masking, per-user limits, audit); a model or tool failure is `502 DRS-4016`, a timeout `504 DRS-4016`, a limit `429 DRS-4017`, a refusal by the policy `403 DRS-4018`, an unknown model or server `404 DRS-4019`. A personal token needs the scope `ai:use` (or `ai:admin` for the test call).
 
 | Method | Path | Notes |
@@ -3125,7 +3125,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-2055 | — | — | a fragment's `doc:` docstring is missing or incomplete (summary, description, every parameter with type, default and meaning, emits, expects, examples, since; a composite's `uses`): the fragment is not loaded and its uses fail with `DRS-2048`. For a Sutra or an older block it is a warning only (`sutra lint --docs` prints it, never fails on it) ([Fragments and docstrings](BUILD_GUIDE.md)) |
 | DRS-2056 | — | — | a child panel nested more than 3 deep (screen, child, grandchild at most) | flatten the screen: move the deepest children up a level |
 | DRS-2057 | — | — | an event or source reference is wrong: a panel named in `@panel.event` or a `source:` that does not exist, a cycle, a panel called `parent`, or a trigger not yet supported | fix the panel name or the event; `sutra lint` names the panel and line |
-| DRS-2058 | — | — | a panel's `form:` does not read: an unknown key, a field type, a `step` or `key` naming nothing, a rule reading a field the form does not have, a pattern that does not compile | the message names the key; see [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md) |
+| DRS-2058 | — | — | a panel's `form:` does not read: an unknown key, a field type, a `step` or `key` naming nothing, a rule reading a field the form does not have, a pattern that does not compile | the message names the key; see [APPROVALS_GUIDE.md](ADMIN_GUIDE.md) |
 | DRS-2059 | — | — | a Sutra's `layout:` does not read: an unknown key, columns that are not the 12-unit grid, a panel placed in an area or section the picture does not have | fix the name in `layout.areas` or `layout.sections`; [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections) |
 | DRS-2060 | 422 | form invalid | A search form (the `form:` section of a pack, or a design's Form tab) is not valid YAML or names a field path, type or operator wrongly; the message says which field and what is allowed |
 | DRS-2061 | 422 | history invalid | a pack's `history:` block names a shape, chart field, headline or limit wrongly; `sutra lint` and the deploy check list each problem |

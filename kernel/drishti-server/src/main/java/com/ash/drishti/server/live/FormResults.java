@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * A FORM's result, and the search page's, as a query on a live table (docs/guides/LIVE_RESULTS_GUIDE.md section 7; LIVE_TABLES LT-5):
+ * A FORM's result, and the search page's, as a query on a live table (docs/guides/USER_GUIDE.md, Live results and blotters: The engine: snapshot, deltas, scale, retention; LIVE_TABLES LT-5):
  * the search compiled once ({@link SearchFilter}) into a filter tree, an order and a limit, read from a table of the kind that holds the
  * columns the search needs. The table is declared on first use and shared by everyone who runs a search over those columns on that day;
  * each reader sees it through their own view (kind access, row rules, masks: the authoriser), the condition applied to the row as they see

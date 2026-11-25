@@ -213,12 +213,12 @@ The element draws what the server sends for one entity; **what picks the entity 
 </script>
 ```
 
-The repository has the same page as **React, Vue and Angular** samples in `docs/guides/examples/embed/`. Fetch the framework builds once (`bash docs/guides/examples/embed/fetch-vendor.sh`; they are not in the repository), register the host with the scopes `embed:view embed:about`, and open `/samples/react/`, `/samples/vue/` or `/samples/angular/` on the sample host. You should see the page's own box above the view; type the id of another trade and press Enter, and the view follows. The page keeps the strict policy of step 6. [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#7-react-angular-and-vue) says how each framework wires events.
+The repository has the same page as **React, Vue and Angular** samples in `docs/guides/examples/embed/`. Fetch the framework builds once (`bash docs/guides/examples/embed/fetch-vendor.sh`; they are not in the repository), register the host with the scopes `embed:view embed:about`, and open `/samples/react/`, `/samples/vue/` or `/samples/angular/` on the sample host. You should see the page's own box above the view; type the id of another trade and press Enter, and the view follows. The page keeps the strict policy of step 6. [INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md#17-react-angular-and-vue) says how each framework wires events.
 
 ## Next steps
 
 - [Tutorial 21](21-run-it-in-production.md): the production checklist (security on, users, tokens, backups).
-- [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [../guides/bi/README.md](../guides/bi/DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions) section 5 covers the reports a host application's users receive; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
+- [INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md#15-the-elements-one-by-one): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [../guides/bi/README.md](../guides/bi/DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions) section 5 covers the reports a host application's users receive; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
 
 ## If something goes wrong
 

@@ -801,7 +801,7 @@ settings; date and filters shared:
 the exceptions table. **VaR at stake** is a computed kind `market-data-at-stake` (id the item, `params: { incremental }`) served by the
 reactive connector, whose engine is Drishti's Java engine calling the VaR engine's decomposition of `BANK`; the panel reads it with
 `source:` and shows *computing*, *ready* or *refused*. Acknowledgements are Sutra Next forms with write-back to the `owned` target
-(`save: { kind: market-data-quality, target: owned, reason: required }`, [APPROVALS_GUIDE.md section 4a](../guides/APPROVALS_GUIDE.md#4-submitting-a-change)).
+(`save: { kind: market-data-quality, target: owned, reason: required }`, [APPROVALS_GUIDE.md section 4a](../guides/USER_GUIDE.md#submitting-a-change)).
 
 | Part | Kind or fragment |
 |---|---|
@@ -1097,7 +1097,7 @@ never widens access.
 #### 4.3.11 WL11: freshness and a refresh schedule
 
 A **Freshness** card listing each source, its last refresh (the scripts' `status`), cadence and licence; the scripts run on a schedule on
-the server, one job per pack (never one combined script), each run recorded. Schedules: [WORLD_DATA_GUIDE.md section 5](../guides/WORLD_DATA_GUIDE.md#5-run-it-every-day).
+the server, one job per pack (never one combined script), each run recorded. Schedules: [WORLD_DATA_GUIDE.md section 19.5](../guides/WORLD_DATA_GUIDE.md#195-run-it-every-day).
 
 #### 4.3.12 WL12: an external-showing switch
 
@@ -1309,7 +1309,7 @@ forms and rules in YAML. The screen is a page kind `breach-queue` whose id is th
 ([RACHANA_REFERENCE, Sutra Next](../guides/RACHANA_REFERENCE.md#events-sources-and-children-sutra-next)). An opened breach is a Sutra Next
 child reading `source: { kind: limit-breach, id: "@queue.open.id" }`; `BRCH <id>` opens the same panels on its own page through the pack
 fragment `breach-detail@1`. Each action is a Sutra Next form (`new: drawer`) whose `save:` writes a new record to the `owned` target
-([APPROVALS_GUIDE section 4a](../guides/APPROVALS_GUIDE.md#4-submitting-a-change)); the breach service hears the record's `edit.applied`
+([APPROVALS_GUIDE section 4a](../guides/USER_GUIDE.md#submitting-a-change)); the breach service hears the record's `edit.applied`
 event ([ARCHITECTURE section 18.3](../architecture/ARCHITECTURE.md#317-the-applied-event-triggers-and-viewers)) and writes the breach's next version, pushed
 live to every viewer. The thread is the record's Discussion ([ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion)).
 
@@ -1838,7 +1838,7 @@ intraday stamps. Within-date batches as stops of the slider come with it. **Size
 
 **What:** a user marks a member wrong (a P&L vector, a sensitivity record, a trade attribute) and proposes a correction (exclude with a
 reason, a replacement or proxy vector, a corrected attribute); a second person approves through write-back
-([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md)). The correction is an overlay record with author, approver, reason and expiry; the original
+([APPROVALS_GUIDE.md](../guides/ADMIN_GUIDE.md)). The correction is an overlay record with author, approver, reason and expiry; the original
 stays; every cell using it shows a **corrected** marker and its provenance names it. **Open decision** (recommended): approved corrections
 are included in the official run by default, with the list on the run. **Data:** [D14](#6616-d14-cube-correction-new-drishti-owned).
 **Size:** M; unscheduled.
@@ -2925,7 +2925,7 @@ The Brief's paragraphs come from a **template** filled with the figures (*"The b
 metrics, with {breached} breach…"*), so every word is reproducible; the AI layer may rephrase with the figures fixed and checked after
 (a number not in the input is refused). **Ask** sends the question to the AI layer with **tools** that call the engines (VaR and its
 explanation, exposure, appetite status, the breach queue), never rows; each figure is cited and linked; an answer with a figure no tool
-returned is refused; the AI layer's policy, masks and audit apply ([AI 7](../guides/AI_GUIDE.md#7-ask-on-the-ai-layer)). On only when the
+returned is refused; the AI layer's policy, masks and audit apply ([AI 7](../guides/ADMIN_GUIDE.md#2717-ask-on-the-ai-layer)). On only when the
 site has a model provider.
 
 #### 8.3.6 Approve and reject
@@ -3179,7 +3179,7 @@ PFE)*), `PROGRESS`, `BY`, `AT`.
 
 #### 8.5.7 LREQ: limit-request, temporary limit increases
 
-New, Drishti-owned, entered and approved through write-back with four eyes ([APPROVALS_GUIDE 10](../guides/APPROVALS_GUIDE.md#6-the-approvals-queue));
+New, Drishti-owned, entered and approved through write-back with four eyes ([APPROVALS_GUIDE 10](../guides/USER_GUIDE.md#the-approvals-queue));
 exported for the bank's limit system. One row per request per status change; key `REQUEST_ID` (`TLI-0412`), `VERSION`. Fields:
 `LIMIT_REF`, `CURRENT_LIMIT`, `REQUESTED_LIMIT`, `APPROVED_LIMIT`, `VALID_FROM`, `VALID_TO` (always ends), `REASON`, `COVERS_BREACH`,
 `REQUESTED_BY`, `RECOMMENDED_BY`, `RECOMMENDATION`, `APPROVER_ROLE` (board limits → `cro`), `STATUS` (`REQUESTED`, `RECOMMENDED`,

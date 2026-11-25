@@ -223,7 +223,7 @@ drishti:
       notify-roles: admin            # the roles told in their inbox (and the bell) when an alert opens, comma-separated; blank: nobody
       keep: 200                      # alerts opened and closed kept for the page, newest first (in memory: a restart starts afresh)
   python: ${DRISHTI_PYTHON:}         # the ONE Python (the console, the tools and the server's Python work: yours, Drishti makes no virtual environment), as an absolute path (tools/drishti.py setup writes the Python it ran with into the settings file; a value naming a missing file is replaced): used where the work's own setting (drishti.feeds.python, compute.python) is blank; DRISHTI_PYTHON beats every setting; blank: the work's own default (python3, python on Windows)
-  feeds:                             # the data feeds as the server sees them (docs/guides/WORLD_DATA_GUIDE.md section 6; Admin -> Data loads -> Feeds)
+  feeds:                             # the data feeds as the server sees them (docs/guides/WORLD_DATA_GUIDE.md section 19.6; Admin -> Data loads -> Feeds)
     config: ${DRISHTI_FEEDS_CONFIG:${drishti.config.dir}/feeds}   # the feed files' folder (config/feeds/<feed>.yaml); the run ledger is <data folder>/datafeeds/ledger.jsonl
     root: ${DRISHTI_FEEDS_ROOT:${drishti.home}}    # the installation's folder (the one holding tools/drishti.py): Run now starts `tools/drishti.py feed run <feed>` there
     python: ${DRISHTI_FEEDS_PYTHON:}  # the Python Run now starts (blank: drishti.python, else python3, python on Windows)
@@ -233,10 +233,10 @@ drishti:
     file: ${DRISHTI_STORE_FILE:${drishti.config.dir}/store/store.yaml}
     root: ${DRISHTI_STORE_ROOT:}   # the filesystem backend's root, over the file's filesystem.root (empty: the file's, else <data folder>/fstore)
   edit:
-    # Write-back (docs/guides/APPROVALS_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
+    # Write-back (docs/guides/ADMIN_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
     # Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only.
     file: ${DRISHTI_EDIT_FILE:${drishti.config.dir}/edit/edit.yaml}
-  live-sets:                         # the live tables behind blotters, FORM results, searches and bare mnemonics, at /api/v1/rdp (docs/guides/LIVE_RESULTS_GUIDE.md section 7)
+  live-sets:                         # the live tables behind blotters, FORM results, searches and bare mnemonics, at /api/v1/rdp (docs/guides/USER_GUIDE.md, Live results and blotters: The engine: snapshot, deltas, scale, retention)
     flush-ms: 50                     # how often each viewer's waiting changes are sent, coalesced per record (milliseconds, at least 10)
     window-capacity: 5000            # records waiting for one viewer before it is told to resync instead (back-pressure)
     default-max-rows: 250000         # the most records a kind's default set reads into memory when its store cannot page it (a kind a lake keeps as columns is paged from the lake, uncapped); beyond it the set says capped
@@ -461,7 +461,7 @@ drishti:
         description: "Read data through Arrow Flight (INTEGRATION_GUIDE.md): kinds, BI models, pivot views, VaR vectors and the in-memory lake, as your roles, masks and row rules allow, every read audited. It opens no HTTP call. data:read:<domain> (a pack such as trading, bi, var, a lake) opens one domain only."
         allow: []
       "[edit]":
-        description: "Submit changes through write-back (APPROVALS_GUIDE.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
+        description: "Submit changes through write-back (ADMIN_GUIDE.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
         allow:
           - POST /api/v1/changes
           - POST /api/v1/rdp/tables/*/write
@@ -627,7 +627,7 @@ drishti:
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
       - PUT /api/v1/tables/editor/prefs         # a person's editor view: personal, in the console
       - "* /api/v1/me/**"
-      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (APPROVALS_GUIDE.md)
+      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (ADMIN_GUIDE.md)
       - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
@@ -693,7 +693,7 @@ drishti:
       author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (USER_GUIDE.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
       pivot-approver: { kinds: ["*"], bi: [bi] }   # approves custom pivot functions someone else wrote (four eyes; drishti.pivot.functions.approver-role)
-      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (APPROVALS_GUIDE.md; editing itself is off until config/edit/edit.yaml turns it on)
+      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (ADMIN_GUIDE.md; editing itself is off until config/edit/edit.yaml turns it on)
     oidc:                              # single sign-on: the console runs the flow, the server verifies the ID token
       enabled: ${DRISHTI_OIDC_ENABLED:false}  # verify single-sign-on ID tokens
       issuer: ${DRISHTI_OIDC_ISSUER:}  # the OIDC issuer URL
@@ -749,7 +749,7 @@ drishti:
     jitter: 0.2                      # each wait varies by up to this fraction either way
     permanent-after: 3               # a failure waiting cannot fix (refused credentials, bad settings) seen this often in a row is retried only every max
     # packs: {initial: 2s}           # drishti.retry.<area>.<key> overrides any of these for one area: packs, connectors, ai, mcp
-  ai:                                # LLM provider layer (docs/guides/AI_GUIDE.md): OFF by default, the ONE switch of all AI (MCP, Ask, BI hooks); not in this release's console
+  ai:                                # LLM provider layer (docs/guides/ADMIN_GUIDE.md): OFF by default, the ONE switch of all AI (MCP, Ask, BI hooks); not in this release's console
     enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the LLM provider layer: provider files in drishti.ai.dir are read and models become callable
     dir: ${DRISHTI_AI_DIR:${drishti.config.dir}/ai}        # one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names
     watch: auto                      # auto | poll | off: how edits to the folder are noticed (live reload, like connectors)
@@ -764,7 +764,7 @@ drishti:
       cost-per-user-per-day: 0       # in the unit of the models' cost-per-1k-* prices
       features: {}                   # per feature: "[ask]": {roles: [..], per-user-per-minute: 6}
       # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/bi/README.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
-  mcp:                               # MCP client (docs/guides/AI_GUIDE.md): OFF by default
+  mcp:                               # MCP client (docs/guides/ADMIN_GUIDE.md): OFF by default
     enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the MCP client (also needs drishti.ai.enabled): server files in drishti.mcp.dir are read and their tools become callable
     dir: ${DRISHTI_MCP_DIR:${drishti.config.dir}/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
     watch: auto  # auto | poll | off: how edits to the folder are noticed (live reload)
@@ -979,7 +979,7 @@ drishti:
     cache-ttl: 60s                   # how long an answer is served before it is derived again
     ask:                             # Ask about this page (RACHANA_REFERENCE.md): OFF by default; while off no call to any model is ever made
       enabled: ${DRISHTI_ASK_ENABLED:false}  # turn on Ask about this page (also needs drishti.ai.enabled; list packs in drishti.explain.ask.packs)
-      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/AI_GUIDE.md)
+      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/ADMIN_GUIDE.md)
       packs: []                      # packs where the Ask box is on; empty = none (per-pack opt-in)
       values: labels-only            # labels-only | shown: whether the page's rendered text (values) goes into the prompt; masked values never do
       max-question-chars: 500  # longer questions are refused (400)

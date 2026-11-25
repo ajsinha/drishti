@@ -409,7 +409,7 @@ part does both on real data:
 
 Each step shows the UI, the command line where there is one, and the YAML. The references are
 [RACHANA_REFERENCE.md › Screen designer and the Build workbench](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) and its
-[section 31, the Sutra designer](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid); the grammar behind the Sutra designer's screen is
+[section 3.31, the Sutra designer](../guides/RACHANA_REFERENCE.md#331-the-sutra-designer-customize-describe-outline-and-grid); the grammar behind the Sutra designer's screen is
 [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms).
 
 #### The Build workbench: a screen from your own documents
@@ -768,7 +768,7 @@ field, a `*_DATE` column a date field:
         - { id: maturity_date, label: Maturity, bind: MATURITY_DATE, type: date }
 ```
 
-Rules, money and linked-record fields, masks and roles are in [APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md). Saving keeps a
+Rules, money and linked-record fields, masks and roles are in [APPROVALS_GUIDE.md](../guides/ADMIN_GUIDE.md). Saving keeps a
 **draft** for each person; nothing is written to the source system until write-back.
 
 **Command line.** Your drafts, checked again on the server with the same rules:
@@ -895,7 +895,7 @@ With Grid or Outline, Customize on a page then opens that mode with the page's d
 
 A desk screen designed from your own documents (steps 8 to 15), your own version of the book's trades page (a linked record on a click, a refresh, a form)
 and a second screen from one line (steps 16 to 22), all in **Create → Build home → My drafts**, seen by nobody else. To make one live for everyone, open it in the workbench
-and **Submit for review** ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 22](../guides/RACHANA_REFERENCE.md#22-saving-and-proposing)),
+and **Submit for review** ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 3.22](../guides/RACHANA_REFERENCE.md#322-saving-and-proposing)),
 or `drishti.py design propose <id>`.
 
 ### Part C · Computed panels: a reactive connector
@@ -1103,7 +1103,7 @@ each kind's latency. The pools and workers behind the Python one are under Admin
 - [Tutorial 12 · Load data daily](12-a-day-of-bank-data.md) keeps the screens' data fresh.
 - [Tutorial 11 · Correct a trade and approve it](11-correct-and-approve.md): a form like the one of step 19 that writes back, with four eyes.
 - [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) is the workbench reference and
-  [its section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid) every mode of the designer in full;
+  [its section 3.31](../guides/RACHANA_REFERENCE.md#331-the-sutra-designer-customize-describe-outline-and-grid) every mode of the designer in full;
   [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) lists every option of every panel and control;
   [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) shows each of the 22 panel kinds with a picture.
 - [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) is the language guide; its
@@ -1128,5 +1128,5 @@ each kind's latency. The pools and workers behind the Python one are under Admin
 | a part of the Describe line is red | the sentence beside it says why; the result says *Fix the red part to see the screen* until it reads |
 | a refresh interval faster than 5 s is not offered | the console's `views.refresh_min_seconds` (default 5) |
 | `DRS-2057` in `sutra lint` | an event or source reads a panel that does not exist (a renamed panel id) |
-| `DRS-2058` | the `form:` does not read: an unknown key or field type ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md)) |
+| `DRS-2058` | the `form:` does not read: an unknown key or field type ([APPROVALS_GUIDE.md](../guides/ADMIN_GUIDE.md)) |
 | `DRS-2059` | the `layout:` names an area the picture does not have |
