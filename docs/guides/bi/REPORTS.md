@@ -1458,7 +1458,7 @@ condition: {type: threshold, op: above, value: 1000000}
 - [USER_GUIDE.md › Scheduled reports](DISTRIBUTION_AND_ALERTS.md#11-the-reports-page-and-scheduled-searches) is the reference for the CSV reports.
 - Tutorial 1, Part C made the search; tutorial 12 told Drishti when the data lands, which is what `after-load` waits for.
 - [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](LIVE_REPORTS_AND_BOARDS.md#2-boards-report-pages-of-live-tiles): every tile option, alerts on tiles and notifications, the API. [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 7.1](TABLES_AND_MODELS.md#17-live-tables) is the live-table reference.
-- [DEMO_CONNECTOR.md](../../../docs/connectors/types/demo/README.md) and [../guides/DATA_GUIDE.md section 11](../../guides/DATA_GUIDE.md#11-the-demo-data) say exactly what ticks and how.
+- [DEMO_CONNECTOR.md](../../../docs/connectors/types/demo/README.md) and [../guides/BANK_DATA_GUIDE.md section 9](../BANK_DATA_GUIDE.md#9-the-demo-data) say exactly what ticks and how.
 - [The Notebook tutorial](NOTEBOOK_AND_PYTHON.md): Python in a measure, a visual and a notebook.
 - [BI_GUIDE.md](GOVERNANCE_AND_AI.md#2-publishing-and-governance-versions-review-certification-lineage-impact-environments): every rule, setting (`drishti.governance.four-eyes`, `drishti.bi.governance.refuse-breaking`) and error code of this tutorial.
 - [BI_GUIDE.md section 23](TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads): models, their contract and their versions.

@@ -834,3 +834,69 @@ moved:
   - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#108-packs-switching-calc-on-and-starter-snippets', to: 'docs/guides/bi/CALC.md#8-packs-switching-calc-on-and-starter-snippets', how: redirect, note: 'section moved'}
   - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1081-the-shipped-packs-snippets', to: 'docs/guides/bi/CALC.md#81-the-shipped-packs-snippets', how: redirect, note: 'section moved'}
   - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#109-roles-who-may-use-calc', to: 'docs/guides/bi/CALC.md#9-roles-who-may-use-calc', how: redirect, note: 'section moved'}
+  # lane leftovers (i7n: the command line of USER_GUIDE is CLI_REFERENCE 20)
+  - {from: 'docs/guides/USER_GUIDE.md#the-form-of-a-command', to: 'docs/guides/CLI_REFERENCE.md#201-the-form-of-a-command', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/USER_GUIDE.md#reserved-words', to: 'docs/guides/CLI_REFERENCE.md#202-reserved-words', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/USER_GUIDE.md#knowledge-what-the-words-mean', to: 'docs/guides/CLI_REFERENCE.md#203-knowledge-what-the-words-mean', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/USER_GUIDE.md#the-pre-deal-check', to: 'docs/guides/CLI_REFERENCE.md#204-the-pre-deal-check', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/USER_GUIDE.md#the-data-map', to: 'docs/guides/CLI_REFERENCE.md#205-the-data-map', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/USER_GUIDE.md#export-data', to: 'docs/guides/CLI_REFERENCE.md#206-export-data', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/USER_GUIDE.md#suggestions-as-you-type', to: 'docs/guides/CLI_REFERENCE.md#207-suggestions-as-you-type', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/USER_GUIDE.md#earlier-commands-and-your-own-aliases', to: 'docs/guides/CLI_REFERENCE.md#208-earlier-commands-and-your-own-aliases', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/USER_GUIDE.md#when-a-command-does-not-work', to: 'docs/guides/CLI_REFERENCE.md#209-when-a-command-does-not-work', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/USER_GUIDE.md#a-pack-at-a-glance', to: 'docs/guides/CLI_REFERENCE.md#2010-a-pack-at-a-glance', how: redirect, note: 'section moved'}
+  # lane leftovers (i7n: the two tutorials inside WORLD_DATA_GUIDE are one worked example, section 21)
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#tutorial-world-data-economies-companies-funds-entities-and-news', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#time-to-complete', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#before-you-start', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#what-you-will-learn', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#part-a--economies', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-1--from-a-counterparty-to-its-economy', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-2--its-outlook-its-peers-and-who-governs-it', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#part-b--companies', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-3--one-company-five-identifiers', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#part-c--funds-and-etfs', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-4--turn-the-pack-on-and-see-what-it-holds', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-5--read-a-funds-fact-sheet', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-6--look-through-the-fund', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-7--set-the-fund-against-its-index', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-8--find-funds-by-share-class-by-index-by-any-field', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-9--see-every-fund-that-holds-a-company', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-10--see-the-funds-that-track-an-index', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-11--on-a-phone-and-from-the-api', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-12--refresh-the-data', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#part-d--legal-entities-and-who-owns-whom', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-13--who-owns-this-company-all-the-way-up', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#part-e--news-and-markets', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-14--a-company-its-quote-and-its-headlines', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#next-steps', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#if-something-goes-wrong', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#tutorial-public-sector-data-and-free-news', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-1--turn-the-packs-on-and-see-the-module', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-2--run-the-six-feeds', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-3--a-countrys-development-wdi', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-4--a-central-bank-cbank-and-cbser', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-5--national-statistics-and-the-oecd-nstat-oecd', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-6--official-news-press-and-prel', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-7--world-events-gdelt', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-8--run-them-every-day', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  - {from: 'docs/guides/WORLD_DATA_GUIDE.md#step-9--change-what-a-feed-pulls', to: 'docs/guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen', how: redirect, note: 'section folded into one worked example'}
+  # lane leftovers (i7n: the demo data of DATA_GUIDE is BANK_DATA_GUIDE 9)
+  - {from: 'docs/guides/DATA_GUIDE.md#11-the-demo-data', to: 'docs/guides/BANK_DATA_GUIDE.md#9-the-demo-data', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#111-the-test-data-and-the-demo-lakes-the-default', to: 'docs/guides/BANK_DATA_GUIDE.md#91-the-test-data-and-the-demo-lakes-the-default', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage', to: 'docs/guides/BANK_DATA_GUIDE.md#92-mixed-delta-and-iceberg-storage', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#113-the-sizes', to: 'docs/guides/BANK_DATA_GUIDE.md#93-the-sizes', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#114-delta-lake', to: 'docs/guides/BANK_DATA_GUIDE.md#94-delta-lake', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#115-postgresql', to: 'docs/guides/BANK_DATA_GUIDE.md#95-postgresql', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#116-apache-iceberg', to: 'docs/guides/BANK_DATA_GUIDE.md#96-apache-iceberg', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#117-duckdb', to: 'docs/guides/BANK_DATA_GUIDE.md#97-duckdb', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#118-mongodb', to: 'docs/guides/BANK_DATA_GUIDE.md#98-mongodb', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#119-redis', to: 'docs/guides/BANK_DATA_GUIDE.md#99-redis', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#1110-aerospike', to: 'docs/guides/BANK_DATA_GUIDE.md#910-aerospike', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#1111-apache-cassandra', to: 'docs/guides/BANK_DATA_GUIDE.md#911-apache-cassandra', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#1112-json-lines-files-no-store-at-all', to: 'docs/guides/BANK_DATA_GUIDE.md#912-json-lines-files-no-store-at-all', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#1113-your-own-jsonl', to: 'docs/guides/BANK_DATA_GUIDE.md#913-your-own-jsonl', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#1114-your-banks-names', to: 'docs/guides/BANK_DATA_GUIDE.md#914-your-banks-names', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#1115-the-samples', to: 'docs/guides/BANK_DATA_GUIDE.md#915-the-samples', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#1116-json-lines-one-format-for-every-loader', to: 'docs/guides/BANK_DATA_GUIDE.md#916-json-lines-one-format-for-every-loader', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/DATA_GUIDE.md#1117-the-scripts', to: 'docs/guides/BANK_DATA_GUIDE.md#917-the-scripts', how: redirect, note: 'section moved'}

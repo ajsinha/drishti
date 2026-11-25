@@ -1259,7 +1259,7 @@ Never write into the folder the server reads while it is half-finished: write el
   lake or partitions, copy **the Parquet files first and `_delta_log/` last** (the log makes files visible):
   `rsync -a stage/trading/trade_endur/ live/trading/trade_endur/ --exclude _delta_log && rsync -a stage/trading/trade_endur/_delta_log/ live/trading/trade_endur/_delta_log/`
   (for `s3a://` the same order with `aws s3 sync`). A whole lake: `mv lake lake.old && mv lake.new lake`. Keep times when copying (`cp -p`,
-  `rsync -t`): *known at* reads them. Keep local test loads small ([DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data)).
+  `rsync -t`): *known at* reads them. Keep local test loads small ([BANK_DATA_GUIDE.md section 9](BANK_DATA_GUIDE.md#9-the-demo-data)).
 
 ### 8.8 Check it after a deploy
 

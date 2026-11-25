@@ -125,7 +125,7 @@ java -jar lib/drishti-server-*-exec.jar --drishti.sources.plugins.demo.enabled=f
 ```
 
 The run configuration **Drishti: run server (demo)** starts with the demo off, so every page reads the lakes `drishti.py lake demo`
-built ([../../../guides/DATA_GUIDE.md section 11](../../../guides/DATA_GUIDE.md#11-the-demo-data)); **Drishti: run server (built-in samples)** (and a bare `java -jar`) leaves it on, for what only it
+built ([../../../guides/BANK_DATA_GUIDE.md section 9](../../../guides/DATA_GUIDE.md#11-the-demo-data)); **Drishti: run server (built-in samples)** (and a bare `java -jar`) leaves it on, for what only it
 gives: values that tick live (live BI and boards) and screens with no store at all. With the demo off, `default-route: demo` names a
 connector that does not run and the router skips it; a kind no other connector (nor the `file` plugin) serves then answers
 `DRS-1002 no source serves kind '<kind>'`.
@@ -180,7 +180,7 @@ a parent's sample by shipping the same kind and id; type-ahead keeps one entry p
 (`DRISHTI_PACKS`) contribute; a pack switched off for users in Admin → Packs still has its samples loaded (that switch hides kinds, it
 does not restart connectors). Setting `dirs` by hand replaces what the packs put there, which is how a site serves a folder of its own
 samples. How the samples are generated, and loaded into every real store, is in
-[../../../guides/DATA_GUIDE.md section 11](../../../guides/DATA_GUIDE.md#1115-the-samples); the format from a pack author's side is in
+[../../../guides/BANK_DATA_GUIDE.md section 9](../../../guides/DATA_GUIDE.md#1115-the-samples); the format from a pack author's side is in
 [the pack developer's guide](../../../guides/BUILD_GUIDE.md#54-samples).
 
 ## Reads and what each costs
@@ -282,7 +282,7 @@ the headline becomes the 10-year point and the 2s10s slope is recomputed. Other 
 The specs are never written by hand: `tools/packgen/common/walks.py` builds each kind's walk from the finished sample and every generator
 calls it; `python3 tools/packgen/banking/make_data.py --check` fails when the samples differ from what the generators write. What stays
 still on purpose (coupon schedules, trade terms, end-of-day risk) is listed per kind in `walks.py` and in
-[../../../guides/DATA_GUIDE.md section 11](../../../guides/DATA_GUIDE.md#live-walks-by-kind); `DemoPackWalksTest` fails on a walked headline whose declared
+[../../../guides/BANK_DATA_GUIDE.md section 9](../../../guides/DATA_GUIDE.md#live-walks-by-kind); `DemoPackWalksTest` fails on a walked headline whose declared
 dependents never move and on a walk naming a path its sample lacks.
 
 ## Its place in routing
@@ -303,7 +303,7 @@ kinds, so it is a candidate for **every** kind and answers "not held" for ids it
 Every document is held parsed in memory for the life of the server (several times its JSON size), beside one type-ahead entry and one
 `walk` per sample: start time, heap and each reverse lookup grow with the number of samples; each tick walks only the subscribed
 entities. It is read once at start, undated (no `snapshot`/`effective`, no *known at*), has no promoted columns, one tick rate, and
-drifts without bound until restart. For a large book use a real store ([../../../guides/DATA_GUIDE.md section 11](../../../guides/DATA_GUIDE.md#11-the-demo-data) builds the
+drifts without bound until restart. For a large book use a real store ([../../../guides/BANK_DATA_GUIDE.md section 9](../../../guides/DATA_GUIDE.md#11-the-demo-data) builds the
 demo lakes).
 
 There is nothing to lose: after start it reads nothing from disk or network. A catalogue entry its kind's file does not hold is
