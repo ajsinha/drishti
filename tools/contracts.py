@@ -39,6 +39,19 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _rel_to_contracts(path: str) -> str:
+    """A replaced-by path as the README index (in docs/contracts) names it."""
+    return path.removeprefix("docs/contracts/").replace("docs/plans/contracts/", "../plans/contracts/")
+
+
+def contract_path(name: str) -> str:
+    """The repository path a name in tools/contracts.policy.yaml (relative to docs/contracts) points at: a built contract stays in
+    docs/contracts, one not built yet lives in docs/plans/contracts (NSET.md, TVAL.md ...); a name found in neither is read as built."""
+    if not (ROOT / "docs" / "contracts" / name).is_file() and (ROOT / "docs" / "plans" / "contracts" / name).is_file():
+        return "docs/plans/contracts/" + name
+    return "docs/contracts/" + name
 PACKS = ROOT / "config" / "packs"
 TESTDATA = ROOT / "data" / "testdata"
 POLICY = ROOT / "tools" / "contracts.policy.yaml"
@@ -771,7 +784,7 @@ class Draft:
                          ("class", klass), ("status", "retiring" if self.retiring else "active")])
         if self.retiring:
             c["retiring-in"] = str(self.retiring["release"])
-            c["replaced-by"] = "docs/contracts/" + self.retiring["contract"]
+            c["replaced-by"] = contract_path(self.retiring["contract"])
         c["title"] = title
         c["description"] = description
         c["source"] = source
@@ -798,11 +811,11 @@ class Draft:
         c["validation"] = self.rules(top, nested, key, dated)
         notes = list(self.notes) + list((self.pol.get("notes") or {}).get(self.kind) or [])
         if self.split:
-            notes.append(f"Terms kept, figures computed from {self.split['release']} ({'docs/contracts/' + self.split['contract']}): the "
+            notes.append(f"Terms kept, figures computed from {self.split['release']} ({contract_path(self.split['contract'])}): the "
                          f"fields marked derived are computed by {self.split['measure']} and leave the stored record then.")
         if self.retiring:
             notes.append(f"Retiring in {self.retiring['release']}: the stored kind is removed and computed instead by "
-                         f"{self.retiring['measure']} (docs/contracts/{self.retiring['contract']}); old ids and links open the computed page.")
+                         f"{self.retiring['measure']} ({contract_path(self.retiring['contract'])}); old ids and links open the computed page.")
         c["notes"] = notes
         c["review"] = self.review_points()
         return c
@@ -974,8 +987,8 @@ def check(packs_dir: Path = PACKS, testdata: Path = TESTDATA, data: bool = True)
                 probs.append(f"{k} is '{c.get(k)}', the pack says '{want}'")
         ret = (pol.get("retiring") or {}).get(cmd["kind"])
         if ret and (c.get("status") != "retiring" or c.get("retiring-in") != str(ret["release"])
-                    or c.get("replaced-by") != "docs/contracts/" + ret["contract"]):
-            probs.append(f"retiring in {ret['release']} (tools/contracts.policy.yaml) replaced by docs/contracts/{ret['contract']}: "
+                    or c.get("replaced-by") != contract_path(ret["contract"])):
+            probs.append(f"retiring in {ret['release']} (tools/contracts.policy.yaml) replaced by {contract_path(ret['contract'])}: "
                          f"status, retiring-in or replaced-by differ")
         if not ret and c.get("status") == "retiring":
             probs.append("status retiring, but tools/contracts.policy.yaml retires nothing of this kind")
@@ -1193,7 +1206,7 @@ def render_index(all_items: list[tuple[dict, Path, dict | None]], plans: list[tu
             rows.append([f"`{cmd['code']}`", f"`{cmd['kind']}`", cmd["pack"], "—", "no contract", "", ""])
             continue
         rows.append([f"`{c['mnemonic']}`", f"`{c['kind']}`", f"[{c['pack']}]({c['pack']}.md#{_anchor(c)})", c["class"], _status(c),
-                     c.get("replaced-by", "").replace("docs/contracts/", "") or "", str(len(c.get("review") or []))])
+                     _rel_to_contracts(c.get("replaced-by", "")), str(len(c.get("review") or []))])
     for f, c in plans:
         rows.append([f"`{c['mnemonic']}` (proposed)", f"`{c['kind']}`", f"[{c['pack']}]({c['pack']}.md#{_anchor(c)})", c["class"],
                      _status(c), "", str(len(c.get("review") or []))])

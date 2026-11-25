@@ -45,7 +45,7 @@ def _cell(text) -> str:
 def _contract_link(path: str) -> str:
     """A replaced-by path as a link when the contract is written (the help links test reads every link), else its name."""
     name = Path(path).name
-    return f"[{name}](../contracts/{name})" if (ROOT / path).is_file() else f"`{name}`"
+    return f"[{name}](../{path.removeprefix('docs/')})" if (ROOT / path).is_file() else f"`{name}`"
 
 
 def _example(mnemonic: str, examples: list, contract: dict) -> str:
