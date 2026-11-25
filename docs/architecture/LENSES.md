@@ -320,7 +320,7 @@ Everything below is built in the engines and lenses the Oversight lens would reu
 | Stress: stored definitions and results per desk; the bank's P&L per scenario and each desk's stress limit use (derived) | **Partly** (no stress engine for any scope) | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived), [STR.md](../plans/contracts/STR.md) |
 | Concentration: VaR of any slice | **Partly**: scope words, rules and `WHERE:`; no concentration view | [VAR_GUIDE section 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute) |
 | Counterparty exposure and credit limits (read for concentration) | **Built** | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) |
-| Alerts on numbers; comment threads anchored to the data; write-back approval with four eyes | **Built** (a person sets each alert) | [USER_GUIDE, Alerts](../guides/USER_GUIDE.md#alerts), [ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion), [APPROVALS_GUIDE section 10](../guides/USER_GUIDE.md#the-approvals-queue) |
+| Alerts on numbers; comment threads anchored to the data; write-back approval with four eyes | **Built** (a person sets each alert) | [USER_GUIDE, Alerts](../guides/USER_GUIDE.md#alerts), [ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion), [USER_GUIDE.md › The Approvals queue](../guides/USER_GUIDE.md#the-approvals-queue) |
 | Certified BI reports; entitlements and audit per answer | **Built** | [REPORTS_GUIDE, certification](../guides/bi/GOVERNANCE_AND_AI.md#24-certification-and-endorsement), [VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
 | P&L explain by cause; PLA test; FRTB internal models | **Not built** (P&L explain stored per desk as read, `PNL`) | [PNL.md](../plans/contracts/PNL.md), [REGULATORY_VAR_REPORTING section 8.1](../guides/REGULATORY_VAR_REPORTING.md#81-coverage-report-by-report) |
 
@@ -479,7 +479,7 @@ hardest families from trade-grain data (VaR at any scope; PFE by counterparty an
 | Compare with an earlier capture; component VaR | **Built** | [VAR_GUIDE 6](../guides/VAR_GUIDE.md#6-captures-and-compare) |
 | VaR change explanation by cause (RO1) | **Built** for VaR; exposure, liquidity and capital reasons not built | [VAR_GUIDE 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained) |
 | A breach as a record; one limit catalogue (RO2, RO3) | **Not built**, designed ([section 5.3](../plans/LENSES_PROPOSALS.md#53-gaps-and-proposals)) | — |
-| Temporary limit increases with four eyes | **Not built**; the pattern exists in write-back approval | [APPROVALS_GUIDE 10](../guides/USER_GUIDE.md#the-approvals-queue) |
+| Temporary limit increases with four eyes | **Not built**; the pattern exists in write-back approval | [USER_GUIDE.md › The Approvals queue](../guides/USER_GUIDE.md#the-approvals-queue) |
 | Comments anchored to data; alerts on numbers | **Built**; alerts are set per person, not from a catalogue | [ARCHITECTURE](ARCHITECTURE.md#31-collaboration-write-back-and-approvals), [USER_GUIDE, alerts](../guides/USER_GUIDE.md#alerts-on-numbers) |
 | LCR, NSFR, survival horizon; CET1, RWA | **Not built** (balance-sheet roadmap; stored SA-CCR and FRTB charges are partial RWA inputs only) | |
 | Financed emissions | **Not built**; climate stays out of scope as a computed measure | — |
@@ -523,7 +523,7 @@ change and incidents, Ask, and an **evidence pack** for a supervisor or audit.
 | BI lineage and impact; official VaR and exposure records for any past date | **Built** | [REPORTS_GUIDE 32](../guides/bi/GOVERNANCE_AND_AI.md#2-publishing-and-governance-versions-review-certification-lineage-impact-environments), [VAR_GUIDE 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | The configuration in one generated document, in the UI with value and origin | **Built** | [CONFIGURATION](../admin/CONFIGURATION.md#every-setting) |
 | Audit log (sign-ins, failures, locks, users, roles, tokens, packs, connectors, load settings, cache purges, secret rotations) | **Built** | [USER_MANAGEMENT, audit](../guides/ADMIN_GUIDE.md#26-read-the-audit-log) |
-| Write-back audit and four-eyes approval | **Built** | [APPROVALS_GUIDE 10](../guides/USER_GUIDE.md#the-approvals-queue) |
+| Write-back audit and four-eyes approval | **Built** | [USER_GUIDE.md › The Approvals queue](../guides/USER_GUIDE.md#the-approvals-queue) |
 | Access log of every answered read, 90 days | **Built** | [USER_MANAGEMENT, access log](../guides/ADMIN_GUIDE.md#8-who-looked-at-what-the-access-log), [OPERATIONS 9b](../guides/OPERATIONS_GUIDE.md#114-what-leaves-the-server-ask-the-access-log-and-ai) |
 | Usage analytics by lens, screen and desk; an entitlement report as of a date | **Not built**; the access log does not record lens or screen | — |
 | Roles and powers; commands turned off by an administrator | **Built** | [ADMIN_GUIDE 3](../guides/ADMIN_GUIDE.md#3-roles) |

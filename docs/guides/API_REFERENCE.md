@@ -557,7 +557,7 @@ curl -s $B/health/live
 
 ### 2.12 Form drafts
 
-What a person typed into a panel's `form:` ([APPROVALS_GUIDE.md](ADMIN_GUIDE.md), RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10), kept for them on the
+What a person typed into a panel's `form:` ([ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run), RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10), kept for them on the
 server; a form whose Sutra has `save:` submits it as change requests ([Write-back: changes](#213-write-back-changes)). Only the owner ever reads a draft. The console passes these through as `/api/drafts`.
 
 | Method | Path | Notes |
@@ -599,7 +599,7 @@ curl -s -X POST "$DRISHTI/api/v1/drafts" -H "Authorization: Bearer $TOKEN" -H 'C
 ### 2.13 Write-back: changes
 
 A change to a record's fields, submitted from a form's draft, the CLI (`drishti.py change`) or a program
-([APPROVALS_GUIDE.md](ADMIN_GUIDE.md); the forms guide, [APPROVALS_GUIDE.md](ADMIN_GUIDE.md)). Off as
+([ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run); the forms guide, [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run)). Off as
 shipped: with `edit.enabled: false` in `config/edit/edit.yaml` every write answers `403 DRS-9301`. A field is editable only when a Sutra's
 `form:` with `save:` names it; the caller needs the `edit` power on a role (Admin → Roles) and an API token the `edit` scope. The console
 passes these through as `/api/changes`.
@@ -2236,7 +2236,7 @@ Review notices reach the inbox ([the inbox](#31-share-with-a-note-the-directory-
 
 ## 16. AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`
 
-Off by default (`drishti.ai.enabled`, `drishti.mcp.enabled`); [AI_GUIDE.md](ADMIN_GUIDE.md#271-model-providers) and [AI_GUIDE.md](ADMIN_GUIDE.md#272-the-mcp-client-other-servers-tools-behind-drishtis-policy) are the references. While a layer is off every call below answers
+Off by default (`drishti.ai.enabled`, `drishti.mcp.enabled`); [ADMIN_GUIDE.md › 27.1 Model providers](ADMIN_GUIDE.md#271-model-providers) and [ADMIN_GUIDE.md › 27.2 The MCP client: other servers' tools, behind Drishti's policy](ADMIN_GUIDE.md#272-the-mcp-client-other-servers-tools-behind-drishtis-policy) are the references. While a layer is off every call below answers
 `404 DRS-4015`. Every call goes through the AI policy (masking, per-user limits, audit); a model or tool failure is `502 DRS-4016`, a timeout `504 DRS-4016`, a limit `429 DRS-4017`, a refusal by the policy `403 DRS-4018`, an unknown model or server `404 DRS-4019`. A personal token needs the scope `ai:use` (or `ai:admin` for the test call).
 
 | Method | Path | Notes |
@@ -3125,7 +3125,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-2055 | — | — | a fragment's `doc:` docstring is missing or incomplete (summary, description, every parameter with type, default and meaning, emits, expects, examples, since; a composite's `uses`): the fragment is not loaded and its uses fail with `DRS-2048`. For a Sutra or an older block it is a warning only (`sutra lint --docs` prints it, never fails on it) ([Fragments and docstrings](BUILD_GUIDE.md)) |
 | DRS-2056 | — | — | a child panel nested more than 3 deep (screen, child, grandchild at most) | flatten the screen: move the deepest children up a level |
 | DRS-2057 | — | — | an event or source reference is wrong: a panel named in `@panel.event` or a `source:` that does not exist, a cycle, a panel called `parent`, or a trigger not yet supported | fix the panel name or the event; `sutra lint` names the panel and line |
-| DRS-2058 | — | — | a panel's `form:` does not read: an unknown key, a field type, a `step` or `key` naming nothing, a rule reading a field the form does not have, a pattern that does not compile | the message names the key; see [APPROVALS_GUIDE.md](ADMIN_GUIDE.md) |
+| DRS-2058 | — | — | a panel's `form:` does not read: an unknown key, a field type, a `step` or `key` naming nothing, a rule reading a field the form does not have, a pattern that does not compile | the message names the key; see [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run) |
 | DRS-2059 | — | — | a Sutra's `layout:` does not read: an unknown key, columns that are not the 12-unit grid, a panel placed in an area or section the picture does not have | fix the name in `layout.areas` or `layout.sections`; [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections) |
 | DRS-2060 | 422 | form invalid | A search form (the `form:` section of a pack, or a design's Form tab) is not valid YAML or names a field path, type or operator wrongly; the message says which field and what is allowed |
 | DRS-2061 | 422 | history invalid | a pack's `history:` block names a shape, chart field, headline or limit wrongly; `sutra lint` and the deploy check list each problem |

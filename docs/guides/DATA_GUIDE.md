@@ -1523,7 +1523,7 @@ variable, as everywhere in the file.
 
 A connector may declare `writes:`: named commands that change a record in its source, used by write-back's `source` target
 ([ADMIN_GUIDE.md section 28.4](ADMIN_GUIDE.md#284-writing-to-a-source-writes); the administrator's guide
-[APPROVALS_GUIDE.md section 13](ADMIN_GUIDE.md#284-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
+[ADMIN_GUIDE.md › 28.4 Writing to a source: writes:](ADMIN_GUIDE.md#284-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
 may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
 (`reply` or `next-load`) and `timeout:`. Only the JDBC plugin writes ([JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record));
 the File, Delta and Iceberg connectors never do (a lake is not written per edit) and every other plugin is refused (*plugin … cannot
@@ -3016,8 +3016,8 @@ private CA.
 | [Delta](../../plugins/drishti-plugin-delta/README.md#outbound-proxy) over S3 | yes | the SDK's proxy configuration |
 | [Iceberg](../../plugins/drishti-plugin-iceberg/README.md#outbound-proxy) over S3 / REST catalog | yes | the REST catalog's own client (`rest.client.proxy.*`), the S3 file IO (SDK proxy configuration), Hadoop `fs.s3a.proxy.*` for path tables |
 | [Kafka](../../plugins/drishti-plugin-kafka/README.md#outbound-proxy) | the **schema registry** only (HTTP) | `HttpURLConnection` with the proxy and a per-connection authenticator. Brokers speak the Kafka protocol, not HTTP, and are not proxied |
-| AI providers: OpenAI-compatible, Anthropic ([AI_GUIDE.md](ADMIN_GUIDE.md#27121-outbound-proxy)) | yes | the JDK HTTP client (server), `httpx` (console) |
-| MCP Streamable HTTP clients ([AI_GUIDE.md](ADMIN_GUIDE.md#27221-outbound-proxy)) | yes | same |
+| AI providers: OpenAI-compatible, Anthropic ([ADMIN_GUIDE.md › 27.1.2.1 Outbound proxy](ADMIN_GUIDE.md#27121-outbound-proxy)) | yes | the JDK HTTP client (server), `httpx` (console) |
+| MCP Streamable HTTP clients ([ADMIN_GUIDE.md › 27.2.2.1 Outbound proxy](ADMIN_GUIDE.md#27221-outbound-proxy)) | yes | same |
 | JDBC, Redis, MongoDB, Aerospike, Cassandra, ActiveMQ, RabbitMQ, files, DuckDB | no | not HTTP: they speak their own protocols (use a TCP-level route if the site needs one) |
 
 When a connector's target is on the no-proxy list its health says so instead of claiming the proxy:

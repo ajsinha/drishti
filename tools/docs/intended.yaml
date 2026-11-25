@@ -72,3 +72,6 @@ intended:
     why: "i7n Fable gate: the write-back citation in a message and a setting's meaning names ADMIN_GUIDE section 28.4 (Writing to a source), where the merged approvals text now lives"
     paths: ["kernel/drishti-packs/src/main/java/com/ash/drishti/packs/ConnectorFiles.java", "tools/settings_schemas.yaml",
             "kernel/drishti-server/src/main/java/com/ash/drishti/server/connectors/ConnectorManager.java"]
+  - decision: I7N_L
+    why: "i7n leftovers: the Help addresses of the data map and Export data follow the command line to CLI_REFERENCE (section 20), and a command's module docstring names ADMIN_GUIDE section 28 and the User guide's Submitting a change"
+    paths: ["drishti-console/web/templates/terminal/data.html", "drishti-console/web/templates/terminal/datamap.html", "tools/changecli.py", "drishti-console/routes/embed_v2_routes.py"]

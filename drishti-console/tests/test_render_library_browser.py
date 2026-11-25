@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The client-side renderer in a real browser (docs/guides/INTEGRATION_GUIDE.md sections 5 to 14): render() over Drishti Elements' painter
+"""The client-side renderer in a real browser (docs/architecture/ARCHITECTURE.md sections 30.1 to 30.8): render() over Drishti Elements' painter
 (drishti-views paint()), Drishti's host part around it. What the host part owes: a hostile ViewModel draws as text only; every case of
 VIEWMODEL.md draws with no page error, no CSP violation, no request off the console's origin and no sideways scroll at 390 px; live frames
 and the console's raw stream are applied in place by the painter; in-place navigation with its own back stack and the navigate event,

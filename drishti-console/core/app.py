@@ -728,7 +728,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(live_routes.router)              # the live tables: /live/<name> and /api/rdp (the Data Protocol, the grid's live mode)
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
-    app.include_router(render_routes.router)            # the client-side renderer's playground (INTEGRATION_GUIDE.md section 13)
+    app.include_router(render_routes.router)            # the client-side renderer's playground (INTEGRATION_GUIDE.md section 1.6.8)
     app.include_router(elements_routes.router)          # the Drishti Elements gallery (Drishti Elements' docs/DESIGN.md)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)

@@ -81,7 +81,7 @@ mkdir -p "$D/data/logs" "$D/data/dumps/server"
 # work and VaR shards handed over, at most DRISHTI_DRAIN_WAIT, 90 s, inside the task's stopTimeout of 120 s), then shuts down gracefully
 # The JVM options: lib/server.args (deploy/jvm/server-container.args, generated from the function drishti.py start server runs); the
 # flags after it are this task's (a later flag wins)
-# direct memory (docs/architecture/DATA_ARCHITECTURE.md section 3a; INTEGRATION_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute
+# direct memory (docs/architecture/DATA_ARCHITECTURE.md section 3a; INTEGRATION_GUIDE.md section 2.10): the in-memory lake's stores and Arrow's buffers (the compute
 # exchange, BI answers as Arrow, Arrow Flight when its engine is on) live there. The image has no Python, so the task definition sets the
 # figures tools/lake/memory_caps.py prints (--stores-only, --arrow-only): DRISHTI_LAKE_MEMORY_MB and DRISHTI_ARROW_MB (default 512, the
 # exchange's budget; with Flight on, memory_caps.py adds its memory.total-mb). The limit becomes 256 MB plus both (the later flag wins), and

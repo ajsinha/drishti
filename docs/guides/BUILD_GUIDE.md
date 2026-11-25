@@ -34,7 +34,7 @@ Who reads what:
 | writing a pack by hand | sections [1](#1-what-a-pack-is) to [7](#7-modelling-content-vocabulary-about-text-help-facts-roles-calc) |
 | turning JSON files or a schema into a pack without writing files | sections [8](#8-the-pack-designer-create--new-pack) to [10](#10-a-pack-from-json-lines-pack-new), [a source system for an existing kind: the source system tutorial](BUILD_GUIDE.md), [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) |
 | writing the screens (Sutras) | sections [11](#11-what-a-sutra-is-and-when-one-applies) to [27](#27-common-mistakes-and-their-messages); every key, panel option, format and function is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench's manual in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
-| letting people edit records on a screen | [section 28](#28-forms-letting-people-edit-records); what happens to a change after that (submitting, approval, Admin → Edits) is in [APPROVALS_GUIDE.md](ADMIN_GUIDE.md) |
+| letting people edit records on a screen | [section 28](#28-forms-letting-people-edit-records); what happens to a change after that (submitting, approval, Admin → Edits) is in [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run) |
 | connecting a pack to a database, a lake or a queue | [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) and the per-connector pages they list |
 | changing Drishti's own code | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
 
@@ -3962,7 +3962,7 @@ A panel's `form:` lets people change the records it shows, or start new ones, wi
 
 Saving keeps a **draft** for each person, on the server. A form whose Sutra has `save:` also **submits** the draft as a change (a correction kept beside
 the source, an owned record, or an amendment sent through a connector, after approval where the policy asks): drafts, submitting, approval, Admin →
-Edits and switching write-back on are in [APPROVALS_GUIDE.md](ADMIN_GUIDE.md). This section is the author's side: declaring the form. The design is
+Edits and switching write-back on are in [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run). This section is the author's side: declaring the form. The design is
 [Forms and data entry](RACHANA_REFERENCE.md#10-forms-and-data-entry); every key is in [Forms](RACHANA_REFERENCE.md#forms-form-on-a-panel).
 
 ### 28.1 A form beside the table
@@ -4041,9 +4041,7 @@ The same form has four fields of the richer kinds:
 
 ### 28.3 Editing in the cells
 
-A credit limit's buckets (`/v/credit-limit/LIM-ALDERSHOT`) are edited straight in the table:
-
-![Edited cells: the changed limits tinted with "was", a value below what is used in red with the reason under the row](img/designer/form-cells.jpg)
+A credit limit's buckets (`/v/credit-limit/LIM-ALDERSHOT`) are edited straight in the table; what the user sees and the keys are [USER_GUIDE.md › Editing in the cells](USER_GUIDE.md#editing-in-the-cells). The panel declares it:
 
 ```yaml
   - id: buckets
@@ -4065,10 +4063,7 @@ A credit limit's buckets (`/v/credit-limit/LIM-ALDERSHOT`) are edited straight i
         - { rule: "limit <= used * 3", severity: warn, fields: [limit], message: "More than three times what's used: the credit committee reviews it." }
 ```
 
-A field edits the column whose `bind` names the same record field (`LIMIT` edits the column bound to `@.LIMIT`). **Enter** (or F2, or a click) opens a
-cell and **Enter** keeps the value in the draft; **Esc** undoes it; **Tab** keeps it and moves to the next editable cell (Shift+Tab back). A changed cell
-is tinted and says "was 337,000,000"; a bad one has a red border and the reason under its row. The bar above the table counts "2 changes not saved",
-with **Undo all** and **Review 2 changes** (which lists every change and saves the draft; it says "Fix 1 problem first" while one is wrong).
+A field edits the column whose `bind` names the same record field (`LIMIT` edits the column bound to `@.LIMIT`). A `readonly` field has a `reason`, a rule with `severity: warn` warns without blocking, and the draft, its tint, its review bar and its keys are the console's (USER_GUIDE, above).
 
 ### 28.4 New records in a guided drawer
 

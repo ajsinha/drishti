@@ -1021,14 +1021,14 @@ Newer screens (every pack screen is built from the same parts) can do more than 
 - **Editing a record.** Where a screen lets you, clicking a row opens a form beside the table, or a pencil on a column lets you edit
   in the cell, and **New …** opens a guided drawer. Fields you may not change say why; a wrong value is explained under its field.
   **Save draft** keeps a **draft** that only you see (*You have 2 drafts on this page* offers them again). The page asks before you
-  leave with changes not saved. The reference is [APPROVALS_GUIDE.md](USER_GUIDE.md).
+  leave with changes not saved. The reference is [USER_GUIDE.md › Approvals](#approvals).
 - **Submitting a change (write-back).** Where editing is on, you hold the edit power and the form says where it goes (the book
   desk's trades do), **Submit…** opens a sheet: what you saw, what is there now and your change; where it goes (a correction kept beside
   the booking system's value, or an amendment sent to it); who approves (never you); what it recomputes; and the reason. After **Confirm**
   the sheet follows it: waiting for an approver, applied (everyone viewing the trade sees the new value at once, *How this view was built*
   says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in the **Approvals** queue
   (Views → Approvals, Admin → Record edits). Someone else's change to the record you are viewing shows *Changed by … just now*.
-  The reference is [APPROVALS_GUIDE.md section 4a](#submitting-a-change); a walk-through is
+  The reference is [USER_GUIDE.md › Submitting a change](#submitting-a-change); a walk-through is
   [tutorial 11](../tutorials/11-correct-and-approve.md).
 - **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
   tabs and panels that fold. Where the screen allows it, you may drag panels to another place and resize them, for yourself;
@@ -1404,7 +1404,7 @@ per field) come with the security release.
 - **Outbox.** The change is recorded as pending in the same transaction that applies it, sent once per record in order, and resent after a failover with
   the **same change id**; the source treats a repeat as already applied.
 - **Four eyes.** The site's policy (`config/edit/policy.yaml`, `source:`) asks for approvals for amendments sent to a source; nobody approves their own
-  change; a form's `approval:` may ask for more, never fewer ([APPROVALS_GUIDE.md](USER_GUIDE.md)).
+  change; a form's `approval:` may ask for more, never fewer ([USER_GUIDE.md › Approvals](#approvals)).
 - **One change id, end to end.** A write's `id` (the client's, 1 to 64 letters, digits, `-` or `_`) is the change's id in the write-back too: the
   approvals page, `GET /api/v1/changes/{id}`, the edit log and the source's message carry it. The same id again is answered with that change's
   answer (its state now: `held`, `queued`, `applied`, ...), never made twice, on any node and after a restart; from another person it is
@@ -1698,7 +1698,7 @@ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: appl
 *YAML*: `save: {target: source, command: amend-trade, reason: optional}` in the declaration and `source: one` in `config/edit/policy.yaml`.
 
 **Step 4 · Approve (another person).** *UI*: a second person opens **Approvals**, reads the old and new values and the reason, and approves; the
-requester cannot (`self-approval: false`). *CLI*: the approvals commands of [APPROVALS_GUIDE.md](USER_GUIDE.md). *YAML*: `approver-roles:` in the policy.
+requester cannot (`self-approval: false`). *CLI*: the approvals commands of [USER_GUIDE.md › Approvals](#approvals). *YAML*: `approver-roles:` in the policy.
 
 **Step 5 · Written back.** *UI*: the tray's line moves from *awaiting* to *sent to the source* to *applied*; the row ticks to version 9 when the
 source's record comes back through the feed, and **History** in the panel lists who, when, why. *CLI*: the same guide lists a change's state.

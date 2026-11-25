@@ -241,7 +241,7 @@ DRISHTI_CONNECTORS_DIR=config/connectors.examples/files DRISHTI_PACKS=market-ris
   or kind like `../x`) is refused.
 
 The connector never writes and has no `writes:`; write-back keeps corrections as overlays in the Drishti database and the loader folds
-approved ones into the next build ([APPROVALS_GUIDE.md](../../../architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
+approved ones into the next build ([ARCHITECTURE.md › 31.6 Where a write lands: overlays, owned rows and the outbox](../../../architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
 
 ## Memory, size and measured results
 

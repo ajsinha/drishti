@@ -3379,8 +3379,8 @@ python3 tools/drishti.py approvals ask change chg-01M5V6GM7NCKSR506RQ86M7YVV "Wh
 
 ### `change` and `edits`: write-back
 
-Write-back from the terminal (`tools/changecli.py`, [APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals),
-[APPROVALS_GUIDE.md section 4a](USER_GUIDE.md#submitting-a-change)), as the caller's token (it needs the `edit` scope):
+Write-back from the terminal (`tools/changecli.py`, [ARCHITECTURE.md › 31 Collaboration, write-back and approvals](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals),
+[USER_GUIDE.md › Submitting a change](USER_GUIDE.md#submitting-a-change)), as the caller's token (it needs the `edit` scope):
 
 - `change propose --kind KIND --id ID --set FIELD=VALUE [...] [--from FIELD=VALUE ...] [--reason TEXT] [--sutra S --panel P] [--date YYYY-MM-DD] [--override]`
   proposes a change to a record's fields: the same request as a form's Submit. A field must be editable by a Sutra's form with `save:`;
