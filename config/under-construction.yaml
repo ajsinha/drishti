@@ -33,8 +33,8 @@ items:
       - kind: sa-ccr
         binds: [$.REPLACEMENT_COST, $.ADD_ON, $.MULTIPLIER, $.EAD, $.RWA]
         panels: [addons, hedging, checks]
-    help: [docs-contracts-saccr]
-    contracts: [docs/contracts/SACCR.md]
+    help: [docs-plans-contracts-saccr]
+    contracts: [docs/plans/contracts/SACCR.md]
 
   - id: cva-figures
     what: field
@@ -47,8 +47,8 @@ items:
         panels: [components, sens]
       - kind: netting-set
         binds: [$.CVA]
-    help: [docs-contracts-cva]
-    contracts: [docs/contracts/CVA.md]
+    help: [docs-plans-contracts-cva]
+    contracts: [docs/plans/contracts/CVA.md]
 
   - id: credit-limit-usage
     what: field
@@ -75,7 +75,7 @@ items:
     about: "The pre-deal decision against every limit a candidate trade touches: SA-CCR's incremental EAD and EAD limits, soft and hard limits, warnings and the maximum size (the decision against the counterparty's credit limit on its exposure measure and tenor buckets is built: PREDEAL, POST /api/v1/exposure/predeal)"
     release: 2.9.11.k
     treatment: under-construction
-    contracts: ["docs/contracts/LIM.md#64-pre-deal-check"]
+    contracts: ["docs/plans/contracts/LIM.md#64-pre-deal-check"]
 
   - id: pnl-explain-waterfall
     what: panel
@@ -85,31 +85,31 @@ items:
     sutras:
       - kind: pnl-explain
         panels: [explain]
-    contracts: ["docs/contracts/PNL.md#1-summary"]
+    contracts: ["docs/plans/contracts/PNL.md#1-summary"]
 
   - id: wwr-contract
     what: contract
     about: "Wrong-way risk: the contract of its inputs and results, planned"
     release: "the wrong-way risk engine (planned)"
     treatment: under-construction
-    help: [docs-contracts-wwr]
-    contracts: [docs/contracts/WWR.md]
+    help: [docs-plans-contracts-wwr]
+    contracts: [docs/plans/contracts/WWR.md]
 
   - id: collateral-contract
     what: contract
     about: "Collateral: the planned contract of the computed collateral figures"
     release: "the collateral engine (planned)"
     treatment: under-construction
-    help: [docs-contracts-coll]
-    contracts: [docs/contracts/COLL.md]
+    help: [docs-plans-contracts-coll]
+    contracts: [docs/plans/contracts/COLL.md]
 
   - id: margin-call-contract
     what: contract
     about: "Margin calls: the planned contract of the computed margin call"
     release: "the collateral engine (planned)"
     treatment: under-construction
-    help: [docs-contracts-mc]
-    contracts: [docs/contracts/MC.md]
+    help: [docs-plans-contracts-mc]
+    contracts: [docs/plans/contracts/MC.md]
 
   - id: flight-cluster-end-to-end
     what: test

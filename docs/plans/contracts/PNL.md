@@ -6,8 +6,8 @@
 
 # PNL, P&L explain: the data contract
 
-*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
-[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Inputs shared with [TVAL.md](TVAL.md) (valuations) and [FRTB.md](FRTB.md) (sensitivities)*
+*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](../../contracts/README.md) · Model contract:
+[VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Inputs shared with [TVAL.md](TVAL.md) (valuations) and [FRTB.md](../../contracts/FRTB.md) (sensitivities)*
 
 This is the planned data contract of **PNL**, P&L explain: the day-over-day P&L of any set of trades, from the upstream engine's
 valuations, attributed to market moves through the trades' sensitivities (delta, gamma, vega), to time (theta and carry), to new,
@@ -153,7 +153,7 @@ time: after the T valuation batch (to be agreed, open question 3).
 | Convention | Rule |
 |---|---|
 | Signs | P&L gain positive; cash received positive; `MOVE` positive is the factor going up |
-| Units | `MOVE` in the unit of the matching sensitivity ([FRTB.md section 3.2.1](FRTB.md#322-units-and-signs)) |
+| Units | `MOVE` in the unit of the matching sensitivity ([FRTB.md section 3.2.1](../../contracts/FRTB.md#322-units-and-signs)) |
 | Dates | T−1 is the previous USNY business date unless `from=` names another; a multi-day span uses T−1's sensitivities and the summed moves (a coarser explain, labelled) |
 | Clean or dirty | MtM dirty; coupons paid move MtM down and cash up: they cancel in the actual P&L; theta carries the accrual |
 | Rounding | whole USD in answers; float64 sums |
@@ -213,7 +213,7 @@ measure (open question 6).
 
 `HYPOTHETICAL(S)` = Σ over the trades of S alive at T−1 (continuing, amended, ended) of (ACTUAL_t − AMENDMENT_t − FEES_t): yesterday's
 trades under today's market, no new trades, no amendments, no fees: the input VaR's backtest needs. Proposed: the official end-of-day capture of P&L explain provides each node's hypothetical P&L to VaR's official history
-(replacing today's stand-in, the node's P&L on the newest scenario day: there is no stored `var-node`; [VAR_GUIDE.md section 18.4](../guides/VAR_GUIDE.md#184-history-and-backtest)).
+(replacing today's stand-in, the node's P&L on the newest scenario day: there is no stored `var-node`; [VAR_GUIDE.md section 18.4](../../guides/VAR_GUIDE.md#184-history-and-backtest)).
 
 ### 6.6 Settings (`drishti.pnl`, proposed)
 
@@ -246,7 +246,7 @@ Trades of A ∪ B share one ordinal space for the pair (the T index plus the end
 
 ## 8. Scopes
 
-Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets) and its planned words, plus `INDEX:` and `TRDR:`. Resolved on T; an ended trade is
+Every scope of [VAR_GUIDE.md section 5](../../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets) and its planned words, plus `INDEX:` and `TRDR:`. Resolved on T; an ended trade is
 in a scope when it was in it on T−1. Fully additive: answered exactly from node aggregates and runs.
 
 ## 9. What Drishti answers
@@ -307,13 +307,13 @@ limits: { timeout: 30s, wait: 50ms, max-inflight-per-user: 4 }
 ```
 
 What-if moves (`POST /what-if`) use the Python engine `drishti_risk.pnl:PnlWhatIfEngine` on the `risk` pool: inputs `net` (the scope's
-T−1 net sensitivities from `sensitivity-net`, [FRTB.md section 9.5](FRTB.md#95-the-reactive-connectors-proposed)) and the moves as an
+T−1 net sensitivities from `sensitivity-net`, [FRTB.md section 9.5](../../contracts/FRTB.md#95-the-reactive-connectors-proposed)) and the moves as an
 Arrow table (`MOVE_KEY`, `MOVE`); output the explain by class and factor. Nothing else in P&L explain needs Python.
 
 ### 9.4 Official end-of-day captures and the published table
 
 When T is complete, Drishti captures every node of both hierarchies (the daily sign-off record) and publishes to
-`${DRISHTI_DELTA_ROOT}/risk-results/pnl-official/` ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures),
+`${DRISHTI_DELTA_ROOT}/risk-results/pnl-official/` ([README.md section 11](../../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures),
 product owner 2026-10-25): one row per node per business date T, the shared columns (`BUSINESS_DATE`, `HIERARCHY`, `NODE_ID`,
 `NODE_NAME`, `PARENT_ID`, `LEVEL`, `CAPTURE_ID`, `RESULT_VERSION`, `INPUT_VERSIONS`, `COMPUTED_AT`, `CONTRACT_VERSION`) and:
 
@@ -495,7 +495,7 @@ FRTB.md's.
 ```
 
 The children here are listed by trade (`by=trade`, two of the five shown). **pnl-official: the book's row** of the sign-off (the
-shared columns are [README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)'s):
+shared columns are [README.md section 11](../../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)'s):
 
 ```json
 {"BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"BOOK:BOOK-X","NODE_NAME":"BOOK-X","PARENT_ID":"DESK:DESK-RATES","LEVEL":"book","CAPTURE_ID":"CAP-PNL-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"valuation\":{\"version\":57,\"batches\":[\"B-VAL-2026-09-30-02\"]},\"market-move\":{\"version\":12,\"batches\":[\"B-MOVE-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:42:00Z","CONTRACT_VERSION":"1.0","FROM_DATE":"2026-09-29","MTM_FROM":1550000.0,"MTM_TO":1540000.0,"ACTUAL":29700.0,"HYPOTHETICAL":18200.0,"EXPLAINED":30878.0,"UNEXPLAINED":-1178.0,"UNEXPLAINED_RATIO":-0.0397,"WITHIN_TOLERANCE":true,"DELTA_GIRR":30000.0,"DELTA_CSR":0.0,"DELTA_EQ":-12000.0,"DELTA_COMM":0.0,"DELTA_FX":500.0,"GAMMA":1278.0,"VEGA":800.0,"THETA":-1400.0,"NEW_TRADES":1500.0,"AMENDMENTS":10000.0,"ENDED_TRADES":200.0,"FEES":0.0,"CASH":39700.0,"TRADE_COUNT":5,"NEW_COUNT":1,"AMENDED_COUNT":1,"ENDED_COUNT":1,"MISSING_COUNT":0}

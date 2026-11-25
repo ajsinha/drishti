@@ -6,7 +6,7 @@
 
 # SACCR: the standardised approach for counterparty credit risk, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting sets, CSAs and
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](../../contracts/README.md) · Model contract: [VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting sets, CSAs and
 membership: [NSET.md](NSET.md) · Collateral: [COLL.md](COLL.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -192,7 +192,7 @@ maturity bucket, supervisory factor, add-ons, RC, multiplier, EAD, RWA. A table 
 | `cap-at-unmargined` | `true` | margined EAD ≤ unmargined EAD |
 | `risk-weights` | by counterparty type and rating (a standardised table, CRE20; 100% when unknown) | the RWA hook |
 | `derive` | `none` | `rules`: derive `saccr-trade` from the trade master (§3.2) |
-| `regulation` | `BCBS` | `BCBS`; OSFI CAR chapter 4 next as its own parameter file, the US final rule and EU CRR2 when a client asks (decided 2026-11-02, [COUNTERPARTY_ENGINES.md section 14](../plans/COUNTERPARTY_ENGINES.md#14-decisions), decision 4) |
+| `regulation` | `BCBS` | `BCBS`; OSFI CAR chapter 4 next as its own parameter file, the US final rule and EU CRR2 when a client asks (decided 2026-11-02, [COUNTERPARTY_ENGINES.md section 14](../COUNTERPARTY_ENGINES.md#14-decisions), decision 4) |
 | `unclassified` | `exclude` | `exclude`: a live derivative without a classification row is left out, counted `unclassified` and its set marked `incomplete`; `stand-in`: charged at its notional at the largest SF of its asset class, unmargined, flagged `STAND_IN` (for banks that report from Drishti; decision 3) |
 | `specific-wwr` | `own-set` | a member flagged `SPECIFIC_WWR` forms its own netting set with no netting benefit (decision 7) |
 
@@ -572,7 +572,7 @@ AddOn_credit = √((0.5 × 1.08 − 0.8 × 1.14)² + (1 − 0.25) × 1.08² + (1
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
-| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../plans/COUNTERPARTY_ENGINES.md#14-decisions)): C and NICA at supervisory haircuts; MPOR as written with `MPOR_DAYS` excluding the remargining period; `unclassified` (exclude by default, a conservative stand-in as a setting); OSFI CAR next; `SPECIFIC_WWR` trades in their own set |
+| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../COUNTERPARTY_ENGINES.md#14-decisions)): C and NICA at supervisory haircuts; MPOR as written with `MPOR_DAYS` excluding the remargining period; `unclassified` (exclude by default, a conservative stand-in as a setting); OSFI CAR next; `SPECIFIC_WWR` trades in their own set |
 
 ## 17. JSON examples
 
@@ -608,7 +608,7 @@ add-on of their own:
 
 The 100% risk weight is the RWA hook's default for an unrated corporate.
 
-**saccr-official: a desk row** (the shared columns of [README.md section 11](README.md), the figure columns of section 9.5; the
+**saccr-official: a desk row** (the shared columns of [README.md section 11](../../contracts/README.md), the figure columns of section 9.5; the
 multiplier, alpha and the booleans are left empty above a netting set):
 
 ```json

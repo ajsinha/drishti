@@ -6,7 +6,7 @@
 
 # CVA: credit and other valuation adjustments, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Exposure: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) ·
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](../../contracts/README.md) · Model contract: [VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Exposure: [EXPOSURE_GUIDE.md](../../guides/EXPOSURE_GUIDE.md) ·
 SA-CCR (for BA-CVA): [SACCR.md](SACCR.md) · Wrong-way risk: [WWR.md](WWR.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -47,7 +47,7 @@ own: everything it needs is EXP's paths, market data and configuration.
 | Part | Status |
 |---|---|
 | CVA unilateral and bilateral (first to default), DVA, FCA and FBA, CS01 and recovery sensitivity | PLANNED |
-| KVA and MVA hooks (KVA from projected capital, MVA from [SIMM.md](SIMM.md)'s IM) | PLANNED (hooks) |
+| KVA and MVA hooks (KVA from projected capital, MVA from [SIMM.md](../../contracts/SIMM.md)'s IM) | PLANNED (hooks) |
 | BA-CVA reduced (MAR50) from SA-CCR EAD; SA-CVA out of scope (needs upstream CVA sensitivities) | PLANNED |
 | Proxy credit curves for counterparties without CDS | PLANNED |
 | Computed kind `cva-result`, reactive connector `cva-engine` (Python) | PLANNED |
@@ -73,11 +73,11 @@ CVA has **no input table of its own**. It reads:
 
 | Input | Contract | What |
 |---|---|---|
-| `exposure-path`, `simulation-run` | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) section 15 | EE, ENE per netting set and primary date (through `exposure-result`); the run should be `RISK_NEUTRAL` (EXPOSURE_GUIDE.md open question 4) |
+| `exposure-path`, `simulation-run` | [EXPOSURE_GUIDE.md](../../guides/EXPOSURE_GUIDE.md) section 15 | EE, ENE per netting set and primary date (through `exposure-result`); the run should be `RISK_NEUTRAL` (EXPOSURE_GUIDE.md open question 4) |
 | `saccr-trade` and its result | [SACCR.md](SACCR.md) | EAD and effective maturity per netting set for BA-CVA |
-| `credit-curve` (market-data pack) | [`credit-curve.contract.yaml`](../../modules/market-data/packs/market-data/contracts/credit-curve.contract.yaml) | `POINTS[]` (`TENOR`, `SPREAD` in bp, `HAZARD`, `SURVIVAL`), `RECOVERY`, `CURRENCY` |
-| `ir-curve` (market-data pack) | [`ir-curve.contract.yaml`](../../modules/market-data/packs/market-data/contracts/ir-curve.contract.yaml) | the USD OIS discount curve (`POINTS[]`) |
-| SIMM IM ([SIMM.md](SIMM.md)) | | IM profile for the MVA hook |
+| `credit-curve` (market-data pack) | [`credit-curve.contract.yaml`](../../../modules/market-data/packs/market-data/contracts/credit-curve.contract.yaml) | `POINTS[]` (`TENOR`, `SPREAD` in bp, `HAZARD`, `SURVIVAL`), `RECOVERY`, `CURRENCY` |
+| `ir-curve` (market-data pack) | [`ir-curve.contract.yaml`](../../../modules/market-data/packs/market-data/contracts/ir-curve.contract.yaml) | the USD OIS discount curve (`POINTS[]`) |
+| SIMM IM ([SIMM.md](../../contracts/SIMM.md)) | | IM profile for the MVA hook |
 
 Cadence: whenever its inputs change (the reactive triggers, §9.4). Due: after the exposure run and the end-of-day market data.
 
@@ -142,7 +142,7 @@ ee-point mid: replace EE*(t_k) by (EE*(t_{k−1}) + EE*(t_k)) / 2, EE*(t_0) = th
 
 **Hooks** (shown only when enabled, labelled *indicative*): **KVA** = −Σ_k K(t_k) · hurdle · Δt_k · DF(t_k), with K(t) the projected
 capital of the set (8% × RW × EAD(t), EAD(t) from EXP's remaining EEPE × alpha); **MVA** = −Σ_k IM(t_k) · (s_F − r_IM) · Δt_k · DF(t_k)
-with IM(t) from [SIMM.md](SIMM.md) (constant at today's IM until an IM profile exists).
+with IM(t) from [SIMM.md](../../contracts/SIMM.md) (constant at today's IM until an IM profile exists).
 
 ### 6.4 Sensitivities
 
@@ -233,7 +233,7 @@ by trade (EXPOSURE_GUIDE.md section 18.6, giving each trade's CVA contribution: 
 | `BY_COUNTERPARTY`, `BY_NETTING_SET` | record list | | `ID`, `CVA`, `DVA`, `FVA`, `CS01`, `BA_CVA_SCVA` |
 | `PROVENANCE` | record | | NSET's (`INPUTS`: each `KIND` with its `VERSION` and `BATCH_IDS`; `UNVALUED`, `PARTIAL`, `HIDDEN`), plus EXP's run (`RUN_ID`, `CALIBRATION`), the curves (`CURVES`: `ID`, `DATE`, `PROXY`), the settings used (`SETTINGS`, by the names of §6.1) and `FLAGS` (§10: `proxy`, `real-world-exposure`, `extrapolated`) |
 
-**FVA comes first, in its own kind** (product owner, 2026-11-02, [COUNTERPARTY_ENGINES.md section 14](../plans/COUNTERPARTY_ENGINES.md#14-decisions), decision 9). Before the CVA family is built, FCA, FBA and
+**FVA comes first, in its own kind** (product owner, 2026-11-02, [COUNTERPARTY_ENGINES.md section 14](../COUNTERPARTY_ENGINES.md#14-decisions), decision 9). Before the CVA family is built, FCA, FBA and
 FVA are computed by the xVA engine (`drishti_ccr.xva:XvaEngine`) into the computed kind `fva-result` with its own API `/api/v1/fva`
 (scope, date, run; per netting set and summed). FVA is computed on the collateralised EE and ENE, funding symmetric (FBA reported) and not
 survival-weighted by default, and refused on a `REAL_WORLD` run in production (decisions 10, 11, 13). When CVA and DVA join the same
@@ -254,7 +254,7 @@ CSV: `GET /scope/contributions?format=csv`.
 ### 9.3 Published official results (`cva-official`, `cva-official-cpty`)
 
 The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty), with the shared columns
-([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)) and these. Node rows sum the xVA of the node's
+([README.md section 11](../../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)) and these. Node rows sum the xVA of the node's
 netting sets; `BA_CVA` of a node is computed over its counterparties (not summed). This is the table finance reads for the day's CVA
 reserve.
 
@@ -414,7 +414,7 @@ counterparty K_reduced = SCVA × √(0.25 + 0.75) = 541,755; **K_BA-CVA = 0.65 �
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
-| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../plans/COUNTERPARTY_ENGINES.md#14-decisions)): FVA computed first into its own kind `fva-result` (`/api/v1/fva`) and read by reference by `cva-result`; FVA on the collateralised profile, symmetric, not survival-weighted; the demo funding curve is a synthetic, labelled curve |
+| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../COUNTERPARTY_ENGINES.md#14-decisions)): FVA computed first into its own kind `fva-result` (`/api/v1/fva`) and read by reference by `cva-result`; FVA on the collateralised profile, symmetric, not survival-weighted; the demo funding curve is a synthetic, labelled curve |
 
 ## 17. JSON examples
 

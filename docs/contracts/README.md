@@ -47,7 +47,8 @@ This page holds the rules every contract shares. A contract states only where it
 **Scope (product owner, 2026-10-25): "Just fundamentals and VaR is good for now."** The active work is the contracts of every
 command (the fundamental data, [section 16](#16-contracts-of-every-command)), VaR ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)) and exposure ([EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance)). Every other computed measure is
 **PARKED**: its contract stays here as a design, the stored kind it would replace stays active and unchanged, and nothing of it is built
-until the product owner brings it back.
+until the product owner brings it back. The twelve contracts that are not built (CVA, COLL, GRP, LIM, MC, NSET, PNL, SACCR, STR, TVAL,
+TRADING_GROUPINGS, WWR) are designs, not contracts of the running product: they live in [docs/plans/contracts](../plans/contracts/).
 
 **built** describes code that exists and is tested. **PLANNED** is the contract the release will implement: column names and rules
 may still change before it ships, and the document records each change.
@@ -55,21 +56,9 @@ may still change before it ships, and the document records each change.
 | Contract (a name in code font is not written yet) | Commands (retired kind) | Status |
 |---|---|---|
 | [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) | VAR (`var`), VNODE (`var-node`): both retired; also PORT, POS and DESK figures | BUILT (part 1: retirement, derived positions, official captures; part 2: memory tiering, the computed kinds and the Python engine); Part II of the VaR guide since 2026-10-26 |
-| [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | PARKED (design kept) |
-| [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | PARKED (design kept) |
-| [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | PARKED (design kept) |
 | [FRTB.md](FRTB.md) | FRSA, computed (`frtb-sa-result`); inputs SENS (`position-sensitivity`) and RFAC (`risk-factor`), every field, the bucket grids and worked records; retires FRTB (`frtb-sensitivity`) | BUILT: the engine, FRSA, the playground ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md)); SENS and RFAC `active` with demo data; DRCI and RRAI `planned`; the computed kind and official captures are design |
 | [SIMM.md](SIMM.md) | SIMM, computed per netting set and regime (`simm-result`) from the same SENS and RFAC; replaces SIMM (`simm`) for the netting sets with sensitivities | BUILT per netting set, collect and post, with the screen and the playground ([SIMM_GUIDE.md](../guides/SIMM_GUIDE.md)): ISDA SIMM 2.8+2512 structure, parameters shipped empty (the bank's licensed file by version) |
-| [PNL.md](PNL.md) | PNL (`pnl-explain`) | PARKED (design kept) |
-| [NSET.md](NSET.md) | NSET (`netting-set`): terms kept, figures computed | PARKED (design kept) |
-| [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | PARKED (design kept) |
-| [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | PARKED (design kept) |
-| [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | PARKED (design kept) |
 | [EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance) | EXP (`exposure-result`; the stored `exposure-profile` retired) | BUILT (part 1: engine, API, computed kind, official results; part 2: the explorer, the what-if and its exact `paths` method in the Java engine, the CLI); Part II of the exposure guide since 2026-10-26 |
-| [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | PARKED (design kept) |
-| [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | PARKED (design kept) |
-| [CVA.md](CVA.md) | CVA (`cva`) | PARKED (design kept) |
-| [WWR.md](WWR.md) | wrong-way risk (new) | PARKED (design kept) |
 | [BUILD_GUIDE.md Part II](../guides/bi/GROUPINGS_AND_ANALYTICS.md#10-the-contract-at-a-glance) | LEIG, LEIC, SIC, ECG (`lei-group`, `lei-country`, `sic-sector`, `country-group`: stored pages retired, computed under the same kinds), CORR (`correlation-result`; the sets keep their factors), USEQ ratios, PXH analytics | BUILT (2026-10-26; Track B) |
 | `CONCENTRATION.md` | large exposures (new); the OSFI report once its template is supplied | PARKED (not written) |
 | `LIQUIDITY.md` | LCR, NSFR, NCCF, cash-flow gaps (new) | PARKED (not written) |

@@ -63,6 +63,18 @@ moved:
   sharing-and-discussion: user-guide#sharing-and-discussion
   docs-guides-pivot-guide: bi-pivot             # the pivot guide's address before the BI section (F1 and links made then)
   tables-guide: bi-tables-models                # the tables guide's address before the BI section
+  docs-contracts-cva: docs-plans-contracts-cva
+  docs-contracts-lim: docs-plans-contracts-lim
+  docs-contracts-coll: docs-plans-contracts-coll
+  docs-contracts-nset: docs-plans-contracts-nset
+  docs-contracts-grp: docs-plans-contracts-grp
+  docs-contracts-saccr: docs-plans-contracts-saccr
+  docs-contracts-wwr: docs-plans-contracts-wwr
+  docs-contracts-mc: docs-plans-contracts-mc
+  docs-contracts-pnl: docs-plans-contracts-pnl
+  docs-contracts-str: docs-plans-contracts-str
+  docs-contracts-tval: docs-plans-contracts-tval
+  docs-contracts-trading-groupings: docs-plans-contracts-trading-groupings
 
 # The most used pages, first under the search box (a page the person cannot see is left out); label: a shorter name on its chip.
 most-used:

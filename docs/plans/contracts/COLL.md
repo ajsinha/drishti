@@ -6,7 +6,7 @@
 
 # COLL: collateral valuation, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · CSAs and netting sets:
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](../../contracts/README.md) · Model contract: [VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · CSAs and netting sets:
 [NSET.md](NSET.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -400,7 +400,7 @@ NS-ALDERSHOT-NY <GO>`; `GET /api/v1/collateral/scope` answers the same fields in
 
 Posted amounts are negative in every total (section 5); `BY_*` rows sum the holdings' signed market and contractual values.
 
-**collateral-official: a desk row** (the shared columns of [README.md section 11](README.md), the figures of section 9.3; no holding
+**collateral-official: a desk row** (the shared columns of [README.md section 11](../../contracts/README.md), the figures of section 9.3; no holding
 rows are published, `HOLDINGS` is their count):
 
 ```json

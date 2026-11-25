@@ -2070,7 +2070,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
 ### Pivot: the fields made manageable
 
 - **The View picker in front of one compact line is how every pivot opens** (Views → Pivot, the MR and CCR cubes, the Pivot under a page's
-  table and above search results; the mock-ups and their build checklist: [LENSES.md section 6.4.4](docs/architecture/LENSES.md#644-pivot-fields-the-view-picker-the-compact-line-and-the-panes)).
+  table and above search results; the mock-ups and their build checklist: [LENSES.md section 6.4.4](docs/plans/LENSES_PROPOSALS.md#644-pivot-fields-the-view-picker-the-compact-line-and-the-panes)).
   No field list on screen: Rows · Columns · Filters · Values on one line, a picker behind each (`R`, `C`, `V`, `F`), a hierarchy as one chip
   (`⋔ MGMT ▾ Desk › Book`) with a level stepper (`Alt+↑`, `Alt+↓`), the lit measure toggles as the values; the grid gets the screen.
   **Customize ›** (`\`) opens the Fields and Build panes (Power BI's), which close to a rail; the BI designer keeps its panes. A preset, a
@@ -5421,7 +5421,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   repository (`docs/lenses/mockups/mr-cube/` and `docs/lenses/mockups/ccr-cube/`, self-contained HTML with a screenshot each), and each
   document's section 6.7, "Mock-ups: the screens to build", is the build checklist: every panel with its exact contents, data, interactions,
   phase, phone tier and states.
-- **The lenses' mock-ups, in the repository with a build checklist each** ([docs/lenses/README.md › Mock-ups](docs/architecture/LENSES.md#mock-ups)):
+- **The lenses' mock-ups, in the repository with a build checklist each** ([docs/lenses/README.md › Mock-ups](docs/plans/LENSES_PROPOSALS.md#mock-ups)):
   the product owner's mock-ups (the Risk, Trading, Market and World landings, the scenario matrix, the VaR horizon picker) copied into
   `docs/lenses/mockups/<lens>/`, self-contained (system fonts, nothing from a CDN), each with a screenshot; every lens document ends with
   *Mock-ups: the screens to build*, one row per panel (contents, data, interactions, phase, status) checked against the code: Risk 38

@@ -6,7 +6,7 @@
 
 # WWR: wrong-way risk, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Exposure paths: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) ·
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](../../contracts/README.md) · Model contract: [VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Exposure paths: [EXPOSURE_GUIDE.md](../../guides/EXPOSURE_GUIDE.md) ·
 CVA: [CVA.md](CVA.md) · Groups: [GRP.md](GRP.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -243,7 +243,7 @@ exposure.
 ### 9.3 Published official results (`wwr-official`, `wwr-official-cpty`)
 
 The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty), with the shared
-columns ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)) and these:
+columns ([README.md section 11](../../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)) and these:
 
 | Field | Type | Delta | Tables | Meaning | Example |
 |---|---|---|---|---|---|

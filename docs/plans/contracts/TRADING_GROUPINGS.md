@@ -6,16 +6,16 @@
 
 # CTRD, PTRD, LTRD, ITRD, the trading groupings: the data contract
 
-*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
-[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Figures from [TVAL.md](TVAL.md) and [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)*
+*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](../../contracts/README.md) · Model contract:
+[VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Figures from [TVAL.md](TVAL.md) and [VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)*
 
 This is the planned data contract of the four **trading groupings**: the pages that list every trade with a counterparty (CTRD), in a
 portfolio or book (PTRD), booked by one of the bank's legal entities (LTRD), or with a leg on an index (ITRD). Today they are stored
 summaries made by a `derived` connector over the trade master, capped at 1,000 member trades. When built they are **one computed page
 over the scope engine**: every trade, paged, sorted and filtered on the server, for any business date, with the scope's valuation
 (TVAL) and VaR beside it. Everything here is a **proposal**; names may change, and each change will be recorded in
-[section 16](#16-open-questions-and-the-change-table). The shared rules are in [README.md](README.md); the scope grammar, captures,
-baskets and entitlements are VaR's ([VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
+[section 16](#16-open-questions-and-the-change-table). The shared rules are in [README.md](../../contracts/README.md); the scope grammar, captures,
+baskets and entitlements are VaR's ([VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
 
 **Sources read for this contract (2026-10-25):** `modules/banking/packs/trading/pack.yaml` (the connector `trade-pages`, its four kinds'
 `group-by`, `max-members: 1000`, `fields` and `rows`), `modules/banking/packs/trading/contracts/{counterparty-trades,portfolio-trades,legal-entity-trades,index-trades,trade}.contract.yaml`,
@@ -83,7 +83,7 @@ the **live** trades of the same set.
 ## 3. Inputs from upstream engines
 
 **None of its own.** The groupings read the trade master (fundamental, through the trading pack's connectors) and, for figures, the
-TVAL and VaR engines' inputs ([TVAL.md section 3](TVAL.md#3-inputs-from-upstream-engines), [VAR_GUIDE.md section 15](../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines)).
+TVAL and VaR engines' inputs ([TVAL.md section 3](TVAL.md#3-inputs-from-upstream-engines), [VAR_GUIDE.md section 15](../../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines)).
 The fields read from each trade:
 
 | Field (trade contract) | Type | Used for | Example |
@@ -168,7 +168,7 @@ All of these are additive or distinct-counts over trades: computed per answer fr
 | Figure | From | Over |
 |---|---|---|
 | `MTM`, `MTM_GROSS`, `DV01` | TVAL ([TVAL.md section 6](TVAL.md#6-the-computation)) | the live trades of *S* |
-| `VAR`, `ES` | VaR ([VAR_GUIDE.md section 18](../guides/VAR_GUIDE.md#18-the-computation)) | the same set; a scope VaR cannot answer (a trade without a vector) is counted `missing` |
+| `VAR`, `ES` | VaR ([VAR_GUIDE.md section 18](../../guides/VAR_GUIDE.md#18-the-computation)) | the same set; a scope VaR cannot answer (a trade without a vector) is counted `missing` |
 | Exposure, limits | `EXPOSURE_GUIDE.md`, `LIM.md` | the counterparty's netting sets |
 
 The page asks each engine with the same canonical scope text and date; each figure carries its own provenance. A figure an engine is
@@ -192,13 +192,13 @@ connector rebuilds it; an intraday trade change through the stream or a write-ba
 
 | Term | Meaning | Reads |
 |---|---|---|
-| `CPTY:<id>` | the trades with that counterparty ([VAR_GUIDE.md section 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute)) | `COUNTERPARTY` |
+| `CPTY:<id>` | the trades with that counterparty ([VAR_GUIDE.md section 5.5](../../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute)) | `COUNTERPARTY` |
 | `LE:<id>` | the trades booked by the bank's legal entity: the trade's **booking `LEGAL_ENTITY`** is the source of truth (product owner, 2026-10-25) | `LEGAL_ENTITY` |
 | `INDEX:<name>` | **new**: the trades with any leg on the index (`LEGS[].INDEX.NAME`) | the trade's legs |
 | `TRDR:<id>` | **new**: the trades of a trader | `TRADER_ID` |
 | `STATUS:<s>[,<s>…]` | **new, list scope only**: the trades with those statuses; combined with `&` (`CPTY:X & STATUS:CANCELLED`) | `TRADE_STATUS` |
 
-`INDEX`, `TRDR` and `STATUS` are letters only, as the grammar requires ([VAR_GUIDE.md section 5.2](../guides/VAR_GUIDE.md#52-the-grammar));
+`INDEX`, `TRDR` and `STATUS` are letters only, as the grammar requires ([VAR_GUIDE.md section 5.2](../../guides/VAR_GUIDE.md#52-the-grammar));
 index names upper-case as every argument (`INDEX:uscpi` is `INDEX:USCPI`; the committed names are all upper case).
 
 ### 8.2 `BOOK:` and the trade's book
@@ -285,7 +285,7 @@ limits: { timeout: 10s, wait: 50ms, max-inflight-per-user: 8 }
 
 The groupings' money figures are TVAL's and VaR's, published in their own tables (`risk-results/tval-official/`,
 `risk-results/var-official/`). The groupings publish only their profile figures by node to
-`${DRISHTI_DELTA_ROOT}/risk-results/trades-official/` ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures),
+`${DRISHTI_DELTA_ROOT}/risk-results/trades-official/` ([README.md section 11](../../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures),
 product owner 2026-10-25): one row per node of both hierarchies per business date, the shared columns (`BUSINESS_DATE`, `HIERARCHY`,
 `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, `CAPTURE_ID`, `RESULT_VERSION`, `INPUT_VERSIONS`, `COMPUTED_AT`, `CONTRACT_VERSION`) and:
 
@@ -302,7 +302,7 @@ Counterparty, index and trader keys are not nodes and are not published; no trad
 
 ### 9.4 The page
 
-The page (mock-ups first, [the release notes](../../RELEASE_NOTES.md))
+The page (mock-ups first, [the release notes](../../../RELEASE_NOTES.md))
 shows the header of the scope's master (counterparty, book, legal entity, index), the figures, the profile charts and the trade grid
 (server paging, column sort, status chips with counts, CSV).
 
@@ -479,7 +479,7 @@ its notional is the first leg's, 141,900,000 USD. An event with an empty `AMOUNT
 ```
 
 **trades-official: the row of book `BOOK-2`** (T3, T4 and T5; the shared columns are
-[README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)'s):
+[README.md section 11](../../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)'s):
 
 ```json
 {"BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"BOOK:BOOK-2","NODE_NAME":"BOOK-2","PARENT_ID":"DESK:DESK-RATES","LEVEL":"book","CAPTURE_ID":"CAP-TRADES-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"trade\":{\"version\":118,\"batches\":[]}}","COMPUTED_AT":"2026-10-01T06:42:00Z","CONTRACT_VERSION":"1.0","TRADE_COUNT":3,"LIVE_COUNT":1,"NEW_COUNT":1,"VALIDATED_COUNT":0,"AMENDED_COUNT":0,"CANCELLED_COUNT":1,"MATURED_COUNT":1,"NOTIONAL_USD":3000000.0,"PAY_7D":0.0,"PAY_30D":0.0,"PAY_90D":7500.0,"PAY_7D_EVENTS":0,"PAY_30D_EVENTS":0,"PAY_90D_EVENTS":1,"COUNTERPARTY_COUNT":1}

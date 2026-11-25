@@ -17,9 +17,9 @@
 
 Status: design, not built. The data contracts are written (`status: planned`); the engines, screens and playgrounds below are the
 design to build. The product owner decided every open point on 2026-11-02 ([section 14](#14-decisions)). The plan's rows are in the implementation plan.
-Companion to [SACCR.md](../contracts/SACCR.md) (the SA-CCR contract this document narrows to a build), [NSET.md](../contracts/NSET.md)
-(netting sets and CSAs), [COLL.md](../contracts/COLL.md) (collateral values), [CVA.md](../contracts/CVA.md) (the xVA formulas, FVA among
-them), [LIM.md](../contracts/LIM.md) (limits), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine, built),
+Companion to [SACCR.md](contracts/SACCR.md) (the SA-CCR contract this document narrows to a build), [NSET.md](contracts/NSET.md)
+(netting sets and CSAs), [COLL.md](contracts/COLL.md) (collateral values), [CVA.md](contracts/CVA.md) (the xVA formulas, FVA among
+them), [LIM.md](contracts/LIM.md) (limits), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine, built),
 [CCR_CUBE_LENS.md](../architecture/LENSES.md#7-ccr-cube-lens) (the CCR cube: landing A with tabs B and C, decided) and the
 [VaR Playground](../guides/VAR_GUIDE.md) (the playground frame every metric here reuses).
 
@@ -59,7 +59,7 @@ results over counterparties, groups, desks and tenors.
 **Principles.**
 
 1. **Classification is delivered, formulas are Drishti's.** The regulatory classification of a trade (asset class, hedging set, direction,
-   option terms) is an input the bank signs off (`saccr-trade`, [SACCR.md section 3.2](../contracts/SACCR.md#32-decision-an-input-table-with-drishti-computing-the-formula-parts));
+   option terms) is an input the bank signs off (`saccr-trade`, [SACCR.md section 3.2](contracts/SACCR.md#32-decision-an-input-table-with-drishti-computing-the-formula-parts));
    every number that follows (supervisory duration, delta, maturity factor, effective notional, add-ons, RC, multiplier, EAD) is computed.
    A delivered row that carries a computed figure is refused.
 2. **Computed, never stored.** EAD, EE, PFE, FVA are computed for the scope asked and kept only as official captures. The stored `sa-ccr`
@@ -222,7 +222,7 @@ never shown as a decomposition.
 
 | Case | Outcome |
 |---|---|
-| `TRANSACTION_TYPE`, `ASSET_CLASS`, `DIRECTION`, `CREDIT_QUALITY`, `HEDGING_SET` invalid; option or tranche terms incomplete; P + λ or K + λ not positive; S > E or E > M | the row is refused with its DRS code ([SACCR.md section 10](../contracts/SACCR.md#10-validation-errors-and-data-quality)) and counted |
+| `TRANSACTION_TYPE`, `ASSET_CLASS`, `DIRECTION`, `CREDIT_QUALITY`, `HEDGING_SET` invalid; option or tranche terms incomplete; P + λ or K + λ not positive; S > E or E > M | the row is refused with its DRS code ([SACCR.md section 10](contracts/SACCR.md#10-validation-errors-and-data-quality)) and counted |
 | a live derivative member without a `DRIVER` 0 row | counted `unclassified` on every page; the set `incomplete`; its EAD excludes it and says so; `strict=true` refuses the answer (`DRS-5411`). A bank that reports from Drishti may switch on the conservative stand-in instead (`drishti.ccr.saccr.unclassified: stand-in`: the trade's notional at the largest SF of its asset class, unmargined, flagged `STAND_IN`; decision 3) |
 | an SFT or cash product | ignored, counted `excluded` (out of SA-CCR; CRE22 covers SFTs) |
 | a margined set without TH, MTA or MPOR | computed unmargined, flagged `MARGIN_TERMS_MISSING` |
@@ -300,7 +300,7 @@ figure, is still the set's to the cent (as VaR's Rest of scope). Limits in secti
 ### 5.1 What it is
 
 Uncollateralised positive exposure must be funded by the bank at its own funding spread over the risk-free (OIS) rate; negative exposure
-funds the bank. FVA prices both over the life of the netting set, from the same EE and ENE profile as CVA ([CVA.md section 6.3](../contracts/CVA.md#63-cva-dva-fva)):
+funds the bank. FVA prices both over the life of the netting set, from the same EE and ENE profile as CVA ([CVA.md section 6.3](contracts/CVA.md#63-cva-dva-fva)):
 
 ```
 EE*(t_k)  = EE(t_k) · DF(t_k)          ENE*(t_k) = ENE(t_k) · DF(t_k)          EE and ENE after collateral, VALUE_BASIS FUTURE
@@ -335,13 +335,13 @@ FCA, FBA and FVA are linear in EE and ENE, which add across netting sets, so FVA
 load from the per-set profile, a scope is a sum. A partial scope uses its partial profile. The computation runs in the Python engine
 `drishti_ccr.xva:XvaEngine` (planned; the CVA family later adds CVA and DVA to the same engine) on the `risk` pool; the computed kind is
 `fva-result` with `/api/v1/fva` (decision 9). When CVA is built, `cva-result` reads FVA by reference to `fva-result` rather than
-carrying a second copy ([CVA.md section 16](../contracts/CVA.md#16-open-questions-and-the-change-table)).
+carrying a second copy ([CVA.md section 16](contracts/CVA.md#16-open-questions-and-the-change-table)).
 
 ## 6. The CCR cube core: data flow
 
-The CCR cube is the shared cube core ([MR_CUBE_LENS.md section 4](../architecture/LENSES.md#65-the-shared-cube-core-mr-and-ccr), MC2 and
+The CCR cube is the shared cube core ([MR_CUBE_LENS.md section 4](LENSES_PROPOSALS.md#65-the-shared-cube-core-mr-and-ccr), MC2 and
 MCP1) with CCR measures. The layouts are decided: **landing A (limit board) with tabs B (netting-set drill) and C (pre-deal and XVA)**
-([CCR_CUBE_LENS.md section 6.7](../architecture/LENSES.md#74-mock-ups-and-build-checklist)).
+([CCR_CUBE_LENS.md section 6.7](LENSES_PROPOSALS.md#74-mock-ups-and-build-checklist)).
 
 ### 6.1 The flow of a date
 
@@ -886,7 +886,7 @@ drishti.ccr.saccr.playground:
 
 ## 12. Mock-ups: the screens to build
 
-Decided already: the CCR cube's landing A with tabs B and C ([CCR_CUBE_LENS.md section 6.7](../architecture/LENSES.md#74-mock-ups-and-build-checklist)),
+Decided already: the CCR cube's landing A with tabs B and C ([CCR_CUBE_LENS.md section 6.7](LENSES_PROPOSALS.md#74-mock-ups-and-build-checklist)),
 and the playgrounds' frame ([VAR_PLAYGROUND.md section 16](../guides/VAR_GUIDE.md#313-the-var-playgrounds-workbook-cell-by-cell)). **Still to make before
 the build (mock-ups first):** the SA-CCR page that replaces the stored Sutra (three options: the EAD waterfall from RC and add-ons by class
 with the hedging-set table; the netting-set list with the selected set's breakdown; the counterparty's sets side by side), and the FVA

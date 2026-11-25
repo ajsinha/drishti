@@ -156,7 +156,7 @@ With Δt = 0.25, 0.25, 0.5 and T = 1 year (t₀ ignored here, CE = 0):
 - **EE contribution** at t₂ without collateral: paths with V > 0 are 1, 2, 3 (V = 4, 1, 4); A contributes (5 − 1 + 4)/4 = 2.0, B (−1 + 2 + 0)/4 =
   0.25; 2.0 + 0.25 = 2.25 = the uncollateralised EE at t₂.
 
-[CVA.md](../contracts/CVA.md) section 15 prices CVA from this profile; [WWR.md](../contracts/WWR.md) section 15 adds credit paths to it.
+[CVA.md](../plans/contracts/CVA.md) section 15 prices CVA from this profile; [WWR.md](../plans/contracts/WWR.md) section 15 adds credit paths to it.
 
 ### 2.2 On the test data
 
@@ -382,7 +382,7 @@ netting set NS-… on <date>" (the computed kind: `STATUS: no-paths`), never sta
 **Netting** happens inside a netting set only: its trades' values add path by path (V), so a payer and a receiver swap offset. Across
 netting sets nothing nets: their *exposures* (already floored at zero) add path by path.
 
-**Collateral** is per netting set, from its CSA ([NSET.md section 3.5](../contracts/NSET.md)) and today's holdings (`collateral-balance`):
+**Collateral** is per netting set, from its CSA ([NSET.md section 3.5](../plans/contracts/NSET.md)) and today's holdings (`collateral-balance`):
 
 - **lagged** (the default): on each path the collateral at date t is what the CSA called at the look-back date t − MPOR (thresholds,
   minimum transfer amounts, independent amount, rounding applied to the change from today's collateral). A date whose look-back would
@@ -599,14 +599,14 @@ Also the token rules: `POST /api/v1/risk/exposure/what-if` and `POST /api/v1/ris
 
 *Version 1.2 · Built · Shared rules: [contracts README.md](../contracts/README.md) · Model
 contract: [VAR_GUIDE.md Part II](VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting and the shared counterparty tables:
-[NSET.md](../contracts/NSET.md)*
+[NSET.md](../plans/contracts/NSET.md)*
 
 This is the contract of Drishti's **exposure engine**: what an
 upstream exposure simulator delivers (every trade's MtM on every Monte Carlo path at every date of a time grid), what Drishti builds from
 it (netting-set path matrices, collateral on each path, tiered memory), and what it answers (EE, ENE, EPE, effective EE and EPE, PFE at
 any confidence, peaks, contributions, incremental figures before dealing) for any scope. It defines the two **shared path tables**,
-`simulation-run` and `exposure-path`, which [CVA.md](../contracts/CVA.md), [LIM.md](../contracts/LIM.md), [GRP.md](../contracts/GRP.md)
-and [WWR.md](../contracts/WWR.md) read too. Sections marked **Implementation** are checked against the code and the committed test data.
+`simulation-run` and `exposure-path`, which [CVA.md](../plans/contracts/CVA.md), [LIM.md](../plans/contracts/LIM.md), [GRP.md](../plans/contracts/GRP.md)
+and [WWR.md](../plans/contracts/WWR.md) read too. Sections marked **Implementation** are checked against the code and the committed test data.
 
 **Sources of truth checked (1.2):** `tools/packgen/ccr/` (`paths.py`, `ccrmath.py`, `make_ccr_data.py`); `drishti-compute`
 (`com.ash.drishti.banking.compute.ccr`: `ExposureGrid`, `CsaTerms`, `ExposureMath`, `ExposureBook`, `ExposureHotFile`, `ExposureScopes`,
@@ -629,7 +629,7 @@ pages show the engine's figures as they open. **Implementation:** `EXP` is the c
 exposure explorer ([section 3](#3-the-explorer-screen-by-screen)), whose Pre-deal tab asks the engine's what-if.
 
 **Not stored:** the kind `exposure-profile` (`EXP-*` records with `EPE`, `EEPE`, `PFE_PEAK`, `BUCKETS[]`), and
-the profile figures on `netting-set` ([NSET.md](../contracts/NSET.md) section 14). Its ids open the computed page (§22).
+the profile figures on `netting-set` ([NSET.md](../plans/contracts/NSET.md) section 14). Its ids open the computed page (§22).
 
 | Part | Status |
 |---|---|
@@ -757,7 +757,7 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 |---|---|---|
 | [`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), `netting-set-member`, `csa` (NSET.md) | `NETTING_SET`, `CSA` | membership (checks), margined or not, thresholds, MTA, IA, rounding, MPOR, IM |
 | `collateral-holding` (COLL.md) | `NETTING_SET` | today's collateral (the `current` collateral model, independent amounts, IM held) |
-| `valuation` ([TVAL.md](../contracts/TVAL.md)) | `TRADE_ID` | t₀ exposure (today's MtM) and the check that path means start near it |
+| `valuation` ([TVAL.md](../plans/contracts/TVAL.md)) | `TRADE_ID` | t₀ exposure (today's MtM) and the check that path means start near it |
 | `trade` | `TRADE_ID` | maturity (sparse rows), status |
 | `counterparty`, `counterparty-group` | | `CPTY:` and `GROUP:` scopes (GRP.md) |
 | [`ir-curve`](../contracts/packs/market-data.md#example-market-data-ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) (market-data) | `CRV-USD-…` | discount factors when `VALUE_BASIS` is `FUTURE` and a discounted figure is asked (CVA.md) |
@@ -1016,7 +1016,7 @@ and does not audit it a second time (`ExposurePreDealExplainer`).
 **Where**: the screen **Counterparties → Pre-deal check** (`PREDEAL <GO>`, `/predeal`, [section 7](#7-pre-deal-what-if));
 `POST /api/v1/risk/exposure/predeal` and `GET /api/v1/risk/exposure/predeal/grammar` (section 11); `drishti.py exposure predeal
 "PREDEAL CP-ALDERSHOT LIKE 1000001 250M"`; the Trading landing's new-trade check (its exposure half is this check). SA-CCR's incremental EAD and the other limits a trade touches (soft and hard
-limits, warnings, the maximum size: [LIM.md section 6.4](../contracts/LIM.md#64-pre-deal-check)) are under construction.
+limits, warnings, the maximum size: [LIM.md section 6.4](../plans/contracts/LIM.md#64-pre-deal-check)) are under construction.
 
 **Tests**: `ExposurePreDealApiTest` (the what-if equal to the full recompute with the trade booked, figure by figure and date by date;
 approve, decline on the limit and on a bucket, refer on a proxy, no limit, a measure not computed and no exposure; two people at once
@@ -1155,7 +1155,7 @@ cent) and `ExposureApiTest` (an unwind of a whole netting set, a copy of its own
 
 ## 20. Official end-of-day results
 
-The two tables of [NSET.md section 9.5](../contracts/NSET.md#95-published-official-results-nset-official-nset-official-cpty) (node rows; restricted
+The two tables of [NSET.md section 9.5](../plans/contracts/NSET.md#95-published-official-results-nset-official-nset-official-cpty) (node rows; restricted
 netting-set, counterparty and group rows), with the shared columns and these figures:
 
 | Column | Type | Meaning |

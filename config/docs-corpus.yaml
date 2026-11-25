@@ -136,22 +136,10 @@ files:
   - {path: 'docs/connectors/types/reactive/README.md', class: connector, lane: C}
   - {path: 'docs/connectors/types/rest/README.md', class: connector, lane: C}
   - {path: 'docs/connectors/types/yfinance/README.md', class: connector, lane: C}
-  - {path: 'docs/contracts/COLL.md', class: keep, lane: B}
   - {path: 'docs/contracts/CSV_FORMATS.md', class: generate, lane: B, tool: 'tools/mrloader/kind_docs.py'}
-  - {path: 'docs/contracts/CVA.md', class: keep, lane: B}
   - {path: 'docs/contracts/FRTB.md', class: keep, lane: B}
-  - {path: 'docs/contracts/GRP.md', class: keep, lane: B}
-  - {path: 'docs/contracts/LIM.md', class: keep, lane: B}
-  - {path: 'docs/contracts/MC.md', class: keep, lane: B}
-  - {path: 'docs/contracts/NSET.md', class: keep, lane: B}
-  - {path: 'docs/contracts/PNL.md', class: keep, lane: B}
   - {path: 'docs/contracts/README.md', class: keep, lane: B}
-  - {path: 'docs/contracts/SACCR.md', class: keep, lane: B}
   - {path: 'docs/contracts/SIMM.md', class: keep, lane: B}
-  - {path: 'docs/contracts/STR.md', class: keep, lane: B}
-  - {path: 'docs/contracts/TRADING_GROUPINGS.md', class: keep, lane: B}
-  - {path: 'docs/contracts/TVAL.md', class: keep, lane: B}
-  - {path: 'docs/contracts/WWR.md', class: keep, lane: B}
   - {path: 'docs/contracts/packs/README.md', class: generate, lane: B, tool: 'tools/contracts.py docs'}
   - {path: 'docs/contracts/packs/central-banks.md', class: generate, lane: B, tool: 'tools/contracts.py docs'}
   - {path: 'docs/contracts/packs/compute-demo.md', class: generate, lane: B, tool: 'tools/contracts.py docs'}
@@ -269,6 +257,31 @@ files:
   - {path: 'docs/plans/I7A_PREDRILL_REVIEW.md', class: delete, lane: B}
   - {path: 'docs/plans/IFRS9_ECL.md', class: keep, lane: B}
   - {path: 'docs/plans/LAUNCHER_REVIEW.md', class: delete, lane: B}
+  - {path: 'docs/plans/LENSES_PROPOSALS.md', class: keep, lane: B}
+  - {path: 'docs/plans/contracts/COLL.md', class: keep, lane: C}
+  - {path: 'docs/plans/contracts/CVA.md', class: keep, lane: C}
+  - {path: 'docs/plans/contracts/GRP.md', class: keep, lane: C}
+  - {path: 'docs/plans/contracts/LIM.md', class: keep, lane: C}
+  - {path: 'docs/plans/contracts/MC.md', class: keep, lane: C}
+  - {path: 'docs/plans/contracts/NSET.md', class: keep, lane: C}
+  - {path: 'docs/plans/contracts/PNL.md', class: keep, lane: C}
+  - {path: 'docs/plans/contracts/SACCR.md', class: keep, lane: C}
+  - {path: 'docs/plans/contracts/STR.md', class: keep, lane: C}
+  - {path: 'docs/plans/contracts/TRADING_GROUPINGS.md', class: keep, lane: C}
+  - {path: 'docs/plans/contracts/TVAL.md', class: keep, lane: C}
+  - {path: 'docs/plans/contracts/WWR.md', class: keep, lane: C}
+  - {path: 'docs/products/elements/v3.3.2-ide3/docs/API.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/elements/v3.3.2-ide3/docs/CONTRACTS.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/elements/v3.3.2-ide3/docs/DESIGN.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/elements/v3.3.2-ide3/docs/EVENTS.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/elements/v3.3.2-ide3/docs/USING.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/elements/v3.3.2-ide3/docs/VIEWS.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.0.1-ide4/docs/IN_YOUR_APP.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.0.1-ide4/docs/PANEL_KINDS.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.0.1-ide4/docs/ROADMAP.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.0.1-ide4/docs/TUTORIAL.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.0.1-ide4/docs/WRITING_SUTRAS.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.0.1-ide4/spec/1/SPEC.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
   - {path: 'docs/strategy/BI_AND_POWER_BI.md', class: merge, lane: A}
   - {path: 'docs/strategy/COMPETITIVE_ANALYSIS.md', class: keep, lane: A}
   - {path: 'docs/strategy/COMPETITIVE_LANDSCAPE.md', class: merge, lane: A}

@@ -238,3 +238,29 @@ moved:
   - {from: 'modules/genomics/packs/genomics-showcase/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
   - {from: 'modules/genomics/packs/protein-engineering/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
   - {from: 'modules/market-data/packs/market-data/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  # lane C (i7m: the 12 not-built computed-measure contracts live under docs/plans/contracts/)
+  - {from: 'docs/contracts/CVA.md', to: 'docs/plans/contracts/CVA.md', how: move, note: 'planned, not built'}
+  - {from: 'docs/contracts/LIM.md', to: 'docs/plans/contracts/LIM.md', how: move, note: 'planned, not built'}
+  - {from: 'docs/contracts/COLL.md', to: 'docs/plans/contracts/COLL.md', how: move, note: 'planned, not built'}
+  - {from: 'docs/contracts/NSET.md', to: 'docs/plans/contracts/NSET.md', how: move, note: 'planned, not built'}
+  - {from: 'docs/contracts/GRP.md', to: 'docs/plans/contracts/GRP.md', how: move, note: 'planned, not built'}
+  - {from: 'docs/contracts/SACCR.md', to: 'docs/plans/contracts/SACCR.md', how: move, note: 'planned, not built'}
+  - {from: 'docs/contracts/WWR.md', to: 'docs/plans/contracts/WWR.md', how: move, note: 'planned, not built'}
+  - {from: 'docs/contracts/MC.md', to: 'docs/plans/contracts/MC.md', how: move, note: 'planned, not built'}
+  - {from: 'docs/contracts/PNL.md', to: 'docs/plans/contracts/PNL.md', how: move, note: 'planned, not built'}
+  - {from: 'docs/contracts/STR.md', to: 'docs/plans/contracts/STR.md', how: move, note: 'planned, not built'}
+  - {from: 'docs/contracts/TVAL.md', to: 'docs/plans/contracts/TVAL.md', how: move, note: 'planned, not built'}
+  - {from: 'docs/contracts/TRADING_GROUPINGS.md', to: 'docs/plans/contracts/TRADING_GROUPINGS.md', how: move, note: 'planned, not built'}
+  - {from: 'help:docs-contracts-saccr', to: 'help:docs-plans-contracts-saccr', how: move, note: 'Help slug'}
+  - {from: 'help:docs-contracts-cva', to: 'help:docs-plans-contracts-cva', how: move, note: 'Help slug'}
+  - {from: 'help:docs-contracts-wwr', to: 'help:docs-plans-contracts-wwr', how: move, note: 'Help slug'}
+  - {from: 'help:docs-contracts-coll', to: 'help:docs-plans-contracts-coll', how: move, note: 'Help slug'}
+  - {from: 'help:docs-contracts-mc', to: 'help:docs-plans-contracts-mc', how: move, note: 'Help slug'}
+  - {from: 'help:docs-contracts-lim', to: 'help:docs-plans-contracts-lim', how: move, note: 'Help slug'}
+  # lane C (i7m: LENSES.md keeps "What it answers today" and the mechanism; the proposals moved to docs/plans/LENSES_PROPOSALS.md)
+  - {from: 'docs/architecture/LENSES.md#13-gaps-and-proposals', to: 'docs/plans/LENSES_PROPOSALS.md#13-gaps-and-proposals', how: redirect}
+  - {from: 'docs/architecture/LENSES.md#23-gaps-and-proposals', to: 'docs/plans/LENSES_PROPOSALS.md#23-gaps-and-proposals', how: redirect}
+  - {from: 'docs/architecture/LENSES.md#531-ro1-var-change-explanation', to: 'docs/plans/LENSES_PROPOSALS.md#531-ro1-var-change-explanation', how: redirect}
+  - {from: 'docs/architecture/LENSES.md#65-the-shared-cube-core-mr-and-ccr', to: 'docs/plans/LENSES_PROPOSALS.md#65-the-shared-cube-core-mr-and-ccr', how: redirect}
+  - {from: 'docs/architecture/LENSES.md#74-mock-ups-and-build-checklist', to: 'docs/plans/LENSES_PROPOSALS.md#74-mock-ups-and-build-checklist', how: redirect}
+  - {from: 'docs/architecture/LENSES.md#mock-ups', to: 'docs/plans/LENSES_PROPOSALS.md#mock-ups', how: redirect}

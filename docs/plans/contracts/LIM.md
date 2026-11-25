@@ -6,8 +6,8 @@
 
 # LIM: credit limits and their usage, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting: [NSET.md](NSET.md) ·
-Usage measures: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), [SACCR.md](SACCR.md) · Groups: [GRP.md](GRP.md)*
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](../../contracts/README.md) · Model contract: [VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting: [NSET.md](NSET.md) ·
+Usage measures: [EXPOSURE_GUIDE.md](../../guides/EXPOSURE_GUIDE.md), [SACCR.md](SACCR.md) · Groups: [GRP.md](GRP.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
@@ -49,7 +49,7 @@ share of a counterparty) and a structured measure.
 |---|---|
 | `credit-limit` moved to the risk lake, with `SCOPE`, `MEASURE` enum, numeric tenor buckets, warning level, temporary excesses | PLANNED |
 | Usage per measure (PFE peak by tenor bucket, EE peak, EEPE, SA-CCR EAD, net MtM, current exposure, notional, settlement), utilisation, status, headroom | PLANNED |
-| Pre-deal check: approve, refer or decline a candidate trade against every limit it touches | BUILT for the counterparty's credit limit and its tenor buckets on the exposure measures (`PREDEAL`, [EXPOSURE_GUIDE.md section 18.9](../guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check)); SA-CCR EAD, soft and hard limits, warnings and the maximum size PLANNED (2.9.11.k) |
+| Pre-deal check: approve, refer or decline a candidate trade against every limit it touches | BUILT for the counterparty's credit limit and its tenor buckets on the exposure measures (`PREDEAL`, [EXPOSURE_GUIDE.md section 18.9](../../guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check)); SA-CCR EAD, soft and hard limits, warnings and the maximum size PLANNED (2.9.11.k) |
 | Computed kind `limit-usage`, reactive connector `lim-engine` (Python, composing EXP and SACCR) | PLANNED |
 
 ## 2. The measure in one page
@@ -58,7 +58,7 @@ share of a counterparty) and a structured measure.
 officers, the front office (pre-deal), and limit monitoring (breaches and early warnings every morning).
 
 **In words:** each limit names a **scope** and a **measure**. Usage is the measure computed for the scope: for a PFE limit, the peak of
-the scope's PFE profile in each tenor bucket (from [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), where exposures of several netting sets add per path before the
+the scope's PFE profile in each tenor bucket (from [EXPOSURE_GUIDE.md](../../guides/EXPOSURE_GUIDE.md), where exposures of several netting sets add per path before the
 quantile is taken); for an EAD limit, the SA-CCR EAD ([SACCR.md](SACCR.md)); for a settlement limit, the largest amount due from the
 counterparty on one settlement day. **Utilisation** = usage / limit, per bucket; the limit's status is that of its worst bucket:
 `OK` below the warning level (80%), `WARNING` from it, `BREACH` above 100%, `EXCESS_APPROVED` within an approved temporary excess.
@@ -233,7 +233,7 @@ CSV: `GET /breaches?format=csv`: `limit_id,scope,measure,bucket,limit,usage,util
 ### 9.3 Published official results (`limit-official`, `limit-official-cpty`)
 
 The two tables of [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty), with the shared
-columns ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)). The node table carries, per hierarchy
+columns ([README.md section 11](../../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)). The node table carries, per hierarchy
 node, the counts of limits in each status among the counterparties the node faces and the total headroom of SA-CCR EAD limits. The
 restricted `-cpty` table's natural row is **the limit** (row level `limit`, `NODE_ID` the limit id).
 

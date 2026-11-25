@@ -54,7 +54,8 @@ from core.guides import GithubSlugger  # noqa: E402
 # Markdown that is not documentation a reader opens: vendored libraries' notes, test resources, the generator's
 # README fragments (they are pasted into the packs' READMEs, which are checked) and the parallel gleif build.
 NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-connectors/src/test/",
-            "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/")
+            "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/",
+            "docs/products/")
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
 HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md",
            # the configuration-resolution working paper: an inventory of the code at one commit (its paths and line numbers are of then)

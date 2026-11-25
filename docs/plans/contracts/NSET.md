@@ -6,8 +6,8 @@
 
 # NSET: netting sets, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Roadmap:
-[the release notes](../../RELEASE_NOTES.md)*
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](../../contracts/README.md) · Model contract: [VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Roadmap:
+[the release notes](../../../RELEASE_NOTES.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
@@ -22,14 +22,14 @@ counterparty-risk contracts, in the order of the roadmap:
 | 2 | [SACCR.md](SACCR.md) | SA-CCR exposure at default | `saccr-trade` |
 | 3 | [COLL.md](COLL.md) | collateral values | `collateral-balance` (account), `collateral-holding` |
 | 4 | [MC.md](MC.md) | the expected margin call beside the actual one | `margin-call` |
-| 5 | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) | EE, EPE, EEPE, PFE from simulated paths | `simulation-run`, `exposure-path` |
+| 5 | [EXPOSURE_GUIDE.md](../../guides/EXPOSURE_GUIDE.md) | EE, EPE, EEPE, PFE from simulated paths | `simulation-run`, `exposure-path` |
 | 6 | [LIM.md](LIM.md) | limit usage, headroom, pre-deal check | `credit-limit` |
 | 7 | [GRP.md](GRP.md) | connected groups and their usage | `counterparty-group`, connection rules |
 | 8 | [CVA.md](CVA.md) | CVA, DVA, FVA, BA-CVA | none (reads market data and EXP) |
 | 9 | [WWR.md](WWR.md) | wrong-way risk | `credit-path` (optional) |
 
-The shared rules of every contract are in [README.md](README.md). Where a rule is the same as VaR's (scope grammar, captures,
-provenance, entitlements, the reactive connector), this page refers to [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) and states only the difference.
+The shared rules of every contract are in [README.md](../../contracts/README.md). Where a rule is the same as VaR's (scope grammar, captures,
+provenance, entitlements, the reactive connector), this page refers to [VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) and states only the difference.
 
 **Sources read for this contract (2026-10-25):** `modules/banking/packs/counterparty-risk/contracts/*.contract.yaml`, its `samples/`,
 `data/testdata/counterparty-risk/`, `config/packs/core/core/contracts/counterparty.contract.yaml` and `counterparty-group.contract.yaml`,
@@ -104,7 +104,7 @@ counterparty measure (they all start from the netting set).
 ### 3.1 Where they live
 
 When built, the counterparty terms move from the domains `credit` (`credit-store`) and `legal` (`legal-store`) to the common risk lake,
-domain `risk`, read through the one connector `risk-store` ([README.md section 2](README.md#2-the-common-risk-lake)). The masters that
+domain `risk`, read through the one connector `risk-store` ([README.md section 2](../../contracts/README.md#2-the-common-risk-lake)). The masters that
 stay where they are: `trade` (trading pack), `counterparty` and `counterparty-group` (core pack; GRP.md moves the group's membership),
 market data, GLEIF.
 
@@ -185,7 +185,7 @@ products no master agreement nets (cash, bonds held, loans, deposits): they are 
 
 ### 3.4 `agreement`: master agreements (kept, moved)
 
-Unchanged from today's kind ([`agreement.contract.yaml`](../../modules/banking/packs/counterparty-risk/contracts/agreement.contract.yaml)) except: moved to `risk/agreement/`,
+Unchanged from today's kind ([`agreement.contract.yaml`](../../../modules/banking/packs/counterparty-risk/contracts/agreement.contract.yaml)) except: moved to `risk/agreement/`,
 `CLOSE_OUT_NETTING` becomes an enum (`ENFORCEABLE`, `NOT_ENFORCEABLE`, `UNDER_REVIEW`), and `NETTING_SETS` (id list, derived) is added
 for navigation. The engines read `AGREEMENT_ID`, `COUNTERPARTY`, `CLOSE_OUT_NETTING`, `ELECTIONS.TERMINATION_CURRENCY` (the currency of
 close-out, used by COLL for the FX haircut) and `ELECTIONS.SET_OFF`.
@@ -213,7 +213,7 @@ haircuts), MC (the call), EXP (collateral on each path) and CVA (via EXP). Today
 | `MPOR_DAYS` | integer | DOUBLE | required | R | business days | | margin period of risk the bank assumes, **excluding the remargining period** (SA-CCR adds F − 1 after the floor; product owner, 2026-11-02) (today text) | `10` |
 | `DISPUTES_LAST_2Q` | integer | DOUBLE | optional | R | | | margin disputes longer than the MPOR in the last two quarters (SA-CCR doubles the MPOR above 2) | `0` |
 | `ILLIQUID_COLLATERAL` | boolean | STRING | optional | R | | | illiquid collateral or hard-to-replace trades in the set (MPOR floor 20 days) | `false` |
-| `IM_MODEL` | text | STRING | optional | R | | | `SIMM`, `SCHEDULE`, `NONE` (IM is [SIMM.md](SIMM.md)'s) | `NONE` |
+| `IM_MODEL` | text | STRING | optional | R | | | `SIMM`, `SCHEDULE`, `NONE` (IM is [SIMM.md](../../contracts/SIMM.md)'s) | `NONE` |
 | `IM_THRESHOLD` | amount | doc | optional | R | CSA ccy | | IM threshold under the uncleared-margin rules | `50000000` |
 | `SEGREGATED_IM` | boolean | doc | optional | R | | | IM held in a bankruptcy-remote account (excluded from NICA in SA-CCR) | `true` |
 | `ELIGIBLE[]` | record list | doc | required | R | | | the eligibility schedule, below | |
@@ -360,7 +360,7 @@ set from the trade columns.
 ### 7.2 On disk
 
 Nothing beyond the lake: the netting-set figures are cheap to rebuild at load (a date of 1,000,000 trades loads in seconds). The
-heavy per-date files of the counterparty measures are EXP's path matrices ([EXPOSURE_GUIDE.md section 26](../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file)).
+heavy per-date files of the counterparty measures are EXP's path matrices ([EXPOSURE_GUIDE.md section 26](../../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file)).
 
 ### 7.3 Caching
 
@@ -467,8 +467,8 @@ The pack routes the kind (`routes: { nset-figures: nset-engine }`) and keeps `ne
 ### 9.5 Published official results (`nset-official`, `nset-official-cpty`)
 
 Every counterparty measure publishes its official end-of-day captures to the read-only results area of the lake
-([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures), product owner 2026-10-25; VaR's table in
-[VAR_GUIDE.md section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results)). For counterparty measures the natural rows are not only hierarchy nodes, so this contract
+([README.md section 11](../../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures), product owner 2026-10-25; VaR's table in
+[VAR_GUIDE.md section 19](../../guides/VAR_GUIDE.md#19-official-end-of-day-results)). For counterparty measures the natural rows are not only hierarchy nodes, so this contract
 proposes **two tables per measure**, the same for all nine counterparty contracts:
 
 | Table | Rows per business date | Who may read the folder |

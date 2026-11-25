@@ -713,10 +713,10 @@ booked the trade. See [Entities and ownership](data.md#2-entities-and-ownership)
 - [The exposure tutorial: exposure from the bank to a trade](../guides/EXPOSURE_GUIDE.md): eight hands-on steps.
 - [Tutorial 1, Part E: an entity over time](../tutorials/01-first-15-minutes.md#part-e--an-entity-over-time) (`TRD 1000015 30 <GO>`).
 - [Groupings and analytics guide](../guides/bi/GROUPINGS_AND_ANALYTICS.md).
-- The stored results' contracts: [NSET](../contracts/NSET.md), [CVA](../contracts/CVA.md), [SA-CCR](../contracts/SACCR.md),
-  [SIMM](../contracts/SIMM.md), [collateral](../contracts/COLL.md), [margin calls](../contracts/MC.md), [limits](../contracts/LIM.md),
-  [groups](../contracts/GRP.md), [wrong-way risk](../contracts/WWR.md); the [trading groupings contract](../contracts/TRADING_GROUPINGS.md)
-  (CTRD, LTRD, PTRD, ITRD) and [trade valuations](../contracts/TVAL.md).
+- The stored results' contracts: [NSET](../plans/contracts/NSET.md), [CVA](../plans/contracts/CVA.md), [SA-CCR](../plans/contracts/SACCR.md),
+  [SIMM](../contracts/SIMM.md), [collateral](../plans/contracts/COLL.md), [margin calls](../plans/contracts/MC.md), [limits](../plans/contracts/LIM.md),
+  [groups](../plans/contracts/GRP.md), [wrong-way risk](../plans/contracts/WWR.md); the [trading groupings contract](../plans/contracts/TRADING_GROUPINGS.md)
+  (CTRD, LTRD, PTRD, ITRD) and [trade valuations](../plans/contracts/TVAL.md).
 - [Data](data.md): [entities and ownership](data.md#2-entities-and-ownership) (who the counterparties and the bank's legal entities
   are) and [data and contracts](data.md#3-data-and-contracts) (fundamental, input and computed data; where the trades come from and how
   they are loaded).

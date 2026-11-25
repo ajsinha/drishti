@@ -6,8 +6,8 @@
 
 # GRP: counterparty groups and their usage, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting and scopes:
-[NSET.md](NSET.md) · Exposure: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) · Limits: [LIM.md](LIM.md) · GLEIF: [packs/gleif.md](packs/gleif.md)*
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](../../contracts/README.md) · Model contract: [VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting and scopes:
+[NSET.md](NSET.md) · Exposure: [EXPOSURE_GUIDE.md](../../guides/EXPOSURE_GUIDE.md) · Limits: [LIM.md](LIM.md) · GLEIF: [packs/gleif.md](../../contracts/packs/gleif.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
 may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
@@ -198,7 +198,7 @@ share of a group: `GROUP:<id> & LE:<le>`.
 
 Group figures name counterparties, so a group publishes only to the restricted table of
 [NSET.md section 9.5](NSET.md#95-published-official-results-nset-official-nset-official-cpty) (row level `group`), with the shared
-columns ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)) and these. There is no node-level
+columns ([README.md section 11](../../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)) and these. There is no node-level
 `group-official` table (a hierarchy node has no group figure of its own; the node tables of the other measures cover it).
 
 | Field | Type | Delta | Meaning | Example |

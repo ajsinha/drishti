@@ -6,7 +6,7 @@
 
 # MC: margin calls, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · CSAs and netting sets:
+*Version 1.0 · 2026-10-25 · Shared rules: [README.md](../../contracts/README.md) · Model contract: [VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · CSAs and netting sets:
 [NSET.md](NSET.md) · Collateral values: [COLL.md](COLL.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
@@ -15,7 +15,7 @@ may change before the release, and each change will be recorded in [section 16](
 This is the contract of **margin calls**: Drishti keeps the **actual calls** and their events (a workflow the collateral system owns)
 and computes the **expected call** of each CSA from the netting set's MtM, the collateral balance and the CSA's terms, shown beside the
 actual call with the difference explained. Variation margin is computed here; initial margin comes from ISDA SIMM, whose contract is
-[SIMM.md](SIMM.md) (written beside this one).
+[SIMM.md](../../contracts/SIMM.md) (written beside this one).
 
 ## Contents
 
@@ -49,7 +49,7 @@ removed from it; it moves to the risk lake and its text values become enums (§3
 |---|---|
 | `margin-call` moved to the risk lake, enums, amounts signed by direction | PLANNED |
 | Expected VM call per CSA (credit support amount, delivery and return amounts, thresholds, MTA, IA, rounding) | PLANNED |
-| Expected IM call from SIMM ([SIMM.md](SIMM.md)) with the IM threshold | PLANNED |
+| Expected IM call from SIMM ([SIMM.md](../../contracts/SIMM.md)) with the IM threshold | PLANNED |
 | Actual against expected: match, difference, not called, unexpected, direction mismatch; dispute analysis | PLANNED |
 | Computed kind `margin-expected`, reactive connector `mc-engine` (Python) | PLANNED |
 
@@ -110,7 +110,7 @@ Load signal reloads the date (product owner, 2026-10-25); kept 7 years.
 | `csa` (NSET.md) | `THRESHOLD_US`, `THRESHOLD_THEM`, `MTA_US`, `MTA_THEM`, `INDEPENDENT_AMOUNT`, `ROUNDING`, `ROUNDING_METHOD`, `MARGIN_FREQUENCY_DAYS`, `IM_THRESHOLD`, `CSA_CURRENCY` |
 | `valuation` ([TVAL.md](TVAL.md)) | the netting set's MtM at the valuation date |
 | `coll-valuation` (COLL.md) | VM and IM balances (contractual values) at the valuation date, plus pending transfers |
-| `simm-margin` ([SIMM.md](SIMM.md)) | `IM_COLLECT` and `IM_POST` per netting set |
+| `simm-margin` ([SIMM.md](../../contracts/SIMM.md)) | `IM_COLLECT` and `IM_POST` per netting set |
 | `fx-spot` | the CSA currency |
 
 ## 5. Conventions specific to margin calls
@@ -132,7 +132,7 @@ Load signal reloads the date (product owner, 2026-10-25); kept 7 years.
 | `valuation-lag-days` | `1` | §5 |
 | `tolerance-rel`, `tolerance-rounding-units` | `0.005`, `1` | §5 |
 | `combined-mta` | `false` | under the uncleared-margin rules VM and IM share one MTA (true: the MTA applies to VM + IM together) |
-| `im-source` | `simm` | `simm` ([SIMM.md](SIMM.md)), `none` |
+| `im-source` | `simm` | `simm` ([SIMM.md](../../contracts/SIMM.md)), `none` |
 
 ### 6.2 Expected VM call
 
@@ -374,7 +374,7 @@ against 1,450,000 actual, inside the 100,000 tolerance; IM expected 1,800,000 (S
 
 `THRESHOLD` and `MTA` in `BY_CSA` are the transferor's for the expected direction (the counterparty's here).
 
-**margin-official: a desk row** (the shared columns of [README.md section 11](README.md), the figures of section 9.3):
+**margin-official: a desk row** (the shared columns of [README.md section 11](../../contracts/README.md), the figures of section 9.3):
 
 ```json
 {"BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"DESK:DESK-RATES","NODE_NAME":"Rates","PARENT_ID":"DIV:DIV-MARKETS","LEVEL":"desk","CAPTURE_ID":"CAP-MC-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"margin-call\":{\"version\":96,\"batches\":[\"B-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:42:00Z","CONTRACT_VERSION":"1.0","EXPECTED_WE_CALL":1500000.0,"EXPECTED_THEY_CALL":0.0,"ACTUAL_WE_CALL":1450000.0,"ACTUAL_THEY_CALL":0.0,"EXPECTED_IM_WE_CALL":1800000.0,"EXPECTED_IM_THEY_CALL":0.0,"ACTUAL_IM_WE_CALL":1800000.0,"ACTUAL_IM_THEY_CALL":0.0,"CSAS":1,"MATCHED":2,"DIFFERENCES":0,"NOT_CALLED":0,"UNEXPECTED":0,"DIRECTION_MISMATCH":0,"DISPUTED":0}

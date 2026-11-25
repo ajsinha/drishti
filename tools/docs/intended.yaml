@@ -57,3 +57,6 @@ intended:
     why: "a shipped pack has no help.yaml since i7k: console.help goes from its pack.yaml (the generators write it only for an example pack) and the unused PackSpec.overview field goes"
     paths: ["config/packs/*/*/pack.yaml", "modules/*/packs/*/pack.yaml", "tools/packgen/*/make.py", "tools/packgen/banking/make_packs.py",
             "tools/packgen/genomics_showcase/files.py"]
+  - decision: I7M
+    why: "i7m: the Help slugs of the five planned contracts that moved to docs/plans/contracts (under-construction registry)"
+    paths: ["config/under-construction.yaml"]

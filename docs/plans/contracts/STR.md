@@ -6,8 +6,8 @@
 
 # STR, stress P&L: the data contract
 
-*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
-[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Sensitivities: [FRTB.md](FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens)*
+*Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](../../contracts/README.md) · Model contract:
+[VAR_GUIDE.md Part II](../../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Sensitivities: [FRTB.md](../../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens)*
 
 This is the planned data contract of **STR**: the P&L of any set of trades under a stress scenario, computed when asked, either by
 **summing per-trade full-revaluation P&L** that the upstream engine delivers for the bank's defined scenarios, or by **applying a
@@ -194,7 +194,7 @@ proposed as **one limit table for every market-risk measure** (VaR's `LIMIT_VAR`
 |---|---|
 | P&L sign | gain positive, loss negative |
 | Limit | positive (a loss amount); `LIMIT_USE` = max(−P&L, 0) / `LIMIT`; a gain uses 0% |
-| Units of shocks | §3.3; applied to `sensitivity` amounts in their units ([FRTB.md section 3.2.1](FRTB.md#322-units-and-signs)) |
+| Units of shocks | §3.3; applied to `sensitivity` amounts in their units ([FRTB.md section 3.2.1](../../contracts/FRTB.md#322-units-and-signs)) |
 | Method shown | every figure says `full` or `sensitivity`; the two are never mixed in one total unless `fallback: sensitivity` is asked (§6.4), and then the count of trades on each method is shown |
 | Currency | USD |
 
@@ -210,7 +210,7 @@ Additive: per node, a vector of P&L over the date's defined scenarios (§7).
 
 ### 6.2 Sensitivity-based, for a defined scenario
 
-For each factor *k* of the date (the factor dictionary, [FRTB.md section 7.1](FRTB.md#71-the-factor-dictionary-shared)), the scenario
+For each factor *k* of the date (the factor dictionary, [FRTB.md section 7.1](../../contracts/FRTB.md#71-the-factor-dictionary-shared)), the scenario
 gives a move x_k in the factor's unit (0 when no shock matches): `bp` for bp factors; `100 × RELATIVE` for % factors (a −34% equity
 shock is x = −34 units of 1%); for vega factors, the **relative** vol move r_k = `RELATIVE`, or `ABSOLUTE vol-pt` / `IMPLIED_VOL`
 (points converted with the row's implied vol; no implied vol: the shock is not applied and counted `volUnconverted`).
@@ -226,7 +226,7 @@ dot product, so any scenario on any scope is fast, and the per-node aggregate of
 ### 6.3 Sensitivity-based stress, scenarios defined on the spot
 
 The same formula with a user's shocks (§3.4) or an edited copy of a defined scenario; computed by the Python engine (§9.5) on the
-scope's net sensitivities (`sensitivity-net`, [FRTB.md section 9.5](FRTB.md#95-the-reactive-connectors-proposed)), or in Java for
+scope's net sensitivities (`sensitivity-net`, [FRTB.md section 9.5](../../contracts/FRTB.md#95-the-reactive-connectors-proposed)), or in Java for
 simple shocks (open question 5). Breakdown by risk factor: δ_k x_k, ½Γ_k x_k², ν_k r_k per factor.
 
 ### 6.4 Combining and comparing
@@ -265,14 +265,14 @@ scenario** = argmin over j of STR(S, j). **Limit use** for scope S, scenario j: 
 | Node vectors (full) | per node, Σ over its trades per scenario | 5,000 nodes × 50 × 8 B = 2 MB |
 | Node vectors (sensitivity, defined scenarios) | per node, STR_sens per defined scenario, computed at load from the node's net sensitivities | 2 MB |
 | Shock vectors | per defined scenario, x_k and r_k over the factor dictionary (sparse) | small |
-| The sensitivity store | shared ([FRTB.md section 7.2](FRTB.md#72-the-sensitivity-store-shared)) | shared |
+| The sensitivity store | shared ([FRTB.md section 7.2](../../contracts/FRTB.md#72-the-sensitivity-store-shared)) | shared |
 
 A scope that is a node answers from its vectors; an ad-hoc scope sums its trades' columns (one pass per scenario asked) or, for the
 sensitivity method, nets its sensitivities once and dots them with each scenario's shocks.
 
 ## 8. Scopes
 
-Every scope of [VAR_GUIDE.md section 5](../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets) and its planned words, plus `INDEX:` and `TRDR:`
+Every scope of [VAR_GUIDE.md section 5](../../guides/VAR_GUIDE.md#5-scopes-system-baskets-and-baskets) and its planned words, plus `INDEX:` and `TRDR:`
 ([TRADING_GROUPINGS.md](TRADING_GROUPINGS.md#81-words-added-proposed)). Everything in STR is additive over trades for a fixed scenario;
 only the worst-scenario and limit-use figures are taken after the sum.
 
@@ -377,7 +377,7 @@ mean over the scope's trades: open question 3) and the scenario's shocks (JSON i
 ### 9.4 Official end-of-day captures and the published table
 
 After a date's `scenario-pnl` (and `sensitivity`) are complete, Drishti captures every node × every programme scenario and publishes
-to `${DRISHTI_DELTA_ROOT}/risk-results/stress-official/` ([README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures),
+to `${DRISHTI_DELTA_ROOT}/risk-results/stress-official/` ([README.md section 11](../../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures),
 product owner 2026-10-25): **one row per node, scenario and business date** (the scenario is part of the row's grain), the shared
 columns (`BUSINESS_DATE`, `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, `CAPTURE_ID`, `RESULT_VERSION`, `INPUT_VERSIONS`,
 `COMPUTED_AT`, `CONTRACT_VERSION`) and:
@@ -413,7 +413,7 @@ Codes are **proposed** (range `DRS-531x`).
 ## 11. Entitlements and audit
 
 VaR's model with `drishti.stress.access`, gate kinds `scenario-pnl` (full) and `sensitivity` (sensitivity method). User scenarios: the
-owner and those it is shared with (as baskets, [VAR_GUIDE.md section 5.8](../guides/VAR_GUIDE.md#58-baskets)). **Audit:** `stress-view` for node scopes and
+owner and those it is shared with (as baskets, [VAR_GUIDE.md section 5.8](../../guides/VAR_GUIDE.md#58-baskets)). **Audit:** `stress-view` for node scopes and
 scopes of more than 10,000 trades, `stress-scenario-save` (user scenarios), `stress-capture`, `stress-export`.
 
 ## 12. Performance and sizing
@@ -589,7 +589,7 @@ A factor's `PNL` in `BY_FACTOR` includes its gamma term (GIRR: 1,000,000 − 10,
 ```
 
 **stress-official: the book's row for `SCN-X`** (the shared columns are
-[README.md section 11](README.md#11-what-drishti-answers-computed-kinds-the-api-captures)'s):
+[README.md section 11](../../contracts/README.md#11-what-drishti-answers-computed-kinds-the-api-captures)'s):
 
 ```json
 {"BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"BOOK:BOOK-X","NODE_NAME":"BOOK-X","PARENT_ID":"DESK:DESK-RATES","LEVEL":"book","CAPTURE_ID":"CAP-STR-2026-09-30-OFFICIAL","RESULT_VERSION":1,"INPUT_VERSIONS":"{\"scenario-pnl\":{\"version\":21,\"batches\":[\"B-STR-2026-09-30-01\"]}}","COMPUTED_AT":"2026-10-01T06:42:00Z","CONTRACT_VERSION":"1.0","SCENARIO_ID":"SCN-X","SCENARIO_VERSION":3,"SCENARIO_NAME":"Rates up, equities down","METHOD":"full","PNL":775000.0,"PNL_SENSITIVITY":810000.0,"LIMIT":500000.0,"LIMIT_USE":0.0,"LIMIT_STATUS":"ok","TRADE_COUNT":2,"MISSING_TRADES":0}

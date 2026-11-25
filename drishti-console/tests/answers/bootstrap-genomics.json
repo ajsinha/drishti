@@ -2147,12 +2147,12 @@
   } ],
   "schema" : 1,
   "under-construction" : [ {
-    "help" : [ "docs-contracts-saccr" ],
+    "help" : [ "docs-plans-contracts-saccr" ],
     "id" : "sa-ccr-figures",
     "menus" : [ ],
     "treatment" : "under-construction"
   }, {
-    "help" : [ "docs-contracts-cva" ],
+    "help" : [ "docs-plans-contracts-cva" ],
     "id" : "cva-figures",
     "menus" : [ ],
     "treatment" : "under-construction"
@@ -2177,17 +2177,17 @@
     "menus" : [ ],
     "treatment" : "under-construction"
   }, {
-    "help" : [ "docs-contracts-wwr" ],
+    "help" : [ "docs-plans-contracts-wwr" ],
     "id" : "wwr-contract",
     "menus" : [ ],
     "treatment" : "under-construction"
   }, {
-    "help" : [ "docs-contracts-coll" ],
+    "help" : [ "docs-plans-contracts-coll" ],
     "id" : "collateral-contract",
     "menus" : [ ],
     "treatment" : "under-construction"
   }, {
-    "help" : [ "docs-contracts-mc" ],
+    "help" : [ "docs-plans-contracts-mc" ],
     "id" : "margin-call-contract",
     "menus" : [ ],
     "treatment" : "under-construction"

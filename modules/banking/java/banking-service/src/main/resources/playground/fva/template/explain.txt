@@ -16,7 +16,7 @@
 # dropped; the text lines of an entry are joined with spaces). Same format as playground/var/template/explain.txt, read by
 # PlaygroundTemplate.explain(). {Name} and {Name:v} cell references are added when the generator names Main's cells; until then the
 # entries name the tab and the column, never a cell. The design is docs/plans/COUNTERPARTY_ENGINES.md (section 5 for the method,
-# 8.3 for the tabs, 9 case F1 for the worked numbers) and docs/contracts/CVA.md section 6.3. The profile of case F1 is the Exposure
+# 8.3 for the tabs, 9 case F1 for the worked numbers) and docs/plans/contracts/CVA.md section 6.3. The profile of case F1 is the Exposure
 # Playground's case X1 (EE 0.8, 1.6, 1.1, 1.3 and ENE 0, 0, −0.4, −0.3 USD millions at 0.25, 0.5, 0.75 and 1 year). The entries come in
 # three parts: the idea in plain words, the steps with one worked number each, and every term of every tab.
 ## In plain words: what this workbook answers

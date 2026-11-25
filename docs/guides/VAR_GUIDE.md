@@ -844,7 +844,7 @@ pivots. It opens the drawer at Why it moved; the drawer's **Open as a page ›**
 
 In the drawer the same answer has three views (**Waterfall**, **Matrix**: the scope and each child node, the steps across,
 and **Sentences**) with the two dates to compare; it answers any scope the page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
-newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../architecture/LENSES.md#531-ro1-var-change-explanation).
+newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../plans/LENSES_PROPOSALS.md#531-ro1-var-change-explanation).
 
 **In plain words.** Drishti moves **one thing at a time** from yesterday's state to today's (the corrections to yesterday's data, the
 books that moved, the trades that left, the oldest day leaving the scenario window, the market, the newest day entering it, the new
@@ -5436,8 +5436,8 @@ annual report's trading VaR table (built); the US needs 10-day VaR and stressed 
 
 Under every edition the engine is the same: any scope, any currency, intraday, official records, the what-if, the API and the CLI. The
 lens gaps that concern VaR (stressed VaR on the landings, horizon and confidence there, backtesting on the bank's P&L, why it moved) are
-listed in [RISK_LENS.md section 5](../architecture/LENSES.md#13-gaps-and-proposals) and
-[TRADING_LENS.md section 5](../architecture/LENSES.md#23-gaps-and-proposals).
+listed in [RISK_LENS.md section 5](../plans/LENSES_PROPOSALS.md#13-gaps-and-proposals) and
+[TRADING_LENS.md section 5](../plans/LENSES_PROPOSALS.md#23-gaps-and-proposals).
 
 ## 34. Configuration keys
 

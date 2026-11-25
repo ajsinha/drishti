@@ -10,7 +10,7 @@
 engine (SBM, DRC, RRAO), the capital screen `FRSA`, the playground and its recipes are built; the `default-risk` and `residual-risk`
 contracts are `planned`; the computed kind `frtb-sa-result`, the reactive connectors and the official captures are design · Method and
 use: [FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md) · Every field, every bucket grid and the worked records: sections 17 to 27 ·
-Shared rules: [README.md](README.md) · The same sensitivities feed [SIMM.md](SIMM.md), [STR.md](STR.md) and [PNL.md](PNL.md)*
+Shared rules: [README.md](README.md) · The same sensitivities feed [SIMM.md](SIMM.md), [STR.md](../plans/contracts/STR.md) and [PNL.md](../plans/contracts/PNL.md)*
 
 This is the data contract of Drishti's **FRTB standardised approach** (FRTB-SA): the sensitivities-based method (SBM, Basel MAR21), the
 default risk charge for non-securitisations (DRC, MAR22) and the residual risk add-on (RRAO, MAR23). It says what an upstream team
@@ -63,7 +63,7 @@ three correlation scenarios, the binding scenario, the default risk charge and t
 scope, from trade-grain inputs; never stored as a figure except as an official capture. **The regime:** Basel MAR21 to MAR23 as the
 reference, then OSFI CAR chapter 9, as for the regulatory VaR reports (decision 4).
 
-**Not in scope:** the internal models approach and its eligibility tests (the P&L attribution test belongs with [PNL.md](PNL.md)); the
+**Not in scope:** the internal models approach and its eligibility tests (the P&L attribution test belongs with [PNL.md](../plans/contracts/PNL.md)); the
 SBM and DRC of securitisations and the correlation trading portfolio (their inputs are accepted and counted, their charge is reported as
 *not computed* until their parameters are added, section 16); a jurisdiction's reporting templates.
 
@@ -143,7 +143,7 @@ page: [position-sensitivity](packs/market-risk.md#example-market-risk-position-s
 per risk factor and measure, never the same pair twice. **Partition:** `BUSINESS_DATE`. **Promoted columns** (read without parsing the
 document): `SENSITIVITY_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `BATCH_ID`, `STATUS`, `DESK`, `TT_BOOK`, `PRODUCT_TYPE`,
 `CURRENCY`. **Readers:** FRTB-SA (this document), SIMM ([SIMM.md](SIMM.md#3-inputs-from-upstream-engines)), the MR cube's ladders and
-heat maps, sensitivity limits, sensitivity-based stress ([STR.md](STR.md)) and P&L explain ([PNL.md](PNL.md)). A bank delivers one
+heat maps, sensitivity limits, sensitivity-based stress ([STR.md](../plans/contracts/STR.md)) and P&L explain ([PNL.md](../plans/contracts/PNL.md)). A bank delivers one
 sensitivity batch, not one per consumer.
 
 **Position or trade.** A position is the one Drishti derives by the market-risk pack's position rules (`POS-<TT_BOOK>~<key>`), so the
