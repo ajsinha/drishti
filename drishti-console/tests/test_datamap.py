@@ -47,7 +47,7 @@ def test_the_model_links_each_kind_to_its_command_contract_guide_and_what(client
     assert trade["open"] == "/go?q=TRD%20T-1"
     labels = {l["label"]: l["href"] for l in trade["links"]}
     assert labels["Data contract"].startswith("/help/docs-contracts-packs-trading#trd-trade"), labels
-    assert any(h == "/help/trading" for h in labels.values()), "the pack's guide"
+    assert any(h.startswith("/help/bank-data-guide") for h in labels.values()), "the pack's guide (its story lives in the bank data guide)"
     assert any(l.get("what") for l in trade["links"]), "a WHAT link: the glossary knows trade"
     cp = next(j for j in m["joins"] if j["field"] == "COUNTERPARTY")
     assert cp["text"] == "15,000 of 15,000 ids match (100%)" and not cp["low"] and cp["cross"]
