@@ -60,3 +60,7 @@ intended:
   - decision: I7M
     why: "i7m: the Help slugs of the five planned contracts that moved to docs/plans/contracts (under-construction registry)"
     paths: ["config/under-construction.yaml"]
+  - decision: I7N_B
+    why: "i7n lane B: the anchor and renumbering tool (renumber.py), the contract link of the command catalogue follows docs/plans/contracts, and the Help address of the Flight and embed guides is the integration guide (config, the Data out page link, the engine catalogue)"
+    paths: ["tools/docs/renumber.py", "tools/command_catalog.py", "config/docs-features.yaml", "drishti-console/web/templates/admin/data_out.html",
+            "kernel/drishti-server/src/main/resources/engines/catalogue.yaml"]
