@@ -56,6 +56,16 @@ def hand_written(text: str) -> str:
     return GENERATED.sub("", text)
 
 
+COMMENT = re.compile(r"<!--.*?-->", re.S)
+LINK_ONLY = re.compile(r"^\s*(?:[-*+]|\d+\.)\s+(?:\[[^\]]*\]\([^)]*\)[\s·|,;:.\-]*)+$")
+
+
+def prose_text(text: str) -> str:
+    """The text a reader reads as prose: without generated blocks and without HTML comments (the multi-line copyright and licence header
+    at the head of every document), so the report shows real duplication, not the legal header."""
+    return COMMENT.sub("", hand_written(text))
+
+
 def corpus(root: Path = ROOT) -> list[str]:
     rows = (yaml.safe_load((root / "config" / "docs-corpus.yaml").read_text(encoding="utf-8")) or {}).get("files") or []
     return [r["path"] for r in rows if r["class"] in CLASSES]
@@ -95,7 +105,7 @@ def runs(blocks: list[list[str]]) -> set[tuple[str, ...]]:
 
 
 def words(prose: list[str]) -> list[str]:
-    keep = [x for x in prose if not x.lstrip().startswith(("<!--", "|---", "|:--", "#"))]
+    keep = [x for x in prose if not x.lstrip().startswith(("<!--", "|---", "|:--", "#")) and not LINK_ONLY.match(x)]
     return re.findall(r"[a-z0-9]+", " ".join(keep).lower())
 
 
@@ -108,7 +118,7 @@ def analyse(texts: dict[str, str], owners: dict | None = None) -> dict:
     allow = [tuple(sorted(a[:2])) for a in owners.get("allow_runs") or []]
     pats = [(re.compile(o["pattern"]), o["home"]) for o in owners.get("owners") or []]
     for path, text in texts.items():
-        blocks, prose = split(hand_written(text))
+        blocks, prose = split(prose_text(text))
         for r in runs(blocks):
             run_in[r].add(path)
         w = words(prose)
@@ -120,7 +130,7 @@ def analyse(texts: dict[str, str], owners: dict | None = None) -> dict:
                     for rx, home in pats:
                         if rx.search(line) and path != home:
                             findings["owned"].append(f"{path}: {line.strip()[:90]}  (home: {home})")
-        if "CONFIGURATION" not in path and "/connectors/" not in path and not path.startswith("plugins/"):
+        if "CONFIGURATION" not in path and "/connectors/" not in path and not path.startswith(("plugins/", "docs/plans/")):
             for line in prose:
                 if SETTING.match(line):
                     findings["settings"].append(f"{path}: {line[:90]}")
@@ -156,6 +166,8 @@ def main(argv: list[str]) -> int:
         for line in f[k][:top]:
             print("  ", line)
     total = sum(len(v) for v in f.values())
+    wins = sum(int(x.rsplit(": ", 1)[1].split()[0]) for x in f["text"])
+    print(f"repeated windows: {wins}")
     print(f"baseline: {len(texts)} hand-written documents, {total} findings ({', '.join(f'{k} {len(v)}' for k, v in f.items())})")
     return 1 if "--fail" in argv and total else 0
 
