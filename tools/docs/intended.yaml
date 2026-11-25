@@ -70,4 +70,5 @@ intended:
             "drishti-console/web/templates/terminal/_live_attrs.html", "kernel/drishti-server/src/main/resources/application.yaml"]
   - decision: I7N_GATE
     why: "i7n Fable gate: the write-back citation in a message and a setting's meaning names ADMIN_GUIDE section 28.4 (Writing to a source), where the merged approvals text now lives"
-    paths: ["kernel/drishti-packs/src/main/java/com/ash/drishti/packs/ConnectorFiles.java", "tools/settings_schemas.yaml"]
+    paths: ["kernel/drishti-packs/src/main/java/com/ash/drishti/packs/ConnectorFiles.java", "tools/settings_schemas.yaml",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/connectors/ConnectorManager.java"]
