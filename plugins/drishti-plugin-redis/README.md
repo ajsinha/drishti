@@ -70,7 +70,7 @@ and Drishti asks that store for any date Redis does not hold.
 
 ## Build and use
 
-The plugin is a module of the platform build (`drishti-plugin-redis`), packed into the server jar with nothing to copy; a driver of your own goes into `lib/ext/`. A connector file in `config/connectors/` with `plugin: redis` turns it on (ready-made: `config/connectors.examples/`). Build, enabling and commands: [DATA_GUIDE.md, section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors). Below, `drishti.py` stands for `python3.13 tools/drishti.py` (Windows `py -3.13 tools\drishti.py`).
+A connector file in `config/connectors/` with `plugin: redis` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
 
 ## What it reads
 
@@ -232,7 +232,6 @@ the pack's template wholesale, so it repeats the promoted layout the pack declar
 `python3.13 tools/drishti.py data load --store redis` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated
 book, through `RedisLoader` (in the plugin):
 
-Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 python3.13 tools/drishti.py data load --store redis redis://localhost:6379                                  # the samples: 1,791 documents x 10 days
@@ -248,8 +247,7 @@ redis: trading:trade 2026-09-30: 1,000,000 rows, 19 columns in 2,000 chunks of 1
 redis: loaded 1,000,000 rows into redis://localhost:26479 in 81 s; documents 6,021 MB as JSON, 811 MB stored (7.4 times smaller)
 ```
 
-- **Input:** loader rows, one JSON line per entity per day, in the same files and folders as for every loader: [Table mode: loading](../drishti-plugin-jdbc/README.md#table-mode-loading).
-- **Business dates come from outside the row**, by the same rules for every loader: [the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) and [the PostgreSQL loader's list](../drishti-plugin-jdbc/README.md#table-mode-loading).
+- **Input and business dates:** as for every loader ([DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares)).
 - **Streaming:** worker threads (`--threads`) parse and compress each line and pipeline its commands over one Lettuce connection:
   `SADD` of the id to the day's journal, then `SET` of the document (`EX` with `--ttl-days`) and `ZADD` of the day to the entity's
   days. At most `--in-flight` lines are unanswered at once. A kind's dictionary is trained on its first `--dict-samples` documents

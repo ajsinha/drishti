@@ -57,7 +57,7 @@ a book of millions a day in object storage use `delta` or `iceberg` on S3 instea
 
 ## Build and use
 
-The plugin is a module of the platform build (`drishti-plugin-s3`), packed into the server jar with nothing to copy; a driver of your own goes into `lib/ext/`. A connector file in `config/connectors/` with `plugin: s3` turns it on (ready-made: `config/connectors.examples/`). Build, enabling and commands: [DATA_GUIDE.md, section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors). Below, `drishti.py` stands for `python3.13 tools/drishti.py` (Windows `py -3.13 tools\drishti.py`).
+A connector file in `config/connectors/` with `plugin: s3` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
 
 ## What it reads
 

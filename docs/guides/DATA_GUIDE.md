@@ -2507,6 +2507,20 @@ literal credential is refused and **Test connection** says it did not try. **His
 page's zone and hides Test and Save (restoring is its own button). A file connector made from a generated template says in its
 description to set `root` (or the `DRISHTI_FILES_ROOT` environment variable); its page repeats it with the root now in effect.
 
+### 9.15 Rules every connector README shares
+
+Each plugin's README (`plugins/drishti-plugin-<x>/README.md`) holds that store's own facts; these rules are the same for all of them.
+
+- **Packing.** A plugin is a module of the platform build (`drishti-plugin-<x>`), packed into the server jar with nothing to copy; a
+  driver of your own goes into `lib/ext/`. A connector file in `config/connectors/` with `plugin: <x>` turns it on (ready-made files:
+  `config/connectors.examples/`). Build, enabling and commands are in this section.
+- **Commands.** In the READMEs, `drishti.py` stands for `python3.13 tools/drishti.py` (Windows `py -3.13 tools\drishti.py`), run from the
+  Drishti folder (the repository root, or the install folder of a release).
+- **Loader input.** Loader rows are one JSON line per entity per day, in the same files and folders as for every loader
+  ([Table mode: loading](../../plugins/drishti-plugin-jdbc/README.md#table-mode-loading)).
+- **Business dates come from outside the row**, by the same rules for every loader: [the load rules](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)
+  and [the PostgreSQL loader's list](../../plugins/drishti-plugin-jdbc/README.md#table-mode-loading).
+
 ## 10. TLS and the outbound proxy
 
 Every connector that talks to a server over the network reads its TLS configuration from the same keys, under the

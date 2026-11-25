@@ -63,7 +63,7 @@ day's promoted columns, from a keyspace that `python3.13 tools/drishti.py data l
 
 ## Build and use
 
-The plugin is a module of the platform build (`drishti-plugin-cassandra`), packed into the server jar with nothing to copy; a driver of your own goes into `lib/ext/`. A connector file in `config/connectors/` with `plugin: cassandra` turns it on (ready-made: `config/connectors.examples/`). Build, enabling and commands: [DATA_GUIDE.md, section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors). Below, `drishti.py` stands for `python3.13 tools/drishti.py` (Windows `py -3.13 tools\drishti.py`).
+A connector file in `config/connectors/` with `plugin: cassandra` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
 
 ## What it reads
 
@@ -255,7 +255,6 @@ scans a table: no `ALLOW FILTERING`, no token range.
 `python3.13 tools/drishti.py data load --store cassandra` loads the
 packs' sample data and optionally a generated book through `CassandraLoader` (in the plugin):
 
-Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 python3.13 tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1                   # the samples x 10 days
@@ -267,8 +266,7 @@ python3.13 tools/drishti.py data load --store cassandra cass1:9042,cass2:9042 dc
 The loader's heap is `DRISHTI_LOADER_HEAP` (default `4g`). The last line names the rows, the days and the rate
 (`cassandra: loaded 30,000 rows (3 days) in 49.7 s (604 rows/s)`).
 
-- **Input:** loader rows, one JSON line per entity per day, in the same files and folders as for every loader: [Table mode: loading](../drishti-plugin-jdbc/README.md#table-mode-loading).
-- **Business dates come from outside the row**, by the same rules for every loader: [the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) and [the PostgreSQL loader's list](../drishti-plugin-jdbc/README.md#table-mode-loading).
+- **Input and business dates:** as for every loader ([DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares)).
 - **A day appears whole or not at all.** Each day of the input gets a new generation. The day's rows go to the new generation's
   partitions, then its `entity_days` rows, and only when every write has succeeded the `kind_days` row naming the new generation.
   Readers switch at that moment. The old generation's partitions are then deleted (`buckets` whole-partition deletes). If a write fails,

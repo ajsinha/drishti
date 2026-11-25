@@ -63,7 +63,7 @@ layout) fills.
 
 ## Build and use
 
-The plugin is a module of the platform build (`drishti-plugin-aerospike`), packed into the server jar with nothing to copy; a driver of your own goes into `lib/ext/`. A connector file in `config/connectors/` with `plugin: aerospike` turns it on (ready-made: `config/connectors.examples/`). Build, enabling and commands: [DATA_GUIDE.md, section 9](../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors). Below, `drishti.py` stands for `python3.13 tools/drishti.py` (Windows `py -3.13 tools\drishti.py`).
+A connector file in `config/connectors/` with `plugin: aerospike` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
 
 ## What it reads
 
@@ -167,7 +167,6 @@ replaces the pack's template wholesale, so it names the kinds and the promoted b
 
 **Walk-through:**
 
-Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d aerospike
@@ -241,8 +240,7 @@ later ones read memory. A loader line looks like:
 through `AerospikeLoader` (in the plugin). It prints `aerospike: <n> rows (<s> s)` every 100,000 rows and ends with
 `aerospike: loaded 3,000,000 rows into namespace test in 147 s`.
 
-- **Input:** loader rows, one JSON line per entity per day, in the same files and folders as for every loader: [Table mode: loading](../drishti-plugin-jdbc/README.md#table-mode-loading).
-- **Business dates come from outside the row**, by the same rules for every loader: [the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) and [the PostgreSQL loader's list](../drishti-plugin-jdbc/README.md#table-mode-loading).
+- **Input and business dates:** as for every loader ([DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares)).
 - **Each line becomes two writes:** the day's record (a put of all its bins) and the entity's index record (an operation that sets
   `kind` and `id` and appends the date to `dates`, sorted and unique). Each kind's dates record is written once at the end. Writes are
   idempotent: loading a day again replaces its records.
