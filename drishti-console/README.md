@@ -29,13 +29,8 @@ for production. `python3.13 tools/drishti.py launchers --list` shows every launc
 
 The Python is the one you prepared: Python 3.13, a dedicated one or a virtual environment you made yourself. Drishti never makes an
 environment and never installs a package. You install the libraries with two pip commands, from this folder (Windows: `py -3.13 -m pip`
-and `..\config\compute\locks\python.lock`), offline from the unzipped wheel pack:
-
-```bash
-python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt
-python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r ../config/compute/locks/python.lock
-python3.13 ../tools/drishti.py setup        # checks them, name by name, and installs nothing
-```
+and `..\config\compute\locks\python.lock`), offline from the unzipped wheel pack; `drishti.py setup` then checks them, name by name, and installs
+nothing. The commands: [Deployment and QA guide, 1.6](../docs/DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup).
 
 `requirements.txt` holds the runtime libraries; `requirements-test.txt` adds pytest, pytest-xdist and Playwright (`python3.13 -m playwright install chromium` once).
 

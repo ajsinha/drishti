@@ -105,20 +105,16 @@ cd ~/IdeaProjects/drishti-platform/drishti
 # Source zip or wheel pack: lib/wheels already holds the pinned Lake wheel, nothing to build. From a git clone only: build it (section 2)
 #   uv build --wheel ../drishti-lake/python --out-dir lib/wheels
 python3 tools/lake/lakewheel.py                                        # exit 0 and (ok): lib/wheels holds exactly the pinned wheel
-cd drishti-console                                                     # YOU install the libraries with two pip commands (Drishti runs no pip)
-python3 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt
-python3 -m pip install --no-index --find-links ~/drishti-wheels -r ../config/compute/locks/python.lock
-cd ..
-python3 tools/drishti.py setup              # checks them ("Drishti is ready."), writes the settings file and drishti.python
-python3 -m pip install -r drishti-console/requirements-test.txt   # a developer's test extras, into the same Python
+# first YOU install the libraries with the two pip commands and run `drishti.py setup` (Drishti runs no pip): see the line below the block
 python3 -m playwright install chromium        # the browser tests' Chromium, once
 python3 tools/drishti.py doctor
 ```
 
 The Lake wheel comes first because `requirements.txt` installs `drishti-lake==<version>` from `lib/wheels`, and no package index has it; `../drishti-lake`
 must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release <release>` leaves it there). On every system Drishti never makes a virtual
-environment: the Python you run it with holds the libraries, which you install (on Windows, from `drishti-console`): `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt`, then the same with `-r ..\config\compute\locks\python.lock`; then `py -3.13 tools\drishti.py setup` checks them, then
-`py -3.13 -m pip install -r drishti-console\requirements-test.txt`; Playwright's browsers go into the
+environment: the Python you run it with holds the libraries, which you install with the two pip commands and then check with `drishti.py setup`
+(per system: [DEPLOYMENT_AND_QA_GUIDE.md 1.6](DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)); a developer adds
+`-r drishti-console/requirements-test.txt` (`requirements.txt` plus pytest, pytest-xdist and Playwright) into the same Python. Playwright's browsers go into the
 user's profile, no administrator rights needed.
 
 **You should see** `doctor` end with `doctor: all clear` (the Java, the Python and its libraries, the ports 18480 and 17480 free).
@@ -186,7 +182,7 @@ The whole path on the command line, nothing but Java 21 and Python 3.13 (the whe
 unzipped platform folder (`C:\Users\you\drishti-platform`, holding `build_all.py` and `drishti\`); Linux and macOS are the same with
 `python3` and `/`, where `python3` is a dedicated Python 3.13 for Drishti (for example `/opt/python3.13/bin/python3.13`): the operating
 system's own `python3` of Debian or Ubuntu is *externally managed* (PEP 668) and setup refuses it in one line. Unzip the offline wheel
-pack (built for Python 3.13) into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`) first and install it yourself, once, with the two pip commands (`requirements.txt`, then `../config/compute/locks/python.lock`, from `drishti-console`; Windows `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt`, the same with `-r ..\config\compute\locks\python.lock`; Linux and macOS the same with `python3.13` and `/`); Drishti never installs Python packages, `setup` only checks them.
+pack (built for Python 3.13) into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`) first and install it yourself, once, with the two pip commands ([DEPLOYMENT_AND_QA_GUIDE.md 1.6](DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)); Drishti never installs Python packages, `setup` only checks them.
 
 | Step | Windows (`cmd`) | Linux and macOS |
 |---|---|---|

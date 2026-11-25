@@ -132,7 +132,6 @@ and in the `drishti` folder:
 ```bash
 python3 build_all.py --release <release> --skip-tests    # platform folder: the products, then Drishti's jar and modules (Windows: py -3.13 build_all.py ...)
 cd drishti
-python3 tools/drishti.py setup            # (after the two pip commands, 2.3) checks Python and Java 21+, makes the data folder and ~/drishti-envs/dev.ini, checks the libraries
 python3 tools/drishti.py build all        # Drishti alone again: Maven clean package of the server and the modules; the exec jar goes into lib/, the .dmod packages into modules/
 ls lib/*-exec.jar modules/*.dmod
 ```
@@ -150,10 +149,10 @@ stops with `Drishti needs Java 21 or newer … Maven is running on Java …`, `J
 **One Python, yours.** One Python serves the console, the command-line tools (`tools/drishti.py`) and the lake builder: the Python
 you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself). you install its libraries from the offline wheel pack with two pip commands, and `setup` only checks them (Drishti never runs pip, and makes no virtual environment):
 
+Unzip the release's wheel pack into `~/drishti-wheels` once (setup finds it by itself), run the two pip commands and `drishti.py setup`
+([DEPLOYMENT_AND_QA_GUIDE.md 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup); setup ends with "Drishti is ready."), then:
+
 ```bash
-unzip drishti-wheels-*.zip -d ~/drishti-wheels      # once: the release's wheel pack (setup finds ~/drishti-wheels by itself)
-(cd drishti-console && python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt -r ../config/compute/locks/python.lock)   # your two pip commands (or one with both -r), once
-python3 tools/drishti.py setup                      # checks the libraries: "Drishti is ready."
 python3 -c "import drishti_lake, pyarrow, yaml, fastapi; print('ok')"
 ```
 
@@ -165,8 +164,9 @@ refuses a Python that lacks a library, naming it and the pip command. Developers
   strict sandbox (Linux only), never in the console. The interpreter must carry exactly the libraries of
   `config/compute/locks/python.lock`; `setup` checks the lock too (you install it with the second pip command above, never Drishti), so the one Python can be it:
 
+  `drishti.py setup --check` names the lock's libraries one by one; then:
+
   ```bash
-  python3 tools/drishti.py setup --check                       # the lock's libraries, name by name
   export DRISHTI_COMPUTE_ENABLED=true                          # before starting the server (it runs drishti.python)
   ```
 
@@ -4358,7 +4358,6 @@ images, a terminal's Ctrl+C: `drishti.node.drain.on-stop`); `drishti.py node dra
 Run them from the Drishti folder (the repository root, or the install folder of a release). Every command takes `--help`.
 
 ```bash
-python tools/drishti.py setup
 python tools/drishti.py build all
 python tools/drishti.py start all --demo                  # the demo, with development secrets (not for production)
 python tools/drishti.py start all --demo --distribution finance   # risk, genomics, finance, all: docs/architecture/DISTRIBUTIONS.md
@@ -4367,9 +4366,7 @@ python tools/drishti.py start console --server http://192.168.1.20:18480 --port 
 python tools/drishti.py start server --node drishti-b --seed 192.168.1.20:18480 --env-file cluster.env --background
 python tools/drishti.py status
 python tools/drishti.py stop server --all-nodes
-python tools/drishti.py start cluster --cluster deploy/stack/stack.yaml   # three nodes and a console from a file
-python tools/drishti.py status --cluster deploy/stack/stack.yaml          # adds the members and the console's servers
-python tools/drishti.py stop cluster --cluster deploy/stack/stack.yaml
+python tools/drishti.py status --cluster deploy/stack/stack.yaml          # adds the members and the console's servers (start and stop cluster: CLUSTER_GUIDE.md)
 ```
 
 ```powershell

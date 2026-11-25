@@ -401,9 +401,7 @@ Python 3.13 (3.11 is the floor `setup` checks) with Polars, NumPy and PyYAML, in
 [DEPLOYMENT_AND_QA_GUIDE.md section 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup), then the Polars extras, the same way
 (from `drishti-console`; `--find-links` the wheel pack, or your package index when the pack does not carry them):
 
-```bash
-python3 -m pip install -r requirements-polars.txt      # Windows: py -3.13 -m pip install -r requirements-polars.txt
-```
+`python3 -m pip install -r requirements-polars.txt` (Windows `py -3.13 -m pip install -r requirements-polars.txt`)
 
 No Java, no server and no network are needed to convert; loading uses Drishti's own loader (below).
 
@@ -777,9 +775,7 @@ From the repository root (or the install folder), Python 3.13 (3.11 is the floor
 [DEPLOYMENT_AND_QA_GUIDE.md section 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)); Polars and NumPy for the scenario PVs of the PVF
 source, from `drishti-console`:
 
-```bash
-python3 -m pip install -r requirements-polars.txt      # Windows: py -3.13 -m pip install -r requirements-polars.txt
-```
+`python3 -m pip install -r requirements-polars.txt` (Windows `py -3.13 -m pip install -r requirements-polars.txt`)
 
 The scripts are run by path. Converting needs no Java, no server and no network; `--load` uses Drishti's own `lake build` (Java and the
 server jar); `--inbox` needs the node that owns the data load running (`DRISHTI_DATALOAD_ENABLED`).

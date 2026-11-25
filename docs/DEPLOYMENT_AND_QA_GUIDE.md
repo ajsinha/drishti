@@ -1094,11 +1094,7 @@ Only the server's unit ships; the console's unit, the layout and the environment
 [OPERATIONS_GUIDE.md › Running as services](guides/OPERATIONS_GUIDE.md#53-running-as-services-systemd). A settings file goes in as
 `-Ddrishti.settings.file=/etc/drishti/prod.ini` on the unit's `java` line.
 
-```bash
-sudo cp deploy/systemd/drishti-server.service /etc/systemd/system/
-sudo systemctl daemon-reload && sudo systemctl enable --now drishti-server drishti-console
-systemctl status drishti-server --no-pager                      # active (running)
-```
+Copy the unit into `/etc/systemd/system/` and enable both services as [OPERATIONS_GUIDE.md › Running as services](guides/OPERATIONS_GUIDE.md#53-running-as-services-systemd) shows.
 
 **Windows (a scheduled task, no service wrapper `.exe`).** One task per process, run at start-up as the service account, whether or
 not anyone is signed in. The task runs `start server` in the foreground (so the task's state is the process's), with the secrets and

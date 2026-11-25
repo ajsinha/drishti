@@ -102,20 +102,11 @@ drishti-elements (the JavaScript libraries). The versions that go together are s
 2. **Build.** Platform: `python3.13 build_all.py --skip-tests` (IntelliJ: **IntelliJ-platform-build**, then **platform-clean-install**).
    Drishti alone, with the products already installed: `./mvnw -B clean package -DskipTests`, which builds the server jar into `lib/`
    **and** the modules into `modules/`.
-3. **Install the libraries** with two pip commands, from `drishti-console`, offline from the unzipped wheel pack:
+3. **Install the libraries** with two pip commands from `drishti-console`, offline from the unzipped wheel pack, then check the machine with
+   `tools/drishti.py setup` (it ends with "Drishti is ready."): [Deployment and QA guide, 1.2](docs/DEPLOYMENT_AND_QA_GUIDE.md#12-what-to-install-per-operating-system) and [1.6](docs/DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup).
+4. **Run:**
 
    ```bash
-   cd drishti-console
-   python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt
-   python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r ../config/compute/locks/python.lock
-   cd ..
-   ```
-
-   Windows: `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt`, then the same with `-r ..\config\compute\locks\python.lock`.
-4. **Check the machine and run:**
-
-   ```bash
-   python3.13 tools/drishti.py setup                       # checks only; ends with "Drishti is ready."
    python3.13 tools/drishti.py lake demo --engine java     # the demo lake, about 15 minutes
    python3.13 tools/drishti.py start all --demo            # server :18480, console :17480
    python3.13 tools/drishti.py doctor --acceptance         # signs in, asks VAR BANK: VaR 167,372,692, ES 210,131,972

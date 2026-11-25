@@ -535,8 +535,7 @@ You should see `Java version: 21…` in the output. Maven itself comes with the 
 # in the platform folder (source zip, or clone_all.py; QUICKSTART_DEVELOPERS.md sections 1 and 2): a clone of drishti alone cannot build
 python3 build_all.py --release <release> --skip-tests              # the products, then Drishti's jar AND modules (Windows: py -3.13 build_all.py ...)
 cd drishti
-# your two pip commands (requirements.txt, then ../config/compute/locks/python.lock, in drishti-console; DEPLOYMENT_AND_QA_GUIDE.md 1.6)
-python3 tools/drishti.py setup                                     # checks them
+# first your two pip commands and `drishti.py setup` (DEPLOYMENT_AND_QA_GUIDE.md 1.6)
 python3 tools/drishti.py lake demo           # about 15 min: the Delta tables, sixty days, under data/delta/demo
 ```
 
@@ -610,9 +609,10 @@ Docker before you merge a schema change ([§5.6](#56-add-a-table-to-the-identity
 
 ### 2.4 The console from source
 
+First the libraries into this Python (yours: Drishti makes no environment), the two pip commands and `drishti.py setup`
+([DEPLOYMENT_AND_QA_GUIDE.md 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)), plus `-r drishti-console/requirements-test.txt` for pytest-xdist, Playwright and the test extras. Then:
+
 ```bash
-python3 tools/drishti.py setup                                     # the libraries into this Python (yours: Drishti makes no environment)
-python3 -m pip install -r drishti-console/requirements-test.txt    # plus pytest-xdist, Playwright and the test extras
 python3 drishti-console/run_drishti_web.py
 ```
 
