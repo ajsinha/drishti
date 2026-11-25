@@ -334,12 +334,10 @@ then the newest `lib/drishti-server-*-exec.jar` of the install (`<home>/lib`; ma
 
 **Environment variables** the program reads:
 
-| Variable | Meaning | Default |
-|---|---|---|
-| `JAVA_HOME` | the JDK that runs it | `/usr/lib/jvm/java-21-openjdk-amd64`, then `java` on the `PATH` |
-| `DRISHTI_SERVER` | the server's base URL | `http://localhost:18480` |
-| `DRISHTI_TOKEN` | the bearer token (never printed) | none |
-| `DRISHTI_USER` | the user name sent when the server has sign-in off | none |
+- `JAVA_HOME`: the JDK that runs it (default `/usr/lib/jvm/java-21-openjdk-amd64`, then `java` on the `PATH`).
+- `DRISHTI_SERVER`: the server's base URL (default `http://localhost:18480`).
+- `DRISHTI_TOKEN`: the bearer token (never printed; default none).
+- `DRISHTI_USER`: the user name sent when the server has sign-in off (default none).
 
 The Java commands run **from the repository root** (the engine reads `./config/packs` and `./sutras` relative to it), so every path
 you give is made absolute first: use paths relative to *your* current directory as you normally would.

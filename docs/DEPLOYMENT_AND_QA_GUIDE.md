@@ -171,16 +171,16 @@ None is required on a developer machine: the install folder is where `tools/dris
 
 | Variable | Meaning | Default | Example (Linux / Windows) |
 |---|---|---|---|
-| `DRISHTI_HOME` | the install folder (read only). Must be the folder the tools come from: one release's tools never drive another's install (a variable naming another folder is a WARNING and ignored) | the folder `tools/drishti.py` is in | `/opt/drishti` / `C:\drishti` |
-| `DRISHTI_DATA_DIR` | the data folder (writable) | `<drishti>/data` | `/srv/drishti-data` / `D:\drishti-data` |
-| `DRISHTI_MODULES_HOME` | the modules folder | `<drishti>/modules` | rarely set |
-| `DRISHTI_JAVA_HOME` | the JDK every Drishti tool uses, before `JAVA_HOME` | none | `/usr/lib/jvm/java-21-openjdk-amd64` / `C:\jdk-21` |
+| [`DRISHTI_HOME`](admin/CONFIGURATION.md#every-placeholder) | the install folder (read only). Must be the folder the tools come from: one release's tools never drive another's install (a variable naming another folder is a WARNING and ignored) | the folder `tools/drishti.py` is in | `/opt/drishti` / `C:\drishti` |
+| [`DRISHTI_DATA_DIR`](admin/CONFIGURATION.md#every-placeholder) | the data folder (writable) | `<drishti>/data` | `/srv/drishti-data` / `D:\drishti-data` |
+| [`DRISHTI_MODULES_HOME`](admin/CONFIGURATION.md#every-placeholder) | the modules folder | `<drishti>/modules` | rarely set |
+| [`DRISHTI_JAVA_HOME`](admin/CONFIGURATION.md#every-placeholder) | the JDK every Drishti tool uses, before `JAVA_HOME` | none | `/usr/lib/jvm/java-21-openjdk-amd64` / `C:\jdk-21` |
 | `JAVA_HOME` | the usual JDK setting: used when `DRISHTI_JAVA_HOME` is not set | none | the same |
-| `DRISHTI_PYTHON` | optional: the one Python (the console, the tools, the server's Python work), instead of `drishti.python` of the settings file | none | `/usr/bin/python3.13` |
-| `DRISHTI_LIB_PATH` | your site's jar folder ([1.4](#14-drishtis-jars-and-your-jars)) | `<drishti>/lib/ext` | rarely set |
-| `DRISHTI_PORT`, `DRISHTI_CONSOLE_PORT` | the server's and the console's ports | `18480`, `17480` | `18580` |
-| `DRISHTI_SERVER_URL` | the server the console talks to | this machine's LAN address `:18480` | `http://192.168.2.77:18480` |
-| `DRISHTI_TOKEN_SECRET`, `DRISHTI_SESSION_SECRET`, `DRISHTI_NET_SECRET`, `DRISHTI_SEED_PASSWORD` | the secrets ([5](#secrets)) | none (`--demo` uses development ones) | **never** in a profile or `setx`: an env-file ([7.4](#74-the-secrets-in-an-env-file)) |
+| [`DRISHTI_PYTHON`](admin/CONFIGURATION.md#every-placeholder) | optional: the one Python (the console, the tools, the server's Python work), instead of `drishti.python` of the settings file | none | `/usr/bin/python3.13` |
+| [`DRISHTI_LIB_PATH`](admin/CONFIGURATION.md#every-placeholder) | your site's jar folder ([1.4](#14-drishtis-jars-and-your-jars)) | `<drishti>/lib/ext` | rarely set |
+| [`DRISHTI_PORT`](admin/CONFIGURATION.md#every-placeholder), `DRISHTI_CONSOLE_PORT` | the server's and the console's ports | `18480`, `17480` | `18580` |
+| [`DRISHTI_SERVER_URL`](admin/CONFIGURATION.md#every-placeholder) | the server the console talks to | this machine's LAN address `:18480` | `http://192.168.2.77:18480` |
+| [`DRISHTI_TOKEN_SECRET`](admin/CONFIGURATION.md#every-placeholder), `DRISHTI_SESSION_SECRET`, `DRISHTI_NET_SECRET`, `DRISHTI_SEED_PASSWORD` | the secrets ([5](#secrets)) | none (`--demo` uses development ones) | **never** in a profile or `setx`: an env-file ([7.4](#74-the-secrets-in-an-env-file)) |
 
 **The one order** each command follows (every line `setup`, `start` and `status` print says which one won):
 
@@ -647,11 +647,11 @@ or the scheduled task's script; macOS: the launchd plist's `EnvironmentVariables
 
 | Variable | Read by | What it is |
 |---|---|---|
-| `DRISHTI_TOKEN_SECRET` | server and console | signs the tokens of signed-in people; the same on both, at least 32 bytes |
-| `DRISHTI_SESSION_SECRET` | console | signs the console's session cookie |
+| [`DRISHTI_TOKEN_SECRET`](admin/CONFIGURATION.md#every-placeholder) | server and console | signs the tokens of signed-in people; the same on both, at least 32 bytes |
+| [`DRISHTI_SESSION_SECRET`](admin/CONFIGURATION.md#every-placeholder) | console | signs the console's session cookie |
 | `DRISHTI_SECURITY_ENABLED=true`, `DRISHTI_AUTH_ENABLED=true` | server; console | sign-in on (off as shipped, for a developer's machine) |
-| `DRISHTI_SEED_ADMIN`, `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | server | the first administrator, made at the first start with no users |
-| `DRISHTI_NET_SECRET` | every server of a cluster | the cluster key ([section 11](#11-a-cluster-of-three)) |
+| [`DRISHTI_SEED_ADMIN`](admin/CONFIGURATION.md#every-placeholder), `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | server | the first administrator, made at the first start with no users |
+| [`DRISHTI_NET_SECRET`](admin/CONFIGURATION.md#every-placeholder) | every server of a cluster | the cluster key ([section 11](#11-a-cluster-of-three)) |
 
 The security checklist before anyone else uses the machine: [OPERATIONS_GUIDE.md › Security checklist](guides/OPERATIONS_GUIDE.md#11-security-checklist).
 
@@ -1610,12 +1610,12 @@ Add a seed**.
 
 | Variable | drishti-a | drishti-b | drishti-c |
 |---|---|---|---|
-| `DRISHTI_NET_SECRET`, `DRISHTI_TOKEN_SECRET`, `DRISHTI_SESSION_SECRET` | the same three values on every node | same | same |
-| `DRISHTI_NET_DIR`, `DRISHTI_DATA_DIR` | its own | its own | its own |
-| `DRISHTI_DELTA_ROOT` (or the lake files' roots) | the shared lake path | the same | the same |
-| `DRISHTI_DATALOAD_ENABLED`, `DRISHTI_DATALOAD_OWNER` | `true`, `true` | unset | unset |
-| `DRISHTI_COMPUTE_ENABLED` | `true` | `true` | `true` |
-| `DRISHTI_PACKS`, `DRISHTI_LENSES`, `config/modules/*` | the same everywhere | same | same |
+| [`DRISHTI_NET_SECRET`](admin/CONFIGURATION.md#every-placeholder), `DRISHTI_TOKEN_SECRET`, `DRISHTI_SESSION_SECRET` | the same three values on every node | same | same |
+| [`DRISHTI_NET_DIR`](admin/CONFIGURATION.md#every-placeholder), `DRISHTI_DATA_DIR` | its own | its own | its own |
+| [`DRISHTI_DELTA_ROOT`](admin/CONFIGURATION.md#every-placeholder) (or the lake files' roots) | the shared lake path | the same | the same |
+| [`DRISHTI_DATALOAD_ENABLED`](admin/CONFIGURATION.md#every-placeholder), `DRISHTI_DATALOAD_OWNER` | `true`, `true` | unset | unset |
+| [`DRISHTI_COMPUTE_ENABLED`](admin/CONFIGURATION.md#every-placeholder) | `true` | `true` | `true` |
+| [`DRISHTI_PACKS`](admin/CONFIGURATION.md#every-placeholder), `DRISHTI_LENSES`, `config/modules/*` | the same everywhere | same | same |
 
 ### 11.5 Secrets
 

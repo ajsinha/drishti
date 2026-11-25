@@ -224,13 +224,13 @@ for a service manager, is in [5.3](#53-running-as-services-systemd): it needs `D
 | Setting | Meaning |
 |---|---|
 | `-Djava.io.tmpdir=<data>/tmp/server` (the script sets it) | Java's temporary folder: DuckDB, RocksDB and CatBoost unpack their native libraries there (DuckDB 60 MB a start), not in `/tmp`, and the server removes stale copies at start. Only the command line moves it (or `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…`); without it the server warns in its log and on Admin → Health |
-| `DRISHTI_PACKS` (`drishti.packs.enabled`) | the packs to load, comma-separated; a pack's parents load with it (`market-risk` brings `core`, `market-data`, `trading`). Unset (`default`): the packs of every module that is on, less those a module marks off by default; the word `default` may stand in a list (the demo profile's `default,us-equities,gleif,funds`) |
+| [`DRISHTI_PACKS`](../admin/CONFIGURATION.md#every-placeholder) (`drishti.packs.enabled`) | the packs to load, comma-separated; a pack's parents load with it (`market-risk` brings `core`, `market-data`, `trading`). Unset (`default`): the packs of every module that is on, less those a module marks off by default; the word `default` may stand in a list (the demo profile's `default,us-equities,gleif,funds`) |
 | `DRISHTI_STUDIO_SAVE=true` | lets the Build workbench save Sutras (the view layouts); only in authoring environments |
 | `DRISHTI_SECURITY_ENABLED=true` | sign-in on: every call needs a token. Off by default |
-| `DRISHTI_TOKEN_SECRET` | the secret the server and the console share to sign tokens, at least 32 bytes. The value above is the development secret: never on a shared machine |
-| `DRISHTI_SEED_ADMIN`, `_USERNAME`, `_PASSWORD` | at the first start with no users, create this administrator (the values above are also the defaults) |
-| `DRISHTI_LIB_PATH` | the site's jars: connectors, JDBC drivers (the server's lib folder; default `<home>/lib/ext`, kept on an upgrade; `<home>/lib` itself holds only Drishti's own jar, which an upgrade replaces, and the start refuses more than one Drishti server jar there; jars in `<data folder>/lib`, the previous default, are moved once into `<home>/lib/ext` and Health says so) |
-| `DRISHTI_EXTERNAL_LIB` | the console's extra Python modules (`external_lib/python`) |
+| [`DRISHTI_TOKEN_SECRET`](../admin/CONFIGURATION.md#every-placeholder) | the secret the server and the console share to sign tokens, at least 32 bytes. The value above is the development secret: never on a shared machine |
+| [`DRISHTI_SEED_ADMIN`](../admin/CONFIGURATION.md#every-placeholder), `_USERNAME`, `_PASSWORD` | at the first start with no users, create this administrator (the values above are also the defaults) |
+| [`DRISHTI_LIB_PATH`](../admin/CONFIGURATION.md#every-placeholder) | the site's jars: connectors, JDBC drivers (the server's lib folder; default `<home>/lib/ext`, kept on an upgrade; `<home>/lib` itself holds only Drishti's own jar, which an upgrade replaces, and the start refuses more than one Drishti server jar there; jars in `<data folder>/lib`, the previous default, are moved once into `<home>/lib/ext` and Health says so) |
+| [`DRISHTI_EXTERNAL_LIB`](../admin/CONFIGURATION.md#every-placeholder) | the console's extra Python modules (`external_lib/python`) |
 | `DRISHTI_DEMO_ENABLED=false` | the demo source (the packs' samples, ticking) off, so every page reads the lakes; on (the default) a sample answers before the lake for an id both hold, and [the reports tutorial, Part F](../tutorials/README.md)'s live tiles need it |
 
 On Java 25 the script adds `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 refuses to start with it. In the foreground the
@@ -3772,10 +3772,10 @@ EOF
 
 | Variable | Read by | What it is |
 |---|---|---|
-| `DRISHTI_TOKEN_SECRET` | server and console | signs the tokens of signed-in people; at least 32 bytes, **the same on the server and the console** (and on every node of a cluster). Whoever holds it can act as any user: treat it as a master key |
-| `DRISHTI_SESSION_SECRET` | console | signs the console's session cookie; at least 32 characters |
-| `DRISHTI_NET_SECRET` | every server of a cluster | the cluster key ([section 7](#7-cluster-more-nodes)); leave it out of a single node |
-| `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | server | the first administrator, made at the first start with no users; see [4.4](#44-the-first-administrator) |
+| [`DRISHTI_TOKEN_SECRET`](../admin/CONFIGURATION.md#every-placeholder) | server and console | signs the tokens of signed-in people; at least 32 bytes, **the same on the server and the console** (and on every node of a cluster). Whoever holds it can act as any user: treat it as a master key |
+| [`DRISHTI_SESSION_SECRET`](../admin/CONFIGURATION.md#every-placeholder) | console | signs the console's session cookie; at least 32 characters |
+| [`DRISHTI_NET_SECRET`](../admin/CONFIGURATION.md#every-placeholder) | every server of a cluster | the cluster key ([section 7](#7-cluster-more-nodes)); leave it out of a single node |
+| [`DRISHTI_SEED_USERNAME`](../admin/CONFIGURATION.md#every-placeholder), `DRISHTI_SEED_PASSWORD` | server | the first administrator, made at the first start with no users; see [4.4](#44-the-first-administrator) |
 
 Database and broker passwords go in `/etc/drishti/secrets.ini` (mode 600), given **last** on the settings list so it wins, under the same
 sections and keys as `prod.ini` (`config/settings.examples/secrets.ini`); a key named password, secret, token or key is masked in logs and in
@@ -4008,10 +4008,10 @@ machine; what differs is below.
 
 | | Same on every node | Per node |
 |---|---|---|
-| `DRISHTI_TOKEN_SECRET`, `DRISHTI_SESSION_SECRET`, `DRISHTI_NET_SECRET` | yes | |
+| [`DRISHTI_TOKEN_SECRET`](../admin/CONFIGURATION.md#every-placeholder), `DRISHTI_SESSION_SECRET`, `DRISHTI_NET_SECRET` | yes | |
 | The release, `prod.ini` lakes and packs, `config/modules`, `config/engines`, `config/store/store.yaml`, the identity database | yes | |
-| `DRISHTI_DATA_DIR` | the same path (each machine has its own folder) | its own contents |
-| `DRISHTI_NET_DIR` | | `/srv/drishti/data/nodes/<node>/net` |
+| [`DRISHTI_DATA_DIR`](../admin/CONFIGURATION.md#every-placeholder) | the same path (each machine has its own folder) | its own contents |
+| [`DRISHTI_NET_DIR`](../admin/CONFIGURATION.md#every-placeholder) | | `/srv/drishti/data/nodes/<node>/net` |
 | `DRISHTI_DATALOAD_ENABLED=true` and `DRISHTI_DATALOAD_OWNER=true` | | on one node only, when the data inbox is used |
 | `SERVER_ADDRESS` | **not set** (remove it from `drishti.env`) | |
 

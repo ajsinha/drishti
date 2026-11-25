@@ -1061,13 +1061,13 @@ python3 tools/drishti.py data get trade-valuation --date 2026-09-30 \
 
 | Setting | Default | What it does |
 |---|---|---|
-| `drishti.data-view.enabled` | `true` | the API on or off (the edition feature `data` presets it) |
-| `drishti.data-view.internal-only` | the IMF, Yahoo and news-headline kinds | the datasets marked internal only |
-| `drishti.data-view.internal-only-download` | `true` | `false` refuses them (the edition feature `internal-only-data: off` presets it) |
-| `drishti.data-view.count-budget` | `PT60S` | the longest a row count reads before answering *at least* |
-| `drishti.data-view.batch-rows` | `8192` | rows a column read hands over at a time |
-| `drishti.data-view.list-limit` | `200000` | most entities read from a source that cannot read a day in one pass |
-| `drishti.data-view.read-budget` | `PT30S` | one listing, or one chunk of 500 entities, from such a source |
+| [`drishti.data-view.enabled`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `true` | the API on or off (the edition feature `data` presets it) |
+| [`drishti.data-view.internal-only`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | the IMF, Yahoo and news-headline kinds | the datasets marked internal only |
+| [`drishti.data-view.internal-only-download`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `true` | `false` refuses them (the edition feature `internal-only-data: off` presets it) |
+| [`drishti.data-view.count-budget`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `PT60S` | the longest a row count reads before answering *at least* |
+| [`drishti.data-view.batch-rows`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `8192` | rows a column read hands over at a time |
+| [`drishti.data-view.list-limit`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `200000` | most entities read from a source that cannot read a day in one pass |
+| [`drishti.data-view.read-budget`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `PT30S` | one listing, or one chunk of 500 entities, from such a source |
 | console `features.data` | `true` | the page, the menu item and the word in the console |
 | console `data_view.*` | 30, 90, 300 s | how long the console waits for the list, a count, and between two parts of a download |
 
