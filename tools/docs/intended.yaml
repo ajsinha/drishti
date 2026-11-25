@@ -68,3 +68,6 @@ intended:
     why: "i7n lane A: the new documentation tools (the BI navigation strip, the Markdown link repair after a merge); a citation of a guide's numbered section names the merged section by its title"
     paths: ["tools/docs/bi_nav.py", "tools/settings_catalogue.py", "drishti-console/web/templates/admin/feeds.html", "tools/docs/relink_md.py", "tools/docs/guide_settings.py", "tools/docs/guide_settings.yaml", "tools/knowledge.py", "tools/docs/generate.py", "drishti-console/core/backend.py", "drishti-console/core/live_results.py",
             "drishti-console/web/templates/terminal/_live_attrs.html", "kernel/drishti-server/src/main/resources/application.yaml"]
+  - decision: I7N_GATE
+    why: "i7n Fable gate: the write-back citation in a message and a setting's meaning names ADMIN_GUIDE section 28.4 (Writing to a source), where the merged approvals text now lives"
+    paths: ["kernel/drishti-packs/src/main/java/com/ash/drishti/packs/ConnectorFiles.java", "tools/settings_schemas.yaml"]
