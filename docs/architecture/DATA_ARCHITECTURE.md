@@ -1945,7 +1945,7 @@ Other connectors, reviewed against the rule that each format or protocol comes f
 
 Status: **R1 to R4 built and built (2026-10-26); R5 and R6 planned, in no release yet.** Designed with the product owner (2026-10-24). What is built, and
 where it differs from the design below, is in [section 4.21](#421-built-r1-to-r4); the reference for people who write and run reactive
-connectors is [the reactive connector's README](../connectors/types/reactive/README.md) and [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector).
+connectors is [the reactive connector's README](../connectors/types/reactive/README.md) and [tutorial 19, Part C](../tutorials/25-computed-panels.md).
 Everything named below that section 4.21 does not list as built is **planned**. Related designs:
 [README.md](../guides/bi/README.md) (the workers that run the computations, `requires:` and approval),
 [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first reactive connector: a generic VaR engine), [APPROVALS_GUIDE.md](ARCHITECTURE.md#31-collaboration-write-back-and-approvals) (a saved change
@@ -3351,7 +3351,7 @@ changed by the lake file.
 
 Some feeds may not, by contract, be saved on a disk. How it is used, every setting and troubleshooting:
 [DATA_LAKE_GUIDE.md section 13](../guides/DATA_LAKE_GUIDE.md#13-the-in-memory-lake); a worked example is
-[tutorial 16, Part D](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-d--news-held-in-memory-only).
+[tutorial 16, Part D](../tutorials/18-news-held-in-memory.md).
 
 ### 9.1 The idea
 

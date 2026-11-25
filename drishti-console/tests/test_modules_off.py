@@ -89,7 +89,7 @@ def test_banking_off_is_gone_from_every_door(backend, monkeypatch):
     assert c.get("/help/docs-guides-var-guide").status_code == 404                                    # Help: its guides and tutorials
     assert c.get("/help/docs-tutorials-02-var-from-the-bank-to-a-trade").status_code == 404
     assert "Risk measures" not in c.get("/help").text                                                 # and its Help section
-    for slug in ("knowledge-risk", "docs-tutorials-12-a-day-of-bank-data"):                           # and its pages in core sections (domain:)
+    for slug in ("knowledge-risk", "bank-data-guide"):                                              # and its pages in core sections (domain:)
         assert c.get(f"/help/{slug}").status_code == 404, slug
     assert c.get("/help/knowledge-data").status_code == 200
     assert 'data-kind="var-baskets"' not in c.get("/build").text                                      # the Build home: its types

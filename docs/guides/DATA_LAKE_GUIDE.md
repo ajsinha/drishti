@@ -90,7 +90,7 @@ and your data cannot mix (section 6).
 | `_load_id`, `_source_file` | which load wrote the row, and from which file: every load can be traced and undone |
 
 **Delta or Iceberg.** A lake is Delta unless its file says `format: iceberg`; one table may differ. On the same rows both give the same
-answers, VaR equal to the cent ([tutorial 16, Part E](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg)). An Iceberg table of this layout is partitioned by
+answers, VaR equal to the cent ([tutorial 16, Part E](../tutorials/23-the-risk-lake-on-iceberg.md)). An Iceberg table of this layout is partitioned by
 business date alone.
 
 **In memory.** A lake whose root is `mem://<store>` lives in the server's memory under a hard cap, for feeds that may never be written
@@ -1710,7 +1710,7 @@ storage from the publishers' settings (`drishti.var.official.*`, `drishti.ccr.ex
 results are published.
 
 **An Iceberg copy of a demo store**: `tools/build_demo_lakes.py --store risk=iceberg` copies the tables into Iceberg with a lake file
-`demo-iceberg.yaml` and connectors naming it ([tutorial 16, Part E](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg)).
+`demo-iceberg.yaml` and connectors naming it ([tutorial 16, Part E](../tutorials/23-the-risk-lake-on-iceberg.md)).
 
 **The local cluster** (`deploy/stack`): the stack's synthetic lakes are written through the demo lake's file with another root
 (`lake build --lake demo --lake-root data/stack/lakes/<name>`); every node reads the same description.
@@ -1728,7 +1728,7 @@ and Parquet files) whose files live in the server's memory, off the Java heap, u
 fills each table from its feed; every page, search, BI dataset and Export data read it exactly as they read a lake on a disk; a guard
 refuses every way the data could reach a disk. Only a user's download leaves the server. How it is built:
 [DATA_ARCHITECTURE.md section 9](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk); a
-worked example: [tutorial 16, Part D](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-d--news-held-in-memory-only).
+worked example: [tutorial 16, Part D](../tutorials/18-news-held-in-memory.md).
 
 ### 13.1 How it works
 

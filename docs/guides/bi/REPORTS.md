@@ -1314,7 +1314,7 @@ Latin America & Caribbean                          12
 A draft model answers its owner (and is listed as `draft` by `bi model list`); a report on it is published once the model is. The reference for the
 wizard's every step is [BI_GUIDE.md section 23](TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads) and
 [BI_GUIDE.md](TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads); the version 1 guided tables builder (*Use the guided tables builder* under the wizard's first step) still makes
-`rachana: 1` datasets, which the upgrade converts to models ([tutorial 21](../../tutorials/21-run-it-in-production.md)).
+`rachana: 1` datasets, which the upgrade converts to models ([tutorial 21](../../DEPLOYMENT_AND_QA_GUIDE.md)).
 
 #### Notes: saving safely, and more than one dataset
 

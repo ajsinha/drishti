@@ -21,7 +21,7 @@ configure it, deploy and promote packs and roll them back, keep it safe, watch i
 upgrade it, and what to do when something goes wrong (four runbooks, the troubleshooting tables and the error codes). Where a
 command prints something, the text after **You should see** is what a healthy system prints. It does not teach the product: the first
 quarter of an hour in it is [tutorial 1, Part A](../tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around), and running it for a team is
-[tutorial 21](../tutorials/21-run-it-in-production.md). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md); this
+[tutorial 21](../DEPLOYMENT_AND_QA_GUIDE.md). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md); this
 guide names the ones a task needs. Several servers acting as one, sizing and tuning are in [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md);
 users, roles, editions and the engine switches in [ADMIN_GUIDE.md](ADMIN_GUIDE.md).
 
@@ -2504,7 +2504,7 @@ person asking, sending a Python engine's work to `engine.pool` (`engine.split` s
 server: Drishti's own always, any other only with `compute.in-process-java: true` after review. `GET /api/v1/admin/compute/reactive` (`drishti.py
 compute reactive`) lists each one's kinds, engine, readiness, cache, coalescing and latency. Triggers fire on `POST /api/v1/compute/events`
 (administrators and service tokens); loads reach `data-version` triggers by themselves. Audit: `compute.answer`, `compute.failed`, `compute.event`.
-The `compute-demo` pack brings two samples ([tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)).
+The `compute-demo` pack brings two samples ([tutorial 19, Part C](../tutorials/25-computed-panels.md)).
 
 | You see | Do |
 |---|---|

@@ -6348,7 +6348,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 
 ### Docs (the 2.9.5 review)
 
-- **New:** [tutorial 29](docs/tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg), the risk lake and the official results on Iceberg (every step run on a
+- **New:** [tutorial 29](docs/tutorials/23-the-risk-lake-on-iceberg.md), the risk lake and the official results on Iceberg (every step run on a
   scratch copy: `build_demo_lakes.py --store risk=iceberg`, official results to Iceberg, VaR and the limit letters equal to Delta, Admin →
   Lakes' Format, `var-results` reset, back to Delta; pictures by `tools/docs/shots/t29.py`); [EXTERNAL_LAKES.md](docs/guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg),
   *Using Drishti with Databricks Delta Lake or Apache Iceberg* (the table shape, Delta on S3, Azure or Google Cloud, Iceberg path-based or
@@ -7239,7 +7239,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   in the same release. 2.8.0 is the foundation with VaR; 2.9.0 trading and market risk; 2.10.0 counterparty risk; 2.11.0 balance sheet and
   regulatory; 2.12.0 AI and GenUI (parked until then); other industries after banking and finance.
 - **Reactive connectors, steps R1 to R4 (2.8.0, [REACTIVE_CONNECTORS.md](docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) section 21,
-  [REACTIVE_CONNECTOR.md](docs/connectors/types/reactive/README.md), [tutorial 23](docs/tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)):** a connector
+  [REACTIVE_CONNECTOR.md](docs/connectors/types/reactive/README.md), [tutorial 23](docs/tutorials/25-computed-panels.md)):** a connector
   may compute its answer. The built-in plugin `reactive` (in `drishti-compute`) reads a connector file's computation: kinds with typed
   `params:` (int, decimal, text, scope, bool, enum, date, sandbox-ref; defaults, allowed values, bounds, refused in words), `reads:`
   (inputs read through the normal routing **as the person asking**, masks applied; a later read may take its ids from an earlier one),
@@ -8447,7 +8447,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   ends in `DIFF` (`HistoryPhrase`, `PhraseParser.Parsed.command`). Read fully, it opens at once; otherwise the search page says *Read as …*
   ([USER_GUIDE › Asking in plain words](docs/guides/USER_GUIDE.md#asking-in-plain-words)).
 - **Added: tutorial 21, An entity over time**, and the help centre's `history` entries (F1 on the history page opens the user guide's
-  History section) ([docs/tutorials/21-an-entity-over-time.md](docs/tutorials/01-first-15-minutes.md#part-e--an-entity-over-time)). `test_tutorials.py` now reads
+  History section) ([docs/tutorials/21-an-entity-over-time.md](docs/tutorials/05-an-entity-over-time.md)). `test_tutorials.py` now reads
   every numbered tutorial (its glob stopped at 19). Tutorial 20 gains its *You should see* lines, a *Next steps* section and the
   statement's second page (`statement-page-2.jpg`).
 - **Added: history queries, more fast paths (H5, H6).** DuckDB (one range query), MongoDB (one range read on the `_id` index), Aerospike
@@ -9747,7 +9747,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
 - **Docs:** [SUTRA_DEVELOPER_GUIDE.md](docs/guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) replaces `RACHANA_GUIDE.md`, `SUTRA_CLI.md` and the in-app `sutra-guide.md`: anatomy, matching and priority, labels, paths, source, row groups, inference, testing and CI, the workbench, a checklist and the common mistakes with their codes; the old help addresses redirect.
 - **Docs:** [CONNECTOR_DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) replaces `PLUGIN_GUIDE.md` and `CONNECTOR_GUIDE.md`: which connector, the `SourcePlugin` SPI, testing with the testkit contracts, a worked teaching plugin (`docs/guides/examples/connector/`, built and contract-tested, not shipped) and one short section per connector; each connector's walk-through and worked examples moved into its own `*_CONNECTOR.md`, de-duplicated.
 - **Docs:** [PACK_DEVELOPER_GUIDE.md](docs/guides/BUILD_GUIDE.md) (build a pack end to end, with a help-desk pack) takes the developer half of `PACKS.md` and the in-app `build-a-pack` tutorial; `PACKS.md` keeps the user and admin content.
-- **Docs:** [BUILD_WORKBENCH_TUTORIAL.md](docs/tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page): four complete projects with a picture of every step; fixed on the way: auto-design with a top-level figure that also occurs nested, bind on a kv panel writes columns, the YAML editor follows the canvas after typed edits, a rebase clears the base-moved flag.
+- **Docs:** [BUILD_WORKBENCH_TUTORIAL.md](docs/tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench): four complete projects with a picture of every step; fixed on the way: auto-design with a top-level figure that also occurs nested, bind on a kv panel writes columns, the YAML editor follows the canvas after typed edits, a rebase clears the base-moved flag.
 - **Docs:** documentation integration: every link to a retired guide points at the new section, the help centre's `moved:` entries and Learn menu are updated, "twenty panel kinds" is twenty-one, no instruction mentions a Studio page.
 - **Fixed:** after approving your own design its header no longer shows "base moved to ..." pointing at the version the design itself published (`DesignRebase` treats a design whose status is `live(vN)` for the latest version as up to date).
 - **Docs:** [PANEL_DEVELOPER_GUIDE.md](docs/guides/RACHANA_REFERENCE.md#developing-a-panel-kind) (adding a panel kind end to end, worked through the real `metric` tile, with an ordered checklist and the guard tests) and [PANEL_KINDS.md](docs/guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) (the catalogue of all twenty-one kinds, where F1 lands) replace PANELS.md, the in-app panel-kinds guide and DEVELOPER_GUIDE §5.4; screenshots are generated per guide by `tools/docs/screenshots.py --guide <name>` (the unreproducible `static/img/guide/kind-*.png` are gone).

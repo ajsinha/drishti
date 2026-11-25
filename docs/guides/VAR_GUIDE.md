@@ -7057,12 +7057,12 @@ true: the sheet's VaR and ES equal the engine's to the cent.
 
 Delta Lake is Drishti's default lake format; Apache Iceberg is a full alternative, chosen by configuration. This part reads the same VaR
 from the risk lake built into Iceberg. The build itself, the official results on Iceberg, Admin → Lakes and the way back to Delta are
-[tutorial 16, Part E](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg).
+[tutorial 16, Part E](../tutorials/23-the-risk-lake-on-iceberg.md).
 
 ### Step 26 · The same VaR on Iceberg
 
 **Before this step**, with the server stopped, build the VaR inputs into Iceberg (step 1's `--only` list with `--store risk=iceberg`; the
-build and its output are [tutorial 16, step 29](../tutorials/16-load-your-own-data-into-a-new-lake.md#step-29--build-the-var-data-into-iceberg)), then start the server again:
+build and its output are [tutorial 16, step 29](../tutorials/23-the-risk-lake-on-iceberg.md#step-1--build-the-var-data-into-iceberg)), then start the server again:
 
 ```bash
 python3 tools/build_demo_lakes.py --as-of data --store risk=iceberg \
@@ -7107,10 +7107,10 @@ connector's `lake` must then name `data/iceberg`); `drishti.py var intraday --lo
 
 - Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar in full, the
   data contract (Part II), sizing for a bank of a million trades and the benchmark (Part III), troubleshooting.
-- Back to Delta, and the official results on Iceberg: [tutorial 16, Part E](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg).
+- Back to Delta, and the official results on Iceberg: [tutorial 16, Part E](../tutorials/23-the-risk-lake-on-iceberg.md).
 - Load your own batch: the columns are in [VAR_GUIDE.md section 15](../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines); send the data-load
-  signal ([tutorial 12](../tutorials/12-a-day-of-bank-data.md)) and the date is reloaded and captured officially.
-- Put a computed VaR on your own screen: a Sutra panel can read `var-result` like [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)'s computed panels.
+  signal ([tutorial 12](../tutorials/16-load-your-own-data-into-a-new-lake.md)) and the date is reloaded and captured officially.
+- Put a computed VaR on your own screen: a Sutra panel can read `var-result` like [tutorial 19, Part C](../tutorials/25-computed-panels.md)'s computed panels.
 - [VAR_GUIDE.md section 3.12](../guides/VAR_GUIDE.md#312-parametric-var-beside-historical-pvar) (the screen) and
   [section 18.15](../guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check) (the method, EWMA, the 10-day lens, the decomposition).
 - [PARAMETRIC_VAR.md](../guides/VAR_GUIDE.md): the design, the worked example and the open questions.

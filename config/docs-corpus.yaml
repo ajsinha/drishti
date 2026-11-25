@@ -290,16 +290,26 @@ files:
   - {path: 'docs/strategy/COMPETITIVE_ANALYSIS.md', class: keep, lane: A}
   - {path: 'docs/strategy/COMPETITIVE_LANDSCAPE.md', class: merge, lane: A}
   - {path: 'docs/tutorials/01-first-15-minutes.md', class: keep, lane: A}
+  - {path: 'docs/tutorials/02-look-up-anything.md', class: keep, lane: A}
+  - {path: 'docs/tutorials/03-query-by-form.md', class: keep, lane: A}
+  - {path: 'docs/tutorials/04-share-and-collaborate.md', class: keep, lane: A}
+  - {path: 'docs/tutorials/05-an-entity-over-time.md', class: keep, lane: A}
   - {path: 'docs/tutorials/10-ai-assistant.md', class: keep, lane: A}
   - {path: 'docs/tutorials/11-correct-and-approve.md', class: keep, lane: A}
-  - {path: 'docs/tutorials/12-a-day-of-bank-data.md', class: keep, lane: A}
+  - {path: 'docs/tutorials/12-a-day-of-bank-data.md', class: merge, lane: A}
+  - {path: 'docs/tutorials/13-one-file-per-lake.md', class: keep, lane: A}
+  - {path: 'docs/tutorials/14-load-files-with-the-data-inbox.md', class: keep, lane: A}
   - {path: 'docs/tutorials/15-connect-your-data.md', class: keep, lane: A}
   - {path: 'docs/tutorials/16-load-your-own-data-into-a-new-lake.md', class: keep, lane: A}
   - {path: 'docs/tutorials/17-data-out-with-arrow-flight.md', class: keep, lane: A}
+  - {path: 'docs/tutorials/18-news-held-in-memory.md', class: keep, lane: A}
   - {path: 'docs/tutorials/19-build-a-pack-and-a-screen.md', class: keep, lane: A}
   - {path: 'docs/tutorials/20-embed-drishti.md', class: keep, lane: A}
-  - {path: 'docs/tutorials/21-run-it-in-production.md', class: keep, lane: A}
+  - {path: 'docs/tutorials/21-run-it-in-production.md', class: merge, lane: A}
   - {path: 'docs/tutorials/22-a-cluster-of-three.md', class: keep, lane: A}
+  - {path: 'docs/tutorials/23-the-risk-lake-on-iceberg.md', class: keep, lane: A}
+  - {path: 'docs/tutorials/24-customize-a-live-page.md', class: keep, lane: A}
+  - {path: 'docs/tutorials/25-computed-panels.md', class: keep, lane: A}
   - {path: 'docs/tutorials/README.md', class: generate, lane: A, tool: 'tools/docs/help_map.py'}
   - {path: 'drishti-console/README.md', class: note, lane: C}
   - {path: 'drishti-console/web/guides/developer.md', class: merge, lane: A}

@@ -390,7 +390,7 @@ The environment, the sign-in and the token are those of [Reports, Before you sta
 
 **Part D · BI that runs itself.**
 
-- [Part A](REPORTS.md#part-a--your-first-bi-report) done (it made the workspace `Economics desk`), and [tutorial 1, Part D](../../tutorials/01-first-15-minutes.md#part-d--share-and-collaborate) for the colleague `vera`
+- [Part A](REPORTS.md#part-a--your-first-bi-report) done (it made the workspace `Economics desk`), and [tutorial 1, Part D](../../tutorials/04-share-and-collaborate.md) for the colleague `vera`
   (a user with the `viewer` role and the address `vera@example.com`); [Part E](#part-e--scheduled-searches-and-subscriptions) for how the **Reports** page lists subscriptions.
 - A personal token **reads** and writes BI items, but it never calls your own
   `/me/...` addresses (subscriptions, alerts): those are made in the console, and steps 31 and 34 say so.
@@ -401,7 +401,7 @@ The environment, the sign-in and the token are those of [Reports, Before you sta
 
 **Part E · Scheduled searches and subscriptions.**
 
-- [Tutorial 1, Part A](../../tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around) done (signed in as the development administrator, the token for the command line set) and [tutorial 1, Part D](../../tutorials/01-first-15-minutes.md#part-d--share-and-collaborate) for the user `vera`.
+- [Tutorial 1, Part A](../../tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around) done (signed in as the development administrator, the token for the command line set) and [tutorial 1, Part D](../../tutorials/04-share-and-collaborate.md) for the user `vera`.
 - Email needs an SMTP server, which a fresh install does not have. The tutorial shows what Drishti does without one (it keeps the run and retries); [OPERATIONS_GUIDE.md](../../guides/OPERATIONS_GUIDE.md) says how to set `spring.mail.host` and the email channel.
 
 ### What you will learn
@@ -436,7 +436,7 @@ yet), and **as YAML** (what the UI writes, which you can keep in git).
 
 ### Step 30 · A dataset that refreshes itself
 
-A dataset keeps its rows in layers it builds from the source. They are rebuilt when a data load arrives ([tutorial 12](../../tutorials/12-a-day-of-bank-data.md)), when someone
+A dataset keeps its rows in layers it builds from the source. They are rebuilt when a data load arrives ([tutorial 12](../../tutorials/16-load-your-own-data-into-a-new-lake.md)), when someone
 asks, and on a **schedule** set on the dataset. A dataset is one table of the **model layer** (`rachana: 2`): it says where the rows come from and
 what one row is, and its measures live in a **model** over it ([BI_GUIDE.md section 23](TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads)).
 
@@ -1067,7 +1067,7 @@ Open **Views** in the top bar and choose **Reports** (it is an entry of Views, w
 
 ![The Views menu with Reports highlighted: Every report you have: scheduled reports, subscriptions, alerts, and BI reports](../../tutorials/img/t09/06-reports-menu.jpg)
 
-You should see **Reports** under **Look up** with the words "Every report you have". It opens **one page** with the links at its top: **My subscriptions**, **My alerts** ([tutorial 12](../../tutorials/12-a-day-of-bank-data.md)), **BI reports and boards** (the published reports of Rūpaka, the catalogue filtered to reports) and, for administrators, **All subscriptions** and **All alerts**; a **Find** box
+You should see **Reports** under **Look up** with the words "Every report you have". It opens **one page** with the links at its top: **My subscriptions**, **My alerts** ([tutorial 12](../../tutorials/16-load-your-own-data-into-a-new-lake.md)), **BI reports and boards** (the published reports of Rūpaka, the catalogue filtered to reports) and, for administrators, **All subscriptions** and **All alerts**; a **Find** box
 (*Find a report or subscription: name, what, when, to...*) narrows the list as you type, and the list is one list:
 
 ![Reports and subscriptions: Big losers (REPORT) and Swap for Vera (SUBSCRIPTION) in one list, each with when, to, next and last run](../../tutorials/img/t09/07-reports-list.jpg)

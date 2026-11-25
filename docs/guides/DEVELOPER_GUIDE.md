@@ -3452,7 +3452,7 @@ the kernel's compute pools. What is supported:
   [OPERATIONS_GUIDE.md section 15](OPERATIONS_GUIDE.md#15-compute-workers).
 - It is reached through a **reactive connector** file (`plugin: reactive`, `engine: { type: python, entry: <module:Class>, pool: <pool> }`,
   the kinds it computes, the inputs it reads, triggers): [the reactive connector](../connectors/types/reactive/README.md); a whole worked
-  run is [tutorial 19, step 23](../tutorials/19-build-a-pack-and-a-screen.md#step-23--switch-on-the-compute-workers-and-the-sample-pack).
+  run is [tutorial 19, step 23](../tutorials/25-computed-panels.md#step-1--switch-on-the-compute-workers-and-the-sample-pack).
   The kinds it computes are then read like any other, and a module reads them through its needs.
 - **A module carries its Python.** The manifest's `python:` section ships the engine inside the `.dmod`, with everything it needs; the
   kernel installs it when the module loads and withdraws it when the module unloads, so a site configures no pool for it:
