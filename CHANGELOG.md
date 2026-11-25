@@ -16,6 +16,25 @@
 # Changelog
 
 
+## 2.9.11.i7m (2026-11-25)
+
+Documentation only; no product behaviour changes. The structure part of the documentation pass (the guide merges, the tutorial rewrites and
+the connector README dedup follow in i7n).
+
+- **Offline Help for the products:** the pinned Rachana and Elements documents ship in `docs/products` and Help links to them locally.
+- **The duplicate report shows real duplication:** `tools/docs/dup_check.py` reads prose only (no legal header, comments, link lists,
+  generated blocks); baseline 118 documents, 188 pairs, 3,247 repeated 40-word windows (it counted 4,464 pairs with the header).
+- **Twelve contracts that are not built** (CVA, COLL, GRP, LIM, MC, NSET, PNL, SACCR, STR, TVAL, TRADING_GROUPINGS, WWR; 5,991 lines)
+  moved to `docs/plans/contracts/`; the under-construction notes and Help serve them from there; `docs/contracts` keeps FRTB, SIMM,
+  CSV_FORMATS and the README.
+- **LENSES.md** keeps what each lens answers today and the lens mechanism (4,752 to 1,010 lines); the proposals, gaps, mock-up
+  checklists and data lists are `docs/plans/LENSES_PROPOSALS.md` (3,793 lines).
+- **Numbering:** the appended parts of `KERNEL_AND_MODULES` are 19 to 22 and those of `THIN_CONSOLE_DESIGN` 8 and 9 (70 anchors,
+  each old anchor listed in `tools/docs/moved.yaml`); a guard test refuses two headings with the same number in one document;
+  the code comments that cite a section follow.
+- **Repeated text:** the naming rules of the console's static assets are written once (`DEVELOPER_GUIDE`), and the explanation that
+  heads the data section of every measure and BI guide is one section of `docs/contracts/README.md`.
+
 ## 2.9.11.i7l (2026-11-25)
 
 Documentation only, across the platform; no product behaviour changes.

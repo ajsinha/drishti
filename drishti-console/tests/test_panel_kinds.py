@@ -119,6 +119,17 @@ def test_each_kind_has_a_picture_options_linked_to_the_reference_and_a_yaml_exam
         assert yaml.group(1) in examples, f"the {kind} example is not a verbatim excerpt of docs/guides/examples"
 
 
+def test_each_kinds_line_to_rachana_links_to_that_kind_in_panel_kinds_md():
+    """The linked line of a kind points at its own heading of Rachana's PANEL_KINDS.md (``#<kind>``), never at another kind's or at the top."""
+    sections = re.split(r"^#### ", KINDS_DOC.read_text(), flags=re.M)[1:]
+    by_kind = {s.split("\n", 1)[0].strip(): s for s in sections}
+    link = re.compile(r"\]\((https://github\.com/drishti-platform/drishti-rachana/blob/[^/)]+/docs/PANEL_KINDS\.md)#([a-z0-9-]+)\)")
+    for kind in KINDS:
+        targets = {m.group(2) for m in link.finditer(by_kind[kind])}
+        linked = "Use it when, not when, key options and every option of" in by_kind[kind]     # Drishti's own kinds (provenance, links) have none
+        assert targets == ({kind} if linked else set()), (kind, targets)
+
+
 def test_the_help_links_into_the_catalogue_use_headings_that_exist():
     found = anchors(PANELS.read_text())
     macro = (CONSOLE / "web" / "templates" / "_macros" / "panels.html").read_text()

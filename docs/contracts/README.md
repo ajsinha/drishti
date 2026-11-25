@@ -41,6 +41,7 @@ This page holds the rules every contract shares. A contract states only where it
 - [14. Retiring the stored version](#14-retiring-the-stored-version)
 - [15. The sections of every contract](#15-the-sections-of-every-contract)
 - [16. Contracts of every command](#16-contracts-of-every-command)
+- [17. The data tables of the guides](#17-the-data-tables-of-the-guides)
 
 ## 1. Status of each contract
 
@@ -390,6 +391,16 @@ analytics, pivot) has a section listing every dataset the feature reads: what it
 real record from `data/testdata`, formatted. `tools/docs/guide_data.py` writes those sections from `tools/docs/guide_data.yaml` and these
 contracts (the key, the field and required counts, the link to the pack's page); `--check` fails when a section is stale or shows a field
 its kind's contract does not have ([CLI_REFERENCE.md](../guides/CLI_REFERENCE.md)).
+
+## 17. The data tables of the guides
+
+A measure or feature guide ends with a data section: every dataset its engine reads, what the dataset is for, whether it is required, and
+where its sample lives. The table is generated (`tools/docs/guide_data.py`, from `tools/docs/guide_data.yaml`), so the guide copies nothing
+of a contract. Each dataset row links its two homes: its **data contract** (the fields, the key and the rules: the pack's contract page in
+[packs/](packs/README.md) and the kind's `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data,
+every field explained, on the same page). The samples are under `data/testdata/`; pointing a domain at a database instead of the sample
+files is a connector setting ([DATA_GUIDE.md](../guides/DATA_GUIDE.md)). How files are named, dated and loaded is
+[DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 ---
 

@@ -5471,7 +5471,7 @@ the loaders ([section 7](../admin/BENCHMARK.md#7-the-loaders)); and the extrapol
 
 ## 36. VaR data: every dataset the engine reads
 
-Every dataset historical VaR uses, what it is for, whether it is required, where its sample lives, and the links to its two homes: its **data contract** (the fields, the key, the rules: the pack's contract page and its `<kind>.contract.yaml`) and its **example** (a real record of the shipped synthetic test data, every field explained, on [docs/contracts/samples](../contracts/packs/README.md)). This guide copies neither. The engine itself, its computations and its
+Every dataset historical VaR uses: what it is for, whether it is required and where its sample lives, each linked to its data contract and its example ([how to read these tables](../contracts/README.md#17-the-data-tables-of-the-guides)). The engine itself, its computations and its
 screens are in the sections above; how files are named, dated and loaded is
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 

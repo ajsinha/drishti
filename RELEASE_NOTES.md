@@ -13,6 +13,26 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7m: release notes
+
+*A documentation release on i7l: structure first. The guide merges and tutorial rewrites are the next release (i7n).* No product behaviour
+changes.
+
+## What changes for readers
+
+- **Offline Help for the products:** the pinned Rachana and Elements documents are in the install and Help links to them without a network.
+- **Only what is built is in the contracts and the lens document:** the twelve computed-measure contracts that are not built are designs
+  under `docs/plans/contracts/`, still reachable from the under-construction notes; `LENSES.md` describes what each lens answers today and
+  the lens mechanism, and the proposals are in `docs/plans/LENSES_PROPOSALS.md`.
+- **Section numbers are unique:** the later parts of the kernel and thin-console design documents continue the numbering (19 to 22 and 8
+  and 9); every old link still opens the right place.
+- **Less repeated text:** the static-asset naming rules and the data-section introduction of the measure guides have one home each.
+
+## Known limits
+
+The guides are still 39 files (17 planned); ten documents still number their appended parts from 1 again (listed in
+`tools/test_docs_consolidation.py`); the connector READMEs still repeat their loading paragraphs.
+
 # Drishti 2.9.11.i7l: release notes
 
 *A documentation release on i7k, across the whole platform.* No product behaviour changes; the server, console, figures and settings
