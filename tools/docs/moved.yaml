@@ -591,7 +591,6 @@ moved:
   - {from: 'docs/guides/FLIGHT_GUIDE.md#72-java', to: 'docs/guides/INTEGRATION_GUIDE.md#21472-java', how: redirect, note: 'merged into the integration guide'}
   - {from: 'docs/guides/FLIGHT_GUIDE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program', to: 'docs/guides/INTEGRATION_GUIDE.md#21473-jdbc-dbeaver-datagrip-any-jdbc-program', how: redirect, note: 'merged into the integration guide'}
   - {from: 'docs/guides/FLIGHT_GUIDE.md#74-odbc-excel-power-bi-tableau', to: 'docs/guides/INTEGRATION_GUIDE.md#21474-odbc-excel-power-bi-tableau', how: redirect, note: 'merged into the integration guide'}
-  - {from: 'docs/guides/DEVELOPER_GUIDE.md#11-the-api-calling-the-server-from-scripts-notebooks-and-excel', to: 'docs/guides/INTEGRATION_GUIDE.md#3-the-api-calling-the-server-from-scripts-notebooks-and-excel', how: redirect, note: 'merged into the integration guide'}
   - {from: 'docs/guides/DEVELOPER_GUIDE.md#111-before-you-start', to: 'docs/guides/INTEGRATION_GUIDE.md#31-before-you-start', how: redirect, note: 'merged into the integration guide'}
   - {from: 'docs/guides/DEVELOPER_GUIDE.md#112-your-first-five-calls', to: 'docs/guides/INTEGRATION_GUIDE.md#32-your-first-five-calls', how: redirect, note: 'merged into the integration guide'}
   - {from: 'docs/guides/DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel', to: 'docs/guides/INTEGRATION_GUIDE.md#33-clients-scripts-notebooks-and-excel', how: redirect, note: 'merged into the integration guide'}

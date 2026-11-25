@@ -726,10 +726,10 @@ curl -s $B/views/trade/MX-20000001 | jq -c '{mnemonic, title: .title.id, panels:
 ```
 
 - **Who you are.** With security on, `Authorization: Bearer <token>` (a signed JWT or a personal API token; see
-  [DEVELOPER_GUIDE, authentication](../guides/DEVELOPER_GUIDE.md#34-who-you-are-authentication)); with security off, `X-Drishti-User: <name>`
+  [DEVELOPER_GUIDE, authentication](../guides/INTEGRATION_GUIDE.md#34-who-you-are-authentication)); with security off, `X-Drishti-User: <name>`
   or nobody (`anonymous`). The answer is masked for that caller.
 - **Which day.** `X-Drishti-As-Of: 2026-09-29` or `?asOf=2026-09-29` (a snapshot: `provenance.live` is `false`), and
-  `X-Drishti-Known-At` / `?knownAt=` for time travel ([DEVELOPER_GUIDE, business date](../guides/DEVELOPER_GUIDE.md#35-which-day-the-business-date)).
+  `X-Drishti-Known-At` / `?knownAt=` for time travel ([DEVELOPER_GUIDE, business date](../guides/INTEGRATION_GUIDE.md#35-which-day-the-business-date)).
 - **Which layout.** `?sutra=<name>` (another Sutra of the kind) or `?design=<id>` (one of your Designs).
 - **Controls.** `?ctl.<id>=<value>`.
 - **Errors** are Problem Details with a `code`: `404 DRS-1001` (no such entity), `403 DRS-5002` (may not open the kind),

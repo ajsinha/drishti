@@ -3224,7 +3224,7 @@ The data-shape to panel-kind table: [Rachana, Panel kinds, Choosing a kind](http
 
 Each kind below says what is special to it. These hold for all of them. Empty panels, a broken panel and masked values: [Rachana, Panel kinds, How a panel behaves](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#how-a-panel-behaves). In the console:
 
-- **Masked.** A user whose roles mask a field sees `•••` where its value would be, never a tone or a link, and a masked number is never added up, charted or used for a total. See the [field masks](DEVELOPER_GUIDE.md#field-masks).
+- **Masked.** A user whose roles mask a field sees `•••` where its value would be, never a tone or a link, and a masked number is never added up, charted or used for a total. See the [field masks](INTEGRATION_GUIDE.md#field-masks).
 - **No access.** A panel with `source:` that names an entity of a kind the user may not open is not fetched: it shows *No access to curve* (the kind it names) with a lock and holds none of that entity's values. Every kind but `links` and `provenance` takes `source`.
 - **Live.** A live view sends only the panels that changed. A `line` or `area` patch carries data and moves the existing chart; every other kind is re-rendered by the same macro as the first paint, so it looks identical after a tick.
 - **Phone.** Below 640 px every panel takes the whole width, one per row; tables scroll sideways inside their panel, charts resize, and a chart's numbers are in a collapsed **Data** section under it.
@@ -3625,7 +3625,7 @@ What to notice, because each is a rule for your own binder:
 You write **no code** for any of the three if you follow section 7, but you must understand them, because your tests
 should cover them.
 
-**Masks** (field masks by role: [API_REFERENCE.md](DEVELOPER_GUIDE.md#field-masks)). The pipeline replaces masked values in the
+**Masks** (field masks by role: [API_REFERENCE.md](INTEGRATION_GUIDE.md#field-masks)). The pipeline replaces masked values in the
 document *before* binding (`ViewPipeline.seen(doc, redact)`); a masked value is a `DataNode` flagged masked whose
 text is `DataNode.MASK` (`•••`). `Binder.cell` turns it into a `Cell` with the mask as its text and **no tone and no
 link**, so the figure's colour cannot leak the sign. Your obligations:

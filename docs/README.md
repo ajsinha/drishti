@@ -93,7 +93,7 @@ repeat.
 | Build a pack from JSON Lines, check it in CI, load data and drive the Screen Designer's review from a terminal | [CLI_REFERENCE.md](guides/CLI_REFERENCE.md) |
 | Find the right tool (command, script or page) for a job, load a large JSON export into a Delta lake, schedule loads and maintenance | [CLI_REFERENCE.md](guides/CLI_REFERENCE.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
-| Read Drishti from a script, a notebook or Excel with a personal API token | [API_REFERENCE.md (clients)](guides/DEVELOPER_GUIDE.md#33-clients-scripts-notebooks-and-excel) |
+| Read Drishti from a script, a notebook or Excel with a personal API token | [API_REFERENCE.md (clients)](guides/INTEGRATION_GUIDE.md#33-clients-scripts-notebooks-and-excel) |
 | Run Python on the view you are looking at (`Alt+C`): re-price, recompute, pivot, chart | [USER_GUIDE.md › Calc: Python on any view](guides/USER_GUIDE.md#calc-python-on-any-view) |
 | Open a view, and learn the command line and keys | [USER_GUIDE.md › The command line](guides/USER_GUIDE.md#the-command-line), [Keyboard](guides/USER_GUIDE.md#keyboard) |
 | List entities to pick from (`TRD MX-200000`, `CPTY north`, `TRD PRODUCT_TYPE=FX_QUANTO`) | [USER_GUIDE.md › Pick lists](guides/USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
@@ -250,7 +250,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [OPERATIONS_GUIDE.md: Windows](guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) | you run Drishti on Windows: a JDK 21 or newer (production runs 21) and Python, building or copying the jar, Drishti Lake's Delta reader (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, the Build workbench, administration |
 | [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md#21-troubleshooting) | something is not working: each problem has what you see, how to check and the fix |
-| [API_REFERENCE.md (clients)](guides/DEVELOPER_GUIDE.md#33-clients-scripts-notebooks-and-excel) | you read Drishti from a script, a notebook or Excel: personal API tokens and scopes, the Python client, Power Query |
+| [API_REFERENCE.md (clients)](guides/INTEGRATION_GUIDE.md#33-clients-scripts-notebooks-and-excel) | you read Drishti from a script, a notebook or Excel: personal API tokens and scopes, the Python client, Power Query |
 | [USER_GUIDE.md › Calc: Python on any view](guides/USER_GUIDE.md#calc-python-on-any-view) | you run Python on a view (`Alt+C`): the `drishti` module, output, packs' snippets, roles, the security model, installing the runtime, measured sizes and speed, limits |
 | [BUILD_GUIDE.md › Part V. Domain packs: the packs that ship, turning them on, who sees which](guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) | you load, switch, assign or change a domain pack |
 | [COMMAND_CATALOG.md](guides/COMMAND_CATALOG.md) | you want every command in one list: the command line's own words, the packs' codes and every mnemonic, with what it does, an example, its kind of data and whether it moves to the compute model (generated) |

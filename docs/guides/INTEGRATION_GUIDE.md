@@ -749,7 +749,7 @@ A host that bundles it must also serve the console's `js/`, `vendor/` and `css/`
 them from the console.
 
 The Drishti Elements libraries are a separate project with
-their own release tree ([section 13](#113-drishti-elements-libraries-in-your-own-app)).
+their own release tree ([section 1.13](#113-drishti-elements-libraries-in-your-own-app)).
 
 ### 1.11 Cookbook
 
@@ -864,7 +864,7 @@ Drishti uses the same renderer (section 1.6) and the same libraries (section 1.1
 
 ### 1.16 Drishti Elements in React, Vue and Angular
 
-Three host pages, one per framework, each embedding `<drishti-view>` for a signed-in user. They are the examples of [section 7.1](#171-the-sample-pages); `tests/test_embed_frameworks_browser.py` runs all three in Chromium.
+Three host pages, one per framework, each embedding `<drishti-view>` for a signed-in user. They are the examples of [section 1.7.1](#171-the-sample-pages); `tests/test_embed_frameworks_browser.py` runs all three in Chromium.
 
 | Folder | Framework | How it runs without a build step |
 |---|---|---|
@@ -919,7 +919,7 @@ in-memory lake; Java; Excel through Python) are in [examples/clients](../../exam
 | a figure, a document, a search, from a script, a few rows at a time | the REST API ([API_REFERENCE.md](API_REFERENCE.md)) with the same token |
 | a table in a browser page (Drishti's own screens, an embedded view) | Arrow over HTTP: the page asks with `Accept: application/vnd.apache.arrow.stream` ([DATA_GUIDE.md](DATA_GUIDE.md)) |
 | a whole table, a model's answer, a scope's P&L vectors into pandas, polars, Spark, a Java or .NET service, a JDBC tool | **Flight** |
-| live updates in a program (each intraday VaR batch, each append to an in-memory table) | **Flight**, a stream ([section 7](#27-live-streams-and-resuming)) |
+| live updates in a program (each intraday VaR batch, each append to an in-memory table) | **Flight**, a stream ([section 2.7](#27-live-streams-and-resuming)) |
 | the lake's files themselves (you already hold lake access) | the lake directly; Flight is the governed way for everyone else |
 
 Flight is **read only**: nothing a client sends changes Drishti's data.

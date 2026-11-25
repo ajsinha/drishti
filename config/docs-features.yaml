@@ -58,7 +58,6 @@ references:
   - guides/COMMAND_CATALOG.md
   - guides/FUNCTIONS.md
   - guides/RACHANA_REFERENCE.md
-  - guides/INTEGRATION_GUIDE.md
   - guides/WORLD_DATA_GUIDE.md          # folds into the world data guide (W1) when it is written
   - guides/API_REFERENCE.md
   - guides/IDE_GUIDE.md             # IntelliJ IDEA, PyCharm and VS Code: the one home of every IDE step

@@ -42,7 +42,7 @@ The API references are at **Help → Developer**, generated from the code: the J
 8. [Common pitfalls](#8-common-pitfalls)
 9. [Releasing](#9-releasing)
 10. [Connectors: choosing, combining and writing one](#10-connectors-choosing-combining-and-writing-one)
-11. [The API: calling the server from scripts, notebooks and Excel](#3-the-api-calling-the-server-from-scripts-notebooks-and-excel)
+11. [The API: calling the server from scripts, notebooks and Excel](#11-the-api-calling-the-server-from-scripts-notebooks-and-excel)
 12. [How to create …](#12-how-to-create-) a module, a plugin, a binding, a distribution, a compute and a visual, step by step, and all of them together
 
 ## 1. The repository
@@ -2343,7 +2343,7 @@ curl -s http://localhost:18480/api/v1/sources | jq '.failures'
 ```
 
 For administrators (with security on, add `-H "Authorization: Bearer $TOKEN"`; see
-[Minting a token for a script](#minting-a-token-for-a-script)):
+[Minting a token for a script](INTEGRATION_GUIDE.md#minting-a-token-for-a-script)):
 
 ```bash
 curl -s http://localhost:18480/api/v1/admin/health | jq '{status, summary, failedToStart}'

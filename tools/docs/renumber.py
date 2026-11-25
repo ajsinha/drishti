@@ -149,9 +149,9 @@ def anchor_rows() -> dict[str, str]:
     return out
 
 
-def tracked_markdown() -> list[str]:
+def tracked_markdown(changelog: bool = False) -> list[str]:
     return [f for f in subprocess.run(["git", "-C", str(ROOT), "ls-files", "*.md"], check=True, capture_output=True, text=True).stdout.splitlines()
-            if f != "CHANGELOG.md"]
+            if changelog or f != "CHANGELOG.md"]
 
 
 LANE_A = ("docs/guides/USER_GUIDE.md", "docs/guides/ADMIN_GUIDE.md", "docs/guides/AI_GUIDE.md", "docs/guides/APPROVALS_GUIDE.md",
@@ -159,14 +159,17 @@ LANE_A = ("docs/guides/USER_GUIDE.md", "docs/guides/ADMIN_GUIDE.md", "docs/guide
           "docs/guides/bi/", "docs/tutorials/", "docs/knowledge/")
 
 
-def follow_links(write: bool, skip: tuple[str, ...] = (), merged: tuple[str, ...] = ()) -> dict[str, int]:
+def follow_links(write: bool, skip: tuple[str, ...] = (), merged: tuple[str, ...] = (), changelog: bool = False) -> dict[str, int]:
     rows = anchor_rows()
     by_doc: dict[str, dict[str, str]] = {}
     for f, t in rows.items():
         doc, _, a = f.partition("#")
-        by_doc.setdefault(doc, {})[a] = t.partition("#")[2]
+        by_doc.setdefault(doc, {})[a] = t
+    # a link that an earlier run left with the old document and the new anchor (the document changed too): the new anchor names its home
+    home = {t.partition("#")[2]: t.partition("#")[0] for t in rows.values() if t.partition("#")[0] != next(iter(rows)).partition("#")[0]}
+    old_docs = {f.partition("#")[0] for f, t in rows.items() if t.partition("#")[0] != f.partition("#")[0]}
     changed: dict[str, int] = {}
-    for md in tracked_markdown():
+    for md in tracked_markdown(changelog):
         if md.startswith(skip):
             continue
         p = ROOT / md
@@ -180,9 +183,18 @@ def follow_links(write: bool, skip: tuple[str, ...] = (), merged: tuple[str, ...
                 target = (p.parent / path).resolve().relative_to(ROOT).as_posix() if path else md
             except ValueError:
                 return m.group(0)                                  # a Help address, not a file
-            if target in by_doc and anchor in by_doc[target]:
-                return f"{m.group(1)}{path}#{by_doc[target][anchor]})"
-            return m.group(0)
+            new = by_doc.get(target, {}).get(anchor)
+            if new is None and target in old_docs and anchor in home and not (ROOT / target).is_file():
+                new = home[anchor] + "#" + anchor
+            if new is None and target in old_docs and anchor in home:
+                new = home[anchor] + "#" + anchor
+            if new is None:
+                return m.group(0)
+            ndoc, _, nanchor = new.partition("#")
+            if ndoc == target or (not path and ndoc == md):
+                return f"{m.group(1)}{path}#{nanchor})"
+            rel = Path(__import__("os").path.relpath(ROOT / ndoc, p.parent)).as_posix() if ndoc != md else ""
+            return f"{m.group(1)}{rel}#{nanchor})"
 
         new = re.sub(r"(\]\()([^)#\s]*)#([^)\s]+)\)", fix, text)
         if merged:                                             # then the documents merged into another, by path (only those named)
@@ -249,7 +261,7 @@ def main(argv: list[str]) -> int:
         skip = LANE_A if "--skip-lane-a" in argv else ()
         merged = tuple(a.split("=", 1)[1].split(",") for a in argv if a.startswith("--merged="))
         merged = merged[0] if merged else ()
-        for f, n in follow_links(write, skip, merged).items():
+        for f, n in follow_links(write, skip, merged, '--changelog' in argv).items():
             print(f"{n:4d} link line(s)  {f}")
         for f, n in follow_labels(write, skip).items():
             print(f"{n:4d} label line(s) {f}")
