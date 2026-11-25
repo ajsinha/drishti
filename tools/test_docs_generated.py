@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.static
+# Not static: the generators read the built server jar, which the drill's static gate runs before (test_browser_rules).
 
 ROOT = Path(__file__).resolve().parents[1]
 
