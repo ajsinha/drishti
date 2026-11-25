@@ -416,9 +416,9 @@ to USD at today's FX; the field list is the generated [csa contract](../contract
 | Margin type | `MARGIN_TYPE` (`VM`, `VM + IM`) | a CSA without variation margin is unmargined |
 | Links | `AGREEMENT`, `COUNTERPARTY`, `NETTING_SETS`, `COLLATERAL_BALANCES` | navigation |
 
-The eligibility schedule (`ELIGIBLE[]`, a haircut per asset) is read as data and shown on the Collateral tab; the engine values today's
-holdings after haircut and does not apply eligibility rules, concentration limits or haircut schedules to the paths. Initial margin
-models, segregation and disputes are not read (see the [counterparty plans](../plans/contracts/NSET.md) for the designs that would).
+The engine does not read the eligibility schedule (`ELIGIBLE[]`, a haircut per asset), initial margin models, segregation or disputes: it
+values today's holdings after haircut as the balance gives them and takes initial margin held from the balance (see the
+[counterparty plans](../plans/contracts/NSET.md) for the designs that would read them).
 
 ## 6. Captures and compare
 

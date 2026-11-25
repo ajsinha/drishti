@@ -1979,15 +1979,18 @@ to `/live/trade`. The component is the grid's live mode over the Data Protocol
 
 ### Settings
 
+The modules' `blotters/` folders are read from each module's folder as the module boot gave it (a module's only while it is on).
+
+<!-- settings:begin live-sets -->
 | Setting | Default | Meaning |
 |---|---|---|
-| `drishti.live-sets.flush-ms` | `50` | how often viewers' windows are sent their changes |
-| `drishti.live-sets.window-capacity` | `5000` | records waiting per viewer before it is asked to resync |
-| `drishti.live-sets.dir` | `config/blotters` | the site's own declarations (`*.live.yaml`) |
-| (none) | | the modules' `blotters/` folders are read from each module's folder as the module boot gave it (a module's only while it is on) |
-| `drishti.live-sets.edits-off` | (none) | the blotters whose edits the site switched off, by id (`trade,exposure`) |
-| `drishti.live-sets.default-max-rows` | `250000` | the most records a kind's default set (a bare mnemonic) reads into memory when its store cannot page it |
+| `drishti.live-sets.flush-ms` | `50` | how often each viewer's waiting changes are sent, coalesced per record (milliseconds, at least 10) |
+| `drishti.live-sets.window-capacity` | `5000` | records waiting for one viewer before it is told to resync instead (back-pressure) |
+| `drishti.live-sets.dir` | `<config>/blotters` | the site's own declarations (\*.live.yaml); a declaration with a problem is set aside (DRS-9307) and listed in Admin |
+| `drishti.live-sets.edits-off` | `""` | declaration ids whose edits the site switches off (comma-separated): their grids are read-only |
+| `drishti.live-sets.default-max-rows` | `250000` | the most records a kind's default set reads into memory when its store cannot page it (a kind a lake keeps as columns is paged from the lake, uncapped); beyond it the set says capped |
 | `drishti.live-sets.store-timeout-seconds` | `120` | how long a set paged from the lake may take to read the columns it orders by, and a page's records |
+<!-- settings:end -->
 
 Every one is in [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.live-sets`), generated from the server's `application.yaml`.
 

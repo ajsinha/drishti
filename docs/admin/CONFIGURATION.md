@@ -6217,7 +6217,7 @@ The rules each server evaluates against its own metrics ([OPERATIONS_GUIDE.md](.
 
 ### Data feeds: `config/feeds/<feed>.yaml`
 
-One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys (environment variables only) ([WORLD_DATA_GUIDE.md section 7](../guides/WORLD_DATA_GUIDE.md#7-the-feed-file-every-key)); read by `drishti.py feed` at every run. The keys below are those of the annotated `gleif.yaml`; `keys:` names API keys as `${ENV}`.
+One file per data feed: the source, its datasets and the lake they load, the schedule, the licence and the keys (environment variables only) ([WORLD_DATA_GUIDE.md section 19.7](../guides/WORLD_DATA_GUIDE.md#197-the-feed-file-every-key)); read by `drishti.py feed` at every run. The keys below are those of the annotated `gleif.yaml`; `keys:` names API keys as `${ENV}`.
 
 #### A feed file: `config/feeds/<feed>.yaml`
 

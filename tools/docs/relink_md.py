@@ -38,6 +38,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import moved  # noqa: E402
 
+FENCE = re.compile(r"^(\s*)(```+|~~~+)")
 LINK = re.compile(r"(\]\()([^)\s#]*)(#[^)\s]*)?(\))")
 HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md", "THIRD-PARTY-NOTICES.md", "docs/products/", "docs/architecture/pack-resolution-inventory.md")
 
@@ -63,12 +64,20 @@ def tables() -> tuple[dict[str, str], dict[str, str]]:
 
 
 def relink(rel: str, text: str, files: dict[str, str], anchors: dict[str, str], gone: set[str], lost: list[str]) -> str:
-    fence = False
+    fence = None
     out = []
     for line in text.split("\n"):
-        if line.lstrip().startswith("```"):
-            fence = not fence
-        if fence or "](" not in line:
+        m = FENCE.match(line)
+        if fence is None and m:
+            fence = m.group(2)
+            out.append(line)
+            continue
+        if fence is not None:
+            if m and m.group(2)[0] == fence[0] and line.strip().strip(fence[0]) == "":
+                fence = None
+            out.append(line)
+            continue
+        if "](" not in line:
             out.append(line)
             continue
 

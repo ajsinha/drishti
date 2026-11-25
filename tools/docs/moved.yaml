@@ -441,7 +441,7 @@ moved:
   - {from: 'docs/guides/APPROVALS_GUIDE.md#64-deciding', to: 'docs/guides/USER_GUIDE.md#deciding', how: redirect, note: 'section moved'}
   - {from: 'docs/guides/APPROVALS_GUIDE.md#65-approving-a-correction', to: 'docs/guides/USER_GUIDE.md#approving-a-correction', how: redirect, note: 'section moved'}
   - {from: 'docs/guides/APPROVALS_GUIDE.md#66-from-the-command-line', to: 'docs/guides/USER_GUIDE.md#from-the-command-line-1', how: redirect, note: 'section moved'}
-  - {from: 'docs/guides/APPROVALS_GUIDE.md#7-for-administrators-switching-write-back-on', to: 'docs/guides/ADMIN_GUIDE.md#281-for-administrators-switching-write-back-on', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/APPROVALS_GUIDE.md#7-for-administrators-switching-write-back-on', to: 'docs/guides/ADMIN_GUIDE.md#281-switching-write-back-on', how: redirect, note: 'section moved'}
   - {from: 'docs/guides/APPROVALS_GUIDE.md#71-off-at-three-levels', to: 'docs/guides/ADMIN_GUIDE.md#2811-off-at-three-levels', how: redirect, note: 'section moved'}
   - {from: 'docs/guides/APPROVALS_GUIDE.md#72-switch-it-on', to: 'docs/guides/ADMIN_GUIDE.md#2812-switch-it-on', how: redirect, note: 'section moved'}
   - {from: 'docs/guides/APPROVALS_GUIDE.md#73-the-approval-policy', to: 'docs/guides/ADMIN_GUIDE.md#2813-the-approval-policy', how: redirect, note: 'section moved'}

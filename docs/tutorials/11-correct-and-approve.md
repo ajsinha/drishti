@@ -21,7 +21,7 @@ notional on the book desk, read the review and confirm sheet, approve the change
 second browser, and do the same from the command line, including a change that is refused because the trade moved underneath. Each
 step shows the UI, the command line and the YAML. The reference for authors is
 [APPROVALS_GUIDE.md section 4a](../guides/USER_GUIDE.md#submitting-a-change); for administrators
-[APPROVALS_GUIDE.md, for administrators](../guides/ADMIN_GUIDE.md#281-for-administrators-switching-write-back-on); the design is [APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals).
+[APPROVALS_GUIDE.md, for administrators](../guides/ADMIN_GUIDE.md#281-switching-write-back-on); the design is [APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals).
 
 ## Time to complete
 

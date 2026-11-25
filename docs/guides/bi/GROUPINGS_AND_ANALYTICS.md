@@ -633,14 +633,10 @@ correlation sets' factors only. `tools/testdata/publicsnap.py` lists the kinds i
 
 ### 24. Settings and limits
 
-| Setting | Default | Where |
-|---|---|---|
-| `DRISHTI_LAKE_ENABLED` | `true` | switches the derived connectors and the correlation engine with the lake they read |
-| a derived connector's `refresh` | `60s` | how often a date's pages are rebuilt when the data's version cannot be asked |
-| `max-scan` | `50000` | the most documents a derived connector reads of a kind (9,937 entities, 586 companies, 213 economies) |
-| `DRISHTI_US_EQUITIES_PRICES_ENABLED` | `false` | PXH and its analytics |
-| `DRISHTI_US_EQUITIES_BENCHMARK` | `SPY` | the symbol PXH's beta is measured against |
-| `correlation-engine` `limits` | timeout 30 s, wait 5 s, 4 in flight a user | as every reactive connector ([DATA_ARCHITECTURE.md](../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)) |
+- `DRISHTI_LAKE_ENABLED` (default `true`) switches the derived connectors and the correlation engine with the lake they read.
+- A derived connector's `refresh` (`60s`) is how often a date's pages are rebuilt when the data's version cannot be asked; `max-scan` (`50000`) is the most documents it reads of a kind (9,937 entities, 586 companies, 213 economies).
+- `DRISHTI_US_EQUITIES_PRICES_ENABLED` (`false`) turns on PXH and its analytics; `DRISHTI_US_EQUITIES_BENCHMARK` (`SPY`) is the symbol PXH's beta is measured against.
+- The `correlation-engine` limits are timeout 30 s, wait 5 s and 4 in flight a user, as every reactive connector ([DATA_ARCHITECTURE.md](../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)).
 
 Memory: a derived page set holds each page's aggregates and rows; the gleif pages of the committed data (590 groups, 133 countries) are a
 few megabytes, built in about a second from the 9,937 entities.
@@ -759,8 +755,7 @@ About 25 minutes.
 
 ### Before you start
 
-- [Tutorial 1, Part A](../../tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around) done: a server and console you can build, start and stop.
-- The demo lake built with the public-data packs: `python3 tools/drishti.py lake demo`, and the packs loaded:
+- The setup of [What you need once](../../tutorials/README.md#what-you-need-once) (a server and console running on the demo lake), with these packs loaded:
   `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif`.
 - For the command-line steps: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens), or `--user`
   with sign-in off.

@@ -595,15 +595,21 @@ for every other measure; a Provenance sheet), CSV, Arrow, the definition as YAML
 The cell budget, busy protection and the cache are the pivot engine's ([section 16](PIVOT.md#16-settings)). The cube's own settings are in
 `config/engines/mr-cube.yaml`; each key, its default and its environment variable are in [CONFIGURATION.md](../../admin/CONFIGURATION.md):
 
-| Setting | What |
-|---|---|
-| `drishti.engines.mr-cube.enabled` | the MR cube (engine `mr-cube`: needs `var` and `pivot`, uses `sensitivities` and `frtb-sa`) |
-| `drishti.cube.mr.risk-classes` | the derived `RISK_CLASS` dimension (IR, CR, FX, EQ, CM by product group as shipped) |
-| `drishti.cube.mr.grids` | the ladders' bucket grids, in years (`BANK-IR-TENOR`, `FRTB-GIRR`) |
-| `drishti.cube.mr.ladder-limits` | two-sided DV01 limits per currency and bucket (`"USD 2-5Y": 1500000`) |
-| `drishti.module.banking.mr-cube.sbm-max-cells`, `stressed-max-cells` | the cells of a view that get SBM (60), and stressed VaR (100): its first, in the grid's order ([section 29.2](#72-the-measures)) |
-| `drishti.cube.mr.sparkline-dates`, `sparkline-max-cells` | the open business dates a sparkline reads, and the most cells of a view that get one |
-| `drishti.cube.mr.what-if-rows` | the most rows the what-if side by side computes (the total always added) |
+<!-- settings:begin mr-cube -->
+| Setting | Default | Meaning |
+|---|---|---|
+| `drishti.engines.mr-cube.enabled` | `true` | run the MR cube on this node: MCUBE, /api/v1/pivot/mr, the VaR source's hierarchy levels and MR measures; needs var and pivot |
+| `drishti.cube.mr.risk-classes` | `{}` | RISK\_CLASS: a class to its product groups, in column order; empty: IR, CR, FX, EQ, CM of the demo's groups (bi/README.md section 29.3) |
+| `drishti.cube.mr.grids` | `{}` | the ladders' bucket grids, each bucket label: from-to in years ({ BANK-IR-TENOR: { 0-2Y: "0-2", 10Y+: "10-" } }); empty: BANK-IR-TENOR and FRTB-GIRR |
+| `drishti.cube.mr.ladder-limits` | `{}` | two-sided DV01 limits per currency and bucket ({ "USD 2-5Y": 1500000 }); empty: no limit bars |
+| `drishti.module.banking.mr-cube.sbm-max-cells` | `60` | the most cells whose FRTB-SA SBM one view computes (a run of the FRTB-SA engine per cell scope) |
+| `drishti.cube.mr.stressed-max-cells` | `100` | the most cells whose stressed VaR one view computes, scope by scope |
+| `drishti.cube.mr.sparkline-dates` | `20` | the open business dates a sparkline reads (a date not open here is not opened for one) |
+| `drishti.cube.mr.sparkline-max-cells` | `600` | the most cells of a view that get a sparkline |
+| `drishti.cube.mr.what-if-rows` | `40` | the most rows the what-if side by side computes (the total always added) |
+<!-- settings:end -->
+
+The engine needs `var` and `pivot` and uses `sensitivities` and `frtb-sa`; the cells of a view that get SBM, stressed VaR or a sparkline are its first, in the grid's order ([section 29.2](#72-the-measures)).
 
 **Switched off** (Admin → Engines, or the file), `/api/v1/risk/mr/...` answers `404 DRS-1020`, the `MCUBE` word and the menu entry are
 gone, the VaR source of the pivot engine offers `var()`, `es()`, `pv()` and `trades()` by the positions' columns only (an MR measure, a
