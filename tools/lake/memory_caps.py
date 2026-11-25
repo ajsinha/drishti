@@ -22,7 +22,7 @@ A store is a lake (config/lakes/<store>.yaml, root: mem://<store>, memory.max-mb
 drishti.lake.memory.stores, still counts. This is the one place the lake files are read without the Java reader (tools/lake/lakeconfig.py):
 the launcher runs before any JVM, to size the JVM, and reads two keys only (root and memory.max-mb).
 
-Arrow's off-heap memory (docs/guides/FLIGHT_GUIDE.md section 10; docs/architecture/DATA_ARCHITECTURE.md, As built) is sized here too, the same way: the
+Arrow's off-heap memory (docs/guides/INTEGRATION_GUIDE.md section 10; docs/architecture/DATA_ARCHITECTURE.md, As built) is sized here too, the same way: the
 official Arrow library's buffers (the compute workers' exchange, BI answers sent as Arrow, Arrow Flight) are direct memory, so the limit
 also gets ``arrow_mb()``: the exchange's budget (``DRISHTI_ARROW_EXCHANGE_MB``, 512) plus, when the engine ``flight`` is on (its file
 config/engines/flight.yaml, or DRISHTI_FLIGHT_ENABLED), Flight's ``memory.total-mb``. The launchers pass the same figure to the server as
@@ -118,7 +118,7 @@ def engine_on(f: Path) -> bool | None:
 
 
 def flight_file() -> Path:
-    """Arrow Flight's engine file (docs/guides/FLIGHT_GUIDE.md): DRISHTI_ENGINES_DIR, default ./config/engines."""
+    """Arrow Flight's engine file (docs/guides/INTEGRATION_GUIDE.md): DRISHTI_ENGINES_DIR, default ./config/engines."""
     return Path(os.environ.get("DRISHTI_ENGINES_DIR") or "config/engines") / "flight.yaml"
 
 

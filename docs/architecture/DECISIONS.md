@@ -649,12 +649,12 @@ had to be decided: **where the rendering happens**, and **how the code reaches t
 ### Consequences
 - Every fix to a panel or a visual reaches embedded views and reports with the console, with no second change.
 - A report in an element cannot do what needs WebAssembly (Perspective) under a strict host policy, nor the viewer's navigation to other console pages: those are
-  listed, not faked ([EMBED_GUIDE.md, section 5](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one)).
+  listed, not faked ([INTEGRATION_GUIDE.md, section 1.5](../guides/INTEGRATION_GUIDE.md#15-the-elements-one-by-one)).
 - The console is a dependency of the host page (it must be reachable from the browser and named in the host's policy); the element has no offline mode.
 - Considered and rejected: an iframe (the reasons above); a JavaScript renderer of ViewModels (a second renderer); a library bundled with every host (it would not match
   the console's data); embedding by the host's server fetching HTML (no live updates, no per-user token on every call).
 
-Design and as-built notes: [EMBED_GUIDE.md](ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements). Developer guide: [guides/EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one).
+Design and as-built notes: [INTEGRATION_GUIDE.md](ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements). Developer guide: [guides/INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md#15-the-elements-one-by-one).
 
 ## ADR-022: One renderer, in the browser (supersedes ADR-021's rendering decision)
 
@@ -697,4 +697,4 @@ follow from it: one renderer can live in the browser.
 - Considered and rejected: keeping HTML over the wire (no GenUI streaming of JSON, no host-side frameworks, payloads 3 to 6 times larger);
   a renderer bundled with a build toolchain (ADR-006: vendored, no build pipeline); a renderer per host framework (many renderers).
 
-Design: [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md). Developer guide: [guides/EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#6-drishti-render-one-import-one-call).
+Design: [INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md). Developer guide: [guides/INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md#16-drishti-render-one-import-one-call).

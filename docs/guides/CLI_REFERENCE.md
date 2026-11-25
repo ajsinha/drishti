@@ -2416,8 +2416,8 @@ deploy/aws/delta-s3/delta-s3.sh check --bucket acme-drishti-lake --prefix delta 
 
 Their tests need no AWS account (`python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3`: botocore's
 Stubber, an in-memory S3, Delta tables written by the deltalake package). They have not been run against AWS: no AWS account is
-available to the build, and the live run waits for an AWS sandbox account. The guides: [`deploy/aws/s3-tables/README.md`](CLUSTER_GUIDE.md#deployawss3-tables-the-s3-tables-connectors-aws-resources)
-and [`deploy/aws/delta-s3/README.md`](CLUSTER_GUIDE.md#deployawsdelta-s3-the-delta-lake-on-s3-connectors-aws-resources).
+available to the build, and the live run waits for an AWS sandbox account. The guides: [`docs/guides/CLUSTER_GUIDE.md`](CLUSTER_GUIDE.md#deployawss3-tables-the-s3-tables-connectors-aws-resources)
+and [`docs/guides/CLUSTER_GUIDE.md`](CLUSTER_GUIDE.md#deployawsdelta-s3-the-delta-lake-on-s3-connectors-aws-resources).
 
 ### 7.15 lake delete: whole business dates out of a table
 
@@ -2806,7 +2806,7 @@ Options of `start server`, `start console` and `start all`:
 | `--home`, `--data-dir`, `--java-home` | the roots and the JDK, as above (`start console` has no `--java-home`) |
 | `--env-file FILE` | `KEY=VALUE` lines put into the process's environment; secrets stay off the command line and are never printed |
 | `--demo` | the demo profile, `config/profiles/demo.ini` (the offline demo on the lakes; the file **Drishti: run server (demo)** names), with development secrets and the `drishti-dev-admin` account: not for production |
-| `--distribution NAME` | `risk`, `finance`, `genomics`, `all` or a file path (`DRISHTI_DISTRIBUTION`; [DISTRIBUTIONS.md](../architecture/KERNEL_AND_MODULES.md)) |
+| `--distribution NAME` | `risk`, `finance`, `genomics`, `all` or a file path (`DRISHTI_DISTRIBUTION`; [KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md)) |
 | `--background` | detach: log and pid file under `logs/` and `run/` |
 | `--port PORT` | the server's port (default `server.port` of the settings files, else `DRISHTI_PORT`, else 18480); the console's (default `DRISHTI_CONSOLE_PORT`, else `console.server.port`, else 17480). `start all` has `--server-port` and `--console-port` |
 | `--heap SIZE` | the server's `-Xmx` (default `drishti.launch.heap` of the settings files: 4g in the demo profile; else 2g) |
@@ -3955,7 +3955,7 @@ forms). `--check` fails when it is stale; a console test runs the same check.
 Drishti Elements (the JavaScript libraries the console draws with) is a separate project vendored at a pinned version; its own
 `tools/elements/cli.py pack|dist` builds a packed pair of files or the release tree
 ([USING.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/USING.md)). Drishti has no `elements` command; how the console
-holds the pin and how to move it: [ELEMENTS_IN_DRISHTI.md](../architecture/THIN_CONSOLE_DESIGN.md).
+holds the pin and how to move it: [THIN_CONSOLE_DESIGN.md](../architecture/THIN_CONSOLE_DESIGN.md).
 
 ### `feed`: the data feeds
 
@@ -4086,7 +4086,7 @@ of Parquet.
 | `tools/drill-known.txt` | the console tests the drill accepts when they fail: one line each, its pytest id, a `|` and the reason; reported at the end of the lane, never hidden |
 | `tools/sizing_planner.py` | reads the planner's one file, `kernel/drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [CLUSTER_GUIDE.md section 9.7](CLUSTER_GUIDE.md#155-the-sizing-planner)), the server's workbook template (`kernel/drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`kernel/drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [section 8](#admin-capacity-admin--capacity-from-a-terminal) |
-| `tools/domain_strings.py` | the domain boundaries' rule 4 ([DOMAIN_MODULES.md](../architecture/KERNEL_AND_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
+| `tools/domain_strings.py` | the domain boundaries' rule 4 ([KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
 | `tools/version.py` | the product version from its one home, `.mvn/maven.config`: `python3 tools/version.py` prints it (`<version>`), `--tag` the release tag (`v<version>`, an i-step written `i_<n>`), `--check <tag>` fails when a tag is not the version's; every tool that names the version reads it here |
 | `tools/code_cap.py` | the one line cap of a code file (`CODE_LINE_CAP`, 2,500): the Python guards import it and the Java `SourceFileSizeTest` reads it; a documentation page has its own cap |
 | `tools/resolved.py` | where every pack, module and connector is, as the server's resolver says (`java -jar <server jar> resolve --json`, no server running): the tools and generators ask it, never a folder of their own; the answer is kept under `<data>/tmp/resolved/` until an input changes (the packs and modules folders, the switch files, the connectors, the override folders of `drishti.overrides.dir`) |

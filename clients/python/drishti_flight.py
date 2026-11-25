@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti's data in Python through Arrow Flight (docs/guides/FLIGHT_GUIDE.md): one file over ``pyarrow.flight``, read-only.
+"""Drishti's data in Python through Arrow Flight (docs/guides/INTEGRATION_GUIDE.md): one file over ``pyarrow.flight``, read-only.
 
     from drishti_flight import Flight
     f = Flight("grpc+tls://drishti-1.bank.example:18815", token="drk_…", ca="bank-ca.pem")   # a token with the scope data:read
@@ -28,7 +28,7 @@
 
     python3 drishti_flight.py --url grpc+tls://host:18815 --token drk_… kind trade --paths TRADE_ID,DESK,MTM > trades.csv
 
-A request is the same Rachana request the REST API takes (the reference: docs/guides/FLIGHT_GUIDE.md). ``read`` asks the service for the
+A request is the same Rachana request the REST API takes (the reference: docs/guides/INTEGRATION_GUIDE.md). ``read`` asks the service for the
 plan (GetFlightInfo), then reads every part from the node that holds it, in parallel, trying the next node of a part when one is down.
 Every read is as the token's person (or the person an application acts for, ``on_behalf_of``), with their entitlements and masks, and is
 audited. A refusal raises ``FlightRefused`` with Drishti's code (``DRS-5604`` …).

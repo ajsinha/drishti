@@ -98,10 +98,12 @@ moved:
   - {from: 'docs/contracts/samples/us-equities.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'docs/contracts/samples/world-development.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'docs/contracts/samples/world-economy.md', to: '', how: delete, note: 'deleted outright'}
+  - {from: 'docs/guides/EMBED_GUIDE.md', to: 'docs/guides/INTEGRATION_GUIDE.md', how: merge}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md', to: 'docs/guides/INTEGRATION_GUIDE.md', how: merge}
   - {from: 'docs/guides/PVF_LOADING.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: rename}
   - {from: 'docs/guides/bi/MODELS_AND_DATASETS_FOR_REPORTS.md', to: 'docs/guides/bi/TABLES_AND_MODELS.md', how: merge}
   - {from: 'docs/guides/examples/all-panels-showcase.md', to: 'docs/guides/examples/README.md', how: merge}
-  - {from: 'docs/guides/examples/embed/README.md', to: 'docs/guides/EMBED_GUIDE.md', how: merge}
+  - {from: 'docs/guides/examples/embed/README.md', to: 'docs/guides/INTEGRATION_GUIDE.md', how: merge}
   - {from: 'docs/guides/examples/exposure-profile.md', to: 'docs/guides/examples/README.md', how: merge}
   - {from: 'docs/guides/examples/level-1-2-panels.md', to: 'docs/guides/examples/README.md', how: merge}
   - {from: 'docs/guides/examples/linked-sources.md', to: 'docs/guides/examples/README.md', how: merge}
@@ -515,3 +517,96 @@ moved:
   - {from: 'docs/guides/RACHANA_REFERENCE.md#22-decisions-on-the-open-questions-product-owner-2026-10-20', to: 'docs/guides/RACHANA_REFERENCE.md#522-decisions-on-the-open-questions-product-owner-2026-10-20', how: redirect, note: 'renumbered'}
   - {from: 'docs/guides/RACHANA_REFERENCE.md#23-c1-drishtitable-chart-enginejs', to: 'docs/guides/RACHANA_REFERENCE.md#523-c1-drishtitable-chart-enginejs', how: redirect, note: 'renumbered'}
   - {from: 'docs/guides/RACHANA_REFERENCE.md#24-the-console-wiring-c3-c6-c7', to: 'docs/guides/RACHANA_REFERENCE.md#524-the-console-wiring-c3-c6-c7', how: redirect, note: 'renumbered'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#embed-drishti-in-your-pages', to: 'docs/guides/INTEGRATION_GUIDE.md#1-embed-drishti-in-your-pages', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#1-what-you-need', to: 'docs/guides/INTEGRATION_GUIDE.md#11-what-you-need', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#2-turn-embedding-on-and-register-your-application', to: 'docs/guides/INTEGRATION_GUIDE.md#12-turn-embedding-on-and-register-your-application', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#21-switch-embedding-on', to: 'docs/guides/INTEGRATION_GUIDE.md#121-switch-embedding-on', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#22-register-a-host-application', to: 'docs/guides/INTEGRATION_GUIDE.md#122-register-a-host-application', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#23-the-cors-allow-list', to: 'docs/guides/INTEGRATION_GUIDE.md#123-the-cors-allow-list', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#3-five-minutes-a-static-page', to: 'docs/guides/INTEGRATION_GUIDE.md#13-five-minutes-a-static-page', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#4-how-a-user-gets-in', to: 'docs/guides/INTEGRATION_GUIDE.md#14-how-a-user-gets-in', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#41-the-token-exchange', to: 'docs/guides/INTEGRATION_GUIDE.md#141-the-token-exchange', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#42-a-page-without-a-backend-the-sign-in-window', to: 'docs/guides/INTEGRATION_GUIDE.md#142-a-page-without-a-backend-the-sign-in-window', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#43-inside-drishtis-console', to: 'docs/guides/INTEGRATION_GUIDE.md#143-inside-drishtis-console', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#5-the-elements-one-by-one', to: 'docs/guides/INTEGRATION_GUIDE.md#15-the-elements-one-by-one', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#51-the-reference', to: 'docs/guides/INTEGRATION_GUIDE.md#151-the-reference', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#drishti-view', to: 'docs/guides/INTEGRATION_GUIDE.md#drishti-view', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#drishti-panel', to: 'docs/guides/INTEGRATION_GUIDE.md#drishti-panel', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#52-elements-2x-drawn-by-the-renderer', to: 'docs/guides/INTEGRATION_GUIDE.md#152-elements-2x-drawn-by-the-renderer', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#6-drishti-render-one-import-one-call', to: 'docs/guides/INTEGRATION_GUIDE.md#16-drishti-render-one-import-one-call', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#61-the-quick-start', to: 'docs/guides/INTEGRATION_GUIDE.md#161-the-quick-start', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#62-sources-and-the-handle', to: 'docs/guides/INTEGRATION_GUIDE.md#162-sources-and-the-handle', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#63-options', to: 'docs/guides/INTEGRATION_GUIDE.md#163-options', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#64-events', to: 'docs/guides/INTEGRATION_GUIDE.md#164-events', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#65-navigation-in-place', to: 'docs/guides/INTEGRATION_GUIDE.md#165-navigation-in-place', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#66-live-updates-and-streamed-screens', to: 'docs/guides/INTEGRATION_GUIDE.md#166-live-updates-and-streamed-screens', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#67-errors', to: 'docs/guides/INTEGRATION_GUIDE.md#167-errors', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#68-the-playground', to: 'docs/guides/INTEGRATION_GUIDE.md#168-the-playground', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#7-react-angular-and-vue', to: 'docs/guides/INTEGRATION_GUIDE.md#17-react-angular-and-vue', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#71-the-sample-pages', to: 'docs/guides/INTEGRATION_GUIDE.md#171-the-sample-pages', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#8-theming-and-sizing', to: 'docs/guides/INTEGRATION_GUIDE.md#18-theming-and-sizing', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#9-your-pages-content-security-policy', to: 'docs/guides/INTEGRATION_GUIDE.md#19-your-pages-content-security-policy', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#10-versions-integrity-and-lifecycle', to: 'docs/guides/INTEGRATION_GUIDE.md#110-versions-integrity-and-lifecycle', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#101-where-the-library-is-served', to: 'docs/guides/INTEGRATION_GUIDE.md#1101-where-the-library-is-served', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#102-integrity-and-sri', to: 'docs/guides/INTEGRATION_GUIDE.md#1102-integrity-and-sri', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#103-contracts-and-lifecycle', to: 'docs/guides/INTEGRATION_GUIDE.md#1103-contracts-and-lifecycle', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#104-the-npm-package-layout', to: 'docs/guides/INTEGRATION_GUIDE.md#1104-the-npm-package-layout', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#11-cookbook', to: 'docs/guides/INTEGRATION_GUIDE.md#111-cookbook', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#12-troubleshooting-by-code', to: 'docs/guides/INTEGRATION_GUIDE.md#112-troubleshooting-by-code', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#13-drishti-elements-libraries-in-your-own-app', to: 'docs/guides/INTEGRATION_GUIDE.md#113-drishti-elements-libraries-in-your-own-app', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#names-a-host-page-sees', to: 'docs/guides/INTEGRATION_GUIDE.md#names-a-host-page-sees', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#14-moving-an-ag-grid-enterprise-pivot-app', to: 'docs/guides/INTEGRATION_GUIDE.md#114-moving-an-ag-grid-enterprise-pivot-app', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#15-use-rachana-and-elements-in-your-own-app-and-genui', to: 'docs/guides/INTEGRATION_GUIDE.md#115-use-rachana-and-elements-in-your-own-app-and-genui', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#drishti-elements-in-react-vue-and-angular', to: 'docs/guides/INTEGRATION_GUIDE.md#116-drishti-elements-in-react-vue-and-angular', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#run-them', to: 'docs/guides/INTEGRATION_GUIDE.md#run-them', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/EMBED_GUIDE.md#what-each-page-shows', to: 'docs/guides/INTEGRATION_GUIDE.md#what-each-page-shows', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#data-out-drishtis-data-to-any-client-with-arrow-flight', to: 'docs/guides/INTEGRATION_GUIDE.md#2-data-out-drishtis-data-to-any-client-with-arrow-flight', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#1-when-to-use-flight', to: 'docs/guides/INTEGRATION_GUIDE.md#21-when-to-use-flight', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#2-turning-it-on', to: 'docs/guides/INTEGRATION_GUIDE.md#22-turning-it-on', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#3-tokens-and-scopes-step-by-step', to: 'docs/guides/INTEGRATION_GUIDE.md#23-tokens-and-scopes-step-by-step', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#4-what-can-be-read-and-how-each-is-named', to: 'docs/guides/INTEGRATION_GUIDE.md#24-what-can-be-read-and-how-each-is-named', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#5-the-request-path', to: 'docs/guides/INTEGRATION_GUIDE.md#25-the-request-path', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#6-the-cluster-endpoints-parallel-reads-a-node-down', to: 'docs/guides/INTEGRATION_GUIDE.md#26-the-cluster-endpoints-parallel-reads-a-node-down', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#7-live-streams-and-resuming', to: 'docs/guides/INTEGRATION_GUIDE.md#27-live-streams-and-resuming', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#8-limits-and-what-a-refusal-says', to: 'docs/guides/INTEGRATION_GUIDE.md#28-limits-and-what-a-refusal-says', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#9-audit-and-admin--data-out', to: 'docs/guides/INTEGRATION_GUIDE.md#29-audit-and-admin--data-out', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#10-operations', to: 'docs/guides/INTEGRATION_GUIDE.md#210-operations', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#11-troubleshooting-the-ten-most-likely-errors', to: 'docs/guides/INTEGRATION_GUIDE.md#211-troubleshooting-the-ten-most-likely-errors', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#12-flight-sql-sql-over-the-bi-models-from-jdbc-and-odbc-tools', to: 'docs/guides/INTEGRATION_GUIDE.md#212-flight-sql-sql-over-the-bi-models-from-jdbc-and-odbc-tools', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#13-testing', to: 'docs/guides/INTEGRATION_GUIDE.md#213-testing', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#arrow-flight-reference', to: 'docs/guides/INTEGRATION_GUIDE.md#214-arrow-flight-reference', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#1-the-calls', to: 'docs/guides/INTEGRATION_GUIDE.md#2141-the-calls', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#2-the-request', to: 'docs/guides/INTEGRATION_GUIDE.md#2142-the-request', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#3-the-forms', to: 'docs/guides/INTEGRATION_GUIDE.md#2143-the-forms', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#31-kind', to: 'docs/guides/INTEGRATION_GUIDE.md#21431-kind', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#32-model', to: 'docs/guides/INTEGRATION_GUIDE.md#21432-model', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#33-pivot', to: 'docs/guides/INTEGRATION_GUIDE.md#21433-pivot', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#34-measure', to: 'docs/guides/INTEGRATION_GUIDE.md#21434-measure', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#35-lake', to: 'docs/guides/INTEGRATION_GUIDE.md#21435-lake', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#4-errors', to: 'docs/guides/INTEGRATION_GUIDE.md#2144-errors', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#5-limits', to: 'docs/guides/INTEGRATION_GUIDE.md#2145-limits', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#6-flight-sql', to: 'docs/guides/INTEGRATION_GUIDE.md#2146-flight-sql', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#7-clients', to: 'docs/guides/INTEGRATION_GUIDE.md#2147-clients', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#71-python', to: 'docs/guides/INTEGRATION_GUIDE.md#21471-python', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#72-java', to: 'docs/guides/INTEGRATION_GUIDE.md#21472-java', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#73-jdbc-dbeaver-datagrip-any-jdbc-program', to: 'docs/guides/INTEGRATION_GUIDE.md#21473-jdbc-dbeaver-datagrip-any-jdbc-program', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/FLIGHT_GUIDE.md#74-odbc-excel-power-bi-tableau', to: 'docs/guides/INTEGRATION_GUIDE.md#21474-odbc-excel-power-bi-tableau', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#11-the-api-calling-the-server-from-scripts-notebooks-and-excel', to: 'docs/guides/INTEGRATION_GUIDE.md#3-the-api-calling-the-server-from-scripts-notebooks-and-excel', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#111-before-you-start', to: 'docs/guides/INTEGRATION_GUIDE.md#31-before-you-start', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#112-your-first-five-calls', to: 'docs/guides/INTEGRATION_GUIDE.md#32-your-first-five-calls', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel', to: 'docs/guides/INTEGRATION_GUIDE.md#33-clients-scripts-notebooks-and-excel', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#make-a-token', to: 'docs/guides/INTEGRATION_GUIDE.md#make-a-token', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#python', to: 'docs/guides/INTEGRATION_GUIDE.md#python', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#excel', to: 'docs/guides/INTEGRATION_GUIDE.md#excel', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#any-other-language', to: 'docs/guides/INTEGRATION_GUIDE.md#any-other-language', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#114-who-you-are-authentication', to: 'docs/guides/INTEGRATION_GUIDE.md#34-who-you-are-authentication', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#security-off-local-development', to: 'docs/guides/INTEGRATION_GUIDE.md#security-off-local-development', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#security-on-production', to: 'docs/guides/INTEGRATION_GUIDE.md#security-on-production', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#how-the-console-does-it', to: 'docs/guides/INTEGRATION_GUIDE.md#how-the-console-does-it', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#minting-a-token-for-a-script', to: 'docs/guides/INTEGRATION_GUIDE.md#minting-a-token-for-a-script', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#what-roles-allow', to: 'docs/guides/INTEGRATION_GUIDE.md#what-roles-allow', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#field-masks', to: 'docs/guides/INTEGRATION_GUIDE.md#field-masks', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#115-which-day-the-business-date', to: 'docs/guides/INTEGRATION_GUIDE.md#35-which-day-the-business-date', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#116-when-something-goes-wrong-errors', to: 'docs/guides/INTEGRATION_GUIDE.md#36-when-something-goes-wrong-errors', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#117-answers-as-arrow-the-accept-header', to: 'docs/guides/INTEGRATION_GUIDE.md#37-answers-as-arrow-the-accept-header', how: redirect, note: 'merged into the integration guide'}
+  - {from: 'docs/guides/DEVELOPER_GUIDE.md#118-scripting-recipes', to: 'docs/guides/INTEGRATION_GUIDE.md#38-scripting-recipes', how: redirect, note: 'merged into the integration guide'}

@@ -80,7 +80,7 @@ def test_every_drishti_link_to_a_bundled_product_document_resolves_locally(clien
                 found += 1
     assert found >= 40, found
     # in the rendered pages no link to a bundled document is left pointing at GitHub
-    for slug in ("rachana-reference", "developer-guide", "docs-architecture-architecture", "embed-guide", "cli-guide"):
+    for slug in ("rachana-reference", "developer-guide", "docs-architecture-architecture", "integration-guide", "cli-guide"):
         r = client.get(f"/help/{slug}")
         if r.status_code != 200:
             continue

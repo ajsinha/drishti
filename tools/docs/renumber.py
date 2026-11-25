@@ -33,6 +33,9 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import moved  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[2]
 MOVED = ROOT / "tools" / "docs" / "moved.yaml"
 NUMBERED = re.compile(r"^(#{2,6}) (\d+(?:\.\d+)*)(\.?) (.*)$")
@@ -156,7 +159,7 @@ LANE_A = ("docs/guides/USER_GUIDE.md", "docs/guides/ADMIN_GUIDE.md", "docs/guide
           "docs/guides/bi/", "docs/tutorials/", "docs/knowledge/")
 
 
-def follow_links(write: bool, skip: tuple[str, ...] = ()) -> dict[str, int]:
+def follow_links(write: bool, skip: tuple[str, ...] = (), merged: tuple[str, ...] = ()) -> dict[str, int]:
     rows = anchor_rows()
     by_doc: dict[str, dict[str, str]] = {}
     for f, t in rows.items():
@@ -182,6 +185,9 @@ def follow_links(write: bool, skip: tuple[str, ...] = ()) -> dict[str, int]:
             return m.group(0)
 
         new = re.sub(r"(\]\()([^)#\s]*)#([^)\s]+)\)", fix, text)
+        if merged:                                             # then the documents merged into another, by path (only those named)
+            rows_m = [r for r in moved.load() if r["from"].rsplit("/", 1)[-1].removesuffix(".md") in merged and "#" not in r["from"]]
+            new = moved.sweep({md: new}, rows_m)[0].get(md, new)
         if new != text:
             changed[md] = sum(1 for a, b in zip(text.split("\n"), new.split("\n")) if a != b)
             if write:
@@ -238,9 +244,12 @@ def follow_labels(write: bool, skip: tuple[str, ...] = ()) -> dict[str, int]:
 
 def main(argv: list[str]) -> int:
     write = "--write" in argv
+    argv = [a for a in argv]
     if "--links" in argv:
         skip = LANE_A if "--skip-lane-a" in argv else ()
-        for f, n in follow_links(write, skip).items():
+        merged = tuple(a.split("=", 1)[1].split(",") for a in argv if a.startswith("--merged="))
+        merged = merged[0] if merged else ()
+        for f, n in follow_links(write, skip, merged).items():
             print(f"{n:4d} link line(s)  {f}")
         for f, n in follow_labels(write, skip).items():
             print(f"{n:4d} label line(s) {f}")

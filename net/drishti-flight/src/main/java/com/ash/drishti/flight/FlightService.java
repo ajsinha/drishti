@@ -70,7 +70,7 @@ public final class FlightService implements AutoCloseable {
         if (settings.certChain() == null || settings.privateKey() == null || !Files.isReadable(settings.certChain())
                 || !Files.isReadable(settings.privateKey())) {
             throw new IOException("Arrow Flight needs TLS: drishti.engines.flight.tls.certificate and .private-key must name readable PEM "
-                    + "files (the server's certificate); see docs/guides/FLIGHT_GUIDE.md, Turning it on");
+                    + "files (the server's certificate); see docs/guides/INTEGRATION_GUIDE.md, Turning it on");
         }
         allocator = ArrowMemory.child("flight", settings.totalMemory());
         executor = Executors.newVirtualThreadPerTaskExecutor();

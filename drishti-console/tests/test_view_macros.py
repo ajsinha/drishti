@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The view parts as macros (EMBED_GUIDE.md › Drishti Elements: the design, step 5): the console's view page is rendered by them."""
+"""The view parts as macros (INTEGRATION_GUIDE.md › Drishti Elements: the design, step 5): the console's view page is rendered by them."""
 import re
 
 

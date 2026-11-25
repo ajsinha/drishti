@@ -2174,7 +2174,7 @@ in `/tmp`, whose quota fills. Health lists both folders with their size ([CONFIG
   launchers raise `-XX:MaxDirectMemorySize` by Arrow's budget and pass the same figure, from `tools/lake/memory_caps.py` (`--arrow-only`): 512 MB for
   the exchange (`DRISHTI_ARROW_EXCHANGE_MB`) plus Flight's `memory.total-mb` (`DRISHTI_FLIGHT_MEMORY_MB`, 4,096) when its engine is on. The limit is
   256 MB plus the in-memory lake's stores plus Arrow's budget. An ECS task has no Python: set `DRISHTI_ARROW_MB` (and `DRISHTI_LAKE_MEMORY_MB`) to what
-  `memory_caps.py --arrow-only` (`--stores-only`) prints ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md#10-operations)). A unit file of your own adds both flags.
+  `memory_caps.py --arrow-only` (`--stores-only`) prints ([INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md#210-operations)). A unit file of your own adds both flags.
 - **Diagnostics.** The production launchers (`tools/drishti.py start server` and `deploy/stack` through it, the Docker and ECS images, the unit of [5.3](#53-running-as-services-systemd))
   also start the server with `-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<folder>/dumps` (a `java_pid<pid>.hprof` about the size of the heap:
   open it in Eclipse MAT or VisualVM; keep room on that disk; at most `drishti.disk.max-dumps`, 2, are kept), a GC log per process rotated at 20 MB with
