@@ -568,7 +568,7 @@ public class DrishtiLiveTables {
     }
 
     /**
-     * A declaration's problems beyond what Rachana checks (docs/guides/LIVE_RESULTS_GUIDE.md section 6): every named format is known, every
+     * A declaration's problems beyond what Rachana checks (docs/guides/USER_GUIDE.md, Live results and blotters: The declaration): every named format is known, every
      * column is in the kind's data contract (when the kind has one), a link is a path of this console, an editable table's form names where
      * its changes go ({@code save:}) and every editable field binds a record field the write-back may set.
      */

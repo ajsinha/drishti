@@ -41,7 +41,7 @@ AI in BI (report from words, ask the data, explain this number) and publishing a
 > (`drishti.ai.enabled`). The section describes the server's hooks, kept for a later release.
 
 A language model sits beside reports in a few places and no more. It is **off by default**, it is the AI layer's
-([AI_GUIDE.md](../AI_GUIDE.md#1-model-providers)), and the model is never trusted with anything a person could not do by hand: **it writes a draft or a
+([AI_GUIDE.md](../ADMIN_GUIDE.md#271-model-providers)), and the model is never trusted with anything a person could not do by hand: **it writes a draft or a
 query, and Drishti checks it, runs it as the reader, and shows it.** With the AI layer off, the buttons are hidden and every call answers
 `404 DRS-4015`.
 
@@ -254,7 +254,7 @@ A workspace may *require review before publishing*; even where it does not, an a
 2. **The review page.** Under *Review*: who asked and what they wrote; **what changed** (the draft against the published version); **Check**;
    **what it does to reports** (section 17.6); and a **data preview** from the **draft**, answered with the reviewer's own rows and masks
    (`drishti.bi.governance.preview-rows`, 20).
-3. **Decide**, in the one Approvals queue (*Decide in Approvals*; [APPROVALS_GUIDE.md](../APPROVALS_GUIDE.md)): *Approve* (with a comment) publishes
+3. **Decide**, in the one Approvals queue (*Decide in Approvals*; [APPROVALS_GUIDE.md](../ADMIN_GUIDE.md)): *Approve* (with a comment) publishes
    the draft as the next version; *Reject* needs a reason and returns it to draft. Both go in the item's **review record**, and the author is told.
 
 **Who may decide**: a **bi-steward** in any workspace, or a workspace **member** whose role holds the `approve` power (a flag of the role, as the

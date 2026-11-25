@@ -37,7 +37,7 @@ def test_every_rule_row_matches_and_totals_are_the_plans():
     assert unmatched == []
     n = corpus.counts(rows)
     assert len(rows) == 396
-    assert (n["merge"], n["delete"], n["generate"], n["move"], n["rename"], n["connector"]) == (98, 64, 94, 5, 2, 22)
+    assert (n["merge"], n["delete"], n["generate"], n["move"], n["rename"], n["connector"]) == (101, 64, 94, 5, 2, 22)
     assert len({r[0] for r in rows}) == len(rows)
 
 
@@ -126,17 +126,15 @@ def test_merge_audit_finds_a_lost_heading_and_a_lost_block_and_honours_the_log()
 
 def test_merge_audit_over_the_tree_finds_nothing_missing_with_both_merge_logs(capsys):
     d = ROOT / "tools" / "docs"
-    assert merge_audit.main(["--show", "0", "--log", str(d / "merge_log_A.txt"), "--log", str(d / "merge_log_B.txt")]) == 0
-    assert "120 merged sources audited, 0 items not found" in capsys.readouterr().out
+    assert merge_audit.main(["--show", "0", "--log", str(d / "merge_log_A.txt"), "--log", str(d / "merge_log_B.txt"), "--log", str(d / "merge_log_N_A.txt")]) == 0
+    assert "123 merged sources audited, 0 items not found" in capsys.readouterr().out
 
 
 # i7m, plan section 5: a document's appended parts take the next numbers, so no two headings of one level carry the same leading number
 # (a link to "section 3" and an anchor "#3-..." would otherwise name two places). The documents below are repaired by the guide merges of
 # i7n; the second test keeps this list honest (a repaired document must leave it).
 NUMBERING_PENDING_I7N = {
-    "docs/architecture/DATA_ARCHITECTURE.md", "docs/contracts/CSV_FORMATS.md", "docs/guides/AI_GUIDE.md", "docs/guides/BANK_DATA_GUIDE.md",
-    "docs/guides/CLI_REFERENCE.md", "docs/guides/DATA_GUIDE.md", "docs/guides/DEVELOPER_GUIDE.md", "docs/guides/RACHANA_REFERENCE.md",
-    "docs/guides/USER_GUIDE.md", "docs/guides/WORLD_DATA_GUIDE.md",
+    "docs/architecture/DATA_ARCHITECTURE.md", "docs/contracts/CSV_FORMATS.md", "docs/guides/CLI_REFERENCE.md", "docs/guides/DATA_GUIDE.md", "docs/guides/DEVELOPER_GUIDE.md", "docs/guides/RACHANA_REFERENCE.md",
 }
 _NUMBERED = re.compile(r"(#{2,6}) (\d+(?:\.\d+)*)\.? ")
 

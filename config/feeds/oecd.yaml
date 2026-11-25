@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The oecd feed (docs/guides/WORLD_DATA_GUIDE.md section 5): the OECD Data Explorer's SDMX REST API into worldlake, for the oecd
+# The oecd feed (docs/guides/WORLD_DATA_GUIDE.md section 20.5): the OECD Data Explorer's SDMX REST API into worldlake, for the oecd
 # pack. Class: tools/feeds/sources/oecd.py. Daily; incremental (from three periods before each measure's last; nothing newer,
 # nothing written). No key; the OECD asks for no more than about 20 requests a minute (one a measure here).
 # A measure is a dataflow (agency,id,version) and an SDMX key whose {countries} is replaced by the countries joined with +; find both

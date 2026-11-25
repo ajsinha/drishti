@@ -92,7 +92,7 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
      * @param collaborate may share, comment and mention; true unless set to false
      * @param compliance may place legal holds, export the collaboration record and read any share; false unless set
      * @param bi business-intelligence powers (Rupaka): any of {@code bi}, {@code bi-author}, {@code bi-steward}, {@code bi-admin}; an administrator holds all
-     * @param edit may submit changes through write-back (APPROVALS_GUIDE.md › The design and its reasons, section 12); false unless set
+     * @param edit may submit changes through write-back (ADMIN_GUIDE.md › The design and its reasons, section 12); false unless set
      * @param permissions module permissions ({@code var:system-baskets}: create, edit, retire and import the VaR engine's system baskets,
      *     VAR_GUIDE.md section 5.7); an administrator holds every one
      * @param rows row rules by kind (KERNEL_AND_MODULES.md section 19.10): {@code trade: "ASSET_CLASS = 'RATES' and DESK in $user.desks"}; the role sees

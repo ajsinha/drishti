@@ -26,15 +26,15 @@ banking, trading and market-data modules do with it. Every figure in it is made 
   3. [Check a day's files](#3-check-a-days-files-before-anything-is-loaded), 4. [Load one day, then several days](#4-load-one-day-then-several-days-in-order),
   5. [Remove older scenario PV dates](#5-remove-older-scenario-pv-dates), 6. [When something goes wrong](#6-when-something-goes-wrong)
 - **The loaders**: [the market-risk loaders](#mrloader-market-risk-loaders-the-csv-datasets-of-var-and-exposure-pvf-scenario-pvs-scenario-sets-scenario-fx) (the columns of every kind
-  and the mapping rules), [the kinds the CSV loaders write](#the-csv-loaders-kinds) and [the daily run](#the-daily-run-csv-extracts-to-var-and-exposure-inputs)
+  and the mapping rules), [the kinds the CSV loaders write](#the-csv-loaders-kinds) and [the daily run](#7-the-daily-run-csv-extracts-to-var-and-exposure-inputs)
   from a whole day of CSV extracts (limits, desks, exposure) to VaR and exposure inputs; [samples](#samples)
 - **Trading**: [the trading pack](#trading-pack) (its commands, kinds and contracts are generated into its README),
-  [the trading products](#trading-products) by asset class, [the trading module](#the-trading-module) and [source systems](#source-systems) (Endur, Calypso, Murex, WSS, SwapOne, ICI)
+  [the trading products](#trading-products) by asset class, [the trading module](#8-the-trading-module) and [source systems](#source-systems) (Endur, Calypso, Murex, WSS, SwapOne, ICI)
 - **Market data**: [the market-data pack](#market-data-pack) and [the market-data catalogue](#market-data-catalogue)
 - **Reference data**: [the core pack](#core-pack) and [the banking data model](#the-banking-data-model)
 
 The columns of every kind and the mapping rules are in [the market-risk loaders](#mrloader-market-risk-loaders-the-csv-datasets-of-var-and-exposure-pvf-scenario-pvs-scenario-sets-scenario-fx);
-the same loader inside a whole day of CSV extracts is [the daily run](#the-daily-run-csv-extracts-to-var-and-exposure-inputs).
+the same loader inside a whole day of CSV extracts is [the daily run](#7-the-daily-run-csv-extracts-to-var-and-exposure-inputs).
 
 Commands are written for **Linux** and **Windows**. `PY` stands for the Python setup prepared (`drishti.python`):
 
@@ -322,7 +322,7 @@ Run it on a schedule with `lake maintain --daemon` or the console's schedules ([
 
 `tools/mrloader/csv_load.py` turns one dataset's CSV into checked records of its kind, written as the data inbox and `lake build` take
 them; it loads nothing itself. Every kind is a mapping file (`kinds/<kind>.yaml`: the CSV columns named as the contract's fields) and a
-section of the one generated page [CSV_FORMATS.md](../contracts/CSV_FORMATS.md); the day's runbook is [The daily run](#the-daily-run-csv-extracts-to-var-and-exposure-inputs).
+section of the one generated page [CSV_FORMATS.md](../contracts/CSV_FORMATS.md); the day's runbook is [The daily run](#7-the-daily-run-csv-extracts-to-var-and-exposure-inputs).
 
 ```bash
 python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29             # convert and check
@@ -764,7 +764,7 @@ The scenario PVs, the scenario set and the scenario FX of the PVF source are wri
 | `portfolio` | Drishti has no portfolio kind: a booking portfolio is the book (load book), a reporting tree is built from the scenario-PV rows, a watched set of positions is a system basket kept in Drishti |
 | every kind of class `computed` or `drishti-owned` | Drishti computes or keeps it |
 
-## The daily run: CSV extracts to VaR and exposure inputs
+## 7. The daily run: CSV extracts to VaR and exposure inputs
 
 One command a day turns the day's CSV extracts into checked files of each kind and hands them to the data inbox, in the order the engines
 need them. This page is the operator's; each kind's columns and rules are on its own page ([the kinds](BANK_DATA_GUIDE.md)). The PVF files alone (scenario PVs, load several days, remove old dates) are step by step in [PVF_LOADING.md](BANK_DATA_GUIDE.md).
@@ -780,7 +780,7 @@ source, from `drishti-console`:
 The scripts are run by path. Converting needs no Java, no server and no network; `--load` uses Drishti's own `lake build` (Java and the
 server jar); `--inbox` needs the node that owns the data load running (`DRISHTI_DATALOAD_ENABLED`).
 
-### 1. The files and the day file
+### 7.1 The files and the day file
 
 Every day the extracts land in one folder, for example `data/mr/2026-10-29/`. A **day file** says which file is which kind, once
 (`tools/mrloader/days/sample.yaml` is the sample's; a site's own lives with its settings and is given by path):
@@ -804,7 +804,7 @@ A kind whose extract has the bank's own column names gets `mapping: /path/to/sit
 shipped `tools/mrloader/kinds/<kind>.yaml` with the `from:` columns renamed (and the `csv:` block for the file's delimiter, decimal and
 date format). Never edit the shipped mappings.
 
-### 2. The one command
+### 7.2 The one command
 
 ```bash
 python3 tools/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day /path/to/site/day.yaml --dry-run   # check everything first
@@ -825,7 +825,7 @@ var-limit              DONE            13       13        0      0       0
 factor); each is listed in `mr-<date>/links-<date>.csv`. A link that changes a number (a netting set's CSA, a valuation's netting set)
 refuses the day; the rest warn.
 
-### 3. Reading a reject report
+### 7.3 Reading a reject report
 
 Each kind writes `mr-<date>/<kind>.<date>.rejects.csv`, one line per problem: `FILE, ROW` (as the spreadsheet shows it), `KEY`, `COLUMN`,
 `FIELD`, `VALUE`, `REASON`, `WHY`, `FIX`. The commonest fixes:
@@ -838,19 +838,19 @@ Each kind writes `mr-<date>/<kind>.<date>.rejects.csv`, one line per problem: `F
 | `EXCEL_NUMBER_ID` | a long id turned into `2.00001E+11` | export the id column as text |
 | `DUPLICATE_KEY` | the same record twice | keep one row per key; a duplicate always refuses the kind |
 
-### 4. When a kind is refused
+### 7.4 When a kind is refused
 
 Masters and limits refuse the whole kind on any rejected row (`on-reject: refuse`): fix the file and run the day again. The large
 kinds (sensitivities) skip a bad row up to their `max-rejects`. `--keep-going` delivers the kinds that do not depend on a refused one;
 without it, nothing is delivered.
 
-### 5. Checking the load
+### 7.5 Checking the load
 
 The inbox moves each file to `data/dataload/outbox/<day>/` with its report (`<file>.loaded.json`), or to `failed/` with the reason;
 **Admin → Data loads** shows the same. Then open VaR for the date (the limits show in the Limit column) and, for exposure, a
 counterparty's page.
 
-### 6. Again, restate, remove
+### 7.6 Again, restate, remove
 
 - **The same day again:** run the same command. Every file replaces its kind's date as a whole; unchanged files have the same bytes.
 - **Restate a past date:** run it with that `--date` and the corrected files; the kinds with a `RESTATEMENT` field take
@@ -862,7 +862,7 @@ counterparty's page.
   *no load for the date, showing* the earlier one. A row left out of today's master file does **not** disappear from those tables:
   remove it with `lake delete` of its earlier dates, or keep sending it with its status.
 
-### 7. Spreadsheets
+### 7.7 Spreadsheets
 
 Export from the source system; do not round-trip a file through Excel. When a file must be edited in Excel, import every column as text:
 Excel silently turns long ids into numbers, drops leading zeros, rewrites dates to the machine's locale and rounds numbers beyond 15
@@ -1334,12 +1334,12 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 **Credit basket note** (`CREDIT_BASKET_NOTE`): Nth-to-default note on a small basket. Terms: `coupon` (Coupon), `nth` (Nth default), `basketSize` (Names).
 <!-- trading-products:end -->
 
-## The trading module
+## 8. The trading module
 
 The module ships the trade blotter (`/live/trade`) and its binding; the steps below are specific to trades. The engine behind the blotter, the page,
 editing, the declaration, the API and the settings are the platform's: the *Live results and blotters* guide (Help → Guides; `docs/guides/LIVE_RESULTS_GUIDE.md`).
 
-### 1. Switch it on (tutorial)
+### 8.1 Switch it on (tutorial)
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
@@ -1355,7 +1355,7 @@ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$B/live/trade/rows?limit=3" |
 # {"total": 4120, "live": true, "rows": ["MX-20004324", "MX-20004261", "MX-20004205"]}
 ```
 
-### 2. Bind the trades
+### 8.2 Bind the trades
 
 The blotter reads the `trade` kind through `config/bindings.yaml`, like every module:
 
@@ -1386,7 +1386,7 @@ drishti.lake.memory.tables:
     retention: { ttl: 1d, on: SOURCE_UPDATE_TIME }   # rows older than a day are dropped by the compaction
 ```
 
-### 3. Edit a trade (tutorial)
+### 8.3 Edit a trade (tutorial)
 
 1. Select the trade; its panel opens with the fields you may change (Book, Price, Quantity; Status for middle office).
 2. Change the book, give a reason, **Submit**. The change goes to the write-back with the version you saw.
@@ -1407,7 +1407,7 @@ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: appl
 *trade MX-20004163 is at version 8, changed by R.DIAZ at 10:02:11; you edited version 7: open it again and edit from what is there*.
 The same guard runs again when the change is applied at the source (the *Live results and blotters* guide, section 8), so a change that raced another one is refused there too.
 
-### 4. Source systems
+### 8.4 Source systems
 
 The `trade` kind is one canonical kind (the trading pack's `trade` contract; every row carries `SOURCE_SYSTEM`). Each trading system that
 feeds it is a **source module of its own**, `modules/source-<system>/`, which requires this module and switches on and off alone

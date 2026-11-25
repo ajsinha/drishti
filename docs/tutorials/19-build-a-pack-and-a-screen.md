@@ -768,7 +768,7 @@ field, a `*_DATE` column a date field:
         - { id: maturity_date, label: Maturity, bind: MATURITY_DATE, type: date }
 ```
 
-Rules, money and linked-record fields, masks and roles are in [APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md). Saving keeps a
+Rules, money and linked-record fields, masks and roles are in [APPROVALS_GUIDE.md](../guides/ADMIN_GUIDE.md). Saving keeps a
 **draft** for each person; nothing is written to the source system until write-back.
 
 **Command line.** Your drafts, checked again on the server with the same rules:
@@ -1128,5 +1128,5 @@ each kind's latency. The pools and workers behind the Python one are under Admin
 | a part of the Describe line is red | the sentence beside it says why; the result says *Fix the red part to see the screen* until it reads |
 | a refresh interval faster than 5 s is not offered | the console's `views.refresh_min_seconds` (default 5) |
 | `DRS-2057` in `sutra lint` | an event or source reads a panel that does not exist (a renamed panel id) |
-| `DRS-2058` | the `form:` does not read: an unknown key or field type ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md)) |
+| `DRS-2058` | the `form:` does not read: an unknown key or field type ([APPROVALS_GUIDE.md](../guides/ADMIN_GUIDE.md)) |
 | `DRS-2059` | the `layout:` names an area the picture does not have |

@@ -36,7 +36,7 @@ import java.util.List;
  * @param updatedAt last change (null for built-in roles)
  * @param updatedBy who made it (empty for built-in roles)
  * @param bi business-intelligence powers held ({@link #BI_POWERS}); each one above {@code bi} also needs {@code bi} to open the page
- * @param edit may submit changes through write-back (APPROVALS_GUIDE.md › The design and its reasons, section 12: the {@code edit} power); false unless granted
+ * @param edit may submit changes through write-back (ADMIN_GUIDE.md › The design and its reasons, section 12: the {@code edit} power); false unless granted
  * @param permissions the module permissions held ({@link #PERMISSIONS}, such as {@code var:system-baskets}); an administrator holds every one
  */
 public record RoleDefinition(String name, String description, List<String> kinds, boolean raw, boolean author, boolean approve,

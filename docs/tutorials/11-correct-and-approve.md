@@ -20,8 +20,8 @@ where the policy says so, applied one at a time per record and audited. In this 
 notional on the book desk, read the review and confirm sheet, approve the change as another person, watch it applied and shown to a
 second browser, and do the same from the command line, including a change that is refused because the trade moved underneath. Each
 step shows the UI, the command line and the YAML. The reference for authors is
-[APPROVALS_GUIDE.md section 4a](../guides/APPROVALS_GUIDE.md#4-submitting-a-change); for administrators
-[APPROVALS_GUIDE.md, for administrators](../guides/APPROVALS_GUIDE.md#7-for-administrators-switching-write-back-on); the design is [APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals).
+[APPROVALS_GUIDE.md section 4a](../guides/USER_GUIDE.md#submitting-a-change); for administrators
+[APPROVALS_GUIDE.md, for administrators](../guides/ADMIN_GUIDE.md#281-for-administrators-switching-write-back-on); the design is [APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals).
 
 ## Time to complete
 
@@ -171,8 +171,8 @@ the sheet take the whole screen, with the difference, the destination and the re
 
 ## Next steps
 
-- Make your own screen's form submit: add `save:` to its `form:` ([APPROVALS_GUIDE.md section 4a](../guides/APPROVALS_GUIDE.md#4-submitting-a-change)).
+- Make your own screen's form submit: add `save:` to its `form:` ([APPROVALS_GUIDE.md section 4a](../guides/USER_GUIDE.md#submitting-a-change)).
 - Send amendments to a booking system: a JDBC connector's `writes:` with its guard and idempotency clause, switched on in Admin → Edits
-  ([APPROVALS_GUIDE.md section 13](../guides/APPROVALS_GUIDE.md#10-writing-to-a-source-writes), [JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record)).
+  ([APPROVALS_GUIDE.md section 13](../guides/ADMIN_GUIDE.md#284-writing-to-a-source-writes), [JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record)).
 - Recompute on a change: a reactive connector with a `write-back` trigger ([tutorial 19, Part C](19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)).
-- Run several servers: PostgreSQL for the Drishti database, or an edit primary ([APPROVALS_GUIDE.md section 11](../guides/APPROVALS_GUIDE.md#8-the-edit-log-lanes-and-the-cluster)).
+- Run several servers: PostgreSQL for the Drishti database, or an edit primary ([APPROVALS_GUIDE.md section 11](../guides/ADMIN_GUIDE.md#282-the-edit-log-lanes-and-the-cluster)).

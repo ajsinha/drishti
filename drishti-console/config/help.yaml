@@ -63,6 +63,11 @@ moved:
   sharing-and-discussion: user-guide#sharing-and-discussion
   docs-guides-pivot-guide: bi-pivot             # the pivot guide's address before the BI section (F1 and links made then)
   tables-guide: bi-tables-models                # the tables guide's address before the BI section
+  live-results-guide: user-guide#live-results-and-blotters   # i7n: merged into the User guide
+  docs-guides-live-results-guide: user-guide#live-results-and-blotters
+  approvals-guide: user-guide#approvals                       # i7n: the using half is the User guide's, the administrator's half is Administration 28
+  docs-guides-approvals-guide: user-guide#approvals
+  docs-guides-ai-guide: admin#27-ai-model-providers-and-mcp-servers   # i7n: the AI set-up is Administration 27; the designs not built are in docs/plans
   docs-contracts-cva: docs-plans-contracts-cva
   docs-contracts-lim: docs-plans-contracts-lim
   docs-contracts-coll: docs-plans-contracts-coll
@@ -115,8 +120,6 @@ sections:
               { slug: bi-python-notebook, doc: guides/bi/NOTEBOOK_AND_PYTHON.md, title: "The Notebook and Python", icon: journal-code, summary: "Where code runs; the Notebook (SQL and Python cells, extract, save, promote, profile); Python measures and visuals; Transforms and the Transform editor; the command line, the sandbox, limits and how an administrator turns Python on; with the tutorial." },
               { slug: bi-groupings, doc: guides/bi/GROUPINGS_AND_ANALYTICS.md, title: "Groupings and analytics", icon: diagram-2, summary: "The groupings and analytics computed instead of stored: LEIG, LEIC, SIC, ECG, CORR, EQB, PXH and the USEQ ratios, their data contract and how they are computed; with the tutorial." },
           ] }
-          - { slug: live-results-guide, domain: core, doc: guides/LIVE_RESULTS_GUIDE.md, title: "Live results and blotters", icon: lightning-charge, summary: "One engine for any set of records shown live: a snapshot from the durable store plus every change merged by key and version. FORM results, search, bare mnemonics and blotters run on it, in every distribution; the declaration, editing with four eyes and the outbox, row rules, write-back to the source, retention, the API and a Kafka tutorial." }
-          - { slug: approvals-guide, domain: core, pair: docs-tutorials-11-correct-and-approve, doc: guides/APPROVALS_GUIDE.md, title: "Corrections and approvals", icon: pencil-square, summary: "Correct a record in a form or a cell, drafts and submitting, the one Approvals queue, where a change goes, the edit log and Admin → Edits, writing back to a source, audit and retention." }
           - { slug: docs-tutorials-11-correct-and-approve, domain: core, doc: tutorials/11-correct-and-approve.md, title: "Approvals tutorial: correct a trade and approve it", icon: mortarboard, kind: tutorial, summary: "Hands-on steps: correct a trade, submit it, approve it and read the audit trail, each in the UI, on the command line and in YAML." }
       - title: "World and public data"
         words: [FUND, WDI]
@@ -251,7 +254,7 @@ contextual:
   workspace: user-guide#workspaces
   monitor: user-guide#monitors
   alerts: user-guide#alerts
-  approvals: approvals-guide#6-the-approvals-queue   # the one Approvals queue (F1, the ? on its page)
+  approvals: user-guide#the-approvals-queue   # the one Approvals queue (F1, the ? on its page)
   inbox: user-guide#sharing-and-discussion
   impact: user-guide#f8--impact
   form: user-guide#query-by-form

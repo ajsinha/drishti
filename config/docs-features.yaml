@@ -25,8 +25,8 @@ features:
   # Start and analyse (core)
   - { id: F1, name: Find anything, domain: core, lenses: all, guide: guides/USER_GUIDE.md, budget: 1200, tutorial: tutorials/01-first-15-minutes.md, tutorial-budget: 600 }
   - { id: F2, name: "Business intelligence: pivot, tables, reports, Notebook, groupings", domain: core, lenses: all, guide: guides/bi/README.md, budget: 13000, tutorial: none }
-  - { id: F5, name: AI assistant, domain: core, lenses: all, guide: guides/AI_GUIDE.md, budget: 700, tutorial: tutorials/10-ai-assistant.md, tutorial-budget: 400 }
-  - { id: F6, name: Corrections and approvals, domain: core, lenses: all, guide: guides/APPROVALS_GUIDE.md, budget: 600, tutorial: tutorials/11-correct-and-approve.md, tutorial-budget: 300 }
+  - { id: F5, name: AI assistant, domain: core, lenses: all, guide: guides/ADMIN_GUIDE.md, budget: 700, tutorial: tutorials/10-ai-assistant.md, tutorial-budget: 400 }
+  - { id: F6, name: Corrections and approvals, domain: core, lenses: all, guide: guides/ADMIN_GUIDE.md, budget: 600, tutorial: tutorials/11-correct-and-approve.md, tutorial-budget: 300 }
   # Risk (the banking module)
   - { id: R1, name: Value at risk, domain: banking, lenses: [risk, trading], guide: guides/VAR_GUIDE.md, budget: 6500, tutorial: none }
   - { id: R1R, name: Regulatory VaR reporting, domain: banking, lenses: [risk], guide: guides/REGULATORY_VAR_REPORTING.md, budget: 850, tutorial: none }
@@ -42,7 +42,7 @@ features:
   - { id: B3, name: Packs and screens, domain: core, lenses: all, guide: guides/BUILD_GUIDE.md, budget: 2000, tutorial: tutorials/19-build-a-pack-and-a-screen.md, tutorial-budget: 700 }
   - { id: B4, name: Data out, domain: core, lenses: all, guide: guides/FLIGHT_GUIDE.md, budget: 900, tutorial: tutorials/17-data-out-with-arrow-flight.md, tutorial-budget: 300 }
   - { id: B5, name: Embed, domain: core, lenses: all, guide: guides/EMBED_GUIDE.md, budget: 800, tutorial: tutorials/20-embed-drishti.md, tutorial-budget: 300 }
-  - { id: B7, name: "Live results and blotters", domain: core, lenses: all, guide: guides/LIVE_RESULTS_GUIDE.md, budget: 400, tutorial: none }
+  - { id: B7, name: "Live results and blotters", domain: core, lenses: all, guide: guides/USER_GUIDE.md, budget: 400, tutorial: none }
   - { id: B6, name: Extend, domain: core, lenses: all, guide: guides/DEVELOPER_GUIDE.md, budget: 1200, tutorial: after 2.9.11.i }
   # Operate (core, administrators)
   - { id: O1, name: Install and operate, domain: core, lenses: all, guide: guides/OPERATIONS_GUIDE.md, budget: 2500, tutorial: tutorials/21-run-it-in-production.md, tutorial-budget: 400 }

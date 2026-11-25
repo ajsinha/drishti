@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * What a Sutra says may be edited (APPROVALS_GUIDE.md principle 1: nothing is editable unless a Sutra says so, field by field). A field is
+ * What a Sutra says may be edited (ADMIN_GUIDE.md principle 1: nothing is editable unless a Sutra says so, field by field). A field is
  * editable through write-back when it is a field of a panel's {@code form:} that has a {@code save:} (RACHANA_REFERENCE.md 10 and 11); the
  * index maps a record's kind and field to the forms that edit it, rebuilt whenever the Sutras change. A change made from a form names
  * its Sutra and panel; one made through the API or the CLI names only the kind and field, and the first form (by Sutra name) that
@@ -97,7 +97,7 @@ public final class EditableFields {
     }
 
     /**
-     * Another place forms with {@code save:} are declared besides Sutras (a live result set's {@code edit:}, docs/guides/LIVE_RESULTS_GUIDE.md):
+     * Another place forms with {@code save:} are declared besides Sutras (a live result set's {@code edit:}, docs/guides/USER_GUIDE.md):
      * its rules join the Sutras' at every rebuild; the rules name the declaration as their Sutra ({@code live:trade}). Rebuilds at once.
      */
     public void addSource(java.util.function.Supplier<List<Rule>> rules) {

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The live tables' console side (docs/guides/LIVE_RESULTS_GUIDE.md; Drishti Elements' grid, live mode): one page for any table
+"""The live tables' console side (docs/guides/USER_GUIDE.md; Drishti Elements' grid, live mode): one page for any table
 (``/live/<name>``: a blotter), and ``/api/rdp/...`` passing the server's Data Protocol (``/api/v1/rdp/...``) on as the signed-in person:
 the tables, a table's schema (masks, ``write`` for a reader who may edit), a page (``query``), a write, a stream's window. The changes
 stream through the console's live channel (``live:<table>``, core/channel.py), so a browser holds one connection however many tables are
