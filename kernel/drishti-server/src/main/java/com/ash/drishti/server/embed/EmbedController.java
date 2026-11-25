@@ -94,7 +94,7 @@ public class EmbedController {
     public record WindowSignIn(String idToken, String nonce, String origin, Boolean refreshed) {}
 
     /**
-     * The renderer's sign-in window (INTEGRATION_GUIDE.md section 10.1): the console's service identity only. Answered like the exchange
+     * The renderer's sign-in window (INTEGRATION_GUIDE.md section 1.4.2): the console's service identity only. Answered like the exchange
      * (RFC 8693 form) or refused with the exchange's errors and DRS codes ({@code DRS-8002} for an origin no host application registered).
      */
     @PostMapping(value = "/api/v1/embed/sign-in-window", consumes = MediaType.APPLICATION_JSON_VALUE)

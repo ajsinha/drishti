@@ -195,7 +195,7 @@ public final class EmbedTokenService {
         return new Response(token, ACCESS_TOKEN, "Bearer", exp.getEpochSecond() - now.getEpochSecond(), scope);
     }
 
-    // ---- the sign-in window (INTEGRATION_GUIDE.md section 10.1) ----------------------------------------------------------------------
+    // ---- the sign-in window (INTEGRATION_GUIDE.md section 1.4.2) ----------------------------------------------------------------------
 
     /**
      * The renderer's optional sign-in window ({@code auth: 'popup'}): a host page WITHOUT a backend opened a window on the console on a click;

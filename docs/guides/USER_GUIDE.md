@@ -162,7 +162,7 @@ you are on is highlighted.
 
 | Menu | Column | Entries |
 |---|---|---|
-| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `EXPORT <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [Export data](#export-data)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
+| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](CLI_REFERENCE.md#205-the-data-map)), *Data* (`/data`, also `EXPORT <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [Export data](CLI_REFERENCE.md#206-export-data)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`), *Approvals* (`/approvals`: [the one queue](#approvals), with the number waiting) |
 | **Domains** (named after its one domain when only one is active: **Risk**) | a column per menu a module brings (Blotter, Positions, Risk, Counterparties, Markets, Companies, Economies ...); Risk's columns are one per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchy limits* `VLIM` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `PREDEAL` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
 | **Create** (BI: people with the `bi` power) | Business intelligence | *Catalogue* (`/bi/catalogue`), *My workspace* (`/bi/w/me`), *My runs*, *Workspaces* |
@@ -254,394 +254,7 @@ a Sutra or an example opens it in the workbench as before.
 
 ## The command line
 
-The command line is the box beside the brand in the top bar. Press `/` anywhere to jump to it.
-
-### The form of a command
-
-```text
-<MNEMONIC> <ID> <GO>
-```
-
-- The **mnemonic** names a kind of entity: `TRD` is a trade, `NSET` a netting set, `ECON` an economy.
-- The **id** names one entity of that kind: `MX-20000001`.
-- `<GO>` means "press Enter".
-
-Examples:
-
-```text
-TRD MX-20000001      an interest rate swap (MUREX)
-TRD 1000001          a commodity swap (ENDUR)
-TRD CLY-3000025      an FX option (CALYPSO)
-TRD CLY-3000157      a government bond (CALYPSO)
-NSET NS-SUMMIT-NY    a netting set
-CRV CRV-USD-OIS      the USD SOFR discount curve
-CPTY CP-NORTHBRIDGE  a counterparty
-ECON ECON-USA        an economy (world-economy)
-```
-
-**A bare id** works when its shape tells Drishti the kind. Type `MX-20000001` and press Enter: it opens
-the same trade as `TRD MX-20000001`.
-
-**Case** never matters: `trd mx-20000001` opens `MX-20000001`.
-
-**One match opens; several give a pick list.** If what you typed names exactly one entity, it opens. If it
-names several (`TRD MX-200000`, the start of an id), you get a table to pick from. See
-[Pick lists](#pick-lists-when-a-command-names-several-entities).
-
-**A range after the id shows the entity over time.** `TRD 1000015 30` opens the trade's
-[History](#history-an-entity-over-time): one row per business day it has data, the last 30 such days.
-
-```text
-TRD 1000015 30            the last 30 business days on which the trade has data
-EQ EQ-CSCA 3M             the last 3 months (also 30D, 2W, 1Y): every business day in the span that has data
-FX FX-AUDUSD YTD          since 1 January (also MTD, QTD)
-CRV CRV-USD-SOFR FROM 2026-09-01 TO 2026-09-30
-TRD 1000015 30 DIFF       only what changed, day by day
-```
-
-The range is always the last words, never the first word after the mnemonic: `TRD 30` still opens trade `30`, and an id that really
-contains the words (`BOND UST 2030`) opens the entity. A search (`TRD desk=rates 30`, `TRD MX-2* 30`) stays a search. A prefix that names
-several trades (`TRD MX-2000 30`) gives the pick list, and each of its rows opens that trade's history. Aliases keep the range:
-`MYBOOK 30` is `BOOK BOOK-RATES-1 30`.
-
-Mnemonics come from the packs that are switched on. Every command, with what it does and an example, is in
-[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [BUILD_GUIDE.md](BUILD_GUIDE.md#311-the-packs-that-ship). The most used ones, from the seven default packs:
-
-| Mnemonic | Kind | Example |
-|---|---|---|
-| `TRD` | trade | `TRD MX-20000001` |
-| `CPTY` | counterparty | `CPTY CP-NORTHBRIDGE` |
-| `BOOK` | book | `BOOK BOOK-RATES-1` |
-| `NSET` | netting set | `NSET NS-SUMMIT-NY` |
-| `LIM` | credit limit | `LIM LIM-SUMMIT` |
-| `CRV` | interest rate curve | `CRV CRV-USD-OIS` |
-| `FXV` | FX volatility surface | `FXV FXV-EURUSD` |
-| `VAR` | VaR / expected shortfall | `VAR VAR-RATES` |
-| `TVAL` | trade valuation (MTM, P&L, DV01) | `TVAL TVAL-MX-20000001` |
-| `ECON` | economy | `ECON ECON-USA` |
-
-**VaR in another currency.** The VaR explorer (`VAR BANK`, `VAR DESK DESK-RATES`) has a **Reporting currency** select at the
-right end of its status line: the configured currencies (USD, EUR, CAD, JPY, GBP by default) and **More…** for any other currency with
-scenario FX on the date. Every figure of the page follows it (the tiles say `VaR 99% · 1 day · EUR`), the choice stays while you work in
-that browser tab, and it goes into the page's link (`&ccy=EUR`), so a link you send opens in the same currency. Type it too: any VAR
-command ends with `IN <currency>`, `VAR DESK DESK-RATES IN EUR <GO>`. The tab **In other currencies** (loaded when you open it) shows the
-scope's VaR and ES in each configured currency side by side, with each one's VaR in the page's currency at today's rate; click a row to
-move the page to it. A currency's VaR is never the USD VaR at a rate: the currency move on each scenario day is part of its risk
-([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)).
-
-**10-day VaR and another confidence.** Beside **Reporting currency** the VaR explorer has **Horizon** (*1-day*, *10-day (√10)*,
-*10-day (sum)*), **Confidence** (95%, 97.5%, 99%, 99.5%: the configured list, 99% the default) and **ES** (its own, 97.5% by default).
-*10-day (√10)* is the 1-day figures × √10; *10-day (sum)* adds 10 consecutive scenario days of the scope's own P&L (509 days give 500
-overlapping windows). Every panel follows the choice, the strip under the tiles says the horizon, the method and the confidences, the
-link keeps it (`&h=10d&m=sum&q=0.95`), and the next VaR page you open remembers it. **Limit use** shows only at the limit's own horizon
-and confidence (1-day 99%), otherwise the tile says *limit is for 1-day 99%: not comparable*; **backtest exceptions** only at 1 day.
-Type it too: `VAR BANK 10D`, `VAR BANK 10D SUM`, `VAR BANK 10D SQRT`, `VAR BANK 95`, `VAR BANK 10D SUM 97.5`, `VAR BANK ES 95`; the
-type-ahead offers them once a scope is typed. Official end-of-day records stay 1-day at 99% ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)).
-**Stressed VaR.** The **Scenarios** picker beside Horizon chooses *Normal* or *Stressed*: stressed VaR is today's positions revalued
-under the market moves of a 12-month stress period (in the demo, a synthetic 2008-07-01 to 2009-06-30, said on the page), in USD. Every
-panel follows; the third tile shows the 12-week average of the node's official stressed VaR; limit use and backtest exceptions are not
-shown for it. Horizon and Confidence work the same. The link keeps it (`&set=stressed`); type `VAR BANK SVAR` or `VAR BANK SVAR 10D SUM`.
-A date without a stress set says so ([VAR_GUIDE.md section 18.8](VAR_GUIDE.md#188-stressed-var)).
-**The scenario matrix.** `SMAT <trade, position or VaR scope> [N] <GO>` (`SMAT DESK RATES 20`, `SMAT POS <position>`,
-`SMAT TRD <trade> 30`) shows one trade, position or node across its last N business dates (20 by default, at most 60): the scenarios
-down, by historical day, the dates across, each cell its scenario P&L. Each date's VaR scenario and ES tail are outlined and marked **V**
-and **E**; the foot of the table keeps each date's VaR (with its rank), ES and base PV. Switch to **PV** (base PV plus the P&L) or
-**Change vs day before**, show **Only tail scenarios**, sort by the worst on any date, or, for a position, see it **By trade**. The chart
-beside the matrix has two views: **Scenarios** (the default) charts the selected date's column, every scenario day in the order of its
-date, in the values shown (scenario P&L, scenario PV or the change), with the tail marked and the selected scenario larger (click a point
-to select that scenario in the matrix); **Across dates** charts the selected row across the business dates (it needs two or more dates
-open: with one it shows the value and says so). The reference line follows the values: **−VaR** for the P&L, **PV at VaR** (base PV less
-VaR) and the base PV for the PV, none for the change; the legend names what is drawn. **Line · Dots · Area · Bars** switches the chart
-type for both views (your choice is remembered in this browser); points beyond VaR or in the tail are diamonds, never colour alone. The matrix and the chart fill the window's height, and follow it when the window is resized. The
-details give the cell's rank that day, its PV, the FX used, its days in the tail and where the
-numbers came from (open in memory, read from the lake by id, the official capture, or the engine), linked to the record. A date with no
-values says why in its column header (`DRS-5203`, refused) and never shows zeros. **Export CSV · Arrow** downloads the whole matrix. A
-**Scenario matrix** link opens it from a trade, a position, a P&L vector (`PNLV`), a scenario PV (`SPV`) and the VaR page; on a phone it
-is the selected scenario's line and its tail count. It is part of Drishti Risk and Drishti Trading
-([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat); [the VaR tutorial, step 16](VAR_GUIDE.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
-
-**The VaR Playground.** `PLAY VAR <scope> <GO>` (`PLAY VAR DESK RATES`, `PLAY VAR BANK 10D SUM`, `PLAY VAR POS-10442 T-1001` for a few
-positions or trades), or **Playground** on the VaR page, works the scope's VaR out cell by cell: a spreadsheet-like grid of each
-position's scenario P&L (positions across, the 509 scenarios down, Portfolio, Rank and the **V** and **E** marks at the right, each
-position's standalone, component and incremental figures below), a formula bar with the selected cell's formula as the workbook writes
-it, and a tall explanation that walks through the selected cell's calculation with the real numbers. Click a cell or use the arrow keys.
-At most 500 positions are shown; a larger scope keeps the 500 largest by |component VaR| and combines the rest in one **Rest of scope**
-column, so its VaR is still the VaR page's. **Export to Excel** downloads the same calculation as a workbook of real formulas (100, 500,
-1,000, 10,000 or All positions, each choice's size, recalculation time and applications stated first) whose **ALL CHECKS PASS** band
-says it equals the engine to the cent. On a phone: the headline and the explanation. Part of Drishti Risk and Drishti Trading
-([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [the VaR tutorial, step 18](VAR_GUIDE.md#step-18--work-the-var-out-by-hand-the-var-playground)).
-
-**The VaR page's layout.** The hierarchy tree is on the left (click **▸** to open a node, its name to see its VaR); the toolbar above
-the figures has two searchable drop-downs, **System baskets** (key **B**: the bank's own, kept in Drishti) and **My baskets** (key **M**: the
-baskets you saved and those shared with you), where you type to search by name or description, move with ↑ ↓ and open with Enter;
-**Explain ›** (key **E**) opens the Explain drawer of the scope's VaR ([Explain: one for every number](#explain-one-for-every-number);
-[VAR_GUIDE.md section 3.2](VAR_GUIDE.md#32-the-screen)).
-
-**Construct your basket.** On the VaR page, **+ New basket** in the toolbar (or `Alt+B`) opens the basket's sheet across its top, one
-sheet like Excel: the VaR of any mix of trades, positions, system baskets, books, desks, limit letters and counterparties, a column per kind
-and the Op column (+ adds, − takes away). Type in a cell, pick a hint (it lands in its kind's column), use **+ basket** on any row, or
-paste whole columns from Excel; **Start from the whole bank** makes the basket the bank and the rows refine it. The server checks every
-cell (a red cell says why it is not found) and computes the basket's VaR, ES, sum of the parts and diversification under the sheet; then
-a pre-deal what-if, **Save basket and open VaR** and **Download as .xlsx**. It is on the VaR page only; what it holds stays in your
-browser, so it is there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
-
-**Editing your baskets.** In the toolbar's *My baskets* drop-down (key **M**; *System baskets*, key **B**, lists the bank's own: whoever holds `var:system-baskets` changes those under the sheet, [VAR_GUIDE.md section 5.7](VAR_GUIDE.md#57-system-baskets)) each basket of yours has **Edit**: it opens in the sheet and **Save as version *n***
-keeps its name as a new version. A portfolio (the bank's) and a basket shared with you have **Edit a copy**: it opens as your own basket,
-to save under your own name. An administrator may edit anyone's basket; you get a notice in your inbox saying who.
-
-**Deleting your ad-hoc scopes.** The baskets you saved are listed in *My baskets* on the VaR page. Open it and point at one (or
-Tab to it) and press **Delete**: a dialog names the basket and whom you shared it with (they lose it too) and asks first; **Keep it** or
-**Esc** keeps it. The list refreshes at once; a view of the basket that was open says it was deleted. Captures you took of it are kept and
-still open, saying the basket no longer exists. You can delete only your own; an administrator may delete anyone's (you get a notice in
-your inbox saying who and why). On the command line: `drishti.py var basket-delete <name>`.
-
-**Many positions in one scope.** The **Contributions** tab lists at most `drishti.var.max-parts` rows (5,000): when a scope has more
-positions or trades, it lists the largest by gross size and says so above the table, for example *5,000 of 18,567 positions shown (the
-largest by gross size); totals are over all 18,567*. The **Total** row, the sum of standalone VaRs and the diversification are always
-over every position ([VAR_GUIDE.md section 27a](VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)).
-
-**One year or two; 99% or 95%.** The page's labels say the confidence the figures are at (*VaR 95% · 1 day* when the
-server is set to 95%), and Explain's *Inputs & lineage* says the scenario window (*newest 250 of 509 scenarios*);
-`drishti.py var show BANK --window 250 --confidence 0.95` compares on the command line, never official.
-
-**The top of the tree.** The VaR tree's top node shows the hierarchy data's name (*Drishti Bank* in the demo); an administrator
-can set any name with `drishti.module.banking.var.root-name` (or one per hierarchy with `drishti.var.root-names`), and the page, the command line and new
-captures follow it ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
-
-**Hierarchies and limit letters.** The select above the tree lists the date's hierarchies by name: *Management*, *Legal
-entities* and, in the demo, *Limit letters*: the letter of authority each trade's VaR limit is granted under, then its desks. A letter
-may hold part of a book: its VaR is exactly that of its own trades. Choose one and the tree, the breadcrumbs and the contributions
-follow it, and the link keeps it (`&hierarchy=LL`); a letter's limit bar reads its own limit (blank when it has none). Type a letter in
-the scope box (`LL:LL-0003`, `LL:LL-0003/DESK-RATES`) or search for it. Which hierarchies exist, and from which columns, is set by an
-administrator ([VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)).
-
-**Any form, any grain.** Explain's *Inputs & lineage* says, per source system, whether its figures came as scenario PVs or P&L
-vectors, per trade or per position. A position its system sends whole answers `POS:<id>`; its trades have no VaR of their own on that
-date (the trade page says so and links the position).
-
-**Intraday.** When pricing systems re-send trades during the day (amended, new or cancelled), the VaR page applies them as they
-land and shows an **intraday** badge in its status line (*intraday · 5 trades · 2026-09-30 11:00*): its figures are the morning run with
-those trades updated; point at the badge for the batches. The official end-of-day records stay the morning run's. `drishti.py var
-intraday` lists what each date holds; the updates may come as files or from a Kafka topic (the `pv-updates` connector, off by default:
-an administrator's **Apply now** on its Admin page applies the waiting window at once) ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
-
-**Trade currency.** Every trade page's strip says **Trade currency**: the currency the trade's PVs come in (`EUR · as priced`) when the
-VaR engine holds it as scenario PVs, else the trade's own currency (`USD · as booked`). Its **Risk** group adds where it comes from and
-the trade's **Base PV** in it. (The strip holds eight figures: the source system moved from the strip to the deal ticket, F2 DES.) The
-VaR explorer's contributions and worst scenarios, a position's trades and the trade tables of the counterparty, portfolio, legal
-entity and index pages list it too.
-
-### Reserved words
-
-Six words are keywords of the console itself, not mnemonics of a pack, and no pack may define a mnemonic with
-their name. They work in any case, and each has type-ahead.
-
-| Type | You get | More |
-|---|---|---|
-| `WHAT <GO>` | Knowledge, the home of the [Knowledge pages](#knowledge-what-the-words-mean): what the words of your data mean and how the data connects | `WHAT PFE <GO>`, `WHAT netting set <GO>`, `WHAT value at risk <GO>` open the term's glossary entry (its long name or a synonym works too, any case); other words (`WHAT collateral posted <GO>`) search the Knowledge pages. The type-ahead lists the terms as you type |
-| `FUNC <GO>` | Functions, `/func`: every command you can use, by pack, with what it does and an example ([ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)) | `FUNC exposure <GO>` opens it filtered (every word must appear in a command's code, title, description or its pack); `FUNC trading` lists one pack's commands. Click a command to open it with its example, a pack to open its search form |
-| `DATAMAP <GO>` | the [data map](#the-data-map), `/datamap`: every kind of data your packs hold, how much of it there is, and how the kinds join | `DATAMAP trade <GO>` opens it on one kind (its name, mnemonic or label: `DATAMAP CPTY`), `DATAMAP organisation` or `DATAMAP counterparty-risk` on one domain; other words fill its Find box |
-| `EXPORT <GO>` | the [Export data](#export-data), `/data`: every dataset you may open, its format and the dates it holds; download a day as `.jsonl.gz` | `EXPORT trade-valuation 2026-09-30 <GO>` opens it on a dataset (its kind or its command: `EXPORT TVAL`) and a date; other words fill its Filter box |
-| `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](#search-with-a-form-form-pack)) |
-| `BI <GO>` | the Build home, `/build` (`/bi` opens it too; only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([README.md](bi/README.md)) |
-| `RUPAKA <GO>` | the same as `BI`, the older name | everything that works after `BI` works after `RUPAKA` |
-
-A pack's code typed alone (`MKT <GO>`) opens that pack's overview ([A pack at a glance](#a-pack-at-a-glance)). Anything else
-that is not a command but reads as words (`live trades over 5m`) is offered as a question
-([Asking in plain words](#asking-in-plain-words)).
-
-### Knowledge: what the words mean
-
-*See what your data hasn't told you yet.* The **Knowledge** section at the top of the help centre has one page per domain:
-[Market risk](../knowledge/risk.md#1-market-risk), [Counterparty credit risk](../knowledge/risk.md#2-counterparty-credit-risk),
-[Trades and products](../knowledge/risk.md#3-trades-and-products), [Entities and ownership](../knowledge/data.md#2-entities-and-ownership),
-[Market data](../knowledge/data.md#1-market-data), [Data and contracts](../knowledge/data.md#3-data-and-contracts),
-[Economies](../knowledge/world.md#2-economies) and [Companies, funds and ETFs](../knowledge/world.md#1-companies-funds-and-etfs). Each says what the domain is in plain words, gives a glossary with the command that shows each
-term, draws how the kinds connect (with their id conventions), works an example through on the demo data, lists ready-made questions to
-ask your data, and clears up the common confusions (VaR against ES, why PFE does not add up, why posted collateral raises exposure).
-The [Knowledge home](../knowledge/README.md) lists every term A to Z.
-
-Reach it three ways: `WHAT <GO>` (or `WHAT <term> <GO>` for one entry), **Create → Learn → Knowledge** or **Help → Knowledge**, and
-the **What does this mean?** link on a data page: the VaR explorer, `VRES` and `DESK` open Market risk; `CPTY`, `NSET`, `CSA` and the
-exposure explorer open Counterparty credit risk. F1 and **?** open the page's help.
-
-### The pre-deal check
-
-*Does this new trade fit the counterparty's credit limit?* **Counterparties → Pre-deal check** (`PREDEAL <GO>`, or **Pre-deal check ›**
-in the exposure explorer at a counterparty or a netting set) asks the server. On the right, the trade: the counterparty, the netting set
-it goes into, a booked trade to copy (the exact method) or the trade described by asset class and maturity (a proxy, which only
-refers), the notional (`250m`, `1.5bn`) and the side; **Check**. The answer: **approve**, **refer** or **decline** with the reason; the
-limit and each tenor bucket **within**, **near the limit** (from 80% of it, a setting) or **over the limit**, with the numbers before and
-with the trade, the increment and the headroom; EPE and EAD before and after; the profile with the trade over the profile before against
-the limit, the incremental PFE per tenor, and the table by tenor. **Explain ›** (or **E**, or a tile) shows how each number was made.
-Typed with its words the check is made at once: `PREDEAL CP-ALDERSHOT LIKE MX-30001587 250M <GO>`; the same on the command line:
-`drishti.py exposure predeal "PREDEAL CP-ALDERSHOT LIKE MX-30001587 250M"`. Every check is audited. On a phone the verdict comes first.
-Details: [EXPOSURE_GUIDE.md section 7](EXPOSURE_GUIDE.md#7-pre-deal-what-if) and [section 18.9](EXPOSURE_GUIDE.md#189-the-pre-deal-check).
-
-### The data map
-
-**Views → Data map** (`/datamap`, or `DATAMAP <GO>`) shows every kind of data your packs hold, how much of it there is on the business
-date, and how the kinds join. Nothing on it is drawn by hand; it is inferred each time from what is loaded:
-
-- **Domains and kinds** come from the packs switched on for you: each pack's kinds, titled by their data contracts
-  (`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
-  what-ifs) is drawn as a **diamond** (a stored kind is a square): it is computed on demand and never stored, so it has no count.
-- **Joins** are what the contracts declare: their `links:`, their fields' `link:` and the fields a pack's `graph.fields` names (the
-  trade's `COUNTERPARTY` → counterparty, `PORTFOLIO` → book, `TRADER_ID` → trader; the P&L vector's and the exposure paths' `TRADE_ID`
-  → trade). Each join is **checked against the data**: the server reads the field over the kind's rows (as columns where the lake keeps
-  them so, else from the documents; at most 20,000 rows a kind, `drishti.datamap.max-rows`) and counts how many of the ids name an
-  entity that exists, so a join reads *15,000 of 15,000 ids match (100%)*. A join under 95% is a **finding**, listed above the map,
-  drawn thin, its kind badged in the warning colour: the contract promises a link the data does not keep.
-- **Counts** are read from the lake when you open the page (the server keeps them for the business date for 15 minutes,
-  `drishti.datamap.ttl`). The first visit of a day may say *Counting and checking the data*: the map fills in as the server goes.
-- **Positions** come from an automatic layout (the map is a Drishti Elements graph, drishti-graph): each domain a frame, its kinds in
-  a grid, the most joined first. **Layered** draws the joins as a lineage DAG instead (what refers to what, top to bottom);
-  force, radial and circular are there too, and the layout you pick is in the address (`layout=layered`).
-
-Two views share one selection, the domain chips and the **Find** box (a kind, a mnemonic or a field: `LEI`, `PORTFOLIO`); the view
-and the selection are in the address, so a link opens the same picture.
-
-- **Map** (the default): click a kind to light its joins and dim the rest. The side panel shows its join fields with their coverage,
-  the kinds that join to it, the commands that open it (its example from Functions, its search form) and its *Data contract*, its pack's
-  guide and its *WHAT* entry. Double-click a kind to open it directly; Esc clears the selection. The wheel zooms, a drag pans, the
-  minimap moves the view, the arrow keys walk from a kind to the kinds it joins, and ▦ lists every kind with what it joins to and what
-  joins to it (the text alternative). Find marks the kinds that match and dims the rest.
-- **Cards**: one card per domain with its largest counts. Open one for a table of its kinds with their counts, joins (→ to, ← from,
-  with the field) and the command that opens each, **Comes from** (the pack README's sources) and **Crosses into** (the other domains
-  its joins reach, and through which fields).
-
-![DATAMAP trade: the Map view with the trade selected, its joins lit and the side panel showing their coverage](img/datamap/01-map-trade.jpg)
-
-![The Cards view with the Trades domain open: its kinds, counts and joins, where the data comes from and the domains it crosses into](img/datamap/02-cards.jpg)
-
-Domains follow `drishti-console/config/datamap.yaml`, which is presentation only: their names, their order and which packs they hold
-(and, rarely, a kind to draw dashed that its contract does not mark computed). A pack the file does not name appears as a domain of its
-own under its pack title, with its kinds and joins, with no configuration at all.
-
-### Export data
-
-**Views → Export data** (`/data`, or `EXPORT <GO>`; `DATA`, the older word, works too) lists every data source and its datasets, and downloads a day of one of them as JSON Lines,
-gzip-compressed (`.jsonl.gz`). It is **download only**: it never shows the rows in a grid. `EXPORT <dataset> [date] <GO>` opens it on
-that dataset and date (`EXPORT trade-valuation 2026-09-30`; the dataset's command works too: `EXPORT TVAL 2026-09-30`).
-
-- **The list** (left): the datasets you may open, grouped by pack, each with its **format** (Delta, Iceberg, JSON Lines, Database ...)
-  and the number of **dates** it holds. *internal only* marks a dataset whose source's terms restrict reuse (the IMF figures, the Yahoo
-  prices, the news headlines); where the edition or the server refuses them, they stay listed but cannot be downloaded. *not dated*
-  marks a source that holds current rows only: its download is those rows. Type in **Filter** to narrow the list.
-- **The dataset** (right): its source (connector and table), format, the dates it holds and its column count, with links to its data
-  contract, Knowledge and `DATAMAP`. A column masked for you is left out and counted (*1 masked for you, left out*).
-- **Date**: a month calendar with the dates that hold data filled; only those can be picked (or choose one in the list under it).
-- **Columns**: every column as a chip, all ticked by default; *all* and *none*; the count (*9 of 21*).
-- **Filter lines**: *attribute · operator · value*, as many as you need, every line joined by AND. The operators are **equals**,
-  **not equals**, **one of** (values separated by commas: OR within one attribute), **contains**, **starts with**, **greater than**,
-  **less than**, **between** (two values, both included), **is empty** and **is not empty**. Numbers compare as numbers, everything
-  else as text; *contains* and *starts with* ignore case. It is deliberately not SQL: no joins, no grouping, no expressions.
-- **Your selection**: the selection read back in plain words (*From trade-valuation on 2026-09-30: 9 columns, rows where DESK is
-  DESK-COMM, and MTM is greater than 1000000.*) and as a SQL-like line, for reference only (it cannot be edited or run). Under it, how
-  the rows are read: *pushed down* when the connector filters as it reads its columns (Delta Lake and Iceberg tables whose columns are
-  promoted), else filtered on the way as the rows stream.
-- **Download**: the **row count before you download** (*412 of 12,076 on the date*) and the estimated size; **Download
-  trade-valuation_2026-09-30.jsonl.gz**; **Copy link**; and the same download as a [`drishti.py data get`](CLI_REFERENCE.md#data-get-a-dataset-as-jsonlgz-export-data)
-  command. A selection that matches no row shows 0 and leaves Download off.
-
-The selection lives in the address (`/data?kind=trade-valuation&date=2026-09-30&columns=TRADE_ID,DESK,MTM&where=DESK+%3D+DESK-COMM`),
-so a link is the selection: whoever opens it sees the same choice, through their own entitlements and masks. The download is streamed from
-the connector and never held whole, on the server or in the console, so a dataset of any size downloads; each line is one row with the
-chosen columns in order. Every download is audited (who, the dataset, the date, the selection and the rows written: Admin → Audit,
-action `data.download`). On a phone the list and the facts show; choosing and downloading are for the desk.
-
-The word (`EXPORT`, and its alias `DATA`) and the page follow the edition (`commands.words.DATA` switches both, `features.data`) and the site (`features.data` in the console,
-`drishti.data-view.enabled` on the server); [DATA_GUIDE.md](DATA_GUIDE.md#6-export-data-download-a-dataset) has the API, the rules for
-masks, internal-only datasets and pushdown, and the settings.
-
-### Suggestions as you type
-
-The command line suggests as you type, in a dropdown, like the Bloomberg terminal. The dropdown holds up to
-**25 suggestions** and scrolls when there are more than fit.
-
-| You have typed | You see |
-|---|---|
-| nothing (click in the box) | the entities you opened recently, marked `recent ·` |
-| `T` | mnemonics that start with T (`TFLOW` Trade flow, `TRD` Trade, `TRDR` Trader, `TRIAL` Clinical trial), then recent entities |
-| `TRD ` (with a space) | trades: `MX-20000001`, `MX-20000002`, … |
-| `TRD MX-2000010` | trades whose id starts that way: `MX-20000100`, `MX-20000101`, … |
-| `NSET SUMMIT` | netting sets whose id or title contains it: `NS-SUMMIT-LDN`, `NS-SUMMIT-NY` |
-| `XYZ Q` | `No matches for "XYZ Q"` |
-| `B`, `BI` (with the `bi` power) | the `BI` keyword, then `BI ` lists *Catalogue*, *My workspace* and the published reports whose id or title match |
-| `FORM `, then `FORM tra` | the packs you may open that have a form, then (after a space) their kinds: `FORM trading trade` |
-
-Each suggestion shows the mnemonic, the id (the letters you typed are highlighted) and a subtitle, for
-example:
-
-```text
-TRD   MX-20000002   Trade · MUREX · IRS_FIXFLOAT · CP-HALCYON · EUR 110.0m
-```
-
-If your role sees some fields masked ([Masked fields](#masked-fields)), the subtitle is the entity's view title as you
-see it (`Rates · Interest rate swap (fixed/float) · •••` when the counterparty is masked), and typing a masked value
-(`Meridian`) finds nothing through it.
-
-| Key in the command line | Does |
-|---|---|
-| `↓` / `↑` | Highlight the next / previous suggestion (the list scrolls with you) |
-| `Tab` | Copy the highlighted suggestion into the box (the first one if none is highlighted). For an entity the box then reads `CPTY CP-NORTHBRIDGE <GO>`; for a mnemonic it reads `TRD ` and the dropdown refreshes |
-| `Enter` | With a suggestion highlighted: open it straight away. With none highlighted: run what you typed as a command (it opens one entity or a pick list) |
-| `Esc` | Close the dropdown |
-
-Worked example:
-
-1. Press `/` and type `CPTY north`.
-2. The dropdown shows one line: `CPTY  CP-NORTHBRIDGE  Counterparty · Northbridge Capital LLP`. Press `↓` to
-   highlight it.
-3. Press `Tab`: the box now reads `CPTY CP-NORTHBRIDGE <GO>`.
-4. Press `Enter`: the counterparty opens.
-
-Without steps 2 and 3, pressing `Enter` on `CPTY north` gives the same result: the command names one
-counterparty, so it opens at once.
-
-The number of suggestions is a server setting (`drishti.commands.suggest-limit`, environment
-`DRISHTI_SUGGEST_LIMIT`, default 25). A program can ask for a different number, up to 50:
-`curl -s 'http://localhost:18480/api/v1/command/suggest?q=TRD%20T-1&limit=50'`.
-
-### Earlier commands and your own aliases
-
-- **History.** Press `↑` in the empty command line to bring back your last command, again for the one before (up to
-  50); `↓` goes forward. The server keeps your history, so it follows you to another browser. Only commands that
-  could be read are kept.
-- **Aliases.** On **My account → Aliases**, give a command a short word: `MYBOOK` for `BOOK BOOK-RATES-1`, or `REVS`
-  for `TRD PRODUCT_TYPE=FX_QUANTO`. Typing `MYBOOK <GO>` then does the same as the command; anything you add after
-  the word is kept (`MYBOOK F3`). A mnemonic or a pack code cannot be an alias. The same through the API:
-  `GET` / `PUT /api/v1/command/aliases` and `GET /api/v1/command/history`.
-- **A range that cannot be read.** After an id, what reads as a range but is none answers with its code and what to type, on the
-  terminal page: `TRD 1000001 0` gives *DRS-4022 a history of 0 days is empty: ask for 1 or more (TRD 1000001 30)*; `-5`, `1.5M`,
-  `3X`, `30.`, `1e3`, `FROM yesterday`, `FROM 2026-02-30`, `FROM 2026-10-01 TO` (*TO needs a date*), `TO 2026-10-01` (*TO follows
-  FROM*), `DIFF DIFF`, a bare `DIFF`, `DIFF 30` (*DIFF follows a range: TRD 1000001 30 DIFF*) and two ranges (`30 30`) are `DRS-4022`
-  too, and a number of days past the limit (`99999`) is `DRS-4021`. The same after a bare id (`1000015 -5`, `1000015 since yesterday`).
-  Full-width digits are read as digits (`３0` is `30`). It never opens today's view as if the range was not typed, nor a search that
-  drops the id. A lone word after the mnemonic stays an id, never a range (`TRD 0` looks up the id `0`).
-
-### When a command does not work
-
-| You see | Meaning | What to do |
-|---|---|---|
-| `DRS-4001 cannot read command 'XYZ MX-20000001'; type <MNEMONIC> <ID> <GO> with a mnemonic such as AGR, BOOK, CPTY, …` on the terminal page (the mnemonics are those of the packs loaded) | The first word is not a mnemonic, and the text is not an id any pack recognises | Type the first letter and pick from the suggestions; check the pack is switched on ([Domain packs](#domain-packs-choosing-what-you-see)) |
-| A page headed *Pick a trade* that says `0 of 0 trades match` and *Nothing matches.* | The mnemonic is fine, but no trade's id starts with what you typed (`TRD MX-29999999`) and no title contains it | Type less of the id (`TRD MX-2`) and pick from the list |
-| `DRS-1001 no source holds trade/MX-29999999` | You opened an address such as `/v/trade/MX-29999999` directly, and no source has that id | Check the id; use the command line to find it |
-| `DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions` | A pick list or search started with an unknown word | Type the first letter and pick a mnemonic |
-| `DRS-4004 no trade has a field 'producttyp'; did you mean PRODUCT_TYPE, PRODUCT_GROUP?` | A pick list or search names a field the kind does not have (case does not matter, spelling does) | Use the name it suggests |
-| `DRS-4004 limit must be a whole number from 1 to 1000, not '0'` | `limit` outside its range | A number from 1 to 1000 |
-| `DRS-5002 <you> may not open trade-valuation entities` | Your roles, or the packs you have switched on, do not include that kind | Switch the pack on in the box menu; otherwise ask an administrator |
-| `DRS-4023 the command TRD (trade) is not part of the edition 'world'`, and under it *You are inside the Drishti World lens, which does not include trades: leave the lens (Views → Leave) or choose an entity it shows* | You opened an entity (a link, a bookmark, a shared view) whose kind the lens you are inside leaves out. The id is right: the lens hides it, for you only | **Views → Leave Drishti World** shows everything your roles open again; or open something the lens shows. On a server that runs an edition (not a lens) the line says so, and an administrator can add the command |
-| A page that says **FRTB is not active on this server**, *Off since 2026-10-24* | An administrator turned the command off for everyone (on Functions, `FUNC`, [ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)). It is not active anywhere: typed, by its page, in search and type-ahead (it is not suggested), in exports and AI; a link to it on another page is struck through and says *not active*, and a panel that reads it says *not active (turned off by an administrator)* | Ask an administrator if you need it; an open page follows when it is turned on again |
-
-### A pack at a glance
-
-Type a pack's code alone, for example `MKT <GO>`, to see what the market-data pack holds: each kind with its mnemonic
-(`CRV`, `FXV`, `IRV`, …), how many there are, an example you can open, and the fields its pick list shows. Click a
-mnemonic to list that kind. Below the kinds, **What the pack holds** gives the pack README's summary, its data sources (with
-any internal-only flag) and, folded, its *Data structures*: each kind's id rule, fields with an example and a description, and
-nested structures by path, for the kinds you may open only. Every pack has a code (`CORE`, `MKT`, `TRDS`, `CCR`, `MRSK`, `WRLD`,
-`NWMK`, … see [BUILD_GUIDE.md](BUILD_GUIDE.md#316-pack-codes)); the pack's name (`market-data`) works too.
+The box beside the brand in the top bar (press `/` anywhere to reach it): the form of a command, reserved words, knowledge, the data map, export, suggestions, aliases and what an error means. It is documented in one place, [CLI_REFERENCE.md › 20 The command line](CLI_REFERENCE.md#20-the-command-line-the-box-in-the-top-bar); [Pick lists](#pick-lists-when-a-command-names-several-entities) below stays here.
 
 ## Pick lists: when a command names several entities
 
@@ -1408,14 +1021,14 @@ Newer screens (every pack screen is built from the same parts) can do more than 
 - **Editing a record.** Where a screen lets you, clicking a row opens a form beside the table, or a pencil on a column lets you edit
   in the cell, and **New …** opens a guided drawer. Fields you may not change say why; a wrong value is explained under its field.
   **Save draft** keeps a **draft** that only you see (*You have 2 drafts on this page* offers them again). The page asks before you
-  leave with changes not saved. The reference is [APPROVALS_GUIDE.md](USER_GUIDE.md).
+  leave with changes not saved. The reference is [USER_GUIDE.md › Approvals](#approvals).
 - **Submitting a change (write-back).** Where editing is on, you hold the edit power and the form says where it goes (the book
   desk's trades do), **Submit…** opens a sheet: what you saw, what is there now and your change; where it goes (a correction kept beside
   the booking system's value, or an amendment sent to it); who approves (never you); what it recomputes; and the reason. After **Confirm**
   the sheet follows it: waiting for an approver, applied (everyone viewing the trade sees the new value at once, *How this view was built*
   says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in the **Approvals** queue
   (Views → Approvals, Admin → Record edits). Someone else's change to the record you are viewing shows *Changed by … just now*.
-  The reference is [APPROVALS_GUIDE.md section 4a](#submitting-a-change); a walk-through is
+  The reference is [USER_GUIDE.md › Submitting a change](#submitting-a-change); a walk-through is
   [tutorial 11](../tutorials/11-correct-and-approve.md).
 - **Screens laid out on a grid.** A screen with named areas may have a split you drag (its position kept for you), areas shown as
   tabs and panels that fold. Where the screen allows it, you may drag panels to another place and resize them, for yourself;
@@ -1791,7 +1404,7 @@ per field) come with the security release.
 - **Outbox.** The change is recorded as pending in the same transaction that applies it, sent once per record in order, and resent after a failover with
   the **same change id**; the source treats a repeat as already applied.
 - **Four eyes.** The site's policy (`config/edit/policy.yaml`, `source:`) asks for approvals for amendments sent to a source; nobody approves their own
-  change; a form's `approval:` may ask for more, never fewer ([APPROVALS_GUIDE.md](USER_GUIDE.md)).
+  change; a form's `approval:` may ask for more, never fewer ([USER_GUIDE.md › Approvals](#approvals)).
 - **One change id, end to end.** A write's `id` (the client's, 1 to 64 letters, digits, `-` or `_`) is the change's id in the write-back too: the
   approvals page, `GET /api/v1/changes/{id}`, the edit log and the source's message carry it. The same id again is answered with that change's
   answer (its state now: `held`, `queued`, `applied`, ...), never made twice, on any node and after a restart; from another person it is
@@ -2085,7 +1698,7 @@ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: appl
 *YAML*: `save: {target: source, command: amend-trade, reason: optional}` in the declaration and `source: one` in `config/edit/policy.yaml`.
 
 **Step 4 · Approve (another person).** *UI*: a second person opens **Approvals**, reads the old and new values and the reason, and approves; the
-requester cannot (`self-approval: false`). *CLI*: the approvals commands of [APPROVALS_GUIDE.md](USER_GUIDE.md). *YAML*: `approver-roles:` in the policy.
+requester cannot (`self-approval: false`). *CLI*: the approvals commands of [USER_GUIDE.md › Approvals](#approvals). *YAML*: `approver-roles:` in the policy.
 
 **Step 5 · Written back.** *UI*: the tray's line moves from *awaiting* to *sent to the source* to *applied*; the row ticks to version 9 when the
 source's record comes back through the feed, and **History** in the panel lists who, when, why. *CLI*: the same guide lists a change's state.
@@ -2113,7 +1726,7 @@ The round **Live** button beside the box is a toggle, the same on a laptop and a
 You can still pick another date while paused. The choice is kept as you move between pages. A screen reader hears
 *Live updates on — click to pause* or *Live updates paused — click to resume*, which is also its tooltip.
 
-Step by step, with pictures (a past date, the same layout with that day's figures, a Saturday, back to Live): [tutorial 1, Part B](../tutorials/01-first-15-minutes.md#part-b--look-up-anything), step 14. It needs the sample history ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine), Step 5).
+Step by step, with pictures (a past date, the same layout with that day's figures, a Saturday, back to Live): [tutorial 1, Part B](../tutorials/02-look-up-anything.md), step 14. It needs the sample history ([OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine), Step 5).
 
 What the banners mean:
 
@@ -2141,7 +1754,7 @@ Compare lists every field that differs in one entity between two business dates.
 
 Click **Compare** (it appears in the title line when you have picked a date): *What changed in MX-20000001* compares the picked date with the business day before. Each row shows the field's label and path, the value on each date and the
 change for numbers; choose any two dates at the top to compare further apart, or give the earlier side a *known at* time to see what was restated on the same date; filter to *changed*, *added* or *removed*; **CSV** downloads
-the comparison. Walk-through: [tutorial 1, Part B](../tutorials/01-first-15-minutes.md#part-b--look-up-anything), step 15.
+the comparison. Walk-through: [tutorial 1, Part B](../tutorials/02-look-up-anything.md), step 15.
 
 Example rows for the valuation `TVAL-MX-20000001`, 2026-10-15 against 2026-10-16:
 
@@ -2168,7 +1781,7 @@ It also takes `fromKnownAt` and `toKnownAt`. See [API_REFERENCE.md](API_REFERENC
 
 ## History: an entity over time
 
-Type a range after the id (`TRD 1000015 30 <GO>`, see [The command line](#the-form-of-a-command)) and the screen becomes that entity
+Type a range after the id (`TRD 1000015 30 <GO>`, see [The command line](CLI_REFERENCE.md#201-the-form-of-a-command)) and the screen becomes that entity
 over time. The address is `/v/trade/1000015/history?days=30` (`?range=3M`, `?from=2026-09-01&to=2026-09-30`, `&diff=1`); the short
 form `/v/trade/1000015?days=30` opens the same page. After an id, a space in the command line offers the ranges: `30`, `3M`, `YTD`,
 `30 DIFF`.
@@ -2414,7 +2027,7 @@ without `where` opens a single match directly.
 
 ## Search with a form (`FORM <pack>`)
 
-Type `FORM <pack>` (or open **Forms** in the Views menu) to fill in boxes instead of writing a search: the form writes the search, shows it and runs it. A field with more than 300 values (the counterparties of a large book) shows a box to find them as you type instead of one tick box each. The reference is [Query by form](#query-by-form) below; the walk-through is [tutorial 1, Part C](../tutorials/01-first-15-minutes.md#part-c--query-by-form).
+Type `FORM <pack>` (or open **Forms** in the Views menu) to fill in boxes instead of writing a search: the form writes the search, shows it and runs it. A field with more than 300 values (the counterparties of a large book) shows a box to find them as you type instead of one tick box each. The reference is [Query by form](#query-by-form) below; the walk-through is [tutorial 1, Part C](../tutorials/03-query-by-form.md).
 
 ## Export, print and share
 
@@ -2542,7 +2155,7 @@ sends figures; open a row for *Open*, *Set an alert* and *Remove from the monito
 saves a copy to your account. (None of the shipped packs offers a starter, so start from a search; the retired example packs
 `finance` and `logistics` under `examples/packs/` offer *Credit watch* and *Fleet watch*.)
 
-Step by step (a search, **Watch as a monitor**, adding an entity, removing a row), with pictures: [tutorial 1, Part C](../tutorials/01-first-15-minutes.md#part-c--query-by-form) (save a search and a monitor).
+Step by step (a search, **Watch as a monitor**, adding an entity, removing a row), with pictures: [tutorial 1, Part C](../tutorials/03-query-by-form.md) (save a search and a monitor).
 
 The monitor is saved on the server under your account, so it follows you to any browser. All rows share
 one live connection.
@@ -3264,7 +2877,7 @@ full-screen at the terminal.
 
 ## Query by form
 
-Learn it by doing in [tutorial 1, Part C](../tutorials/01-first-15-minutes.md#part-c--query-by-form); this page is the reference.
+Learn it by doing in [tutorial 1, Part C](../tutorials/03-query-by-form.md); this page is the reference.
 
 If you would rather fill in boxes than write a search, type `FORM` and a pack on the command line. The page is a form for the pack's
 kinds: one input for each field people search by, each suited to what the field holds. When you press **Search** the form writes the search

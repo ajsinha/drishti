@@ -801,7 +801,7 @@ settings; date and filters shared:
 the exceptions table. **VaR at stake** is a computed kind `market-data-at-stake` (id the item, `params: { incremental }`) served by the
 reactive connector, whose engine is Drishti's Java engine calling the VaR engine's decomposition of `BANK`; the panel reads it with
 `source:` and shows *computing*, *ready* or *refused*. Acknowledgements are Sutra Next forms with write-back to the `owned` target
-(`save: { kind: market-data-quality, target: owned, reason: required }`, [APPROVALS_GUIDE.md section 4a](../guides/USER_GUIDE.md#submitting-a-change)).
+(`save: { kind: market-data-quality, target: owned, reason: required }`, [USER_GUIDE.md › Submitting a change](../guides/USER_GUIDE.md#submitting-a-change)).
 
 | Part | Kind or fragment |
 |---|---|
@@ -1184,7 +1184,7 @@ and debt, its LEI group's parent, its latest filing), internal only: the Risk le
 World row.
 
 **Embedding.** An entity page (`ECON CAN`, `LEIG …`) can be shown on an intranet page by the client renderer, with the optional sign-in
-window ([INTEGRATION_GUIDE.md section 10.1](../guides/INTEGRATION_GUIDE.md#142-a-page-without-a-backend-the-sign-in-window));
+window ([INTEGRATION_GUIDE.md section 1.4.2](../guides/INTEGRATION_GUIDE.md#142-a-page-without-a-backend-the-sign-in-window));
 the World landings are not Sutras and cannot be embedded until a "home" Sutra kind exists. Internal-only data stays internal on any host.
 
 ## 5. Oversight lens (proposals, designs and data)
@@ -1309,7 +1309,7 @@ forms and rules in YAML. The screen is a page kind `breach-queue` whose id is th
 ([RACHANA_REFERENCE, Sutra Next](../guides/RACHANA_REFERENCE.md#events-sources-and-children-sutra-next)). An opened breach is a Sutra Next
 child reading `source: { kind: limit-breach, id: "@queue.open.id" }`; `BRCH <id>` opens the same panels on its own page through the pack
 fragment `breach-detail@1`. Each action is a Sutra Next form (`new: drawer`) whose `save:` writes a new record to the `owned` target
-([APPROVALS_GUIDE section 4a](../guides/USER_GUIDE.md#submitting-a-change)); the breach service hears the record's `edit.applied`
+([USER_GUIDE.md › Submitting a change](../guides/USER_GUIDE.md#submitting-a-change)); the breach service hears the record's `edit.applied`
 event ([ARCHITECTURE section 18.3](../architecture/ARCHITECTURE.md#317-the-applied-event-triggers-and-viewers)) and writes the breach's next version, pushed
 live to every viewer. The thread is the record's Discussion ([ARCHITECTURE.md §31](../guides/USER_GUIDE.md#discussion)).
 
@@ -1838,7 +1838,7 @@ intraday stamps. Within-date batches as stops of the slider come with it. **Size
 
 **What:** a user marks a member wrong (a P&L vector, a sensitivity record, a trade attribute) and proposes a correction (exclude with a
 reason, a replacement or proxy vector, a corrected attribute); a second person approves through write-back
-([APPROVALS_GUIDE.md](../guides/ADMIN_GUIDE.md)). The correction is an overlay record with author, approver, reason and expiry; the original
+([ADMIN_GUIDE.md › 28 Write-back and approvals](../guides/ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run)). The correction is an overlay record with author, approver, reason and expiry; the original
 stays; every cell using it shows a **corrected** marker and its provenance names it. **Open decision** (recommended): approved corrections
 are included in the official run by default, with the list on the run. **Data:** [D14](#6616-d14-cube-correction-new-drishti-owned).
 **Size:** M; unscheduled.
@@ -3179,7 +3179,7 @@ PFE)*), `PROGRESS`, `BY`, `AT`.
 
 #### 8.5.7 LREQ: limit-request, temporary limit increases
 
-New, Drishti-owned, entered and approved through write-back with four eyes ([APPROVALS_GUIDE 10](../guides/USER_GUIDE.md#the-approvals-queue));
+New, Drishti-owned, entered and approved through write-back with four eyes ([USER_GUIDE.md › The Approvals queue](../guides/USER_GUIDE.md#the-approvals-queue));
 exported for the bank's limit system. One row per request per status change; key `REQUEST_ID` (`TLI-0412`), `VERSION`. Fields:
 `LIMIT_REF`, `CURRENT_LIMIT`, `REQUESTED_LIMIT`, `APPROVED_LIMIT`, `VALID_FROM`, `VALID_TO` (always ends), `REASON`, `COVERS_BREACH`,
 `REQUESTED_BY`, `RECOMMENDED_BY`, `RECOMMENDATION`, `APPROVER_ROLE` (board limits → `cro`), `STATUS` (`REQUESTED`, `RECOMMENDED`,

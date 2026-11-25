@@ -96,7 +96,7 @@ These are standard Apache Iceberg v2 tables: Spark, Trino, Snowflake or pyiceber
 see [the data lake guide, section 15](../guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
 **Further:** [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md) (the connector, sections 18 and 19),
-[../guides/DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage) (mixed storage). What Drishti reads and writes of the Iceberg spec:
+[../guides/DATA_GUIDE.md section 11](../guides/BANK_DATA_GUIDE.md#92-mixed-delta-and-iceberg-storage) (mixed storage). What Drishti reads and writes of the Iceberg spec:
 [DATA_LAKE_GUIDE.md section 15](../guides/DATA_LAKE_GUIDE.md#15-iceberg-spec-compliance).
 
 ## Step 2 · Publish the official results to Iceberg

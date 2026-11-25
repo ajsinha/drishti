@@ -1484,10 +1484,10 @@ itself, that is the site's choice and nothing moves.
 
 ## 23. Data bindings
 
-A module says which **kinds** it needs (banking: `trade`, [`scenario-pv`](../contracts/packs/market-risk.md#example-market-risk-scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv))
-or [`pnl-vector`](../contracts/packs/market-risk.md#example-market-risk-pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)),
-[`scenario-set`](../contracts/packs/market-risk.md#example-market-risk-scenario-set) ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)),
-[`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) …); the site decides
+A module says which **kinds** it needs (banking: `trade`, [`scenario-pv`](../contracts/packs/market-risk.md#example-market-risk-scenario-pv)
+or [`pnl-vector`](../contracts/packs/market-risk.md#example-market-risk-pnl-vector),
+[`scenario-set`](../contracts/packs/market-risk.md#example-market-risk-scenario-set),
+[`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) …); the site decides
 which connector or lake table serves each one. That decision is the **binding**, one per kind, shared by every module that needs the kind,
 kept in `config/bindings.yaml` (`drishti.bindings.file` names another place). A binding names connectors and lakes only; hosts, URLs and
 credentials stay in the connector files and the secret store, and no module ever sees them. The file's format and examples:
@@ -2479,7 +2479,7 @@ so a changed row is evident. The log is kept `retention.keep` (7 years); finishe
   [CONFIGURATION.md](../admin/CONFIGURATION.md#write-back-configedit).
 - Designing a form that submits (`form:`, `save:`, cells, the drawer, rules and hints, the designer, `sutra lint`):
   [BUILD_GUIDE.md](BUILD_GUIDE.md); every key is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#forms-form-on-a-panel).
-- Recomputing on a change: a computed connector with a `write-back` trigger ([tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)).
+- Recomputing on a change: a computed connector with a `write-back` trigger ([tutorial 19, Part C](../tutorials/25-computed-panels.md)).
 - The endpoints: [API_REFERENCE.md](API_REFERENCE.md). The commands: [CLI_REFERENCE.md](CLI_REFERENCE.md).
 - How it is built (lanes, fencing, the outbox, the applied event, the one queue): [ARCHITECTURE.md, section 31](../architecture/ARCHITECTURE.md).
 - The worked example: [tutorial 11](../tutorials/11-correct-and-approve.md).
@@ -2498,7 +2498,7 @@ between them without the menu.
 | Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
 | Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([API_REFERENCE.md (clients)](INTEGRATION_GUIDE.md#33-clients-scripts-notebooks-and-excel)) |
 | Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([ADMIN_GUIDE.md](ADMIN_GUIDE.md)) |
-| AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI_GUIDE.md](#271-model-providers)) |
+| AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([ADMIN_GUIDE.md › 27.1 Model providers](#271-model-providers)) |
 | Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)); its **Inbox** tab (`/admin/loads/inbox`, while the data inbox runs) is the inbox's status board: files waiting, the run loading table by table, the last cycles, failures with **Retry**, and **Load now** ([DATA_LAKE_GUIDE.md section 3.1](DATA_LAKE_GUIDE.md#31-the-data-inbox)) |
 | Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)) |
 | Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([INTEGRATION_GUIDE.md](../architecture/ARCHITECTURE.md#30-the-client-renderer-and-drishti-elements)) |

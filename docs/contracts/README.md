@@ -139,7 +139,7 @@ Every table in the risk lake joins to the masters and to each other through thes
 
 ## 5. Types, names and encodings
 
-- **Column names:** `UPPER_SNAKE`, as the trades use ([production-shaped trades](../guides/DATA_GUIDE.md#11-the-demo-data)). Nested objects keep the
+- **Column names:** `UPPER_SNAKE`, as the trades use ([production-shaped trades](../guides/BANK_DATA_GUIDE.md#9-the-demo-data)). Nested objects keep the
   same style (`LEGS[].NOTIONAL`).
 - **Types:** JSON in the test data, Delta types in the lake:
 

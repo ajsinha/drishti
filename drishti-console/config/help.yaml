@@ -288,8 +288,8 @@ contextual:
   simm: docs-guides-simm-guide   # ISDA SIMM, the SIMM screen (F1 and its ?): the SIMM guide
   play-simm: docs-guides-simm-guide#8-the-simm-playground-play-simm   # the SIMM Playground, PLAY SIMM
   func: admin#20-functions-func-every-command-and-turning-one-on-or-off       # Functions, FUNC (F1 and its ?): the command directory and, for administrators, the switches
-  datamap: user-guide#the-data-map   # the data map, DATAMAP (F1 and its ?): kinds, counts and joins checked against the data
-  data: user-guide#export-data     # Export data, EXPORT (DATA, its older word; F1 and its ?): every dataset, a simple selection, a day as .jsonl.gz
+  datamap: cli-guide#205-the-data-map   # the data map, DATAMAP (F1 and its ?): kinds, counts and joins checked against the data
+  data: cli-guide#206-export-data     # Export data, EXPORT (DATA, its older word; F1 and its ?): every dataset, a simple selection, a day as .jsonl.gz
   bi-designer: bi-reports#7-bi-studio-and-the-report-designer
   bi-theme-designer: bi-report-file#23-themes
   bi-transform: bi-python-notebook#5-data-prep-the-transform-editor

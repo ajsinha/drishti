@@ -64,7 +64,7 @@ The AI assistant and corrections with four eyes. The pivot engine, tables and mo
 
 ### Data in and out
 
-Connecting a source, a lake of your own and loading it every day, the data inbox, news in memory, Iceberg, and data out to any client. The world's public data is in the [world data guide](../guides/WORLD_DATA_GUIDE.md#tutorial-world-data-economies-companies-funds-entities-and-news), with the [public sector](../guides/WORLD_DATA_GUIDE.md#tutorial-public-sector-data-and-free-news).
+Connecting a source, a lake of your own and loading it every day, the data inbox, news in memory, Iceberg, and data out to any client. The world's public data is in the [world data guide](../guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen), with the [public sector](../guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen).
 
 | # | Tutorial | You will | Time | Status |
 |---|---|---|---|---|

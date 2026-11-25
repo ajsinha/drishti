@@ -34,7 +34,7 @@ Who reads what:
 | writing a pack by hand | sections [1](#1-what-a-pack-is) to [7](#7-modelling-content-vocabulary-about-text-help-facts-roles-calc) |
 | turning JSON files or a schema into a pack without writing files | sections [8](#8-the-pack-designer-create--new-pack) to [10](#10-a-pack-from-json-lines-pack-new), [a source system for an existing kind: the source system tutorial](BUILD_GUIDE.md), [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) |
 | writing the screens (Sutras) | sections [11](#11-what-a-sutra-is-and-when-one-applies) to [27](#27-common-mistakes-and-their-messages); every key, panel option, format and function is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench's manual in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
-| letting people edit records on a screen | [section 28](#28-forms-letting-people-edit-records); what happens to a change after that (submitting, approval, Admin → Edits) is in [APPROVALS_GUIDE.md](ADMIN_GUIDE.md) |
+| letting people edit records on a screen | [section 28](#28-forms-letting-people-edit-records); what happens to a change after that (submitting, approval, Admin → Edits) is in [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run) |
 | connecting a pack to a database, a lake or a queue | [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) and the per-connector pages they list |
 | changing Drishti's own code | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
 
@@ -172,7 +172,7 @@ good version running and shows on Admin → Packs. A pack folder copied into `co
 
 This is the pack **by hand**, to show every file. If your data is JSON Lines or has a JSON Schema you do not need to write these files:
 **Create → New pack** and `drishti.py pack make` ([section 8](#8-the-pack-designer-create--new-pack)) or `drishti.py pack new`
-([section 10](#10-a-pack-from-json-lines-pack-new)) turn a schema or a folder into a pack, and [tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page)
+([section 10](#10-a-pack-from-json-lines-pack-new)) turn a schema or a folder into a pack, and [tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench)
 designs its screen. Each step says what to type and what you should see; the outputs were produced by running the steps on the finished pack
 (your ticking numbers may differ a little: the ticket's age walks up and down).
 
@@ -3805,7 +3805,7 @@ same guarantees from `pack check` in its CI and the checklist on a scratch serve
 You can write every Sutra in this guide in a text editor. The **Build workbench** (**Create → New screen**) is the same language with the engine in the
 loop: the screen you see is the real one, every edit is an operation the server applies to the Sutra text (your comments and key order are kept), and
 the checks run as you type. Its full manual is [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench); a guided build is
-[tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page).
+[tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench).
 
 | You are doing | In the workbench | Section |
 |---|---|---|
@@ -3962,7 +3962,7 @@ A panel's `form:` lets people change the records it shows, or start new ones, wi
 
 Saving keeps a **draft** for each person, on the server. A form whose Sutra has `save:` also **submits** the draft as a change (a correction kept beside
 the source, an owned record, or an amendment sent through a connector, after approval where the policy asks): drafts, submitting, approval, Admin →
-Edits and switching write-back on are in [APPROVALS_GUIDE.md](ADMIN_GUIDE.md). This section is the author's side: declaring the form. The design is
+Edits and switching write-back on are in [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run). This section is the author's side: declaring the form. The design is
 [Forms and data entry](RACHANA_REFERENCE.md#10-forms-and-data-entry); every key is in [Forms](RACHANA_REFERENCE.md#forms-form-on-a-panel).
 
 ### 28.1 A form beside the table
@@ -4041,9 +4041,7 @@ The same form has four fields of the richer kinds:
 
 ### 28.3 Editing in the cells
 
-A credit limit's buckets (`/v/credit-limit/LIM-ALDERSHOT`) are edited straight in the table:
-
-![Edited cells: the changed limits tinted with "was", a value below what is used in red with the reason under the row](img/designer/form-cells.jpg)
+A credit limit's buckets (`/v/credit-limit/LIM-ALDERSHOT`) are edited straight in the table; what the user sees and the keys are [USER_GUIDE.md › Editing in the cells](USER_GUIDE.md#editing-in-the-cells). The panel declares it:
 
 ```yaml
   - id: buckets
@@ -4065,10 +4063,7 @@ A credit limit's buckets (`/v/credit-limit/LIM-ALDERSHOT`) are edited straight i
         - { rule: "limit <= used * 3", severity: warn, fields: [limit], message: "More than three times what's used: the credit committee reviews it." }
 ```
 
-A field edits the column whose `bind` names the same record field (`LIMIT` edits the column bound to `@.LIMIT`). **Enter** (or F2, or a click) opens a
-cell and **Enter** keeps the value in the draft; **Esc** undoes it; **Tab** keeps it and moves to the next editable cell (Shift+Tab back). A changed cell
-is tinted and says "was 337,000,000"; a bad one has a red border and the reason under its row. The bar above the table counts "2 changes not saved",
-with **Undo all** and **Review 2 changes** (which lists every change and saves the draft; it says "Fix 1 problem first" while one is wrong).
+A field edits the column whose `bind` names the same record field (`LIMIT` edits the column bound to `@.LIMIT`). A `readonly` field has a `reason`, a rule with `severity: warn` warns without blocking, and the draft, its tint, its review bar and its keys are the console's (USER_GUIDE, above).
 
 ### 28.4 New records in a guided drawer
 
@@ -4775,7 +4770,7 @@ this table is the map. Seven packs are on by default; the others are turned on b
 | `us-equities` | `USEQS` | — | `USEQ` `IDX` `SIC` `EDGAR` `FILING` `FACT` `PXH` (off by default; prices live only and internal) | `USEQ AAPL`, `IDX SP500` | [us-equities](../../modules/capital-markets/packs/us-equities/README.md) |
 | `gleif` | `GLEIF` | — | `LEI` `LEIG` `LEIR` `LEIC` `LEIM` (off by default; with `us-equities` on, a company and its LEI link both ways) | `LEI 8I5DZWZKVSZI1NUHU748`, `LEIG ALL` | [gleif](../../config/packs/core/gleif/README.md) |
 | `funds` | `FUNDS` | — | `FUND` `HELD` `TRACK` (off by default, after `us-equities`; [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) | `FUND QQQ`, `HELD AAPL` | [funds](../../modules/capital-markets/packs/funds/README.md) |
-| `compute-demo` | `CMPD` | — | `PBOOK` `PSTRIP` `PSUM` `PSUMJ` (a sample pack for reactive connectors; [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)) | `PSUM …` | [compute-demo](../../config/packs/core/compute-demo/README.md) |
+| `compute-demo` | `CMPD` | — | `PBOOK` `PSTRIP` `PSUM` `PSUMJ` (a sample pack for reactive connectors; [tutorial 19, Part C](../tutorials/25-computed-panels.md)) | `PSUM …` | [compute-demo](../../config/packs/core/compute-demo/README.md) |
 | genomics showcase (genomics module) | `GENOMICS` `PROTENG` | — | `genomics-showcase` and `protein-engineering`: the showcase's synthetic cohort and protein campaign (off by default, read from the demo lake; [GENOMICS_SHOWCASE.md](../../modules/genomics/docs/guide.md)) | `GWAS RESPONSE`, `PROTEIN HLXK7` | [genomics-showcase](../../modules/genomics/packs/genomics-showcase/README.md) |
 | public sector (economy module) | `WDEV` `CBNK` `STCAN` `OECDP` `ONEWS` `GDLT` | — | world development, central banks, national statistics, OECD, official news, GDELT events ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) | | [world-development](../../modules/economy/packs/world-development/README.md), [central-banks](../../modules/economy/packs/central-banks/README.md), [national-statistics](../../modules/economy/packs/national-statistics/README.md), [oecd](../../modules/economy/packs/oecd/README.md), [official-news](../../modules/economy/packs/official-news/README.md), [gdelt-events](../../modules/economy/packs/gdelt-events/README.md) |
 

@@ -120,7 +120,7 @@ documents. The pack declares the layout ([Declaring the layout in a pack](#decla
 ([DATA_LAKE_GUIDE.md](../../docs/guides/DATA_LAKE_GUIDE.md)). Giving `root`, `domain`, `table.<kind>` and `layout.<kind>.*` in the
 connector file instead is the form for tables no lake file describes (a vendor's table on S3).
 A Delta connector never writes per edit: write-back keeps corrections as overlays and the loader folds approved ones into the next build
-([APPROVALS_GUIDE.md](../../docs/architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
+([ARCHITECTURE.md › 31.6 Where a write lands: overlays, owned rows and the outbox](../../docs/architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
 
 ## Settings
 

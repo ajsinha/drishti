@@ -407,7 +407,7 @@ async def my_arrangement(request: Request, sutra: str):
 async def about(request: Request, kind: str, id_: str, generation: int = 0, format: str = ""):  # noqa: A002 - the query parameter's name
     """The body of the About this page drawer (an HTML fragment), asked for when the drawer first opens, never with the view.
     ``?format=json``: the explanation itself, ``{explain, index}`` (or ``{error: {code, detail}}``), for the pages the client-side renderer
-    draws: it draws the body from it (INTEGRATION_GUIDE.md section 12)."""
+    draws: it draws the body from it (INTEGRATION_GUIDE.md section 1.6.3)."""
     me = ident(request)
     extra = {}                                       # the language of the pack's text: ?locale=, else the user's setting, else the browser's
     loc = request.query_params.get("locale") or (await request.app.state.user_settings.get(request.app.state.backend, me)).get("locale")

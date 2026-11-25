@@ -933,7 +933,7 @@ A rolling upgrade of one node is section 8.2.
 
 The identity database is SQLite by default (`jdbc:sqlite:${drishti.data.dir}/identity/drishti.db`); a cluster needs PostgreSQL
 (`DRISHTI_IDENTITY_DB_URL`) so users, sessions, edit lanes and run leases are shared and failover works
-([APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). Size its `max_connections` for every member's pool
+([ARCHITECTURE.md › 31 Collaboration, write-back and approvals](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). Size its `max_connections` for every member's pool
 (`drishti.db.pool.size`, 20 a member); run a streaming standby (synchronous in one site, asynchronous to the recovery site); minor upgrades by
 standby switchover. The schema files are complete, with no migrations.
 
