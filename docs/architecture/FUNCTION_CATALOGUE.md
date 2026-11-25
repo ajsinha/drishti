@@ -61,7 +61,7 @@ for several arguments (Rachana's `min(a, b, ...)`), `cumulative` folded into `ru
 and models and rewritten by the migration tool. Rachana has the one names (`starts_with`, `ends_with`, `days_between`, `least`,
 `greatest`, `matches_case`, `one_of`); its old spellings `startsWith`, `days`, `matchesCase`, `oneOf` and `min`/`max` with several
 arguments are read with the results they always gave. Rachana's tier-1 functions, their rules and an example of each on the demo trade
-are in [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#functions). Since 2.9.11.e Rachana writes lists (`['DESK-COMM', 'DESK-RATES']`), a strict `in` (an empty list holds nothing) beside
+are in [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#functions). Rachana writes lists (`['DESK-COMM', 'DESK-RATES']`), a strict `in` (an empty list holds nothing) beside
 `one_of` (an empty choice holds everything, for controls), named arguments (`where = ...`) and the parent path `^`; checked mode
 types an expression where the types are known (BI_FOUNDATION_2911E.md section 2).
 
@@ -350,7 +350,7 @@ smoothing (`FORECAST.ETS`), `winsorize(x, pct)` (PROC UNIVARIATE), histogram bin
 *Product owner, 2026-11-03: "let us add functions, whatever makes sense": an analyst coming from Excel, SAS or MATLAB should rarely miss a
 function.* Every family of Excel's function list, SAS's DATA-step functions and PROC MEANS/UNIVARIATE/FREQ statistics, and MATLAB's
 (Octave's) everyday data functions, marked: **covered** (by which Drishti function, under its one name: the other names are documentation,
-never aliases), **added** (built in 2.9.11.e, sections 1 to 9), or **not** (why). Counts are of Excel functions, SAS functions and
+never aliases), **added** (sections 1 to 9), or **not** (why). Counts are of Excel functions, SAS functions and
 statistics, and MATLAB functions as the families list them.
 
 **The reasons a function is not added.** *Non-deterministic*: a figure must be the same each time it is asked for. *Spreadsheet-cell*:
@@ -400,7 +400,7 @@ calls for it; added on a person's request.
 | Text and dates | `upper`, `lower`, `strtrim` (`trim`), `strsplit` (`split`), `strjoin` (`string_agg`), `strrep` (`replace`), `regexp` (`regex_extract`), `regexprep` (`regex_replace`), `contains`, `startsWith`, `endsWith`, `datestr` (`text`), `year`, `month`, `day`, `weekday`, `calmonths` (`intck`), `busdate` (`shift_date`) | | `datetime('now')`, `now`, `clock`, `rand`, `randn`, `randi` (non-deterministic) |
 | Signal, matrices, toolboxes | | | `filter`, `conv`, `fft`, `ifft`, `xcorr` (signal processing: no use on risk data; `movmean` covers smoothing); `mtimes`, `inv`, `mldivide`, `det`, `eig`, `chol`, `svd`, `pca` (MX); plotting (`plot` …: the console draws); Financial Toolbox pricing (`blsprice`, `bndprice`, `zbtprice` …: QLRisk), `portvar`, `portopt` (risk engines, `measure(...)`) |
 
-**Counts (2.9.11.e).** Drishti gained **154** registered functions, each under its one name: 127 in Rachana (9 of them DEL's scalars,
+**Counts.** Drishti has **154** registered functions, each under its one name: 127 in Rachana (9 of them DEL's scalars,
 each one implementation shared with part A's fold: `round`, `len`, `date`, `year`, `quarter`, `month`, `week`, `day`, `shift_date`), 12 aggregates
 and 15 list analytics in the engine; Rachana's `sort` takes several keys. Counting each Excel, SAS or MATLAB name once as these tables
 list it (a family written with "…" counts once): **268** were already covered, **207** are answered by the added functions, **193** are not

@@ -1662,7 +1662,7 @@ words. Every setting: [DELTA_CONNECTOR.md section 14](../../plugins/drishti-plug
 
 ### 10.2 Planned (not built)
 
-> **Under construction.** On the owner's roadmap (2026-11-07) for the platform release 2.9.11.f; none of this works today.
+> **Under construction.** On the roadmap; none of this works today.
 
 | Planned | What it will do | Today |
 |---|---|---|

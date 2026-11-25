@@ -6,7 +6,7 @@
 
 # The thin console: the console asks the server
 
-**Internal. Status: S0 to S5, S6 (in part), S7 and S8a built; S8b (the lake build, lake maintenance and pack design as server jobs) to build.** Release 2.9.11.i5. Decided by the product owner on 2026-11-15: i5 makes the Python console
+**Internal. Status: S0 to S5, S6 (in part), S7 and S8a built; S8b (the lake build, lake maintenance and pack design as server jobs) to build.** Decided by the product owner on 2026-11-15: this design makes the Python console
 **thin** (the "middle path"); the move of the console to Spring Boot
 ([KERNEL_AND_MODULES.md section 10](KERNEL_AND_MODULES.md#10-the-drishti-console-on-spring-boot-a-separate-ui-tier)) is decided after
 it, for i7, with the numbers this release produces (section 6). The inventory in section 2 is of `wip/i4` at `213e980d2`.
@@ -559,14 +559,14 @@ and deletes what it replaces.
 
 | # | Screen | Replaces | Done |
 |---|---|---|---|
-| 1 | One Build home (rail, lists with lineage, first-visit tiles, one search) | Studio, BI Studio, the workbench, the pack tools' homes | ☑ (2.9.11.e: `/build`; BI Studio's own home `/bi` redirects to it, its four lists the home's For you strip) |
-| 2 | One Approvals queue (inbox, due soon, diff, effect, rules, questions) | the per-kind approval queues | ☑ (built in 2.9.11.e: `/approvals`, `/api/v1/approvals`; the access kinds and the effect in risk numbers are under construction) |
+| 1 | One Build home (rail, lists with lineage, first-visit tiles, one search) | Studio, BI Studio, the workbench, the pack tools' homes | ☑ (`/build`; BI Studio's own home `/bi` redirects to it, its four lists the home's For you strip) |
+| 2 | One Approvals queue (inbox, due soon, diff, effect, rules, questions) | the per-kind approval queues | ☑ (built: `/approvals`, `/api/v1/approvals`; the access kinds and the effect in risk numbers are under construction) |
 | 3 | One Explain (preview, drawer with four tabs, full page) | the five explain panels | ◐ built for VaR, ES, parametric, exposure, the MR cube's cells and the Pivot's Why did it move? card (`GET /api/v1/explain`, `drishti_explain.js`); BI measures and Sutra metrics in the under-construction registry (`explain-*`) |
 | 4 | The trader home (headline figures, books, markets, what changed, feed) | the generic home for the Trading lens | ☐ |
 
 ### 6. Controls screens: run status and sign-off, the breach queue, number honesty
 
-The screens of the controls a risk function runs every day, chosen by the product owner from mock-ups (2026-11-05), built in 2.9.11.f
+The screens of the controls a risk function runs every day, chosen by the product owner from mock-ups (2026-11-05), built
 (trust, RBAC, security and controls; the security rules themselves are settled in that release's design discussion). The mock-ups are
 in [mockups/controls/](mockups/controls); people, roles and API keys are in [EDITORS.md](#7-the-editors-one-pattern-for-every-object-people-author) sections 5 and 6; the Approvals
 queue and the Explain drawer they use are in [the shared screens part](THIN_CONSOLE_DESIGN.md#shared-screens-one-build-home-one-approvals-queue-one-explain-the-trader-home-the-controls-screens-and-the-editors).
@@ -881,11 +881,11 @@ old code is gone and its tests run against the new DOM with the same assertions.
 
 | Screen or part | Moved onto | Status | Deleted | Numbers checked by |
 |---|---|---|---|---|
-| Pivot screen (`drishti_pivot.js`, `terminal/pivot.html`) | drishti-grid, `layout: 'wells'`, `clientAggregation: false`, `serverPivot` (/api/pivot/query, progressive, compare), Explain = provenance | **moved** (2.9.11.e) | `drishti_pivot-grid.js` (the renderer 1.2.0 keeps the name as a loader of the grid), the field list and zones, their CSS | `test_pivot_screen_browser.py`, `test_pivot_switches_browser.py`, `test_pivot_functions_browser.py`, `test_pivot_expand_browser.py` (grand totals per column against the sample), `test_pivot_grid_fmt.py` (`measureText`), a one-off old-against-new parity on the VaR demo |
+| Pivot screen (`drishti_pivot.js`, `terminal/pivot.html`) | drishti-grid, `layout: 'wells'`, `clientAggregation: false`, `serverPivot` (/api/pivot/query, progressive, compare), Explain = provenance | **moved** | `drishti_pivot-grid.js` (the renderer 1.2.0 keeps the name as a loader of the grid), the field list and zones, their CSS | `test_pivot_screen_browser.py`, `test_pivot_switches_browser.py`, `test_pivot_functions_browser.py`, `test_pivot_expand_browser.py` (grand totals per column against the sample), `test_pivot_grid_fmt.py` (`measureText`), a one-off old-against-new parity on the VaR demo |
 | MR cube (`MCUBE`) and CCR cube presets | the Pivot screen; the lens's sparklines and the switches' comments as `decorateCell`; live patches flashed by the grid | **moved** | the lens's and switches' writes into the old grid's cells | `test_mr_cube_browser.py` (every cell the VaR engine's scope VaR, a total never the sum of its rows) |
 | Pivot functions' cards (why, what-if, functions) | drishti-inputs `DatePicker` for the two dates; the results stay plain tables (no sort, filter or paging) | **moved** | the two text date fields | `test_pivot_functions_browser.py` |
 | Tree rows, the nested pivot (`drishti_tree-rows.js`) | drishti-grid pivot mode, `chrome: false`, the panel's own answer | **moved** | the call into the old grid | `test_tree_rows.py` (in Chromium), `test_render_behaviours_browser.py` |
-| Tree rows, the table with children (`table.tbl-tree`) | drishti-tree's table tree (`treeTables`: the tree grid on drishti-grid's tree data, the org chart for one chain) | **moved** (2.9.11.e) | the console's toggles, filter and funnels on trees, drishti-grid's `tree` and `treeVisibility` | `test_tree_rows.py`, `tests/elements/tree-panel.test.mjs`, `test_colfilter_browser.py`, `test_render_library_browser.py`, `test_render_parity_browser.py` |
+| Tree rows, the table with children (`table.tbl-tree`) | drishti-tree's table tree (`treeTables`: the tree grid on drishti-grid's tree data, the org chart for one chain) | **moved** | the console's toggles, filter and funnels on trees, drishti-grid's `tree` and `treeVisibility` | `test_tree_rows.py`, `tests/elements/tree-panel.test.mjs`, `test_colfilter_browser.py`, `test_render_library_browser.py`, `test_render_parity_browser.py` |
 | BI table, perspective grid, a report's rows and as-table views (`drishti_bi-grids.js`) | drishti-grid, `chrome: false`, conditional formats and terminal links as `decorateCell`, data bars, the engine's totals under the grid | **moved** | the table's own `<table>` and sort code, `.bi-sorthead` | `test_bi_reports_browser.py`, `test_bi_new_visuals_browser.py` (the engine's totals), `test_bi_wave_b_browser.py`, `test_bi_live_browser.py` (masks), `test_embed_report_browser.py` |
 | Notebook result tables (`drishti_bi-notebook.js`) | drishti-grid | **moved** | the `<table>` | `test_bi_notebook_browser.py`, `test_bi_wave_c_browser.py` |
 | Chart any table, View as table (`drishti_table-chart.js`) | drishti-grid | **moved** | the `<table>` | `test_table_chart_browser.py` (every row in the CSV) |
@@ -953,7 +953,7 @@ description instead); the screens' scripts move into the banking plugin with the
 #### 10.3 Every designer, editor and authoring tool on the kit (the standing rule: no bespoke UI)
 
 The survey of 2026-11-07 (grep for drags, inspectors, palettes, outlines, code and YAML editors, then each authoring screen read). The
-old dataset wizard and model designer were deleted in 2.9.11.d; nothing of them survives (the Datasets page's "New table" opens the
+old dataset wizard and model designer were deleted; nothing of them survives (the Datasets page's "New table" opens the
 table editor, `/build/tables?new=table`; "the model designer" in two notes means the model editor).
 
 | Screen (files) | On the kit | Still its own (moving next) |
@@ -1003,7 +1003,7 @@ page's `DragHub`. The table editor's own formula widget folded into the `Form`'s
 console script draws a label and an input in a loop over a schema's properties or fields (an inspector or form pane made by hand); its
 allow-list (2: a lake's classifier and promote checkboxes, a BI transform's parameters) only shrinks and ends at 0.
 
-**The BI designer's own panes (2.9.11.e).** The panes the guard does not see moved too: every settings pane of the report designer and
+**The BI designer's own panes.** The panes the guard does not see moved too: every settings pane of the report designer and
 the theme designer (and, in the second BI pass, the Filters pane's editor, bookmarks, links, drill-through, the Phone and Tablet rows) is a `Form` through one helper (`drishtiBi.formatPane.form`: fields, values, a handler per top-level field; each
 control keeps its `data-*` hook, so tests and tutorials find it), and the ExpressionEditor is a one-line `CodeEditor` (the editor's
 completion in place of its own list). Saved reports are unchanged: a field writes only when a person changes it, and what it writes is

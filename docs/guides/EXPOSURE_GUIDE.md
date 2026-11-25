@@ -447,7 +447,7 @@ is the server's pre-deal check ([section 18.9](#189-the-pre-deal-check)), the pa
 - **The verdict**: the decision (**approve**, **refer**, **decline**) with its lamp, the limit's status (**within**, **near the limit**
   from `drishti.risk.limit-near` of it, 80% by default, or **over the limit**), the reason and every other reason; the tiles: the new trade, the limit
   use before → after with its status, the headroom after (and before), the incremental figure the limit is set on, EPE before → after,
-  the EAD (IMM, α × EEPE) before → after (the exact method only), SA-CCR's incremental EAD (under construction, 2.9.11.k); the table of
+  the EAD (IMM, α × EEPE) before → after (the exact method only), SA-CCR's incremental EAD (under construction); the table of
   the limit and each tenor bucket: limit, before, with the trade, increment, use before and after, headroom and status.
 - **Explain ›** (or a tile, or **E**): the one Explain of the check (kind `predeal`): the formula with its values (use = with ÷ limit,
   headroom = limit − with, each bucket, the near rule, EAD = α × EEPE, the decision rule), the inputs (the command, the netting set and how
@@ -1002,7 +1002,7 @@ counterparty, netting set, MtM, the `factor`, `side`, the candidate's notional a
 `buckets[]` with `bucket`, `limit`, `before`, `after`, `increment`, `useBefore`, `useAfter`, `headroomAfter`, `status`), `exposure`
 (`base`, `with`, `incremental` with the profile, as section 18.7; with the exact method also `ead`, the IMM EAD α × EEPE, in each, and
 `alpha`), `saCcr` (SA-CCR's incremental EAD:
-**under construction**, release 2.9.11.k), `flags`, `businessDate`, `runId`, `confidence`, `engine`.
+**under construction**), `flags`, `businessDate`, `runId`, `confidence`, `engine`.
 
 **Entitlements and audit.** The check is computed as the person asking: the counterparty's netting sets they see (others left out and
 the answer refers), a template only of a trade they see trade by trade; nothing per person is kept between requests (two people asking
@@ -1016,7 +1016,7 @@ and does not audit it a second time (`ExposurePreDealExplainer`).
 **Where**: the screen **Counterparties → Pre-deal check** (`PREDEAL <GO>`, `/predeal`, [section 7](#7-pre-deal-what-if));
 `POST /api/v1/risk/exposure/predeal` and `GET /api/v1/risk/exposure/predeal/grammar` (section 11); `drishti.py exposure predeal
 "PREDEAL CP-ALDERSHOT LIKE 1000001 250M"`; the Trading landing's new-trade check (its exposure half is this check). SA-CCR's incremental EAD and the other limits a trade touches (soft and hard
-limits, warnings, the maximum size: [LIM.md section 6.4](../contracts/LIM.md#64-pre-deal-check)) come with release 2.9.11.k.
+limits, warnings, the maximum size: [LIM.md section 6.4](../contracts/LIM.md#64-pre-deal-check)) are under construction.
 
 **Tests**: `ExposurePreDealApiTest` (the what-if equal to the full recompute with the trade booked, figure by figure and date by date;
 approve, decline on the limit and on a bucket, refer on a proxy, no limit, a measure not computed and no exposure; two people at once

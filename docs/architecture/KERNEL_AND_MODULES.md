@@ -100,11 +100,11 @@ them or off the glue between them. The names below are used throughout; *the ker
 | G3 | **A module carries everything its capability needs**: Java compute, services and API; Python compute; packs (kinds, contracts, Sutras, samples); console routes, templates, the domain Elements library, CSS on the theme tokens; lenses, functions, Home cards; feeds; Help, guides, tutorials, glossary; settings schema; licence feature | removing `banking.dmod` leaves no banking word, page, file, Help page, engine or API anywhere ([ACCESS_MODEL.md section 6](#6-guarantees-as-tests), extended to "not installed") |
 | G4 | **The kernel controls connectors.** A module declares the *data* it needs (kinds and contracts); the site binds its configured connectors and lake tables to them | no host or credential in any module file, and no connector outside its read-only templates, whose site values are `${...}` placeholders (a packager check, C9); Admin → Data bindings shows every need and what serves it |
 | G5 | **White label by configuration**: one distribution file picks modules, brand, theme, lenses, Home and docs | `drishti.finance` and a sample `drishti.genomics` boot from configuration only, from the same kernel build |
-| G6 | **VaR exactly equal** through every phase | the 2.9.11.c VaR check, bit for bit, at the 509 and 250 windows |
+| G6 | **VaR exactly equal** through every phase | the VaR check, bit for bit, at the 509 and 250 windows |
 
 ### 1.3 Non-goals
 
-- No public module marketplace or online repository in 2.9.11.i1–i4 (a site's module repository is phase P5).
+- No public module marketplace or online repository (a site's module repository is phase P5).
 - No third-party connector plugins inside modules, ever (G4). Connector plugins remain kernel extensions (section 2.4).
 - No OSGi or JPMS layer: one class loader per module with an explicit export list is enough and keeps Spring and the build simple.
 - No second way: banking does not keep an "in the jar" path once it is a `.dmod` (no dual machinery: the development fat jar is a build of the kernel plus modules, not a different loading path; section 4.10).
@@ -181,7 +181,7 @@ module (section 14.1 lists today's leaks).
 ### 2.2 The kernel API
 
 The kernel API is a **published, versioned contract**: what a module may compile against and rely on. It is one version number for
-the whole surface, `kernelApi: MAJOR.MINOR`, separate from the product version (2.9.11.i2 ships kernel API **1.0**; i1 ships 0.x).
+the whole surface, `kernelApi: MAJOR.MINOR`, separate from the product version (the kernel API is at **1.0**).
 
 | Surface | Form | Where |
 |---|---|---|
@@ -461,7 +461,7 @@ the registry (other kernel parts ask the registry). Every field:
 
 **First-party modules, like in-tree Linux drivers** (product owner, 2026-11-10). The manifest's `origin:` says `first-party` (built and
 shipped by the Drishti product, like a driver built in the kernel tree) or `third-party` (the default, like an out-of-tree driver). The
-claim is **verified, never trusted**: until signing (2.9.11.j) the kernel ships `first-party.yaml`, the ids and content hashes of its own
+claim is **verified, never trusted**: until signing exists the kernel ships `first-party.yaml`, the ids and content hashes of its own
 modules, and a `.dmod` is first-party only when its id and its `DMOD.MF` hash match; from j, when it carries the product's signature. Only
 a verified first-party module may use a **declared allowance** of kernel internals (`kernel-internals:` in its manifest, the list that may
 only shrink; banking's 44 packages in i2 + i3); conformance check C1 honours the allowance for it and refuses internals for every other
@@ -474,7 +474,7 @@ vermagic) and loads only on that build; on any other the kernel refuses it with 
 module". First-party modules without an allowance, and every third-party module, keep the ordinary `kernel-api` version range. The product's
 one build and release train builds banking with each kernel, so the two always ship together.
 
-**As built (2.9.11.i2 + i3, wave 2).** One implementation, `FirstParty` in the module runtime, answers for the verifier (`ModuleCli`) and the kernel.
+**As built.** One implementation, `FirstParty` in the module runtime, answers for the verifier (`ModuleCli`) and the kernel.
 The build (`packaging/dist`, Maven with no Python) packs every one of the product's twelve modules with the one packer (`ModulePack` of the module runtime, run as `ModuleCli module pack` on the server classes), verifies the ones with a server part with `ModuleCli verify` and writes
 `first-party.yaml` (id, version, SHA-256 of each `DMOD.MF`) from the packed files, in `packaging/dist/target/dmod`; at `package` it installs the packages and the list into the modules folder beside the server jar, which holds neither (`module install`: each through a `.part` file and one replace, an older version of the same module removed; `-Ddrishti.install.skip=true` installs nothing), and `packaging/drishti-app` installs the exec jar into `lib/` the same way (`module install-jar`). A package is stale (R2) when `module fresh` finds its module folder changed (by content, never by time) or its stamp is another jar's; `start server`, `start cluster` and a test session refuse it, naming the module and the command. A manifest
 whose `kernel-internals:` names a file (banking's `java/kernel-internals.txt`) gets the list written in by the packer, and the packer stamps
@@ -785,7 +785,7 @@ prefix.
 - The module's `python/` packages are made importable **only in that module's runs**: a run submitted by `banking` gets
   `<module>/python` prepended to its sandbox's import path; another module's runs never see it. The kernel's `drishti_kernel` package and
   the locked libraries are shared.
-- **Built (2.9.11.i4): the module's Python runs in the kernel's compute pool.** On load the module's vendored wheels are unpacked into
+- **Built: the module's Python runs in the kernel's compute pool.** On load the module's vendored wheels are unpacked into
   `<data>/compute/modules/<id>/site` and a pool `m-<id>` joins the compute service (`ComputeService.addModulePool`, the same `Pool` and
   workers as a site's pool: one implementation); its workers' path is the SDK, that folder and the module's `python:` `path:` folders, so
   modules cannot clash. The reactive connector and compute requests name the pool. On unload the pool is withdrawn (`PYTHON_ITEM`, step 4)
@@ -1313,7 +1313,7 @@ command at every step.
 | `drishti.py module …` | the command line of section 7.1 plus `new` and `run` (8.3, 8.4), for teams without Maven expertise |
 | a sample | the `genomics` sample module (examples in `examples/genomics/`), used by the SDK's own tests and by `drishti.genomics` |
 
-**As built (i7a): the SDK folder.** `python tools/drishti.py build sdk` writes `<home>/sdk/`: `repo/` (a Maven file repository with `drishti-kernel-api` and what it needs, the product's parent pom, `drishti-module-parent` and the archetype), `settings.xml` (that repository by absolute path, for `mvn -s`) and `drishti-module-parent/pom.xml` (for a `relativePath`). Maven runs `package`, never `install`. Nothing needs the kernel's sources: `tools/test_sdk_builds_genomics.py` builds the genomics sample from the SDK folder alone and packs and verifies it. The SDK folder also holds `drishti-testkit` in its repository (test scope in the parent's management), `kernel-libraries.txt` (read from `META-INF/drishti/kernel-libraries.txt` of the server jar in `<home>/lib`; the parent pom manages every library of it at the kernel's version, scope `provided`, so a module compiles against the copy the kernel runs with), `typings/` (the Elements and renderer `.d.ts` files of the newest vendored release) and `schemas/` (`contract.schema.json`; the other schemas of the table above are not written yet).
+**As built: the SDK folder.** `python tools/drishti.py build sdk` writes `<home>/sdk/`: `repo/` (a Maven file repository with `drishti-kernel-api` and what it needs, the product's parent pom, `drishti-module-parent` and the archetype), `settings.xml` (that repository by absolute path, for `mvn -s`) and `drishti-module-parent/pom.xml` (for a `relativePath`). Maven runs `package`, never `install`. Nothing needs the kernel's sources: `tools/test_sdk_builds_genomics.py` builds the genomics sample from the SDK folder alone and packs and verifies it. The SDK folder also holds `drishti-testkit` in its repository (test scope in the parent's management), `kernel-libraries.txt` (read from `META-INF/drishti/kernel-libraries.txt` of the server jar in `<home>/lib`; the parent pom manages every library of it at the kernel's version, scope `provided`, so a module compiles against the copy the kernel runs with), `typings/` (the Elements and renderer `.d.ts` files of the newest vendored release) and `schemas/` (`contract.schema.json`; the other schemas of the table above are not written yet).
 
 ### 8.2 The module as a Maven project
 
@@ -1732,7 +1732,7 @@ answers the thin console adds are the ones a Java console would ask too.
   depends on `async` discipline: one blocking call in a handler stalls every person served by that worker.
 - **One plugin model.** The kernel and the console load modules with the same library (`drishti-module-runtime`, 10.4) instead of a
   Java loader and a Python loader that must agree.
-- **Fewer cross-person leak risks.** The 2.9.11.b drill found engine state in a module-level Python global shared by every person (the
+- **Fewer cross-person leak risks.** A drill found engine state in a module-level Python global shared by every person (the
   session-isolation rule). In the Java console, per-person state lives only in the request and the session. Singletons are stateless
   services checked by an architecture test, and the conformance suite runs two people at once (C9).
 - **One security stack.** Spring Security handles sign-in, enterprise SSO (section 10.11), CSRF, headers and per-kernel tokens in the
@@ -3007,7 +3007,7 @@ predicate), `LiveIsolationTest` (a reader's row scope on shared sets), `SourceRo
 
 ## Drishti distributions: Drishti Risk, Drishti Finance, Drishti Genomics, Drishti All
 
-**Status: built (2.9.11.i2 + i3 wave 3, white label; section 10 is how it works as built).** The distribution file of
+**Status: built (white label; section 10 is how it works as built).** The distribution file of
 [KERNEL_AND_MODULES.md section 6](#6-the-distribution-file-white-label). One kernel build, one console build; each
 distribution is a distribution file plus the modules it picks. The owner demos and tests **Drishti Risk** and **Drishti Finance**;
 **Drishti Genomics** is the sample that proves the kernel carries no finance.
@@ -3255,11 +3255,11 @@ distribution ships its own files.
 
 ## Domain modules: the boundary between the core and banking
 
-> **What comes next is [the kernel and modules document](#contents)** (2.9.11.i, design): the kernel, the signed module package, loading from
+> **What comes next is [the kernel and modules document](#contents)** (design): the kernel, the signed module package, loading from
 > module folders, kernel-controlled data binding and distributions. Section 6 step 9, section 7's D1 and D6 and section 8's *Phase 2, still to do*
 > moved there (its section 12); this document stays the record of the split as built until that design's phase P2 completes.
 
-**Status: phase 1 (the backend) built in 2.9.11.f: the Java modules split, the cycles J1 to J6 broken, the API under `/api/v1/risk`, the
+**Status: phase 1 (the backend) built: the Java modules split, the cycles J1 to J6 broken, the API under `/api/v1/risk`, the
 packs naming their domain, the rules as tests. Phase 2's first half built: the console asks the server for modules and functions on every
 door, static assets by module and lens, the console cycles C1 to C7 broken in place, the console on `/api/v1/risk` (section 8). The moves
 (screens into the plugin folder, packs into domain folders, the banking configuration in its folders, editions folded into lenses)
@@ -3414,7 +3414,7 @@ No banking code imports another domain (there is no other domain's code yet), an
 `ArchitectureRulesTest`, in the console `tests/test_module_boundaries.py` (no core module imports a module's code, no core template
 includes a module's template or names its static files, no core script or style names a module's file). Admin → Saved VaR baskets
 (`/admin/scopes`) moved from the core's Admin routes to the VaR routes for the same rule. The generic packages that only *mention* VaR in their documentation (`compute.vector`, `compute.shard`, `server.shard`,
-`server.playground`) import nothing of banking; their comments are reworded when the documentation is rewritten (2.9.11.g).
+`server.playground`) import nothing of banking; their comments are reworded when the documentation is rewritten.
 
 ### 6. The move, step by step (after 2.9.11.d merges)
 
@@ -3456,7 +3456,7 @@ folders, 8, 9 and 10 are phase 2 (section 8).
 
 ### 8. Phase 1 as built, and what phase 2 must do
 
-**Built (2.9.11.f, backend; the CLIs, tools and documents on the new paths too):** the modules of section 3; J1 to J6; the API under `/api/v1/risk` with the old prefixes answered; module
+**Built (backend; the CLIs, tools and documents on the new paths too):** the modules of section 3; J1 to J6; the API under `/api/v1/risk` with the old prefixes answered; module
 registration through the registry (`@ConditionalOnModule`, `404 DRS-1025` for an off module's API, its engines *not installed* with the
 reason, its packs and connectors not loaded); functions in the manifests, the mnemonic switches decided by the registry, a function off
 answering `404 DRS-1026`; packs naming their `domain:`; the rules of section 4 (Java) as `ArchitectureRulesTest`; the backend guarantee
@@ -3468,7 +3468,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
 `TokenScopeGuardTest` beside the server's, over the banking API. Banking tests start the whole server through `BankingTestServer`
 (`@SpringBootConfiguration` importing `DrishtiApplication`), with the server's test helpers from its test jar.
 
-**Phase 2, first half, as built (2.9.11.f, the console; additive, no screen moved):**
+**Phase 2, first half, as built (the console; additive, no screen moved):**
 
 - **The console asks the server** and nothing else. The public about answer lists the `modules` loaded at the server's start (polled with
   the edition and the engines, kept per console app: `core/modules.py` `State`); `GET /api/v1/modules`, as the person, answers the modules
@@ -3502,7 +3502,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   its files; no core script or style names a module file), the Elements loader's refusal (`tests/elements/core.test.mjs`), and on the
   server `BankingModuleOffTest` / `BankingModuleOnTest` (the console's answers: `/api/v1/modules` and `/public/about`).
 
-**Phase 2, second half, as built so far (2.9.11.f):**
+**Phase 2, second half, as built so far:**
 
 - **The console plugin's moves** (with `git mv`, so later merges follow): the banking routes (`drishti-console/plugins/banking/routes`: VaR, regulatory
   VaR, SMAT, FRTB-SA, SIMM, the playgrounds, exposure and the pre-deal check, the MR cube, the trading and market landings' figures), its
@@ -3517,9 +3517,9 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
   counts only where the module is installed.
 - **Rule 4 (strings)**: `tools/domain_strings.py` counts the banking names (command words, engine ids, connectors, API and console paths,
   packages) in the core's code (Java outside the banking modules; the console's core, routes, scripts, styles and templates) against
-  `tools/domain_strings_allowed.yaml` (empty since 2.9.11.i1: a line that only looks like banking carries `domain-strings: generic`), which only shrinks (a quick file check, `tools/test_domain_strings.py`).
+  `tools/domain_strings_allowed.yaml` (empty: a line that only looks like banking carries `domain-strings: generic`), which only shrinks (a quick file check, `tools/test_domain_strings.py`).
 
-**Phase 2, second half, as built (2.9.11.f, the configuration):**
+**Phase 2, second half, as built (the configuration):**
 
 - **The banking token declarations** are the module's: `META-INF/drishti/token-scopes.yaml` in its jar (`module:`, `read-posts:`,
   `scopes:`, the shapes of `drishti.security.token-read-posts` and `token-scopes`), merged by the core's `ModuleTokenScopes` into the

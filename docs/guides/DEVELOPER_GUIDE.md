@@ -191,7 +191,7 @@ server nor Spring, and the Delta and Iceberg source plugins read the lake throug
 
 `drishti-module-runtime` loads **modules**: separately built packages (`<id>-<version>.dmod`) installed unpacked under a module folder
 as `<folder>/<id>/<version>/` with the package beside them (the design: [KERNEL_AND_MODULES.md sections 3, 4, 9.8 and 12](../architecture/KERNEL_AND_MODULES.md#3-the-module-package-dmod)).
-It is a library; a host (the kernel, from i5 also the console) makes one `ModuleRuntime` and adds only its own kind of contribution through
+It is a library; a host (the kernel, and the console) makes one `ModuleRuntime` and adds only its own kind of contribution through
 `ModuleHost`. With no module folder, or an empty one, it does nothing.
 
 ```java

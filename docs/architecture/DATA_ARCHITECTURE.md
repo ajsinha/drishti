@@ -3210,7 +3210,7 @@ The user-facing behaviour (the lake file, the inbox's folders and cycle, the `.r
 [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md); this section keeps only how it is built and why. Requested by the product owner on
 2026-11-03 ("an automatic data loader: a `dataload/inbox` and `dataload/outbox` folder … every 10 minutes … ingest them using Java into
 Delta … a separate Maven module; it can work as a thread in the server"); the load rules decided 2026-11-04; the per-lake folders, the
-demo move and the `.ready` file's `lake:` added in 2.9.11.d (2026-11-07).
+demo move and the `.ready` file's `lake:` decided 2026-11-07.
 
 ### 1. Reused, never rewritten
 
