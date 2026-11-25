@@ -253,7 +253,7 @@ abstract class IdentityStoreContract {
         assertThat(roles.find("credit-analyst").orElseThrow().calc()).isTrue();
         assertThat(roles.find("credit-analyst").orElseThrow().layout()).isTrue();
         assertThat(roles.find("credit-analyst").orElseThrow().mayOpen("trade")).isTrue();
-        // a module permission round-trips by its own name (var:system-baskets, KERNEL_AND_MODULES.md section 8); an unknown one is not kept
+        // a module permission round-trips by its own name (var:system-baskets, KERNEL_AND_MODULES.md section 19.8); an unknown one is not kept
         roles.save(new RoleDefinition("basket-keeper", "", List.of("*"), false, false, false, false, false, true, true, false, false, null, null,
                 Set.of(), false, Set.of("var:system-baskets", "var:nothing")), "ops", Set.of("admin"));
         roles.refresh();

@@ -1701,7 +1701,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   shows the new picture (the old flow diagram is deleted) and links the page; the PDF is generated and
   checked with the other guides' (`tools/docs/md_to_pdf.py`).
 - **Banking is a module** (2.9.11.i2 + i3, wave 2, option A; [KERNEL_AND_MODULES.md section 3.3](docs/architecture/KERNEL_AND_MODULES.md#33-the-manifest-moduleyaml),
-  [DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute), [DISTRIBUTIONS.md section 10](docs/architecture/KERNEL_AND_MODULES.md#10-how-it-works-as-built)).
+  [DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute), [DISTRIBUTIONS.md section 10](docs/architecture/KERNEL_AND_MODULES.md#2010-how-it-works-as-built)).
   First-party modules: `origin: first-party` is verified against the `first-party.yaml` the build ships (ids and hash-list hashes); only
   such a module may declare a `kernel-internals:` allowance, honoured by conformance check C1 and the module class loader, and a module
   with one loads only on the exact kernel build stamped into it ("built for kernel X, this is Y: install the matching module"). One
@@ -1715,7 +1715,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   loaded. Removing banking from a running server answers 410 (*needs module
   banking*) for its API (old prefixes too) and pages, installing it again brings back the same VaR, and its class loader is collected (leak-free).
 - **The genomics sample module and Drishti Genomics** (2.9.11.i2 + i3, wave 3; [DEVELOPER_GUIDE.md section 1.9](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step),
-  [DISTRIBUTIONS.md section 4](docs/architecture/KERNEL_AND_MODULES.md#4-drishti-genomics-sample)). `modules/genomics`, a third party's module
+  [DISTRIBUTIONS.md section 4](docs/architecture/KERNEL_AND_MODULES.md#204-drishti-genomics-sample)). `modules/genomics`, a third party's module
   made from the archetype and finished by hand on the kernel API and the plugin API only: a VCF reader as a connector extension inside
   the module (a module's `SourcePlugin` is routed while it is loaded, started with its folders), the kinds `variant`, `sample`, `gene`,
   `cohort`, the functions `VARIANT`, `GENE`, `COHORT` on one page folder, synthetic samples (a seeded generator), its `.dmod` built in the
@@ -2052,7 +2052,7 @@ The Python commands release. The build still reports its version as 2.9.11.g (th
   notice are the control. API: `/api/v1/risk/var/system-baskets` (list, one, save, retire, export, import).
 - **Module permissions on roles:** a role carries `permissions` (today `var:system-baskets`): in configuration and packs
   (`permissions: [var:system-baskets]`), in Admin → Roles (*Permissions*) and the role API; kept as a power row (no schema change);
-  every administrator holds them ([ACCESS_MODEL.md section 8](docs/architecture/KERNEL_AND_MODULES.md#8-as-built-the-backend-phase-1-of-the-split)).
+  every administrator holds them ([ACCESS_MODEL.md section 8](docs/architecture/KERNEL_AND_MODULES.md#198-as-built-the-backend-phase-1-of-the-split)).
 
 - **(Blank) nodes:** a row whose level column is empty, or whose source does not promote it, sits under a **(Blank)** node at that level,
   under its real parent, the deeper levels beneath it (Power BI's convention): never refused, never dropped, the totals complete. The
@@ -2285,7 +2285,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   finds the `Form` with `formOf(host, {widgets})`; its own `new Form` path and the `data-qf-schema` attribute are deleted. `formOf`
   called with `widgets` on a `Form` already drawn draws its fields again with them, the values kept. The page's GET address and every
   criterion's name (`op.`, `v.`, `v2.`, `cs.<path>`) are unchanged.
-- **The Admin forms, part 2, on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
+- **The Admin forms, part 2, on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#910-drishtis-screens-on-the-libraries)):
   Users, Roles, Access, Audit, Configuration (search and *Propose a change*), Connectors (the list's filters and the connector editor),
   Artifacts (filters, a BI file), Packs (the archive, the signature, the breaking-change box), a pack's *Load a data file*, Lakes,
   Drishti*net (seed, map filter, *Explain a request*, nodes per role, this node's tags, the file's YAML), Capacity (the plan's inputs, the
@@ -2327,7 +2327,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   record forms' enum and lookup cells (it opens on the value; a pick saves), the refresh interval, the table chart, and the banking
   plugin's trading landing, market-risk ladder and scenario matrix is drishti-inputs' `<drishti-select>`: search on a long list,
   type-ahead, the kit's keys; a form submits the same names; 39 files and 78 selects off the guard's allow-list.
-- **The theme designer's YAML on the kit's `YamlPane`** ([ELEMENTS.md section 12.3](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
+- **The theme designer's YAML on the kit's `YamlPane`** ([ELEMENTS.md section 12.3](docs/architecture/THIN_CONSOLE_DESIGN.md#910-drishtis-screens-on-the-libraries)):
   the theme as YAML is BI Studio's YAML panel (Visual, YAML, Both), both ways: an edit is read by the server after a pause, a line that does
   not read is marked and the theme keeps its last good version; the hand-made YAML writer and the text area are deleted (`dumpYaml` writes it).
 - **The Phone and Tablet orders on the kit's `LayoutModel`** ([ELEMENTS.md section 8.9](https://github.com/ajsinha/drishti-elements/blob/v2.4.0/docs/DESIGN.md)):
@@ -2346,7 +2346,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 - **The workbench's menus on drishti-inputs** (Add panel, Bind field, File, Ship, the command palette, a dropped field's kinds): `Listbox`
   under a search ranked by `searchOptions`, placed by drishti-core (`build/drishti_menus.js` 132 → 119 lines; the hand-made listbox and
   its CSS deleted). `Listbox` gains `followActive`; `searchOptions` ranks a label that is the word first.
-- **Admin forms, part 1, on the one server-drawn form** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
+- **Admin forms, part 1, on the one server-drawn form** ([ELEMENTS.md section 12.3, sixth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#910-drishtis-screens-on-the-libraries)):
   Collaboration (search, holds, export, verify, the list toggles, a comment's hide reason), Data loads (the filter embedded in its GET
   form, Announce, Expectations with a repeatable row per kind), Embedding (filter, new application, the secret, rotate) and Lakes ›
   Maintain (the choices, settings, a new schedule) are drawn by the same machinery as part 2: `core/form_kit.py`'s field helpers, the one
@@ -2358,14 +2358,14 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 - **Fixed: an unchecked "Active" saved as active.** The alert form, a scheduled report and a subscription read a missing `enabled` field
   (an unchecked checkbox is not sent) as on; now as off, and the subscribe form drawn again after a refusal keeps the box as it was. Tests
   in `test_alert_routes.py` and `test_dist_routes.py`.
-- **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
+- **The alert form on drishti-inputs' `Form`** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#910-drishtis-screens-on-the-libraries)):
   the server sends the form's schema (`core/alert_form.py`, new, 168 lines) and the page's `Form`, embedded in its POST form, draws every
   field with the name it always submitted (saving and *Check now* unchanged); the source, condition and trigger groups follow the choice
   through `when`, the model's measures and the filters' fields arrive as the server answers (`Form.setOptions`), and the filters are an array
   of objects written into the hidden `model_query`. `drishti_alert-form.js` 218 → 191 lines, `alert_form.html` 163 → 69; the hand-made groups,
   filter rows, swapped select and their CSS deleted. **drishti-inputs**: `Form.setOptions(path, list, labels)`, an array's `itemHook` and
   `addHook`.
-- **No bespoke UI, the editors' rows on drishti-grid editing** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
+- **No bespoke UI, the editors' rows on drishti-grid editing** ([ELEMENTS.md section 12.3, fifth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#910-drishtis-screens-on-the-libraries)):
   the model editor's tables, relationships, measures (the ? card and the engine's "adds up?" as drawn cells), hierarchies, row rules,
   fields and access matrix, and the table editor's source and look-ups and its columns checklist are drishti-grid with cell editing through
   one helper (`E.rowGrid`, `drishti_editor-formula.js` 59 → 92 lines; `drishti_editor-model.js` 332 → 340 and `drishti_editor-table.js`
@@ -2438,7 +2438,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   connected graph on a canvas (counterparty, ownership and AML networks; layouts, paths, grouping, Explain, a linked table), a tree
   (org chart, tree grid with ◆ non-additive measures, sunburst; re-parenting as a four-eyes proposal), and the one shell every
   designer is built on, shown as the BI report designer and as the form designer. Design only.
-- **No bespoke UI, the panes** ([ELEMENTS.md section 12.3, fourth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
+- **No bespoke UI, the panes** ([ELEMENTS.md section 12.3, fourth pass](docs/architecture/THIN_CONSOLE_DESIGN.md#910-drishtis-screens-on-the-libraries)):
   the Build workbench's inspector is drishti-designer's `Inspector` (one live `Form` from the Rachana schema; `build/drishti_inspector.js`
   286 → 242 lines) and its palette the kit's `Palette` (`build/drishti_palette.js` 80 → 63); its expression fields are `Form`'s new
   **formula** widget, a one-line `CodeEditor` completing shape paths and functions (`build/drishti_expr.js` 107 → 65: the hand-made
@@ -2456,7 +2456,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   top bar's Known at, compare, the record forms). The column filter's dates and BI's date parameters are the date picker. Deleted: the
   query form's server-drawn fields, its dependents and long-list search, the record forms' field boxes, messages and currency painter,
   the inspector's hand-made lists, objects and number checks, the Format pane's hand-made controls, and their CSS.
-- **No bespoke UI, the second pass** ([ELEMENTS.md section 12.3](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
+- **No bespoke UI, the second pass** ([ELEMENTS.md section 12.3](docs/architecture/THIN_CONSOLE_DESIGN.md#910-drishtis-screens-on-the-libraries)):
   `trackPointer` moved into drishti-core (with pointer capture); the Sutra designer's Customize, Grid and Outline drags, the BI designer's
   field, visual-type and well drags, layout mode, screen arranging, workspaces and sliders on it or on drishti-designer's `DragHub` (their
   HTML5 drags deleted); drishti-inputs makes a page's `<textarea data-di-code>` a code editor (`upgradeCodeArea`) and the connector,
@@ -2471,7 +2471,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
   leaving comes only after a person's edit, never for the page's own text. drishti-designer's `Outline`: a node's `cls` and its own
   `data-*` attributes. The guard's allow-list went from 3 files to 1 (the workbench's data-shape tree, moved onto drishti-tree on its
   own branch).
-- **No bespoke UI: the BI designer's own panes** ([ELEMENTS.md section 12.3](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
+- **No bespoke UI: the BI designer's own panes** ([ELEMENTS.md section 12.3](docs/architecture/THIN_CONSOLE_DESIGN.md#910-drishtis-screens-on-the-libraries)):
   conditional formatting (each rule a live `Form` whose fields follow its kind; the 2.1 short form a Form's repeatable rows), the theme
   designer's name, series colours (repeatable rows: add, remove, move; 3 to 12), colours and type, Edit interactions, the tooltip page,
   the page's layout, the report's theme and kiosk rotation, a board tile's report, visual and alert, and the visual's, page's and
@@ -2890,7 +2890,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
 - **Settings tiers, one home** (`tools/settings_schemas.yaml` `tiers`): everyday by area:key (18), expert by pattern in the areas that
   hold internals (413), admin by area (1,720); CONFIGURATION.md gains a *Tier* column; `settings_catalogue.py --check` fails when an area has
   no tier or a listed key or pattern matches nothing (`test_settings_catalogue.py`).
-- **The BI and Pivot family moved onto drishti-grid** ([ELEMENTS.md section 12.1](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
+- **The BI and Pivot family moved onto drishti-grid** ([ELEMENTS.md section 12.1](docs/architecture/THIN_CONSOLE_DESIGN.md#910-drishtis-screens-on-the-libraries)):
   - **The Pivot screen** (`PIVOT`, and its presets the MR cube `MCUBE` and the CCR cube) is drawn by drishti-grid in its `wells`
     layout: the catalogue's fields, a document's paths by their grain and the engine's measures are the grid's fields; the wells, the
     member filters, + and −, a level (1 to 9), Shift+→ and the aggregation menus build the view, and every answer is the server's
@@ -2944,7 +2944,7 @@ The release train ships 2.9.11.e, 2.9.11.f, 2.9.11.g and 2.9.11.h as one tag, v2
     sets the machine was shared with other runs and the sums varied by run (2,252 s before, 3,835 s after, 1,744 s in 2.9.11.d's
     drill), so they say nothing either way. The thinner screen tests the owner asked for come with the component tests (the gallery).
   - **Still to move** (ELEMENTS.md 8.6): the multi-select, the pickers, the controls, the forms and the Build and Studio editors.
-- **The VaR and exposure family on Drishti Elements** ([ELEMENTS.md section 12.2](docs/architecture/THIN_CONSOLE_DESIGN.md#10-drishtis-screens-on-the-libraries)):
+- **The VaR and exposure family on Drishti Elements** ([ELEMENTS.md section 12.2](docs/architecture/THIN_CONSOLE_DESIGN.md#910-drishtis-screens-on-the-libraries)):
   every table of the VaR explorer (the scope tree as tree data, the path, the history, the contributions, the captures, the
   currencies), parametric VaR, the basket's sheet (now drishti-grid's cell editing: typing, Enter, Tab, Delete, undo; the paste with
   headings stays the sheet's) and its what-if, the VaR Playground (its six header rows pinned), backtesting, the regulatory screens, the

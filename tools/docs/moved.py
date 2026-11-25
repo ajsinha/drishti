@@ -101,6 +101,15 @@ def non_markdown() -> list[str]:
 
 
 DOCREF = re.compile(r"[\w./<>-]*[\w<>-]+\.(?:md|pdf)(?:#[\w.-]+)?|\b[A-Z][A-Z0-9_]{4,}\b")
+SECTION = re.compile(r"(\bsections? |\bDOC )\d[\d.]*(?: (?:to|and) \d[\d.]*)?")
+
+
+def _plain(line: str) -> str:
+    """A line with its documents and its section numbers blanked: the numbering repair (i7m) renumbers the appended parts, and a citation of
+    one follows (a comment or a docstring that says only which section)."""
+    return SECTION.sub(r"\1N", DOCREF.sub("DOC", line))
+
+
 INTENDED = ROOT / "tools" / "docs" / "intended.yaml"
 
 
@@ -132,7 +141,7 @@ def classify(diff: str, rules: list[dict] | None = None) -> dict[str, list[str]]
                 why = "test"
             elif COMMENT.match(line):
                 why = "comment"
-            elif twin is not None and DOCREF.sub("DOC", line) == DOCREF.sub("DOC", twin):
+            elif twin is not None and _plain(line) == _plain(twin):
                 why = "reference"
             else:
                 why = _decision(cur, rules) or "bad"

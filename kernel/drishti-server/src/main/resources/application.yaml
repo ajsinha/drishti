@@ -773,7 +773,7 @@ drishti:
     server-roles: {}                 # "[server]": [roles]   absent = every signed-in user
     tool-roles: {}                   # "[server/tool]": [roles]
     server-features: {}              # "[server]": [features]
-  approvals:                         # the one Approvals queue (docs/architecture/THIN_CONSOLE_DESIGN.md section 2; USER_GUIDE.md, Approvals)
+  approvals:                         # the one Approvals queue (docs/architecture/THIN_CONSOLE_DESIGN.md section 8.2; USER_GUIDE.md, Approvals)
     due-soon-days: 3                 # an item due within this many days (or overdue) is pinned at the top as due soon
     due-days:                        # per kind: an item with a period is due this many days after its period ends
       var-report: 30                 # a regulatory report run (VAR_GUIDE.md section 18.14)

@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * The access model in YAML files (KERNEL_AND_MODULES.md section 4):
+ * The access model in YAML files (KERNEL_AND_MODULES.md section 19.4):
  *
  * <ul>
  *   <li>each module's manifest, shipped in its jar as {@value #MANIFEST} (found on the class path: installed exactly when present);</li>

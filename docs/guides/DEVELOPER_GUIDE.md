@@ -489,7 +489,7 @@ is not listed, so its visual is gone from the gallery (and its library answers 4
 
 `modules/genomics` is a third party's module (publisher Helix Lab, a sample) made from the archetype and finished by hand: it uses
 `drishti-kernel-api` and the plugin API only (C1) and carries no finance. Drishti Genomics (`--distribution genomics`) runs the thin
-kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/KERNEL_AND_MODULES.md#4-drishti-genomics-sample)).
+kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/KERNEL_AND_MODULES.md#204-drishti-genomics-sample)).
 
 1. **Generated.** `mvn archetype:generate -DarchetypeArtifactId=drishti-module-archetype -DgroupId=org.helixlab -DartifactId=genomics
    -Dpackage=org.helixlab.genomics -Ddomain=genomics` (the first commit of the module is the archetype's output, unchanged).

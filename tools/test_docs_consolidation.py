@@ -15,6 +15,7 @@
 """Unit tests of the documentation consolidation tools (i7k): corpus manifest, moved.yaml, moved.py, dup_check.py, merge_audit.py."""
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -127,3 +128,42 @@ def test_merge_audit_over_the_tree_finds_nothing_missing_with_both_merge_logs(ca
     d = ROOT / "tools" / "docs"
     assert merge_audit.main(["--show", "0", "--log", str(d / "merge_log_A.txt"), "--log", str(d / "merge_log_B.txt")]) == 0
     assert "120 merged sources audited, 0 items not found" in capsys.readouterr().out
+
+
+# i7m, plan section 5: a document's appended parts take the next numbers, so no two headings of one level carry the same leading number
+# (a link to "section 3" and an anchor "#3-..." would otherwise name two places). The documents below are repaired by the guide merges of
+# i7n; the second test keeps this list honest (a repaired document must leave it).
+NUMBERING_PENDING_I7N = {
+    "docs/architecture/DATA_ARCHITECTURE.md", "docs/contracts/CSV_FORMATS.md", "docs/guides/AI_GUIDE.md", "docs/guides/BANK_DATA_GUIDE.md",
+    "docs/guides/CLI_REFERENCE.md", "docs/guides/DATA_GUIDE.md", "docs/guides/DEVELOPER_GUIDE.md", "docs/guides/RACHANA_REFERENCE.md",
+    "docs/guides/USER_GUIDE.md", "docs/guides/WORLD_DATA_GUIDE.md",
+}
+_NUMBERED = re.compile(r"(#{2,6}) (\d+(?:\.\d+)*)\.? ")
+
+
+def _duplicate_numbers(path: str) -> list[str]:
+    seen: dict[tuple[int, str], int] = {}
+    out, fence = [], False
+    for i, line in enumerate((ROOT / path).read_text(encoding="utf-8").splitlines(), 1):
+        if line.lstrip().startswith("```"):
+            fence = not fence
+        elif not fence and (m := _NUMBERED.match(line)):
+            key = (len(m.group(1)), m.group(2))
+            if key in seen:
+                out.append(f"{path}:{i}: two level-{key[0]} headings numbered {key[1]} (the other at line {seen[key]})")
+            seen.setdefault(key, i)
+    return out
+
+
+def _numbered_documents() -> list[str]:
+    return [p for p in corpus.tracked() if p.startswith("docs/") and not p.startswith(("docs/products/", "docs/contracts/packs/"))]
+
+
+def test_no_document_numbers_two_headings_alike():
+    bad = [x for p in _numbered_documents() if p not in NUMBERING_PENDING_I7N for x in _duplicate_numbers(p)]
+    assert not bad, "\n".join(bad)
+
+
+def test_the_numbering_pending_list_is_honest():
+    fixed = [p for p in sorted(NUMBERING_PENDING_I7N) if not _duplicate_numbers(p)]
+    assert not fixed, f"repaired: take these out of NUMBERING_PENDING_I7N: {fixed}"

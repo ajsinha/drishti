@@ -365,7 +365,7 @@ describes every kind in depth. The full grammar is in
 options) and to the binder on the Java side, plus a Jinja macro in `_macros/panels.html` and its client-side
 handling on the console ([section 7a](#7a-how-a-screen-is-made-generic-not-bespoke) maps each kind to its macro).
 
-**Formats** (`fmt`) are named and config driven: the core set is `formats.yaml` of Drishti Elements (`data/formats.yaml` of its vendored copy, a resource of drishti-rachana: [ELEMENTS_IN_DRISHTI.md](THIN_CONSOLE_DESIGN.md#5-the-two-tables-the-server-reads))
+**Formats** (`fmt`) are named and config driven: the core set is `formats.yaml` of Drishti Elements (`data/formats.yaml` of its vendored copy, a resource of drishti-rachana: [ELEMENTS_IN_DRISHTI.md](THIN_CONSOLE_DESIGN.md#95-the-two-tables-the-server-reads))
 (`text`, `amount0`, `amount2`, `signed0`, `signed2`, `pct0`, `pct2`, `price2`, `compact` (4.1m), `date`, `dmy`), a
 site file can be named in `drishti.rachana.formats-file`, and packs add their own (the finance pack's
 `config/formats.yaml` adds `pct4`, `rate5`, `pips1`, `df4`, `bp1`). **Tones** (`sign`, `threshold`, `status`) colour
@@ -2811,7 +2811,7 @@ version's `integrity.json` (SHA-384 of every distributed file and of the rendere
 - **Lifecycle.** `embed.lifecycle` (one entry per API major) adds `Deprecation` (RFC 9745), `Sunset` (RFC 8594) and a `Link` to every
   answer from the announcement, and `410 DRS-8006` from the sunset day; a `Drishti-Embed-Api` header naming an unserved major is `410`.
 - **Packages.** `@drishti/render` is the version folder laid out as an npm package (documented, not published); the Elements libraries are
-  a separate project, Drishti Elements, vendored at a pinned version ([the Elements in Drishti part](THIN_CONSOLE_DESIGN.md#drishti-elements-in-drishti)).
+  a separate project, Drishti Elements, vendored at a pinned version ([the Elements in Drishti part](THIN_CONSOLE_DESIGN.md#9-drishti-elements-in-drishti)).
 
 ### 30.8 The parity suite
 

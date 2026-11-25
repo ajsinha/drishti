@@ -83,7 +83,7 @@ public class ExposureConfiguration {
         return new ExposureCaches(svc);
     }
 
-    /** Explain an exposure figure (kind exposure, the one Explain of THIN_CONSOLE_DESIGN.md section 3). */
+    /** Explain an exposure figure (kind exposure, the one Explain of THIN_CONSOLE_DESIGN.md section 8.3). */
     @Bean
     com.ash.drishti.kernel.api.explain.Explainer exposureNumberExplainer(ExposureViews views) {
         return new ExposureNumberExplainer(views);

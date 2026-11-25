@@ -1492,7 +1492,7 @@ away. Admin → Data loads → Routing rules shows each rule's origin (`site` or
 
 **Refusals.** A `where` that is not a predicate, a map file that is missing, unreadable, maps two fields to one, or names an unknown cast,
 refuses the connector at load with `DRS-5034`, shown on Admin → Connectors with the reason; the rest of the server runs. A connector's `where`
-may not name `$user`: person attributes belong in a role's row rule ([ACCESS_MODEL.md section 10](../architecture/KERNEL_AND_MODULES.md#10-row-rules)).
+may not name `$user`: person attributes belong in a role's row rule ([ACCESS_MODEL.md section 10](../architecture/KERNEL_AND_MODULES.md#1910-row-rules)).
 
 **A source module switched off** (Admin → Modules, at runtime, no restart): its connectors leave every binding without an error (Admin says
 *source ENDUR off*), its rows leave lists, blotters, search and BI (also from a shared table read by a connector without `where`), its live

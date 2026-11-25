@@ -717,7 +717,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(home_routes.router)
     app.include_router(edition_routes.router)              # an edition's landings and the lens (LENSES.md › The design)
     from core import plugins as _plugins
-    # the domain modules' routers (C1, KERNEL_AND_MODULES.md section 5): each plugins/<module>/plugin.yaml lists its own, in order; before the
+    # the domain modules' routers (C1, KERNEL_AND_MODULES.md section 21.5): each plugins/<module>/plugin.yaml lists its own, in order; before the
     # core's terminal and pivot routes, as they always were; while a module is off its routes answer 404 (core/modules.py)
     app.state.plugins = _plugins.include(app)
     app.include_router(history_routes.router)          # history queries: before the terminal (/v/{kind}/{id}) and export routes
@@ -735,7 +735,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(build_routes.router)
     app.include_router(pack_routes.router)
     app.include_router(connector_designer_routes.router)
-    app.include_router(approval_routes.router)          # the one Approvals queue (THIN_CONSOLE_DESIGN.md section 2) and the old review pages' redirects
+    app.include_router(approval_routes.router)          # the one Approvals queue (THIN_CONSOLE_DESIGN.md section 8.2) and the old review pages' redirects
     app.include_router(ship_routes.router)
     app.include_router(admin_routes.router)
     app.include_router(help_routes.router)
@@ -771,7 +771,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(net_routes.router)
     from routes import module_admin_routes
     app.include_router(module_admin_routes.router)     # Admin -> Modules; a module's paths when it is off or unknown (KERNEL_AND_MODULES.md)
-    app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (THIN_CONSOLE_DESIGN.md 3)
+    app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (THIN_CONSOLE_DESIGN.md 8.3)
     app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)
     if app.state.bi_on:

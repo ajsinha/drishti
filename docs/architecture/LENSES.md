@@ -581,7 +581,7 @@ code change. The administrator's view of the same mechanism (the two uses, the s
   module's console plugin (`drishti-console/plugins/banking/`: `trading_landing.py`, `market_landing.py`, `routes/trading_routes.py`;
   `drishti-console/plugins/economy/`), each with its `home/<lens>_landing.html`, `drishti_<lens>-landing.js` and `.css`.
 - **Who sees a lens.** `lens.roles` in the console's configuration is read and is the hook for role-based access; grants and denials of
-  lenses per role belong to the access model ([the access model](KERNEL_AND_MODULES.md#the-access-model-licence-module-lens-function-permission), [the domain modules part](KERNEL_AND_MODULES.md#domain-modules-the-boundary-between-the-core-and-banking) section 8).
+  lenses per role belong to the access model ([the access model](KERNEL_AND_MODULES.md#19-the-access-model-licence-module-lens-function-permission), [the domain modules part](KERNEL_AND_MODULES.md#21-domain-modules-the-boundary-between-the-core-and-banking) section 8).
 - **A lens file extending another** (`extends: risk`, so shared command lists do not drift) is decided for the Oversight lens
   ([section 5.5](../plans/LENSES_PROPOSALS.md#55-the-oversight-lens-design)) and not built.
 

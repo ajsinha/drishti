@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * The guarantee, backend part (docs/architecture/KERNEL_AND_MODULES.md section 6): the banking module off is gone everywhere on the server. No bean
+ * The guarantee, backend part (docs/architecture/KERNEL_AND_MODULES.md section 19.6): the banking module off is gone everywhere on the server. No bean
  * of its code, no engine (each "not installed", saying why), no scheduled job, no API (new and old paths answer {@code 404 DRS-1025}), no
  * pack of its domain, no connector of its own, no function. The packs named are the banking ones: they are asked for and still not loaded.
  */
@@ -132,7 +132,7 @@ class BankingModuleOffTest {
 
     @Test
     void theConsoleIsToldWhatIsGone() throws Exception {
-        // what the console draws every door from (KERNEL_AND_MODULES.md section 2): the module not loaded with why, its lenses not open, its
+        // what the console draws every door from (KERNEL_AND_MODULES.md section 19.2): the module not loaded with why, its lenses not open, its
         // functions not available with the words to say; the public about answer lists the modules loaded
         String auth = "Bearer " + tokens.mint("rita", List.of("risk"), 300);
         String me = mvc.perform(get("/api/v1/modules").header("Authorization", auth)).andReturn().getResponse().getContentAsString();

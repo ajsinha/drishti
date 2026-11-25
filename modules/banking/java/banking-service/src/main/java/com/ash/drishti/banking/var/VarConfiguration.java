@@ -228,7 +228,7 @@ public class VarConfiguration {
         return new VarExplain(svc, props);
     }
 
-    /** Explain a VaR figure (kind var, the one Explain of THIN_CONSOLE_DESIGN.md section 3): formula, inputs and lineage, why it moved, workbook. */
+    /** Explain a VaR figure (kind var, the one Explain of THIN_CONSOLE_DESIGN.md section 8.3): formula, inputs and lineage, why it moved, workbook. */
     @Bean
     com.ash.drishti.kernel.api.explain.Explainer varNumberExplainer(VarService svc, VarViews views, VarExplain explain) {
         return new VarNumberExplainer(svc, views, explain);

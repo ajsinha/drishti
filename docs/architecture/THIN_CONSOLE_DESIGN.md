@@ -33,6 +33,8 @@ it, for i7, with the numbers this release produces (section 6). The inventory in
 5. [The migration, step by step](#5-the-migration-step-by-step)
 6. [What this means for i7: the console on Spring Boot](#6-what-this-means-for-i7-the-console-on-spring-boot)
 7. [Open questions for the owner](#7-open-questions-for-the-owner)
+8. [Shared screens: one Build home, one Approvals queue, one Explain, the trader home, the controls screens and the editors](#8-shared-screens-one-build-home-one-approvals-queue-one-explain-the-trader-home-the-controls-screens-and-the-editors)
+9. [Drishti Elements in Drishti](#9-drishti-elements-in-drishti)
 
 ## 1. The problem
 
@@ -491,13 +493,13 @@ a pair of consoles are enough and the latency budget is met, keep the thin Pytho
 | **Q8** | Push of the stamps (the event stream) in i5, or the 5-second poll only? | **Both in i5**: the poll is S0, the push is a small addition in Drill B once the answers are stable. The poll alone already matches today's delay |
 | **Q9** | The release numbers in [the release notes](../../RELEASE_NOTES.md) still describe i5 as the cluster and the Spring Boot console. Where does the cluster on standard libraries go? | Keep the cluster item where the plan has it and replace only the console item with this design; move the Spring Boot console row to i7 with "decided after i5". The plan's table is edited once the owner confirms |
 
-## Shared screens: one Build home, one Approvals queue, one Explain, the trader home, the controls screens and the editors
+## 8. Shared screens: one Build home, one Approvals queue, one Explain, the trader home, the controls screens and the editors
 
 Four screens that replace several today, chosen by the product owner from mock-ups, followed by the controls screens (section 6) and
 the editors (section 7). Each folds duplicates into one and deletes the old in the same release (*lean & streamlined*). The mock-ups are in
-[mockups/shared-screens/](mockups/shared-screens) and open in a browser; the editors they lead to are in [EDITORS.md](#7-the-editors-one-pattern-for-every-object-people-author).
+[mockups/shared-screens/](mockups/shared-screens) and open in a browser; the editors they lead to are in [EDITORS.md](#87-the-editors-one-pattern-for-every-object-people-author).
 
-### 1. One Build home
+### 8.1 One Build home
 
 Mock-up: [e1-build-home.html](mockups/shared-screens/e1-build-home.html), option **A** as the home, **B** as the first-visit view, **C**'s
 lineage columns in A's lists.
@@ -511,7 +513,7 @@ lineage columns in A's lists.
 - One search across everything a person may build; + New opens the guided steps; what a person may build follows their role.
 - Studio, BI Studio, the workbench and the pack tools redirect here and their separate homes are deleted.
 
-### 2. One Approvals queue
+### 8.2 One Approvals queue
 
 Mock-up: [e2-approvals.html](mockups/shared-screens/e2-approvals.html), option **A**, with **B**'s *due soon* items pinned at the top.
 
@@ -524,7 +526,7 @@ Mock-up: [e2-approvals.html](mockups/shared-screens/e2-approvals.html), option *
   a count on the top bar; the per-kind queues redirect here and are deleted.
 - A team board by stage (proposed, questions, approved, rejected) only if asked for later.
 
-### 3. One Explain for every number
+### 8.3 One Explain for every number
 
 Mock-up: [e3-explain.html](mockups/shared-screens/e3-explain.html), option **A**, with **B** as its preview and **C** through a link.
 
@@ -538,7 +540,7 @@ Mock-up: [e3-explain.html](mockups/shared-screens/e3-explain.html), option **A**
 - Computed and explained on the server; a stored figure says it is stored. Today's explain panels (How calculated, the ? pop-ups, Why it
   moved and the others) fold into it and are deleted.
 
-### 4. The trader home
+### 8.4 The trader home
 
 Mock-up: [e4-trader-home.html](mockups/shared-screens/e4-trader-home.html), option **A**, with **C**'s feed as a column and **B** one
 click from a book.
@@ -552,7 +554,7 @@ click from a book.
   browser; every number opens the Explain; the command line is always at the top. It is the Trading lens's home (configuration, not a
   new product); a pre-deal *what if I add this trade* box joins it, drawn from the Java pre-deal service (built: `POST /api/v1/risk/exposure/predeal`, EXPOSURE_GUIDE.md section 18.9) when its screen is built on the Elements libraries.
 
-### 5. Build checklist
+### 8.5 Build checklist
 
 Each item ships with a click test for every button, its guide section, its tutorial steps (UI, command line and YAML) and its help entry,
 and deletes what it replaces.
@@ -564,14 +566,14 @@ and deletes what it replaces.
 | 3 | One Explain (preview, drawer with four tabs, full page) | the five explain panels | ◐ built for VaR, ES, parametric, exposure, the MR cube's cells and the Pivot's Why did it move? card (`GET /api/v1/explain`, `drishti_explain.js`); BI measures and Sutra metrics in the under-construction registry (`explain-*`) |
 | 4 | The trader home (headline figures, books, markets, what changed, feed) | the generic home for the Trading lens | ☐ |
 
-### 6. Controls screens: run status and sign-off, the breach queue, number honesty
+### 8.6 Controls screens: run status and sign-off, the breach queue, number honesty
 
 The screens of the controls a risk function runs every day, chosen by the product owner from mock-ups (2026-11-05), built
 (trust, RBAC, security and controls; the security rules themselves are settled in that release's design discussion). The mock-ups are
-in [mockups/controls/](mockups/controls); people, roles and API keys are in [EDITORS.md](#7-the-editors-one-pattern-for-every-object-people-author) sections 5 and 6; the Approvals
-queue and the Explain drawer they use are in [the shared screens part](THIN_CONSOLE_DESIGN.md#shared-screens-one-build-home-one-approvals-queue-one-explain-the-trader-home-the-controls-screens-and-the-editors).
+in [mockups/controls/](mockups/controls); people, roles and API keys are in [EDITORS.md](#87-the-editors-one-pattern-for-every-object-people-author) sections 5 and 6; the Approvals
+queue and the Explain drawer they use are in [the shared screens part](THIN_CONSOLE_DESIGN.md#8-shared-screens-one-build-home-one-approvals-queue-one-explain-the-trader-home-the-controls-screens-and-the-editors).
 
-#### 6.1 Run status and sign-off
+#### 8.6.1 Run status and sign-off
 
 Mock-up: [f1-run-signoff.html](mockups/controls/f1-run-signoff.html), option **A** for a day's run, **B** as the overview, **C** as a tab.
 
@@ -586,7 +588,7 @@ Mock-up: [f1-run-signoff.html](mockups/controls/f1-run-signoff.html), option **A
   capture; a change after sign-off is a restatement with its reason and a second sign-off; an overdue sign-off reaches the Approvals
   queue as *due soon*; everything audited.
 
-#### 6.2 One breach and escalation queue
+#### 8.6.2 One breach and escalation queue
 
 Mock-up: [f2-breaches.html](mockups/controls/f2-breaches.html), option **A** as the risk-control screen, **B** in the Approvals inbox, **C**
 as a tab.
@@ -599,7 +601,7 @@ as a tab.
 - Rules: **credit-limit use is computed from the engine, never stored**; near-breaches shown from a configurable threshold (e.g. 85%);
   escalation by time and level, configured; built on the one alert engine (today's separate alert lists fold into it); everything audited.
 
-#### 6.3 Number honesty: computed, stored, official
+#### 8.6.3 Number honesty: computed, stored, official
 
 Mock-up: [f3-honesty.html](mockups/controls/f3-honesty.html), mixed by context.
 
@@ -615,7 +617,7 @@ Mock-up: [f3-honesty.html](mockups/controls/f3-honesty.html), mixed by context.
 - Exports carry a status column. A stored figure whose computation is under construction keeps the registry's chip
   ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)).
 
-#### 6.4 Build checklist
+#### 8.6.4 Build checklist
 
 Each item ships with a click test for every button, its guide section, its tutorial steps and its help entry, and deletes what it replaces.
 
@@ -625,7 +627,7 @@ Each item ships with a click test for every button, its guide section, its tutor
 | 2 | One breach and escalation queue (cases, ladder, resolve, inbox, heat map) | the separate alert lists for limits | ☐ |
 | 3 | Number honesty (badges, dots, legend, the drawer's first line, export column, guard test) | unlabelled stored figures | ☐ |
 
-### 7. The editors: one pattern for every object people author
+### 8.7 The editors: one pattern for every object people author
 
 How Drishti's authoring screens look and behave: tables and virtual tables, semantic models, Python-driven tables and models, people
 and roles, and API keys. One shell and one set of rules, so a person who has learned one editor knows them all. The product owner chose
@@ -635,7 +637,7 @@ Which release builds what: tables, virtual tables, semantic models and Python-dr
 people, roles and API keys come with trust, RBAC and security, whose rules are settled in that release's design discussion (this
 document fixes only their screens).
 
-#### 7.1 The shell every editor shares
+#### 8.7.1 The shell every editor shares
 
 Mock-up: [g1-editor-shell.html](mockups/editors/g1-editor-shell.html), option **C** as the home, option **B** for every *+ New*.
 
@@ -656,7 +658,7 @@ Mock-up: [g1-editor-shell.html](mockups/editors/g1-editor-shell.html), option **
   whether the YAML is open are kept by the server. A YAML edit is read on the server after a pause and each problem is marked at its
   line (a sign in the gutter, the list under the editor); the visual side keeps the last valid version.
 
-#### 7.2 Tables and virtual tables
+#### 8.7.2 Tables and virtual tables
 
 Mock-up: [g2-tables.html](mockups/editors/g2-tables.html), option **A** as the editor, option **C** as its Text toggle.
 
@@ -670,7 +672,7 @@ Mock-up: [g2-tables.html](mockups/editors/g2-tables.html), option **A** as the e
 - **A look-up across connectors shows its cost** (rows each side, memory, time) and is refused above a limit until the reader filters.
 - The diagram (option B) is not an editing mode; it may appear later as a read-only picture of the look-ups and a model's relationships.
 
-#### 7.3 Semantic models
+#### 8.7.3 Semantic models
 
 Mock-up: [g3-models.html](mockups/editors/g3-models.html), option **A** as the editor, **B** as the Overview and the *+ New* steps,
 **C** for a measure's details and the Access tab.
@@ -682,7 +684,7 @@ Mock-up: [g3-models.html](mockups/editors/g3-models.html), option **A** as the e
 - **Access** is a matrix of roles against rows, columns (masked or not) and editing.
 - Whether a total adds up is the engine's answer, never the author's: VaR, ES and ratios are computed per total.
 
-#### 7.4 Python-driven tables and models
+#### 8.7.4 Python-driven tables and models
 
 Mock-up: [g4-python.html](mockups/editors/g4-python.html), option **A** as the editor, **B** (the Notebook) to explore, **C**
 (templates) for common cases; all three end in A.
@@ -699,7 +701,7 @@ Mock-up: [g4-python.html](mockups/editors/g4-python.html), option **A** as the e
   checked against the contract and a mismatch is refused in words ([bi/NOTEBOOK_AND_PYTHON.md section 19](ARCHITECTURE.md#291-one-python-runtime)).
   Where the server cannot run Python safely (compute off, Windows) the buttons are off and say why.
 
-#### 7.5 People and access
+#### 8.7.5 People and access
 
 Mock-up: [g5-people.html](mockups/editors/g5-people.html); all three options, as the three tabs of **Admin → People & access**.
 
@@ -709,7 +711,7 @@ Mock-up: [g5-people.html](mockups/editors/g5-people.html); all three options, as
 - **Check access**: *can this person do this?* answered yes or no **with the reason** (the role, the rule and the attribute that
   decided it) and how to change it.
 
-#### 7.6 API keys
+#### 8.7.6 API keys
 
 Mock-up: [g6-apikeys.html](mockups/editors/g6-apikeys.html); all three options.
 
@@ -719,7 +721,7 @@ Mock-up: [g6-apikeys.html](mockups/editors/g6-apikeys.html); all three options.
 - **Admin → API keys**: every key with owner, scopes, expiry, last use and flags (expiring, unused, used from outside the network),
   bulk revoke, and the key policy (maximum lifetime, unused keys revoked, a rotation warning).
 
-#### 7.7 Rules every editor follows
+#### 8.7.7 Rules every editor follows
 
 - **Nothing goes live without review**: a change is proposed and approved by another person (four eyes), versioned and audited.
 - **Impact before change**: every editor shows what uses the object (models, Sutras, reports, boards, keys) before it is changed.
@@ -738,7 +740,7 @@ Mock-up: [g6-apikeys.html](mockups/editors/g6-apikeys.html); all three options.
 - **Under construction**: an editor or a part of one that depends on unbuilt work is hidden or marked from the registry
   ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)).
 
-#### 7.8 Build checklist
+#### 8.7.8 Build checklist
 
 Each item ships with its tests (a click test for every button), its guide section, its tutorial steps (UI, command line and YAML) and
 its help entry.
@@ -753,7 +755,7 @@ its help entry.
 | 5 | People & access (People, Roles, Check access) | Trust, RBAC and security | ☐ |
 | 6 | API keys (My keys, + New key, Admin overview) | Trust, RBAC and security | ☐ |
 
-## Drishti Elements in Drishti
+## 9. Drishti Elements in Drishti
 
 Drishti Elements is a separate project by the same owner: eight plain-JavaScript libraries (drishti-core, drishti-inputs, drishti-grid
 with its pivot, drishti-chart with its maps, drishti-data, drishti-tree, drishti-graph, drishti-designer), their gallery and their docs,
@@ -769,7 +771,7 @@ AG Grid) is in its docs, one home for each fact:
 [MOVING_FROM_AG_GRID.md](https://github.com/drishti-platform/drishti-elements/blob/v2.4.0/docs/MOVING_FROM_AG_GRID.md).
 This page says how Drishti holds and uses it.
 
-### 1. The pin
+### 9.1 The pin
 
 The release tree of a tag of Drishti Elements (built by its `python3 tools/elements/cli.py dist` in a fresh clone of the tag, never from a
 working folder) is copied, unchanged, to `drishti-console/web/static/vendor/drishti-elements/<version>/`. **The pin has one home: the name of
@@ -781,7 +783,7 @@ and ECharts GL, CodeMirror, Apache Arrow JS, the Natural Earth map shapes), the 
 (`tools/elements/build.py`), `LICENSE`, `README.md`, `CHANGELOG.md` and `drishti-elements.json` (the version, the libraries and the
 SHA-384 of every file). Its licence is the owner's proprietary licence, the same as Drishti's (`static/vendor/VENDOR.md`).
 
-### 2. How pages load it
+### 9.2 How pages load it
 
 A template names the copy through one global, `ELEMENTS_DIR` (`/static/vendor/drishti-elements/<version>`, set in `core/app.py` from the
 pin): `{{ BASE }}{{ ELEMENTS_DIR }}/elements/drishti-grid/drishti_grid.js`. No template spells the version. `base.html` loads drishti-core's
@@ -795,14 +797,14 @@ drishti-data, drishti-inputs, then drishti-chart before drishti-grid (the grid's
 draws charts adds only ECharts (`vendor/echarts/echarts.min.js`), which drishti-chart looks up when it draws. The client-side renderer imports
 the libraries' modules from the same folder and loads their bundles and the map shapes from it too.
 
-### 3. The host script
+### 9.3 The host script
 
 `static/js/drishti_elements-host.js`, loaded by `base.html` straight after drishti-core's bundle, is the one place Drishti's routes are
 told to Elements: `configure({ endpoints: { live: '/api/rdp', changes: '/api/changes', pivotPage: '/pivot', capabilities:
 '/api/v1/data/capabilities' } })` (the live-set client, the grid's pivot link and the data client read them; with none they say the
 feature is off), and `register` for Drishti's own libraries (section 4), so a page may load them by name with the loader.
 
-### 4. Drishti's own libraries
+### 9.4 Drishti's own libraries
 
 Two libraries stay in Drishti because they are clients of Drishti's server or belong to a module: **drishti-insight** (About and
 Explain, search, approvals, workbook export) and **drishti-risk** (the banking module's kinds and presets). The client renderer is not a
@@ -820,23 +822,23 @@ python3 drishti-console/web/static/vendor/drishti-elements/<version>/tools/eleme
 Their Node tests are `drishti-console/tests/elements/*.test.mjs` (`test_elements_node.py`); a domain module's library (drishti-genomics)
 is tested the same way.
 
-### 5. The two tables the server reads
+### 9.5 The two tables the server reads
 
 `world-regions.yaml` (the grouping of countries into sub-regions and continents) and `formats.yaml` (the named formats) have their home
 in Drishti Elements (`data/`), because both projects read them. `compute/drishti-rachana/pom.xml` adds the vendored `data/` folder as a
 resource folder (the root `pom.xml`'s property `drishti.elements.version` names it; a guard holds it to the pin), so `WorldRegions.java`
 and `Formats.java` read the same names from the classpath and git holds no second copy.
 
-### 6. The render folder and the embed
+### 9.6 The render folder and the embed
 
 `static/render/<version>/` (the public entry of the client-side renderer, its sheet and its integrity record) is Drishti's and is named after the pin; `tools/render_sheet.py` writes it. When the pin moves, a new folder is written and the previous one is removed: one renderer, one Elements version.
 
-### 7. The gallery
+### 9.7 The gallery
 
 Build -> Learn -> Elements gallery (`/elements`) opens the gallery of the vendored release tree, offline, with
 `?visuals=/api/elements/visuals`: the hosted modules' visual types (a module's own kinds registered in drishti-chart) get their pages too.
 
-### 8. The guards
+### 9.8 The guards
 
 - `tests/test_elements_vendored.py`: exactly one folder under `vendor/drishti-elements/`, its `drishti-elements.json` and the Maven property
   say the same version, `LICENSE` is there; nobody edits the copy (every file matches the SHA-384 of its manifest, nothing added); Drishti
@@ -848,13 +850,13 @@ Build -> Learn -> Elements gallery (`/elements`) opens the gallery of the vendor
 - `tests/test_elements_guards.py`: no console script keeps a second implementation of what the libraries do (charts, grids, number
   formats, live connections). The libraries' own guards are Drishti Elements'.
 
-### 9. Moving the pin
+### 9.9 Moving the pin
 
 `static/vendor/VENDOR.md`, "Drishti Elements: updating the pin", lists the steps: the release tree of the new tag into
 `vendor/drishti-elements/<new>/` (the old folder deleted), `drishti.elements.version`, the pinned paths of Drishti's libraries and pages,
 their bundles, the render folder, the element sheets, and the guards.
 
-### 10. Drishti's screens on the libraries
+### 9.10 Drishti's screens on the libraries
 
 Each step is one branch with its gate; the screen moves, its old code is deleted in the same branch, the allow list of 11 shrinks, and
 the screen's tests and screenshots are unchanged or deliberately updated.
@@ -874,7 +876,7 @@ the screen's tests and screenshots are unchanged or deliberately updated.
    SIMM and the MR lens; moved into the banking plugin.
 10. **The allow list empty**; the guard strict; the inventory regenerated into section 2.
 
-#### 10.1 The migration checklist
+#### 9.10.1 The migration checklist
 
 One line per screen or part: what it is drawn with now, what was deleted, and how its numbers were checked. A screen is moved when its
 old code is gone and its tests run against the new DOM with the same assertions.
@@ -898,7 +900,7 @@ old code is gone and its tests run against the new DOM with the same assertions.
 The embed (the first Elements embed) loads drishti-core and drishti-grid with the console's scripts, and its view sheet carries the grid's style, so
 an embedded view or report draws the same grid.
 
-#### 10.2 The VaR and exposure family (step 9, 2.9.11.e): the migration checklist
+#### 9.10.2 The VaR and exposure family (step 9, 2.9.11.e): the migration checklist
 
 Every table of the family is a `<drishti-grid>` made by drishti-risk's preset `riskGrid` (the `terminal` layout and density, the
 product owner's default for VaR screens; the grid's own command line, wells, toolbar and function keys off inside a screen that has
@@ -950,7 +952,7 @@ DRISHTI_FIGURES_BASELINE=data/figures/before python3 -m pytest -q drishti-consol
 **Open.** The exposure scope tree is still hand-built (not tree data yet); the scenario matrix's date headings lose their hover note (in the column
 description instead); the screens' scripts move into the banking plugin with the module platform (section 8).
 
-#### 10.3 Every designer, editor and authoring tool on the kit (the standing rule: no bespoke UI)
+#### 9.10.3 Every designer, editor and authoring tool on the kit (the standing rule: no bespoke UI)
 
 The survey of 2026-11-07 (grep for drags, inspectors, palettes, outlines, code and YAML editors, then each authoring screen read). The
 old dataset wizard and model designer were deleted; nothing of them survives (the Datasets page's "New table" opens the

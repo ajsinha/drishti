@@ -31,7 +31,7 @@ import java.util.Set;
 
 /**
  * A row predicate as a site writes it (docs/guides/DATA_LAKE_GUIDE.md, "Several source systems: shared or separate tables"; docs/architecture/
- * KERNEL_AND_MODULES.md section 10, row rules): a connector's {@code where:} and a role's row rule. It is Rachana's expression language written the
+ * KERNEL_AND_MODULES.md section 19.10, row rules): a connector's {@code where:} and a role's row rule. It is Rachana's expression language written the
  * way a filter reads: {@code SOURCE_SYSTEM = 'ENDUR'}, {@code ASSET_CLASS = 'RATES' and DESK in $user.desks}, {@code NOTIONAL >= 1000000},
  * {@code BOOK in ('B1', 'B2')}, {@code MATURITY is not null}. {@code =} and {@code <>} are Rachana's {@code ==} and {@code !=}; {@code and},
  * {@code or}, {@code not} its {@code &&}, {@code ||}, {@code !}; {@code in (a, b)} its {@code in [a, b]}; {@code $user.<attribute>} the

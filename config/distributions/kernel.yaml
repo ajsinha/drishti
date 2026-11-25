@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The kernel's own part of every distribution (docs/architecture/KERNEL_AND_MODULES.md section 10): its packs, its command words, its top
+# The kernel's own part of every distribution (docs/architecture/KERNEL_AND_MODULES.md section 20.10): its packs, its command words, its top
 # menus and the feature switches a distribution's features: presets. The modules a distribution lists describe themselves in their own manifests (modules/<id>/module.yaml for a content module, a
 # module jar's META-INF/drishti/module.yaml); the kernel and the console read both the same way.
 format: 1

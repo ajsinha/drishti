@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The console's side of the dependency rules (docs/architecture/KERNEL_AND_MODULES.md section 4, rule 1): the core never imports a domain
+"""The console's side of the dependency rules (docs/architecture/KERNEL_AND_MODULES.md section 21.4, rule 1): the core never imports a domain
 module's code, never includes one of its templates and never names one of its static files; a module reaches the core only through the
 hooks (core/plugins.py) and its plugin.yaml. A module's console part is what its plugins/<module>/plugin.yaml lists (routers, registers,
 code, templates, assets); everything else of drishti-console is the core. Quick file checks: no server, console or browser."""

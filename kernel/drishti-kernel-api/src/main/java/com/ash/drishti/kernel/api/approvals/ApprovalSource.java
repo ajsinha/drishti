@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * One kind of four-eyes item feeding the one Approvals queue (docs/architecture/THIN_CONSOLE_DESIGN.md section 2): Sutra proposals, corrections
+ * One kind of four-eyes item feeding the one Approvals queue (docs/architecture/THIN_CONSOLE_DESIGN.md section 8.2): Sutra proposals, corrections
  * (write-back), BI items, compute requirements, pivot functions, stress windows, regulatory report sign-offs. A source keeps its own rules
  * (who may decide, four eyes, what a decision does); the queue gathers the items, orders them, keeps the questions and is the only API.
  *

@@ -218,7 +218,7 @@ class ArchitectureRulesTest {
             .should().beAnnotatedWith("org.springframework.web.bind.annotation.RestController")
             .allowEmptyShould(true);
 
-    // ------------------------------------------------------------------------------------------------ domain modules (KERNEL_AND_MODULES.md section 4)
+    // ------------------------------------------------------------------------------------------------ domain modules (KERNEL_AND_MODULES.md section 21.4)
 
     /** The core never imports a domain: nothing outside a domain's packages depends on one inside them (the SPIs go the other way). */
     @ArchTest
@@ -227,7 +227,7 @@ class ArchitectureRulesTest {
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.banking..", "com.ash.drishti.economy..")
             .because("the core knows no industry: a domain registers with the core through its SPIs (docs/architecture/KERNEL_AND_MODULES.md)");
 
-    /** Only drishti-registry reads the access model (KERNEL_AND_MODULES.md section 6): every other class asks the AccessRegistry. */
+    /** Only drishti-registry reads the access model (KERNEL_AND_MODULES.md section 19.6): every other class asks the AccessRegistry. */
     @ArchTest
     static final ArchRule onlyTheRegistryReadsTheAccessModel = noClasses()
             .that().resideOutsideOfPackage("com.ash.drishti.registry..")

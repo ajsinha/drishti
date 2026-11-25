@@ -309,7 +309,7 @@ the VaR explorer: the baskets leave the left-hand column for two drop-downs, and
 | L3 | + New basket | the basket's sheet (`drishti_var-basket.js`) | Alt+B | **Built** |
 | L4 | The hierarchy tree | `/api/var/tree` | ▸ opens, click shows the node's VaR | **Built** |
 | L5 | Keys strip | — | the keys | **Built** |
-| L6 | How calculated › | — | **H** | **Folded** into the one **Explain ›**, key **E** ([the shared screens part](../architecture/THIN_CONSOLE_DESIGN.md#shared-screens-one-build-home-one-approvals-queue-one-explain-the-trader-home-the-controls-screens-and-the-editors)) |
+| L6 | How calculated › | — | **H** | **Folded** into the one **Explain ›**, key **E** ([the shared screens part](../architecture/THIN_CONSOLE_DESIGN.md#8-shared-screens-one-build-home-one-approvals-queue-one-explain-the-trader-home-the-controls-screens-and-the-editors)) |
 | L7 | The drawer | the scope's `provenance` | Esc, ✕ | **Folded** into the Explain drawer, tab Inputs & lineage |
 | L8 | Phone (700 px and below) | — | tap | **Built** (full-width drop-downs, the drawer a bottom sheet) |
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The banking engines' calls on the server, as the person (docs/architecture/KERNEL_AND_MODULES.md section 5, C7): each over the core
+"""The banking engines' calls on the server, as the person (docs/architecture/KERNEL_AND_MODULES.md section 21.5, C7): each over the core
 client's one generic call (``BackendClient.engine``), under the module's API, ``/api/v1/risk``. The core client names none of them."""
 from __future__ import annotations
 

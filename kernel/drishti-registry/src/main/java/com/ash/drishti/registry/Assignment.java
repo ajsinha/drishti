@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * An assignment (KERNEL_AND_MODULES.md section 3): a person or a group, the roles it holds in the access model, and the attributes row rules
+ * An assignment (KERNEL_AND_MODULES.md section 19.3): a person or a group, the roles it holds in the access model, and the attributes row rules
  * read (desk, legal entity ...). Read from {@code config/access/assignments.yaml}.
  *
  * @param subject    {@code user:<name>} or {@code group:<name>} (a bare name is a user)

@@ -867,7 +867,7 @@ Each item is **built** unless it says otherwise; the design is [KERNEL_AND_MODUL
    a folder, a plan per node, four-eyes apply, two-phase activation with rollback, and **clean unload** (every surface withdrawn, saved work
    marked *needs module X*). Atoti's unit is a Maven project compiled in [A4][A6]; Elastic needs a restart of every node [E1].
 3. **Distributions (white label).** One kernel build and one console build make Drishti Risk, Finance, Genomics and All, each from one
-   file ([DISTRIBUTIONS.md](../architecture/KERNEL_AND_MODULES.md#drishti-distributions-drishti-risk-drishti-finance-drishti-genomics-drishti-all)). Atoti offers branding of one app [A1]; we found no risk vendor shipping
+   file ([DISTRIBUTIONS.md](../architecture/KERNEL_AND_MODULES.md#20-drishti-distributions-drishti-risk-drishti-finance-drishti-genomics-drishti-all)). Atoti offers branding of one app [A1]; we found no risk vendor shipping
    several products from one file.
 4. **Modules declare data needs; the kernel binds them.** A module never brings connectors; the site binds its lakes and sources
    (`config/bindings.yaml`, Admin → Data bindings). Snowflake's consumer-granted privileges are the nearest idea [S1].

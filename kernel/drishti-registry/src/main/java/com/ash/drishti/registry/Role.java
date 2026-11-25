@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A role in the access model (KERNEL_AND_MODULES.md section 3): the lenses it may open and the actions inside each. Permissions are granted per
+ * A role in the access model (KERNEL_AND_MODULES.md section 19.3): the lenses it may open and the actions inside each. Permissions are granted per
  * lens and action, never per screen. Read from {@code config/access/roles.yaml}; enforced per lens and action from 2.9.11.i.
  *
  * @param id      its id (the identity layer's role name)

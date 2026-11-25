@@ -357,7 +357,7 @@ materialize: none
 ### 11. The editors
 
 **Build › Tables & models** (`/build/tables`; also from BI's rail) is one screen for every table, virtual table, semantic model and
-Python-driven table. The designs and the mock-ups the product owner chose are in [EDITORS.md](../../architecture/THIN_CONSOLE_DESIGN.md#7-the-editors-one-pattern-for-every-object-people-author). Opening it needs
+Python-driven table. The designs and the mock-ups the product owner chose are in [EDITORS.md](../../architecture/THIN_CONSOLE_DESIGN.md#87-the-editors-one-pattern-for-every-object-people-author). Opening it needs
 the `bi` power; saving and proposing need `bi-author` (or an administrator); a person without it reads the YAML and the preview but cannot
 change them.
 

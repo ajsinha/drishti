@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The genomics sample module's console part (KERNEL_AND_MODULES.md section 4; modules/genomics, the SDK's layout): hosted from its folder
+"""The genomics sample module's console part (KERNEL_AND_MODULES.md section 20.4; modules/genomics, the SDK's layout): hosted from its folder
 folder, its one page folder drawn with the Elements macros only, its pages reading the module's API through the console, and its own
 visual type, genomics.lollipop (the custom-visual SDK): listed for the Elements gallery while the module is hosted, gone when it is
 removed. Drishti Genomics' file compiles to the Research lens with no finance command."""

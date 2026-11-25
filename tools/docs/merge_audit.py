@@ -44,6 +44,8 @@ def squash(s: str) -> str:
 
 
 def head_key(h: str) -> str:
+    """The heading's words; a leading section number is left out (i7m renumbers the appended parts of a document, plan section 5)."""
+    h = re.sub(r"^\d+(\.\d+)*\.?\s+", "", h)
     return re.sub(r"[^a-z0-9]+", " ", re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", h).lower()).strip()
 
 

@@ -29,7 +29,7 @@ running server. Process ids and logs are where ``drishti.py start`` keeps them (
 data and the synthetic lakes in <data>/stack/.
 
 Consoles: the cluster file's ``console:`` block is one console; a ``consoles:`` list (each {name, port, distribution}, the console block
-its defaults) runs several over the same cluster, each with its own distribution (docs/architecture/KERNEL_AND_MODULES.md section 7): Drishti
+its defaults) runs several over the same cluster, each with its own distribution (docs/architecture/KERNEL_AND_MODULES.md section 20.7): Drishti
 Risk on 17480 and Drishti Finance on 17481. A named console is the process console-<name> (run/console-<name>.pid); ``drishti.py status``
 shows each one's distribution."""
 from __future__ import annotations
@@ -265,7 +265,7 @@ def pid_file(name: str) -> Path:
 
 
 def consoles(stack: dict) -> list[dict]:
-    """The stack file's consoles (docs/architecture/KERNEL_AND_MODULES.md section 7): its ``consoles:`` list, each {name, port, distribution,
+    """The stack file's consoles (docs/architecture/KERNEL_AND_MODULES.md section 20.7): its ``consoles:`` list, each {name, port, distribution,
     servers, settings}, so one cluster serves a Risk console on 17480 and a Finance console on 17481; else the one ``console:`` block.
     A named console's process is console-<name> (its pid file, log and temp folder)."""
     base = stack.get("console") or {}

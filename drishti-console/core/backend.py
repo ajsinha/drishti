@@ -366,7 +366,7 @@ class BackendClient:
 
     async def engine(self, method: str, path: str, ident, /, body=None, raw: bool = False, accept: str = "", timeout: float = 60.0,
                      **params) -> Any:
-        """A compute engine's API, as the user (docs/architecture/KERNEL_AND_MODULES.md section 5, C7: the core client names no engine; a
+        """A compute engine's API, as the user (docs/architecture/KERNEL_AND_MODULES.md section 21.5, C7: the core client names no engine; a
         module's typed calls are its own, over this one). ``path`` starts after /api/v1 (``/risk/var/scope``); a list value is sent as a
         repeated parameter. The first answer of a business date loads the engine's inputs into the server's memory, so this waits up to
         ``timeout`` seconds (a minute). ``raw`` returns the bytes and headers (an export); ``accept`` (with ``raw``) asks for another format
@@ -381,12 +381,12 @@ class BackendClient:
         return await self._send(method, path, ident, **kw)
 
     async def modules(self, ident) -> dict:
-        """What the person may see (docs/architecture/KERNEL_AND_MODULES.md section 2): the modules loaded and not (with why), the lenses open to
+        """What the person may see (docs/architecture/KERNEL_AND_MODULES.md section 19.2): the modules loaded and not (with why), the lenses open to
         them and the functions they may not use (``GET /api/v1/modules``, as the person; core/modules.py reads it)."""
         return await self._send("GET", "/modules", ident, timeout=10.0)
 
     async def explain_number(self, method: str, path: str, ident, body=None, **params) -> Any:
-        """One Explain for every number (/api/v1/explain, docs/architecture/THIN_CONSOLE_DESIGN.md section 3), as the user. ``path`` starts after
+        """One Explain for every number (/api/v1/explain, docs/architecture/THIN_CONSOLE_DESIGN.md section 8.3), as the user. ``path`` starts after
         /api/v1/explain (``""`` or ``/kinds``). Why it moved reads two business dates: this waits up to two minutes."""
         kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 120.0}
         if body is not None:

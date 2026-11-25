@@ -21,7 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * One module's manifest (KERNEL_AND_MODULES.md section 3): what the module is and what it contributes. A module with code ships its manifest in
+ * One module's manifest (KERNEL_AND_MODULES.md section 19.3): what the module is and what it contributes. A module with code ships its manifest in
  * its own jar ({@code META-INF/drishti/module.yaml}), so it is installed exactly when its jar is on the class path; a content-only module
  * (packs, lenses, reports and no code) may be declared by a site file alone ({@code config/modules/<id>.yaml} with {@code code: false}).
  *
