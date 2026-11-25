@@ -354,7 +354,8 @@ A scope is text: one word or several joined with `+` (union), `-` (difference) a
 Examples: `CPTY:CP-ALDERSHOT - NSET:NS-ALDERSHOT-NY` (Aldershot without New York), `NSET:NS-ALDERSHOT-LDN + NSET:NS-AURORA-TKY` (two sets
 together: their exposures add path by path), `LE:LE-TKY & CPTY:CP-ALDERSHOT`.
 
-Scope grammar of VAR_GUIDE.md section 5 with the counterparty terms of NSET.md section 8 (`NSET:`, `CPTY:`, `GROUP:`, `LE:`).
+The counterparty words resolve as above. `LE:` is the trade's booking legal entity (the trade's own `LEGAL_ENTITY` is the source of truth). A
+group resolves to `CPTY:` of every connected member (`counterparty-group`); a legal entity's share of a group is `GROUP:<id> & LE:<le>`.
 
 | Scope | How the exposure matrix is formed | Cost |
 |---|---|---|
@@ -366,7 +367,10 @@ Scope grammar of VAR_GUIDE.md section 5 with the counterparty terms of NSET.md s
 | `TRD:<ids>` (a trade alone) | the trade as its own set, uncollateralised | ms (lake read) |
 
 **Additive:** V per path across trades; E per path across netting sets; EE, ENE, EPE across netting sets. **Not additive:** PFE, peaks,
-EEE, EEPE, contributions to them.
+EEE, EEPE, contributions to them. `CE` adds per netting set, never per trade (a trade's own `CE` is its set's share).
+
+**Default parts** (the drill, and `parts` without `--by`): a group shows its counterparties; a legal entity its counterparties; a counterparty
+its netting sets; a netting set or a list of trades their trades; any other scope the netting sets it touches.
 
 **Implementation:** the words `BANK`, `NSET:` (ids, with or without `NS-`), `CPTY:` (with or without `CP-`), `GROUP:` (the
 `counterparty-group` members), `LE:` (the trade's legal entity; `LE:NY` is `LE-NY`), `DESK:`, `BOOK:` (the trades' `DESK` and `TT_BOOK`),
@@ -382,7 +386,7 @@ netting set NS-… on <date>" (the computed kind: `STATUS: no-paths`), never sta
 **Netting** happens inside a netting set only: its trades' values add path by path (V), so a payer and a receiver swap offset. Across
 netting sets nothing nets: their *exposures* (already floored at zero) add path by path.
 
-**Collateral** is per netting set, from its CSA ([NSET.md section 3.5](../plans/contracts/NSET.md)) and today's holdings (`collateral-balance`):
+**Collateral** is per netting set, from its CSA (the terms below) and today's holdings (`collateral-balance`):
 
 - **lagged** (the default): on each path the collateral at date t is what the CSA called at the look-back date t − MPOR (thresholds,
   minimum transfer amounts, independent amount, rounding applied to the change from today's collateral). A date whose look-back would
@@ -398,6 +402,23 @@ When a CSA's MPOR (plus remargin frequency − 1) differs from the run's look-ba
 
 A scope that cuts a netting set (a desk inside a counterparty) recomputes the set's value from the scope's trades, read from the lake,
 and applies the set's CSA to them as if they were the set (flag `partial`).
+
+**The CSA terms the engine reads** (kind `csa`, one row per CSA and business date, key `CSA_ID`; amounts in the CSA's currency, converted
+to USD at today's FX; the field list is the generated [csa contract](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa)):
+
+| Term | Field | Effect |
+|---|---|---|
+| Threshold, theirs and ours | `THRESHOLD_THEM`, `THRESHOLD_US` (>= 0) | exposure we may have to them before they post; the exposure they may have to us before we post |
+| Minimum transfer amount | `MTA_THEM`, `MTA_US` (`MTA` when one value serves both) | the held side is shortened by theirs |
+| Independent amount | `INDEPENDENT_AMOUNT` (held +, posted -) | added to the call; an unmargined set holds it alone |
+| Rounding | `ROUNDING` (0: none) | deliveries round up, returns down, applied to the change from today's collateral |
+| Margin period of risk | `MPOR_DAYS`, `MARGIN_FREQUENCY_DAYS` (business days; `FREQUENCY: Daily` reads as 1) | the effective MPOR is `MPOR_DAYS + frequency - 1`; a difference from the run's look-back is flagged `MPOR_MISMATCH` |
+| Margin type | `MARGIN_TYPE` (`VM`, `VM + IM`) | a CSA without variation margin is unmargined |
+| Links | `AGREEMENT`, `COUNTERPARTY`, `NETTING_SETS`, `COLLATERAL_BALANCES` | navigation |
+
+The eligibility schedule (`ELIGIBLE[]`, a haircut per asset) is read as data and shown on the Collateral tab; the engine values today's
+holdings after haircut and does not apply eligibility rules, concentration limits or haircut schedules to the paths. Initial margin
+models, segregation and disputes are not read (see the [counterparty plans](../plans/contracts/NSET.md) for the designs that would).
 
 ## 6. Captures and compare
 
@@ -497,8 +518,19 @@ panel), Calc (`exposure_profile_stats.py`, `cva_from_ee.py`, `collateral_mpor_mc
 
 ## 9. Who sees what: entitlements and audit
 
-As NSET.md section 11 (counterparty coverage, restricted list, masks, aggregate-only). In addition: a role at `aggregate` for a
-counterparty sees its profile but not `BY_NETTING_SET` rows below its level nor trade contributions; captures never store trade paths;
+Counterparty data is sensitive (names, exposures, collateral, ratings; often under information barriers), so the exposure engine adds
+a coverage rule to the usual role and field rules:
+
+| Rule | How it works |
+|---|---|
+| Who may use exposure | a caller who may open `exposure-path` (and `netting-set`) |
+| Coverage by counterparty | `drishti.ccr.exposure.access.<role>` lists counterparties, connected groups or legal entities, each `trades` (figures, netting sets and trades), `aggregate` (figures only) or `none`; a role with no entry sees everything at `trades`; a role with entries sees nothing else |
+| Groups | a group's figure covers the members the viewer sees; the others are left out and counted (`hiddenSets`, `hiddenTrades`), and the answer says it is restricted |
+| Field masks | the `counterparty` kind's masks (`NAME`) apply in every answer and export: a masked name shows the id |
+| Aggregate-only | a role at `aggregate` for a counterparty sees its figures inside a legal-entity or bank answer but never its row in `BY_NETTING_SET`, the drill or a trade contribution |
+| Audit | `ccr-view` for every scope answer (user, scope, date, counts, hidden), `ccr-export`, `ccr-capture`, `ccr-whatif`, `ccr-official`, `ccr-reload` |
+
+In addition: captures never store trade paths;
 the what-if sandbox is private (REACTIVE_CONNECTOR.md); `ccr-view`, `ccr-whatif` and `ccr-capture` are audited with scope, run and
 counts.
 
@@ -598,8 +630,8 @@ Also the token rules: `POST /api/v1/risk/exposure/what-if` and `POST /api/v1/ris
 ## Part II · The data contract
 
 *Version 1.2 · Built · Shared rules: [contracts README.md](../contracts/README.md) · Model
-contract: [VAR_GUIDE.md Part II](VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting and the shared counterparty tables:
-[NSET.md](../plans/contracts/NSET.md)*
+contract: [VAR_GUIDE.md Part II](VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting, the CSA terms and the counterparty scopes:
+[sections 4, 5, 9 and 20](#4-scopes)*
 
 This is the contract of Drishti's **exposure engine**: what an
 upstream exposure simulator delivers (every trade's MtM on every Monte Carlo path at every date of a time grid), what Drishti builds from
@@ -629,7 +661,7 @@ pages show the engine's figures as they open. **Implementation:** `EXP` is the c
 exposure explorer ([section 3](#3-the-explorer-screen-by-screen)), whose Pre-deal tab asks the engine's what-if.
 
 **Not stored:** the kind `exposure-profile` (`EXP-*` records with `EPE`, `EEPE`, `PFE_PEAK`, `BUCKETS[]`), and
-the profile figures on `netting-set` ([NSET.md](../plans/contracts/NSET.md) section 14). Its ids open the computed page (§22).
+the profile figures on `netting-set` (section 22.1 lists what was removed). Its ids open the computed page (§22).
 
 | Part | Status |
 |---|---|
@@ -676,7 +708,7 @@ ${DRISHTI_DELTA_ROOT}/risk/
 ├── simulation-run/   business_date=YYYY-MM-DD/                   one row per simulation run and date: the grid and the run's identity
 ├── exposure-path/    business_date=YYYY-MM-DD/run_id=<RUN_ID>/   one row per trade × grid date: MTM over the P paths  (the large table)
 ├── credit-path/      business_date=YYYY-MM-DD/run_id=<RUN_ID>/   optional: counterparty credit on the same paths (WWR.md)
-└── netting-set/, netting-set-member/, csa/, valuation/     NSET.md
+└── netting-set/, netting-set-member/, csa/, valuation/     the netting-set contract (section 29)
 ```
 
 | Kind | Key | Grain | Read by | Cadence | Due |
@@ -755,11 +787,11 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 
 | Kind | Key | Read for |
 |---|---|---|
-| [`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), `netting-set-member`, `csa` (NSET.md) | `NETTING_SET`, `CSA` | membership (checks), margined or not, thresholds, MTA, IA, rounding, MPOR, IM |
+| [`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), `netting-set-member`, `csa` (section 5) | `NETTING_SET`, `CSA` | membership (checks), margined or not, thresholds, MTA, IA, rounding, MPOR, IM |
 | `collateral-holding` (COLL.md) | `NETTING_SET` | today's collateral (the `current` collateral model, independent amounts, IM held) |
 | `valuation` ([TVAL.md](../plans/contracts/TVAL.md)) | `TRADE_ID` | t₀ exposure (today's MtM) and the check that path means start near it |
 | `trade` | `TRADE_ID` | maturity (sparse rows), status |
-| `counterparty`, `counterparty-group` | | `CPTY:` and `GROUP:` scopes (GRP.md) |
+| `counterparty`, `counterparty-group` | | `CPTY:` and `GROUP:` scopes (section 4) |
 | [`ir-curve`](../contracts/packs/market-data.md#example-market-data-ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) (market-data) | `CRV-USD-…` | discount factors when `VALUE_BASIS` is `FUTURE` and a discounted figure is asked (CVA.md) |
 
 ## 17. Conventions specific to exposure
@@ -814,7 +846,7 @@ applied G times.
 
 ### 18.3 Collateral on each path (margined netting sets)
 
-With the CSA's terms (NSET.md section 3.5) converted to USD at today's FX (`TH_them`, `TH_us`, `MTA_them`, `MTA_us`, `IA`, rounding *r*),
+With the CSA's terms ([section 5](#5-collateral-and-netting)) converted to USD at today's FX (`TH_them`, `TH_us`, `MTA_them`, `MTA_us`, `IA`, rounding *r*),
 and ℓ(k) the look-back point of primary point *k* (`LOOKBACK_OF`):
 
 ```
@@ -851,7 +883,7 @@ Unmargined sets: C = IA held (or 0).
 ### 18.4 Statistics of a scope
 
 A scope's **exposure matrix** is the sum over the netting sets it covers of their exposure matrices (exposures add per path across netting
-sets; partial sets are first recomputed from the trades in the scope, as NSET.md section 6.1):
+sets; partial sets are first recomputed from the trades in the scope, [section 5](#5-collateral-and-netting)):
 
 ```
 E_S(p,k) = Σ_{n ∈ S} E_n(p,k)            N_S(p,k) = Σ_{n ∈ S} N_n(p,k)          over primary k only
@@ -864,7 +896,7 @@ EPE      = Σ_{t_k ≤ T} EE(k) Δt_k / T                expected positive expos
 EEPE     = Σ_{t_k ≤ T} EEE(k) Δt_k / T               effective EPE                NOT additive
 PEAK_PFE = max_k PFE_q(k), and its date             MPFE                          NOT additive
 PEAK_EE  = max_k EE(k)                                                            NOT additive
-CE       = E at t₀ = Σ_n max(MTM_n − C_n − IM_n, 0)  current exposure (NSET.md)
+CE       = E at t₀ = Σ_n max(MTM_n − C_n − IM_n, 0)  current exposure
 ```
 
 EE(0), EEE(0) use the t₀ exposure (CE). For a counterparty or group with several netting sets, T for EPE and EEPE is the longest
@@ -1032,7 +1064,7 @@ a proxy, the form, Explain, a phone, the banking module off).
 
 | Field | Type | Unit | Meaning |
 |---|---|---|---|
-| `SCOPE`, `CANONICAL`, `SCOPE_KIND`, `LABEL`, `BUSINESS_DATE` | text, date | | as NSET |
+| `SCOPE`, `CANONICAL`, `SCOPE_KIND`, `LABEL`, `BUSINESS_DATE` | text, date | | the scope, its canonical text and the date |
 | `RUN_ID`, `PATHS`, `CALIBRATION` | text, integer, text | | the run |
 | `CONFIDENCE` | rate | | q of the PFE fields |
 | `CE`, `EPE`, `EEPE`, `PEAK_EE`, `PEAK_PFE`, `PEAK_PFE_DATE` | amount, date | USD | §18.4 |
@@ -1041,7 +1073,7 @@ a proxy, the form, Explain, a phone, the banking module off).
 | `PROFILE` | record list | | per primary date: `TENOR` (label, `1M`), `DATE`, `T` (years), `EE`, `ENE`, `EEE`, `PFE` (at `CONFIDENCE`), `PFE_99`, `EE_UNCOLL` |
 | `BY_NETTING_SET` | record list | | for a counterparty or larger: `NETTING_SET`, `EPE`, `PEAK_EE`, `PEAK_PFE`, `PFE_CONTRIBUTION` |
 | `FLAGS` | text list | | `partial`, `MPOR_MISMATCH`, `proxy`, `incomplete`, `stale-run` |
-| `PROVENANCE` | record | | NSET's plus `RUN_ID`, `MODEL`, `MODEL_VERSION`, `SEED`, `FAILED_TRADES`, `PROXIED_TRADES`, `TIER` (`hot`, `lake`) |
+| `PROVENANCE` | record | | the intake and input versions, plus `RUN_ID`, `MODEL`, `MODEL_VERSION`, `SEED`, `FAILED_TRADES`, `PROXIED_TRADES`, `TIER` (`hot`, `lake`) |
 
 Standard tenor labels in `PROFILE`: the primary grid dates, labelled by the nearest of `1W`, `2W`, `1M`, `2M`, `3M`, `6M`, `9M`, `1Y`, …,
 `30Y` (a grid date between labels keeps its date).
@@ -1155,8 +1187,18 @@ cent) and `ExposureApiTest` (an unwind of a whole netting set, a copy of its own
 
 ## 20. Official end-of-day results
 
-The two tables of [NSET.md section 9.5](../plans/contracts/NSET.md#95-published-official-results-nset-official-nset-official-cpty) (node rows; restricted
-netting-set, counterparty and group rows), with the shared columns and these figures:
+Official results go to the read-only results area of the lake, as VaR's ([VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)),
+in **two tables**:
+
+| Table | Rows per business date | Who may read the folder |
+|---|---|---|
+| `risk-results/exposure-official/` | one per node of each configured hierarchy: figures over the node's trades | as any measure's results: aggregate figures by node, no counterparty named |
+| `risk-results/exposure-official-cpty/` | one per **netting set**, **counterparty** and **connected group** | **restricted**: the rows name counterparties and their exposures; grant the folder (in the storage's own access rules) to credit risk, regulatory reporting and the warehouse's restricted zone only |
+
+The shared columns are `HIERARCHY` (`NSET`, `CPTY` or `GROUP` on the restricted table), `NODE_ID` (the scope text, `NSET:NS-ALDERSHOT-FRA`),
+`NODE_NAME` (a masked name is published as the id), `PARENT_ID` (a netting set's counterparty, a counterparty's group), `LEVEL`
+(`netting-set`, `counterparty`, `group`), `RESULT_VERSION`, `INPUT_VERSIONS`, `COMPUTED_AT` and `CONTRACT_VERSION`; the restricted table adds
+`COUNTERPARTY` and `LEGAL_ENTITY` (netting-set rows). LEI and rating are not published. The figures are:
 
 | Column | Type | Meaning |
 |---|---|---|
@@ -1542,7 +1584,7 @@ the date's rows streamed once and those of the wanted trades kept (a cache of 25
 1. Read `simulation-run`; check P, G, roles.
 2. Stream `exposure-path` in the lake's sort order (netting set, trade, grid index), one set at a time: accumulate V in float64 per set,
    write float32 to `VMAT`, compute C and E per §18.3, write `EMAT`, compute the set's statistics.
-3. Sum each counterparty's set matrices for its statistics (and each group's, GRP.md).
+3. Sum each counterparty's set matrices for its statistics (and each group's: the sum of its members' set matrices).
 4. Publish the date (the previous date stays until no request uses it). A load is one job per node over its shard; progress on Admin →
    Data loads.
 
