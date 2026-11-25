@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""Writes the navigation strip of the eleven BI pages (docs/guides/bi): one list of pages here, one generated block in each page.
+"""Writes the navigation strip of the twelve BI pages (docs/guides/bi): one list of pages here, one generated block in each page.
 
 A page's strip is the line `Business intelligence: [Index](README.md) . [Pivot](PIVOT.md) ...` with its own entry in bold, between
 `<!-- nav:begin -->` and `<!-- nav:end -->`. A page that holds two parts (TABLES_AND_MODELS: the tables, then the models for reports) has
@@ -44,6 +44,7 @@ PAGES = [
     ("DISTRIBUTION_AND_ALERTS.md", "", "Distribution, subscriptions and alerts"),
     ("GOVERNANCE_AND_AI.md", "", "Governing BI and AI in BI"),
     ("NOTEBOOK_AND_PYTHON.md", "", "The Notebook and Python"),
+    ("CALC.md", "", "Calc: Python in your own browser"),
     ("GROUPINGS_AND_ANALYTICS.md", "", "Groupings and analytics"),
 ]
 BLOCK = re.compile(r"<!-- nav:begin -->\n.*?<!-- nav:end -->", re.S)

@@ -61,7 +61,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [The workbench](#the-workbench-changing-how-a-screen-looks) | Changing how a screen looks |
 | [Administration](ADMIN_GUIDE.md#29-the-admin-pages-at-a-glance) | Users, roles, packs, audit, health, caches, capacity |
 | [Query by form](#query-by-form) | `FORM <pack>`: the forms home, the inputs, the search a form writes, keeping and scheduling it, who decides what a form offers |
-| [Calc: Python on any view](bi/NOTEBOOK_AND_PYTHON.md#10-calc-python-in-your-own-browser) | `Alt+C` in full: the `drishti` module, output and charts, packages, packs and roles, snippets, the runtime, limits, `drishti.quant`, the BI client |
+| [Calc: Python on any view](bi/CALC.md#calc-python-in-your-own-browser) | `Alt+C` in full: the `drishti` module, output and charts, packages, packs and roles, snippets, the runtime, limits, `drishti.quant`, the BI client |
 | [The Notebook](#the-notebook) | Code over data: open a model as your masked extract, SQL cells run by the server, Python cells on its compute pool, notebooks, promote to a report or a Python item |
 
 ## The pages at a glance
@@ -1659,7 +1659,7 @@ The code runs in your browser, never on a server, and reads only what you could 
 where a pack switches Calc on (trading, counterparty-risk and market-risk do, through roles with `calc: true`: `trader`, `credit-risk`,
 `market-risk`) and needs a role with the `calc` power; without
 one it is shown greyed, with the reason. Everything about it, from the `drishti` module to the limits, is in
-[Calc: Python on any view](bi/NOTEBOOK_AND_PYTHON.md#10-calc-python-in-your-own-browser).
+[Calc: Python on any view](bi/CALC.md#calc-python-in-your-own-browser).
 
 ### F8 · Impact
 
@@ -3386,7 +3386,7 @@ inferred from its search columns and screen. Authors can shape a kind's form in 
 
 
 Calc is a Labs feature (off as shipped) and runs in your browser. Its guide (the panel and its keys, the `drishti` module, reading data, packages,
-roles, the security model, limits, troubleshooting, the snippet catalogue) is [The Notebook and Python, section 10](bi/NOTEBOOK_AND_PYTHON.md#10-calc-python-in-your-own-browser).
+roles, the security model, limits, troubleshooting, the snippet catalogue) is [The Notebook and Python, section 10](bi/CALC.md#calc-python-in-your-own-browser).
 Code over a model that others can run is a [notebook](#the-notebook).
 
 ## The Notebook
@@ -3394,7 +3394,7 @@ Code over a model that others can run is a [notebook](#the-notebook).
 The **Notebook** (`/bi/notebook`, the BI rail's *Notebook*) is the one place for code over data: SQL cells run by the server and Python cells
 run on the server's compute pool, over an extract of the rows you may see. Everything about it (extracts, cells, saving, promoting, the profile,
 limits and errors) is in [NOTEBOOK_AND_PYTHON.md](bi/NOTEBOOK_AND_PYTHON.md#2-the-notebook), with Python measures, visuals and data prep; the walk-through is
-[the Notebook tutorial](bi/NOTEBOOK_AND_PYTHON.md). For Python in your own browser on a view's rows, see [Calc](bi/NOTEBOOK_AND_PYTHON.md#10-calc-python-in-your-own-browser).
+[the Notebook tutorial](bi/NOTEBOOK_AND_PYTHON.md). For Python in your own browser on a view's rows, see [Calc](bi/CALC.md#calc-python-in-your-own-browser).
 
 ## Sharing and discussion
 

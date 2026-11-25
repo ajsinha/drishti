@@ -87,9 +87,15 @@ def relink(rel: str, text: str, files: dict[str, str], anchors: dict[str, str], 
                 return m.group(0)
             p = rel if tgt == "" else os.path.normpath(os.path.join(os.path.dirname(rel), tgt))
             new, fn = p, frag[1:]
-            if fn and f"{p}#{fn}" in anchors:
-                dest = anchors[f"{p}#{fn}"]
+            moved_anchor = False
+            for _ in range(5):                      # a section that moved twice is followed to its last home
+                if not (fn and f"{new}#{fn}" in anchors):
+                    break
+                dest = anchors[f"{new}#{fn}"]
                 new, fn = dest.split("#", 1) if "#" in dest else (dest, "")
+                moved_anchor = True
+            if moved_anchor:
+                pass
             elif p in gone and p in files:
                 new = files[p]
                 if fn:

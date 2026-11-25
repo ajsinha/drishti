@@ -23,7 +23,7 @@ dashboard: slice any table in the **pivot**, describe it once as a **table** and
 wall, sent as a statement or watched by an alert, and go further in the **Notebook** with SQL and Python. Every number is computed on the server, as the
 person looking: their row rules and masks apply to every grid, visual, export, mail, alert and embedded report. The browser only draws.
 
-BI is a section of eleven pages, not one long guide. Each page is a guide followed by its tutorial, so a topic is read, then done, in one place. This
+BI is a section of twelve pages, not one long guide. Each page is a guide followed by its tutorial, so a topic is read, then done, in one place. This
 index is the map.
 
 ## The pages and where each tutorial is
@@ -40,6 +40,7 @@ index is the map.
 | [Distribution, subscriptions and alerts](DISTRIBUTION_AND_ALERTS.md) | The Reports page, scheduled searches, export, subscriptions, webhooks and texts, alerts on numbers, embedding | Parts D and E, BI that runs itself; scheduled searches and subscriptions |
 | [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) | Report from words, ask the data, explain this number; versions, review, certification, lineage, impact, environments | Part G, govern BI |
 | [The Notebook and Python](NOTEBOOK_AND_PYTHON.md) | SQL and Python cells, Python measures and visuals, Transforms, the sandbox, limits, turning Python on | the Notebook and Python |
+| [Calc: Python in your own browser](CALC.md) | The Labs scratch pad: Python beside a view on its rows, the panel and its keys, the `drishti` module, packages, roles, the security model, limits | a first session in the guide |
 | [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md) | LEIG, LEIC, SIC, ECG, CORR, EQB, PXH and the USEQ ratios, computed instead of stored: the data contract and how they are computed | groupings and analytics, computed |
 
 The section numbers of the reports topic (1 to 22) run across the five pages from Reports to Governing BI, so a reference such as "section 14" names

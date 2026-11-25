@@ -36,7 +36,7 @@ def test_every_rule_row_matches_and_totals_are_the_plans():
     rows, unmatched = corpus.build()
     assert unmatched == []
     n = corpus.counts(rows)
-    assert len(rows) == 396
+    assert len(rows) == 399
     assert (n["merge"], n["delete"], n["generate"], n["move"], n["rename"], n["connector"]) == (101, 64, 94, 5, 2, 22)
     assert len({r[0] for r in rows}) == len(rows)
 

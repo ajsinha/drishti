@@ -1365,7 +1365,7 @@ servers). The environment variables of this section are in the [environment vari
 | `roles.<role>.author` | `false` | May save Sutras from Studio (a proposal when governance is on). |
 | `roles.<role>.approve` | `false` | May approve or reject proposed Sutras. |
 | `roles.<role>.admin` | `false` | May manage users, read the audit log, approve Sutras. |
-| `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([USER_GUIDE.md](../guides/bi/NOTEBOOK_AND_PYTHON.md#109-roles-who-may-use-calc)). |
+| `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([USER_GUIDE.md](../guides/bi/CALC.md#9-roles-who-may-use-calc)). |
 | `roles.<role>.layout` | `true` | May customise layouts: layout mode (`Alt+L`) and personal layouts ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). On unless set to `false`; the bundled `viewer` sets it to `false`. |
 | `roles.<role>.collaborate` | `true` | May share, comment and mention ([ARCHITECTURE.md §31](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals)). On unless set to `false`; a role saved by an earlier release keeps it without a migration. |
 | `roles.<role>.compliance` | `false` | May read any share, place and release legal holds, export the collaboration record and verify hash chains (`/admin/collab/holds`, `/exports`, `/verify`). Not implied by `admin`: grant it to the compliance role. Moderation, retention runs and permanent removal are `admin`. |
@@ -1794,7 +1794,7 @@ Not in the bundled file; the defaults apply until you set them.
 
 ### `drishti.calc` — Python in the browser
 
-Calc ([USER_GUIDE.md](../guides/bi/NOTEBOOK_AND_PYTHON.md#10-calc-python-in-your-own-browser)) runs Python in the user's browser; the server never runs the code. It
+Calc ([USER_GUIDE.md](../guides/bi/CALC.md#calc-python-in-your-own-browser)) runs Python in the user's browser; the server never runs the code. It
 decides who may use it (roles with `calc`), keeps each user's snippets, and serves whole columns of a day.
 
 | Key | Default | Meaning |
@@ -2908,7 +2908,7 @@ Whether a design can save Sutra files is decided by the server (`drishti.rachana
 
 | Key | Default | Meaning |
 |---|---|---|
-| `labs.calc` | `false` (`DRISHTI_LABS_CALC`) | Labs: Calc, a scratch pad in the browser that never publishes. Off (as shipped): no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([USER_GUIDE.md](../guides/bi/NOTEBOOK_AND_PYTHON.md#10-calc-python-in-your-own-browser)). |
+| `labs.calc` | `false` (`DRISHTI_LABS_CALC`) | Labs: Calc, a scratch pad in the browser that never publishes. Off (as shipped): no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([USER_GUIDE.md](../guides/bi/CALC.md#calc-python-in-your-own-browser)). |
 
 ### `layouts`
 
@@ -2926,7 +2926,7 @@ Whether a design can save Sutra files is decided by the server (`drishti.rachana
 
 The Python runtime is a folder, not a setting: `drishti-console/web/static/vendor/pyodide/`, installed by
 `python tools/drishti.py calc install` and served at `/pyodide/<version>/` when present
-([USER_GUIDE.md](../guides/bi/NOTEBOOK_AND_PYTHON.md#1012-installing-the-python-runtime)).
+([USER_GUIDE.md](../guides/bi/CALC.md#12-installing-the-python-runtime)).
 
 ---
 

@@ -530,3 +530,33 @@ moved:
   - {from: 'docs/guides/WORLD_DATA_GUIDE.md#9-troubleshooting', to: 'docs/guides/WORLD_DATA_GUIDE.md#209-troubleshooting', how: redirect, note: 'section moved'}
   - {from: 'docs/guides/WORLD_DATA_GUIDE.md#external-data-feeds', to: 'docs/guides/WORLD_DATA_GUIDE.md#19-external-data-feeds', how: redirect, note: 'section moved'}
   - {from: 'docs/guides/WORLD_DATA_GUIDE.md#public-sector-government-data-and-free-news', to: 'docs/guides/WORLD_DATA_GUIDE.md#20-public-sector-government-data-and-free-news', how: redirect, note: 'section moved'}
+  # lane A (i7n: Calc has its own BI page, bi/CALC.md)
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#10-calc-python-in-your-own-browser', to: 'docs/guides/bi/CALC.md#calc-python-in-your-own-browser', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#101-when-to-use-calc-and-when-not', to: 'docs/guides/bi/CALC.md#1-when-to-use-calc-and-when-not', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1010-saving-your-own-snippets', to: 'docs/guides/bi/CALC.md#10-saving-your-own-snippets', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1011-security-model', to: 'docs/guides/bi/CALC.md#11-security-model', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1012-installing-the-python-runtime', to: 'docs/guides/bi/CALC.md#12-installing-the-python-runtime', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1013-sizes-and-performance-measured', to: 'docs/guides/bi/CALC.md#13-sizes-and-performance-measured', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1014-limits', to: 'docs/guides/bi/CALC.md#14-limits', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1015-configuration-and-api', to: 'docs/guides/bi/CALC.md#15-configuration-and-api', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1016-troubleshooting', to: 'docs/guides/bi/CALC.md#16-troubleshooting', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1017-the-drishtiquant-module', to: 'docs/guides/bi/CALC.md#17-the-drishtiquant-module', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1018-snippet-catalogue', to: 'docs/guides/bi/CALC.md#18-snippet-catalogue', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#10181-core-9', to: 'docs/guides/bi/CALC.md#181-core-9', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#10182-counterparty-risk-12', to: 'docs/guides/bi/CALC.md#182-counterparty-risk-12', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#10183-market-data-27', to: 'docs/guides/bi/CALC.md#183-market-data-27', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#10184-market-risk-6', to: 'docs/guides/bi/CALC.md#184-market-risk-6', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#10185-trading-9', to: 'docs/guides/bi/CALC.md#185-trading-9', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#10186-finance-10-the-retired-example-pack-under-examplespacks', to: 'docs/guides/bi/CALC.md#186-finance-10-the-retired-example-pack-under-examplespacks', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1019-the-bi-client', to: 'docs/guides/bi/CALC.md#19-the-bi-client', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#102-opening-it', to: 'docs/guides/bi/CALC.md#2-opening-it', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#103-the-panel-and-its-keys', to: 'docs/guides/bi/CALC.md#3-the-panel-and-its-keys', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#104-a-first-session-var-from-the-scenarios', to: 'docs/guides/bi/CALC.md#4-a-first-session-var-from-the-scenarios', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#105-the-drishti-module', to: 'docs/guides/bi/CALC.md#5-the-drishti-module', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1051-view-the-screen-you-ran-from', to: 'docs/guides/bi/CALC.md#51-view-the-screen-you-ran-from', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1052-reading-data', to: 'docs/guides/bi/CALC.md#52-reading-data', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#106-output-print-show-chart-figures', to: 'docs/guides/bi/CALC.md#6-output-print-show-chart-figures', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#107-packages', to: 'docs/guides/bi/CALC.md#7-packages', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#108-packs-switching-calc-on-and-starter-snippets', to: 'docs/guides/bi/CALC.md#8-packs-switching-calc-on-and-starter-snippets', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#1081-the-shipped-packs-snippets', to: 'docs/guides/bi/CALC.md#81-the-shipped-packs-snippets', how: redirect, note: 'section moved'}
+  - {from: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md#109-roles-who-may-use-calc', to: 'docs/guides/bi/CALC.md#9-roles-who-may-use-calc', how: redirect, note: 'section moved'}

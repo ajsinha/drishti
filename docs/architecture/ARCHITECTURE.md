@@ -50,7 +50,7 @@ it is a retired example pack):
 
 ### 1.2 Non-goals (v1)
 - Trade capture / booking (Drishti is read-only).
-- Pricing or risk calculation on the server — values (MTM, DV01, PFE) come from sources. A user may compute on a view in the browser with Calc ([USER_GUIDE.md](../guides/bi/NOTEBOOK_AND_PYTHON.md#10-calc-python-in-your-own-browser)); a server-side QuantLib service is proposed, not built ([AI_GUIDE.md](../plans/QUANT_SERVICE.md#server-side-pricing-the-quant-service)).
+- Pricing or risk calculation on the server — values (MTM, DV01, PFE) come from sources. A user may compute on a view in the browser with Calc ([USER_GUIDE.md](../guides/bi/CALC.md#calc-python-in-your-own-browser)); a server-side QuantLib service is proposed, not built ([AI_GUIDE.md](../plans/QUANT_SERVICE.md#server-side-pricing-the-quant-service)).
 - A free-form page designer. Screens stay Sutras; the Build workbench and the Sutra Studio edit them with a preview, and the BI report designer lays out report pages ([ARCHITECTURE.md §28](#28-business-intelligence-on-the-table-layer)).
 
 ---

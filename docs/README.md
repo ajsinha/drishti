@@ -94,7 +94,7 @@ repeat.
 | Find the right tool (command, script or page) for a job, load a large JSON export into a Delta lake, schedule loads and maintenance | [CLI_REFERENCE.md](guides/CLI_REFERENCE.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
 | Read Drishti from a script, a notebook or Excel with a personal API token | [API_REFERENCE.md (clients)](guides/DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel) |
-| Run Python on the view you are looking at (`Alt+C`): re-price, recompute, pivot, chart | [USER_GUIDE.md › Calc: Python on any view](guides/bi/NOTEBOOK_AND_PYTHON.md#10-calc-python-in-your-own-browser) |
+| Run Python on the view you are looking at (`Alt+C`): re-price, recompute, pivot, chart | [USER_GUIDE.md › Calc: Python on any view](guides/bi/CALC.md#calc-python-in-your-own-browser) |
 | Open a view, and learn the command line and keys | [USER_GUIDE.md › The command line](guides/USER_GUIDE.md#the-command-line), [Keyboard](guides/USER_GUIDE.md#keyboard) |
 | List entities to pick from (`TRD MX-200000`, `CPTY north`, `TRD PRODUCT_TYPE=FX_QUANTO`) | [USER_GUIDE.md › Pick lists](guides/USER_GUIDE.md#pick-lists-when-a-command-names-several-entities) |
 | Page through a table, or walk it with the keyboard | [USER_GUIDE.md › Tables](guides/USER_GUIDE.md#tables-sorting-filtering-paging-and-the-keyboard) |
@@ -178,7 +178,7 @@ repeat.
 | Define roles, or switch a pack off for everyone | [USER_GUIDE.md › Administration](guides/ADMIN_GUIDE.md#29-the-admin-pages-at-a-glance) |
 | Look up any setting of any kind (server, console, connectors, packs, editions, stores) and its environment variable: the one configuration document, also at Help → Configuration | [CONFIGURATION.md](admin/CONFIGURATION.md) |
 | Run an instance as Drishti Risk (an edition), offer it as a lens, choose its Home landing, white-label it | [ADMIN_GUIDE.md › Lenses](guides/ADMIN_GUIDE.md#12-what-a-lens-is) |
-| Install Calc's Python runtime, offline too, and decide who may use it | [USER_GUIDE.md › Installing](guides/bi/NOTEBOOK_AND_PYTHON.md#1012-installing-the-python-runtime), [Roles](guides/bi/NOTEBOOK_AND_PYTHON.md#109-roles-who-may-use-calc) |
+| Install Calc's Python runtime, offline too, and decide who may use it | [USER_GUIDE.md › Installing](guides/bi/CALC.md#12-installing-the-python-runtime), [Roles](guides/bi/CALC.md#9-roles-who-may-use-calc) |
 | Deploy, secure and monitor it; keep the lake bounded | [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md), [OPERATIONS_GUIDE.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`](guides/OPERATIONS_GUIDE.md#16-lake-maintenance-and-scheduling); a cluster: [CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md) |
 | Run several servers as one cluster (Drishti\*net): `config/net/`, Admin → Cluster, the cluster key, routing, the console's failover | [CLUSTER_GUIDE.md › Several servers as one](guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet), [tutorial 22](tutorials/22-a-cluster-of-three.md) |
 | Run Python computations for connectors in worker pools: `config/compute/compute.yaml`, Admin → Compute, approving what a connector requires (four eyes), as many workers as you want, fan-out over nodes | [OPERATIONS_GUIDE.md › Compute workers](guides/OPERATIONS_GUIDE.md#15-compute-workers) |
@@ -251,7 +251,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, the Build workbench, administration |
 | [OPERATIONS_GUIDE.md](guides/OPERATIONS_GUIDE.md#21-troubleshooting) | something is not working: each problem has what you see, how to check and the fix |
 | [API_REFERENCE.md (clients)](guides/DEVELOPER_GUIDE.md#113-clients-scripts-notebooks-and-excel) | you read Drishti from a script, a notebook or Excel: personal API tokens and scopes, the Python client, Power Query |
-| [USER_GUIDE.md › Calc: Python on any view](guides/bi/NOTEBOOK_AND_PYTHON.md#10-calc-python-in-your-own-browser) | you run Python on a view (`Alt+C`): the `drishti` module, output, packs' snippets, roles, the security model, installing the runtime, measured sizes and speed, limits |
+| [USER_GUIDE.md › Calc: Python on any view](guides/bi/CALC.md#calc-python-in-your-own-browser) | you run Python on a view (`Alt+C`): the `drishti` module, output, packs' snippets, roles, the security model, installing the runtime, measured sizes and speed, limits |
 | [BUILD_GUIDE.md › Part V. Domain packs: the packs that ship, turning them on, who sees which](guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) | you load, switch, assign or change a domain pack |
 | [COMMAND_CATALOG.md](guides/COMMAND_CATALOG.md) | you want every command in one list: the command line's own words, the packs' codes and every mnemonic, with what it does, an example, its kind of data and whether it moves to the compute model (generated) |
 | [BUILD_GUIDE.md](guides/BUILD_GUIDE.md) | you build a pack or need any `pack.yaml` key: kinds, links, roles, Sutras, tests, generators, signing; a worked help-desk pack |

@@ -243,7 +243,7 @@ Changes to roles, settings, workspaces, members and items are in the audit log (
 
 ### 3.5 Calc
 
-Calc ([USER_GUIDE.md](bi/NOTEBOOK_AND_PYTHON.md#10-calc-python-in-your-own-browser)) runs Python in the user's browser on the view they are looking at.
+Calc ([USER_GUIDE.md](bi/CALC.md#calc-python-in-your-own-browser)) runs Python in the user's browser on the view they are looking at.
 
 - **Who:** holders of a role with `calc`. Tick *Use Calc* in the role's dialog (Admin → Roles), or `calc: true` in configuration or a pack.
 - **What it reads:** only what the user could open by clicking. Every read goes through the console with the user's session; roles, packs
@@ -2528,7 +2528,7 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 | author Sutras | save and propose Sutras from the workbench (designing and previewing there is open to everyone) |
 | approve Sutras | approve proposed Sutras in Reviews |
 | administer | use every admin page |
-| Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([section 9](bi/NOTEBOOK_AND_PYTHON.md#109-roles-who-may-use-calc)) |
+| Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([section 9](bi/CALC.md#9-roles-who-may-use-calc)) |
 | BI (`bi`, `bi-author`, `bi-steward`, `bi-admin`) | four powers for Rūpaka, granted on roles ([REPORTS.md](bi/REPORTS.md#3-who-may-do-what-the-four-powers), [ADMIN_GUIDE.md](#34-bi-powers-rupaka)); the Roles form above lists only the first six powers |
 | layouts | use [layout mode](USER_GUIDE.md#layout-mode-arrange-a-view-your-way) (`Alt+L`) and keep personal layouts. On for every role unless unticked; the built-in `viewer` role does not have it |
 
