@@ -18,7 +18,7 @@
 > Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
 
 A lake is described once, in its own file, and everyone refers to it: the connectors that read it, the loader and the data inbox that
-write it, `lake build` and the demo lakes. In this part you read the demo lake's file, see a connector name it, load a day through
+write it, `lake build` and the demo lakes. In this tutorial you read the demo lake's file, see a connector name it, load a day through
 it, watch a load that contradicts it being refused, add an append table and load the same batch twice, check the lake files against the
 tables on disk. Each step shows the UI, the command line and the YAML behind it. The guide is
 [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md).

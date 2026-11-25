@@ -58,7 +58,7 @@ The reference for every step is the [data lake and data load guide](../guides/DA
 ### Part A · A new lake of your own
 
 You have your own trades, positions with their scenario PVs, and the VaR limits of your hierarchy, and you want Drishti to read them instead of the demo.
-In this part you create a lake of your own, `risklake`, in its own folder beside the demo lake; route files to it; drop one business
+In this tutorial you create a lake of your own, `risklake`, in its own folder beside the demo lake; route files to it; drop one business
 day of trades, scenario PVs and VaR limits with full `.ready` files; watch them load; point the connectors at the new lake; check and undo
 a load; and go back to the demo. Each step shows the UI, the command line and the YAML.
 
@@ -430,7 +430,7 @@ rm -rf data/delta/risklake config/lakes/risklake.yaml
 
 ### Part B · Load it every day
 
-In production your own job loads the store every day, and its last step tells Drishti: *this pack's data for this business date has landed*. Drishti then refreshes what it caches, checks that the data can be read, looks at the alerts that follow loads and tells the right people. If the job never calls, Drishti notices that too. In this part you play the job: set an expectation, announce loads from the command line and the API, watch a failure and a late day, make an alert that fires when a day's trades are not there, and take a day back out. The pack here is `trading` and its kind is `trade` (15,000 trades a day on the demo lakes); the dates are the lakes' (2026-10-13 to 2026-10-16 here), use yours. Drishti never copies or transforms your data: it reads the store your job loaded ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) tells the whole story); `lake demo` and `lake build --signal URL` send this same signal for every table and date they write. The token needs the scope `loads:write` (tutorial 1, Part A ticked it); a real nightly job should use its own token with that one scope and nothing else.
+In production your own job loads the store every day, and its last step tells Drishti: *this pack's data for this business date has landed*. Drishti then refreshes what it caches, checks that the data can be read, looks at the alerts that follow loads and tells the right people. If the job never calls, Drishti notices that too. In this tutorial you play the job: set an expectation, announce loads from the command line and the API, watch a failure and a late day, make an alert that fires when a day's trades are not there, and take a day back out. The pack here is `trading` and its kind is `trade` (15,000 trades a day on the demo lakes); the dates are the lakes' (2026-10-13 to 2026-10-16 here), use yours. Drishti never copies or transforms your data: it reads the store your job loaded ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) tells the whole story); `lake demo` and `lake build --signal URL` send this same signal for every table and date they write. The token needs the scope `loads:write` (tutorial 1, Part A ticked it); a real nightly job should use its own token with that one scope and nothing else.
 
 ## Step 8 · Say when you expect data
 

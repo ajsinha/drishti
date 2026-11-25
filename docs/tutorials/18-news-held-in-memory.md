@@ -17,7 +17,7 @@
 
 > Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
 
-Some feeds may not, by contract, be saved on a disk. In this part you move the news-and-markets pack (headlines, quotes, news topics,
+Some feeds may not, by contract, be saved on a disk. In this tutorial you move the news-and-markets pack (headlines, quotes, news topics,
 listed companies) from the disk lake into the server's memory, watch the replenish jobs fill it, read it as before, see what the guard
 refuses and what it allows, and go back. Each step shows the UI, the command line and the YAML behind it. The figures are those of the
 committed snapshot (71 headline sets, 20 quotes, 15 topics, 20 companies).

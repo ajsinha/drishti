@@ -17,7 +17,7 @@
 
 > Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
 
-Your ETL writes JSON Lines files; Drishti can load them by itself. In this part you turn the data inbox on, write a routing rule,
+Your ETL writes JSON Lines files; Drishti can load them by itself. In this tutorial you turn the data inbox on, write a routing rule,
 drop a day of Endur trades with its `.ready` marker, watch it on the Inbox screen (Admin → Data loads → Inbox) from *waiting* through
 *loading* to *loaded*, release two files at once with `ready.all`, see a file fail, fix the rules and Retry it, and read the outbox's
 reports. Each step shows the UI, the command line (`drishti.py dataload status|run|retry`) and the YAML behind it.
@@ -416,7 +416,7 @@ keep. The reference is the [data guide, section 7](../guides/DATA_GUIDE.md#7-the
 ## Next steps
 
 - [the data lake guide, section 3.1](../guides/DATA_LAKE_GUIDE.md#31-the-data-inbox): every part of the Inbox screen and where each figure comes from.
-- The parallel lake loader the inbox runs: [CLI_REFERENCE.md, section 4.13](../guides/CLI_REFERENCE.md#713-the-parallel-lake-loader).
+- The parallel lake loader the inbox runs: [CLI_REFERENCE.md, section 7.13](../guides/CLI_REFERENCE.md#713-the-parallel-lake-loader).
 - [Data guide, section 7](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load): the inbox's settings and the `.ready` file.
 
 ## If something goes wrong
