@@ -72,3 +72,6 @@ intended:
     why: "i7n Fable gate: the write-back citation in a message and a setting's meaning names ADMIN_GUIDE section 28.4 (Writing to a source), where the merged approvals text now lives"
     paths: ["kernel/drishti-packs/src/main/java/com/ash/drishti/packs/ConnectorFiles.java", "tools/settings_schemas.yaml",
             "kernel/drishti-server/src/main/java/com/ash/drishti/server/connectors/ConnectorManager.java"]
+  - decision: I7N_DATAMAP
+    why: "i7n: the data map's link to a pack's guide follows help.yaml moved: when the pack guide merged into a feature guide (the pack guides went in i7k; the link had gone quiet)"
+    paths: ["drishti-console/core/datamap.py"]
