@@ -13,6 +13,25 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7l: release notes
+
+*A documentation release on i7k, across the whole platform.* No product behaviour changes; the server, console, figures and settings
+are as in i7k.
+
+## What changes for readers
+
+- **Fewer, truer documents in every product:** Drishti Rachana 71 to 14, Elements 14 to 10, Tools 13 to 4, Lake 19 to 15; each fact
+  checked against the code, finished plans removed, and what is designed but not built kept in a short `ROADMAP.md` per product.
+- **Rachana's language has its home in Rachana:** panel kinds, layout, controls, forms, recipes and the expression guide moved there;
+  Drishti's Rachana reference keeps what is Drishti's own and links the rest. Every Help page and address is unchanged.
+- **One home per procedure in Drishti:** repeated install, setup and service commands are links; release history is gone from the
+  design texts; the 125-product catalogue is generated.
+- **The platform's start pages** point at the production section of the Operations guide.
+
+## Known limits
+
+As in i7k.
+
 # Drishti 2.9.11.i7k: release notes
 
 *On i7j: the documentation consolidated (one home per fact, generated wherever it can be), the platform described first, and Drishti

@@ -16,6 +16,20 @@
 # Changelog
 
 
+## 2.9.11.i7l (2026-11-25)
+
+Documentation only, across the platform; no product behaviour changes.
+
+- Duplicate procedures replaced by links to their one home (commands outside their home 47 to 22); release history removed from the
+  architecture and guide texts; `CLI_REFERENCE` says `setup` only checks the libraries.
+- The general Rachana language material (panel kinds, layout, controls, forms, recipes, the expression guide, format and function keys)
+  moved to Drishti Rachana's documents (`v1.0.1-ide4`); `RACHANA_REFERENCE` keeps Drishti's own parts and links the rest
+  (9,108 to 8,202 lines); 264 lines of design history removed; every Help address kept.
+- The 125-product catalogue in `BANK_DATA_GUIDE` is generated (`docs generate --check` covers it); decision-record titles capitalised;
+  the documentation index lists only what exists; the embedding guide links Rachana's guide for your own Flask or FastAPI app.
+- Products, documentation only: Rachana 71 to 14 documents, Elements 14 to 10, Tools 13 to 4, Lake 19 to 15, each with a short roadmap
+  of what is designed but not built.
+
 ## 2.9.11.i7k (2026-11-24)
 
 - **Documentation consolidation, step 0**: `config/docs-corpus.yaml` (the 400 tracked Markdown files by class and lane), `tools/docs/moved.yaml` + `moved.py`
