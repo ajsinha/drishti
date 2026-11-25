@@ -74,4 +74,4 @@ console:
   servers: [drishti-main]          # the console is given these alone and learns the other servers from the cluster
   settings:
     DRISHTI_CONSOLE_HOST: 0.0.0.0
-    DRISHTI_UI_DESIGNER: "true"           # the Sutra designer (Customize, Describe, Outline, Grid; docs/guides/RACHANA_REFERENCE.md 31)
+    DRISHTI_UI_DESIGNER: "true"           # the Sutra designer (Customize, Describe, Outline, Grid; docs/guides/RACHANA_REFERENCE.md 3.31)

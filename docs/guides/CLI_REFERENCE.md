@@ -757,7 +757,7 @@ in `config/connectors/`), and the official VaR and exposure captures, the demo t
 Drishti*net are off. The site's lakes (`DRISHTI_DELTA_ROOT`, `DRISHTI_ICEBERG_ROOT`, `DRISHTI_FILES_ROOT`, `DRISHTI_FEEDS`, each
 defaulting under `DRISHTI_DATA_DIR` or `data/`) and its added and installed packs are still read. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
 CI wiring are also in section 15 of the [Sutra developer guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check); the workbench's own use of the same command is in
-[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#26-the-command-line-and-ci).
+[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#326-the-command-line-and-ci).
 
 ## 5. `pack`: make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install
 
@@ -3281,7 +3281,7 @@ without folders, its JSON Lines members become one file; with folders one level 
 
 The same designs the **Build** workbench shows, from a terminal or a pipeline: create one from samples and/or a Sutra file,
 check it against every sample, save edits made in your editor, send it for review, and let an approver decide. Everything the
-screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-saving-and-proposing); the endpoints are in
+screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#322-saving-and-proposing); the endpoints are in
 [API_REFERENCE.md](API_REFERENCE.md).
 
 | Command | Does | Endpoint |
@@ -3733,7 +3733,7 @@ with `--window` keeps the comparison ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#1
 
 The same designs the **Build** workbench shows, from a terminal or a pipeline: create one from samples and/or a Sutra file,
 check it against every sample, save edits made in your editor, send it for review, and let an approver decide. Everything the
-screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-saving-and-proposing); the endpoints are in
+screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#322-saving-and-proposing); the endpoints are in
 [API_REFERENCE.md](API_REFERENCE.md).
 
 ### `exposure`: the exposure engine

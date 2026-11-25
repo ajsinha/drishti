@@ -134,7 +134,7 @@ def test_merge_audit_over_the_tree_finds_nothing_missing_with_both_merge_logs(ca
 # (a link to "section 3" and an anchor "#3-..." would otherwise name two places). The documents below are repaired by the guide merges of
 # i7n; the second test keeps this list honest (a repaired document must leave it).
 NUMBERING_PENDING_I7N = {
-    "docs/guides/AI_GUIDE.md", "docs/guides/BANK_DATA_GUIDE.md", "docs/guides/RACHANA_REFERENCE.md",
+    "docs/guides/AI_GUIDE.md", "docs/guides/BANK_DATA_GUIDE.md",
     "docs/guides/USER_GUIDE.md", "docs/guides/WORLD_DATA_GUIDE.md",
 }
 _NUMBERED = re.compile(r"(#{2,6}) (\d+(?:\.\d+)*)\.? ")

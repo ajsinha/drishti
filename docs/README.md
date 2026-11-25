@@ -121,7 +121,7 @@ repeat.
 | If you want to… | Read |
 |---|---|
 | Learn to build screens in the workbench, step by step, with a picture of each step | [tutorial 19, Part B](tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page) |
-| Change a live page in plain words (Customize, Describe, Outline, Grid): a linked record on a click, refresh, let people edit | [tutorial 19](tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer), [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid) |
+| Change a live page in plain words (Customize, Describe, Outline, Grid): a linked record on a click, refresh, let people edit | [tutorial 19](tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer), [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 3.31](guides/RACHANA_REFERENCE.md#331-the-sutra-designer-customize-describe-outline-and-grid) |
 | Fragments of the UI kit, events, children, per-panel sources, `layout:` and `form:`: the grammar of every screen | [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms](guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms), [BUILD_GUIDE.md section 11a](guides/BUILD_GUIDE.md#201-fragments-events-children-refresh-and-forms) |
 | Learn what a Sutra is and write one, from the first panel to a tested screen | [BUILD_GUIDE.md](guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) |
 | Choose or configure a panel kind | [RACHANA_REFERENCE.md › Panels: the twenty-two kinds, and developing a new one](guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) |
@@ -136,7 +136,7 @@ repeat.
 | See how connectors, packs and Sutras fit together, and how the UI is bound to the backend at runtime | [ARCHITECTURE.md, Walk through one request](architecture/ARCHITECTURE.md#5-walk-through-one-request) |
 | Understand the screens Drishti draws with no Sutra | [RACHANA_REFERENCE.md › Inference: the screens Drishti draws with no Sutra](guides/RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra) |
 | See which Canadian and US regulatory reports need VaR or ES (OSFI BCAR and Pillar 3, FFIEC 102, Volcker and others), item by item with formulas, controls, the bank's data contracts, what Drishti covers and the roadmap | [REGULATORY_VAR_REPORTING.md](guides/REGULATORY_VAR_REPORTING.md) |
-| The Screen Builder's shape engine, auto-design and API (JSON files → shape → design → Sutra) | [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 32](guides/RACHANA_REFERENCE.md#32-reference-the-shape-engine-auto-design-and-the-builder-api) |
+| The Screen Builder's shape engine, auto-design and API (JSON files → shape → design → Sutra) | [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 3.32](guides/RACHANA_REFERENCE.md#332-reference-the-shape-engine-auto-design-and-the-builder-api) |
 | The Build workbench: Designs, one page for data, canvas, YAML and tests, and the plan | [RACHANA_REFERENCE.md › The Build workbench: the design](guides/RACHANA_REFERENCE.md#the-build-workbench-the-design) |
 | Design of *About this page*: context-aware help built from the page's data, pack glossaries, the explain API and the plan | [RACHANA_REFERENCE.md › About this page: the design of context help](guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help) |
 | Design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI | [ARCHITECTURE.md §28](architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer), [ARCHITECTURE.md §28 › Rupaka: the original design and every phase as built](architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) |
@@ -438,7 +438,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [USER_GUIDE.md](guides/USER_GUIDE.md#sharing-and-discussion) | you send a view with a note, read your inbox or discuss a number |
 | [layout-mode.md](guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way) | you arrange a view's panels for yourself (`Alt+L`) |
 | [pivot-tab.md](guides/USER_GUIDE.md#pivot-slice-a-table-your-way) | you slice a table with Pivot (the pivot screen) |
-| [screen-builder.md](guides/RACHANA_REFERENCE.md#1-start-bring-data) | you turn sample JSON files into a shape, the first two steps of the builder |
+| [screen-builder.md](guides/RACHANA_REFERENCE.md#31-start-bring-data) | you turn sample JSON files into a shape, the first two steps of the builder |
 
 ### Examples (`guides/examples/`)
 

@@ -182,7 +182,7 @@ The full shape is in [The ViewModel in detail](#229-the-viewmodel) and, as a con
 
 `?sutra=<name>` draws the view with another Sutra of the entity's kind (the newest version; `400 DRS-5001` for one of another kind):
 `GET /api/v1/views/portfolio-trades/BOOK-RATES-2?sutra=book-desk`. `?design=<id>` draws it with one of the caller's own Designs (the
-Sutra designer's saved page, [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid)): only the owner's
+Sutra designer's saved page, [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#331-the-sutra-designer-customize-describe-outline-and-grid)): only the owner's
 (`404 DRS-5006` for anyone else's), and only of the entity's kind (`400 DRS-5001`). Events and child panels take it too.
 
 ### 2.3 Events and child panels (Sutra Next)
@@ -655,7 +655,7 @@ It is kept on the server, so it follows the user to any browser.
 |---|---|---|
 | `GET` | `/me/settings` | `{theme, landing, clockZone, density, flash, searchLimit, pinned, designerMode, refresh, notify: {email: {share, mention, reply}}}` with defaults filled in (the notify events are emailed when true) |
 | `PATCH` | `/me/settings` | change only the fields named; `null` resets one; unknown field or bad value → `400 DRS-5001` |
-| `GET` | `/me/pages` | the Sutra designer's "my version of this page" flags: `{kind: designId}` (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31) |
+| `GET` | `/me/pages` | the Sutra designer's "my version of this page" flags: `{kind: designId}` (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 3.31) |
 | `PUT` | `/me/pages/{kind}` | body `{design}`: that Design draws the kind's pages for this user; renaming the Design keeps it; bad kind or id → `400 DRS-5001` |
 | `DELETE` | `/me/pages/{kind}` | clears the flag: the pack's page again |
 | `GET` · `PUT` · `DELETE` | `/me/arrange/{sutra}` | the caller's own arrangement of a screen with `layout:` (RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 13): `{columns, collapsed, panels}` (the split's widths, the folded sections and panels, and, where the Sutra says `user-can-arrange: true`, each panel's area, width and order); never changes the shared Sutra; `DELETE` is *Reset layout* |

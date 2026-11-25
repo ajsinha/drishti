@@ -3153,8 +3153,8 @@ on the right, and `F7 Counterparty`, `F8 Impact`, `F9 Raw JSON` in the key bar.
 Sutras are written and previewed in the **Build workbench** (Create → New screen in the console). Its use is the
 [Screen designer guide](#screen-designer-and-the-build-workbench) (the YAML tab is the editor, with completion from the
 [schema](#completion-and-checking-in-your-editor) and a check as you type; the Design, Summary, Problems, Tests and Versions tabs read
-the same Sutra back; saving and proposing are [section 22](#22-saving-and-proposing)). The `/studio` page
-exists; its addresses redirect into the workbench ([where things went](#19-studio-users-where-things-went)). The HTTP
+the same Sutra back; saving and proposing are [section 3.22](#322-saving-and-proposing)). The `/studio` page
+exists; its addresses redirect into the workbench ([where things went](#319-studio-users-where-things-went)). The HTTP
 facts that remain, for scripts:
 
 - `GET /api/v1/studio/inferred/{kind}/{id}?name=...` (or `POST /api/v1/studio/inferred` with sample JSON) returns a new YAML Sutra
@@ -3891,7 +3891,7 @@ choice for existing fields, which is why `AutoDesignerTest.suggestReturnsTheExpe
 
 ##### 12.6 The first draft: `AutoDesigner`
 
-`AutoDesigner.Collector.scalar` decides which scalar fields become panels in the **draft** of auto-design ([Screen designer and the Build workbench, its section 32.2](#322-auto-design)). Be conservative: a kind that is drafted for every field floods
+`AutoDesigner.Collector.scalar` decides which scalar fields become panels in the **draft** of auto-design ([Screen designer and the Build workbench, its section 3.32.2](#3322-auto-design)). Be conservative: a kind that is drafted for every field floods
 the screen. `metric` is drafted only for the document's one headline measure:
 
 ```java
@@ -4793,7 +4793,7 @@ You have JSON documents (trades, shipments, patients, sensor readings) and you w
 This guide goes step by step, with a picture of each step. The pictures are made by a script (`tools/docs/screenshots.py`), so they match the screen you have.
 
 
-### 1. Start: bring data
+### 3.1 Start: bring data
 
 Open **Create → New screen**. The page asks two things: *what data do you have?* and *where should the design start?*
 
@@ -4810,11 +4810,11 @@ labels, links, About text and tests. The rules are in [Schema to pack](BUILD_GUI
 | One of the **examples** | The design opens as **your own copy** of it: the example's Sutra, its JSON as a sample, its notes. The files in `docs/guides/examples/` are never changed. |
 | An existing **Sutra** (from the registry, or a `.yaml` file) | The design edits a copy; the original is untouched until you propose the change. |
 
-**Start from**: *auto-design* (the default when there are samples: a first screen drafted for you, section 7), *an existing Sutra*, or *an empty Sutra* for the kind.
+**Start from**: *auto-design* (the default when there are samples: a first screen drafted for you, section 3.7), *an existing Sutra*, or *an empty Sutra* for the kind.
 
 Open the workbench with nothing at all and you get an unnamed **scratch design** on the all-panels showcase; it is forgotten after a day. Name it in **My drafts** on the Build home to keep it (named designs are kept 90 days after you last touch them). Every example in *Help → Examples* has an **Open in the workbench** link that makes the same kind of copy.
 
-### 2. The workbench at a glance
+### 3.2 The workbench at a glance
 
 ![The workbench on a copy of the all-panels showcase: Data on the left, the screen in the middle, details on the right, the status bar below](img/designer/02-workbench.jpg)
 
@@ -4831,7 +4831,7 @@ The **Notes** tab holds what the screen is for, in markdown, with a live preview
 
 Everything you do is an **operation** on the design (add a panel, move it, set an option…). The server applies it to the Sutra text, keeps your comments and the order of your keys, and sends back the screen. That is why the Design tab shows what users will see, not a mock-up, and why Undo can take back any step.
 
-### 3. The Data pane: samples, shape, palette
+### 3.3 The Data pane: samples, shape, palette
 
 ![The Data pane, scrolled to the shape tree: a field opened, with its path and role](img/designer/03-data-pane.jpg)
 
@@ -4848,13 +4848,13 @@ Everything you do is an **operation** on the design (add a panel, move it, set a
 | `ohlc`, `distribution`, `grid`, `steps` | Open/high/low/close rows; a list of numbers; a table of numbers on one axis (a surface); signed steps that sum to a total (a waterfall). |
 | `graph`, `tree`, `text` | Nodes and edges; rows that hold rows of the same shape; long text. |
 
-Conflicts (the same field with different types in different files) and rare fields (in fewer than half of the records) are listed above the tree: a panel built on a rare field is empty for many samples. The tree is a compact tree grid (drishti-tree's outline): each field's row shows its name, type, role (hover it for the reason), presence and a few examples. Filter by path or role (the paths that do not match leave the tree, the ones above a match stay); **Expand** and **Collapse** open or close every branch; arrows move, Home and End jump, Right and Left open, close and go up, **Enter** (or a click) shows a field's reason, examples and files under the tree, and Enter again or Escape closes it. Each opened field has two buttons, **Suggest panels…** and **Bind to selected panel** (also the keys `S` and `B`), and every field can be **dragged** onto the canvas (section 6).
+Conflicts (the same field with different types in different files) and rare fields (in fewer than half of the records) are listed above the tree: a panel built on a rare field is empty for many samples. The tree is a compact tree grid (drishti-tree's outline): each field's row shows its name, type, role (hover it for the reason), presence and a few examples. Filter by path or role (the paths that do not match leave the tree, the ones above a match stay); **Expand** and **Collapse** open or close every branch; arrows move, Home and End jump, Right and Left open, close and go up, **Enter** (or a click) shows a field's reason, examples and files under the tree, and Enter again or Escape closes it. Each opened field has two buttons, **Suggest panels…** and **Bind to selected panel** (also the keys `S` and `B`), and every field can be **dragged** onto the canvas (section 3.6).
 
-**Palette.** The 22 panel kinds, each with an icon and a line on what it shows. Drag one onto the canvas, or press its **Add** button (section 5).
+**Palette.** The 22 panel kinds, each with an icon and a line on what it shows. Drag one onto the canvas, or press its **Add** button (section 3.5).
 
 ![The palette of panel kinds](img/designer/04-palette.jpg)
 
-### 4. The canvas and the grid
+### 3.4 The canvas and the grid
 
 The Design tab draws your screen exactly as users see it, then lets you point at it. Each column of the screen (the **main** column on the left, the **side** column on the right) is a **12-column grid**. A panel has three placement settings: its **area** (main or side), its **span** (1 to 12 columns wide; the default is the whole column) and its **height** (1 to 24 rows of 2.5 rem; the default is as tall as its content). Panels with a span below 12 sit side by side.
 
@@ -4867,9 +4867,9 @@ The Design tab draws your screen exactly as users see it, then lets you point at
 
 ![Dragging a panel's right edge: the badge shows its new width on the 12-column grid](img/designer/09-resize.jpg)
 
-Every one of these is a single operation, sent with the revision you built on. If the design has changed somewhere else in the meantime (another tab), the answer is refused, the design is reloaded and the status line says so; make the change again (section 13).
+Every one of these is a single operation, sent with the revision you built on. If the design has changed somewhere else in the meantime (another tab), the answer is refused, the design is reloaded and the status line says so; make the change again (section 3.13).
 
-### 5. Add a panel
+### 3.5 Add a panel
 
 Four ways, all producing the same operation, and the first is always in sight:
 
@@ -4901,7 +4901,7 @@ Removing is one operation and **Undo brings the panel back in its place**, so no
 
 A toast *Removed 'Title' · Undo* stays for eight seconds and is announced to screen readers; its Undo button (or Ctrl+Z) restores the panel. The YAML loses exactly that panel; every other comment stays.
 
-### 6. Drop a field: suggestions and binding
+### 3.6 Drop a field: suggestions and binding
 
 A field of the shape is dragged onto the canvas:
 
@@ -4918,7 +4918,7 @@ A field of the shape is dragged onto the canvas:
 
 The keyboard way is the **Bind field…** button (or `B` on a selected panel): type part of the path, Enter. In the shape tree, `S` opens the suggestions for the focused field.
 
-### 7. Auto-design and its alternatives
+### 3.7 Auto-design and its alternatives
 
 **Auto-design** (top right) drafts a complete Sutra from your samples and makes it the design's next revision. It looks at the roles of your fields, at how often each field is present, at how long each list is and at how varied its values are, and it **previews the draft against every sample**: a panel that comes out empty or broken for many of them is left out or demoted.
 
@@ -4926,7 +4926,7 @@ The keyboard way is the **Bind field…** button (or `B` on a selected panel): t
 
 Above the canvas it shows **what it left out and why**, and for every panel **the reason for the choice and the runner-up kinds** with their reasons, so you can swap one in (drop the field again and pick the alternative). Auto-design only produces the first draft: everything after it is yours. If you have already worked on the design, it asks first; **Undo** brings your previous Sutra back.
 
-### 8. The inspector
+### 3.8 The inspector
 
 ![The inspector for a ladder panel: required options first, expression fields, lists](img/designer/10-inspector.jpg)
 
@@ -4943,7 +4943,7 @@ The form is generated from the same schema the YAML editor completes from, so it
 
 Each change is an operation about 0.4 s after you stop typing (or when you leave the field). If you are unsure of a value, the server tells you in the Problems tab and the status line.
 
-### 9. The YAML tab, the split view and the Summary
+### 3.9 The YAML tab, the split view and the Summary
 
 ![The YAML tab: Studio's editor with completion, help for the key under the cursor and a check as you type](img/designer/12-yaml-tab.jpg)
 
@@ -4959,7 +4959,7 @@ The YAML tab is Studio's editor on the design's Sutra: completion of keys and va
 
 #### The About tab
 
-The **About** tab (right pane, after Versions) is the pack's `config/about.yaml` for this design: the text of the page, the text of each panel and the glossary that says what each field means. It is kept **with the design** (counted in the quotas like the notes, with the cap `max-notes-kb`) and travels with the pack fragment ([§24](#24-pack-fragments-export-and-import)); it is not a Sutra edit and does not change the screen.
+The **About** tab (right pane, after Versions) is the pack's `config/about.yaml` for this design: the text of the page, the text of each panel and the glossary that says what each field means. It is kept **with the design** (counted in the quotas like the notes, with the cap `max-notes-kb`) and travels with the pack fragment ([§24](#324-pack-fragments-export-and-import)); it is not a Sutra edit and does not change the screen.
 
 - **Write it.** Type in the box (YAML; line numbers, wrapped lines). *Starter* writes a skeleton for the design's kind: a title, a page sentence to fill in, one entry under `panels:` for each panel of the Sutra and one under `glossary:` for each field the preview shows that has no entry yet. The format, the keys and `${...}` expressions are the pack guide's; a `${...}` reads the **sample being previewed** (as the viewer may see it), so changing the sample in the status bar changes the card.
 - **See it.** Under the box is the **About card** for the previewed sample, drawn by the server's own About code (the same that fills the drawer): the kind's title, the page text with your numbers in it, the Sutra's description, the text of each panel, and the glossary of the fields the preview shows (term, meaning, unit, sign, formula). It updates a moment after you stop typing (600 ms) and when you change the Sutra or the sample. A `${...}` that fails reads as a dash and is counted ("2 expressions failed"). What the packs already say about the same kind is underneath yours: an entry you write wins, the pack's fills the rest, and the card says where the page text came from.
@@ -5014,7 +5014,7 @@ It is the `form:` section of `pack.yaml` for that kind, kept with the design.
   On approval the proposed form is in force at once, kept on the server in front of the pack's own `form:` until the pack carries the change (copy it into the pack's `form:` or its generator,
   then `pack check`); *Revert* is deleting the kept form. With no review configured the form is in force when you propose. A form change needs a Sutra to travel with: propose the design as usual.
 
-### 10. Problems
+### 3.10 Problems
 
 ![The Problems tab: a refused edit with its line, and what the light check found](img/designer/14-problems.jpg)
 
@@ -5031,7 +5031,7 @@ One list, each item a button that takes you there:
 
 The tab's badge counts them.
 
-### 11. Tests as you type
+### 3.11 Tests as you type
 
 A moment after your last change (about 0.8 s) every sample is checked against the Sutra by the same checker Studio and auto-design use. A newer change cancels a run that is no longer current.
 
@@ -5039,13 +5039,13 @@ A moment after your last change (about 0.8 s) every sample is checked against th
 
 The **matrix** has a row per panel and a column per sample; each cell says **ok**, **empty** (the sample has no data for the panel), **error** (the panel failed; hover for the message) or **no access** (a stored entity you may not open). **Click a cell**: that sample is previewed and the panel selected. The status bar shows the total, `✓ 12/12` when every sample renders without errors, `✗ 9/12` otherwise. Empty cells are not errors but are worth reading: they are the places a panel needs a field the sample does not have.
 
-### 12. Preview with a file
+### 3.12 Preview with a file
 
 **Preview with a file…** in the status bar takes any JSON file (or the first line of a JSONL file) and draws the current design against it at once. The file is **not added** to the design; the status bar shows its name with a *Back to the samples* button. Edit the design meanwhile and the file preview follows.
 
 ![Previewing a file that is not in the design](img/designer/16-preview-file.jpg)
 
-### 13. Undo, redo and revisions
+### 3.13 Undo, redo and revisions
 
 Undo and Redo (the status bar, or Ctrl+Z and Ctrl+Shift+Z outside text fields) walk the design's log: every canvas move, inspector change, typed YAML edit and auto-design is a step (the last 100 are kept). Each move is a new **revision** (`rev 7` in the status bar).
 
@@ -5053,13 +5053,13 @@ Undo and Redo (the status bar, or Ctrl+Z and Ctrl+Shift+Z outside text fields) w
 
 If you edit the same design in two tabs, the older tab's next change is answered **409 (DRS-5007)**: nothing is applied twice or lost silently; the tab reloads the design at its current revision and says so.
 
-### 14. Phone width and themes
+### 3.14 Phone width and themes
 
 **Phone** narrows the canvas to a phone's width so you can see how the screen stacks; **Desktop** goes back. **Theme** previews the design in each of the console's themes.
 
 ![The screen at phone width](img/designer/19-phone.jpg)
 
-### 15. Keyboard reference
+### 3.15 Keyboard reference
 
 Everything the mouse does has a key. Changes are announced in a live region for screen readers.
 
@@ -5086,8 +5086,8 @@ Everything the mouse does has a key. Changes are announced in a live region for 
 | Key | Does |
 |---|---|
 | Ctrl+Z, Ctrl+Shift+Z (Ctrl+Y) | Undo, redo (inside a text field or the YAML editor the field's own undo is kept). |
-| Ctrl+K | The command palette: add a panel, go to a panel, next sample, run the check, switch tab, undo, save, open the guide (section 20). |
-| Ctrl+S | Save to the registry, or propose it for review; says why when you may not (section 22). Never opens the browser's save dialog. |
+| Ctrl+K | The command palette: add a panel, go to a panel, next sample, run the check, switch tab, undo, save, open the guide (section 3.20). |
+| Ctrl+S | Save to the registry, or propose it for review; says why when you may not (section 3.22). Never opens the browser's save dialog. |
 | Ctrl+Enter | Preview: sends what you typed, draws the screen again. Works in the YAML editor too. |
 | Shape tree: arrows, Enter, `S`, `B` | Move, show a field's reason, suggest panels for it, bind it to the selected panel. |
 | Menus (Add panel…, Bind field…, suggestions) | Type to filter; Up/Down; Enter picks; Esc closes. |
@@ -5099,7 +5099,7 @@ Everything the mouse does has a key. Changes are announced in a live region for 
 
 ![Bind field… from the keyboard](img/designer/17b-keyboard-bind.jpg)
 
-### 16. Worked examples, one per panel family
+### 3.16 Worked examples, one per panel family
 
 Each example in `docs/guides/examples/` opens as your own copy (*Create → Examples*, or the **Open in the workbench** link on *Help → Examples*). Each has a note on what to look for and which lines to copy. For each family below: open the copy, click the panel named, look at its inspector, then try the exercise.
 
@@ -5155,7 +5155,7 @@ The `waterfall`'s `sum` names the step that is the total; the `hbar` panel draws
 
 The ladder highlights the row its `highlight` expression is true for. Exercise: change the expression and watch the highlight move.
 
-### 17. Troubleshooting
+### 3.17 Troubleshooting
 
 | You see | Why | What to do |
 |---|---|---|
@@ -5171,7 +5171,7 @@ The ladder highlights the row its `highlight` expression is true for. Exercise: 
 | The check shows `? not checked` | The check could not run (no samples, or the server did not answer). | Add a sample; reload. |
 | Fields I dropped are bound to the wrong option | A drop binds the next unfilled option of the kind. | Fix the option in the inspector, or Undo. |
 
-### 18. Limits
+### 3.18 Limits
 
 | Limit | Value | Where it is set |
 |---|---|---|
@@ -5186,7 +5186,7 @@ The ladder highlights the row its `highlight` expression is true for. Exercise: 
 
 Sample contents are never logged.
 
-### 19. Studio users: where things went
+### 3.19 Studio users: where things went
 
 **Sutra Studio no longer has a page of its own.** Everything it did is in the workbench, and every address you may have bookmarked still works: it sends you (a redirect) to the equivalent workbench screen, starting a design for you when it needs one.
 
@@ -5194,7 +5194,7 @@ Sample contents are never logged.
 |---|---|
 | `/studio` | A new unnamed **scratch design** (forgotten after a day) on the all-panels showcase, on its **YAML** tab. The showcase is the one named by `ui.studio_example`. |
 | `/studio?example=tree-table` | A new design that is a **copy** of that example (its Sutra, its JSON as a sample, its notes), on the YAML tab. |
-| `/studio?sutra=irs-vanilla@3` | A new design that **edits that Sutra** (shown as *edits irs-vanilla@3*, with a base to compare with: section 21). The entities you kept as that Sutra's *test entities* in Studio are brought along as **stored-entity samples**. |
+| `/studio?sutra=irs-vanilla@3` | A new design that **edits that Sutra** (shown as *edits irs-vanilla@3*, with a base to compare with: section 3.21). The entities you kept as that Sutra's *test entities* in Studio are brought along as **stored-entity samples**. |
 | `/studio?kind=trade&id=T-1` | A new design for that kind with a starter Sutra and that **stored entity** as its sample. |
 | `/studio?design=ID&sample=NAME` | That design (if it is yours), with that sample selected. |
 | `/studio?build=1` (with any of the above) | The same, on the **Design** tab instead of the YAML. |
@@ -5208,12 +5208,12 @@ What Studio had, and where it is now:
 |---|---|
 | The YAML editor with completion and the light check | The **YAML** tab (the same editor). |
 | Summary tab | The **Summary** tab. |
-| Preview (Ctrl+Enter) | **Ctrl+Enter** previews: it sends what you typed, then draws the screen again (section 22). |
-| Save (Ctrl+S) | **Ctrl+S**, and the *Save* / *Submit for review* button (section 22). |
+| Preview (Ctrl+Enter) | **Ctrl+Enter** previews: it sends what you typed, then draws the screen again (section 3.22). |
+| Save (Ctrl+S) | **Ctrl+S**, and the *Save* / *Submit for review* button (section 3.22). |
 | File → Open… and File → Examples | The **File** button above the screen: *Open…* takes a `.yaml` (replaces the Sutra; Undo brings it back) or `.json` documents (added as samples); each example opens as a new copy. |
 | The entity kind and id boxes, *Load entity JSON*, *Preview against this JSON* | **Samples**: add the entity as a sample (*More ways*), or **Preview with a file…**. Samples are listed, and you move between them with ◀ ▶. |
 | *Test entities* and *Run all* | The **Tests** tab checks **every sample** against the design as you type. |
-| *Start from inference* | **Auto-design** (section 7) drafts a complete Sutra from the samples. |
+| *Start from inference* | **Auto-design** (section 3.7) drafts a complete Sutra from the samples. |
 | The Sutra picker (*New Sutra…*) | **Create → New screen → an existing Sutra**, or `/studio?sutra=name@version` as above. |
 | Reviews, with the pending count | **Views → Approvals** and the *Reviews* button beside *Submit for review*. |
 
@@ -5221,7 +5221,7 @@ What Studio had, and where it is now:
 
 The JSON addresses Studio's own scripts used (`/studio/preview`, `/studio/summary`, `/studio/schema`, `/studio/save` and others) are unchanged, so existing notebooks and tests that call them keep working.
 
-### 20. The command palette
+### 3.20 The command palette
 
 Press **Ctrl+K** (Cmd+K on a Mac) anywhere on the workbench, or press **Commands** above the screen. A list opens with a filter box; type a few letters, move with Up and Down, press Enter, and the command runs. Esc, or Ctrl+K again, closes it and puts the focus back where it was.
 
@@ -5237,13 +5237,13 @@ Press **Ctrl+K** (Cmd+K on a Mac) anywhere on the workbench, or press **Commands
 | `undo`, `redo` | The same as the status bar's buttons. |
 | `preview` | Sends what you typed and draws again (Ctrl+Enter). |
 | `save`, `propose` | *Save to the registry* or *Propose: submit for review*; the list says when you may not. |
-| `compare` | Opens the Versions tab (section 21). |
+| `compare` | Opens the Versions tab (section 3.21). |
 | `open a file` | The File → Open… chooser. |
 | `guide` | This guide (F1 does the same). |
 
 It is the same keyboard menu as *Add panel…*: the filter box is a labelled combobox and the choices a listbox, so a screen reader hears each command as you move, and the status line says what ran. The panels and samples listed are the design's current ones, and *Undo* says when there is nothing to undo.
 
-### 21. Diff and versions
+### 3.21 Diff and versions
 
 The **Versions** tab (right-hand side, next to Tests) answers *what did I change?* in two ways:
 
@@ -5273,7 +5273,7 @@ Proposing now would be refused as stale. Open **Ship** and choose **Rebase onto 
 A step that no longer applies (the panel it changes was removed) is listed as a problem; change the design to match the new version and go on. Undo does not go back past a rebase. Proposing then publishes the next
 version (v3 here), and the diff the reviewer sees is only your change against version 2. Versions are never overwritten; views use the highest approved one, and rolling back is a new proposal of the older text.
 
-### 22. Saving and proposing
+### 3.22 Saving and proposing
 
 Designing is open to everyone: the design is yours, kept by the server, and you need no right to make or edit one. **Saving to the registry** is the author right with Studio saving switched on (`DRISHTI_STUDIO_SAVE`), and where governance is on, saving is a **proposal** an approver must approve.
 
@@ -5287,13 +5287,13 @@ Designing is open to everyone: the design is yours, kept by the server, and you 
 
 Typed YAML is sent first, so what is saved is what you see. A Sutra the server refuses (a located problem) is answered with the line, and nothing is saved. **Views → Approvals** lists what is waiting (the menu shows how many) and shows each proposal with the diff; approvers approve or reject there, and authors withdraw their own.
 
-### 23. End to end: from a folder of JSON to a live screen
+### 3.23 End to end: from a folder of JSON to a live screen
 
 This is the whole road in one go. It assumes you have the author right and Studio saving is on (`DRISHTI_STUDIO_SAVE=true`); a colleague with the approve right does the last step. Without those, steps 1 to 4 still work and the design waits in *My drafts* (the Build home).
 
-1. **Folder.** *Create → New screen → Choose a folder* (section 1). Drishti reads every `.json` and `.jsonl` in it as samples. Start from **Auto-design** and give the design a name, so it is kept for 90 days.
-2. **Design.** The workbench opens on a first screen drawn from your data (sections 2 to 8). Drag a panel from the palette, drop a field onto it, size it on the grid, fill its options in the inspector. Everything is an undoable step.
-3. **Check.** The *Tests* tab and the status bar (`✓ 38/40`) run every sample against the design as you type (section 11). Fix the red cells: an *empty* panel is a field some sample does not have; an *error* names the reason. Switch samples with the arrows in the status bar to see why.
+1. **Folder.** *Create → New screen → Choose a folder* (section 3.1). Drishti reads every `.json` and `.jsonl` in it as samples. Start from **Auto-design** and give the design a name, so it is kept for 90 days.
+2. **Design.** The workbench opens on a first screen drawn from your data (sections 3.2 to 3.8). Drag a panel from the palette, drop a field onto it, size it on the grid, fill its options in the inspector. Everything is an undoable step.
+3. **Check.** The *Tests* tab and the status bar (`✓ 38/40`) run every sample against the design as you type (section 3.11). Fix the red cells: an *empty* panel is a field some sample does not have; an *error* names the reason. Switch samples with the arrows in the status bar to see why.
 4. **Propose.** Type what changed in the box beside the button and press **Submit for review** (Ctrl+S). The server runs the check again, then sends the proposal **with its evidence**: the panel-by-sample matrix, the names of the samples (not their contents), your notes and the design's identity. The status next to the title becomes *proposed P-000042*.
 
    ![After Submit for review: the message names the proposal, the status says proposed](img/designer/41-submit-for-review.jpg)
@@ -5306,11 +5306,11 @@ This is the whole road in one go. It assumes you have the author right and Studi
 
    ![My drafts: the design is live v1](img/designer/43-live-status.jpg)
 
-7. **Change it later.** Open the live Sutra in the workbench (*Create → New screen → An existing Sutra*): the new design remembers its **base**, the *Versions* tab (section 21) shows your changes against it, and the next proposal is a new version. If someone else changed the live Sutra meanwhile, the proposal says *stale* and must be made again from the live version.
+7. **Change it later.** Open the live Sutra in the workbench (*Create → New screen → An existing Sutra*): the new design remembers its **base**, the *Versions* tab (section 3.21) shows your changes against it, and the next proposal is a new version. If someone else changed the live Sutra meanwhile, the proposal says *stale* and must be made again from the live version.
 
 A design that is edited after it was proposed or approved goes back to *draft*: the status always describes the revision you are looking at.
 
-### 24. Pack fragments: export and import
+### 3.24 Pack fragments: export and import
 
 A design can leave the workbench as a **pack fragment**, a zip you can put in a pack, and a pack (or a folder of Sutras) can come back as designs.
 
@@ -5329,13 +5329,13 @@ my-view/
   README.md                         what is in it and how to load it
 ```
 
-Stored-entity samples are references, not data, so they are not exported; synthetic ones are, and are labelled as such by their names. Put the folder under the server's `config/packs/`, list it in `DRISHTI_PACKS` (or load it from **Admin → Packs**), and change the stub's title, version and mnemonic first. The exported tests pass `sutra test` unchanged (section 26).
+Stored-entity samples are references, not data, so they are not exported; synthetic ones are, and are labelled as such by their names. Put the folder under the server's `config/packs/`, list it in `DRISHTI_PACKS` (or load it from **Admin → Packs**), and change the stub's title, version and mnemonic first. The exported tests pass `sutra test` unchanged (section 3.26).
 
 **Import** (*New screen → Or import a pack*) takes a **zip** or a **folder**. Each `*.sutra.yaml` becomes a design of its own, named after the Sutra, with the documents of `tests/<sutra>/` and `samples/<kind>/` as its samples, the README as its notes and `config/about.yaml` (if there is one) as its About text. A Sutra that does not check yet is imported anyway, with a note, so you can fix it in the workbench. Nothing is loaded into the server; this only makes designs, so it is open to everyone.
 
 ![The import section of the New page](img/designer/44-export-import.jpg)
 
-### 25. Sharing a design read-only
+### 3.25 Sharing a design read-only
 
 For pairing and review without sending files around: *Ship → Create a read-only link*. The link is `/build/d/{id}?share=...`.
 
@@ -5347,7 +5347,7 @@ What the person who opens it sees (they must be signed in): the **Sutra**, the *
 
 The link is a secret: anyone who has it can read the Sutra and the operations. **Revoke** stops it at once (so does *Renew*, which makes a new one and kills the old). Only a hash of the secret is kept; it cannot be shown again, which is why the box is empty after a reload until you renew it.
 
-### 26. The command line and CI
+### 3.26 The command line and CI
 
 Pack authors run the same checks without a browser. The server jar has a `sutra` command that starts no web server and opens no port:
 
@@ -5362,7 +5362,7 @@ java -jar drishti-server-<version>-exec.jar sutra design --each samples-by-kind 
 
 `test` uses the **same checker as the Tests tab**, with the `modules/<module>/packs/<pack>/tests/<sutra>/cases.jsonl` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check).
 
-### 27. Binding a design to a file (development servers)
+### 3.27 Binding a design to a file (development servers)
 
 If you edit Sutras in an IDE and keep them in git, bind the design to a file so the workbench and the IDE work on the same text. This is **off by default**: set `drishti.builder.file-binding: true` on a development server (and `drishti.rachana.studio-save`; you need the author right).
 
@@ -5378,7 +5378,7 @@ If you edit Sutras in an IDE and keep them in git, bind the design to a file so 
 - If **both** sides changed, saving is refused with `409 DRS-5007` rather than overwrite the IDE's file: load the file's version first (or unbind), then redo your change.
 - Paths outside your folder (`..`, absolute paths, other extensions, very long names), and any name that is, or goes through, a symbolic link, are refused with a plain message. *Ship → Unbind* ends the binding. On a server without the setting the item is not offered and the API answers `403`.
 
-### 28. Troubleshooting shipping
+### 3.28 Troubleshooting shipping
 
 | You see | Why | What to do |
 |---|---|---|
@@ -5386,7 +5386,7 @@ If you edit Sutras in an IDE and keep them in git, bind the design to a file so 
 | *X is already live exactly as proposed* | The live Sutra already has this exact text | Change something, or you are done |
 | Proposal says *stale* and cannot be approved | The live Sutra changed after you proposed | Reject it (or withdraw), open the live Sutra as a new design, redo, propose again |
 | The review shows *no check was attached* | The design had no samples when it was proposed | Add samples, check, and propose again |
-| The evidence says *some samples fail* | A panel is in error on a sample | The reviewer can still decide; better fix it first (section 11) |
+| The evidence says *some samples fail* | A panel is in error on a sample | The reviewer can still decide; better fix it first (section 3.11) |
 | Status stays *proposed* after approval | The design was edited after proposing, so its status is *draft* | Nothing is wrong; the approval is on the proposal |
 | *This link is not valid* | Revoked, renewed, mistyped, or the design was deleted or expired | Ask the owner for a new link |
 | *binding a design to a file is off on this server* | `drishti.builder.file-binding` is false | Only for development servers; set it there |
@@ -5394,7 +5394,7 @@ If you edit Sutras in an IDE and keep them in git, bind the design to a file so 
 | Import says *no Sutra (*.sutra.yaml) was found* | The zip holds no file named `*.sutra.yaml` | Rename the Sutra files, or zip the pack folder (not a parent of many) |
 | `sutra test` exit `2` | An unknown key in `expect.yaml` or a path that does not exist | Fix the key; the message names it |
 
-### 29. Limits of shipping
+### 3.29 Limits of shipping
 
 - One proposal carries the check of the revision you submit; it holds names and counts, never sample contents. The design's notes travel in full; the reviewer note beside the button is 300 characters.
 - A fragment exports up to 20 samples as tests and 3 as samples; stored-entity samples are not exported.
@@ -5403,7 +5403,7 @@ If you edit Sutras in an IDE and keep them in git, bind the design to a file so 
 - File binding is for development servers: one file per design, text only, no merge (a clash is refused, never merged), and only under the configured Sutra directories.
 - The command line runs one process per command, without hot reload; Sutras that read other entities need the packs that hold them enabled for the run.
 
-### 30. Keyboard reference for shipping
+### 3.30 Keyboard reference for shipping
 
 | Keys | What |
 |---|---|
@@ -5415,9 +5415,9 @@ If you edit Sutras in an IDE and keep them in git, bind the design to a file so 
 
 The shared page has no editing keys: the *Preview with a file…*, *Preview a stored entity* and *Copy the Sutra* controls are real buttons and fields in reading order.
 
-See also: [the Sutra command](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check), [the shape engine and builder API](#32-reference-the-shape-engine-auto-design-and-the-builder-api), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](#panels-the-twenty-two-kinds-and-developing-a-new-one).
+See also: [the Sutra command](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check), [the shape engine and builder API](#332-reference-the-shape-engine-auto-design-and-the-builder-api), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](#panels-the-twenty-two-kinds-and-developing-a-new-one).
 
-### 31. The Sutra designer: Customize, Describe, Outline and Grid
+### 3.31 The Sutra designer: Customize, Describe, Outline and Grid
 
 The Sutra designer changes a screen in plain words, on the real page with real data, as you see it. It has one shell with modes:
 **Customize** (change the page you are on), **Describe** (type a new screen in one line), **Outline** (the screen as a list you
@@ -5731,12 +5731,12 @@ move, a panel that did not change is left alone, the picked row stays picked and
 - When a refresh fails, the panel keeps what it showed and names the source in words: *trade-endur isn't answering; showing data from
   10:42*. The next refresh tries again.
 
-### 32. Reference: the shape engine, auto-design and the builder API
+### 3.32 Reference: the shape engine, auto-design and the builder API
 
 The reference parts of the Screen Builder's design:
 how samples become a shape, how auto-design drafts a screen from it, the server API and the limits.
 
-#### 32.1 The shape: the JSON Schema extractor
+#### 3.32.1 The shape: the JSON Schema extractor
 
 ##### What goes in
 
@@ -5797,7 +5797,7 @@ files contributed it. Conflicts and rare fields are listed at the top: they are 
 - **Open in Designer** (step 2).
 - **Copy as JSON Schema without annotations**, for use elsewhere.
 
-#### 32.2 Auto-design
+#### 3.32.2 Auto-design
 
 Opening a shape in the designer starts from **auto-design**: the engine drafts a complete Sutra from the shape's roles,
 with a title (id + a dimension), a strip (up to six measures and dates), and one panel per meaningful structure, laid
@@ -5855,7 +5855,7 @@ its reason says how many. Panels beyond `max-panels` (16 main, 4 side) are dropp
 *Suggest.* `AutoDesigner.suggest(shape, path[, at])` is the same chooser for one field, or for a dimension and a measure
 of the same rows (`at`): the designer calls it on a field drop and shows the ranked kinds.
 
-#### 32.3 The builder API
+#### 3.32.3 The builder API
 
 All under `/api/v1/builder`. Designing is not saving: shaping, drafting, suggesting, previewing and checking are open to every signed-in user and
 write nothing; the `author` power is needed to propose a Sutra. The stateless calls take the samples in the body; the workbench uses the
@@ -5885,7 +5885,7 @@ Engine placement: a `shape` package in `drishti-engine` (merging, roles), next t
 operations extend `SutraLayoutEditor` in `drishti-rachana`. The console adds templates and vendored JavaScript only;
 no new framework.
 
-#### 32.4 Security, limits and accessibility
+#### 3.32.4 Security, limits and accessibility
 
 - **Who may use it**: every signed-in user may shape, design, suggest and preview; the kind a pasted document is labelled with
   (`sample`) is a label, not a permission. Saving, proposing, approving and deleting stay with the `author`, `approve` and
@@ -6174,14 +6174,14 @@ To try it without a data source:
 
 1. Open **Create → New screen** in the console.
 2. Save the document above as `WH-ROTTERDAM-2.json` and drop it on the page (it becomes a sample), and keep
-   *auto-design* as the start ([SCREEN_DESIGNER §1](#1-start-bring-data)).
+   *auto-design* as the start ([SCREEN_DESIGNER §1](#31-start-bring-data)).
 
 You should see the workbench open on a new Sutra (the inferred layout, written out, with the reason for each panel) and
 the **Design** tab render it. Open the **YAML** tab, edit anything and press **Ctrl+Enter** to preview again.
 
 Here is what inference makes of it, step by step.
 
-#### 1. The title line
+#### 4.1 The title line
 
 | Part | Result | Why |
 |---|---|---|
@@ -6191,7 +6191,7 @@ Here is what inference makes of it, step by step.
 
 If none of the identifier fields exists, the first top-level text field whose name ends in `Id` is used.
 
-#### 2. The strip (key figures under the title)
+#### 4.2 The strip (key figures under the title)
 
 Every top-level scalar except the identifier, `product`, `productType` and `counterparty` is a candidate. Each
 is given a **role** by its name (see [Semantic hints](#semantic-hints)); the 8 with the highest role weight
@@ -6209,7 +6209,7 @@ are kept and shown in document order. This document has 7, so all appear:
 
 Labels are the field names in words: `storageCost` reads **Storage cost**, `openedDate` reads **Opened date**.
 
-#### 3. The panels
+#### 4.3 The panels
 
 Each rule looks at the arrays and objects and proposes panels with a score. For each document path the
 highest score wins:
@@ -6241,7 +6241,7 @@ Two things to notice:
   matches a known pattern (for example `CP-…` with the banking packs) appears there as a link.
 - **How this view was built** always closes the main column. For this view it says **Layout: inference only**.
 
-#### 4. What would change the result
+#### 4.4 What would change the result
 
 | If the document had… | Inference would… |
 |---|---|
@@ -6506,7 +6506,7 @@ The finance pack's hints make inference itself closer: its roles make `mtm`, `pv
 
 The usual way to write a Sutra for a new kind is to start from inference and correct it.
 
-1. **Get the draft.** In the workbench, bring the entity and start from *auto-design* ([SCREEN_DESIGNER §7](#7-auto-design-and-its-alternatives)), or fetch the draft:
+1. **Get the draft.** In the workbench, bring the entity and start from *auto-design* ([SCREEN_DESIGNER §7](#37-auto-design-and-its-alternatives)), or fetch the draft:
 
    ```bash
    curl -s "http://localhost:18480/api/v1/studio/inferred/key-risk-indicator/KRI-COMM-1?name=kri-mine" > kri-mine.v1.sutra.yaml
@@ -6768,16 +6768,16 @@ the bundled hints, so check the path when your change seems to have no effect.
 
 Status: **console wiring built and built (2026-10-21):** the engine (C1), the dialog with the `dom`, `records`, `search`, `history` and
 `bi` adapters, the Chart button and the keys (C3, C6, and C7 without its BI-runs path), exports, themes, the browser test and the
-docs; see [section 24](#24-the-console-wiring-c3-c6-c7). **Not built yet (server lane):** `for=chart` on the records
+docs; see [section 5.24](#524-the-console-wiring-c3-c6-c7). **Not built yet (server lane):** `for=chart` on the records
 endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), Open in BI (C9), Chart all N through BI runs; their release is not decided.
 Feature decided by the product owner, beside BI runs
 ([ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job)) and the two Drishti\*net transport items ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet)). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the pivot engine
 (drishti-bicompute on the server; `drishti_pivot-engine.js`, its browser client, and `drishti_pivot-grid.js`, its grid; [PIVOT.md](bi/PIVOT.md)),
-the chart panels (`drishti_charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([REPORT_FILE_FORMAT_STATEMENTS.md](bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) section 3) and
+the chart panels (`drishti_charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([REPORT_FILE_FORMAT_STATEMENTS.md](bi/REPORT_FILE_FORMAT_STATEMENTS.md#1-the-report-file-pages-visuals-filters-and-slicers) section 5.3) and
 history queries ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)).
 
-### 1. The ask
+### 5.1 The ask
 
 The product owner, 2026-10-20: **every table can be charted.**
 
@@ -6799,7 +6799,7 @@ The product owner, 2026-10-20: **every table can be charted.**
   **Promote to Sutra** (a chart panel, through review) and **Open in BI** (a report visual).
 * **Reuse:** the pivot engine's aggregation and ECharts; **one** shared component, `drishti_table-chart.js`, used by every kind of table.
 
-### 2. What exists already
+### 5.2 What exists already
 
 | Piece | Where | What it gives this design |
 |---|---|---|
@@ -6811,17 +6811,17 @@ The product owner, 2026-10-20: **every table can be charted.**
 | Saved pivot views | `/api/pivot/views` (`/api/v1/pivot/views`) | Per-user pivot views (bi/PIVOT.md), shareable with roles; a cell is addressable as `pivot://owner/name@v/Measure[DIM=V]`. |
 | Chart panels | `web/static/js/drishti_charts.js` (`window.Drishti.charts`) | `tokens(root)` reads `--d-*` from `<html>` or a shadow host, `palette(t)` (8 tokens), `compact()` numbers, `axis()`, `tooltip()`; a "Data" table under every chart for keyboards, screen readers and print; redraws on a theme change. |
 | Sutra chart kinds | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one): `line`, `area`, `hbar` (`shape: donut`), `scatter`, `histogram`, `waterfall` | One series per kind (or `area`'s list of bands); **no grouped or stacked bars, no combo, no second axis, no split, no Top N**. |
-| BI visuals | `drishti_bi-report.js`, `drishti_bi-grids.js`, bi/REPORTS.md › Reports: the YAML, the visuals and how they behave, section 3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
+| BI visuals | `drishti_bi-report.js`, `drishti_bi-grids.js`, bi/REPORTS.md › Reports: the YAML, the visuals and how they behave, section 5.3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
 | BI runs | [ARCHITECTURE.md §28](../architecture/ARCHITECTURE.md#287-bi-runs-every-bi-query-as-a-bounded-visible-job), `POST /api/v1/bi/runs` | Every BI question through one pipeline: inline within about 2 s, otherwise a visible run; `interaction`, `supersedes`; results reused by fingerprint, data version and security signature. |
 | History | `drishti_history-page.js`, `terminal/history.html`, `/export/history/{kind}/{id}.{csv,xlsx,json}` | One row per business day (at most `max-days`, 366); a `data-plain` table with its own document-level keys: **`k` is "previous day"** (vim style), `j` next, `C D E R P Y T 1 3 6 ?`. The market shape already draws one line (P cycles the field). |
 | Exports | `POST /export/grid.csv`, `POST /export/grid.xlsx` (`routes/export_routes.py`) | A grid the page computed (`{name, header, rows}`) as CSV (formula-safe) or Excel (bold frozen header, numbers as numbers). |
 | Dialogs | native `<dialog>` with `showModal()` (`drishti_history.js`, `drishti_share.js`, `drishti_colfilter.js`), a phone sheet in `drishti_collab.css`, focus trapped and returned (`drishti_share.js`), `drishti_zoom.js` `OVERLAYS` includes `dialog[open]` | A popup that Escape closes before the zoom, inside a ShadowRoot for an embedded view (the pivot's `layer`). |
 | Keys elsewhere | `drishti_bi-report-board.js` | **K toggles kiosk** on a report with pages (document level, any focus). `drishti_zoom.js`: Z zoom, Shift+Z full screen. `drishti_tables.js`: Alt+Shift+X clears filters. `drishti_view.js`: F1–F10 and Alt+Shift+digits. |
 
-### 3. Principles
+### 5.3 Principles
 
 1. **One component, many adapters.** `drishti_table-chart.js` draws, configures, saves and exports; each kind of table hands it a small
-   *source adapter* (section 8). No table type has its own chart code.
+   *source adapter* (section 5.8). No table type has its own chart code.
 2. **Raw values, never display text,** wherever the server can give them. A table's cell `1.5m` is a rounded display; charting it would
    draw wrong numbers. Display text is a last resort for tables with no raw source (admin lists), and the chart says so.
 3. **One engine, on the server.** Every figure is the pivot engine's (drishti-bicompute): the shown rows through `POST /api/pivot/inline`,
@@ -6830,15 +6830,15 @@ The product owner, 2026-10-20: **every table can be charted.**
    choice with its cost said up front.
 5. **Masks hold twice.** The server masks before rows leave it; the component refuses a masked column. A chart never makes a hidden value
    readable (a total of masked values included).
-6. **No aggregation of its own.** Each table type's server path is reused (section 11); rows the page holds go to the pivot engine's
+6. **No aggregation of its own.** Each table type's server path is reused (section 5.11); rows the page holds go to the pivot engine's
    inline endpoint, which aggregates them with the same functions as every other pivot.
 7. **Tokens only.** Every colour is a `--d-*` token through `drishti_charts.js` `tokens()`; no literal colour, no inline style (CSP).
 
-### 4. Where it appears
+### 5.4 Where it appears
 
 | Table | Renderer | Icon placed by | Raw rows from | Chart all N | Save identity | Promote | Open in BI |
 |---|---|---|---|---|---|---|---|
-| Sutra `table`, `ladder` (and a drill's current level) | `panels.html` + `drishti_tables.js` | `drishti_tables.js` heading strip | `/api/pivot/records/…?for=chart` (C3) | records beyond `limit`, up to 50,000 | `panel:<sutra>/<panel>` | **yes** (authors) | no (section 12.4) |
+| Sutra `table`, `ladder` (and a drill's current level) | `panels.html` + `drishti_tables.js` | `drishti_tables.js` heading strip | `/api/pivot/records/…?for=chart` (C3) | records beyond `limit`, up to 50,000 | `panel:<sutra>/<panel>` | **yes** (authors) | no (section 5.12.4) |
 | A Sutra `pivot` table (`by: [a, b]`) | `panels.html` `pivot_table`, `drishti_tree-rows.js` | `drishti_tables.js` | its rows as shown (already aggregated) | no | `panel:<sutra>/<panel>` | yes | no |
 | The pivot screen | `drishti_pivot.js` | not offered: it charts a selection itself (`G`) | | | | | |
 | Search results and pick lists | `terminal/search.html` + `drishti_tables.js` | `drishti_tables.js` | the page's rows (search answer) | `/api/pivot/search/{kind}` when the pack says `pivot:` | `search:<kind>` | no | when a BI dataset serves the kind |
@@ -6847,11 +6847,11 @@ The product owner, 2026-10-20: **every table can be charted.**
 | Other tables (admin lists, a chart panel's Data table) | `drishti_tables.js` | `drishti_tables.js` | the cells' text (`drishti_colfilter.js` value parser) | no | none (not saved) | no | no |
 
 A table with `data-no-chart` (a Sutra's `chart: false`, a form laid out as a table, `data-plain` tables other than history) has no icon.
-A table with no chartable column (section 15) shows the icon disabled with the reason as its title.
+A table with no chartable column (section 5.15) shows the icon disabled with the reason as its title.
 
-### 5. UI sketches
+### 5.5 UI sketches
 
-#### 5.1 Desktop (wide popup, about 92 vw × 86 vh, at least 960 × 600)
+#### 5.5.1 Desktop (wide popup, about 92 vw × 86 vh, at least 960 × 600)
 
 ```
 ┌─ Chart · Cash flows (TRD 1000015 · 2026-10-20) ─────────────────────────────────────────────────── [?] [✕] ┐
@@ -6874,12 +6874,12 @@ A table with no chartable column (section 15) shows the icon disabled with the r
 ```
 
 * The chart takes about 70% of the width, the settings 30% (a 300–360 px column). Every change redraws at once (no Apply).
-* The caption under the chart is the text summary (section 14), visible and read by screen readers.
+* The caption under the chart is the text summary (section 5.14), visible and read by screen readers.
 * The line under the chart says what is charted (*Showing 25 of 1,340 rows*, the table's filters in words, the business date, any masked
-  column left out). **Chart all N** is there only when more rows exist and a server path exists (section 11).
+  column left out). **Chart all N** is there only when more rows exist and a server path exists (section 5.11).
 * Buttons a user may not use are absent, not disabled (Promote for a non-author; Save in an embedded view).
 
-#### 5.2 Phone (full screen)
+#### 5.5.2 Phone (full screen)
 
 ```
 ┌──────────────────────────────┐
@@ -6905,24 +6905,24 @@ A table with no chartable column (section 15) shows the icon disabled with the r
   the height, the settings and actions in two `<details>` sheets. Controls follow `drishti_touch.css` (44 px targets).
 * Rotating to landscape gives the chart the whole height and moves the sheets behind a ⚙ button.
 
-#### 5.3 Moments
+#### 5.5.3 Moments
 
 | Moment | What the person sees |
 |---|---|
-| Opening | the chart already drawn with the defaults (section 7), focus on the chart's type group; announced *"Chart of AMOUNT by PAY_DATE. Settings on the right."* |
+| Opening | the chart already drawn with the defaults (section 5.7), focus on the chart's type group; announced *"Chart of AMOUNT by PAY_DATE. Settings on the right."* |
 | Chart all N, records or history | *Reading 1,340 rows…* in the status line, then the chart redrawn; the line says *All 1,340 rows* |
 | Chart all N, search | *Aggregating every match on 2026-10-20…*; the server's partial or masked notes shown as the pivot shows them |
 | Chart all N, BI, longer than the inline wait | the run card of BI_RUNS 6.2 inside the popup (*Running: about 2 min, we'll notify you*, Cancel); the popup may be closed, and the run opens the chart from the Runs tab |
 | Closing (✕, Escape, the browser's Back on a phone) | the dialog closes and the focus returns to the Chart icon; unsaved settings are kept for the tab's life (per identity, in memory) |
 
-### 6. Chart types and settings
+### 5.6 Chart types and settings
 
 | Type | X | Y series | Split | Aggregation | Notes |
 |---|---|---|---|---|---|
 | **Line** | date (time axis), number or text | 1–6 | yes (one line per value) | sum, avg, count, min, max | `smooth`, `step` off by default |
 | **Bar** | date, number or text | 1–6 | yes | as line | `grouped` (default) or `stacked`; `percent` (100%) when stacked; vertical columns; horizontal when X is text with long labels (> 18 characters on average) |
 | **Area** | date or number | 1–6 | yes | as line | stacked when split |
-| **Pie / donut** | text (the slices) | exactly 1 | no | sum, count | at most `pie-slices` (12): Top 11 and *Others*; refuses negative values (section 15) |
+| **Pie / donut** | text (the slices) | exactly 1 | no | sum, count | at most `pie-slices` (12): Top 11 and *Others*; refuses negative values (section 5.15) |
 | **Scatter** | number | 1 numeric Y (size optional: a second numeric column) | yes (colour groups) | none (points), or by X with an aggregation | at most `scatter-points` (5,000) points; beyond, a note and the first 5,000 by the sort |
 | **Combo** | date or text | 2–6, each with its own type (bar, line, area) | no | per series | each series on the left or right axis |
 
@@ -6939,25 +6939,25 @@ otherwise takes the smallest period that fits, as a BI time series does, and say
 
 **Top N:** `0` (all) or N; *Others* on or off. Text X with more than `category-max` (30) values starts at Top 20 with *Others* and says so.
 
-### 7. Smart defaults
+### 5.7 Smart defaults
 
 Computed by the pure function `defaults(columns, rows)` in `drishti_table-chart-engine.js` (unit-tested):
 
 1. Columns are classified from their declared type (records `fmt`, BI `type`, history field kinds) and, only when undeclared, from the
    values: a column is a **date** when ≥ 90% of its non-blank values parse as ISO dates; **number** when ≥ 90% are finite numbers;
-   **text** otherwise. Masked columns are left out (section 10).
+   **text** otherwise. Masked columns are left out (section 5.10).
 2. **X** = the first date column; else the first text column whose distinct count is between 2 and `category-max`; else the first text
    column; else the first numeric column (scatter becomes possible).
 3. **Y** = the first numeric column that is not X and is not an id (records `kind`, a linked column); else `count` (*Rows*).
 4. **Type** = line for a date X, bar for a text X, scatter for numeric X and Y.
 5. **Aggregation** = sum, or avg for percentage, price and rate formats.
-6. **Split** = none. **Sort** and **Top N** as section 6.
-7. A **saved arrangement** for the table's identity (section 9) wins over the defaults when every field it names is still offered;
+6. **Split** = none. **Sort** and **Top N** as section 5.6.
+7. A **saved arrangement** for the table's identity (section 5.9) wins over the defaults when every field it names is still offered;
    otherwise it is set aside with a note (*Your saved chart names PV, which this table no longer has; using the defaults*) and kept.
 
-### 8. The component and its API
+### 5.8 The component and its API
 
-#### 8.1 Files
+#### 5.8.1 Files
 
 | File | What | Size goal |
 |---|---|---|
@@ -6969,7 +6969,7 @@ Computed by the pure function `defaults(columns, rows)` in `drishti_table-chart-
 The files load on demand: `drishti_tables.js` adds the icon and, at the first click, injects the three scripts (and `echarts.min.js` when the page
 does not have it), so a page with tables pays nothing until a chart is opened. BI pages and the history page already load ECharts.
 
-#### 8.2 Opening a chart
+#### 5.8.2 Opening a chart
 
 ```js
 window.Drishti.tableChart.open(source, {
@@ -6982,13 +6982,13 @@ window.Drishti.tableChart.open(source, {
 });
 ```
 
-#### 8.3 The source adapter (what a table hands over)
+#### 5.8.3 The source adapter (what a table hands over)
 
 Every adapter implements the same small interface; `drishti_table-chart.js` never looks at the table's DOM.
 
 ```js
 {
-  identity: 'panel:trade-overview/cashflows',      // the saved arrangement's key (section 9); null: not saved
+  identity: 'panel:trade-overview/cashflows',      // the saved arrangement's key (section 5.9); null: not saved
   title: 'Cash flows',                             // the table's title
   context: { kind: 'trade', id: '1000015', asOf: '2026-10-20', knownAt: null },
   filters: 'STATUS = Live',                        // the table's own filters in words (drishti_colfilter.js, the search's where), or ''
@@ -7005,9 +7005,9 @@ Every adapter implements the same small interface; `drishti_table-chart.js` neve
   can: { save: true, promote: true, openInBi: false, all: true },   // computed from the server's answers, never guessed
 
   rows(): Promise<{ fields, rows }>,               // the rows the table holds, raw, in the pivot engine's {fields, rows} shape
-  all(arrangement, signal): Promise<Answer>|null,  // chart all N (section 11); null when there is no server path
-  promote(settings): Promise<Proposal>|null,       // section 12.3
-  openInBi(settings): Promise<{ href }>|null       // section 12.4
+  all(arrangement, signal): Promise<Answer>|null,  // chart all N (section 5.11); null when there is no server path
+  promote(settings): Promise<Proposal>|null,       // section 5.12.3
+  openInBi(settings): Promise<{ href }>|null       // section 5.12.4
 }
 ```
 
@@ -7015,17 +7015,17 @@ Every adapter implements the same small interface; `drishti_table-chart.js` neve
 cube shape of `drishti_pivot-engine.js`, laid out from a `/api/pivot/query` answer) or `{ run }` (a BI run still running; the component shows the run card
 and listens on `/api/v1/bi/runs/events`).
 
-#### 8.4 The adapters
+#### 5.8.4 The adapters
 
 | Adapter | `rows()` | `all()` | Built by |
 |---|---|---|---|
 | `records` (Sutra table, ladder, drill level) | the rows the table holds after its column filters: `GET /api/pivot/records/{kind}/{id}/{panel}?for=chart`, cut to the table's `limit` and filtered by the same `drishti_colfilter.js` predicates the table applies (`CF.matches`) | the same records uncut (up to `max-records`), filters applied | `drishti_tables.js`, from the panel's `data-panel`, the view's `data-kind`/`data-id` and the table's filter state |
 | `search` (search results, pick lists) | the current page's rows from the search answer (`data-search-rows` JSON written by `search.html`, raw values of the kind's search columns) | `POST /api/pivot/search/{kind}` with `{q, rows: [x], columns: [split], values, filters}` | `drishti_tables.js`, from `search.html`'s `data-pivot-search` / `data-pivot-q`, or a new `data-chart-search` for kinds without `pivot:` |
 | `history` | the days on the page, from the `.json` export | the whole range from the `.json` export (`max-days` ≤ 366) | `drishti_history-page.js` |
-| `bi` | the visual's last answer (`columns` with `type` and `masked`, `rows`) | a BI run (section 11.3) | `drishti_bi-report.js`, in the visual's action bar |
+| `bi` | the visual's last answer (`columns` with `type` and `masked`, `rows`) | a BI run (section 5.11.3) | `drishti_bi-report.js`, in the visual's action bar |
 | `dom` | the cells' text through `drishti_colfilter.js`'s classifier and `drishti_tables.js`'s value parser (`1.5m` → 1,500,000) | none | `drishti_tables.js` for any other table |
 
-#### 8.5 What the component does with them
+#### 5.8.5 What the component does with them
 
 ```
 open(source) ──► rows() ──► classify + defaults (or the saved settings) ──► toArrangement(settings)
@@ -7047,9 +7047,9 @@ day cube). Scatter without aggregation skips the cube and reads the points direc
 stacking, pie and scatter. Both use `drishti_charts.js`'s `tokens`, `palette`, `compact`, `axis` and `tooltip`, which `drishti_charts.js` exports on
 `window.Drishti.charts` (C1 adds them to its public object).
 
-### 9. The settings model and saved arrangements
+### 5.9 The settings model and saved arrangements
 
-#### 9.1 The settings document
+#### 5.9.1 The settings document
 
 ```json
 {
@@ -7070,10 +7070,10 @@ stacking, pie and scatter. Both use `drishti_charts.js`'s `tokens`, `palette`, `
 ```
 
 `normalise(settings, columns)` (pure) drops unknown keys, clamps numbers, removes series whose field is no longer offered or is masked,
-keeps at most 6 series, and returns `{settings, problems}`; a saved document with problems is not applied (section 7, rule 7). `scope`
+keeps at most 6 series, and returns `{settings, problems}`; a saved document with problems is not applied (section 5.7, rule 7). `scope`
 (`shown` or `all`) is saved so a chart saved over all rows reopens over all rows (with the cost said again for BI).
 
-#### 9.2 Where a saved arrangement is kept
+#### 5.9.2 Where a saved arrangement is kept
 
 **The pivot's mechanism, a namespace of its own.** A new `SavedChartController` (`/api/v1/me/charts`) keeps one document per user and
 table identity in the `PreferenceStore`, namespace **`charts`**, as `SavedPivotController` keeps `pivots`:
@@ -7093,10 +7093,10 @@ and replication: **`charts` is added to `StateSync.NAMESPACES`**, so a saved cha
 (Drishti\*net N7).
 
 The console's routes mirror `routes/pivot_routes.py`: `GET/PUT/DELETE /api/chart/saved/{identity}` (identity URL-encoded,
-`panel/…`, `search/…`, `history/…`, `bi/…`), only the keys of section 9.1 passed on. An embedded view (`save: false`) neither reads nor
+`panel/…`, `search/…`, `history/…`, `bi/…`), only the keys of section 5.9.1 passed on. An embedded view (`save: false`) neither reads nor
 writes them. Tables of the `dom` adapter are not saved (no stable identity); their settings live for the tab only.
 
-### 10. What it charts: rows, filters, masks
+### 5.10 What it charts: rows, filters, masks
 
 * **Rows:** the rows the table holds: its business date (and `knownAt` on a history *as it was* view), its Sutra-computed rows, and its
   **column filters and search box** (`drishti_colfilter.js`; the adapter applies the same predicates to the raw rows, so the chart counts what the
@@ -7108,11 +7108,11 @@ writes them. Tables of the `dom` adapter are not saved (no stable identity); the
   * a column with **some** masked cells (a row-level rule) is chartable; its masked cells are left out of every aggregate and the status
     line says *12 values hidden for your role were left out*. A count is a count of the visible rows;
   * never shows a total, a percentage of total or *Others* that would include a masked value;
-  * exports only what is drawn (section 12.1), so an export cannot carry more than the screen.
+  * exports only what is drawn (section 5.12.1), so an export cannot carry more than the screen.
 * **Masked server side twice across nodes:** a forwarded view or a scattered search is masked on the node that read it and again on the
   showing node (DRISHTI_NET N3); the records endpoint follows the view's path, so it inherits both.
 
-### 11. Big tables: chart all N
+### 5.11 Big tables: chart all N
 
 **Chart all N** is offered when `total > shown` and the adapter's `all()` is not null. The decision on the server path, per table type:
 
@@ -7123,19 +7123,19 @@ writes them. Tables of the `dom` adapter are not saved (no stable identity); the
 | BI table, matrix | **BI runs** (`POST /api/v1/bi/runs`, source `mq`) | BI_RUNS decides that every BI query goes through one bounded pipeline; a chart over every row of a BI table can be an ad-hoc heavy question (182 dates of trades). The run gives the estimate, the confirmation above the threshold, the inline wait, fairness, reuse by fingerprint and masks per runner. |
 | History | **`GET /export/history/{kind}/{id}.json?{range}`** (the rows; the browser aggregates) | A range is at most `max-days` (366) rows: small, already served whole, masked. |
 
-#### 11.1 Records (Sutra tables)
+#### 5.11.1 Records (Sutra tables)
 
 The browser asks once per open chart (cached for the dialog's life), applies the table's column filters, then aggregates. When the
 server answers `truncated: true` the line reads *All 50,000 of 61,204 rows (the server's limit)*: never silently cut.
 
-#### 11.2 Search
+#### 5.11.2 Search
 
 A pivot view on the kind (`POST /api/pivot/query`): `{source: <kind>, rows: [<x>], columns: [<split>] | [], values: [{measure, as}…],
 top: {<x>: {n, by}, <split>: {n: 11, by}}}`. Top N and *Others* are the engine's: it ranks a level's members by the measure, keeps N and
 makes the rest one *Others* member whose every figure is computed from its own rows (an average included), so nothing is merged in the
 browser. A date X charted over every match goes by day.
 
-#### 11.3 BI runs
+#### 5.11.3 BI runs
 
 The component builds an MQ from the visual's own question (the model, the page's slicers, filters, parameters and as-of from
 `stateFor(spec)`, the visual's filters), replacing its `select` by `{ by: [x, split], measures: [...] }`: a Y that is a **measure** is
@@ -7149,9 +7149,9 @@ supersedes: "<report>/<page>/<visual>/chart", title: "Chart of … from <visual>
   (`?run=…&chart=1`);
 * a time series too long for `chart-rows` (500) is asked by period as BI does (*by week*), and the X bucket shows it.
 
-### 12. Actions: export, save, promote, open in BI
+### 5.12 Actions: export, save, promote, open in BI
 
-#### 12.1 Export
+#### 5.12.1 Export
 
 | Export | How | Name |
 |---|---|---|
@@ -7163,12 +7163,12 @@ Downloads are a `Blob` and a temporary link for PNG and SVG (no server round tri
 does. Exports are of the chart's **aggregated data as drawn** (masked values left out, Top N applied). `exports: false` (an embedded view)
 hides them.
 
-#### 12.2 Save, Reset
+#### 5.12.2 Save, Reset
 
-**Save** keeps the settings for the table's identity (section 9); **Reset** deletes them and redraws the defaults. Both write the user
+**Save** keeps the settings for the table's identity (section 5.9); **Reset** deletes them and redraws the defaults. Both write the user
 stamp, so every console worker and every node sees them at once. Announced: *Chart saved: it opens like this next time*.
 
-#### 12.3 Promote to Sutra (authors, Sutra tables only)
+#### 5.12.3 Promote to Sutra (authors, Sutra tables only)
 
 Offered when the console's `promote` power for pivots is true (an author, with Studio saving on: `core/pivots.py` `promote`) and the table
 is a Sutra panel. Like pivot promotion it proposes the Sutra's **next version** through review (`SutraGovernance`), with the changes in
@@ -7203,7 +7203,7 @@ Endpoints: `GET/POST /api/chart/saved/panel/{sutra}/{panel}/promotion` (console)
 (server), the same shapes as the pivot's (`fromVersion`, `version`, `review`, `changes`, `diff`; the POST answers a proposal with its
 `href: /approvals/sutra/<id>`).
 
-#### 12.4 Open in BI
+#### 5.12.4 Open in BI
 
 Offered to users with BI author powers when the table maps to a BI model:
 
@@ -7213,7 +7213,7 @@ Offered to users with BI author powers when the table maps to a BI model:
 | Search results of a kind a BI dataset serves (the pack's dataset whose table carries the kind) | a new draft report on that dataset, one page, the visual, the search's `where` as page filters when each term maps to a field; otherwise not offered |
 | Sutra tables, history, `dom` tables | not offered: their rows are a document's nested fields or one entity over time, not a model's table |
 
-The mapping to BI visual types (bi/TABLES_AND_MODELS.md › Reports: the YAML, the visuals and how they behave, section 3):
+The mapping to BI visual types (bi/TABLES_AND_MODELS.md › Reports: the YAML, the visuals and how they behave, section 5.3):
 
 | Chart | BI visual | Wells and format |
 |---|---|---|
@@ -7231,7 +7231,7 @@ puts a line on the left or a bar on the right cannot be mapped as is: the dialog
 PV moves to the right axis*, and goes on only when confirmed. Top N becomes the visual's `top` filter; Others has no BI equivalent and is
 dropped with a note. A field Y with an aggregation becomes a local measure (`sum(AMOUNT)`); a measure Y stays the measure.
 
-### 13. Keys
+### 5.13 Keys
 
 **K** opens the chart where it is free; every context was checked against the code:
 
@@ -7258,7 +7258,7 @@ dropped with a note. A field Y with an aggregation becomes a local measure (`sum
 | E | the export menu |
 | ? | the popup's key card |
 
-### 14. Themes and accessibility
+### 5.14 Themes and accessibility
 
 * **Tokens only.** Colours come from `drishti_charts.js` `tokens(root)` (which reads a shadow host's tokens in an embedded view) and its
   `palette(t)`: `link`, `accent`, `ok`, `neg`, `warn`, `bad`, `muted`, `ink`; *Others* is always `faint`; the axes `border` and
@@ -7268,7 +7268,7 @@ dropped with a note. A field Y with an aggregation becomes a local measure (`sum
 * **Contrast (`test_contrast.py`):** a new test asserts, in all ten themes, that every palette token and `faint` reach 3:1 against
   `surface` (non-text graphics), that axis label tokens reach 4.5:1, and that adjacent palette entries differ by at least a minimum
   ΔE so two neighbouring series are told apart.
-* **Keyboard:** every setting is a native control; the chart is focusable with point navigation (section 13); nothing needs a pointer.
+* **Keyboard:** every setting is a native control; the chart is focusable with point navigation (section 5.13); nothing needs a pointer.
 * **Screen readers:** the chart is `role="img"` with an `aria-label` that is the text summary; the summary is also the visible caption:
   *"Bar chart of AMOUNT (sum) by CURRENCY, 7 categories, highest USD 4.1m, lowest NOK −0.3m; 25 of 1,340 rows."* For a time axis: the
   first and last X, the highest and lowest point, the trend (up, down, flat by the least-squares slope over the range). Changes are
@@ -7278,7 +7278,7 @@ dropped with a note. A field Y with an aggregation becomes a local measure (`sum
 * **Motion:** `animation: false` (as the pivot's charts), so `prefers-reduced-motion` is honoured by default.
 * **Print:** `@media print` prints the chart and its caption, not the settings.
 
-### 15. Edge cases
+### 5.15 Edge cases
 
 | Case | Behaviour |
 |---|---|
@@ -7287,7 +7287,7 @@ dropped with a note. A field Y with an aggregation becomes a local measure (`sum
 | **A single row** | drawn (one bar, one point, a full pie); the caption says *one row*. A line with one point is drawn as a point. |
 | **No rows** (the table is empty, or its filters leave none) | the popup opens with *No rows to chart (the table's filters leave none)* and the settings still usable; Chart all N if more exist. |
 | **Nulls and blanks** | a blank X is the pivot's `(blank)` key, last in order, labelled *(blank)*; a blank Y is left out of sum, avg, min and max, counted by count only when counting rows (the engine's functions). A time axis leaves blank-X rows out and says *3 rows without a PAY_DATE left out*. |
-| **Mixed types in a column** (numbers and text) | classified by the 90% rule (section 7); values that do not fit the type are left out of that role and counted in the status line (*2 non-numeric AMOUNT values left out*). A column below 90% either way is text. |
+| **Mixed types in a column** (numbers and text) | classified by the 90% rule (section 5.7); values that do not fit the type are left out of that role and counted in the status line (*2 non-numeric AMOUNT values left out*). A column below 90% either way is text. |
 | **Very many categories** | text X: more than `category-max` (30) starts at Top 20 with *Others*; the cube itself stops at 2,000 row keys (the pivot's limit), which the line says. Split: at most 12 series (11 and *Others*). Pie: at most 12 slices. |
 | **Negative values in a pie** | refused: *A pie shows shares of a whole, and AMOUNT has negative values (3 of 7 slices). Use a bar chart, or chart the absolute values.* with buttons **Bar chart** and **Absolute values** (a series option `abs: true`, saying *absolute* in the label). Zero slices are left out and said. |
 | **Dates with gaps** (weekends, holidays, missing days) | a time axis spaces dates by time; lines connect across gaps by default (`gaps: connect`); `break` draws a gap where a business day expected by the calendar (`CATO` calendar when the pack has one, else Monday–Friday) is missing. Bars stand at their dates. Buckets (week, month) sum within the bucket. |
@@ -7300,25 +7300,25 @@ dropped with a note. A field Y with an aggregation becomes a local measure (`sum
 | **A saved chart naming a removed or masked column** | not applied; the defaults are used with a note; the saved document is kept until saved again or reset. |
 | **A server path that fails** | the pivot's problem text (`{code, detail}`) in the status line, the shown-rows chart kept. |
 
-### 16. Endpoints
+### 5.16 Endpoints
 
 All but the last two are reuses or small extensions; nothing new aggregates.
 
 | Method | Path (console → server) | New or changed | Notes |
 |---|---|---|---|
 | `GET` | `/api/pivot/records/{kind}/{id}/{panel}?for=chart` → `/api/v1/views/{kind}/{id}/panels/{panel}/records?for=chart` | **changed** | `for=chart` gives every **column** of a table, ladder or drill level (not only the `pivot:` fields), for any table panel, with each field's `fmt`, `type`, `masked`, `id`/`kind`. `PivotBinder.records` gets the fields from `p.columns()` (each column's `bind`, label and format) when the panel has no `pivot:` or `for=chart`. Refused with a planned code (*not a table*) for other kinds; `drishti.pivot.enabled: false` will not switch charts off (a planned charts switch will). |
-| `POST` | `/api/pivot/search/{kind}` | reused | as is; the chart sends one or two values per series (section 11.2) |
+| `POST` | `/api/pivot/search/{kind}` | reused | as is; the chart sends one or two values per series (section 5.11.2) |
 | `GET` | `/export/history/{kind}/{id}.json` | reused | as is |
 | `POST` | `/api/v1/bi/runs` | reused | BI_RUNS 14.2, `source.type: mq` |
 | `POST` | `/export/grid.csv`, `/export/grid.xlsx` | reused | as is |
-| `GET/PUT/DELETE` | `/api/chart/saved/{scope}/{…}` → `/api/v1/me/charts/{scope}/{…}` | **new** | section 9.2; `GET /api/v1/me/charts` lists the user's valid ones (for `drishti.py`) |
-| `GET/POST` | `/api/chart/saved/panel/{sutra}/{panel}/promotion` → `/api/v1/me/charts/panel/{sutra}/{panel}/promotion` | **new** | section 12.3 |
+| `GET/PUT/DELETE` | `/api/chart/saved/{scope}/{…}` → `/api/v1/me/charts/{scope}/{…}` | **new** | section 5.9.2; `GET /api/v1/me/charts` lists the user's valid ones (for `drishti.py`) |
+| `GET/POST` | `/api/chart/saved/panel/{sutra}/{panel}/promotion` → `/api/v1/me/charts/panel/{sutra}/{panel}/promotion` | **new** | section 5.12.3 |
 | `POST` | `/api/chart/open-in-bi` → `/api/v1/bi/drafts/from-chart` | **new** | `{source: "bi"|"search", report?, page?, visual?, kind?, q?, settings}` → `201 {draft, visual, href, notes}` |
 
 Error codes (planned, none in `ErrorCode` yet; numbers to be taken at C2): not a table; a chart field is masked or unknown; open in BI:
 no dataset serves the kind; promotion: the panel is not a table.
 
-### 17. Settings
+### 5.17 Settings
 
 Server, `application.yaml` (planned with C2; not built, nothing reads these yet; the console's limits are constants in
 `drishti_table-chart-engine.js` today):
@@ -7337,13 +7337,13 @@ drishti:
 
 Rows are bounded by the existing `drishti.pivot.max-records` (50,000), the search pivot's limits and BI runs' admission; no second cap.
 
-### 18. Build steps C1..C10
+### 5.18 Build steps C1..C10
 
 One console builder and one server builder (two at most, as the release's other items need theirs); targeted tests between steps.
 
 | Step | Lane | What | Done when |
 |---|---|---|---|
-| **C1** | console | `drishti_table-chart-engine.js`: classify, defaults, normalise, `toArrangement`, `series` (Top N, Others, buckets, sort, percent, abs), the summary, the export grid, the option builder; `drishti_charts.js` exports `tokens`, `palette`, `compact`, `axis`, `tooltip` | unit tests of section 19.1 pass under node |
+| **C1** | console | `drishti_table-chart-engine.js`: classify, defaults, normalise, `toArrangement`, `series` (Top N, Others, buckets, sort, percent, abs), the summary, the export grid, the option builder; `drishti_charts.js` exports `tokens`, `palette`, `compact`, `axis`, `tooltip` | unit tests of section 5.19.1 pass under node |
 | **C2** | server | `for=chart` on the records endpoint (`PivotBinder` fields from columns, `type`/`masked` per field), planned `drishti.charts.*` properties (none was built yet), error codes | `ViewApiTest`/`PivotApiTest` cases: a non-pivot table's records; masked field flagged; a non-table refused |
 | **C3** | console | `drishti_table-chart.js` (the dialog, settings, ECharts, keys, live region, View as table, PNG/SVG/CSV/Excel) and `drishti_table-chart.css`; the `dom` and `records` adapters; the icon and K in `drishti_tables.js` (lazy load) | a Sutra table charts its shown rows and all rows; keys work; phone layout |
 | **C4** | server | `SavedChartController` (`/api/v1/me/charts`, namespace `charts`), `charts` in `StateSync.NAMESPACES` | save, read back, invalidated by a Sutra change, replicated to a peer (`NetStateSyncTest`) |
@@ -7352,11 +7352,11 @@ One console builder and one server builder (two at most, as the release's other 
 | **C7** | console | the `bi` adapter: the icon in `drishti_bi-report.js`'s action bar for table, matrix and rows-behind, K with `preventDefault` and the kiosk guard in `drishti_bi-report-board.js`, chart all through BI runs (the run card inside the popup) | BI table charts inline and as a run |
 | **C8** | server | the `chart` panel kind: schema, `ChartBinder` over `PivotCube`, problem codes; `SutraChartEditor` and the promotion endpoints | a promoted Sutra draws the same numbers as the popup (`ChartPanelTest`) |
 | **C9** | both | Open in BI: `/api/v1/bi/drafts/from-chart` (BI table → draft with a visual; search kind → a new draft on its dataset), the mapping of 12.4 with its notes | the designer opens with the visual selected; the combo axis note shown |
-| **C10** | console | the browser test across table types and ten themes, the mask test, `test_contrast` additions, docs (section 20), help card, tutorial section | section 19 green; docs tests green |
+| **C10** | console | the browser test across table types and ten themes, the mask test, `test_contrast` additions, docs (section 5.20), help card, tutorial section | section 5.19 green; docs tests green |
 
-### 19. Tests
+### 5.19 Tests
 
-#### 19.1 Unit (node, `test_table_chart_engine.py`, the engine's answer stood in; the figures themselves in `PivotApiTest` and `RowsProviderTest`)
+#### 5.19.1 Unit (node, `test_table_chart_engine.py`, the engine's answer stood in; the figures themselves in `PivotApiTest` and `RowsProviderTest`)
 
 * **Classify:** ISO dates, date-times, numbers, numbers as text, mixed columns at 89% and 91%, all blank, masked.
 * **Defaults:** date + number → line by date; text + number → bar; two numbers → scatter; no number → count; ids never Y; masked never
@@ -7373,7 +7373,7 @@ One console builder and one server builder (two at most, as the release's other 
 * **Option builder:** two axes when a series is on the right; stacked and 100%; combo types; no literal colour in the option (every
   colour is one of the tokens passed in).
 
-#### 19.2 Server
+#### 5.19.2 Server
 
 * `PivotApiTest` / `ViewApiTest`: `for=chart` on a table without `pivot:`; columns, formats, `masked`; a drill level; truncation at
   `max-records`.
@@ -7384,7 +7384,7 @@ One console builder and one server builder (two at most, as the release's other 
 * `OpenInBiTest`: BI table → draft visual of the right type and wells for every row of the 12.4 table; search kind without a dataset →
   the planned *no dataset* code.
 
-#### 19.3 Browser (`test_table_chart_browser.py`, one test process, 10K trades at most)
+#### 5.19.3 Browser (`test_table_chart_browser.py`, one test process, 10K trades at most)
 
 For each table type: a Sutra table, a ladder, a drill level, search results, a pick list, the history page (document and market
 shapes), a BI table, a BI matrix and a BI chart shown as a table:
@@ -7403,7 +7403,7 @@ shapes), a BI table, a BI matrix and a BI chart shown as a table:
 9. keyboard only: open, change every setting, navigate points, export, close, without a pointer;
 10. on a BI report with pages, K on a table visual opens the chart and K elsewhere still toggles kiosk.
 
-#### 19.4 Masks (`test_table_chart_masks_browser.py` and server cases)
+#### 5.19.4 Masks (`test_table_chart_masks_browser.py` and server cases)
 
 A user whose role masks `MTM` and a row-level rule on one desk:
 
@@ -7414,7 +7414,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 * the CSV and Excel exports carry nothing the screen does not;
 * a chart saved by a user who may see `MTM` and opened by one who may not: not applied, defaults used.
 
-### 20. Docs to update when it is built
+### 5.20 Docs to update when it is built
 
 | Doc | What |
 |---|---|
@@ -7430,7 +7430,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 | this document | implementation notes; status to *built* |
 | CHANGELOG, RELEASE_NOTES | the release's entries |
 
-### 21. What the real code changed
+### 5.21 What the real code changed
 
 Reading the code on `develop` changed the agreed outline in these places:
 
@@ -7457,7 +7457,7 @@ Reading the code on `develop` changed the agreed outline in these places:
 9. **A BI measure must not be re-aggregated.** A BI table's measure column (a ratio, an average) summed again by X would be wrong; the BI
    path asks the engine for the measure at the chart's grain, and only fields get an aggregation menu.
 
-### 22. Decisions on the open questions (product owner, 2026-10-20)
+### 5.22 Decisions on the open questions (product owner, 2026-10-20)
 
 1. **Chart all N on searches without `pivot:`:** not offered. The pack owner's opt-in stays; the rows on screen are always chartable.
 2. **Open in BI for Sutra tables:** not offered.
@@ -7465,26 +7465,26 @@ Reading the code on `develop` changed the agreed outline in these places:
 4. **Saved charts for `dom` tables** (admin lists): not saved.
 5. **Saved charts per table:** one per table; named charts may come later.
 
-### 23. C1: `drishti_table-chart-engine.js`
+### 5.23 C1: `drishti_table-chart-engine.js`
 
 Coding the engine settled these points:
 
 * **Count of rows needs a column.** A value must name a field the engine is sent, so *Rows* cannot be
   `{field: null, agg: count}` beside other values. `prepare` adds a derived `·rows` column (1 per kept row) and counts it, so a count is
   of the rows that reached the chart (masked X or split cells drop their row first).
-* **A masked X or split cell drops its row; a masked Y cell is only left out of that series.** The section 10 rule ("left out of every
+* **A masked X or split cell drops its row; a masked Y cell is only left out of that series.** The section 5.10 rule ("left out of every
   aggregate") needs that split: a row cannot be placed without its X.
 * **Top N does not apply to a time axis** (it would cut dates out of a line); the engine notes it and keeps every date.
 * **Scatter's aggregation `none`** is a seventh value of the series' `agg`, allowed only for `type: scatter`; `normalise` turns it into
   `sum` for every other type.
-* **The summary's numbers use `drishti_pivot-engine.js` `format(v, 'compact')`** (`−300k`, `4.1m`), not the section 14 example's `−0.3m`.
+* **The summary's numbers use `drishti_pivot-engine.js` `format(v, 'compact')`** (`−300k`, `4.1m`), not the section 5.14 example's `−0.3m`.
 * **Bad enums are fixes, not problems.** `normalise` returns `{settings, problems, fixes}`: only a removed or masked field (or another
   `v`) is a problem that sets a saved document aside; a bad `type` or `agg` is replaced and listed in `fixes`.
 
-### 24. The console wiring (C3, C6, C7)
+### 5.24 The console wiring (C3, C6, C7)
 
 Built in the console; the server steps (C2, C4, C5, C8, C9) are still to come, and the dialog leaves
-their buttons out (section 5.1: absent, not disabled) until they are.
+their buttons out (section 5.5.1: absent, not disabled) until they are.
 
 | File | What | Lines |
 |---|---|---|
