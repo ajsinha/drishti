@@ -1157,7 +1157,7 @@ file has no entry for the table (a kind's, or one of a kind's several tables: `t
 first (said in the log), with the kind's key as its `id:` when the entry names none (the `.ready` file's `key:`, else the pack's ingest
 key, else the single `key:` field of the kind's data contract); when the lake has no file at all, `config/lakes/<lake>.yaml` is created. From then on the lake file is the truth: edit it there.
 
-A file of *lake rows* or *loader rows* (the row forms of [DATA_GUIDE.md section 2.2](DATA_GUIDE.md#2-the-row-forms)) is refused with the
+A file of *lake rows* or *loader rows* (the row forms of [DATA_GUIDE.md section 2.2](DATA_GUIDE.md#22-the-row-forms)) is refused with the
 tool that loads it (`tools/samplegen/load_rows.py`, or the store's own loader): the loader reads documents.
 
 ### 5.2 The business date of a file
@@ -1492,7 +1492,7 @@ away. Admin → Data loads → Routing rules shows each rule's origin (`site` or
 
 **Refusals.** A `where` that is not a predicate, a map file that is missing, unreadable, maps two fields to one, or names an unknown cast,
 refuses the connector at load with `DRS-5034`, shown on Admin → Connectors with the reason; the rest of the server runs. A connector's `where`
-may not name `$user`: person attributes belong in a role's row rule ([ACCESS_MODEL.md section 10](../architecture/KERNEL_AND_MODULES.md#1910-row-rules)).
+may not name `$user`: person attributes belong in a role's row rule ([ACCESS_MODEL.md section 19.10](../architecture/KERNEL_AND_MODULES.md#1910-row-rules)).
 
 **A source module switched off** (Admin → Modules, at runtime, no restart): its connectors leave every binding without an error (Admin says
 *source ENDUR off*), its rows leave lists, blotters, search and BI (also from a shared table read by a connector without `where`), its live

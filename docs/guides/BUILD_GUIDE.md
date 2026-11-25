@@ -5265,7 +5265,7 @@ drishti:
 ```
 
 A person with this role (and no other that opens trades) sees only SwapOne's trades in `TRD`, search and the blotter; a trade of another system is
-*not found*. Aggregates (VaR, BI totals) keep their own scope model ([ACCESS_MODEL.md section 10](../architecture/KERNEL_AND_MODULES.md#1910-row-rules)).
+*not found*. Aggregates (VaR, BI totals) keep their own scope model ([ACCESS_MODEL.md section 19.10](../architecture/KERNEL_AND_MODULES.md#1910-row-rules)).
 
 You should see, signed in as that person, only `SW1-…` ids in `TRD`, and *not found* for a trade of another system.
 

@@ -1082,7 +1082,7 @@ Errors are RFC 7807 `application/problem+json` with a `code` (`DRS-nnnn`) member
 Every answer is **JSON** unless a client asks otherwise. A client that sends `Accept: application/vnd.apache.arrow.stream` gets
 **Arrow IPC** where the server offers it, cell for cell the same table, with the rest of the answer in the schema metadata. Anything
 Arrow cannot carry falls back to JSON, and nothing changes for a client that does not ask. Where each format is used, and why
-(measured 2026-10-30; [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](../guides/DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays)):
+(measured 2026-10-30; [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 2.6](../guides/DATA_GUIDE.md#26-arrow-to-the-browser-where-it-pays)):
 
 | Boundary | Format | Why |
 |---|---|---|

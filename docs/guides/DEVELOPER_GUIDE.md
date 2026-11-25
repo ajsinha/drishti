@@ -414,7 +414,7 @@ failure a sentence naming the file and the fix:
 
 `ModuleCliTest` (in `drishti-server`) runs these paths without Maven: it generates a module from the archetype's templates, compiles it, packs it with the one packer (`ModulePack`), passes the fourteen checks through `ModuleCli`, adds a visual, and a broken copy fails the checks with their words.
 
-### 1.7 A module's console part
+### 1.7a A module's console part
 
 The console hosts a module's `console/` part **declaratively** (design: [KERNEL_AND_MODULES.md sections 4.7, 9 and 14.2.1](../architecture/KERNEL_AND_MODULES.md#47-the-console-part-loaded-by-the-drishti-console)):
 it reads the files the kernel verified and runs none of them, so a module brings no Python, no Java and no route registration to the
@@ -489,7 +489,7 @@ is not listed, so its visual is gone from the gallery (and its library answers 4
 
 `modules/genomics` is a third party's module (publisher Helix Lab, a sample) made from the archetype and finished by hand: it uses
 `drishti-kernel-api` and the plugin API only (C1) and carries no finance. Drishti Genomics (`--distribution genomics`) runs the thin
-kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/KERNEL_AND_MODULES.md#204-drishti-genomics-sample)).
+kernel with it alone ([DISTRIBUTIONS.md section 20.4](../architecture/KERNEL_AND_MODULES.md#204-drishti-genomics-sample)).
 
 1. **Generated.** `mvn archetype:generate -DarchetypeArtifactId=drishti-module-archetype -DgroupId=org.helixlab -DartifactId=genomics
    -Dpackage=org.helixlab.genomics -Ddomain=genomics` (the first commit of the module is the archetype's output, unchanged).
@@ -2227,7 +2227,7 @@ endpoint) is listed under `failedToStart` and retried by itself ([DATA_GUIDE.md 
 One `DOWN` connector does not take the others with it.
 
 A connector is a file of its own, never a block of a site configuration file
-([DATA_GUIDE.md section 9, section 11](DATA_GUIDE.md#911-where-connectors-are-defined)).
+([DATA_GUIDE.md section 9, section 9.11](DATA_GUIDE.md#911-where-connectors-are-defined)).
 
 ### 10.3 Which connector should I use?
 
@@ -3582,7 +3582,7 @@ a list of lists named by `columns`; `{"shape": "records", "at": "rows", "absent"
 some objects leave out). Text that repeats (desks, books, currencies, dates) is a dictionary column; integers are 64-bit, numbers
 doubles, flags booleans. A table Arrow is not written with here (an object or a list in a cell, a column mixing text and numbers) comes
 as JSON with `200`, as does every call without that `Accept`: read the `Content-Type`. The console's `/api/var/...` and `/bi/api/...`
-pass the header on and answer the same way. Why these two and not others, with the measurements: [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays).
+pass the header on and answer the same way. Why these two and not others, with the measurements: [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 2.6](DATA_GUIDE.md#26-arrow-to-the-browser-where-it-pays).
 
 ```bash
 curl -s -H "Authorization: Bearer $T" -H "Accept: application/vnd.apache.arrow.stream" \
@@ -3717,7 +3717,7 @@ is in [section 1.7](#17-what-a-module-can-contribute).
 | a function | a `FunctionProvider` (`kernel.api.function`): `functions()` returns `Provided(name, minArgs, maxArgs, signature, description, fn)`; the name is usable in any Rachana expression, Sutra or measure | `GreetingFunctions` |
 | a REST API | a `@RestController` with `@ModuleApi("<prefix>")` (`kernel.api.module`); mounted under `/api/v1/<prefix>/` | `GreetingController` |
 | start and stop | the `java.entry` class, a `DrishtiModule`: `start(ModuleContext)` gives the kinds as rows (`kinds()`), a writer, its settings (`drishti.module.<id>.*`), its data folder, audit and the business date | `HelloModule` |
-| a page | `console/plugin.yaml` (`format: 2`, `routes:`, `menus:`, `home:`, `ai:`) and a template extending `kernel/page.html`: [section 1.7, the console part](#17-a-modules-console-part) | `console/pages/hello.html` |
+| a page | `console/plugin.yaml` (`format: 2`, `routes:`, `menus:`, `home:`, `ai:`) and a template extending `kernel/page.html`: [section 1.7a, the console part](#17a-a-modules-console-part) | `console/pages/hello.html` |
 | Help | `docs/README.md` with front matter (`title`, `domain`, `summary`), `docs/help.yaml` (`sections:` of `pages:` with `file:`), a guide and a tutorial (C7); shown as `/help/section/module-<id>` | `docs/` |
 
 **4. Build it, one of three ways** (one packer, one set of checks; [section 1.6](#16-the-module-sdk)). Run these from your module project's folder (the one with `module.yaml` at its top; the code is the Maven or Gradle project under `java/<id>/`); the Python line needs the path to the Drishti folder's `tools/drishti.py`.

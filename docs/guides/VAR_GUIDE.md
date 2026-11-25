@@ -472,7 +472,7 @@ scope's VaR) with its share and a bar, marginal VaR per million of market value,
 component. **+ basket** on a row adds it to your basket ([section 3.5](#35-construct-your-basket)); the row's own click still drills in.
 By position and by trade, a desk's table has hundreds to thousands of rows: the page reads it as Apache Arrow (61 to 65% fewer
 bytes than JSON, the same table cell for cell); everything else on the page stays JSON. `?tables=json` in the address makes it ask JSON
-([DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays)).
+([DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 2.6](DATA_GUIDE.md#26-arrow-to-the-browser-where-it-pays)).
 
 ![The rates desk's contributions: three books, their components adding up to the desk's VaR](img/var/04-contributions.jpg)
 
@@ -1471,7 +1471,7 @@ Its **VaR limit** is a `var-limit` row of `HIERARCHY` `PORTFOLIO` whose `NODE_ID
 **Who changes them.** Everyone who may open VaR reads every system basket (the System baskets drop-down, key `B`; `PORT <GO>`;
 `GET /api/v1/risk/var/system-baskets`). Creating, editing and retiring one needs the permission **`var:system-baskets`**: a role that
 lists it (Admin → Roles → *Permissions*, or `permissions: [var:system-baskets]` of a configured role,
-[ACCESS_MODEL.md section 8](../architecture/KERNEL_AND_MODULES.md#198-as-built-the-backend-phase-1-of-the-split)), or an administrator. It is
+[ACCESS_MODEL.md section 19.8](../architecture/KERNEL_AND_MODULES.md#198-as-built-the-backend-phase-1-of-the-split)), or an administrator. It is
 done in the basket sheet itself ([section 3.5](#35-construct-your-basket)): a holder of the permission sees **System basket** under the
 sheet, the basket's fields; *Edit a copy* on a system basket fills them with it. **Save system basket** saves a `basket` from the sheet's
 position and trade columns, a `hierarchy` from its node (or the one node the sheet holds) and a `rule` from its condition; the same id is
@@ -1840,7 +1840,7 @@ The design ([section 30](#30-the-design-record)). What-if pricing is not built; 
 systems are built** (the subsection *Intraday updates* below).
 
 **What-if changes.** A sandbox is a person's private what-if: a base scope and a list of changes; only its owner sees or changes it
-([DATA_ARCHITECTURE.md › Reactive connectors, section 9](../architecture/DATA_ARCHITECTURE.md#9-isolation-two-users-never-see-each-others-answers)).
+([DATA_ARCHITECTURE.md › Reactive connectors, section 4.9](../architecture/DATA_ARCHITECTURE.md#49-isolation-two-users-never-see-each-others-answers)).
 
 | Change | How its vector is obtained | Pricing needed |
 |---|---|---|
@@ -1863,7 +1863,7 @@ the event trigger recomputes the real scopes; the sandbox is left as it was. Wit
 changes that need no pricing.
 
 **Intraday events.** Overnight vectors describe the morning's positions; the design keeps an **intraday layer** on top of them,
-recomputed on the reactive connectors' triggers ([DATA_ARCHITECTURE.md › Reactive connectors, section 7](../architecture/DATA_ARCHITECTURE.md#7-triggers-computing-on-events)):
+recomputed on the reactive connectors' triggers ([DATA_ARCHITECTURE.md › Reactive connectors, section 4.7](../architecture/DATA_ARCHITECTURE.md#47-triggers-computing-on-events)):
 
 | Event | Trigger | Effect on the intraday layer |
 |---|---|---|
@@ -1873,11 +1873,11 @@ recomputed on the reactive connectors' triggers ([DATA_ARCHITECTURE.md › React
 | the overnight batch publishes new vectors | `data-version` | the intraday layer of that date is dropped: the batch's vectors include the day's trades |
 
 An event changes the vector of the trade's book and every node above it by (new − old), and every saved basket holding the trade;
-nothing else is recomputed ([DATA_ARCHITECTURE.md › Reactive connectors, section 10.2](../architecture/DATA_ARCHITECTURE.md#102-incremental-recompute)). An
+nothing else is recomputed ([DATA_ARCHITECTURE.md › Reactive connectors, section 4.10.2](../architecture/DATA_ARCHITECTURE.md#4102-incremental-recompute)). An
 intraday result says which events it includes (`L17:3412`, `trade-kafka p3:182277`) and is labelled *intraday*; the official numbers
 come only from the batch. The submitter of a write-back receives their own change's incremental VaR, computed against the state just
 before their event, under their change id; everyone watching the scope receives the new shared number
-([DATA_ARCHITECTURE.md › Reactive connectors, section 9.2](../architecture/DATA_ARCHITECTURE.md#92-two-traders-two-amendments-the-same-second)). Until a
+([DATA_ARCHITECTURE.md › Reactive connectors, section 4.9.2](../architecture/DATA_ARCHITECTURE.md#492-two-traders-two-amendments-the-same-second)). Until a
 pricer is available an amended or booked trade gets no intraday vector (*intraday change not reflected: pricing unavailable*);
 cancellations, which need no pricing, are applied. A trade moved between books moves its vector to another ancestor chain, with no
 repricing.
@@ -4573,7 +4573,7 @@ table and charts, VaR and ES history, bank to desk to book to position, any ad-h
 first class. Its principles: vectors, not prices; one engine for every scope (a hierarchy node is only a scope that happens to be
 precomputed); additive where it can be, honest where it cannot (P&L vectors and ES contributions add up, VaR does not: the screens show
 diversification); every number reproducible (each result carries its stamp: input versions, scenario set, method, engine,
-[DATA_ARCHITECTURE.md › Reactive connectors, section 8](../architecture/DATA_ARCHITECTURE.md#8-point-in-time-stamping-ordering-and-idempotence)); entitled
+[DATA_ARCHITECTURE.md › Reactive connectors, section 4.8](../architecture/DATA_ARCHITECTURE.md#48-point-in-time-stamping-ordering-and-idempotence)); entitled
 as the viewer; packs stay declarative.
 
 | Part | Implementation |
@@ -5315,7 +5315,7 @@ record.
 
 **The explorer as a Sutra (not built).** The design made the explorer an ordinary Sutra of the market-risk pack built from UI kit
 fragments, reading the reactive kinds through `source:` with `params:`
-([DATA_ARCHITECTURE.md › Reactive connectors, section 12](../architecture/DATA_ARCHITECTURE.md#12-one-screen-many-connectors)), with new fragments (a
+([DATA_ARCHITECTURE.md › Reactive connectors, section 4.12](../architecture/DATA_ARCHITECTURE.md#412-one-screen-many-connectors)), with new fragments (a
 distribution histogram with marked lines, a sorted-tail chart, a hierarchy tree with measures). Three static mock-ups were made (the
 explorer, the what-if panel, the write-back review with its recompute status), shared with the product owner and kept outside the
 repository; the explorer was built as a console page from the first. On a phone the design made the hierarchy a drop-down; the

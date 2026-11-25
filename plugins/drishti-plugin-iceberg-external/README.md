@@ -215,7 +215,7 @@ with its environment variable is in [CONFIGURATION.md](../../docs/admin/CONFIGUR
 
 Both read through Drishti Lake's Iceberg reader, with no Hadoop; this connector asks for each table through `LakeReader.foreign` with a `TableShape` built from `tables.<kind>.*`
 ([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)); why
-there are two is in [DATA_ARCHITECTURE.md, Two connectors](../../docs/architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables).
+there are two is in [DATA_ARCHITECTURE.md, Two connectors](../../docs/architecture/DATA_ARCHITECTURE.md#315-two-connectors-drishti-tables-and-external-tables).
 
 ## Ids, dates and modes
 
