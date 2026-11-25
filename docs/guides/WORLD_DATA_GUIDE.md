@@ -1946,6 +1946,8 @@ means the lake was built without the IMF data (`-- --no-imf`), which is expected
 | `LEI 010PWNH4K3BLIC3I7R03` | an entity with its direct and ultimate parents; `LEIR LEIREL-010PWNH4K3BLIC3I7R03-DIRECT` the relationship, `LEIG 549300B2Q47IR0CR5B54` the ownership group, `LEIC GB` the country | `view get lei-entity/010PWNH4K3BLIC3I7R03` |
 | `CO AAPL`, `NEWS Apple`, `QUOTE AAPL` | a listed company, its headlines and quote; on the committed snapshot the quote says *(snapshot captured <date>)* | `view get listed-company/CO-AAPL` |
 
+![FUNDS: the pack's overview, its three commands and their counts](../tutorials/img/t28/01-pack-overview.jpg)
+
 Every command is a `view get <kind>/<id>` for the command line (prefix `python3 tools/drishti.py`). The commands and id rules of a pack
 are its `pack.yaml`; for the gleif pack:
 
@@ -1956,6 +1958,10 @@ mnemonics:
   LEIR: { kind: lei-relationship, label: LEI parent relationship }
   LEIC: { kind: lei-country, label: LEI country }
 ```
+
+The same page on a phone (`FUND VTI`):
+
+![FUND VTI on a phone](../tutorials/img/t28/09-phone.jpg)
 
 A parent relationship is a record of its own; an ownership group and a country are computed when opened. The news and quote pages
 answer from the committed snapshot while the live connectors are off (Admin → Connectors shows `news` and `yfinance` *off (served from

@@ -1588,7 +1588,7 @@ the page's own values ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#pac
 
 ### `drishti.datamap` — the data map
 
-The data map (`DATAMAP <GO>`, `GET /api/v1/datamap`; [USER_GUIDE.md](../guides/USER_GUIDE.md#the-data-map)) counts every stored kind and
+The data map (`DATAMAP <GO>`, `GET /api/v1/datamap`; [CLI_REFERENCE.md › 20.5 The data map](../guides/CLI_REFERENCE.md#205-the-data-map)) counts every stored kind and
 checks every join the data contracts declare against the data, in the background, once per business date and set of loaded packs.
 
 | Key | Default | Meaning |

@@ -928,7 +928,7 @@ A pack made from JSON Schema files, a folder of JSON Lines, or both (Create → 
 
 Taking data **out** of Drishti, a dataset and a day at a time: `EXPORT <GO>` (Views → Export data, `/data`; `DATA` works too), the API under `/api/v1/data` and
 `drishti.py data get`. It is download only: rows are never shown in a grid. The screen itself, panel by panel, is in
-[USER_GUIDE.md (Export data)](CLI_REFERENCE.md#206-export-data).
+[CLI_REFERENCE.md › 20.6 Export data](CLI_REFERENCE.md#206-export-data).
 
 ### 6.1 What a dataset is
 
