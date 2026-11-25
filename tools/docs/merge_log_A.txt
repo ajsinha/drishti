@@ -44,3 +44,6 @@ modules/source-wss/docs/guide.md | Load a file | docs/guides/BANK_DATA_GUIDE.md,
 modules/source-wss/docs/guide.md | # config/connectors/trade-wss.yaml (from connectors/delta.yaml) | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
 modules/source-wss/docs/guide.md | cp wss-2026-11-03.jsonl.gz data/dataload/inbox/ | docs/guides/BANK_DATA_GUIDE.md, the Endur block with the system name changed
 docs/guides/PVF_LOADING.md | Load your scenario PV and portfolio files into the Delta lake, and remove older scenario PV dates | docs/guides/BANK_DATA_GUIDE.md, the document's title (it is renamed and its title now names the whole guide: Bank data: what a bank sends each day and how it is loaded)
+bin/README.md | python tools/drishti.py setup | docs/guides/CLI_REFERENCE.md (setup), linked from OPERATIONS_GUIDE (one home per command)
+tools/mrloader/README.md | python3 -m pip install -r requirements-polars.txt      # Windows: py -3.13 -m pip install -r requirements-polars.txt | docs/guides/BANK_DATA_GUIDE.md (inline command, same text)
+tools/mrloader/docs/DAILY_RUNBOOK.md | python3 -m pip install -r requirements-polars.txt      # Windows: py -3.13 -m pip install -r requirements-polars.txt | docs/guides/BANK_DATA_GUIDE.md (inline command, same text)

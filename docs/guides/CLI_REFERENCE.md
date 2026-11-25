@@ -31,7 +31,7 @@ All the data in this guide is invented, and every example runs on a fresh clone 
 under `data/testdata/` (the ENDUR trade book `data/testdata/trades/endur/`, a day-one snapshot and one file of changes per later day,
 JSON Lines gzipped; trades with legs, cash flows, resets and events in the UPPER_SNAKE attributes of the trading pack, blanks spelt
 four ways: the *shape* of a booking-system export, none of its values), the interpreter is the one you run Drishti with
-(`python3`; `py` on Windows), its libraries installed by `python tools/drishti.py setup` (from the offline wheel pack), and the commands run from the repository root. Scratch output (`lake`, `lake2`, `data/build/...`) goes into the clone; delete it
+(`python3`; `py` on Windows), its libraries installed by you from the offline wheel pack with the two pip commands (`python tools/drishti.py setup` only checks them), and the commands run from the repository root. Scratch output (`lake`, `lake2`, `data/build/...`) goes into the clone; delete it
 afterwards.
 
 ## Contents
