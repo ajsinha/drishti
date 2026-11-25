@@ -4112,7 +4112,7 @@ It prints the latency and error table (one line per action, `history` its own) a
 One command runs every documentation generator, in the order that is right (a page that lists other pages comes after them): the
 settings catalogue (`CONFIGURATION.md`), the under-construction page, the command catalogue, the data contracts' pages, the CSV formats,
 the feed pages, the glossaries, the pack, module and connector READMEs, the IDE launchers and their guide table, the guides' data
-sections, the Help map and the corpus tables. Run it after changing a pack, a setting, a contract, a mapping or a registry.
+sections, the pinned Rachana and Elements documents under `docs/products/` (copied from the product clones at the pinned tags; Help shows them offline), the Help map and the corpus tables. Run it after changing a pack, a setting, a contract, a mapping or a registry.
 
 ```bash
 python3 tools/drishti.py docs generate                       # write every generated document

@@ -51,6 +51,9 @@ _IMG = re.compile(r'(<a\b[^>]*>\s*)?(<img\b[^>]*?\bsrc="([^"]+)"[^>]*>)')
 # A link written in a guide: relative links are resolved against the guide's file (DOC-18).
 _LINK = re.compile(r'<a href="([^"]*)"([^>]*)>(.*?)</a>', re.S)
 _EXTERNAL = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|/|#)", re.I)
+# A link to a product document of the pinned release on GitHub: product repository, tag, path, anchor. The console shows the copy that ships
+# in docs/products/<product>/<tag>/<path> (tools/docs/product_docs.py) when it has that exact tag and path, so Help works offline.
+_PRODUCT_LINK = re.compile(r"^https://github\.com/drishti-platform/(drishti-(?:rachana|elements))/blob/([^/#?]+)/([^#?]+\.md)(#.*)?$")
 _FRONT = re.compile(r"\A(?:\s*<!--.*?-->)*\s*(---\n.*?\n---\n)", re.S)
 
 
@@ -322,6 +325,29 @@ class Library:
         """One markdown note (an example's, as ``text`` of ``path``) as help HTML, its links resolved like any guide's."""
         return self._html(path, text)[0]
 
+    def product_link(self, href: str) -> str | None:
+        """``/help/<slug>#anchor`` for a GitHub link to a bundled product document (that exact tag and path), else None: the link stays as it is."""
+        m = _PRODUCT_LINK.match(href)
+        if not m:
+            return None
+        copy = (self.docs_dir / "products" / m.group(1).removeprefix("drishti-") / m.group(2) / m.group(3)).resolve()
+        slug = self.by_file.get(copy)
+        return f"/help/{slug}{m.group(4) or ''}" if slug else None
+
+    def _product_copy_target(self, source: Path, target: str) -> str | None:
+        """A relative link inside a copied product document to a file that was not copied: the same file of that tag on GitHub."""
+        base = (self.docs_dir / "products").resolve()
+        try:
+            product, tag, *_ = source.resolve().relative_to(base).parts
+        except ValueError:
+            return None
+        root = base / product / tag
+        try:
+            rel = (source.parent / target).resolve().relative_to(root)
+        except ValueError:
+            return None
+        return f"https://github.com/drishti-platform/drishti-{product}/blob/{tag}/{rel.as_posix()}"
+
     def _link(self, source: Path, m: re.Match) -> str:
         """A link between documents opens inside the help centre (an example's note opens on the Examples page); a
         repository file it cannot show is named, not linked.
@@ -329,6 +355,9 @@ class Library:
         A link that resolves to nothing at all keeps ``data-unavailable`` so the help-centre crawl test fails on it.
         """
         href = html.unescape(m.group(1))
+        local = self.product_link(href)
+        if local:
+            return f'<a href="{html.escape(local)}"{m.group(2)}>{m.group(3)}</a>'
         if not href or _EXTERNAL.match(href):
             return m.group(0)
         target, _, anchor = href.partition("#")
@@ -344,6 +373,9 @@ class Library:
         ex = self.guides.get("examples")
         if ex and path.parent == ex.path.parent.resolve() and path.suffix == ".md" and path.exists():
             return f'<a href="/help/examples#{html.escape(path.stem)}"{m.group(2)}>{m.group(3)}</a>'
+        gh = None if slug else self._product_copy_target(source, target)
+        if gh:
+            return f'<a href="{html.escape(gh + anchor)}"{m.group(2)}>{m.group(3)}</a>'
         if not path.exists():
             if "/" not in target and "." not in target:
                 return m.group(0)                    # a console guide's link to another guide by slug: /help/<slug>

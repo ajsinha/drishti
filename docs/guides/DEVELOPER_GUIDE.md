@@ -1265,6 +1265,17 @@ After you change a pack, a setting, a contract, a mapping or a registry, run `py
 generated document (READMEs, CONFIGURATION.md, contract pages, CSV formats, launchers, the Help map) in the right order, and
 `docs generate --check` fails naming each stale one. Details: [CLI_REFERENCE.md](CLI_REFERENCE.md#docs-generate-every-generated-document).
 
+**The product documents in Help (offline).** Our documents link the Rachana and Elements guides on GitHub at the tag this release pins, and the
+demo machine is offline, so Help carries those guides itself. The documents keep one home, the product's repository; the build never fetches
+them from the network and no Maven artifact carries them (the Elements release tree has no `docs/`). Instead `tools/docs/product_docs.py`
+(a generator in `docs generate`, its pins and file list in `tools/docs/product_docs.yaml`) copies the pinned files byte for byte with
+`git show <tag>:<path>` from the sibling clone (`../drishti-rachana`, `../drishti-elements`) into the committed `docs/products/<product>/<tag>/<repo
+path>`, and `--check` fails when a copy differs from its tag; with no clone (a source-zip build) it only verifies the committed copy is complete,
+so the zip still builds and checks. Help lists the copies under Reference, Product documents; the console (`core/guides.py`) rewrites a GitHub link
+to a bundled tag and path into the local page and keeps its anchor, leaves every other link alone, and sends a relative link inside a copy
+to a file that was not copied to GitHub at that tag. To move to a new pin, change `tag:` (and the pom's version) in the YAML, run the generator,
+and update the `doc:` paths in the console's `help.yaml`.
+
 ### 5.6 Add a table to the identity database
 
 **Goal:** a `drishti_notice` table: site-wide notices that administrators switch on and off.
