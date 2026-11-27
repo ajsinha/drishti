@@ -100,7 +100,7 @@ ENV=(DRISHTI_PORT="$PORT" DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_DE
      DRISHTI_PACKS_OVERLAY="$SRV/packs/added.yaml" DRISHTI_PACKS_INSTALLED="$SRV/packs/installed" DRISHTI_FEEDS="$SRV/feeds"
      DRISHTI_REPORTS_ENABLED=false DRISHTI_ACCESS_LOG=false)
 LOADER=(); ENGINE=""
-DLOAD=("${DRISHTI_PYTHON:-drishti-console/.venv/bin/python}" tools/drishti.py data load --store)   # the store loaders (tools/storeload.py)
+DLOAD=("${DRISHTI_PYTHON:-python3}" tools/drishti.py data load --store)   # the store loaders (tools/storeload.py)
 case "$STORE" in
   delta)
     mkdir -p "$DATA/lake"; ENGINE=native

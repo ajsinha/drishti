@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Route gating by module, edition, lens and feature switch (docs/guides/ADMIN_GUIDE.md › The design;
-docs/architecture/ACCESS_MODEL.md: a module that is off is gone, its pages and APIs too): a page whose module is off, or whose word,
+docs/architecture/KERNEL_AND_MODULES.md: a module that is off is gone, its pages and APIs too): a page whose module is off, or whose word,
 feature or Admin page the edition (or the person's lens) hides, or that a console ``features.*`` switch turns off, answers the console's
 404 page (or a 404 problem under /api). Called by the auth gate (core/app.py) once the person's edition is known. Without an edition and
 with every switch on (the defaults) nothing is refused: the full Drishti, as before."""
@@ -58,7 +58,7 @@ def needs_data(path: str) -> dict | None:
 
 def hidden(request, edition: Edition, path: str) -> str | None:
     """Why the page is hidden for this request (a short reason), or None when it is shown."""
-    gone = modules.path_refusal(path)                               # a module that is off: its pages and APIs are not here (ACCESS_MODEL.md)
+    gone = modules.path_refusal(path)                               # a module that is off: its pages and APIs are not here (KERNEL_AND_MODULES.md)
     if gone is not None:
         return gone
     off = engines.path_engine(path)                                 # a compute engine that runs nowhere (ADMIN_GUIDE.md 5.2)

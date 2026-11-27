@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The banking module's Help (docs/architecture/DOMAIN_MODULES.md section 8): its section's head (placed in Help's order after the
+# The banking module's Help (docs/architecture/KERNEL_AND_MODULES.md section 8): its section's head (placed in Help's order after the
 # section named by after:) and its pages, in the shapes of the sitemap's help-sections: and help.yaml's sections:. Read only while the
 # module is installed in the console (this folder); while it is off on the server, Help hides the section like any of the module's.
 help-sections:

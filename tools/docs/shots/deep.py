@@ -16,7 +16,7 @@
 swap with the index leg's tab open and one cashflow opened to its daily fixings, a vanilla swap's floating leg opened to its fixings, and the
 commodity swap on a phone (390 px, touch). Views of the QUICKSTART packs, the real console:
 
-    DRISHTI_SHOTS_SERVER_PORT=18988 DRISHTI_SHOTS_CONSOLE_PORT=17988 drishti-console/.venv/bin/python tools/docs/screenshots.py --guide deep
+    DRISHTI_SHOTS_SERVER_PORT=18988 DRISHTI_SHOTS_CONSOLE_PORT=17988 python3 tools/docs/screenshots.py --guide deep
 """
 from __future__ import annotations
 

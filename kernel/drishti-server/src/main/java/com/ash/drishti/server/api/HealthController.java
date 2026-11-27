@@ -265,7 +265,7 @@ public class HealthController {
         if (access != null) {
             out.put("modules", modules(access));                      // the thin jar: no code modules, and Health says so
         }
-        for (HealthFigures f : com.ash.drishti.common.Extensions.with(moduleFigures, HealthFigures.class)) {                     // the modules' engines' figures (DOMAIN_MODULES.md J4)
+        for (HealthFigures f : com.ash.drishti.common.Extensions.with(moduleFigures, HealthFigures.class)) {                     // the modules' engines' figures (KERNEL_AND_MODULES.md J4)
             Object v = f.value();
             out.put(f.key(), v);
             // a configuration problem a figure reports (a lens named that is not offered): DEGRADED, as other configuration problems

@@ -58,7 +58,8 @@ public class ComputeConfiguration {
         com.ash.drishti.server.net.NetService n = net.getIfAvailable();
         String node = n == null ? "" : n.plannedNodeId();
         try {
-            return ComputeSettings.load(file(env), data, node, env::resolvePlaceholders);
+            ComputeSettings s = ComputeSettings.load(file(env), data, node, env::resolvePlaceholders);
+            return s.withPython(com.ash.drishti.api.PythonSetting.resolve(s.python(), env::getProperty, System::getenv));
         } catch (IllegalArgumentException e) {
             LOG.error("compute: {} is not usable ({}); compute stays off", file(env), e.getMessage());
             return ComputeSettings.defaults(data);

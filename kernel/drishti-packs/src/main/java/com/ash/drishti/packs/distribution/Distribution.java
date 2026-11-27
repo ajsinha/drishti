@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * One distribution as read from its file (docs/architecture/DISTRIBUTIONS.md, KERNEL_AND_MODULES.md section 6): who it is, the brand and
+ * One distribution as read from its file (docs/architecture/KERNEL_AND_MODULES.md, KERNEL_AND_MODULES.md section 6): who it is, the brand and
  * theme, the modules it names, and what those modules come to today (packs, commands, words, engine features, domain modules), until
  * every module is a {@code .dmod} of its own.
  *

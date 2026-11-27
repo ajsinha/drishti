@@ -17,7 +17,7 @@ connector: one table per kind, partitioned by business date, with a history of b
 market-sensitive numbers with a deterministic random walk, so moving the date in the console changes what you see. Generating and
 loading are separate steps (docs/guides/DATA_GUIDE.md): this writes JSONL; tools/samplegen/load_rows.py loads it.
 
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \\
+    python tools/samplegen/lake.py \\
         --samples examples/packs/finance/samples --root data/delta/demo --domain finance --days 10 [--as-of 2026-09-30] [--rows DIR] [--no-load]
 
 Rows (--rows DIR, default <root>/../build/lake-rows), by the load rules (docs/guides/DATA_LAKE_GUIDE.md: a file is one table and

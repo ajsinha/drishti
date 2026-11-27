@@ -72,6 +72,10 @@ Plugin `iceberg-external` (`plugins/drishti-plugin-iceberg-external`): Iceberg t
 Drishti Lake's Iceberg reader. A table is a kind, a row is a document, every primitive column is searchable without a pack declaring it. For
 tables Drishti's own loader writes use `iceberg`, which reads that layout faster.
 
+## Build and use
+
+A connector file in `config/connectors/` with `plugin: iceberg-external` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
+
 ## What it reads
 
 Tables reached the way the `iceberg` connector reaches them: path-based under `root` (local disk or `s3://`), a REST catalog
@@ -211,7 +215,7 @@ with its environment variable is in [CONFIGURATION.md](../../docs/admin/CONFIGUR
 
 Both read through Drishti Lake's Iceberg reader, with no Hadoop; this connector asks for each table through `LakeReader.foreign` with a `TableShape` built from `tables.<kind>.*`
 ([DATA_ARCHITECTURE.md](../../docs/architecture/DATA_ARCHITECTURE.md#3-lake-iceberg-apache-iceberg-on-iceberg-core-with-no-hadoop)); why
-there are two is in [DATA_ARCHITECTURE.md, Two connectors](../../docs/architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables).
+there are two is in [DATA_ARCHITECTURE.md, Two connectors](../../docs/architecture/DATA_ARCHITECTURE.md#315-two-connectors-drishti-tables-and-external-tables).
 
 ## Ids, dates and modes
 
@@ -280,7 +284,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 java -cp "$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-iceberg-external -Dmdep.outputFile=/dev/stdout):plugins/drishti-plugin-iceberg-external/target/classes" \
   com.ash.drishti.plugin.icebergext.StarterSchemas --out build/risk-mart-schemas \
   --set catalog=rest --set uri=https://polaris.example.com/api/catalog --set tables=auto --set namespace=risk_mart
-tools/drishti.py pack make --schema build/risk-mart-schemas --name risk-mart
+python3.13 tools/drishti.py pack make --schema build/risk-mart-schemas --name risk-mart
 ```
 
 ## Limits

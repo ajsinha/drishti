@@ -17,7 +17,7 @@
 
 # Data contracts of the protein-engineering pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/genomics/packs/protein-engineering/guides/protein-engineering.md](../../../modules/genomics/packs/protein-engineering/guides/protein-engineering.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/genomics/packs/protein-engineering/README.md](../../../modules/genomics/packs/protein-engineering/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -47,7 +47,6 @@ One invented protein: its sequence, family and active site. Four proteins; Helix
 | Binding hint | lake table `protein-engineering.protein`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `PROTEIN`, `GENE`, `NAME`, `LENGTH`, `FAMILY`, `DESIGN_ROUNDS` |
 | Test data | data/testdata/protein-engineering/protein |
-| Worked example | [protein-engineering/protein](../samples/protein-engineering.md#protein) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -76,6 +75,29 @@ One invented protein: its sequence, family and active site. Four proteins; Helix
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-protein-engineering-protein"></a>
+**Example: `data/testdata/protein-engineering/protein`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "PROTEIN": "HLXK7",
+  "GENE": "HLXK7",
+  "NAME": "Helixase-7",
+  "LENGTH": 312,
+  "FAMILY": "Helicase-like kinase",
+  "SEQUENCE": "MKPTSHASQASSVLNKLTSESAGQQAAAVIMLFILFFVDMTRKPHKVAHFMKFLASHTRHNIFKHGNDADSPAEEEERQKQADPNQHLMKSFMEAKRKKILFMLAAFMFHRVALVLVANAKMVIIFAFFVMDANRMILHNHGNDREASSDHHHDKRIVIIMAKSRDQSDIMICIVLHFLLHAAFKPRKHILVMVLAKEVMKIPHIVFVIIFILVVFDTQHTSIFANMMLTILAKMDEKDAEVLFMMIVFFLAAPPNNIVRAAFNQTNSKAEHDRDNETSREAIAFQNLVVRMASKKDRDDEEQASERNNSEP",
+  "ACTIVE_SITE": [
+    173,
+    177,
+    181,
+    "… 3 more numbers"
+  ],
+  "DESIGN_ROUNDS": 8
+}
+```
+
 ## RESIDUE: Residue (`residue`)
 
 One amino acid position of a protein: what it is, where it sits in the fold, how buried it is, whether it is in the active site, its place in space and the mean effect of changing it. Coordinates, burial and the means are written by the generator.
@@ -94,7 +116,6 @@ One amino acid position of a protein: what it is, where it sits in the fold, how
 | Binding hint | lake table `protein-engineering.residue`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `RESIDUE_ID`, `PROTEIN`, `POS`, `SECONDARY`, `ACTIVE_SITE` |
 | Test data | data/testdata/protein-engineering/residue |
-| Worked example | [protein-engineering/residue](../samples/protein-engineering.md#residue) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -129,6 +150,29 @@ One amino acid position of a protein: what it is, where it sits in the fold, how
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-protein-engineering-residue"></a>
+**Example: `data/testdata/protein-engineering/residue`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "RESIDUE_ID": "HLXK7:1",
+  "PROTEIN": "HLXK7",
+  "POS": 1,
+  "AA": "M",
+  "SECONDARY": "loop",
+  "DOMAIN": "N-lobe",
+  "BURIAL": 0.016,
+  "ACTIVE_SITE": false,
+  "X": -12.47,
+  "Y": -10.57,
+  "Z": -20.26,
+  "MEAN_ACTIVITY": -0.048,
+  "MEAN_STABILITY": -0.132
+}
+```
+
 ## CONTACT: Residue contact (`residue-contact`)
 
 Two positions of a protein that sit close in space though they are not neighbours in the chain: the contact map's cells. The nearest pairs at least three positions apart, as many as the generator keeps for the protein.
@@ -147,7 +191,6 @@ Two positions of a protein that sit close in space though they are not neighbour
 | Binding hint | lake table `protein-engineering.residue-contact`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `CONTACT_ID`, `PROTEIN`, `POS_A`, `POS_B` |
 | Test data | data/testdata/protein-engineering/residue-contact |
-| Worked example | [protein-engineering/residue-contact](../samples/protein-engineering.md#residue-contact) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -172,6 +215,21 @@ Two positions of a protein that sit close in space though they are not neighbour
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-protein-engineering-residue-contact"></a>
+**Example: `data/testdata/protein-engineering/residue-contact`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CONTACT_ID": "HLXK7:68-71",
+  "PROTEIN": "HLXK7",
+  "POS_A": 68,
+  "POS_B": 71,
+  "DISTANCE": 2.84
+}
+```
+
 ## DMS: Deep mutational scan score (`dms-score`)
 
 One measurement of the scan: what changing one position of a protein to one amino acid did to one assay. Every position, every one of the 20 amino acids, two assays: 47,840 experiments.
@@ -190,7 +248,6 @@ One measurement of the scan: what changing one position of a protein to one amin
 | Binding hint | lake table `protein-engineering.dms-score`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `SCORE_ID`, `PROTEIN`, `POS`, `AA`, `ASSAY`, `SCORE` |
 | Test data | data/testdata/protein-engineering/dms-score |
-| Worked example | [protein-engineering/dms-score](../samples/protein-engineering.md#dms-score) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -221,6 +278,26 @@ One measurement of the scan: what changing one position of a protein to one amin
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-protein-engineering-dms-score"></a>
+**Example: `data/testdata/protein-engineering/dms-score`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SCORE_ID": "HLXK7:1:A:ACTIVITY",
+  "PROTEIN": "HLXK7",
+  "POS": 1,
+  "AA_REF": "M",
+  "AA": "A",
+  "MUTATION": "M1A",
+  "ASSAY": "activity",
+  "SCORE": 0.114,
+  "SE": 0.135,
+  "REPLICATES": 3
+}
+```
+
 ## DESIGN: Protein design (`design`)
 
 One designed variant of Helixase-7 from one round of the campaign: its parent, how many changes it carries, how active and stable it measured, what the model predicted and where it sits on the map of designs. Eight rounds of 1,500 designs climb to a protein about fifteen times as active as the natural one.
@@ -239,7 +316,6 @@ One designed variant of Helixase-7 from one round of the campaign: its parent, h
 | Binding hint | lake table `protein-engineering.design`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `DESIGN_ID`, `PROTEIN`, `ROUND`, `ACTIVITY`, `STATUS` |
 | Test data | data/testdata/protein-engineering/design |
-| Worked example | [protein-engineering/design](../samples/protein-engineering.md#design) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -272,6 +348,28 @@ One designed variant of Helixase-7 from one round of the campaign: its parent, h
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-protein-engineering-design"></a>
+**Example: `data/testdata/protein-engineering/design`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "DESIGN_ID": "DSG-HLXK7-R1-0001",
+  "PROTEIN": "HLXK7",
+  "ROUND": 1,
+  "PARENT": "NATURAL",
+  "N_CHANGES": 2,
+  "CHANGES": "S164E E302V",
+  "ACTIVITY": 1.35,
+  "DELTA_TM": -0.31,
+  "MODEL_SCORE": 1.57,
+  "STATUS": "tested",
+  "EMB_X": 0.1548,
+  "EMB_Y": 0.3823
+}
+```
+
 ## DMUT: Design change (`design-mutation`)
 
 One amino acid change of one design: the position, what it was and what it became. 33,000 changes over 12,000 designs.
@@ -290,7 +388,6 @@ One amino acid change of one design: the position, what it was and what it becam
 | Binding hint | lake table `protein-engineering.design-mutation`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `DESIGN_MUTATION_ID`, `DESIGN_ID`, `PROTEIN`, `ROUND`, `POS` |
 | Test data | data/testdata/protein-engineering/design-mutation |
-| Worked example | [protein-engineering/design-mutation](../samples/protein-engineering.md#design-mutation) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -319,6 +416,24 @@ One amino acid change of one design: the position, what it was and what it becam
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
 
+<a id="example-protein-engineering-design-mutation"></a>
+**Example: `data/testdata/protein-engineering/design-mutation`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "DESIGN_MUTATION_ID": "DSG-HLXK7-R1-0001:164",
+  "DESIGN_ID": "DSG-HLXK7-R1-0001",
+  "PROTEIN": "HLXK7",
+  "ROUND": 1,
+  "POS": 164,
+  "AA_FROM": "S",
+  "AA_TO": "E",
+  "MUTATION": "S164E"
+}
+```
+
 ## DROUND: Design round (`design-round`)
 
 One round of the campaign: how the designs were made, how many, and how well the round did. Eight rounds.
@@ -337,7 +452,6 @@ One round of the campaign: how the designs were made, how many, and how well the
 | Binding hint | lake table `protein-engineering.design-round`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `ROUND_ID`, `PROTEIN`, `ROUND`, `METHOD` |
 | Test data | data/testdata/protein-engineering/design-round |
-| Worked example | [protein-engineering/design-round](../samples/protein-engineering.md#design-round) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -368,3 +482,24 @@ One round of the campaign: how the designs were made, how many, and how well the
 
 - Synthetic and seeded: the same seed gives the same documents, byte for byte. Nothing in it is real: the gene, protein, patients and designs are invented, and every screen that shows it says so.
 - A snapshot: the same documents on every business day of the demo lake.
+
+<a id="example-protein-engineering-design-round"></a>
+**Example: `data/testdata/protein-engineering/design-round`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "ROUND_ID": "HLXK7-R1",
+  "PROTEIN": "HLXK7",
+  "ROUND": 1,
+  "METHOD": "Scan-guided library: single changes at tolerant positions",
+  "STARTED": "2026-03-02",
+  "DESIGNS": 1500,
+  "BEST_DESIGN": "DSG-HLXK7-R1-0665",
+  "BEST_ACTIVITY": 6.34,
+  "MEDIAN_ACTIVITY": 1.82,
+  "TRAPPED": 0,
+  "NOTE": "Mostly small gains: the natural protein is the start."
+}
+```

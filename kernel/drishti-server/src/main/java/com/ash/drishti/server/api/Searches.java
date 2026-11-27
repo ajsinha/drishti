@@ -80,7 +80,7 @@ public class Searches {
         String kind = search.kindOf(query);
         entitlements.requireOpen(principal, kind);
         edition.requireKind(kind);
-        // the person's row rule on the kind joins the condition (ACCESS_MODEL.md section 10): a search finds only the records they may see
+        // the person's row rule on the kind joins the condition (KERNEL_AND_MODULES.md section 19.10): a search finds only the records they may see
         java.util.Optional<com.ash.drishti.engine.source.RowPredicate> rule = entitlements.rowRule(principal, kind);
         if (rule.isPresent()) {
             String c = query.condition();

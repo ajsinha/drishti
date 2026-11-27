@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Drishti Finance (docs/architecture/DISTRIBUTIONS.md section 3): investment and research analysts, economists, portfolio and fund
+# Drishti Finance (docs/architecture/KERNEL_AND_MODULES.md section 20.3): investment and research analysts, economists, portfolio and fund
 # analysts. "What are these companies, funds and economies doing, and what moves them?" No VaR or any other risk number (decision 1):
 # the banking module's commands, words, menus, Help and AI tools do not exist here; market data is shared with Drishti Risk (decision 2).
 format: 1

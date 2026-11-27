@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The genomics sample module's console part (DISTRIBUTIONS.md section 4; modules/genomics, the SDK's layout): hosted from its folder
+"""The genomics sample module's console part (KERNEL_AND_MODULES.md section 20.4; modules/genomics, the SDK's layout): hosted from its folder
 folder, its one page folder drawn with the Elements macros only, its pages reading the module's API through the console, and its own
 visual type, genomics.lollipop (the custom-visual SDK): listed for the Elements gallery while the module is hosted, gone when it is
 removed. Drishti Genomics' file compiles to the Research lens with no finance command."""
@@ -107,7 +107,7 @@ def test_drishti_genomics_is_the_research_lens_with_no_finance():
 
 
 def test_the_showcase_pages_host_elements_only_and_read_the_module_api(client, tmp_path, monkeypatch):
-    """The showcase (GENOMICS_SHOWCASE.md): the board, its guided mode and the protein workbench are hosts for drishti-chart and drishti-grid
+    """The showcase (guide.md): the board, its guided mode and the protein workbench are hosts for drishti-chart and drishti-grid
     filled by drishti_genomics-showcase.js from the module's API; the words GWAS, PROTEIN and DESIGNS open them; nothing is drawn by hand."""
     _fresh(client, tmp_path, monkeypatch, None)
     client.get("/t")

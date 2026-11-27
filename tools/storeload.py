@@ -14,7 +14,7 @@
 
 """``drishti.py data load --store <store>``: the banking packs' demo data (1,791 sample documents x 10 business days, and with
 ``--trades N`` a generated trade book of N trades a day for ``--days D`` days) into any of the nine stores, in the layout each
-connector reads (docs/guides/DATA_GUIDE.md section 11; the store's plugin README for its layout and options).
+connector reads (docs/guides/BANK_DATA_GUIDE.md section 9; the store's plugin README for its layout and options).
 
     python tools/drishti.py data load --store delta [root] [--trades N --days D]
     python tools/drishti.py data load --store files [root] [--future-days N] [--zone Z]

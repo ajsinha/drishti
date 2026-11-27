@@ -17,5 +17,5 @@ sections:
 - id: source-calypso
   title: Source Calypso
   pages:
-  - title: 'Source Calypso'
-    file: guide.md
+  - title: Source Calypso
+    file: ../guides/BANK_DATA_GUIDE.md

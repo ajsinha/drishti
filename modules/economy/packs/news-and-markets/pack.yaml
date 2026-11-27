@@ -19,7 +19,7 @@
 # connectors are off by default. Countries and companies link to their economy (world-economy pack); a core counterparty links to its
 # headlines through its NEWS_ID.
 pack: news-and-markets
-domain: economy   # the domain it serves (docs/architecture/ACCESS_MODEL.md): it loads only while a module of the domain is on
+domain: economy   # the domain it serves (docs/architecture/KERNEL_AND_MODULES.md): it loads only while a module of the domain is on
 sample: true                        # a demonstration pack: see drishti.packs.samples
 version: 1.0.0
 code: NWMK             # typed alone, opens this pack's overview
@@ -77,7 +77,6 @@ console:
     - ["CO CO-AAPL", "Apple · quote, six months of prices, headlines"]
     - ["CO CO-XOM", "Exxon Mobil · energy"]
     - ["QUOTE QUOTE-MSFT", "Any ticker works: the quote and history for MSFT"]
-  help: config/help.yaml
 columns:
   news-topic:
     - NAME

@@ -60,6 +60,6 @@ def test_a_dataset_links_its_contract_and_its_example_and_copies_neither():
          "sample": "market-risk/scenario-pv/scenario-pv-*.tar"}]}
     block, problems = tool.build(guide, tool.contracts())
     assert not problems
-    assert "(../contracts/samples/market-risk.md#scenario-pv)" in block
+    assert "(../contracts/packs/market-risk.md#example-market-risk-scenario-pv)" in block
     assert "(../../modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml)" in block
     assert "```" not in block and "SCENARIO_PV_ID\":" not in block

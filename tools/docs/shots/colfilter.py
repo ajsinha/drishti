@@ -15,7 +15,7 @@
 """The pictures of "Filter a table like Excel" (docs/guides/USER_GUIDE.md), written to docs/guides/img/colfilter/: a column's filter menu, a
 condition, a filtered table with its funnels, and the menu on a phone (390 px, touch). A view of the QUICKSTART packs, the real console:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide colfilter
+    python3 tools/docs/screenshots.py --guide colfilter
 """
 from __future__ import annotations
 

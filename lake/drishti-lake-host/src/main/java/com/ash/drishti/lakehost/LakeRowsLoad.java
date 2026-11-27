@@ -136,7 +136,7 @@ public final class LakeRowsLoad {
                 throw new IOException("loading " + rows.size() + " row(s) of " + kind + " " + date + " into " + table + " failed (" + code + "): "
                         + said.toString(StandardCharsets.UTF_8).strip());
             }
-            JsonNode v = JSON.readTree(summary.toFile()).path("commit").path("dates").path(date.toString()).path("version");
+            JsonNode v = JSON.readTree(java.nio.file.Files.readAllBytes(summary)).path("commit").path("dates").path(date.toString()).path("version");
             if (!v.isNumber()) {
                 throw new IOException("the loader's summary names no version for " + kind + " " + date + " (" + table + ")");
             }

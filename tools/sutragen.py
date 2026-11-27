@@ -16,7 +16,7 @@
 """Draft Sutras from folders of JSON Lines files: one Sutra per kind, or one per distinct combination of the values
 of some "match" fields (for example one per productType), each with its own samples under tests/.
 
-    uv run --with pyyaml python tools/sutragen.py data/testdata/trades/endur --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/sutras
+    python tools/sutragen.py data/testdata/trades/endur --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/sutras
 
 Input: one or more folders (every *.jsonl in them; -r for subfolders) and/or single .jsonl files. A line is one plain JSON document, or the loader
 envelope {"kind": ..., "id": ..., "doc": {...} | "<json text>"} whose doc is unwrapped (and whose kind wins over the

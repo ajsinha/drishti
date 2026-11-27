@@ -56,7 +56,7 @@ def add_options(p: argparse.ArgumentParser, verb: str, what: str) -> None:
     for flag, kw in common:
         p.add_argument(flag, **kw)
     p.add_argument("--demo", action="store_true", help="the demo profile, config/profiles/demo.ini (the offline demo on the lakes; the same file the IDE's demo launcher names), with DEVELOPMENT secrets and the drishti-dev-admin account: NOT FOR PRODUCTION")
-    p.add_argument("--distribution", metavar="NAME", help="risk, finance, genomics, all, or a file path (DRISHTI_DISTRIBUTION); docs/architecture/DISTRIBUTIONS.md")
+    p.add_argument("--distribution", metavar="NAME", help="risk, finance, genomics, all, or a file path (DRISHTI_DISTRIBUTION); docs/architecture/KERNEL_AND_MODULES.md")
     p.add_argument("--background", action="store_true", help="detach: log and pid file under the data folder (logs/, run/)")
     if what == "server":
         p.add_argument("--port", type=int, help="the server's port (default server.port of the settings files, else DRISHTI_PORT, else 18480)")
@@ -80,13 +80,15 @@ def add_options(p: argparse.ArgumentParser, verb: str, what: str) -> None:
     elif what == "console":
         p.add_argument("--server", action="append", metavar="URLS", help="the server, or a cluster's entry nodes, comma-separated (default DRISHTI_SERVER_URL, else this machine's LAN address :18480)")
         p.add_argument("--port", type=int, help="the console's port (default DRISHTI_CONSOLE_PORT, else 17480)")
-        p.add_argument("--python", metavar="FILE", help="the Python 3.11+ to make drishti-console/.venv with (default this one)")
-        p.add_argument("--reinstall", action="store_true", help="remake drishti-console/.venv (after drishti-console/requirements.txt changed)")
+        # moved to setup (start never makes a Python environment): kept only to say so
+        p.add_argument("--python", metavar="FILE", help=argparse.SUPPRESS)
+        p.add_argument("--reinstall", action="store_true", help=argparse.SUPPRESS)
         p.add_argument("--wait", type=int, default=90, metavar="SECONDS", help="how long to wait for the health answer (default 90)")
         p.add_argument("--name", help="a name for this console when several run from one data folder (run/console-<name>.pid)")
     else:
-        p.add_argument("--server-port", type=int, default=procs.DEFAULT_SERVER_PORT, help="the server's port (default 18480)")
-        p.add_argument("--console-port", type=int, help="the console's port (default 17480)")
+        p.add_argument("--server-port", type=int, help="the server's port (default server.port of the settings files, else DRISHTI_PORT, else 18480)")
+        p.add_argument("--console-port", type=int, help="the console's port (default DRISHTI_CONSOLE_PORT, else console.server.port of the "
+                       "settings files, else 17480)")
         p.add_argument("--heap", metavar="SIZE", help="the server's heap (-Xmx)")
         p.add_argument("--java-home", metavar="DIR", help="the JDK (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then the PATH)")
 
@@ -121,7 +123,8 @@ def _run(fn, *args) -> int:
     try:
         return fn(*args) or 0
     except procs.LaunchError as e:
-        print(f"drishti: {e}", file=sys.stderr, flush=True)
+        text = str(e)
+        print(text if text.startswith("[FAIL]") else f"[FAIL] {text}", file=sys.stderr, flush=True)
         return e.code
 
 
@@ -136,11 +139,28 @@ def cmd_start(a, extra) -> int:
     if a.what == "console":
         return _run(consolestart.start, a)
     # all: one server and one console on this machine, in the background, the console pointed at the server's LAN address
-    host = procs.lan_ip() or "localhost"
-    rc = _run(serverstart.start, _server_ns(a, port=a.server_port, background=True))
+    # on one machine the console talks to the server over loopback (no proxy, no VPN or adapter change in the way); the addresses
+    # printed for people stay the real ones. The ports in each one's own order (serverstart.start, consolestart.start), so start all and
+    # start server / start console pick the same ones: server.port and console.server.port of the settings files count here too
+    keys = serverstart.profiled(a)[1]
+    env = os.environ
+    if getattr(a, "env_file", None):
+        env = dict(os.environ)
+        procs.load_env_file(a.env_file, env)
+    sport = int(a.server_port or (keys.get("server.port") or "").strip() or env.get("DRISHTI_PORT") or procs.DEFAULT_SERVER_PORT)
+    cport = int(a.console_port or env.get("DRISHTI_CONSOLE_PORT") or (keys.get("console.server.port") or "").strip() or procs.DEFAULT_CONSOLE_PORT)
+    console = _console_ns(a, port=cport, background=True, server=[f"http://127.0.0.1:{sport}"])
+    rc = _run(lambda ns: consolestart.prepared_python(ns) and 0, console)   # the console's Python first: an unprepared one stops before the server starts
     if rc:
         return rc
-    return _run(consolestart.start, _console_ns(a, port=a.console_port, background=True, server=[f"http://{host}:{a.server_port}"]))
+    if procs.port_in_use(cport):                  # both ports before either starts (no server left without its console)
+        print(procs.fail(f"port {cport}", "is in use by another process", f"stop it, or {procs.command('start', 'all', '--console-port', '<another port>')}"),
+              file=sys.stderr, flush=True)
+        return 3
+    rc = _run(serverstart.start, _server_ns(a, port=sport, background=True))
+    if rc:
+        return rc
+    return _run(consolestart.start, console)
 
 
 def cmd_stop(a, extra) -> int:
@@ -155,16 +175,16 @@ def cmd_stop(a, extra) -> int:
 
 
 def cmd_cluster(a, extra) -> int:
-    """start|stop cluster, status --cluster: tools/launch/clusterctl.py, which reads the cluster file with PyYAML: run with the console's
-    Python when this one has no PyYAML."""
+    """start|stop cluster, status --cluster: tools/launch/clusterctl.py, which reads the cluster file with PyYAML: run with the one Python
+    (DRISHTI_PYTHON, drishti.python) when this one has no PyYAML."""
     try:
         import yaml  # noqa: F401
     except ModuleNotFoundError:
-        py = procs.venv_python()
-        if py.exists() and Path(sys.executable).resolve() != py.resolve():
-            return subprocess.run([str(py), str(HERE.parent / "drishti.py"), *a._argv]).returncode
-        raise SystemExit("drishti: the cluster file needs PyYAML: run  python tools/drishti.py setup  (it makes drishti-console/.venv), "
-                         "then run this with that Python") from None
+        py, why = procs.tools_python()
+        if Path(py).exists() and Path(sys.executable).resolve() != Path(py).resolve():
+            return subprocess.run([py, str(HERE.parent / "drishti.py"), *a._argv]).returncode
+        raise SystemExit("[FAIL] the cluster file needs PyYAML, which this Python has not got. Fix: " + procs.setup_line() + "  "
+                         "(setup checks the libraries of the Python you run Drishti with; you install them with the pip commands it prints)") from None
     import clusterctl
     verb = getattr(a, "verb", "status")
     data = a.data_dir[0] if isinstance(a.data_dir, list) else a.data_dir
@@ -245,17 +265,23 @@ def cmd_build(a, extra) -> int:
 
 def register(groups, add) -> None:
     """Adds setup, build, start, stop and status to drishti.py's command line."""
-    s = groups.add_parser("setup", help="setup: prepare this machine (Python, Java 21, the data folder, ~/drishti-envs/dev.ini, drishti-console/.venv)",
+    s = groups.add_parser("setup", help="setup [drishti|libs]: prepare this machine and CHECK the libraries of the Python you run Drishti with "
+                                         "(setup installs nothing and makes no virtual environment)",
                           description=__import__("envsetup").__doc__, formatter_class=RAW,
-                          epilog=f"examples:\n  {P} setup\n  {P} setup --check\n  {P} setup --data-dir D:/drishti-data --skip-venv")
-    s.add_argument("--check", action="store_true", help="only report; change nothing (exit 1 when something needs doing)")
+                          epilog=f"examples:\n  {P} setup\n  {P} setup --check\n  {P} setup --wheels %USERPROFILE%\\drishti-wheels\n  {P} setup drishti --data-dir D:/drishti-data\n"
+                                 f"  {P} setup libs     (only the libraries of this Python, checked; you install them with the two pip commands it prints)")
+    s.add_argument("part", nargs="?", choices=("drishti", "libs"),
+                   help="drishti: the settings folder, dev.ini, data folder, JVM argument files, Java, jar and modules checks; libs: the libraries of this "
+                        "Python (the Lake wheel and requirements.txt, then config/compute/locks/python.lock) checked, never installed: what is missing is a [FAIL] with the "
+                        "two pip commands you run yourself; none: drishti, then libs")
+    s.add_argument("--check", action="store_true", help="only report; change nothing (exit 1 when something needs doing); also verifies the libraries name by name")
     s.add_argument("--home", help="the install folder (default DRISHTI_HOME, else the folder these tools are in)")
     s.add_argument("--data-dir", metavar="DIR", help="the data folder to prepare (default DRISHTI_DATA_DIR, else <home>/data)")
     s.add_argument("--envs-dir", metavar="DIR", help="the settings folder (default ~/drishti-envs; Windows %%USERPROFILE%%\\drishti-envs)")
     s.add_argument("--java-home", metavar="DIR", help="the JDK to check (default drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then the PATH)")
-    s.add_argument("--python", metavar="FILE", help="the Python to make drishti-console/.venv with (default this one)")
-    s.add_argument("--skip-venv", action="store_true", help="leave drishti-console/.venv alone")
-    s.add_argument("--reinstall", action="store_true", help="remake drishti-console/.venv and install drishti-console/requirements.txt")
+    s.add_argument("--system", action="store_true", help="accepted for old commands and ignored (setup always uses the Python you run it with)")
+    s.add_argument("--wheels", metavar="FOLDER", help="the unzipped offline wheel pack folder (a .zip is never unzipped: unzip it into ~/drishti-wheels); it only names the pack in the printed pip "
+                                                      "commands (setup installs nothing); default DRISHTI_WHEELS, else ~/drishti-wheels, else the pack zip in your Downloads folder")
     s.set_defaults(func=cmd_setup, cmd=None)
 
     b = groups.add_parser("build", help="build jar|modules|all|sdk: the server jar (copied into <home>/lib) and the modules (packages in <home>/modules), with Maven, never install")
@@ -316,12 +342,15 @@ def register(groups, add) -> None:
 
     __import__("nodecmd").register(groups)
 
-    lg = groups.add_parser("launchers", help="launchers [--check|--machine]: the IDE launchers and IDE_GUIDE section 4 from tools/launch/launchers.yaml; this machine's JVM arguments files",
+    lg = groups.add_parser("launchers", help="launchers [--check|--machine|--list|--run NAME]: the IDE launchers and IDE_GUIDE section 4 from tools/launch/launchers.yaml; this machine's JVM arguments files",
                            description=__import__("launchers").__doc__, formatter_class=RAW,
-                           epilog=f"examples:\n  {P} launchers\n  {P} launchers --check\n  {P} --settings ~/drishti-envs/dev.ini launchers --machine")
+                           epilog=f"examples:\n  {P} launchers\n  {P} launchers --check\n  {P} launchers --list\n  {P} launchers --run 'Drishti: run server (demo)'\n  {P} --settings ~/drishti-envs/dev.ini launchers --machine")
     lg.add_argument("--check", action="store_true", help="change nothing; exit 1 naming each committed launcher (or IDE_GUIDE section 4) that differs from the table")
     lg.add_argument("--machine", action="store_true", help="write this machine's JVM arguments files, <settings folder>/jvm-<profile>.args (setup runs it)")
     lg.add_argument("--envs-dir", metavar="DIR", help="the settings folder (default ~/drishti-envs)")
+    lg.add_argument("--list", action="store_true", help="print every committed launcher by group with the exact command it runs and its working folder (read from the run-configs/*.run.xml files)")
+    lg.add_argument("--run", metavar="NAME", help='run the launcher called NAME (the whole name or a prefix naming one), exactly as its file holds it: its folder, command and environment; e.g. --run "Drishti: run server (demo)"')
+    lg.add_argument("--input", metavar="VALUE", help="with --run: the value a launcher asks for in the IDE (for example the file to load)")
     lg.set_defaults(func=lambda a, extra: __import__("launchers").main(a), cmd=None)
 
     st = groups.add_parser("status", help="status: the resolved home, data, modules and java; then every process started with drishti.py start",

@@ -17,7 +17,7 @@
 
 # Data contracts of the oecd pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/economy/packs/oecd/guides/oecd.md](../../../modules/economy/packs/oecd/guides/oecd.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/economy/packs/oecd/README.md](../../../modules/economy/packs/oecd/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -41,7 +41,6 @@ One OECD member: the latest leading indicator, unemployment, inflation and growt
 | Cadence | daily (due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `oecd.oecd-country`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/oecd/samples |
-| Worked example | [oecd/oecd-country](../samples/oecd.md#oecd-country) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -102,6 +101,59 @@ One OECD member: the latest leading indicator, unemployment, inflation and growt
 - Stored in the worldlake lake (config/lakes/worldlake.yaml), table <data>/delta/worldlake/oecd/oecd-country/, one JSONL.gz a business date loaded with mode replace (a rerun of a day is idempotent).
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
 
+<a id="example-oecd-oecd-country"></a>
+**Example: `modules/economy/packs/oecd/samples/oecd-country.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "COUNTRY_ID": "OECD-AUS",
+  "COUNTRY_NAME": "Australia",
+  "GDP_GROWTH": 0.419502713,
+  "GDP_GROWTH_PERIOD": "2026-Q2",
+  "INFLATION": 4.34,
+  "INFLATION_PERIOD": "2026-09",
+  "ISO3": "AUS",
+  "LEADING_INDICATOR": 99.9505,
+  "LEADING_INDICATOR_PERIOD": "2026-09",
+  "MEASURES": [
+    {
+      "CHANGE": -0.04308,
+      "LATEST": 99.9505,
+      "MEASURE": "CLI",
+      "OECD_SERIES": "OECDS-AUS-CLI",
+      "PERIOD": "2026-09",
+      "TITLE": "Composite leading indicator",
+      "UNIT": "index, long-term average = 100"
+    },
+    {
+      "CHANGE": 0.066741,
+      "LATEST": 4.718349,
+      "MEASURE": "UNEMPLOYMENT",
+      "OECD_SERIES": "OECDS-AUS-UNEMPLOYMENT",
+      "PERIOD": "2026-09",
+      "TITLE": "Unemployment rate, seasonally adjusted",
+      "UNIT": "% of labour force"
+    },
+    "… 2 more elements of the same shape"
+  ],
+  "MEASURE_COUNT": 4,
+  "NAME": "Australia",
+  "PROVENANCE": {
+    "ATTRIBUTION": "Source: OECD Data Explorer (CC BY 4.0).",
+    "DATASET": "OECD Data Explorer (SDMX)",
+    "INTERNAL_ONLY": false,
+    "LICENCE": "OECD terms and conditions: data may be extracted, copied and redistributed, also commercially, with the source acknowledged (CC BY 4.0 for OECD data since July 2024)",
+    "RETRIEVED_AT": "2026-11-06",
+    "SOURCE": "OECD",
+    "URL": "https://data-explorer.oecd.org/"
+  },
+  "UNEMPLOYMENT": 4.718349,
+  "UNEMPLOYMENT_PERIOD": "2026-09"
+}
+```
+
 ## OECDS: OECD series (`oecd-series`)
 
 One OECD measure of one member by period: the history, the latest value and the change.
@@ -119,7 +171,6 @@ One OECD measure of one member by period: the history, the latest value and the 
 | Cadence | daily (due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `oecd.oecd-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/oecd/samples |
-| Worked example | [oecd/oecd-series](../samples/oecd.md#oecd-series) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -175,3 +226,48 @@ One OECD measure of one member by period: the history, the latest value and the 
 
 - Stored in the worldlake lake (config/lakes/worldlake.yaml), table <data>/delta/worldlake/oecd/oecd-series/, one JSONL.gz a business date loaded with mode replace (a rerun of a day is idempotent).
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
+
+<a id="example-oecd-oecd-series"></a>
+**Example: `modules/economy/packs/oecd/samples/oecd-series.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CHANGE": 0.0529,
+  "COUNTRY_NAME": "United States",
+  "DATAFLOW": "OECD.SDD.STES,DSD_STES@DF_CLI,",
+  "FREQUENCY": "monthly",
+  "HISTORY": [
+    {
+      "PERIOD": "2024-01",
+      "VALUE": 99.09195
+    },
+    {
+      "PERIOD": "2024-02",
+      "VALUE": 99.19873
+    },
+    "… 31 more elements of the same shape"
+  ],
+  "ISO3": "USA",
+  "LATEST": 100.9993,
+  "LATEST_PERIOD": "2026-09",
+  "MEASURE": "CLI",
+  "NAME": "United States · Composite leading indicator",
+  "OECD_COUNTRY": "OECD-USA",
+  "PREVIOUS": 100.9464,
+  "PREVIOUS_PERIOD": "2026-08",
+  "PROVENANCE": {
+    "ATTRIBUTION": "Source: OECD Data Explorer (CC BY 4.0).",
+    "DATASET": "OECD DSD_STES@DF_CLI",
+    "INTERNAL_ONLY": false,
+    "LICENCE": "OECD terms and conditions: data may be extracted, copied and redistributed, also commercially, with the source acknowledged (CC BY 4.0 for OECD data since July 2024)",
+    "RETRIEVED_AT": "2026-11-06",
+    "SOURCE": "OECD",
+    "URL": "https://data-explorer.oecd.org/?lc=en&df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_STES%40DF_CLI"
+  },
+  "SERIES_ID": "OECDS-USA-CLI",
+  "TITLE": "Composite leading indicator",
+  "UNIT": "index, long-term average = 100"
+}
+```

@@ -24,7 +24,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,7 +34,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * The access model in YAML files (ACCESS_MODEL.md section 4):
+ * The access model in YAML files (KERNEL_AND_MODULES.md section 19.4):
  *
  * <ul>
  *   <li>each module's manifest, shipped in its jar as {@value #MANIFEST} (found on the class path: installed exactly when present);</li>
@@ -181,7 +180,7 @@ public final class YamlAccessStore implements AccessStore {
         try {
             Files.createDirectories(modulesDir);
             List<String> lines = Files.isRegularFile(f) ? new ArrayList<>(Files.readAllLines(f, StandardCharsets.UTF_8)) : new ArrayList<>(List.of(
-                    "# The module '" + id + "' at this site (docs/architecture/ACCESS_MODEL.md): the administrator's switch. POST /api/v1/admin/modules",
+                    "# The module '" + id + "' at this site (docs/architecture/KERNEL_AND_MODULES.md): the administrator's switch. POST /api/v1/admin/modules",
                     "# writes it; a change takes effect when the server restarts (a module's beans, engines, jobs and API are loaded at start)."));
             boolean replaced = false;
             for (int i = 0; i < lines.size(); i++) {
@@ -195,7 +194,7 @@ public final class YamlAccessStore implements AccessStore {
             }
             Path next = f.resolveSibling(f.getFileName() + ".next");
             Files.write(next, lines, StandardCharsets.UTF_8);
-            Files.move(next, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(next, f);
         } catch (IOException e) {
             throw new UncheckedIOException("could not write " + f, e);
         }
@@ -376,7 +375,7 @@ public final class YamlAccessStore implements AccessStore {
 
     private static Map<String, Object> readMap(Path f) {
         try {
-            Map<String, Object> m = YAML.readValue(f.toFile(), YAML.getTypeFactory().constructMapType(LinkedHashMap.class, String.class, Object.class));
+            Map<String, Object> m = YAML.readValue(java.nio.file.Files.readAllBytes(f), YAML.getTypeFactory().constructMapType(LinkedHashMap.class, String.class, Object.class));
             return m == null ? Map.of() : m;
         } catch (IOException e) {
             throw new UncheckedIOException("cannot read: " + e.getMessage(), e);

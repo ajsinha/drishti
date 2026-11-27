@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * The modules a distribution may list, read from their own manifests (docs/architecture/DISTRIBUTIONS.md section 10): a content module's
+ * The modules a distribution may list, read from their own manifests (docs/architecture/KERNEL_AND_MODULES.md section 20.10): a content module's
  * {@code modules/<id>/module.yaml} (the {@code .dmod} manifest), a module with code's {@code META-INF/drishti/module.yaml} in its
  * sources ({@code modules/<id>/java/<part>/src/main/resources/...}), and the packaged modules the registry reads with the same reader
  * (the module boot's {@code ModuleHomes}: the {@code .dmod} packages of the modules folder),
@@ -212,7 +212,7 @@ public final class ModuleManifests {
 
     private static JsonNode tree(Path f) {
         try {
-            JsonNode n = YAML.readTree(f.toFile());
+            JsonNode n = YAML.readTree(java.nio.file.Files.readAllBytes(f));
             return n == null ? YAML.createObjectNode() : n;
         } catch (IOException e) {
             throw new IllegalStateException("module manifest " + f + " cannot be read: " + e.getMessage(), e);

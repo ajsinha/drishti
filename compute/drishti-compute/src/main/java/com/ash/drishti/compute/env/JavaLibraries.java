@@ -26,7 +26,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,7 +72,7 @@ public final class JavaLibraries {
                 throw new ComputeException(ComputeException.Code.REFUSED, lib.coords() + " carries a native library (" + natives.get(0)
                         + ") but does not say native: true; it could only run in a Java worker");
             }
-            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(tmp, target);
             ReadOnly.apply(dir);
             return new Staged(lib, target, natives);
         } catch (IOException e) {

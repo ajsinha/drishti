@@ -35,7 +35,7 @@ import tempfile
 
 MANIFEST = "MANIFEST.json"
 FORMAT = 1
-SKIP_DIRS = {".git", "__pycache__", ".idea", ".pytest_cache", ".generated", ".venv", "node_modules"}
+SKIP_DIRS = {".git", "__pycache__", ".idea", ".pytest_cache", ".generated", ".venv", "node_modules"}  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
 SKIP_FILES = {".DS_Store", "Thumbs.db", MANIFEST}
 NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 # a pack's version is semantic: X.Y.Z, optionally -pre-release and +build (1.4.0, 2.0.0-rc.1); the server's deploy check says the same

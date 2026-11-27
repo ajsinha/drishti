@@ -15,49 +15,26 @@
 -->
 # Tutorial 19 · Build a pack and a screen
 
-From your own data to a pack, a screen and computed panels. Part A turns a schema and a folder of data into a pack and deploys it.
-Part B designs a screen, in the Build workbench and on a live page. Part C adds panels computed on demand by a reactive connector. Every step
-shows the UI, the command line and the YAML.
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
+From your own data to a pack and a screen. Part A turns a schema and a folder of data into a pack and deploys it. Part B designs a screen for it in the Build workbench. The next tutorials continue on the same page: [the Sutra designer on a live page](24-customize-a-live-page.md) and [computed panels](25-computed-panels.md). Every step shows the UI, the command line and the YAML.
 
 ## Time to complete
 
-About 2 h 10 min in all; each part can be done on its own day.
+About 70 minutes in all; each part can be done on its own day.
 
 - Part A · Build a pack from your data: About 30 minutes.
-- Part B · Design a screen: in the workbench and on a live page: About 75 minutes: 40 for the workbench (steps 8 to 15), 35 for the Sutra designer (steps 16 to 22).
-- Part C · Computed panels: a reactive connector: About 25 minutes.
+- Part B · Design a screen in the workbench: About 40 minutes (steps 8 to 15).
 
 ## Before you start
 
-- [Tutorial 15](15-connect-your-data.md) done: the connector `desk-quotes` exists and runs (check with `drishti-console/.venv/bin/python tools/drishti.py connector list --origin file`).
-- Signed in as the development administrator. The server needs `DRISHTI_STUDIO_SAVE=true` (tutorial 1, step 2), and deploying a pack needs the administrator.
-- The console's Python (tutorial 1, Part A) for the command-line part: it has the Drishti Lake wheel and `pyarrow`, which `pack make` uses to write its Delta store.
-- The data: `docs/tutorials/data/schemas/desk-quote.schema.json` (a JSON Schema titled *Desk quote*, with a description for every field) and `docs/tutorials/data/desk-quotes/`
-  (the ten day folders, one `desk-quote.jsonl` each).
+- [Tutorial 15](15-connect-your-data.md) done: the connector `desk-quotes` exists and runs (check with `python3 tools/drishti.py connector list --origin file`).
+- Signed in as the development administrator. The server needs `DRISHTI_STUDIO_SAVE=true` ([tutorial 1, step 2](01-first-15-minutes.md#step-2--start-the-server-and-the-console-with-sign-in-on)), and deploying a pack needs the administrator.
+- The console's Python ([tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around)) for the command-line part: it has the Drishti Lake wheel and `pyarrow`, which `pack make` uses to write its Delta store.
+- The data: `docs/tutorials/data/schemas/desk-quote.schema.json` (a JSON Schema titled *Desk quote*, with a description for every field) and `docs/tutorials/data/desk-quotes/` (the ten day folders, one `desk-quote.jsonl` each).
+- For Part B (the workbench): a running server and console with the `trading`, `core` and `counterparty-risk` packs (all on by default) and the demo lakes (`drishti.py lake demo`), signed in, and the server started with `DRISHTI_STUDIO_SAVE=true`. The data: three desk documents in `docs/tutorials/data/desks/` (`desk-rates.json`, `desk-fx.json`, `desk-credit.json`: each a desk with its currencies and their trades), and the Sutra itself, `docs/tutorials/data/desk-book.sutra.yaml`. The fields are UPPER_SNAKE (`DESK_ID`, `REGION`, `MTM`, `CURRENCIES[].TRADES[].NOTIONAL`), as production data is. For the command-line checks: the console's Python; `sutra lint` and `sutra preview` run the server jar's Sutra tool locally, with no server needed.
 
-**Part B · Design a screen: in the workbench and on a live page.**
-
-- [Tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around) done: a running server and console with the `trading`, `core` and `counterparty-risk` packs (all on by default)
-  and the demo lakes (`drishti.py lake demo`), signed in. Anyone may design; saving a Sutra for everyone needs an author and a reviewer, which this
-  tutorial does not do.
-- **For the workbench (steps 8 to 15)**: the server started with `DRISHTI_STUDIO_SAVE=true`. The data: three desk documents in `docs/tutorials/data/desks/` (`desk-rates.json`,
-  `desk-fx.json`, `desk-credit.json`: each a desk with its currencies and their trades), and the Sutra itself, `docs/tutorials/data/desk-book.sutra.yaml`.
-  The fields are UPPER_SNAKE (`DESK_ID`, `REGION`, `MTM`, `CURRENCIES[].TRADES[].NOTIONAL`), as production data is. For the command-line checks: the
-  console's Python (tutorial 1, Part A); `sutra lint` and `sutra preview` run the server jar's Sutra tool locally, with no server needed.
-- **For the Sutra designer (steps 16 to 22)**: the designer switched on. It is off by default; in the console's `config/application.yaml` set `ui.designer: true`, or start the console
-  with `DRISHTI_UI_DESIGNER=true` ([CONFIGURATION.md](../admin/CONFIGURATION.md)), and restart the console. Off, there is no **Customize** button and
-  `/designer/*` answers 404. For its command-line steps: a token, `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API
-  tokens; [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md#3-connecting-to-a-server-url-tokens-and-permissions)), and `B=$DRISHTI_SERVER/api/v1` for `curl`.
-  Nothing you do there changes the pack's screen: the designer keeps **your own design**, which only you see until you share it.
-
-**Where this data comes from.** The country pages of the map step are the `world-economy` pack's, published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `drishti.py feed run world-economy`. Each source, its licence and how to refresh it: [External data](../guides/WORLD_DATA_GUIDE.md).
-
-**Part C · Computed panels: a reactive connector.**
-
-- The compute workers need a Python 3.10 or newer; the console's own (`drishti-console/.venv/bin/python`) is enough: the sample engine
-  uses the standard library only.
-
-The compute-demo pack is **synthetic** (a seeded random walk): nothing in it is market data.
+The country pages of the map step are the `world-economy` pack's, published data from the World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and the CIA World Factbook (public domain), plus IMF forecasts that are **internal only**, fetched by `drishti.py feed run world-economy`. Each source, its licence and how to refresh it: [External data](../guides/WORLD_DATA_GUIDE.md).
 
 ## What you will learn
 
@@ -69,7 +46,7 @@ The compute-demo pack is **synthetic** (a seeded random walk): nothing in it is 
 - how to roll a pack back, and what is kept for it;
 - `pack make`, `pack verify`, `server packs deploy`, `history` and `rollback`.
 
-**Part B · Design a screen: in the workbench and on a live page**
+**Part B · Design a screen in the workbench**
 
 - how to start a design from documents, and what the auto-design gives you;
 - the parts of a Sutra: `match`, `title`, `strip`, `controls`, `panels`;
@@ -78,21 +55,6 @@ The compute-demo pack is **synthetic** (a seeded random walk): nothing in it is 
 - the *About this page* text and glossary, and where it is written;
 - the **`map`** panel: a country highlighted, its regions, a click that opens the country's page;
 - `sutra lint` and `sutra preview` from the command line;
-- how **Customize** moves, hides and adds panels on a live page, and what it writes;
-- how to say what a click on a row opens: **a linked record** from another pack;
-- how to make a panel **refresh**, and how readers pause it and read its freshness;
-- how to **let people edit** a table's records, and where their drafts go;
-- how **Describe** builds the same screen from one line, and how **Outline** and **Grid** show it;
-- how to find, check and reset your page from the command line.
-
-**Part C · Computed panels: a reactive connector**
-
-- how a connector file of plugin `reactive` declares kinds with typed parameters, inputs, an engine and triggers;
-- how a Sutra panel names a computed kind and its parameters (`source: { kind, id, params }`);
-- what a panel shows while it computes, when it is ready, and when it is refused, and that the page never waits;
-- how a Python engine runs over every worker of a pool, and how its Java twin gives the same number;
-- how to ask a computation, cancel it and send it an event from the command line;
-- how a write-back event recomputes only what somebody watches.
 
 ### Part A · Build a pack from your data
 
@@ -195,7 +157,7 @@ configuration and start scripts. `pack make` wants the ids in what it reads to b
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack make docs/tutorials/data/desk-quotes/2026-09-30/desk-quote.jsonl --kind desk-quote --match VENUE --name desk-quotes --version 1.2.0 --out build/desk-quotes
+$ python3 tools/drishti.py pack make docs/tutorials/data/desk-quotes/2026-09-30/desk-quote.jsonl --kind desk-quote --match VENUE --name desk-quotes --version 1.2.0 --out build/desk-quotes
 read 6 desk-quote document(s)
 key:   ID  (named id, present and unique in all 6 documents)
 date:  AS_OF  (date-valued, named like a business date, 1 distinct date(s))
@@ -304,7 +266,7 @@ On this server that store reads `<data>/delta/desk-quotes`, which is empty until
 Verify the bundle, as a colleague would before deploying it:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack verify build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz
+$ python3 tools/drishti.py pack verify build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz
 verify build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz: desk-quotes 1.2.0
   checksums ok
   schema    ok
@@ -316,7 +278,7 @@ verified
 Ask the server what a deploy would do, without doing it (`--preview` discards the upload):
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server packs deploy build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz --preview
+$ python3 tools/drishti.py server packs deploy build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz --preview
 archive desk-quotes-1.2.0.tar.gz (4559 bytes, sha256 2ef97e13fb4c877c...)
   ok    archive         4559 bytes, sha256 2ef97e13fb4c877c...
   ok    checksum        matches the sha256 you gave
@@ -342,7 +304,7 @@ was itself made by `pack make`, so only the version differs; after the page's 1.
 Sutra and glossary under CHANGE.) Then deploy it for real, look at the history, roll back and look again:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server packs deploy build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz
+$ python3 tools/drishti.py server packs deploy build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz
 archive desk-quotes-1.2.0.tar.gz (4559 bytes, sha256 2ef97e13fb4c877c...)
   ok    archive         4559 bytes, sha256 2ef97e13fb4c877c...
   ok    checksum        matches the sha256 you gave
@@ -364,7 +326,7 @@ deployed desk-quotes 1.2.0 (replacing 1.0.0): Applied now; no restart.
 ```
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server packs history --pack desk-quotes --limit 6
+$ python3 tools/drishti.py server packs history --pack desk-quotes --limit 6
   when (UTC)           action    pack         version  replaced  by
   -------------------  --------  -----------  -------  --------  -----------------
   2026-10-17 21:42:46  deploy    desk-quotes  1.2.0    1.0.0     drishti-dev-admin
@@ -375,12 +337,12 @@ $ drishti-console/.venv/bin/python tools/drishti.py server packs history --pack 
 ```
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server packs rollback desk-quotes --version 1.0.0
+$ python3 tools/drishti.py server packs rollback desk-quotes --version 1.0.0
 rolled desk-quotes back to 1.0.0 (replacing 1.2.0): Applied now; no restart.
 ```
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server packs history --pack desk-quotes --limit 3
+$ python3 tools/drishti.py server packs history --pack desk-quotes --limit 3
   when (UTC)           action    pack         version  replaced  by
   -------------------  --------  -----------  -------  --------  -----------------
   2026-10-17 21:42:47  rollback  desk-quotes  1.0.0    1.2.0     drishti-dev-admin
@@ -391,25 +353,11 @@ $ drishti-console/.venv/bin/python tools/drishti.py server packs history --pack 
 
 You should see the rollback recorded and the pack back at `1.0.0`. A **breaking** change (a kind or mnemonic removed or renamed) makes `deploy` stop with exit 1 until you add `--accept-breaking`.
 
-### Part B · Design a screen: in the workbench and on a live page
 
-A screen in Drishti is a **Sutra**: a small YAML file that says which entities it applies to and what to show. There are two ways to make one, and this
-part does both on real data:
 
-- **The Build workbench** (steps 8 to 15): a screen built from your own sample documents, with a live preview. You design a desk screen with a
-  strip of key figures, **tabs that each hold two panels** (a currency's totals and its trades), a **slider** that narrows the trades by size, the text
-  behind **About this page** and a **map**, see the column filters every table has, and check the Sutra from the command line.
-- **The Sutra designer** (steps 16 to 22): an existing page changed in plain words, on the real page with real data. You take a book's trades
-  page and make it a desk: a click on a trade opens the counterparty's credit limits beside the table, the trades refresh every 30 seconds with a pause
-  button, and people may edit a trade in a form beside the table and start a new one in a drawer. Then you build the same screen from one line with
-  **Describe**, and look at it in **Outline** and **Grid**.
+### Part B · Design a screen in the workbench
 
-Each step shows the UI, the command line where there is one, and the YAML. The references are
-[RACHANA_REFERENCE.md › Screen designer and the Build workbench](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) and its
-[section 31, the Sutra designer](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid); the grammar behind the Sutra designer's screen is
-[RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms).
-
-#### The Build workbench: a screen from your own documents
+A screen in Drishti is a **Sutra**: a small YAML file that says which entities it applies to and what to show. The Build workbench makes one from your own sample documents, with a live preview. You design a desk screen with a strip of key figures, **tabs that each hold two panels** (a currency's totals and its trades), a **slider** that narrows the trades by size, the text behind **About this page** and a **map**, see the column filters every table has, and check the Sutra from the command line. Each step shows the UI, the command line where there is one, and the YAML. The references are [RACHANA_REFERENCE.md › Screen designer and the Build workbench](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) and the grammar behind it, [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms).
 
 ## Step 8 · Bring your documents
 
@@ -509,11 +457,11 @@ The command line runs the same checks, which is what a CI job would do. Put the 
 ```bash
 mkdir -p desk-test && cp docs/tutorials/data/desk-book.sutra.yaml desk-test/
 cp docs/tutorials/data/desks/desk-rates.json desk-test/desk-book.json
-drishti-console/.venv/bin/python tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
+python3 tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
 ```
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
+$ python3 tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
 ok      desk-test/desk-book.sutra.yaml
 desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
 desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'VAR_99' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
@@ -525,7 +473,7 @@ You should see `ok desk-test/desk-book.sutra.yaml` and a list of warnings, one p
 default about help text: exit 0; `--strict` makes these warnings fail the run.)
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py sutra lint --strict desk-test/desk-book.sutra.yaml
+$ python3 tools/drishti.py sutra lint --strict desk-test/desk-book.sutra.yaml
 ok      desk-test/desk-book.sutra.yaml
 desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
 desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'VAR_99' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
@@ -546,7 +494,7 @@ desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.MATURITY' is sh
 `preview` renders every sample and reports panels in error:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py sutra preview desk-test/desk-book.sutra.yaml
+$ python3 tools/drishti.py sutra preview desk-test/desk-book.sutra.yaml
 desk-book / desk-book.json: 1 panels, 0 in error
 ```
 
@@ -616,495 +564,13 @@ When an administrator has switched the **Sutra designer** on, much of the workbe
 the page header and change it on the real page with real data. The result is kept as a design in **My drafts** on the Build home, like the workbench's, so the same `design`
 commands work on it.
 
-## Step 16 · Open the page and press Customize
-
-**In the UI.** Type `PTRD BOOK-RATES-2 <GO>`: the trades of book `BOOK-RATES-2`. Press **Customize** in the page header. A yellow bar
-says *Customizing · only you see changes until you share*, with **Cancel** and **Done**; every panel gets a dashed outline, a handle
-and its tools; the side panel on the right lists what you can do. The data stays live and is read as you (your roles and masks).
-
-![Customize on a page: dashed outlines, each panel's tools, the side panel](../guides/img/designer/customize.jpg)
-
-Try the basic tools: drag a panel's handle onto another panel (or use ↑ and ↓) to **move** it; **Hide** a panel (it is listed under
-*Hidden*, where **Show** brings it back); on the trades table, **Columns** picks the fields to show. **Add to this page** searches the
-UI kit by what a part shows (*limits*, *chart*, *note*): click a card or drag it onto the page.
-
-**You should see** the yellow bar, a dashed outline and tools on every panel, and the side panel with *When I click*, *Refresh*
-and *Add to this page*. A part you add opens its **settings** at once (*Which number? [NOTIONAL ▾]*, *Label*, *Format*); a part you
-added has **Remove** (with **Undo** for a few seconds), the pack's panels have **Hide**.
-
-**What it writes.** **Show the Sutra**, at the foot of the side panel, shows the whole YAML read-only. Your page has its own name, so
-it never stands for the pack's Sutra:
-
-```yaml
-# My page, saved by the Sutra designer (Customize). Only I see it until I share it; Reset goes back to the pack's page.
-rachana: 1.2
-sutra: my-portfolio-trades
-version: 1
-match: { kind: portfolio-trades }
-panels:
-  - { use: trading/payments-metrics@1, with: { ... } }   # the pack's own fragments, as on the pack's page
-  - { use: trading/trade-table@1, with: { ... } }
-  - { use: explainer-note@1, with: { id: note } }         # added from the kit
-```
-
-A hidden panel is kept in the design's notes, not in the Sutra, so *Show* restores it exactly.
-
-**Command line.** Nothing yet: the change is drawn at once but not kept until **Done** (step 20).
-
-## Step 17 · A linked record on a click
-
-**In the UI.** In the side panel, **When I click** a row in *[Trades ▾]* show *[what ▾]* in *[the right column ▾]*. Open *what*: it
-lists the row's details, and every record linked to a trade the way the packs link entities, across packs, each with the pack that
-serves it: *the trade itself (trading)*, *its events*, *its counterparty (core)*, *its counterparty's credit limits*... Pick **its
-counterparty's credit limits (counterparty-risk)** and press **Make it so**. Click a trade: its counterparty's limits open on the right.
-**Stop** removes it.
-
-![When I click a trade, show its counterparty's credit limits (counterparty-risk pack)](../guides/img/designer/customize-linked.jpg)
-
-**You should see** *Pick a row of Trades to see it here* on the right until you click a trade, then a table of that
-counterparty's credit limits titled *Credit limits of CP-...*.
-
-**What it writes.** The table now emits an `open` event on a row click, and a child reads the clicked row through its own `source:`:
-
-```yaml
-  - id: trades
-    kind: table
-    ...
-    emits:
-      - name: open
-        on: row-click
-        payload: { SOURCE_SYSTEM: { bind: "@.SOURCE_SYSTEM", type: id }, COUNTERPARTY: { bind: "@.COUNTERPARTY", type: any }, ... }
-    children:
-      - place: detail-right
-        waits: Pick a row of Trades to see it here
-        source: { pack: counterparty-risk, kind: credit-limit, where: "@.COUNTERPARTY == @parent.open.COUNTERPARTY", limit: 20 }
-        panels:
-          - id: trades-credit-limit
-            kind: table
-            title: "Credit limits of ${@parent.open.COUNTERPARTY}"
-            rows: $src
-            columns: [ { label: Limit id, bind: "@.LIMIT_ID" }, { label: Counterparty name, bind: "@.COUNTERPARTY_NAME" }, ... ]
-```
-
-A table that came from a shared part of the page (a fragment) is first written out on the page, as above, so it can take the event.
-The limits are read as you: a counterparty masked for you is never followed, and the panel says *Hidden for you*.
-
-**Command line.** The pack's page as your token sees it, in text tables, and which Sutra draws it and why:
-
-```bash
-python3 tools/drishti.py view get portfolio-trades/BOOK-RATES-2
-python3 tools/drishti.py view explain portfolio-trades/BOOK-RATES-2
-```
-
-The child's limits are read only when a row is clicked, so they are not in `view get`; your designed page is checked from the command
-line in step 20.
-
-## Step 18 · Refresh every 30 seconds
-
-**In the UI.** In the side panel, **Refresh** *[Trades ▾]* every *[30 seconds ▾]* (*never (off)* removes it). The trades are fetched
-again every 30 seconds without reloading the page: only panels that changed are redrawn, the picked row stays picked and the limits it
-opened stay open. In the panel's header: **pause/resume**, **every …** (only as slow as the Sutra's interval or slower) and how fresh it
-is, *updated 12 s ago*, ticking. **Pause all**, above the panels, pauses the page.
-
-![Refresh controls: a paused panel, a slower interval, Pause all](../guides/img/designer/refresh-controls.jpg)
-
-When a source is behind, the panel says *stale* in amber; when it fails, the panel keeps what it showed and names the source:
-*trade-endur isn't answering; showing data from 10:42*.
-
-![Freshness: a stale source marked in the light theme](../guides/img/designer/freshness.jpg)
-
-**You should see** *updated … s ago* ticking in the trades' header, and the panel fetched again every 30 seconds with the
-page left where you scrolled.
-
-**What it writes.** On the panel (or on the use, or the whole Sutra):
-
-```yaml
-  - id: trades
-    kind: table
-    refresh: 30                 # or { every: 30, user-can-pause: false }
-```
-
-Never faster than the console's `views.refresh_min_seconds` (default 5).
-
-**Command line.** Your pause and interval choices are kept for you, per screen, in your settings:
-
-```bash
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $B/me/settings            # ... "refresh": {"portfolio-trades/my-portfolio-trades": {...}}
-curl -s -X PATCH -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
-     -d '{"refresh": {"portfolio-trades/my-portfolio-trades": {"panels": {"trades": {"paused": true}}}}}' $B/me/settings
-```
-
-## Step 19 · Let people edit
-
-**In the UI.** In the side panel, **Let people edit** *[Trades ▾]* *[in a form beside it ▾]* (or *in its cells*), tick the columns people
-may change (the notional, the maturity date) and *and start new ones in a guided drawer*; press **Set**. Click a trade: a form opens
-beside the table, the read-only fields saying why, a bad value explained under its field. **Save draft** keeps it; **Discard** forgets it.
-
-![A form beside the trades](../guides/img/designer/form-beside.jpg)
-
-**New trade** opens the drawer: steps *Who → What → Check* over the dimmed page.
-
-![The New trade drawer](../guides/img/designer/form-drawer.jpg)
-
-**You should see** a form beside the trades when you click one, the trade id read-only and the notional a number field.
-
-**What it writes.** A `form:` on the table. The first column names the record and is read-only; a number column becomes a number
-field, a `*_DATE` column a date field:
-
-```yaml
-  - id: trades
-    kind: table
-    ...
-    form:
-      key: trade_id
-      edit: beside              # or cells
-      new: drawer
-      fields:
-        - { id: trade_id, label: Trade, bind: TRADE_ID, readonly: true }
-        - { id: notional, label: Notional, bind: NOTIONAL, type: number }
-        - { id: maturity_date, label: Maturity, bind: MATURITY_DATE, type: date }
-```
-
-Rules, money and linked-record fields, masks and roles are in [APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md). Saving keeps a
-**draft** for each person; nothing is written to the source system until write-back.
-
-**Command line.** Your drafts, checked again on the server with the same rules:
-
-```bash
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$B/drafts?kind=portfolio-trades&id=BOOK-RATES-2"
-```
-
-## Step 20 · Done: your page
-
-**In the UI.** Press **Done**. The page now opens with your version, marked *Your page* in the header (that link opens the pack's page).
-Customize again to go on; **Share** makes a read-only link to your design; **Reset to the pack's page** removes your version.
-
-**You should see** the page without the yellow bar, with *Your page* in its header and your changes in place.
-
-**Command line.** Your page is an ordinary design in **Create → Build home → My drafts** (first called *My page · portfolio-trades*), so the
-`design` commands work on it, and a flag says which design is your version of each kind's page:
-
-```bash
-python3 tools/drishti.py design list                                    # find My page · portfolio-trades and its id
-python3 tools/drishti.py design get <id> --yaml -o my-desk.sutra.yaml   # the Sutra the designer wrote
-python3 tools/drishti.py sutra lint my-desk.sutra.yaml                  # the same checks the server runs
-python3 tools/drishti.py design check <id>                              # run it against its samples
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $B/me/pages            # {"portfolio-trades": "<id>"}
-curl -s -X DELETE -H "Authorization: Bearer $DRISHTI_TOKEN" $B/me/pages/portfolio-trades   # Reset: the pack's page again
-```
-
-Edit `my-desk.sutra.yaml` in your editor and `design save <id> my-desk.sutra.yaml` puts it back: the page shows your edit.
-
-## Step 21 · The same screen from one line: Describe
-
-**In the UI.** **Create → New screen** offers *describe the screen in one line* (Customize has **Describe a change**). Type:
-
-```
-TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s · edit trades beside · new trade in a drawer
-```
-
-and press **Build**. **Understood as** shows one token per part; an unsure one has a **fix…** list, a part it cannot read is red with a
-sentence saying why. The live result below draws the screen as you: click a trade and its cash flows open under the row, the
-counterparty's limits on the right. The parser is deterministic: the same line always gives the same screen, and no AI is involved.
-**Save to my workspace** keeps it as a design (*My screen · Trades of book BOOK-RATES-2*).
-
-![Describe: the book desk from one line](../guides/img/designer/describe.jpg)
-
-**You should see** one token per part under *Understood as*, none of them red, and the live result filling the cash flows
-under a trade you click.
-
-**What it writes** (shortened; the whole text is under **Show the Sutra**):
-
-```yaml
-rachana: 1.2
-sutra: my-portfolio-trades-book-rates-2
-version: 1
-description: TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s · ...
-match: { kind: portfolio-trades }
-refresh: 30
-panels:
-  - use: row-picker@1
-    with: { id: trades, title: Trades, rows: $.TRADES, event: open, key: TRADE_ID, ref: COUNTERPARTY, ... }
-    form: { edit: beside, new: drawer, ... }
-    children:
-      - place: expand-row
-        waits: Pick a trade to see its cash flows
-        source: { pack: trading, kind: trade, id: "@parent.open.id" }
-        panels:
-          - use: cashflow-ladder@1
-            with: { id: flows, title: "Cash flows of ${@parent.open.id}", rows: $src.EVENTS, date: EVENT_DATE, amount: AMOUNT }
-  - id: limit
-    kind: kv
-    title: Counterparty limits
-    area: right
-    waits: Pick a trade to see its counterparty's limits
-    source: { pack: counterparty-risk, kind: credit-limit, where: "@.COUNTERPARTY == @trades.open.ref", limit: 1 }
-    columns: [ ... ]
-  - { use: data-provenance@1 }
-```
-
-The trading pack ships a screen written this way, by hand: the book desk, `/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`
-(`modules/banking/packs/trading/sutras/pages/book-desk.v1.sutra.yaml`).
-
-**Command line.** As in step 20: `design list` shows *My screen · Trades of book BOOK-RATES-2*, and `design get <id> --yaml` prints it.
-
-## Step 22 · Outline and Grid: the same draft, two other views
-
-The four modes edit one draft; the switcher carries it from one to the other.
-
-**You should see** the same draft in each mode: a change made in Outline is there in Grid and in Customize.
-
-**Outline** shows the screen as a list: its sections, the panels in each, and under the trades table the panels a click opens, each
-with a line in plain words. Drag to reorder; drag a panel onto a table's *Drop a panel here* line to make it open on a click (*nest*);
-**Un-nest** puts it back; each item has its width, area, section and refresh interval.
-
-![Outline: the book page as a list, a panel nested under the trades table, the live preview beside it](../guides/img/designer/outline.jpg)
-
-**Grid** shows the screen as a spreadsheet: columns A, B, C (each header says its width, such as *7/12*) over the Sutra's
-`layout.areas`, and each cell's panels written as formulas. The cash flows a click opens are a cell of their own, `A2a`, under the
-trades:
-
-```
-A2 = row-picker@1(id: trades, title: Trades of the book, rows: $.TRADES, event: open, key: TRADE_ID, ref: COUNTERPARTY)
-A2a = cashflow-ladder@1(id: flows, title: Cash flows, rows: $src.EVENTS, date: EVENT_DATE, amount: AMOUNT) opens from A2
-B2 = field-list@1(id: who, title: Counterparty, rows: $src; source: {pack: core, kind: counterparty, id: @A2.open.ref})
-```
-
-`@A2.open.ref` is `@trades.open.ref` in the Sutra: B2 waits until a trade is picked. A screen without areas is one column; **Make it a
-grid** gives each panel an area. Drag the edge between two column headers to change the widths (`layout.columns`).
-
-![Grid: the trades in A2 with the cash flows a click opens as cell A2a, a counterparty in B2](../guides/img/designer/grid-mode.jpg)
-
-Grid edits two levels of panels a click opens as cells; pack screens nest at most two levels, and anything deeper is edited in Outline
-or Customize. On a phone Grid offers Outline.
-
-**Command line.** The mode you open first is a setting of yours (`customize`, `describe`, `outline` or `grid`; **Open first** beside
-the modes does the same):
-
-```bash
-curl -s -X PATCH -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
-     -d '{"designerMode": "grid"}' $B/me/settings
-```
-
-With Grid or Outline, Customize on a page then opens that mode with the page's draft.
-
-#### What you have, and what comes next
-
-A desk screen designed from your own documents (steps 8 to 15), your own version of the book's trades page (a linked record on a click, a refresh, a form)
-and a second screen from one line (steps 16 to 22), all in **Create → Build home → My drafts**, seen by nobody else. To make one live for everyone, open it in the workbench
-and **Submit for review** ([RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 22](../guides/RACHANA_REFERENCE.md#22-saving-and-proposing)),
-or `drishti.py design propose <id>`.
-
-### Part C · Computed panels: a reactive connector
-
-A **reactive connector** computes its answer when a screen asks for it, as the person asking, and again when something changes. In
-this part you switch on the compute workers and the **compute-demo** sample pack, open a book whose P&L path is computed twice (by a
-Python engine fanned out over the workers of a pool, and by its Java twin inside the server), watch a panel go from *computing* with its
-progress to the result without a reload, ask the same computation from the command line, see a parameter refused in words, and send a
-write-back event that recomputes what a screen shows. Each step shows the UI, the command line and the YAML. The reference is
-[REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md); the design is [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors).
-
-## Step 23 · Switch on the compute workers and the sample pack
-
-**On the server.** Start it with the pack added and compute on (both are off as shipped):
-
-```bash
-DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,compute-demo \
-DRISHTI_COMPUTE_ENABLED=true DRISHTI_PYTHON=$PWD/drishti-console/.venv/bin/python \
-  java -jar lib/drishti-server-*-exec.jar
-```
-
-**You should see** in the server's log:
-
-```text
-connectors: connector file path-sum-python.yaml generated from the template of pack 'compute-demo'
-connectors: connector file path-sum-java.yaml generated from the template of pack 'compute-demo'
-compute: on, node local, 1 pool(s): sample 0..4 fork (settings config/compute/compute.yaml, ...)
-reactive connectors: host installed (2 running; in-process Java engines other than Drishti's own: refused)
-```
-
-**What it uses.** The pool `sample` of `config/compute/compute.yaml` runs the sample engines; `workers.max` is how many this node runs
-(`DRISHTI_COMPUTE_SAMPLE_WORKERS`, 4 by default): configuration only, as many as you want, on every node of a cluster. **In the UI**,
-Admin → Compute lists the pool, its workers and both sample engines:
-
-![Admin → Compute: the pool sample, its workers and engines](img/t23/pools.jpg)
-
-```yaml
-pools:
-  sample:
-    type: python
-    engines: [drishti_compute.samples.vectors:VectorEngine, drishti_compute.samples.paths:PathSumEngine]
-    environment: system
-    workers: { min: 0, max: ${DRISHTI_COMPUTE_SAMPLE_WORKERS:4} }
-```
-
-## Step 24 · Read the connector file
-
-**In the UI.** Admin → Connectors → `path-sum-python`: plugin `reactive`, the file it came from, *running · UP*, the kind it serves.
-
-![Admin → Connectors: the reactive connector path-sum-python](img/t23/connector.jpg)
-
-**You should see** the connector running, its plugin `reactive` and the kind `path-sum`.
-
-**On the command line.** `cat config/connectors/path-sum-python.yaml`:
-
-```yaml
-plugin: reactive
-mode: reactive
-kinds:
-  path-sum:
-    compute: sum-vectors                       # what the engine calls it
-    params:
-      delay-ms: { type: int, default: 0, min: 0, max: 500 }
-    result: { required: [SUM, WORST], types: { SUM: number, WORST: number } }
-reads:                                         # read as the person asking, in this order
-  - { kind: path-book, as: book, id: "{id}" }
-  - { kind: path-strip, as: values, ids: "{inputs.book.MEMBERS}", limit: 5000 }
-engine:
-  type: python
-  entry: drishti_compute.samples.paths:PathSumEngine
-  pool: sample
-  split: values                                # the strips are cut over every worker of the pool
-  chunk-rows: 20
-  reduce: { sum: [ROWS, SUM], tables: { total: [PNL] }, then: { WORST: "min:total.PNL", BEST: "max:total.PNL" } }
-triggers:
-  - { on: data-version, kinds: [path-strip], affects: all }
-  - { on: write-back, kinds: [path-strip], affects: "{payload.BOOK_ID}" }
-limits: { timeout: 30s, wait: 25ms, max-inflight-per-user: 4 }
-```
-
-`path-sum-java.yaml` is the same computation with `engine: { type: java, class: com.ash.drishti.compute.reactive.samples.VectorSumEngine }`.
-The pack routes the kinds to them (`routes: { path-sum: path-sum-python, path-sum-java: path-sum-java }`) and nothing else in the pack
-knows how they are computed.
-
-## Step 25 · Open a book and watch it compute
-
-**In the UI.** Type `PBOOK BOOK-CREDIT <GO>` and pick **100** under *Slow down* (the engines pause per tenth of the strips, so you can
-watch). The page opens at once. The computed panels say *Computing · path-sum-python* and *Computing 10% · path-sum-java*, each with a
-progress bar; the book's own fields are already there.
-
-![Computed panels while they compute: a bar and a percentage per panel](img/t23/computing.jpg)
-
-A second or two later each panel fills in place, without a reload: the sum over 250 days, the worst day and the book's path as a chart,
-from Python and from Java, the same number. *How the Java answer was computed* shows the stamp: the pin of the inputs' versions, the
-engine, when, the result's hash.
-
-![The same book once computed: both engines agree](img/t23/computed-panels.jpg)
-
-**What the screen says** (`config/packs/core/compute-demo/sutras/path-book.v1.sutra.yaml`):
-
-```yaml
-controls:
-  - { id: slow, kind: segmented, label: Slow down (ms per tenth), options: ["0", "20", "100"], default: "0" }
-panels:
-  - id: py-sum
-    kind: metric
-    source: { kind: path-sum, id: "$.BOOK_ID", params: { delay-ms: ctl.slow } }
-    value: "$src.SUM"
-  - id: java-path
-    kind: line
-    source: { kind: path-sum-java, id: "$.BOOK_ID", params: { delay-ms: ctl.slow } }
-    rows: "$src.TABLES.total"
-    x: DAY
-    y: PNL
-```
-
-**You should see** the panels computing, then ready; open the same book again: it is answered from the cache at once (*updated 0 s
-ago*). Pick **20**: a new parameter is a new question, computed once more.
-
-## Step 26 · The same computation from the command line
-
-```bash
-python3 tools/drishti.py compute run path-sum-java path-sum-java BOOK-FX --param delay-ms=20
-python3 tools/drishti.py compute run path-sum-python path-sum BOOK-FX --wait 15000
-```
-
-**You should see** (captured on a workstation, 2026-10-25):
-
-```text
-path-sum-java BOOK-FX~delay-ms=20  READY  (req-mvncbp26-22d83e2f83dc)
-  ROWS         40
-  WIDTH        250
-  SUM          -72869.06999999999
-  WORST        -37535.829999999994
-  BEST         29214.140000000003
-  computed 2026-10-25T04:41:25.883332524Z by java:vector-sum@1.0, pin pin-4c3b79fd25579fdf, sha256:6efecc13cffe8c612f090a2650e23dbb
-path-sum-python BOOK-FX  READY  (req-mvncbpap-cd3a5fa3f80a)
-  ...
-  ran on {'worker': '2 workers', 'node': 'local', 'chunks': 2, 'workers': 2, 'nodes': {'local': 2}, 'queuedMs': 0, 'runMs': 98}
-```
-
-The id carries the parameters: `BOOK-FX~delay-ms=20`. The same id opens the computed kind in the browser
-(`/v/path-sum-java/BOOK-FX~delay-ms=20`) and over HTTP (`POST /api/v1/compute/path-sum-java/path-sum-java {"id": "BOOK-FX", "params":
-{"delay-ms": 20}}`). `ran on` says the Python one was cut into 2 chunks over 2 workers. `--json` prints the whole answer;
-`drishti.py compute cancel <request>` cancels one of yours. In the browser the computed kind itself shows its result, the
-`RESULTS` and `TABLES` and the stamp:
-
-![The computed kind path-sum-java opened by its id](img/t23/computed-kind.jpg)
-
-## Step 27 · A parameter out of bounds is refused in words
-
-```bash
-python3 tools/drishti.py compute run path-sum-java path-sum-java BOOK-FX --param delay-ms=900; echo "exit $?"
-```
-
-**You should see** the refusal in words and exit code 1:
-
-```text
-path-sum-java BOOK-FX~delay-ms=900  REFUSED  (req-mvncbpgc-b05a980336d9)
-  delay-ms for path-sum-java is 900: it must be at least 0 and at most 500
-exit 1
-```
-
-**In the UI**, `PSUMJ BOOK-FX~delay-ms=900 <GO>` says the same in the answer's `COMPUTE` part: state *refused*, the request id, the message.
-
-![A parameter out of bounds: refused in words, nothing computed](img/t23/refused.jpg) A panel whose parameter is refused shows *Not computed: …* in that panel
-only; the rest of the screen is drawn as usual. Nothing was read or computed.
-
-## Step 28 · An event recomputes what somebody watches
-
-Keep `PBOOK BOOK-FX` open in the browser. As an administrator, send the event a saved change will send once write-back lands (W6):
-
-```bash
-python3 tools/drishti.py compute event write-back chg-101 --kind path-strip --entity STRIP-FX-001 \
-  --payload BOOK_ID=BOOK-FX --watermark L3=13
-```
-
-```json
-{ "connectors": { "path-sum-java": { "affected": 1, "recomputing": 1 }, "path-sum-python": { "affected": 1, "recomputing": 1 } },
-  "event": "chg-101" }
-```
-
-**You should see** the book's computed panels turn amber (*Stale · path-sum-java is recomputing after write-back of STRIP-FX-001*), then
-fill again. The new stamp says `watermark: {L3: 13}` and `trigger: {type: write-back, eventId: chg-101}`. Send the same command again:
-`"ignored": "already processed chg-101"`. With the page closed, `recomputing` is `0`: the result is only marked stale and recomputed on
-its next read. A burst of events is coalesced (`coalesce: { quiet: 250ms, max-wait: 2s }`): twenty changes in a second are one or two
-computations.
-
-## Step 29 · What Admin sees
-
-```bash
-python3 tools/drishti.py compute reactive
-```
-
-**You should see** both sample connectors with `"available": "ready"` and their cache counts.
-
-Each reactive connector with its kinds and parameters, engine, `available` (*ready*, or why not: *compute is off on this server*), the
-cache (results, hits, misses, late results dropped), coalescing (events in, computations), computations running, joined and failed, and
-each kind's latency. The pools and workers behind the Python one are under Admin → Compute.
-
 ## Next steps
 
-- [DATA_GUIDE.md](../guides/BUILD_GUIDE.md#8-the-pack-designer-create--new-pack) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) the commands; [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md)
-  how a pack is laid out; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) how to promote a pack between servers.
-- [Tutorial 12 · Load data daily](12-a-day-of-bank-data.md) keeps the screens' data fresh.
-- [Tutorial 11 · Correct a trade and approve it](11-correct-and-approve.md): a form like the one of step 19 that writes back, with four eyes.
-- [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) is the workbench reference and
-  [its section 31](../guides/RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid) every mode of the designer in full;
-  [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) lists every option of every panel and control;
-  [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) shows each of the 22 panel kinds with a picture.
-- [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) is the language guide; its
-  [section 11a](../guides/BUILD_GUIDE.md#201-fragments-events-children-refresh-and-forms) writes Part B's screen by hand.
+- [Tutorial 24 · Customize a live page](24-customize-a-live-page.md): change an existing page in plain words.
+- [DATA_GUIDE.md](../guides/BUILD_GUIDE.md#8-the-pack-designer-create--new-pack) lists every rule (keys, links, formats, enums, splitting a kind); [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md) the commands; [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md) how a pack is laid out; [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) how to promote a pack between servers.
+- [Tutorial 16 · Load your own data into a new lake](16-load-your-own-data-into-a-new-lake.md) keeps the screens' data fresh.
+- [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) is the workbench reference; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one) shows each of the 22 panel kinds with a picture.
+- [BUILD_GUIDE.md](../guides/BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies) is the language guide; its [section 11a](../guides/BUILD_GUIDE.md#201-fragments-events-children-refresh-and-forms) writes a screen by hand.
 
 ## If something goes wrong
 
@@ -1119,11 +585,3 @@ each kind's latency. The pools and workers behind the Python one are under Admin
 | `DRS-2023` | an option on a panel that does not take it (`panels:` is only for `tabs`, `body` likewise) |
 | the Trades table is empty | the slider is above every trade, or the `where` reads a control that has no value |
 | the workbench says the design changed in another tab | reload it: the other tab's edit wins, nothing is lost (Versions) |
-| no **Customize** button; `/designer/...` answers 404 | the designer is off: `ui.designer: true` (or `DRISHTI_UI_DESIGNER=true`) and restart the console |
-| the linked-record list has no *credit limits* | the counterparty-risk pack is not enabled, or not among your active packs, or the table has no field the packs link |
-| a panel says *Hidden for you* | the clicked row's value is masked for you; the panel is not looked up |
-| a part of the Describe line is red | the sentence beside it says why; the result says *Fix the red part to see the screen* until it reads |
-| a refresh interval faster than 5 s is not offered | the console's `views.refresh_min_seconds` (default 5) |
-| `DRS-2057` in `sutra lint` | an event or source reads a panel that does not exist (a renamed panel id) |
-| `DRS-2058` | the `form:` does not read: an unknown key or field type ([APPROVALS_GUIDE.md](../guides/APPROVALS_GUIDE.md)) |
-| `DRS-2059` | the `layout:` names an area the picture does not have |

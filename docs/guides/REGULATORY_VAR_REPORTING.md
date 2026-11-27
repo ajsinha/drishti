@@ -31,7 +31,7 @@ controls (report definitions, checks, frozen runs, sign-off), the data the bank 
 **Read with:** [VAR_GUIDE.md](VAR_GUIDE.md) (the VaR engine: positions, scopes, official records, settings, API, CLI),
 [the market-risk contracts](../contracts/packs/market-risk.md) (every input's contract, the planned ones at the end),
 [FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md) (the FRTB standardised approach, built: the sensitivities-based method, the DRC and the RRAO, with its own input contract),
-and the proposed contracts [FRTB.md](../contracts/FRTB.md) (the internal-models inputs) and [PNL.md](../contracts/PNL.md) (P&L explain).
+and the proposed contracts [FRTB.md](../contracts/FRTB.md) (the internal-models inputs) and [PNL.md](../plans/contracts/PNL.md) (P&L explain).
 
 **Not legal advice.** Which reports apply to which entity, and how a figure is defined for a filing, is for the bank's regulatory
 reporting and legal teams to decide. Drishti computes the figures, lays them out, checks and freezes them; the bank files.
@@ -57,7 +57,7 @@ reporting and legal teams to decide. Drishti computes the figures, lays them out
 | Report or figure | Who needs it | Drishti | Section |
 |---|---|---|---|
 | Trading VaR by risk type, period end, average, high, low (annual report) | every listed Canadian bank; §217.212 in the US | **Built** (the pilot `annual-report-var`); rows by risk type **Built — needs the bank's data** (a risk-type hierarchy or the planned risk-type mapping) | [3.2](#32-annual-report-trading-var-by-risk-type-canada-mda) |
-| Backtesting: exceptions, zone, multiplier, chart | US subpart F, OSFI internal models, Pillar 3 MR2, §217.212 | **Built — needs the bank's data** ([`desk-pnl`](../contracts/samples/market-risk.md#desk-pnl)); the pilot `var-backtesting-chart` | [3.3](#33-backtesting-chart-and-exceptions-both-countries) |
+| Backtesting: exceptions, zone, multiplier, chart | US subpart F, OSFI internal models, Pillar 3 MR2, §217.212 | **Built — needs the bank's data** ([`desk-pnl`](../contracts/packs/market-risk.md#example-market-risk-desk-pnl)); the pilot `var-backtesting-chart` | [3.3](#33-backtesting-chart-and-exceptions-both-countries) |
 | VaR and stressed VaR, 1-day and 10-day, latest, 60-day and 12-week averages | US subpart F, FFIEC 102 | **Built** | [3.7](#37-us-market-risk-capital-217204), [3.8](#38-ffiec-102-market-risk-regulatory-report-us) |
 | Market risk capital (VaR term + stressed VaR term + add-ons) and its RWA | US subpart F, FFIEC 102, FR Y-9C | **Not built (designed)**: needs the planned capital inputs | [4.7](#47-capital) |
 | FFIEC 102 and §217.212 report definitions | US filers | **Not built (designed)**: every figure but the add-ons is built | [3.8](#38-ffiec-102-market-risk-regulatory-report-us), [3.9](#39-217212-market-risk-disclosures-us) |
@@ -337,9 +337,9 @@ sensitivities and inventory aging are not among the five metrics.
 
 | Metric | Definition (identifiers per the technical specifications, to confirm) | Inputs (contract) | Status |
 |---|---|---|---|
-| 1. Internal limits and usage | every limit of the desk (VaR at least), its upper and lower size and its daily usage | VaR limits ([VLIM](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)); other limit types: a limit catalogue (proposed `risk-limit`, [STR.md 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental)) | VaR limits **Built**; the catalogue **Not built (designed)** |
+| 1. Internal limits and usage | every limit of the desk (VaR at least), its upper and lower size and its daily usage | VaR limits ([VLIM](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)); other limit types: a limit catalogue (proposed `risk-limit`, [STR.md 3.5](../plans/contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental)) | VaR limits **Built**; the catalogue **Not built (designed)** |
 | 2. VaR | daily 1-day 99% VaR per trading desk | official records | **Built** (per management desk); per regulatory desk **Not built (designed)** |
-| 3. Comprehensive P&L attribution | daily: P&L of existing positions attributed to risk factors and other factors (carry, reserves, cash flows, corrections), P&L of new positions including fees and commissions, the unexplained | desk P&L; P&L explain ([PNL.md](../contracts/PNL.md)); planned trade cash flows ([TCF](../contracts/packs/market-risk.md#tcf-trade-cash-flows-daily-trade-cash-flow)) | **Not built (designed)** |
+| 3. Comprehensive P&L attribution | daily: P&L of existing positions attributed to risk factors and other factors (carry, reserves, cash flows, corrections), P&L of new positions including fees and commissions, the unexplained | desk P&L; P&L explain ([PNL.md](../plans/contracts/PNL.md)); planned trade cash flows ([TCF](../contracts/packs/market-risk.md#tcf-trade-cash-flows-daily-trade-cash-flow)) | **Not built (designed)** |
 | 4. Positions | daily value of the desk's securities and derivatives positions, long and short | derived positions ([VAR_GUIDE 15.6](VAR_GUIDE.md#156-positions-derived-by-drishti)); planned Volcker trade attributes ([VTRD](../contracts/packs/market-risk.md#vtrd-volcker-trade-attributes-volcker-trade)) for the product split | **Not built (designed)** |
 | 5. Transaction volumes | value and number of transactions with customers, non-customers, and desks of the same or another banking entity | planned Volcker trade attributes (`COUNTERPARTY_CLASS`, `TRANSACTION_VALUE`) | **Not built (designed)** |
 | Desk information | desk name, covered activities, strategy, trading-day calendar | planned regulatory desks | **Not built (designed)** |
@@ -730,7 +730,7 @@ No contract is written for these yet: each waits for its report's design to be c
 | 10-day P&L vectors (full revaluation), or the bank's approval of scaling | per trade, date | US 10-day VaR if scaling is not accepted |
 | Per-risk-class P&L vectors | per trade, date, risk class | exact VaR by risk type |
 | A limit catalogue (every limit with id, type, upper and lower) | per desk | Volcker metric 1 (the proposed `risk-limit` of STR.md) |
-| P&L explain (risk factors, new trades, fees, unexplained) | per desk, date | Volcker metric 3 ([PNL.md](../contracts/PNL.md)) |
+| P&L explain (risk factors, new trades, fees, unexplained) | per desk, date | Volcker metric 3 ([PNL.md](../plans/contracts/PNL.md)) |
 | Sensitivities and curvature shocks | per position, date, FRTB risk factor | the standardised approach (built: its input contract is in [FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md)) |
 | Liquidity-horizon mapping and five vectors per trade | per risk factor; per trade, date | ES with liquidity horizons |
 | Real-price observations | per risk factor, daily | RFET, NMRF, SES |
@@ -853,4 +853,4 @@ Opened and read on 2026-10-30 unless noted.
 - Volcker 2019 amendments: [OCC bulletin 2019-56](https://www.occ.gov/news-issuances/bulletins/2019/bulletin-2019-56.html), [SEC release 2019-207](https://www.sec.gov/newsroom/press-releases/2019-207), [Federal Register 2019-22695](https://www.federalregister.gov/documents/2019/11/14/2019-22695/prohibitions-and-restrictions-on-proprietary-trading-and-certain-interests-in-and-relationships-with).
 
 **Drishti:** [VAR_GUIDE.md](VAR_GUIDE.md), [the market-risk contracts](../contracts/packs/market-risk.md), `config/reports/banking/`,
-[FRTB.md](../contracts/FRTB.md), [PNL.md](../contracts/PNL.md), [STR.md](../contracts/STR.md).
+[FRTB.md](../contracts/FRTB.md), [PNL.md](../plans/contracts/PNL.md), [STR.md](../plans/contracts/STR.md).

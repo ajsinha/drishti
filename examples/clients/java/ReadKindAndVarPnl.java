@@ -41,7 +41,7 @@ import org.apache.arrow.vector.Float8Vector;
 import org.apache.arrow.vector.VectorSchemaRoot;
 
 /**
- * A read-only Arrow Flight client in one file (examples/clients/java/README.md): connect with an API token, read a kind's rows, then a
+ * A read-only Arrow Flight client in one file (examples/clients/README.md): connect with an API token, read a kind's rows, then a
  * desk's VaR scenario P&L with the engine's VaR and ES from the schema's metadata.
  *
  * <pre>

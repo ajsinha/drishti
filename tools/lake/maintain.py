@@ -28,7 +28,7 @@ no delta-rs). Drishti's server only reads the lake; this job does what readers c
     checkpoint  write a Delta checkpoint, so readers replay a short log
     vacuum      remove files no longer referenced, older than vacuum-hours (time travel reaches back that far)
 
-    uv run --with pyarrow --with pyyaml python tools/lake/maintain.py --config deploy/lake-maintenance.yaml --once
+    python tools/lake/maintain.py --config deploy/lake-maintenance.yaml --once
     ... --daemon            run the file's schedules (lakes[].schedules: cron text or after-build); with none, every day at
                             schedule.at in schedule.zone (a container or service); a time missed while down runs once at start
     ... --dry-run           report what would happen (files and MB before -> after, dates retention drops, files vacuum removes)
@@ -37,13 +37,13 @@ no delta-rs). Drishti's server only reads the lake; this job does what readers c
     ... --as-of 2026-09-30  count the retention back from this date instead of today
     ... --force-drop        delete even when that is more than max-drop-share of a table
     ... --signal URL        tell that server about each changed table (the data-load signal lake build sends)
-    uv run ... maintain.py --history [--limit 50] [--json]     the last runs, from Admin -> Lakes and from here
+    python maintain.py --history [--limit 50] [--json]     the last runs, from Admin -> Lakes and from here
 
 --config defaults to <data>/lakes/lake-maintenance.yaml, the file Admin -> Lakes writes (docs/guides/OPERATIONS_GUIDE.md). Only
 tables lake build built are maintained (its build record, tools/lake/ownership.py); each run takes the lake's lock exclusively (builds hold it shared), so it never
 overlaps a build, and is kept in the history (<data>/lakes/maintenance-history.jsonl).
 
-    uv run --with pyarrow --with pyyaml python tools/lake/maintain.py relayout --root data/delta --domain trading \\
+    python tools/lake/maintain.py relayout --root data/delta --domain trading \\
         [--kind trade] [--dates 2026-09-28,2026-09-30 | --dates 2026-09-01..2026-09-30] [--force] [--dry-run]
                             lay the tables their pack lays out (tools/samplegen/layout.py) out again by id (lake maintain --relayout):
                             a date already in the layout is left as it is (unless --force), so running it again is harmless

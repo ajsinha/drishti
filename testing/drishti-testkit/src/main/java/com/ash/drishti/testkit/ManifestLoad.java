@@ -55,7 +55,7 @@ public final class ManifestLoad {
     /** Loads the manifest file's tables; throws {@link IllegalStateException} with the loader's words when a load fails. */
     public static void run(Path manifest) {
         try {
-            JsonNode m = JSON.readTree(manifest.toFile());
+            JsonNode m = JSON.readTree(java.nio.file.Files.readAllBytes(manifest));
             String table = m.path("table").asText();
             Path t = Path.of(table).toAbsolutePath();
             String kind = t.getFileName().toString();

@@ -27,7 +27,7 @@ import org.springframework.core.env.Environment;
 /**
  * The server's view of the data feeds (docs/guides/WORLD_DATA_GUIDE.md): {@code drishti.feeds.config} (the feed files, default
  * {@code ./config/feeds}), {@code drishti.feeds.root} (where {@code tools/drishti.py} is, for Run now; default {@code .}),
- * {@code drishti.feeds.python} (the Python Run now starts; default the console's environment, else python3) and
+ * {@code drishti.feeds.python} (the Python Run now starts; blank: DRISHTI_PYTHON, then {@code drishti.python}, then the console's environment, else python3) and
  * {@code drishti.feeds.sample-seconds} (how often the ledger is read for the gauge {@code drishti.datafeed.failed}; default 60).
  */
 @Configuration
@@ -38,7 +38,7 @@ public class DataFeedsConfiguration {
     public DataFeeds dataFeeds(Environment env, ObjectProvider<MeterRegistry> registry) {
         DataFeeds f = new DataFeeds(Path.of(env.getProperty("drishti.feeds.config", com.ash.drishti.api.Roots.config("feeds"))),
                 Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data())), java.util.Optional.ofNullable(env.getProperty("drishti.feeds.root")).filter(s -> !s.isBlank()).map(com.ash.drishti.api.Roots::anchored).orElseGet(com.ash.drishti.api.Roots::home),
-                env.getProperty("drishti.feeds.python", ""), registry.getIfAvailable());
+                com.ash.drishti.api.PythonSetting.resolve(env.getProperty("drishti.feeds.python", ""), env::getProperty, System::getenv), registry.getIfAvailable());
         f.start(Math.max(5, env.getProperty("drishti.feeds.sample-seconds", Long.class, 60L)));
         return f;
     }

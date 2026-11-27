@@ -113,4 +113,4 @@ not merged) and is applied within seconds; with the Endur Cassandra template (mo
 
 - [The cassandra connector README](../../../plugins/drishti-plugin-cassandra/README.md): layout, loading, retention, sizing, security.
 - [The cassandra connector's README](../../../plugins/drishti-plugin-cassandra/README.md) and [connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors).
-- [TLS](../../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) and [the demo data](../../../docs/guides/DATA_GUIDE.md#11-the-demo-data).
+- [TLS](../../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy) and [the demo data](../../../docs/guides/BANK_DATA_GUIDE.md#9-the-demo-data).

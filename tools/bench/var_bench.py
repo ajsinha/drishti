@@ -113,7 +113,7 @@ class Out:
 def load(a) -> int:
     """Each kind of --data into --lake with the given engine, timed, with the peak resident memory of the loader's process tree."""
     out = Out(a.out, {"run": a.run, "engine": a.engine, "positions": a.positions})
-    py = str(ROOT / "drishti-console" / ".venv" / "bin" / "python")
+    py = str(Path(os.environ.get("DRISHTI_PYTHON") or _sys.executable))
     env = dict(os.environ, JAVA_HOME=JAVAS[a.java], TMPDIR=str(Path(a.lake).parent / "tmp"))
     Path(env["TMPDIR"]).mkdir(parents=True, exist_ok=True)
     total = 0.0
@@ -296,7 +296,7 @@ class Bench:
 
     def users(self, users: int, seconds: int, label: str) -> dict:
         servers = ",".join(self.url(n) for n in self.names)
-        py = str(ROOT / "drishti-console" / ".venv" / "bin" / "python")
+        py = str(Path(os.environ.get("DRISHTI_PYTHON") or _sys.executable))
         cmd = [py, str(ROOT / "tools" / "bench" / "users.py"), "--server", servers, "--token-file", str(self.work / "token.txt"),
                "--users", str(users), "--seconds", str(seconds), "--ids", str(self.a.trade_ids), "--counterparties", str(self.a.counterparties),
                "--dates", self.a.trade_dates, "--var-share", str(self.a.var_share), "--var-dates", self.a.dates]

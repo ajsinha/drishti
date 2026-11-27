@@ -59,7 +59,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * K2's parity (docs/plans/I7A_BUILD_PLAN.md): for every kernel call the landings make today, the typed in-process call and the REST
+ * K2's parity (docs/architecture/KERNEL_AND_MODULES.md): for every kernel call the landings make today, the typed in-process call and the REST
  * call (a plain HTTP client carrying the request's own headers) give the same answer for the same person, both made inside one real request (a probe endpoint
  * of this test). Rows: an administrator, a masked role, a row-ruled role, a role the kind is closed to, a lens, an earlier date box, another
  * language, a read-only API token and a token with the scope that opens the one POST; a refusal is the same status, code and words both

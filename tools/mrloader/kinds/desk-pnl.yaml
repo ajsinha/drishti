@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The desks' daily P&L for backtesting (docs/plans/CSV_LOADERS.md section 3.1): finance's clean actual P&L and front office's
+# The desks' daily P&L for backtesting (docs/guides/BANK_DATA_GUIDE.md section 3.1): finance's clean actual P&L and front office's
 # hypothetical P&L, per desk and legal entity, in USD. Without it there is no backtest.
 format: 1
 kind: desk-pnl

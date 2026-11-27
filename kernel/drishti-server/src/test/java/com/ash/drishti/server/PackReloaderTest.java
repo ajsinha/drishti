@@ -148,6 +148,16 @@ class PackReloaderTest {
         until("the test packs to be gone", () -> names().equals(List.of("alpha")));
     }
 
+    /** A folder no pack is edited in (Python's byte-code cache, git's) is matched by name, whatever the separator of the operating system. */
+    @Test
+    void cacheAndGitFoldersAreNoPartOfAPacksFingerprint() {
+        assertThat(PackReloader.ignored(Path.of("scripts", "__pycache__", "make.cpython-313.pyc"))).isTrue();
+        assertThat(PackReloader.ignored(Path.of("scripts", "__pycache__"))).isTrue();
+        assertThat(PackReloader.ignored(Path.of(".git", "HEAD"))).isTrue();
+        assertThat(PackReloader.ignored(Path.of("scripts", "make.py"))).isFalse();
+        assertThat(PackReloader.ignored(Path.of("sutras", "my__pycache__notes.sutra.yaml"))).isFalse();
+    }
+
     @Test
     void aNewPackFolderIsLoadedEditedAndRemovedWithoutARestart() throws Exception {
         assertThat(names()).containsExactly("alpha");
@@ -248,7 +258,10 @@ class PackReloaderTest {
                 && roles.find("gizmo-reader").map(r -> r.kinds().size()).orElse(0) == 2);
 
         remove("delta");                                                                          // removed
-        until("delta to be gone", () -> pack("delta") == null && about.sources().stream().noneMatch(s -> s.name().equals("delta")));
+        // as when it came: each commit is its own listener, in no fixed order under load (a slow machine): wait for all checked below
+        until("delta to be gone", () -> pack("delta") == null && about.sources().stream().noneMatch(s -> s.name().equals("delta"))
+                && roles.find("gizmo-reader").isEmpty() && search.columnsOf("gizmo").isEmpty() && references.kindOfField("gizmoRef").isEmpty()
+                && !formats.has("gizmo-fmt"));
         assertThat(roles.find("gizmo-reader")).isEmpty();
         assertThat(search.columnsOf("gizmo")).isEmpty();
         assertThat(references.kindOfField("gizmoRef")).isEmpty();

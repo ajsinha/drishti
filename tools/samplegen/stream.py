@@ -15,7 +15,7 @@
 """Streams a pack's sample trades to Kafka, then keeps them ticking, so Drishti's Live views update from a real
 stream (the trading pack's `trading-stream` connector, switched on with DRISHTI_STREAM_TRADING=true).
 
-    uv run --with kafka-python python tools/samplegen/stream.py [--bootstrap localhost:9092] [--topic drishti.trading.trades]
+    python tools/samplegen/stream.py [--bootstrap localhost:9092] [--topic drishti.trading.trades]
                                                                 [--samples modules/banking/packs/trading/samples] [--rate 5] [--seconds 0]
 
 Each trade is published once, keyed by its TRADE_ID (the topic is the state: the latest message per trade wins), then `--rate` random

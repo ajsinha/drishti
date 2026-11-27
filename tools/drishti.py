@@ -15,14 +15,14 @@
 
 """drishti: one command line for building, checking, loading and shipping Drishti packs and Sutras.
 
-    python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
+    python3 tools/drishti.py <group> <command> [options]          (Windows: py tools\\drishti.py ...; the one Python, its libraries from setup)
 
 Groups: setup (prepare this machine), build (jar: the server jar into <home>/lib), start, stop and status (server, console, all, cluster;
 every OS, by pid files), sutra (the Java `sutra` tool, plus `sutra gen`), module (pack a folder; verify, check, inspect a .dmod with the server jar's verifier; deploy, plan, apply, list, remove, disable, enable, upgrade, run), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
 publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
 lake (build a Delta lake from a large JSON export, scan, status, maintain), feed (pull external data into the lakes: list, run, status, schedule), testdata (capture-market: a real offline snapshot), view (get, explain), history (an entity over business days), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
-Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
+Needs Python 3.11+ (3.13 is what the wheel packs target) and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_REFERENCE.md.
 
 Exit codes: 0 ok, 1 problems found (a failing check, a server that said no, an unreachable server), 2 usage (a bad option,
@@ -97,7 +97,7 @@ def need_yaml():
         import yaml
         return yaml
     except ModuleNotFoundError:
-        raise CliError("PyYAML is not installed: run with  uv run --with pyyaml python tools/drishti.py ...  or  pip install pyyaml") from None
+        raise CliError("PyYAML is not installed in this Python: run  " + procs_command("setup") + "  (setup checks the libraries; you install them with the pip commands it prints, offline from ~/drishti-wheels or --wheels <folder>)") from None
 
 
 def say_json(obj) -> None:
@@ -293,7 +293,9 @@ class Api:
         while True:
             req = urllib.request.Request(self.base + path, data=data, method=method, headers={**headers, **(extra or {})})
             try:
-                with urllib.request.urlopen(req, timeout=self.timeout) as r:  # noqa: S310 - the URL is the operator's own --server
+                loop = urllib.parse.urlsplit(self.base).hostname in ("localhost", "127.0.0.1", "::1")
+                opener = urllib.request.build_opener(urllib.request.ProxyHandler({})) if loop else urllib.request.build_opener()
+                with opener.open(req, timeout=self.timeout) as r:  # noqa: S310 - the operator's own --server; this machine's never through a proxy
                     self.headers = r.headers                                   # the last answer's headers (a statement's X-Statement-Cut)
                     return r.status, r.read()
             except urllib.error.HTTPError as e:
@@ -1088,6 +1090,11 @@ def cmd_docs_shots(a, extra) -> int:
     return subprocess.run(cmd, cwd=ROOT).returncode
 
 
+def cmd_docs_generate(a, extra) -> int:
+    """docs generate [--check]: every documentation generator in order (tools/docs/generate.py)."""
+    return load_module("docs_generate", "docs/generate.py").run(a.check, a.only)
+
+
 # ------------------------------------------------------------------------------------------------ smoke, doctor, view, completion
 
 def cmd_server_smoke(a, extra) -> int:
@@ -1099,6 +1106,16 @@ def cmd_server_smoke(a, extra) -> int:
 
 def cmd_doctor(a, extra) -> int:
     doctor = load_module("doctor", "doctor.py")
+    if getattr(a, "acceptance", False):
+        keys = javacmd.settings()[1]
+        port = (keys.get("console.server.port") or "").strip() or os.environ.get("DRISHTI_CONSOLE_PORT") or "17480"
+        sys.path.insert(0, str(ROOT / "tools" / "launch"))
+        import devsecrets
+        password = (os.environ.get("DRISHTI_SEED_PASSWORD") or "").strip() or devsecrets.DEV["DRISHTI_SEED_PASSWORD"]
+        results = doctor.acceptance(a.console or f"http://127.0.0.1:{port}", password, a.expect_var or doctor.ACCEPT_VAR,
+                                    a.expect_es or doctor.ACCEPT_ES, a.wait, server=(a.server or os.environ.get("DRISHTI_SERVER") or "").split(",")[0].strip() or None)
+        say_json({"ok": doctor.exit_code(results) == 0, "checks": results}) if a.json else doctor.render(results)
+        return doctor.exit_code(results)
     api = Api.from_args(a) if a.server or os.environ.get("DRISHTI_SERVER") or settingsfile.server_url(javacmd.settings()[1]) else None
     results = doctor.run(os.environ, ROOT, find_jar, find_java, api, a.java)
     say_json({"ok": doctor.exit_code(results) == 0, "checks": results}) if a.json else doctor.render(results)
@@ -1132,11 +1149,75 @@ def build_parser() -> argparse.ArgumentParser:
     return drishti_parser.build_parser(sys.modules[__name__])
 
 
+def is_setup(argv: list[str]) -> bool:
+    """True when the command is ``setup``: it must run on the standard library alone (the full parser needs PyYAML)."""
+    i = 0
+    while i < len(argv) and argv[i].startswith("-"):
+        i += 2 if argv[i] in ("--settings", "--profile") else 1
+    return i < len(argv) and argv[i] == "setup"
+
+
+REEXEC = "DRISHTI_TOOLS_REEXEC"
+
+
+def setup_python() -> str | None:
+    """The Python setup prepared (DRISHTI_PYTHON, drishti.python) when it is not this one and
+    this process is not already such a re-run: ``python3 tools/drishti.py lake demo`` then runs in it. None otherwise."""
+    if os.environ.get(REEXEC):
+        return None
+    try:
+        sys.path.insert(0, str(ROOT / "tools" / "launch"))
+        import procs
+        py = procs.tools_python()[0]
+    except Exception:                     # noqa: BLE001 - only a convenience: the one-line message follows
+        return None
+    norm = lambda x: os.path.normcase(os.path.abspath(x))     # never resolved: one Python may be a link to another
+    same = norm(py) == norm(sys.executable)
+    return py if not same and (pathlib.Path(py).is_file() or shutil_which(py)) else None
+
+
+def shutil_which(name: str) -> str | None:
+    import shutil
+    return shutil.which(name)
+
+
+def default_settings() -> str | None:
+    """The settings file setup writes, ``~/drishti-envs/dev.ini`` (Windows ``%USERPROFILE%\\drishti-envs\\dev.ini``), when no --settings is
+    given and it names THIS checkout as drishti.home (another copy's file is never picked up by default): its path, else None."""
+    base = (os.environ.get("USERPROFILE") if os.name == "nt" else None) or str(pathlib.Path.home())
+    ini = pathlib.Path(base) / "drishti-envs" / "dev.ini"
+    if not ini.is_file():
+        return None
+    try:
+        entries = settingsfile.read_all(str(ini))
+    except (settingsfile.SettingsError, OSError):
+        return None
+    if settingsfile.names_home(entries, ROOT):
+        return str(ini)
+    print(f"[WARN] {ini} belongs to {(entries.get('drishti.home') or '').strip() or 'no checkout'}: not used here (Fix: "
+          f"{procs_command('setup')})", file=sys.stderr)
+    return None
+
+
+def procs_command(*args: str) -> str:
+    sys.path.insert(0, str(ROOT / "tools" / "launch"))
+    import procs
+    return procs.command(*args)
+
+
 def use_tmp_dir() -> None:
     """``DRISHTI_TMP_DIR``, when set, is this command's temp folder too: Python's own temporary files and every program it starts
     (``TMPDIR``), so a site whose system temp folder is small or in memory points all of Drishti at one folder of its choosing."""
     base = (os.environ.get("DRISHTI_TMP_DIR") or "").strip()
     if not base:
+        return
+    if not settingsfile.inside(base, ROOT) and (is_setup(sys.argv[1:]) or not pathlib.Path(base).is_dir()):
+        # a folder outside this checkout is never made here (an old setx from an earlier copy): setup reports the variable itself; any
+        # other command says so once and uses the default temp folder
+        if not is_setup(sys.argv[1:]):
+            print(f"WARNING: DRISHTI_TMP_DIR={base} names a folder outside this checkout that does not exist: ignored (the default temp "
+                  "folder is used); create it, or delete the variable", file=sys.stderr)
+            os.environ.pop("DRISHTI_TMP_DIR", None)
         return
     import tempfile
     pathlib.Path(base).mkdir(parents=True, exist_ok=True)
@@ -1144,11 +1225,34 @@ def use_tmp_dir() -> None:
     tempfile.tempdir = base
 
 
+def _fail_line(e, what: str = "", fix_args: str = "") -> str:
+    """An error of a command as the one line a person reads (E1): kept when it is already ``[FAIL] ...``, ``[FAIL] `` before a text that
+    carries its own ``Fix:``, else ``procs.fail(what, text, <the command of fix_args>)`` when given, else ``[FAIL] <text>`` (an option mistake)."""
+    text = str(e).strip()
+    if text.startswith("[FAIL]"):
+        return text
+    if what and fix_args:
+        sys.path.insert(0, str(ROOT / "tools" / "launch"))
+        import procs
+        return procs.fail(what, text, procs.command(fix_args))
+    return f"[FAIL] {text}"
+
+
 def main(argv: list[str] | None = None) -> int:
     """Runs one command (``argv``, else the process's arguments); the exit code: 0 ok, 1 problems found, 2 usage."""
     try:
         # --settings /absolute/drishti.ini: the optional settings file (tools/settingsfile.py), handed on to every java this command starts
         argv, settings = settingsfile.pop_option(list(sys.argv[1:] if argv is None else argv))
+        if not settings and not is_setup(argv):
+            # the trust rule (FIRST_RUN_ROBUSTNESS.md R5): with no --settings, a DRISHTI_* folder variable naming a folder outside this
+            # checkout (an old setx) is ignored by every command, said once; only a settings file named on purpose points elsewhere
+            import tempfile
+            scratch = tempfile.gettempdir()     # a folder under the system temp folder is a run's scratch (a test's), never another clone
+            settings = default_settings()        # ~/drishti-envs/dev.ini of this checkout: no --settings needed on the command line
+            mine = settingsfile.read_all(settings) if settings else {}
+            # a scratch folder, or the very folder this checkout's settings file names (a re-run), is kept (the console's rule too)
+            for line in settingsfile.drop_foreign_vars(os.environ, ROOT, mine, scratch):
+                print(line, file=sys.stderr)
         # --profile demo|samples|qa: a committed settings file of this install (config/profiles/<name>.ini), after --settings (it wins)
         lead = 0                                # only before the command: a command's own options are its own
         while lead < len(argv) and (argv[lead] == "--profile" or argv[lead].startswith("--profile=")):
@@ -1157,9 +1261,17 @@ def main(argv: list[str] | None = None) -> int:
         argv = head + argv[lead:]
         settings = settingsfile.with_profiles(settings, ROOT, profiles)
         entries = settingsfile.read_all(settings) if settings else {}
-        settingsfile.apply_roots(entries)       # the Python side reads the roots the files name, as the JVMs do
+        if is_setup(argv):
+            # setup decides the roots itself (an old dev.ini named here is the file it moves aside): the file's roots are neither put
+            # into the environment nor handed on, so `--settings <old dev.ini> setup` goes ahead instead of being refused
+            entries = {k: v for k, v in entries.items() if k not in settingsfile.ROOTS}
+        else:
+            settingsfile.apply_roots(entries)       # the Python side reads the roots the files name, as the JVMs do
+            warning = settingsfile.other_home(entries)
+            if warning:
+                print(warning, file=sys.stderr)
         javacmd.set_settings(settings, entries)
-        ap = build_parser()
+        ap = drishti_parser.build_setup_parser(sys.modules[__name__]) if is_setup(argv) else build_parser()
         a, extra = ap.parse_known_args(argv)
         a._argv = list(argv)
         passthrough = (a.group == "sutra" and a.cmd != "gen") or (a.group == "data" and a.cmd == "load") or (a.group == "lake" and a.cmd == "maintain") or (a.group == "feed" and a.cmd == "run") or (a.group == "start" and a.cmd == "server")
@@ -1168,27 +1280,62 @@ def main(argv: list[str] | None = None) -> int:
         if extra and extra[0] == "--":
             extra = extra[1:]
         return a.func(a, extra) or 0
-    except (settingsfile.SettingsError, javacmd.JavaError, javacmd.HomeError) as e:
-        print(f"drishti: {e}", file=sys.stderr)
+    except settingsfile.SettingsError as e:          # the one shape (E1): [FAIL] <what>: <why>. Fix: <command>
+        print(_fail_line(e, "the settings file", "setup"), file=sys.stderr)
+        return 2
+    except (javacmd.JavaError, javacmd.HomeError) as e:
+        print(_fail_line(e), file=sys.stderr)
         return 2
     except CliError as e:
-        print(f"drishti: {e}", file=sys.stderr)
+        print(_fail_line(e), file=sys.stderr)
         return e.code
     except SystemExit as e:
         if isinstance(e.code, str):
             print(e.code, file=sys.stderr)
             return 2
         return e.code or 0
-    except ModuleNotFoundError as e:
-        print(f"drishti: {e.name} is not installed; run  uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...", file=sys.stderr)
+    except ImportError as e:              # ModuleNotFoundError, or the Lake wheel missing (tools/lake/lakewheel.py): one line, no traceback
+        again = setup_python()
+        if again:                         # this Python lacks them, the one setup prepared has them: the same command in that one
+            return subprocess.run([again, str(pathlib.Path(__file__).resolve()), *(sys.argv[1:] if argv is None else argv)],
+                                  env={**os.environ, REEXEC: "1"}).returncode
+        what = getattr(e, "name", None) or ("drishti_lake" if "drishti_lake" in str(e) else "a library Drishti needs")
+        sys.path.insert(0, str(ROOT / "tools" / "launch"))
+        import procs
+        print(procs.fail("libraries", f"{what} is not installed in this Python ({sys.executable})", procs.setup_line()), file=sys.stderr)
         return 2
+    except PermissionError as e:          # a file held open by another program, or a folder this account may not write (E1: with a Fix)
+        f = pathlib.Path(e.filename) if e.filename else None
+        folder = f.parent if f is not None else "the folder"
+        print(f"[FAIL] {f or 'a file'}: {folder} is not writable or the file is in use ({e.strerror or e}). Fix: close the program that "
+              f"has {f.name if f is not None else 'it'} open, or check you may write to {folder}, and run the command again", file=sys.stderr)
+        return 1
     except FileNotFoundError as e:
-        print(f"drishti: {e.filename or e}: no such file", file=sys.stderr)
+        print(f"[FAIL] {e.filename or e}: no such file", file=sys.stderr)
         return 2
     except KeyboardInterrupt:
+        print("[FAIL] interrupted", file=sys.stderr)
         return 130
+    except Exception as e:                # noqa: BLE001 - the one funnel (E1): one line on screen, the traceback in a log file
+        if os.environ.get("DRISHTI_DEBUG") == "1":
+            raise
+        import tempfile
+        import traceback
+        log = pathlib.Path(tempfile.gettempdir()) / f"drishti-error-{datetime.datetime.now():%Y%m%d-%H%M%S}.log"
+        try:
+            log.write_text("".join(traceback.format_exception(e)), encoding="utf-8")
+            where = f"the details are in {log}"
+        except OSError:
+            where = "set DRISHTI_DEBUG=1 to see the details"
+        print(f"[FAIL] {type(e).__name__}: {str(e).splitlines()[0] if str(e) else 'an unexpected error'}. {where}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
+    for _stream in (sys.stdout, sys.stderr):      # plain status text never fails on the console's code page (E6)
+        try:
+            _stream.reconfigure(errors="replace")
+        except (AttributeError, ValueError):
+            pass
     use_tmp_dir()
     sys.exit(main())

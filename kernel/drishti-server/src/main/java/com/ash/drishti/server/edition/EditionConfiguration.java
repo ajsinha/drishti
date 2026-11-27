@@ -23,7 +23,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * The distribution's filter (docs/architecture/DISTRIBUTIONS.md) as beans: the {@link Edition} itself (read once at start, from the
+ * The distribution's filter (docs/architecture/KERNEL_AND_MODULES.md) as beans: the {@link Edition} itself (read once at start, from the
  * distribution's property layer and the site's overrides) and {@link EditionCommands}, the commands it shows people. Drishti All: both
  * answer "allowed" everywhere.
  */
@@ -133,7 +133,7 @@ public class EditionConfiguration {
     }
 
     /**
-     * Health's distribution card (docs/architecture/DISTRIBUTIONS.md): the running distribution, the modules it asked for and which of them
+     * Health's distribution card (docs/architecture/KERNEL_AND_MODULES.md): the running distribution, the modules it asked for and which of them
      * loaded (each module's domain module, today).
      */
     @Bean

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 19.1): drishti_table-chart-engine.js under Node, as
+"""Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 5.19.1): drishti_table-chart-engine.js under Node, as
 with the pivot engine's answer stood in (the server's engine aggregates: PivotApiTest, RowsProviderTest). Classify, defaults, normalise,
 the mapping onto the pivot engine, the figures per X, Top N
 and Others, buckets and gaps, the pie refusal, masks, the summary, the export grid and the option drishti-chart draws from its model (two axes,

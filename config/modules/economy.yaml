@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/modules/economy.yaml: the economy module at this site (docs/architecture/ACCESS_MODEL.md): content only (the public economic and
+# config/modules/economy.yaml: the economy module at this site (docs/architecture/KERNEL_AND_MODULES.md): content only (the public economic and
 # market data packs and the World lens), shipped with the core server. This file holds the administrator's switch; the setting
 # drishti.modules.economy.enabled (DRISHTI_MODULES_ECONOMY_ENABLED) wins over it. A change takes effect at the next start.
 enabled: true

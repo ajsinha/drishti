@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The mapping file of a kind (``kinds/<kind>.yaml``, ``kinds/<kind>.<source>.yaml``; docs/plans/CSV_LOADERS.md section 7): PVF's grammar
+"""The mapping file of a kind (``kinds/<kind>.yaml``, ``kinds/<kind>.<source>.yaml``; docs/guides/BANK_DATA_GUIDE.md section 7): PVF's grammar
 (mapping.py) with the additions a CSV of any kind needs: the inputs (a main file, child files grouped into a list), nested fields
 (``KYC.STATUS``), lists in a cell (``split``), the cell's own format (``dates``, ``decimal``, ``percent``), ``pad``, ``lower``, ``trim``,
 the kind's place in the day (``after``), what a rejected row does (``on-reject``), computed columns refused by name (``refuse-columns``)

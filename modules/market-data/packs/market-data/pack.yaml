@@ -825,7 +825,6 @@ console:
     - 'The computed kind itself: G10 FX correlations, Ledoit-Wolf shrinkage'
   - - EQB EQ-NVTK
     - Novatek's beta against the Nasdaq-100, computed from both price histories
-  help: config/help.yaml
 python:
   enabled: true
 lake:

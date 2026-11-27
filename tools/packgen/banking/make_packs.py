@@ -113,7 +113,7 @@ PIVOTS = {"trading": {"trade": {"fields": ["SOURCE_SYSTEM", "PORTFOLIO", "CURREN
                                 "filters": ["PRODUCT_GROUP", "TRADE_STATUS"]}}}
 
 # calc: may use Calc, Python in the browser on what the role opens (USER_GUIDE.md)
-# trade-editor: the power to amend trades through the trade blotter (docs/guides/LIVE_RESULTS_GUIDE.md section 3); trader alone reads
+# trade-editor: the power to amend trades through the trade blotter (docs/guides/USER_GUIDE.md, Live results and blotters: Editing: configuration and rights); trader alone reads
 ROLES = {"trading": {"trader": {"kinds": TRADER_KINDS, "calc": True}, "trade-editor": {"kinds": ["trade"], "edit": True}}, "market-risk": {"market-risk": {"kinds": ["*"], "raw": True, "calc": True}},
          "counterparty-risk": {"credit-risk": {"kinds": ["*"], "raw": True, "calc": True}}}
 
@@ -206,7 +206,7 @@ def manifest(name: str) -> dict:
     kinds = [k for ks in p["kinds"].values() for k in ks]
     specs = {k.kind: k for k in T.KINDS + [T.TRADE]}
     fields = {f: {"kind": kind, "label": label} for f, (kind, label) in T.graph_fields().items() if kind in kinds}
-    # the domain each pack serves (docs/architecture/ACCESS_MODEL.md): the core pack is the core's, the others the banking module's
+    # the domain each pack serves (docs/architecture/KERNEL_AND_MODULES.md): the core pack is the core's, the others the banking module's
     m = {"pack": name, "domain": "core" if name == "core" else "banking", "version": "1.0.0", "code": CODES[name], "title": p["title"], "description": p["description"], "extends": p["requires"],
          "kinds": kinds, "sutras": "sutras", "formats": "config/formats.yaml",
          **({"semantics": "config/semantics.yaml"} if name == "core" else {}),
@@ -259,7 +259,7 @@ def manifest(name: str) -> dict:
         m["pivot"] = PIVOTS[name]
     m["form"] = forms(name, m["kinds"], specs)
     extra = VK.EXAMPLES if name == "market-risk" else XK.EXAMPLES if name == "counterparty-risk" else CK.EXAMPLES if name == "market-data" else []
-    m["console"] = {"examples": [list(e) for e in EXAMPLES[name] + extra], "help": "config/help.yaml"}
+    m["console"] = {"examples": [list(e) for e in EXAMPLES[name] + extra]}
     if calc_snippets.SNIPPETS.get(name):    # Calc on the pack's kinds, with its snippets under python/ (calc_snippets.py)
         m["python"] = {"enabled": True}
     if name in IMPACT:

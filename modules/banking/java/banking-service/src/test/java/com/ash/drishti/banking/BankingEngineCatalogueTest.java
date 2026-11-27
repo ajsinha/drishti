@@ -26,7 +26,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 /**
- * The banking module owns its engines (docs/architecture/DOMAIN_MODULES.md): their entries are its jar's META-INF/drishti/engines.yaml,
+ * The banking module owns its engines (docs/architecture/KERNEL_AND_MODULES.md): their entries are its jar's META-INF/drishti/engines.yaml,
  * read before the core's catalogue, their files its jar's engines/<file> (the site's config/engines/<file> byte for byte), and the console's
  * copy is its plugin's engines.yaml, the same bytes.
  */

@@ -26,7 +26,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * The showcase's tables (docs/architecture/GENOMICS_SHOWCASE.md section 6): the fourteen kinds of the packs {@code genomics} and
+ * The showcase's tables (modules/genomics/docs/guide.md section 6): the fourteen kinds of the packs {@code genomics} and
  * {@code protein}, read through the kernel's bindings as rows (never a connection), kept as one immutable snapshot and replaced whole. The
  * first call reads them; a read that found a kind empty is tried again after a minute (a lake still loading), and the answers cached by
  * their query are dropped with the snapshot they came from. Nothing is computed when the rows are read: the boards compute per call.

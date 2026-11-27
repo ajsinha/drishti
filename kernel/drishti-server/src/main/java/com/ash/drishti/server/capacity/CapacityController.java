@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.http.HttpHeaders;
@@ -65,29 +66,65 @@ public class CapacityController {
 
     private final Entitlements entitlements;
     private final AuditLog audit;
-    private final CapacityPlanner planner;
-    private final CapacityWorkbook workbook;
+    private final Supplier<CapacityPlanner> planners;
+    private final Supplier<CapacityWorkbook> workbooks;
     private final CapacityLive live;
 
     @org.springframework.beans.factory.annotation.Autowired
     public CapacityController(Entitlements entitlements, AuditLog audit, ObjectProvider<BuildProperties> build, ObjectProvider<CapacityFigures> figures,
             ObjectProvider<DiskBudget> disk, ObjectProvider<RequestActivity> activity, ObjectProvider<MeterRegistry> meters) {
-        this(entitlements, audit, CapacityPlanner.builtIn(build.getIfAvailable() == null ? "dev" : build.getIfAvailable().getVersion()),
-                CapacityWorkbook.builtIn(), new CapacityLive(() -> figures.orderedStream().toList(), disk::getIfAvailable, activity::getIfAvailable, meters::getIfAvailable));
+        this(entitlements, audit, lazy(() -> CapacityPlanner.builtIn(build.getIfAvailable() == null ? "dev" : build.getIfAvailable().getVersion())),
+                lazy(CapacityWorkbook::builtIn), new CapacityLive(() -> figures.orderedStream().toList(), disk::getIfAvailable, activity::getIfAvailable, meters::getIfAvailable));
     }
 
     CapacityController(Entitlements entitlements, AuditLog audit, CapacityPlanner planner, CapacityWorkbook workbook, CapacityLive live) {
+        this(entitlements, audit, () -> planner, () -> workbook, live);
+    }
+
+    /** The planner and the workbook are read on first use and kept: a template part that is missing stops the planner's endpoints, never the server. */
+    CapacityController(Entitlements entitlements, AuditLog audit, Supplier<CapacityPlanner> planner, Supplier<CapacityWorkbook> workbook, CapacityLive live) {
         this.entitlements = entitlements;
         this.audit = audit;
-        this.planner = planner;
-        this.workbook = workbook;
+        this.planners = planner;
+        this.workbooks = workbook;
         this.live = live;
+    }
+
+    /** Builds on first call, keeps the result; a failure is answered as DRS-1032 "the capacity template is missing <part>" and tried again next time. */
+    static <T> Supplier<T> lazy(Supplier<T> build) {
+        return new Supplier<>() {
+            private volatile T value;
+
+            @Override
+            public T get() {
+                T v = value;
+                if (v == null) {
+                    synchronized (this) {
+                        if ((v = value) == null) {
+                            try {
+                                v = build.get();
+                            } catch (RuntimeException e) {
+                                throw new DrishtiException(ErrorCode.MODULE_PART_UNAVAILABLE, "the capacity template is missing " + missing(e));
+                            }
+                            value = v;
+                        }
+                    }
+                }
+                return v;
+            }
+        };
+    }
+
+    private static String missing(RuntimeException e) {
+        String m = String.valueOf(e.getMessage());
+        java.util.regex.Matcher x = java.util.regex.Pattern.compile("no (\\S*capacity/\\S+)").matcher(m);
+        return x.find() ? x.group(1) : m;
     }
 
     @GetMapping("/api/v1/admin/capacity")
     public Map<String, Object> plan(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
-        return planner.plan();
+        return planners.get().plan();
     }
 
     @GetMapping("/api/v1/admin/capacity/live")
@@ -107,6 +144,8 @@ public class CapacityController {
         }
         Map<String, String> given = new LinkedHashMap<>(all);
         given.remove("inputs");
+        CapacityPlanner planner = planners.get();
+        CapacityWorkbook workbook = workbooks.get();
         Map<String, Object> plan = planner.inputs(given);
         Map<String, Object> values = plan;
         String header = null;
@@ -174,7 +213,7 @@ public class CapacityController {
         add(rows, "Resident memory (RSS)", s.get("rssMb"), "MB");
         add(rows, "Machine memory", s.get("ramMb"), "MB");
         add(rows, "Cores (hardware threads the JVM sees)", s.get("cpus"), "cores");
-        for (CapacityFigures f : figures) {                      // each module's engine's rows (DOMAIN_MODULES.md J3)
+        for (CapacityFigures f : figures) {                      // each module's engine's rows (KERNEL_AND_MODULES.md J3)
             if (m.get(f.key()) instanceof Map<?, ?> v) {
                 for (Object[] r : f.rows((Map<String, Object>) v)) {
                     add(rows, String.valueOf(r[0]), r[1], String.valueOf(r[2]));

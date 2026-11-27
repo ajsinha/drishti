@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/engines/flight.yaml: Arrow Flight, Drishti's data to any client (docs/guides/FLIGHT_GUIDE.md). Read at start, imported by application.yaml
+# config/engines/flight.yaml: Arrow Flight, Drishti's data to any client (docs/guides/INTEGRATION_GUIDE.md). Read at start, imported by application.yaml
 # after the jar's copy of this file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
 # (docs/guides/ADMIN_GUIDE.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
 drishti:

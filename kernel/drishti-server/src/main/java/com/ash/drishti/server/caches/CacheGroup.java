@@ -16,7 +16,7 @@
 package com.ash.drishti.server.caches;
 
 /**
- * An engine's caches joining the memory budget once the server is up (docs/architecture/DOMAIN_MODULES.md, the cycles: J2): each module's
+ * An engine's caches joining the memory budget once the server is up (docs/architecture/KERNEL_AND_MODULES.md, the cycles: J2): each module's
  * engine contributes its group as a bean, and Admin → Caches lists them with the rest; the core names no module's cache. Ordered by
  * {@link org.springframework.core.annotation.Order}.
  */

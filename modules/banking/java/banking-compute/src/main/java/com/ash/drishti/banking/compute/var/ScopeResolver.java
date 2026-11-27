@@ -58,8 +58,99 @@ public final class ScopeResolver {
     public record Resolution(OrdinalSet set, String canonical, String node, int position, int trade, List<String> unknown, List<String> notes,
             List<String> warnings) {}
 
+    /**
+     * What a scope is resolved over: a date's rows by ordinal, its positions and its hierarchies' nodes. Drishti's in-tree book is one
+     * ({@link #of(VarBook)}); the market-risk engine's index is another (R2: the host resolves every scope kind to a row set, EN-68), so
+     * the grammar, the baskets and the resolution stay the host's while the rows are the engine's.
+     */
+    public interface Book {
+        /** A node's member rows; null when the date has no such node. */
+        OrdinalSet members(String node);
+
+        List<String> hierarchies();
+
+        /** A hierarchy's root node id. */
+        String rootId(String hierarchy);
+
+        /** A position's index, its id in any case; -1 when unknown. */
+        int positionIndexAnyCase(String id);
+
+        /** A position's rows as runs, ascending. */
+        void forEachPositionRun(int index, OrdinalSet.RunConsumer f);
+
+        /** A trade's row, its id in any case; -1 when unknown. */
+        int tradeOrdinalAnyCase(String id);
+
+        /** True when the row is a position its source sends whole (false for -1). */
+        boolean supplied(int ordinal);
+
+        /** The live rows whose text column holds one of the values, ignoring case. */
+        OrdinalSet tradesWhere(String column, java.util.Collection<String> values);
+
+        int positionCount();
+
+        /** A position's column value (a text or a number), null when absent. */
+        Object positionValue(String column, int position);
+
+        /** Drishti's in-tree book as a book to resolve over. */
+        static Book of(VarBook b) {
+            return new Book() {
+                @Override
+                public OrdinalSet members(String node) {
+                    VarBook.Node n = b.node(node);
+                    return n == null ? null : n.members();
+                }
+
+                @Override
+                public List<String> hierarchies() {
+                    return b.hierarchies();
+                }
+
+                @Override
+                public String rootId(String hierarchy) {
+                    return b.root(hierarchy).id();
+                }
+
+                @Override
+                public int positionIndexAnyCase(String id) {
+                    return b.positionIndexAnyCase(id);
+                }
+
+                @Override
+                public void forEachPositionRun(int index, OrdinalSet.RunConsumer f) {
+                    b.forEachPositionRun(index, f);
+                }
+
+                @Override
+                public int tradeOrdinalAnyCase(String id) {
+                    return b.tradeOrdinalAnyCase(id);
+                }
+
+                @Override
+                public boolean supplied(int ordinal) {
+                    return b.supplied(ordinal);
+                }
+
+                @Override
+                public OrdinalSet tradesWhere(String column, java.util.Collection<String> values) {
+                    return b.tradesWhere(column, values);
+                }
+
+                @Override
+                public int positionCount() {
+                    return b.positionCount();
+                }
+
+                @Override
+                public Object positionValue(String column, int position) {
+                    return b.positions().value(column, position);
+                }
+            };
+        }
+    }
+
     private static final int MAX_DEPTH = 8;
-    private final VarBook book;
+    private final Book book;
     private final Definitions defs;
     /** The configured hierarchies' scope words (2.9.5): word to hierarchy id ({@code LL -> LL}). */
     private final java.util.Map<String, String> words;
@@ -70,6 +161,11 @@ public final class ScopeResolver {
 
     /** A resolver that also knows the configured hierarchies' words ({@code words}: word to hierarchy id). */
     public ScopeResolver(VarBook book, Definitions defs, java.util.Map<String, String> words) {
+        this(Book.of(book), defs, words);
+    }
+
+    /** A resolver over any {@link Book} (the engine's index on the engine path). */
+    public ScopeResolver(Book book, Definitions defs, java.util.Map<String, String> words) {
         this.book = book;
         this.defs = defs;
         this.words = words == null ? java.util.Map.of() : java.util.Map.copyOf(words);
@@ -135,7 +231,7 @@ public final class ScopeResolver {
                     return OrdinalSet.empty();
                 }
                 notes.add("node " + id);
-                return book.node(id).members();
+                return book.members(id);
             }
             case "POS" -> {
                 OrdinalSet.Builder out = new OrdinalSet.Builder();     // one set for all the ids, not one as wide as the date per id
@@ -175,12 +271,11 @@ public final class ScopeResolver {
             }
             case "WHERE" -> {
                 PositionRule rule = new PositionRule(r.arg());
-                Columns pc = book.positions();
                 OrdinalSet.Builder b = new OrdinalSet.Builder();
                 int matched = 0;
                 for (int p = 0; p < book.positionCount(); p++) {
                     int pi = p;
-                    if (rule.matches(f -> pc.value(f, pi))) {
+                    if (rule.matches(f -> book.positionValue(f, pi))) {
                         book.forEachPositionRun(p, b::addRange);
                         matched++;
                     }
@@ -223,7 +318,7 @@ public final class ScopeResolver {
                         return OrdinalSet.empty();
                     }
                     notes.add("node " + id);
-                    return book.node(id).members();
+                    return book.members(id);
                 }
                 throw new IllegalArgumentException(r.word() + ": is not a scope of VaR (NSET and GROUP are the exposure engine's)");
             }
@@ -250,11 +345,11 @@ public final class ScopeResolver {
                 return OrdinalSet.empty();
             }
             notes.add("node " + node + " (no trade carries the legal entity)");
-            return book.node(node).members();
+            return book.members(node);
         }
         notes.add("legal entity " + id + ": " + s.size() + " trades booked by it");
         if (node != null) {
-            OrdinalSet members = book.node(node).members();
+            OrdinalSet members = book.members(node);
             int outside = s.andNot(members).size();
             int foreign = members.andNot(s).size();
             if (outside > 0) {
@@ -277,15 +372,15 @@ public final class ScopeResolver {
         String h = words.get(r.word());
         if (h != null) {
             for (String t : List.of(h + "~" + a, h + "~" + r.word() + "-" + a)) {
-                if (book.node(t) != null) {
+                if (book.members(t) != null) {
                     return t;
                 }
             }
             return null;
         }
         List<String> tries = switch (r.word()) {
-            case "BANK" -> book.node("MGMT~BANK") != null || book.hierarchies().isEmpty() ? List.of("MGMT~BANK")
-                    : List.of(book.root(book.hierarchies().get(0)).id());
+            case "BANK" -> book.members("MGMT~BANK") != null || book.hierarchies().isEmpty() ? List.of("MGMT~BANK")
+                    : List.of(book.rootId(book.hierarchies().get(0)));
             case "NODE" -> List.of(r.arg(), a);
             case "LE" -> List.of("LEGAL~" + a, "LEGAL~LE-" + a);
             case "DIV" -> List.of("MGMT~" + a, "MGMT~DIV-" + a);
@@ -294,7 +389,7 @@ public final class ScopeResolver {
             default -> List.of();
         };
         for (String t : tries) {
-            if (book.node(t) != null) {
+            if (book.members(t) != null) {
                 return t;
             }
         }

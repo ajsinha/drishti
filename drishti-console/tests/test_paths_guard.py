@@ -41,8 +41,8 @@ def _roots() -> set[str]:
 
 def _python_tests() -> list[Path]:
     found = list((ROOT / "drishti-console" / "tests").glob("*.py"))
-    found += [p for p in (ROOT / "tools").rglob("test_*.py") if ".venv" not in p.parts and "node_modules" not in p.parts]
-    found += [p for p in (ROOT / "compute").rglob("*.py") if "src/test/python" in p.as_posix() and ".venv" not in p.parts]
+    found += [p for p in (ROOT / "tools").rglob("test_*.py") if ".venv" not in p.parts and "node_modules" not in p.parts]  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
+    found += [p for p in (ROOT / "compute").rglob("*.py") if "src/test/python" in p.as_posix() and ".venv" not in p.parts]  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
     # the guards themselves: their self-tests hold the very forms they refuse
     return [p for p in found if not (p.name.endswith("paths_guard.py") or p.name == "test_no_relative_paths.py")]
 

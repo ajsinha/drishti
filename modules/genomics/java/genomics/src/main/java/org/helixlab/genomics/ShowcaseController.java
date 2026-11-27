@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The showcase's REST API under {@code /api/v1/genomics/} (docs/architecture/GENOMICS_SHOWCASE.md section 9): what the genomics board and
+ * The showcase's REST API under {@code /api/v1/genomics/} (modules/genomics/docs/guide.md section 9): what the genomics board and
  * the protein workbench draw, every figure made here, every answer with its Explain block. A selection of samples travels as
  * {@code cluster=}, {@code box=x0,x1,y0,y1} or {@code samples=} on any call it applies to ({@link Selection}). All calls are GET.
  */

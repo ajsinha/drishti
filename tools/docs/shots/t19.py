@@ -18,7 +18,7 @@ A real cluster: three built servers (a, b, c on 18783 to 18785) and a console on
 cluster (drishti-console/tests/net_stack.py: small synthetic trades split three ways, MX-00003 on c only, the finance demo ticking on b).
 Run it on its own, with the console's address:
 
-    DRISHTI_SHOTS_WORK=~/drishti drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t19 --base http://127.0.0.1:17784
+    DRISHTI_SHOTS_WORK=~/drishti python3 tools/docs/screenshots.py --guide t19 --base http://127.0.0.1:17784
 
 The pictures, in the tutorial's order: Members with the three alive (the table and the hash ring) and the console's servers, the Files tab with gossip.yaml open, a trade only
 c holds opened through a, Explain naming that route, the capability map, Access, Security, and the console's servers after a is stopped (the

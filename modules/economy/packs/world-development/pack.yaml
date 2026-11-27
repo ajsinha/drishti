@@ -15,7 +15,7 @@
 # World development · the economy module's public-sector World Bank pack (docs/guides/WORLD_DATA_GUIDE.md): World Development Indicators by
 # country and year, filled daily by the world-development feed (config/feeds/world-development.yaml) into the worldlake lake.
 pack: world-development
-domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/KERNEL_AND_MODULES.md)
 version: 1.0.0
 code: WDEV             # typed alone, opens this pack's overview
 title: World development
@@ -98,4 +98,3 @@ console:
     - ["WDI WDI-NGA", "Nigeria · a lower-middle-income economy"]
     - ["WDIS WDIS-IND-NY_GDP_MKTP_KD_ZG", "India · real GDP growth by year"]
     - ["WDIS WDIS-BRA-SI_POV_DDAY", "Brazil · poverty headcount by year"]
-  help: config/help.yaml

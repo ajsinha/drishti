@@ -17,5 +17,5 @@ sections:
 - id: source-ici
   title: Source ICI
   pages:
-  - title: 'Source ICI'
-    file: guide.md
+  - title: Source ICI
+    file: ../guides/BANK_DATA_GUIDE.md

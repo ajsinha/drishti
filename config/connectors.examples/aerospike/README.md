@@ -116,4 +116,4 @@ seconds. The trading pack routes `trade` to `trade-endur`: save `trading-store.y
 
 - [The aerospike connector README](../../../plugins/drishti-plugin-aerospike/README.md): layout, loading, TTL retention, sizing, security.
 - [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (copying examples, the trade connectors' names) and [TLS](../../../docs/guides/DATA_GUIDE.md#10-tls-and-the-outbound-proxy).
-- [The demo data](../../../docs/guides/DATA_GUIDE.md#11-the-demo-data) (the samples loaded into every store).
+- [The demo data](../../../docs/guides/BANK_DATA_GUIDE.md#9-the-demo-data) (the samples loaded into every store).

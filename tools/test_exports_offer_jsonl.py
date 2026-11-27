@@ -30,7 +30,7 @@ pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it
 
 ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "kernel/drishti-server" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "server"
-BANKING = ROOT / "modules" / "banking" / "java" / "banking-service" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "banking"   # the banking module's (DOMAIN_MODULES.md)
+BANKING = ROOT / "modules" / "banking" / "java" / "banking-service" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "banking"   # the banking module's (KERNEL_AND_MODULES.md)
 CONSOLE = ROOT / "drishti-console"
 
 

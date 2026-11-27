@@ -16,7 +16,6 @@
 package com.ash.drishti.server.bi.python;
 
 import com.ash.lake.tck.TestRoots;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,13 +64,6 @@ public final class PythonPoolForTests {
         for (String c : new String[] {System.getProperty("drishti.compute.test.python"), System.getenv("DRISHTI_PYTHON")}) {
             if (c != null && !c.isBlank()) {
                 candidates.add(c);
-            }
-        }
-        Path dir = Path.of(TestRoots.module());
-        for (int i = 0; i < 6 && dir != null; i++, dir = dir.getParent()) {
-            Path venv = dir.resolve("drishti-console/.venv/bin/python");
-            if (Files.isExecutable(venv)) {
-                candidates.add(venv.toString());
             }
         }
         candidates.add("python3");

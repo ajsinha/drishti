@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The economy module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 4; DISTRIBUTIONS.md): content only, no code.
+# The economy module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 4; KERNEL_AND_MODULES.md): content only, no code.
 # The distribution files list it by id, and their visibility filter reads this file: its packs, functions, menus and Help.
 format: 1
 id: economy
@@ -182,14 +182,7 @@ docs:
   domains:
   - economy
   guides:
-  - packs/world-economy/guides/world-economy.md
-  - packs/news-and-markets/guides/news-and-markets.md
-  - packs/world-development/guides/world-development.md
-  - packs/central-banks/guides/central-banks.md
-  - packs/national-statistics/guides/national-statistics.md
-  - packs/oecd/guides/oecd.md
-  - packs/official-news/guides/official-news.md
-  - packs/gdelt-events/guides/gdelt-events.md
+  - guides/WORLD_DATA_GUIDE.md
   tutorials:
   - guides/WORLD_DATA_GUIDE.md
 resources:

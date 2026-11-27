@@ -18,7 +18,7 @@ package com.ash.drishti.banking.exposure;
 import org.springframework.test.context.TestPropertySource;
 
 /**
- * Every test of {@link ExposureApiTest} again with the server running Drishti Risk (drishti.distribution=risk, docs/architecture/DISTRIBUTIONS.md): exposure scopes, profiles, contributions and the what-if work
+ * Every test of {@link ExposureApiTest} again with the server running Drishti Risk (drishti.distribution=risk, docs/architecture/KERNEL_AND_MODULES.md): exposure scopes, profiles, contributions and the what-if work
  * under Drishti Risk exactly as on the full product. The test's own packs (the site's drishti.packs.enabled) win over the distribution's; the commands stay Drishti Risk's.
  */
 @TestPropertySource(properties = {"drishti.distribution=risk", "drishti.distributions-dir=../../../../config/distributions"})

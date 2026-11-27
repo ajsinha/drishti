@@ -476,7 +476,7 @@ settings:                               # read as drishti.module.banking.<key> (
   - { key: var.es-confidence, type: number, retired: drishti.var.es-confidence, group: VaR, meaning: "Expected shortfall's confidence" }
   - { key: var.ten-day-method, type: string, retired: drishti.var.ten-day-method, group: VaR, meaning: "10-day VaR when the method is not named: sqrt10 or sum" }
   - { key: var.rank-rule, type: string, retired: drishti.var.rank-rule, group: VaR, meaning: "kth-worst or interpolated" }
-  - { key: var.path, type: string, group: VaR, meaning: "in-tree, or engine: the VaR routes asked of Drishti Risk's market-risk engine through the host (R2)" }
+  - { key: var.route, type: string, group: VaR, meaning: "in-tree, or engine: the VaR routes asked of Drishti Risk's market-risk engine through the host (R2)" }
   - { key: var.threads, type: int, retired: drishti.var.threads, group: VaR, meaning: "Cores the vector sums use (0: every core)" }
   - { key: var.hot-dates, type: int, retired: drishti.var.hot-dates, group: VaR, meaning: "Business dates kept open" }
   - { key: var.root-name, type: string, retired: drishti.var.root-name, group: Hierarchies, meaning: "The top of the VaR tree (every hierarchy's root node)" }
@@ -512,10 +512,11 @@ docs:
   domains:
   - banking
   guides:
-  - packs/trading/guides/trading-products.md
-  - packs/trading/guides/trading.md
-  - packs/market-risk/guides/market-risk.md
-  - packs/counterparty-risk/guides/counterparty-risk.md
+  - guides/BANK_DATA_GUIDE.md
+  - guides/VAR_GUIDE.md
+  - guides/EXPOSURE_GUIDE.md
+  - guides/FRTB_SA_GUIDE.md
+  - guides/SIMM_GUIDE.md
   tutorials:
   - guides/VAR_GUIDE.md
   - guides/EXPOSURE_GUIDE.md

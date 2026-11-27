@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The risk-factor dictionary (docs/plans/CSV_LOADERS.md section 3.1): every factor the sensitivities use, its FRTB and SIMM mapping and
+# The risk-factor dictionary (docs/guides/BANK_DATA_GUIDE.md section 3.1): every factor the sensitivities use, its FRTB and SIMM mapping and
 # the names the source systems give it. Sent on change; the risk-store reads it as a snapshot table (within 10 days, section 18.1).
 format: 1
 kind: risk-factor

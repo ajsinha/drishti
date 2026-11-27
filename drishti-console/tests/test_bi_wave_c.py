@@ -30,7 +30,7 @@ LIBRARY = re.compile(r"vendor/vega\b|vega-embed|vegaEmbed|vega-interpreter|vegaI
                      r"\bB\.vega\b|window\.vega\b|\bvega@\d")
 # the history keeps its record of what was vendored; this file names what it forbids
 HISTORY = {"CHANGELOG.md", "RELEASE_NOTES.md", "drishti-console/tests/test_bi_wave_c.py"}
-SKIP_DIRS = {".git", "node_modules", "target", ".venv", "data", "dist", "__pycache__", ".claude"}
+SKIP_DIRS = {".git", "node_modules", "target", ".venv", "data", "dist", "__pycache__", ".claude"}  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
 TEXT = {".js", ".mjs", ".py", ".html", ".css", ".md", ".yaml", ".yml", ".json", ".java", ".txt", ".sh", ".ps1", ".toml", ".xml", ".properties"}
 
 

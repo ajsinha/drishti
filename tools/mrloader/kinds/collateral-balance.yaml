@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Today's collateral held and posted, per netting set (docs/plans/CSV_LOADERS.md section 3.2): the balance's terms in one file, its
+# Today's collateral held and posted, per netting set (docs/guides/BANK_DATA_GUIDE.md section 3.2): the balance's terms in one file, its
 # holdings in a child file. The totals (held, posted, net) and each holding's value after haircut are computed.
 format: 1
 kind: collateral-balance

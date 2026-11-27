@@ -17,7 +17,7 @@ panel, and the "not active" page of a command that is off. A real scratch server
 (`drishti.py lake demo --only` a few kinds; the command list comes from the shipped packs, not from the data). The development administrator
 turns FRTB off (with a reason) so the administrator's picture shows an off command and the user's does not; it is turned on again at the end.
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide functions
+    python3 tools/docs/screenshots.py --guide functions
     (DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT move the scratch ports)"""
 from __future__ import annotations
 

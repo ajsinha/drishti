@@ -16,7 +16,7 @@
 written to docs/tutorials/img/t32/, with the toy parameter file of the tests installed (round illustrative numbers, never ISDA's). Run it on
 its own (it builds its own lake and starts its own scratch server and console):
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t32
+    python3 tools/docs/screenshots.py --guide t32
 
 The pictures, in the tutorial's order: the netting sets with the installed version, the hand-built examples, a netting set's breakdown,
 the playground comparing a switch, a recipe replayed, and the netting set against the counterparty's call."""

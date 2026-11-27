@@ -54,8 +54,8 @@ import org.springframework.test.web.servlet.MvcResult;
  * them): a locked pool's environment is refused before its requirements are approved, built offline from the shipped wheel once a second person
  * approves, and repeated without a rebuild; the sample engine is run on its pool and refused on one that does not load it; a running
  * request is cancelled from Admin → Compute (once: the second finds nothing); another node's chunk is run for the viewer it names and its cancel
- * reaches the worker; nothing but a node may call the peer endpoints. Needs a Python 3.10+ with pyarrow and venv
- * ({@code -Ddrishti.compute.test.python}, DRISHTI_PYTHON, the console's virtual environment); skipped without one.
+ * reaches the worker; nothing but a node may call the peer endpoints. Needs a Python 3.10+ with pyarrow and pip
+ * ({@code -Ddrishti.compute.test.python}, else DRISHTI_PYTHON, else python3 on the PATH); skipped, saying so, without one.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false"})
 @AutoConfigureMockMvc
@@ -72,13 +72,12 @@ class ComputeWritesApiTest {
     @Autowired ComputeService compute;
 
     static String interpreter() {
-        for (String c : new String[] {System.getProperty("drishti.compute.test.python"), System.getenv("DRISHTI_PYTHON"),
-                Path.of(TestRoots.repo(), "drishti-console", ".venv", "bin", "python").toAbsolutePath().toString()}) {
+        for (String c : new String[] {System.getProperty("drishti.compute.test.python"), System.getenv("DRISHTI_PYTHON"), "python3"}) {
             if (c == null || c.isBlank() || (c.contains("/") && !Files.exists(Path.of(c)))) {
                 continue;
             }
             try {
-                Process p = new ProcessBuilder(c, "-c", "import pyarrow, venv, ensurepip, sys; print('%d.%d' % sys.version_info[:2])").redirectErrorStream(true).start();
+                Process p = new ProcessBuilder(c, "-c", "import pyarrow, pip, sys; print('%d.%d' % sys.version_info[:2])").redirectErrorStream(true).start();
                 String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8).strip();
                 if (p.waitFor(30, java.util.concurrent.TimeUnit.SECONDS) && p.exitValue() == 0 && out.matches("\\d+\\.\\d+")) {
                     version = out;
@@ -149,7 +148,7 @@ class ComputeWritesApiTest {
     }
 
     private static void needPython() {
-        assumeTrue(python != null, "no Python 3.10+ with pyarrow, venv and ensurepip (-Ddrishti.compute.test.python)");
+        assumeTrue(python != null, "no Python 3.10+ with pyarrow and pip: pass -Ddrishti.compute.test.python=<python> or set DRISHTI_PYTHON");
     }
 
     private JsonNode ok(MvcResult r) throws Exception {
@@ -190,14 +189,11 @@ class ComputeWritesApiTest {
         assertThat(id).as("the pool's requirements wait for approval").isNotNull();
         assertThat(mvc.perform(post("/api/v1/approvals/compute/" + id + "/approve").header("X-Drishti-User", "admin-two").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"comment\":\"pure Python, ours\"}")).andReturn().getResponse().getStatus()).isEqualTo(200);
-        JsonNode built = ok(as(post("/api/v1/admin/compute/pools/risk/build"), "admin-one"));
-        assertThat(built.get("reused").asBoolean()).isFalse();
-        assertThat(Files.isDirectory(Path.of(built.get("dir").asText()))).isTrue();
-        assertThat(built.get("log").toString()).contains("built");
-        // again: the same environment, never rebuilt in place
-        JsonNode again = ok(as(post("/api/v1/admin/compute/pools/risk/build"), "admin-one"));
-        assertThat(again.get("reused").asBoolean()).isTrue();
-        assertThat(again.get("id").asText()).isEqualTo(built.get("id").asText());
+        // approved, the build CHECKS the pool's interpreter and installs nothing (owner rule 2026-11-23): the test Python lacks the pool's
+        // pinned requirement, so the build is refused naming it and the pip command the operator may run himself
+        MvcResult checked = as(post("/api/v1/admin/compute/pools/risk/build"), "admin-one");
+        refused(checked, 409, "installs nothing");
+        assertThat(checked.getResponse().getContentAsString()).contains("lacks").contains("pip install");
 
         // the sample engine on its pool: a real worker answers; a pool that does not load it refuses
         JsonNode t = ok(as(post("/api/v1/admin/compute/pools/sample/test"), "admin-one"));

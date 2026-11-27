@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The bank's desks (docs/plans/CSV_LOADERS.md section 3.1): the canonical CSV. The names behind the desk nodes of the management and
+# The bank's desks (docs/guides/BANK_DATA_GUIDE.md section 3.1): the canonical CSV. The names behind the desk nodes of the management and
 # legal trees; a full snapshot every day.
 format: 1
 kind: desk

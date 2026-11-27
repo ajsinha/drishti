@@ -53,13 +53,17 @@ settings:
 - tls.*
 auth: Password log-in (username + password as ${ENV} or file:), mutual TLS (tls.*), DataStax Astra (secure-connect-bundle + token), Amazon Keyspaces SigV4 (sigv4, plug-in jar not shipped).
 licence: Apache Cassandra Java driver 4 (Apache-2.0), bundled; no native library.
-windows: Works the same on Windows (pure Java driver); the loader is `python tools/drishti.py data load --store cassandra` (any system).
+windows: Works the same on Windows (pure Java driver); the loader is `python3.13 tools/drishti.py data load --store cassandra` (any system).
 doc: plugins/drishti-plugin-cassandra/README.md
 ---
 # The cassandra connector
 
 Plugin `cassandra` (`plugins/drishti-plugin-cassandra`): one entity in a few milliseconds, type-ahead from memory and searches over a
-day's promoted columns, from a keyspace that `python tools/drishti.py data load --store cassandra` (or any writer keeping the same layout) fills.
+day's promoted columns, from a keyspace that `python3.13 tools/drishti.py data load --store cassandra` (or any writer keeping the same layout) fills.
+
+## Build and use
+
+A connector file in `config/connectors/` with `plugin: cassandra` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
 
 ## What it reads
 
@@ -179,7 +183,7 @@ Delta connector of that name and serves every system's trades the loader wrote),
 
 1. Run Cassandra: `docker run -d --name cass -p 9042:9042 cassandra:5.0.6` (ScyllaDB: `scylladb/scylla:6.2 --smp 1
    --developer-mode 1`). Wait until `cqlsh` answers.
-2. Load the samples and a small book: `python tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1 --trades 10000
+2. Load the samples and a small book: `python3.13 tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1 --trades 10000
    --days 3`. The last line reads `cassandra: loaded … rows (… days)`.
 3. `cp config/connectors.examples/cassandra/*.yaml config/connectors/`.
 4. Check: Admin → Connectors → `trade-endur` → **Test connection** lists the days and their rows; Admin → Health says `UP`.
@@ -210,7 +214,7 @@ found after a colon. With nothing added, the node answers CQL: look at `local-da
 | `… : TLS to <host:port> failed (…): the node does not speak TLS on this port …` | `tls.enabled: true` against a plain port | `tls.enabled: false`, or the TLS port |
 | `… : TLS: the node at <host:port> did not answer CQL in plain text …, so it requires TLS` | no TLS against a node that demands it | `tls.enabled: true` with `tls.ca-file` (and the client certificate when asked) |
 | `DOWN: keyspace … does not exist` | the keyspace is named after the domain unless `keyspace` is set | set `keyspace`, or load it |
-| `DOWN: keyspace … has no kind_days table` | nothing was loaded in the connector's layout | `python tools/drishti.py data load --store cassandra --create`, or run the printed CQL |
+| `DOWN: keyspace … has no kind_days table` | nothing was loaded in the connector's layout | `python3.13 tools/drishti.py data load --store cassandra --create`, or run the printed CQL |
 | `UP (2 of 3 nodes up)` | a node is down; reads go to the replicas left | the driver reconnects by itself |
 | a new day does not appear | the catalogue is re-read every `refresh-seconds`; or the load failed before `kind_days` was written | wait, or Admin → Caches → purge; check the loader's last line |
 | searches say `partial: true` | a field the query reads is not a promoted column | add it to `layout.<kind>.columns` and reload with `--create` |
@@ -248,28 +252,21 @@ scans a table: no `ALLOW FILTERING`, no token range.
 
 ## Loading
 
-`python tools/drishti.py data load --store cassandra` loads the
+`python3.13 tools/drishti.py data load --store cassandra` loads the
 packs' sample data and optionally a generated book through `CassandraLoader` (in the plugin):
 
-Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-python tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1                   # the samples x 10 days
-python tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --trades 10000 --days 3               # and a book, streamed
-python tools/drishti.py data load --store cassandra cass1:9042,cass2:9042 dc-east --ttl-days 90 --setting tls.enabled=true \
+python3.13 tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1                   # the samples x 10 days
+python3.13 tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --trades 10000 --days 3               # and a book, streamed
+python3.13 tools/drishti.py data load --store cassandra cass1:9042,cass2:9042 dc-east --ttl-days 90 --setting tls.enabled=true \
     --setting tls.ca-file=/etc/drishti/tls/ca.pem --username loader --password "$PW"            # a secured cluster
 ```
 
 The loader's heap is `DRISHTI_LOADER_HEAP` (default `4g`). The last line names the rows, the days and the rate
 (`cassandra: loaded 30,000 rows (3 days) in 49.7 s (604 rows/s)`).
 
-- **Input:** loader rows, one JSON line per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`, as
-  `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write them (tars of `<kind>/<YYYY-MM-DD>/rows.jsonl`). A folder
-  argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order.
-- **Business dates come from outside the row**, by the load rules every loader shares
-  ([DATA_LAKE_GUIDE.md, section 5](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): a tar's
-  folder date; for a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-`), `--as-of`, else its `.ready` file, else the date in its
-  name, else the business today. A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar.
+- **Input and business dates:** as for every loader ([DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares)).
 - **A day appears whole or not at all.** Each day of the input gets a new generation. The day's rows go to the new generation's
   partitions, then its `entity_days` rows, and only when every write has succeeded the `kind_days` row naming the new generation.
   Readers switch at that moment. The old generation's partitions are then deleted (`buckets` whole-partition deletes). If a write fails,

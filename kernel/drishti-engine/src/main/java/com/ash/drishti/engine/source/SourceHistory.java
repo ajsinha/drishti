@@ -212,7 +212,9 @@ public final class SourceHistory {
      */
     public static boolean connectionFailed(Throwable e) {
         for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause()) {
-            if (t instanceof java.net.ConnectException || t instanceof java.net.NoRouteToHostException
+            // a connect that timed out never reached the peer: on Windows (its firewall drops a call to a closed port, no refusal) it
+            // is how a peer that is down looks, the same as a refusal on Linux
+            if (t instanceof java.net.http.HttpConnectTimeoutException || t instanceof java.net.ConnectException || t instanceof java.net.NoRouteToHostException
                     || t instanceof java.net.PortUnreachableException || t instanceof java.io.EOFException
                     || t instanceof java.nio.channels.ClosedChannelException) {
                 return true;
@@ -228,8 +230,20 @@ public final class SourceHistory {
 
     /** Whether a read failed because it ran out of time (an HTTP time-out of a peer, a {@code TimeoutException}). */
     static boolean timedOut(Throwable e) {
+        if (connectTimedOut(e)) {
+            return false;                       // no connection was made: the peer cannot be reached (connectionFailed), not a slow answer
+        }
         for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause()) {
             if (t instanceof java.util.concurrent.TimeoutException || t.getClass().getSimpleName().endsWith("TimeoutException")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean connectTimedOut(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause() == t ? null : t.getCause()) {
+            if (t instanceof java.net.http.HttpConnectTimeoutException) {
                 return true;
             }
         }

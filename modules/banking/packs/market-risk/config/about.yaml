@@ -42,7 +42,7 @@ kinds:
     about: >-
       ${$.NAME} is a ${lower($.TYPE)} stress scenario of ${lower($.SEVERITY)} severity: ${size($.SHOCKS)} risk factors are shocked
       together and the portfolio is revalued.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       TYPE:
         term: "Scenario type"
@@ -71,7 +71,7 @@ kinds:
     about: >-
       Under "${$.SCENARIO_NAME}" the bank's desks together change in value by ${fmt($.PNL, 'compact')} USD, worked out by adding the
       ${$.DESK_COUNT} desks' stress results (not stored); ${$.BREACHES} desks lose more than their limit.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       PNL: { term: "Bank stress P&L", means: "The sum of the desks' P&L under the scenario.", unit: "USD", sign: "Negative is a loss." }
       DESK_COUNT: { term: "Desks", means: "The desks with a stress result under the scenario." }
@@ -83,7 +83,7 @@ kinds:
     about: >-
       ${$.RESULT_ID}: under "${$.SCENARIO_NAME}" the portfolio changes in value by ${fmt($.PNL, 'compact')} USD against a limit of
       ${fmt($.LIMIT, 'compact')}.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       SCENARIO_NAME:
         term: "Scenario"
@@ -110,7 +110,7 @@ kinds:
     about: >-
       ${$.RESULT_ID} is the FRTB standardised sensitivities-based method for ${$.BOOK}: delta ${fmt($.DELTA_CHARGE, 'compact')},
       vega ${fmt($.VEGA_CHARGE, 'compact')} and curvature ${fmt($.CURVATURE_CHARGE, 'compact')} add up to ${fmt($.TOTAL, 'compact')} USD.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       BOOK:
         term: "Book"
@@ -162,7 +162,7 @@ kinds:
     about: >-
       On ${$.DATE} ${$.BOOK} made ${fmt($.ACTUAL, 'signed0')} USD. Its risk factors explain ${fmt($.EXPLAINED, 'signed0')};
       ${fmt($.UNEXPLAINED, 'signed0')} is unexplained.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       DATE:
         term: "Business date"
@@ -197,7 +197,7 @@ kinds:
     about: >-
       The risk engine values ${$.TRADE_ID} (${$.PRODUCT_TYPE}, booked in ${$.SOURCE_SYSTEM}) at ${fmt($.MTM, 'signed0')} USD on ${$.VALUATION_DATE};
       it moved ${fmt($.PNL_1D, 'signed0')} USD over the last day.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       MTM: { use: "MTM" }
   position:
@@ -205,7 +205,7 @@ kinds:
     about: >-
       ${$.POSITION_ID} holds ${fmt($.QUANTITY, 'compact')} of ${$.INSTRUMENT} in ${$.TT_BOOK}: ${$.DIRECTION}, built from ${$.TRADE_COUNT} trade(s).
       Drishti derives it from the trades by the ${$.POSITION_RULE} rule; its VaR is the engine's, computed as the page opens.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       TRADES.DIRECTION: { term: "Trade direction", means: "LONG for a buy, SHORT for a sell: the sign of the trade's quantity." }
       VAR_ENGINE.TRADES.DIRECTION: { term: "Trade direction", means: "LONG for a buy, SHORT for a sell: the sign of the trade's quantity." }
@@ -253,7 +253,7 @@ kinds:
     about: >-
       ${$.TRADE_ID}'s P&L under each of the ${size($.PNL)} scenario days of ${$.SCENARIO_SET_ID} on ${$.BUSINESS_DATE}, in USD: the grain every
       VaR is summed from. The trade is ${$.DIRECTION} in ${$.TT_BOOK}; Drishti derives its position from it.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       PNL: { term: "P&L vector", means: "The trade's P&L under each historical scenario day, oldest first: index i is the scenario set's day i.", unit: "USD", sign: "Positive is a gain." }
       SECURITY_ID: { term: "Security", means: "The security or exchange contract the trade is in (securities and listed products): Drishti keys the trade's position by book and security." }
@@ -267,7 +267,7 @@ kinds:
       ${$.TRADE_ID}'s value under each of the ${size($.SCENARIO_PV)} scenario days of ${$.SCENARIO_SET_ID} on ${$.BUSINESS_DATE}, in its own
       currency ${$.CURRENCY}, beside its base PV of the same run: Drishti turns them into the trade's USD P&L when it loads the date
       (P&L = PV under the scenario x the scenario's FX - base PV x today's FX), and into any reporting currency when asked.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       POSITION_ID: { term: "Position", means: "The position these scenario PVs belong to, at position grain." }
       SCENARIO_SET_ID: { term: "Scenario set", means: "The scenario set whose days order SCENARIO_PV: index i is its day i." }
@@ -284,7 +284,7 @@ kinds:
       ${$.CURRENCY} against USD under each of the ${size($.RATES)} scenario days of ${$.SCENARIO_SET_ID} on ${$.BUSINESS_DATE}, and today's
       rate ${$.RATE} (USD per 1 ${$.CURRENCY}): the rates the VaR engine converts scenario PVs and reporting currencies with. Without them
       Drishti derives the rates from the FX history (today's rate moved by each scenario day's 1-day move).
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       QUOTE: { term: "Quote", means: "How the rates are quoted, in words: always USD per one unit of the currency." }
       BUSINESS_DATE: { term: "Business date", means: "The close of business the rates belong to: the date of the scenario PVs they convert." }
@@ -298,7 +298,7 @@ kinds:
     about: >-
       ${$.SCENARIO_SET_ID} on ${$.BUSINESS_DATE}: ${$.SCENARIO_COUNT} historical scenario days from ${$.WINDOW_START} to ${$.WINDOW_END}, each
       day's market move applied to the business date's market, ${$.HORIZON_DAYS}-day horizon.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       BUSINESS_DATE: { term: "Business date", means: "The close of business whose vectors the set orders." }
       SCENARIO_COUNT: { term: "Scenarios", means: "N, the number of scenario days: the length of SCENARIO_DATES and of every vector of the date." }
@@ -313,7 +313,7 @@ kinds:
     about: >-
       The node ${$.NODE_ID} of the ${$.HIERARCHY} hierarchy may take a 1-day 99% VaR of ${fmt($.LIMIT_VAR, 'compact')} USD (from
       ${$.VALID_FROM}). A node without such a row has no limit.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       HIERARCHY: { term: "Hierarchy", means: "The hierarchy the node is in, each built from the trades' promoted columns: MGMT (DIVISION > DESK > TT_BOOK), LEGAL (LEGAL_ENTITY > DESK > TT_BOOK) or LL (LIMIT_LETTER > DESK)." }
       NODE_ID: { term: "Node", means: "The node's id as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES." }
@@ -324,7 +324,7 @@ kinds:
       On ${$.BUSINESS_DATE} the desk ${$.DESK_ID} made an actual P&L of ${fmt($.ACTUAL_PNL, 'compact')} ${$.CURRENCY} and a hypothetical
       P&L of ${fmt($.HYPOTHETICAL_PNL, 'compact')} ${$.CURRENCY}. Regulatory backtesting compares each with the official VaR of the day
       before; the VaR engine itself never reads them.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       ACTUAL_PNL: { term: "Actual P&L", means: "The desk's P&L of the day from the bank's books, without fees, commissions, reserves and net interest income.", unit: "the row's currency" }
       HYPOTHETICAL_PNL: { term: "Hypothetical P&L", means: "Yesterday's positions revalued at today's market: the P&L had nothing been traded.", unit: "the row's currency" }
@@ -335,7 +335,7 @@ kinds:
       The sensitivities of ${$.POSITION_ID} on ${$.BUSINESS_DATE} from ${$.SOURCE_SYSTEM} (batch ${$.BATCH_ID}): how much it gains or
       loses when each standard risk factor moves one small step. FRTB-SA weighs and adds them up for any scope (FRSA); the bank's pricing
       systems deliver them, Drishti never computes them.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       SENSITIVITIES: { term: "Sensitivities", means: "One element per risk factor and measure: DV01, CS01, IE01 per basis point, DELTA per 1% move, VEGA per volatility point, CURVATURE_UP and CURVATURE_DOWN for the regulatory shock, or GAMMA." }
       GRAIN: { term: "Grain", means: "Whether the record is a position (as the pack's position rules derive it) or a trade." }
@@ -345,7 +345,7 @@ kinds:
     about: >-
       ${$.RISK_FACTOR}: a ${$.RISK_CLASS} factor of type ${$.FACTOR_TYPE}, in FRTB bucket ${$.FRTB_BUCKET} and SIMM bucket
       ${$.SIMM_BUCKET}. Every sensitivity names its factor by this standard name; the source systems' own names map to it.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       FRTB_BUCKET: { term: "FRTB bucket", means: "Where the factor falls in the Basel grid (MAR21): a currency for GIRR and FX, a number for credit, equity and commodity." }
       SOURCE_NAMES: { term: "Source names", means: "The names the source systems give the factor; each maps to exactly one factor, an unknown name is refused, never guessed." }
@@ -355,7 +355,7 @@ kinds:
     about: >-
       The node ${$.NODE_ID} of the ${$.HIERARCHY} hierarchy: today's portfolio under each day's market moves from ${$.FIRST_DAY} to
       ${$.LAST_DAY}, ${$.DAY_COUNT} days. The stress window selection values every 250-day window of it as a stressed VaR.
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       PNL: { term: "P&L by day", means: "Today's portfolio at the node under each historical day's market moves, gains positive.", unit: "USD" }
       DAY_COUNT: { term: "Days", means: "How many business days the history holds." }
@@ -366,7 +366,7 @@ kinds:
       ${$.NAME} is a ${$.TYPE} system basket owned by ${$.OWNER}, kept in Drishti's basket store (version ${$.VERSION}). Its positions, VaR,
       ES, contributions and VaR limit (its var-limit row of hierarchy PORTFOLIO) are the engine's, computed as the page opens (PORT
       ${$.PORTFOLIO_ID} in the VaR explorer).
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       TYPE:
         term: "System basket type"
@@ -400,7 +400,7 @@ kinds:
       ${$.LABEL} on ${$.BUSINESS_DATE}: a 1-day VaR of ${fmt($.VAR, 'compact')} USD at ${$.CONFIDENCE} confidence and an expected
       shortfall of ${fmt($.ES, 'compact')} USD, computed when asked by the server's VaR engine from every trade's P&L vector, as you see
       them (VAR ${$.CANONICAL} opens the same answer in the explorer).
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       SCOPE: { term: "Scope", means: "The set of trades asked about, in the scope grammar: BANK, DESK:RATES, POS:<id>, PORT:<id>, BANK - DESK:CREDIT." }
       VAR: { use: "var99" }
@@ -417,7 +417,7 @@ kinds:
       ${$.NODE_NAME} (${$.LEVEL}, ${$.HIERARCHY}) on ${$.BUSINESS_DATE}: the official end-of-day 1-day VaR of ${fmt($.VAR, 'compact')} USD
       and expected shortfall of ${fmt($.ES, 'compact')} USD, result version ${$.RESULT_VERSION}, as the server captured and published it
       (read only; VAR NODE:${$.NODE_ID} opens the explorer at the node).
-    guide: market-risk
+    guide: docs-guides-var-guide
     glossary:
       NODE_ID: { term: "Hierarchy node", means: "The node of the MGMT or LEGAL hierarchy the row is for." }
       VAR: { use: "var99" }
@@ -427,3 +427,87 @@ kinds:
       LIMIT_USE: { term: "Limit use", means: "The VaR over the node's VaR limit." }
       EXCEPTIONS_250: { term: "Backtest exceptions", means: "Days in the official history (up to 250) whose loss exceeded the VaR of the day before." }
       TRAFFIC_LIGHT: { term: "Traffic light", means: "The Basel backtesting zone: green, amber or red." }
+intro:
+  generator: tools/packgen/banking/make_docs.py
+  sources:
+  - name: Synthetic sample data (tools/packgen/banking)
+    licence: Proprietary (part of Drishti); fictitious names and figures
+    internal-only: false
+    used-for: every document in samples/ and the demo lake
+  fields:
+    stress-scenario:
+      SHOCKS: The shocks applied, by risk factor
+      HORIZON: Horizon of the scenario
+    stress-result:
+      BY_BOOK: Stress P&L by book
+      DESK: The desk's id
+    frtb-sensitivity:
+      SENSITIVITIES: Sensitivities by risk factor
+      BY_CLASS: Capital by risk class
+      APPROACH: The FRTB approach, e.g. standardised (SBM)
+    pnl-explain:
+      ATTRIBUTION: P&L by risk factor
+      EXPLAIN_STEPS: The explain steps in order
+      BOOK: The book's id
+    trade-valuation:
+      TRADE_ID: The trade valued (trading pack)
+      PORTFOLIO: The book's id
+      DESK: The desk's id
+      COUNTERPARTY: The counterparty's id
+      NETTING_SET: The netting set's id
+      TRADER_ID: The trader's id
+      BUY_SELL_CODE: B or S
+      MTM_CURRENCY: Currency of the mark-to-market
+      TRADE_DATE: The trade's trade date
+    position:
+      _: |-
+        A position Drishti derives from the trades when it loads a date, by the pack's positions: rules (docs/guides/VAR_GUIDE.md section 15.6): served from the VaR engine by the var-positions connector, never stored
+      POSITION_ID: |-
+        POS-<book>~<security> for securities and listed products (fungible: the trades net), POS-<book>~<trade> for an OTC trade
+      POSITION_RULE: 'securities, listed or otc: the rule that keyed it'
+      DIRECTION: 'LONG, SHORT or FLAT: the sign of the net quantity'
+      QUANTITY: The signed sum of the trades' quantities (a buy adds, a sell takes away)
+      TRADE_IDS: The trades in the position (each links to the trade)
+      TRADES: Each trade's signed quantity, direction, PV, product and counterparty
+    system-basket:
+      _: |-
+        A system basket: one of the bank's own baskets (PORT <id>), kept in Drishti's basket store, never read from data (docs/guides/VAR_GUIDE.md section 5.7): a hierarchy node, a rule over the positions' columns, or a basket of positions and trades; served by the var-system-baskets connector. System baskets may overlap; their VaR is computed when asked
+      TYPE: HIERARCHY, RULE or BASKET
+      DEFINITION: NODE (a hierarchy node), RULE (a condition) or MEMBERS (positions and trades)
+      VALID_TO: |-
+        The last business date it applies to (set when it is retired); its VaR limit is a var-limit row (HIERARCHY PORTFOLIO)
+    pnl-vector:
+      _: |-
+        One position's or trade's P&L under each scenario day of the window, in USD: the grain every VaR is summed from, with the terms the server derives its position from
+      VECTOR_ID: PNL-<trade or position>-HS-509 (PV- also read)
+      LIMIT_LETTER: |-
+        The limit letter the trade's VaR limit is granted under: the hierarchy LL, LIMIT_LETTER > DESK, is built from it
+      SECURITY_ID: |-
+        The security or exchange contract of a securities or listed trade (the demo's are synthetic)
+      TRADE_STATUS: 'The trade''s status: NEW, VALIDATED and AMENDED count on the date'
+      PNL: |-
+        One value per scenario, oldest first, stored as a list<double> column (out of the document)
+    scenario-set:
+      _: |-
+        The scenario days of a business date: HS-509, historical simulation over the window's business days
+      SCENARIO_DATES: 'The scenario days, oldest first: index i of every vector is day i'
+    var-limit:
+      _: |-
+        A node's 1-day 99% VaR limit by hierarchy and node id, in USD: the limit letters' (LL) and the MGMT and LEGAL nodes' own
+      NODE_ID: 'The node, as the engine builds it: LL~LL-0003, LL~LL-0003/DESK-RATES, MGMT~DESK-RATES'
+      LIMIT_VAR: The limit (USD); a node without a row has none
+  sections:
+    What it is: |-
+      Market-risk results over the trading pack's trades: stress scenarios and their results, FRTB standardised sensitivities, P&L explain and
+      trade valuations (mark-to-market, P&L and sensitivities per trade), and the **VaR engine's inputs**: one P&L vector
+      per live position or trade over the window's historical scenario days, the scenario set and the VaR limits of the hierarchies' nodes and of the system
+      baskets (`var-limit`). The system baskets themselves (`PORT <id>`: a hierarchy node, a rule or a basket) are kept in Drishti's basket
+      store, not data: the demo's are this pack's seed, `seeds/system-baskets.yaml`, imported once at a demo's first start
+      ([VAR_GUIDE.md section 5.7](../../../../docs/guides/VAR_GUIDE.md#57-system-baskets)). The hierarchies themselves are configured in this pack's `hierarchies:` block (any
+      number): MGMT (`DIVISION > DESK > TT_BOOK`), LEGAL (`LEGAL_ENTITY > DESK > TT_BOOK`) and the limit letters LL (`LIMIT_LETTER > DESK`),
+      each built by the server from the trades' promoted columns ([VAR_GUIDE.md section 15.14](../../../../docs/guides/VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)). Value at risk is never stored: the VaR explorer (`VAR DESK DESK-RATES <GO>`,
+      [VAR_GUIDE.md section 3](../../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the system basket
+      and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
+      are the engine's end-of-day captures. Positions are Drishti's: derived from the trades by this pack's `positions:` rules (securities by
+      book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR_GUIDE.md Part II](../../../../docs/guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
+      There is no stored `var` (VAR-<desk>) or `var-node` kind: `VAR VAR-COMM` opens the explorer at `DESK:COMM`.

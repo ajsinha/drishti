@@ -527,7 +527,7 @@ public final class PackReloader implements AutoCloseable {
             Path f = p.resolve(String.valueOf(rel));
             if (Files.isRegularFile(f)) {
                 try {
-                    yaml.readTree(f.toFile());
+                    yaml.readTree(java.nio.file.Files.readAllBytes(f));
                 } catch (IOException e) {
                     throw new IllegalStateException(p.dir().relativize(f) + " is not valid YAML: " + firstLine(e.getMessage()));
                 }
@@ -943,12 +943,27 @@ public final class PackReloader implements AutoCloseable {
         return out;
     }
 
+    /**
+     * A file or folder no pack change is made of: under {@code .git} or {@code __pycache__} (Python writes the latter when a pack's script
+     * runs). Matched by path element, never by a "/" in the text: on Windows the separator is "\\" and a text match let every run of a
+     * pack script look like an edit of the pack.
+     */
+    static boolean ignored(Path relative) {
+        for (Path e : relative) {
+            String n = e.toString();
+            if (n.equals(".git") || n.equals("__pycache__")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static String fingerprint(Path pack) {
         try {
             MessageDigest md = Hashes.digest("SHA-1");
             int[] count = {0};
             try (Stream<Path> s = Files.walk(pack, 8)) {
-                s.filter(p -> !p.toString().contains("/.git/") && !p.toString().contains("/__pycache__/")).sorted().forEach(p -> {
+                s.filter(p -> !ignored(pack.relativize(p))).sorted().forEach(p -> {
                     if (++count[0] > MAX_FILES) {
                         return;
                     }

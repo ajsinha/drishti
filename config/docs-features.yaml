@@ -12,41 +12,42 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The documentation's feature register (docs/architecture/DOCS_PLAN.md section 5): every major feature of the product with its ONE guide
+# The documentation's feature register (docs/architecture/TEST_HARNESS.md section 10): every major feature of the product with its ONE guide
 # and its ONE tutorial (paths under docs/), its domain module (core, banking, capitalmarkets, economy), the lenses whose Help shows it
 # (all: every lens) and the line budgets of both. drishti-console/tests/test_docs_gates.py holds the files to it:
 #   - every guide and tutorial named here exists, and every guide under docs/guides/ and tutorial under docs/tutorials/ is named here
 #     once (or is a reference: references:);
+#   - a tutorial may be split into focused parts: `tutorial-parts:` lists the further files (each one task of 15 to 30 minutes); the budget is of all of them;
 #   - a feature whose guide or tutorial is not written yet says so with `guide: after <release>` / `tutorial: after <release>`;
 #   - a page over its budget by more than 10% is reported (a warning: the budgets are targets the rewrite works toward).
 # A feature's Help rows are help.yaml's (or its module's help.yaml); `domain:` here and on the Help row agree.
 
 features:
   # Start and analyse (core)
-  - { id: F1, name: Find anything, domain: core, lenses: all, guide: guides/USER_GUIDE.md, budget: 1200, tutorial: tutorials/01-first-15-minutes.md, tutorial-budget: 600 }
+  - { id: F1, name: Find anything, domain: core, lenses: all, guide: guides/USER_GUIDE.md, budget: 1200, tutorial: tutorials/01-first-15-minutes.md, tutorial-parts: [tutorials/02-look-up-anything.md, tutorials/03-query-by-form.md, tutorials/04-share-and-collaborate.md, tutorials/05-an-entity-over-time.md], tutorial-budget: 1400 }
   - { id: F2, name: "Business intelligence: pivot, tables, reports, Notebook, groupings", domain: core, lenses: all, guide: guides/bi/README.md, budget: 13000, tutorial: none }
-  - { id: F5, name: AI assistant, domain: core, lenses: all, guide: guides/AI_GUIDE.md, budget: 700, tutorial: tutorials/10-ai-assistant.md, tutorial-budget: 400 }
-  - { id: F6, name: Corrections and approvals, domain: core, lenses: all, guide: guides/APPROVALS_GUIDE.md, budget: 600, tutorial: tutorials/11-correct-and-approve.md, tutorial-budget: 300 }
+  - { id: F5, name: AI assistant, domain: core, lenses: all, guide: guides/ADMIN_GUIDE.md, budget: 700, tutorial: tutorials/10-ai-assistant.md, tutorial-budget: 400 }
+  - { id: F6, name: Corrections and approvals, domain: core, lenses: all, guide: guides/ADMIN_GUIDE.md, budget: 600, tutorial: tutorials/11-correct-and-approve.md, tutorial-budget: 300 }
   # Risk (the banking module)
   - { id: R1, name: Value at risk, domain: banking, lenses: [risk, trading], guide: guides/VAR_GUIDE.md, budget: 6500, tutorial: none }
   - { id: R1R, name: Regulatory VaR reporting, domain: banking, lenses: [risk], guide: guides/REGULATORY_VAR_REPORTING.md, budget: 850, tutorial: none }
   - { id: R2, name: Counterparty exposure, domain: banking, lenses: [risk], guide: guides/EXPOSURE_GUIDE.md, budget: 2300, tutorial: none }
   - { id: R3, name: FRTB-SA, domain: banking, lenses: [risk], guide: guides/FRTB_SA_GUIDE.md, budget: 800, tutorial: none }
   - { id: R4, name: SIMM, domain: banking, lenses: [risk], guide: guides/SIMM_GUIDE.md, budget: 800, tutorial: none }
-  - { id: R6, name: "The bank's data", domain: banking, lenses: [risk, trading, market], guide: guides/PVF_LOADING.md, budget: 1200, tutorial: tutorials/12-a-day-of-bank-data.md, tutorial-budget: 400 }
+  - { id: R6, name: "The bank's data", domain: banking, lenses: [risk, trading, market], guide: guides/BANK_DATA_GUIDE.md, budget: 1200, tutorial: none }
   # World and public data
   - { id: W1, name: "World and public data", domain: capitalmarkets, lenses: [world], guide: guides/WORLD_DATA_GUIDE.md, budget: 3500, tutorial: none }
   # Data in and out, build (core)
   - { id: B1, name: Connect, domain: core, lenses: all, guide: guides/DATA_GUIDE.md, budget: 1000, tutorial: tutorials/15-connect-your-data.md, tutorial-budget: 300 }
-  - { id: B1b, name: Data lake and data load, domain: core, lenses: all, guide: guides/DATA_LAKE_GUIDE.md, budget: 1100, tutorial: tutorials/16-load-your-own-data-into-a-new-lake.md, tutorial-budget: 500 }
-  - { id: B3, name: Packs and screens, domain: core, lenses: all, guide: guides/BUILD_GUIDE.md, budget: 2000, tutorial: tutorials/19-build-a-pack-and-a-screen.md, tutorial-budget: 700 }
-  - { id: B4, name: Data out, domain: core, lenses: all, guide: guides/FLIGHT_GUIDE.md, budget: 900, tutorial: tutorials/17-data-out-with-arrow-flight.md, tutorial-budget: 300 }
-  - { id: B5, name: Embed, domain: core, lenses: all, guide: guides/EMBED_GUIDE.md, budget: 800, tutorial: tutorials/20-embed-drishti.md, tutorial-budget: 300 }
-  - { id: B7, name: "Live results and blotters", domain: core, lenses: all, guide: guides/LIVE_RESULTS_GUIDE.md, budget: 400, tutorial: none }
+  - { id: B1b, name: Data lake and data load, domain: core, lenses: all, guide: guides/DATA_LAKE_GUIDE.md, budget: 1100, tutorial: tutorials/16-load-your-own-data-into-a-new-lake.md, tutorial-parts: [tutorials/13-one-file-per-lake.md, tutorials/14-load-files-with-the-data-inbox.md, tutorials/18-news-held-in-memory.md, tutorials/23-the-risk-lake-on-iceberg.md], tutorial-budget: 1500 }
+  - { id: B3, name: Packs and screens, domain: core, lenses: all, guide: guides/BUILD_GUIDE.md, budget: 2000, tutorial: tutorials/19-build-a-pack-and-a-screen.md, tutorial-parts: [tutorials/24-customize-a-live-page.md, tutorials/25-computed-panels.md], tutorial-budget: 1200 }
+  - { id: B4, name: Data out, domain: core, lenses: all, guide: guides/DATA_GUIDE.md, budget: 900, tutorial: tutorials/17-data-out-with-arrow-flight.md, tutorial-budget: 300 }
+  - { id: B5, name: Embed, domain: core, lenses: all, guide: guides/INTEGRATION_GUIDE.md, budget: 800, tutorial: tutorials/20-embed-drishti.md, tutorial-budget: 300 }
+  - { id: B7, name: "Live results and blotters", domain: core, lenses: all, guide: guides/USER_GUIDE.md, budget: 400, tutorial: none }
   - { id: B6, name: Extend, domain: core, lenses: all, guide: guides/DEVELOPER_GUIDE.md, budget: 1200, tutorial: after 2.9.11.i }
   # Operate (core, administrators)
-  - { id: O1, name: Install and operate, domain: core, lenses: all, guide: guides/OPERATIONS_GUIDE.md, budget: 2500, tutorial: tutorials/21-run-it-in-production.md, tutorial-budget: 400 }
-  - { id: O2, name: Clusters and scale, domain: core, lenses: all, guide: guides/CLUSTER_GUIDE.md, budget: 1500, tutorial: tutorials/22-a-cluster-of-three.md, tutorial-budget: 400 }
+  - { id: O1, name: Install and operate, domain: core, lenses: all, guide: guides/OPERATIONS_GUIDE.md, budget: 2500, tutorial: none }
+  - { id: O2, name: Clusters and scale, domain: core, lenses: all, guide: guides/CLUSTER_GUIDE.md, budget: 1500, tutorial: tutorials/22-a-cluster-of-three.md, tutorial-budget: 450 }
   - { id: O3, name: "People, access and editions", domain: core, lenses: all, guide: guides/ADMIN_GUIDE.md, budget: 1200, tutorial: after 2.9.11.j }
 
 # The references (one home each, mostly generated) and the guide sub-pages that are not features of their own.
@@ -58,7 +59,6 @@ references:
   - guides/COMMAND_CATALOG.md
   - guides/FUNCTIONS.md
   - guides/RACHANA_REFERENCE.md
-  - guides/FLIGHT_GUIDE.md
   - guides/WORLD_DATA_GUIDE.md          # folds into the world data guide (W1) when it is written
   - guides/API_REFERENCE.md
   - guides/IDE_GUIDE.md             # IntelliJ IDEA, PyCharm and VS Code: the one home of every IDE step

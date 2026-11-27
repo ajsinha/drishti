@@ -15,7 +15,7 @@
 server holds in memory only, drawn from GET /api/v1/admin/lakes/memory; nothing when the server has no memory store; and
 drishti.py lake memory's text.
 
-    drishti-console/.venv/bin/python -m pytest drishti-console/tests/test_admin_lake_memory.py -q
+    python3 -m pytest drishti-console/tests/test_admin_lake_memory.py -q
 """
 import importlib.util
 from pathlib import Path

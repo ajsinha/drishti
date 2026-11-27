@@ -707,7 +707,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                     continue;
                 }
                 try {
-                    Manifest man = JSON.readValue(m.toFile(), Manifest.class);
+                    Manifest man = JSON.readValue(java.nio.file.Files.readAllBytes(m), Manifest.class);
                     if (!want.equals(man.rowKeys())) {
                         continue;                                 // built by other definitions: built again
                     }

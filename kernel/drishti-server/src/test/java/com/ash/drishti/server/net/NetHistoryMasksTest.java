@@ -41,7 +41,7 @@ class NetHistoryMasksTest {
     static NetNodes cluster;
     /** The finance lake's override of a node holding the test lake (its desk domain), and of a node holding none. */
     static void lake(NetNodes cluster, String node, Object root) {
-        cluster.connector(node, "finance-lake", "settings:", "  root: \"" + root + "\"", "  domain: desk");
+        cluster.connector(node, "finance-lake", "settings:", "  root: " + NetNodes.yaml(root), "  domain: desk");
     }
 
     static final String TEST_LAKE = "../../plugins/drishti-plugin-delta/src/test/resources/lake";

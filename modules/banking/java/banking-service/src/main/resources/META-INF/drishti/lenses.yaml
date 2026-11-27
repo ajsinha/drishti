@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The lenses the banking module ships (docs/architecture/ACCESS_MODEL.md, docs/lenses/): each names the modules it needs (offered only
+# The lenses the banking module ships (docs/architecture/KERNEL_AND_MODULES.md, docs/lenses/): each names the modules it needs (offered only
 # while they are all on) and the functions it bundles (the editions' command lists, config/lenses/<lens>.yaml). A site's
 # config/access/lenses.yaml adds lenses or replaces one of these by its id.
 lenses:

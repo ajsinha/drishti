@@ -30,9 +30,8 @@ Scheduling these tools, lake maintenance, the console pages that run them and si
 All the data in this guide is invented, and every example runs on a fresh clone as it is: the files are the committed test data
 under `data/testdata/` (the ENDUR trade book `data/testdata/trades/endur/`, a day-one snapshot and one file of changes per later day,
 JSON Lines gzipped; trades with legs, cash flows, resets and events in the UPPER_SNAKE attributes of the trading pack, blanks spelt
-four ways: the *shape* of a booking-system export, none of its values), the interpreter is the console's,
-`drishti-console/.venv/bin/python` (the five-step quick start of [data/testdata/README.md](../../data/testdata/README.md) installs it),
-and the commands run from the repository root. Scratch output (`lake`, `lake2`, `data/build/...`) goes into the clone; delete it
+four ways: the *shape* of a booking-system export, none of its values), the interpreter is the one you run Drishti with
+(`python3`; `py` on Windows), its libraries installed by you from the offline wheel pack with the two pip commands (`python tools/drishti.py setup` only checks them), and the commands run from the repository root. Scratch output (`lake`, `lake2`, `data/build/...`) goes into the clone; delete it
 afterwards.
 
 ## Contents
@@ -57,6 +56,7 @@ afterwards.
 17. [Developer tools](#17-developer-tools)
 18. [Recipes](#18-recipes)
 19. [JSON output, exit codes and troubleshooting](#19-json-output-exit-codes-and-troubleshooting)
+20. [The command line: the box in the top bar](#20-the-command-line-the-box-in-the-top-bar)
 
 ## 1. What it is
 
@@ -84,7 +84,7 @@ codes and, where it helps scripts, `--json`.
 | `bi`, `tables` | `bi workspace`, `catalogue`, `expr`, `migrate`, `sql`, `model`, `mq`, `transform`, `item`, `dataset`, `runs`, `statement`; `tables` list, check, preview, lineage, offer, migrate | REST; the Java `tables` tool | [12](#12-bi-and-tables) |
 | `var`, `exposure`, `sens`, `frtb`, `simm`, `play`, `pivot` | the VaR, exposure, FRTB-SA, SIMM and pivot engines | REST | [13](#13-the-risk-engines-var-exposure-sens-frtb-simm-pivot) |
 | `compute`, `contract`, `feed` | reactive connectors; data contracts; the data feeds | REST; `tools/contracts.py`; `tools/feeds/` | [14](#14-compute-contract-and-feed) |
-| `docs` | `docs shots` | `tools/docs/screenshots.py` (Playwright) | [17](#docs-shots-screenshots) |
+| `docs` | `docs generate [--check]`, `docs shots` | `tools/docs/generate.py`; `tools/docs/screenshots.py` (Playwright) | [17](#docs-generate-every-generated-document); [17](#docs-shots-screenshots) |
 | `calc`, `dev` | `calc install` (Calc's Python runtime); `dev bicompute-unit` (the pivot engine without Maven) | `tools/calcruntime.py`; `tools/dev/bicompute_unit.py` | [17](#17-developer-tools) |
 | `completion` | `completion bash`, `zsh`, `powershell` | the command tree | [2](#shell-completion) |
 
@@ -140,7 +140,7 @@ Sutras, the data in a Delta lake partitioned by business date, a checksummed bun
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
+python3 tools/drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     --kind trade --match PRODUCT_TYPE --name my-bank
 ```
 
@@ -180,41 +180,10 @@ root or set `DRISHTI_DELTA_ROOT`, switch the pack on with `DRISHTI_PACKS`". New 
 `data ingest --from new-days --pack data/build/my-bank-1.0.0/pack/my-bank --lake <the lake>`. The details are in
 [section 5](#pack-make-everything-in-one-folder) and [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#812-pack-make-one-folder-to-deploy).
 
-## 1. What it is
-
-`tools/drishti.py` is a thin, honest front door. It adds no new engine: each command either runs something that already
-exists (the Java `sutra` tool in the server's jar, the generators and loaders under `tools/`) or calls a REST endpoint the
-server already has. What it adds is one place to look, one `--help` per command, one set of exit codes and, where it helps
-scripts, `--json`.
-
-| Group | What it is for | Runs | Needs |
-|---|---|---|---|
-| `sutra` | shape, design, lint, test and preview Sutras; `gen` drafts one Sutra per group of JSON Lines | the Java tool in the exec jar; `tools/sutragen.py` | JDK 21+, the exec jar |
-| `pack` | create a pack from JSON Lines, check it in CI, find missing help text, sign and publish it, install one from a registry | `tools/packgen/pack_from_jsonl.py`, the Java tool, `tools/packreg/packreg.py`; REST for `install` | PyYAML; a server for `install` |
-| `data` | write your JSON Lines into a Delta lake or the file store; load the demo data into any store | `tools/ingest_jsonl.py`, `tools/storeload.py` | `deltalake` + `pyarrow` for Delta |
-| `server` | health, and pack list / load / unload / on / off on a running server | REST `/api/v1/admin/...` | a server, an administrator |
-| `admin` | `capacity`: the single-node capacity planner the server serves, evaluated (`--live` with this server's figures), or its formula workbook | REST `/api/v1/admin/capacity`; `tools/capacitycli.py` | a server, an administrator, PyYAML |
-| `design` | the Screen Designer's designs: create, save, check, propose, approve, export, import, bind | REST `/api/v1/builder/designs`, `/api/v1/sutras/proposals` | a server |
-| `docs` | regenerate the guides' screenshots | `tools/docs/screenshots.py` | Playwright |
-
-Concepts used throughout (each is explained in its own guide; this one only links to them):
-
-- A **pack** is a folder: `pack.yaml`, Sutras, samples, tests, help text.
-  [BUILD_GUIDE.md](BUILD_GUIDE.md).
-- A **Sutra** is the YAML that says how one kind of document is shown. [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies).
-- A **design** is a Sutra in progress in the Screen Designer, with its samples and its history of edits.
-  [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench).
-- A **dated store** is where a pack reads documents *per business date*: a Delta lake or the file connector's
-  `<root>/<domain>/<date>/<kind>.jsonl` files.
-- A pack becomes known to a running server in **four ways**: its folder is copied into the packs folder the server watches (`pack deploy`, `pack make`'s `pack/<name>`: the server checks it and loads it by itself, no restart), the server is started with it in `DRISHTI_PACKS` (a restart),
-  an administrator loads it in **Admin → Packs** (at once), or it is installed from a registry.
-  `drishti.py pack new --load`, `server packs load` and `pack install` are the command-line forms of the last two.
-  [BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs](BUILD_GUIDE.md#292-loading-a-pack-while-the-server-runs) has the rules.
-
-Run the program from the repository root, or from anywhere with its path, with the console's interpreter
-(`drishti-console/.venv/bin/python`, which the quick start of [data/testdata/README.md](../../data/testdata/README.md) installs with PyYAML, deltalake
-and pyarrow). Many examples write `python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that does not write a Delta lake;
-`drishti.py` in the output is the same program.
+Run the program from the repository root, or from anywhere with its path, with the Python you run Drishti with (its libraries,
+PyYAML, deltalake and pyarrow among them, installed with the two pip commands; `setup` checks them). Many examples write
+`python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that does not write a Delta lake; `drishti.py` in the
+output is the same program.
 
 **`drishti.py --help`** (captured on a fresh clone)
 
@@ -227,6 +196,10 @@ positional arguments:
   GROUP
     sutra       The Sutra tool: shape, design, lint, test, preview (Java) and
                 gen (one Sutra per group of JSON Lines)
+    module      Modules: pack a folder into a reproducible .dmod, verify a
+                package and run the conformance checks C1-C14, inspect one;
+                run one module alone (the server jar's own packer and
+                verifier)
     pack        Packs: generate from JSON Lines, check in CI, find missing
                 help text, publish and install
     data        Data: ingest your own JSON Lines into a lake or files store;
@@ -236,32 +209,94 @@ positional arguments:
     connector   Connectors over REST (Admin -> Connectors): list, get, apply a
                 YAML file, test, enable, delete (administrator; a token needs
                 packs:admin)
+    net         Drishti*net's config/net/ folder: list, check, add a peer, set
+                a setting (local files); members of a running server
     design      Screen Designer designs over REST: create, edit, check,
-                propose, approve, ship (anyone may design; approving needs an
-                approver)
+                propose, ship (anyone may design; a proposal is decided in
+                approvals)
     docs        Documentation tooling
     doctor      doctor: is this machine ready (Java, jar, Python, directories,
                 ports, and with --server the token)
     bi          Business intelligence (Rupaka) over REST: workspaces and the
                 catalogue, as the token's user sees them (a write needs the
                 bi:write scope)
+    history     history: one entity over business days (a table newest first,
+                changed cells marked *)
+    convert     convert: CSV, a JSON array or a folder of .json files into
+                JSON Lines (one object a line)
+    compute     compute: reactive connectors (ask for a computed kind, cancel,
+                send an event, sandboxes)
+    change      change: write-back (propose a change, submit a form's draft,
+                list, history; decide in approvals)
+    edits       edits: Admin -> Edits (where the edit log lives, lanes,
+                warnings, connector writes)
+    approvals   approvals: the one queue of four-eyes items (list, show,
+                approve, reject, withdraw, ask)
+    var         var: the VaR engine as you see it (show, parts, path, history,
+                tree, status, captures, baskets, what-if)
+    exposure    exposure: the exposure engine as you see it (show, parts,
+                tree, profile, distribution, captures, what-if)
+    sens        sens: position sensitivities summed for any scope, and the
+                factor dictionary
+    frtb        frtb: FRTB-SA of any scope (SBM by class and scenario, DRC,
+                RRAO), its steps and contributions
+    play        play: the playgrounds from the command line (play frtb, play
+                simm; PLAY VAR is drishti.py var playground)
+    simm        simm: ISDA SIMM per netting set (collect and post), the list,
+                the steps, against the counterparty's call
+    pivot       pivot: any table or VaR as a pivot computed by the server:
+                run, estimate, export, saved views
+    admin       Administration over REST (administrators): the capacity
+                planner, the compute engines
+    dataload    dataload status|run|retry|ready|undo: the data inbox (files
+                dropped in <data>/dataload/inbox, loaded into the lake)
+    feed        feed list|run|status|schedule: pull external data (GLEIF, SEC,
+                IMF, ...) and load it into the lakes
+    calc        calc install: the Python runtime of Calc (Pyodide), pinned and
+                verified, served by the console itself
+    dev         dev bicompute-unit: developer checks that need no Maven
+    contract    contract: the data contract of every command (list, show,
+                check, docs, bootstrap)
+    tables      Virtual tables and models: list, check, preview, lineage,
+                offer
     view        A rendered entity view in the terminal, as the caller's token
                 sees it (masks apply)
+    setup       setup [drishti|libs]: prepare this machine and CHECK the
+                libraries of the Python you run Drishti with (setup installs
+                nothing and makes no virtual environment)
+    build       build jar|modules|all|sdk: the server jar (copied into
+                <home>/lib) and the modules (packages in <home>/modules), with
+                Maven, never install
+    start       start server|console|all|cluster: start Drishti (Java 21+, the
+                jar of <home>/lib, logs and pid files under the data folder)
+    stop        stop server|console|all|cluster: stop by the pid files only
+                (never by name)
+    node        node drain|undrain|status|wait-ready: one server's drain
+                before a stop and its readiness (CLUSTER_GUIDE.md 4.6)
+    launchers   launchers [--check|--machine|--list|--run NAME]: the IDE
+                launchers and IDE_GUIDE section 4 from
+                tools/launch/launchers.yaml; this machine's JVM arguments
+                files
+    status      status: the resolved home, data, modules and java; then every
+                process started with drishti.py start
     lake        Delta lakes: build one from a large JSON export (memory flat,
                 safe to re-run), scan an export, status, maintain
+    testdata    The committed test data (data/testdata): capture the news-and-
+                markets pack's real market snapshot for offline demos
     completion  completion: print a shell completion script (bash, zsh,
                 powershell)
 
 options:
   -h, --help    show this help message and exit
 
-    python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
+    python3 tools/drishti.py <group> <command> [options]          (Windows: py tools\drishti.py ...; the one Python, its libraries from setup)
 
-Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
+Groups: setup (prepare this machine), build (jar: the server jar into <home>/lib), start, stop and status (server, console, all, cluster;
+every OS, by pid files), sutra (the Java `sutra` tool, plus `sutra gen`), module (pack a folder; verify, check, inspect a .dmod with the server jar's verifier; deploy, plan, apply, list, remove, disable, enable, upgrade, run), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback,
 publish, keygen, install), data (profile and ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke),
-lake (build a Delta lake from a large JSON export, scan, status, maintain), view (get, explain), doctor, completion, design (the Screen Designer's designs over
+lake (build a Delta lake from a large JSON export, scan, status, maintain), feed (pull external data into the lakes: list, run, status, schedule), testdata (capture-market: a real offline snapshot), view (get, explain), history (an entity over business days), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
-Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
+Needs Python 3.11+ (3.13 is what the wheel packs target) and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_REFERENCE.md.
 
 Exit codes: 0 ok, 1 problems found (a failing check, a server that said no, an unreachable server), 2 usage (a bad option,
@@ -273,7 +308,7 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 
 | You need | For | How to check |
 |---|---|---|
-| Python 3.10 or newer | everything | `python3 --version` |
+| Python 3.13 | everything | `python3 --version` |
 | PyYAML | `pack`, `data ingest`, `design create --from-sutra` | `python3 -c "import yaml"` |
 | `deltalake` and `pyarrow` | `data ingest --store delta`, `pack new --lake` | only when you write a Delta lake |
 | JDK 21 or newer | `sutra`, `pack new`, `pack check`, `pack about-check` | `java -version` (the tool prefers `drishti.java.home` of the settings file, then `JAVA_HOME`, then `/usr/lib/jvm/java-21-openjdk-amd64`, then `java`) |
@@ -284,25 +319,15 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 The program uses only the standard library plus PyYAML. It imports `deltalake` and `pyarrow` **only** when a command writes
 a Delta lake, so a machine without them runs everything else.
 
-**With `uv`** (nothing to install into your system Python; the recommended way):
+**The one Python.** `setup` only CHECKS the libraries of the Python you run Drishti with (the system's, a dedicated one, or a virtual environment you made yourself; Drishti makes none) and installs nothing: you install them yourself with two pip commands (Windows `py -3.13`, Linux and macOS `python3.13`), from the offline wheel pack unzipped into `~/drishti-wheels` (Windows `%USERPROFILE%\drishti-wheels`), in `drishti-console`: `-m pip install --no-index --find-links <wheel folder> -r requirements.txt`, then the same with `-r ../config/compute/locks/python.lock` (Windows `..\config\compute\locks\python.lock`); [DEPLOYMENT_AND_QA_GUIDE.md 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup) shows both per system. The IDE launchers use the project interpreter, the same
+Python ([Running the tools from PyCharm](#running-the-tools-from-pycharm-and-the-java-sutra-from-intellij)):
 
 ```bash
-uv run --with pyyaml python tools/drishti.py --help
-uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta/demo
+python3 tools/drishti.py setup            # Windows: py -3.13 tools\drishti.py setup
+python3 tools/drishti.py --help
 ```
 
-**With the console's environment** (what an IDE wants, see [Running the tools from PyCharm](#running-the-tools-from-pycharm-and-the-java-sutra-from-intellij);
-the run configurations use it):
-
-```bash
-python3 -m venv drishti-console/.venv && drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt
-#   or, where python3 -m venv lacks ensurepip:  uv venv --python 3.13 drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
-drishti-console/.venv/bin/python tools/drishti.py --help
-```
-
-Run the program from the repository root, or from anywhere with its path, with the console's interpreter
-(`drishti-console/.venv/bin/python`, which the quick start of [data/testdata/README.md](../../data/testdata/README.md) installs with
-PyYAML, deltalake and pyarrow). Many examples write `python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that
+Run the program from the repository root, or from anywhere with its path, with that Python. Many examples write `python3 tools/drishti.py`: any Python 3.10+ with PyYAML runs every command that
 does not write a Delta lake; `drishti.py` in the output is the same program. The shell tools under `tools/` are bash; the Python commands (`tools/drishti.py`, `tools/rolling.py`, `tools/pvgen/*.py`) run on every system.
 
 The Java commands (`sutra`, `pack check`, `tables` and Drishti Lake's loader) run from the server's exec jar, found as `--jar`,
@@ -310,12 +335,10 @@ then the newest `lib/drishti-server-*-exec.jar` of the install (`<home>/lib`; ma
 
 **Environment variables** the program reads:
 
-| Variable | Meaning | Default |
-|---|---|---|
-| `JAVA_HOME` | the JDK that runs it | `/usr/lib/jvm/java-21-openjdk-amd64`, then `java` on the `PATH` |
-| `DRISHTI_SERVER` | the server's base URL | `http://localhost:18480` |
-| `DRISHTI_TOKEN` | the bearer token (never printed) | none |
-| `DRISHTI_USER` | the user name sent when the server has sign-in off | none |
+- `JAVA_HOME`: the JDK that runs it (default `/usr/lib/jvm/java-21-openjdk-amd64`, then `java` on the `PATH`).
+- `DRISHTI_SERVER`: the server's base URL (default `http://localhost:18480`).
+- `DRISHTI_TOKEN`: the bearer token (never printed; default none).
+- `DRISHTI_USER`: the user name sent when the server has sign-in off (default none).
 
 The Java commands run **from the repository root** (the engine reads `./config/packs` and `./sutras` relative to it), so every path
 you give is made absolute first: use paths relative to *your* current directory as you normally would.
@@ -338,7 +361,7 @@ python tools/drishti.py completion powershell | Out-String | Invoke-Expression
 The script is registered for the names `drishti.py` and `drishti`, so an alias or a symlink called `drishti` completes too.
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py completion bash | head -n 3
+$ python3 tools/drishti.py completion bash | head -n 3
 # bash completion for drishti.py: generated by `drishti.py completion bash`
 #   source <(drishti.py completion bash)         or save it as ~/.local/share/bash-completion/completions/drishti.py
 _drishti_complete() {
@@ -520,7 +543,7 @@ On the three trade sources of the test data (every `*.jsonl` and `*.jsonl.gz` of
 changes), one run:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py sutra gen data/testdata/trades/endur data/testdata/trades/calypso \
+python3 tools/drishti.py sutra gen data/testdata/trades/endur data/testdata/trades/calypso \
     data/testdata/trades/murex --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/sutras
 ```
 
@@ -555,7 +578,7 @@ the `--match` field across all of them, and writes **one Sutra per distinct prod
 files by product or to run the command once per product.
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py sutra gen data/testdata/trades/endur data/testdata/trades/calypso \
+python3 tools/drishti.py sutra gen data/testdata/trades/endur data/testdata/trades/calypso \
     data/testdata/trades/murex --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/sutras
 ```
 
@@ -599,7 +622,7 @@ The workbench checks a screen against your sample files as you type. The `sutra`
 extractor, auto-design and the view pipeline) without a browser and without a web server, so a pack author gets the same answer in CI. Run it through the command line program, or the server jar:
 
 ```
-drishti-console/.venv/bin/python tools/drishti.py sutra <command> <path>... [options]
+python3 tools/drishti.py sutra <command> <path>... [options]
 java -jar lib/drishti-server-<version>-exec.jar sutra <command> <path>... [options]
 ```
 
@@ -621,13 +644,13 @@ that does not exist, an unknown key in `expect.yaml`).
 What it prints (a Sutra with a mistake, then a pack's own tests):
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py sutra lint counterparty-mine/
+$ python3 tools/drishti.py sutra lint counterparty-mine/
 PROBLEM counterparty-mine/counterparty-mine.v1.sutra.yaml
 counterparty-mine/counterparty-mine.v1.sutra.yaml:7 DRS-2021 unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot, metric, map
 $ echo $?
 1
 
-$ drishti-console/.venv/bin/python tools/drishti.py sutra test modules/banking/packs/market-risk
+$ python3 tools/drishti.py sutra test modules/banking/packs/market-risk
      frtb-sensitivity: help coverage 9/9 (100%)
 ok   modules/banking/packs/market-risk/sutras/market-risk/frtb-sensitivity.v1.sutra.yaml (2 samples)
      pnl-explain: help coverage 4/4 (100%)
@@ -678,7 +701,7 @@ splits JSON Lines files into groups by the values of the `--match` fields, write
 
 ```bash
 mkdir -p /tmp/gen && zcat data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz | head -400 > /tmp/gen/trade.jsonl
-drishti-console/.venv/bin/python tools/drishti.py sutra gen /tmp/gen --kind trade --key TRADE_ID \
+python3 tools/drishti.py sutra gen /tmp/gen --kind trade --key TRADE_ID \
     --match SOURCE_SYSTEM,PRODUCT_TYPE --date TRADE_DATE --fallback --out /tmp/genout
 ```
 
@@ -703,9 +726,9 @@ are done. The whole workflow, including a complete pack and loading the data, is
 #### In CI
 
 ```sh
-drishti-console/.venv/bin/python tools/drishti.py sutra lint config/packs/my-pack --strict
-drishti-console/.venv/bin/python tools/drishti.py sutra test config/packs/my-pack --junit target/sutra-tests.xml
-drishti-console/.venv/bin/python tools/drishti.py sutra preview config/packs/my-pack --out target/snapshots   # attach as build artifacts
+python3 tools/drishti.py sutra lint config/packs/my-pack --strict
+python3 tools/drishti.py sutra test config/packs/my-pack --junit target/sutra-tests.xml
+python3 tools/drishti.py sutra preview config/packs/my-pack --out target/snapshots   # attach as build artifacts
 ```
 
 Publish `sutra-tests.xml` with your CI's JUnit report step. A Sutra whose panels read other entities with `source:` needs those entities' packs enabled for the run: set
@@ -733,7 +756,7 @@ in `config/connectors/`), and the official VaR and exposure captures, the demo t
 Drishti*net are off. The site's lakes (`DRISHTI_DELTA_ROOT`, `DRISHTI_ICEBERG_ROOT`, `DRISHTI_FILES_ROOT`, `DRISHTI_FEEDS`, each
 defaulting under `DRISHTI_DATA_DIR` or `data/`) and its added and installed packs are still read. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
 CI wiring are also in section 15 of the [Sutra developer guide](BUILD_GUIDE.md#24-testing-expectyaml-sutra-lint-sutra-test-and-pack-check); the workbench's own use of the same command is in
-[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#26-the-command-line-and-ci).
+[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#326-the-command-line-and-ci).
 
 ## 5. `pack`: make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install
 
@@ -771,7 +794,7 @@ those tools (`tools/packmake.py` only chooses the key and the date, lays the fol
 `config/drishti-site.yaml`, `run-server.sh`, `run-server.ps1` and `MANIFEST.json`).
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank
+$ python3 tools/drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank
 read 4407 trade document(s)
 key:   TRADE_ID  (named <kind>_id, present and unique in all 4407 documents)
 date:  START_DATE  (the date-valued field with the fewest distinct dates (24); pass --date to choose another)
@@ -832,7 +855,7 @@ On the MUREX snapshot of the test data (it has no business-date field, so no `--
 is written), with `--out` outside `config/packs` so nothing of the server's changes:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --name murex-book \
+python3 tools/drishti.py pack new data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --name murex-book \
     --title "MUREX book" --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/murex-book
 ```
 
@@ -864,7 +887,7 @@ The interest-rate curves of the test data carry their business date in `AS_OF` (
 fill a dated store:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-demo --title "Curves demo" \
+python3 tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-demo --title "Curves demo" \
     --kind ir-curve --key CURVE_ID --date AS_OF --match CURVE_TYPE --store files --files-root data/build/files --out data/build/curves-demo
 ```
 
@@ -894,7 +917,7 @@ sutra test: exit 0
 The same, into a **Delta lake** (`deltalake` and `pyarrow` are in the console's requirements):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-lake --kind ir-curve \
+python3 tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-lake --kind ir-curve \
     --key CURVE_ID --date AS_OF --match CURVE_TYPE --lake data/build/delta --out data/build/curves-lake
 ```
 
@@ -917,7 +940,7 @@ to be where the server reads packs from: its `drishti.packs.dir` (default `./con
 else the command says so.
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-demo --kind ir-curve \
+python3 tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-demo --kind ir-curve \
     --key CURVE_ID --date AS_OF --match CURVE_TYPE --store files --files-root data/files --load --server http://localhost:18480
 ```
 
@@ -938,7 +961,7 @@ key table of [BUILD_GUIDE.md](BUILD_GUIDE.md)). Delete it and the pack loads exa
 subfolders) `pack new` writes a content module (a `.dmod`), binds its kinds, loads the documents and installs the module in one command:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack new /data/incoming --name deals --kind-prefix deals- \
+python3 tools/drishti.py pack new /data/incoming --name deals --kind-prefix deals- \
     --key DEAL_ID --match PRODUCT_TYPE,SOURCE_SYSTEM --workers 4 \
     --files-root /data/files --load --deploy --modules-dir /srv/drishti/data/modules
 ```
@@ -972,7 +995,7 @@ pack.yaml form.trade.fields[0] (counterparty.name): operator 'between' does not 
 ```
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack check data/build/curves-demo --junit data/build/reports
+python3 tools/drishti.py pack check data/build/curves-demo --junit data/build/reports
 ```
 
 ```text
@@ -994,7 +1017,7 @@ ok   data/build/curves-demo/sutras/ir-curve/ir-curve-projection.v1.sutra.yaml (5
 The exit code is 0 here; with `--strict` the generated pack's unexplained fields fail the run:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack check data/build/curves-demo --strict --tail 3
+python3 tools/drishti.py pack check data/build/curves-demo --strict --tail 3
 ```
 
 ```text
@@ -1017,7 +1040,7 @@ Lists, per Sutra, the fields it shows that `config/about.yaml` does not explain 
 `TODO` placeholders `pack new` left in `config/about.yaml`. Exit 1 when a field is unexplained; with `--strict` a `TODO` counts too.
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack about-check data/build/curves-demo
+python3 tools/drishti.py pack about-check data/build/curves-demo
 ```
 
 ```text
@@ -1055,11 +1078,11 @@ A worked run on the test data: a pack made from the ENDUR snapshot (five product
 priority set to 15, the About sentence of the kind written), then the data grows: the CALYPSO snapshot joins it.
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --name mb \
+$ python3 tools/drishti.py pack new data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --name mb \
     --kind trade --match PRODUCT_TYPE --key TRADE_ID --out data/build/mb
 4407 documents, 1 kind(s), 5 group(s)
 ...
-$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
+$ python3 tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     data/testdata/trades/calypso/trade_calypso.2026-07-08.jsonl.gz --dry-run
 pack regenerate --dry-run: data/build/mb
   add         sutras/trade/trade-abs.v1.sutra.yaml
@@ -1084,7 +1107,7 @@ The priority edit is kept, the About edit is merged with the regenerated skeleto
 conflict, here the generator now writes `priority: 20` on the line you changed to 15:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
+$ python3 tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     data/testdata/trades/calypso/trade_calypso.2026-07-08.jsonl.gz --priority 20
 pack regenerate: data/build/mb
   add         sutras/trade/trade-abs.v1.sutra.yaml
@@ -1119,7 +1142,7 @@ The same pack, bundled before the CALYPSO data joined it (`pack bundle data/buil
 after `pack regenerate ... --priority 20 --version 1.1.0` (no hand edits this time, so no conflict):
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack diff data/build/dist/mb-1.0.0.tar.gz data/build/mb
+$ python3 tools/drishti.py pack diff data/build/dist/mb-1.0.0.tar.gz data/build/mb
 pack diff: mb 1.0.0 -> mb 1.1.0
 
 SELECTION (56)
@@ -1155,7 +1178,7 @@ exists); `--json` prints `{counts, findings: [{level, what, name, detail}], fail
 ### `pack catalogue`: a readable catalogue for business review
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack catalogue data/build/curves-demo --out data/build/catalogue
+$ python3 tools/drishti.py pack catalogue data/build/curves-demo --out data/build/catalogue
 pack catalogue: 1 kind(s), 4 Sutra(s) -> data/build/catalogue/catalogue.md
 ```
 
@@ -1202,11 +1225,11 @@ written shows as its `TODO` placeholder, so the catalogue doubles as a review ch
 ### `pack i18n`: translate the About text through a spreadsheet
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack i18n export data/build/curves-demo --lang fr --out data/build/fr.csv
+$ python3 tools/drishti.py pack i18n export data/build/curves-demo --lang fr --out data/build/fr.csv
 pack i18n export: 20 texts of curves-demo -> data/build/fr.csv  (0 already translated, 20 to do)
 next: fill the 'translation' column, then  drishti.py pack i18n import data/build/curves-demo data/build/fr.csv --lang fr
 
-$ drishti-console/.venv/bin/python tools/drishti.py pack i18n import data/build/curves-demo data/build/fr.csv --lang fr
+$ python3 tools/drishti.py pack i18n import data/build/curves-demo data/build/fr.csv --lang fr
 pack i18n import: 0 of 20 texts -> data/build/curves-demo/config/about.fr.yaml
   missing (shown in English): 20
     kinds/ir-curve/title
@@ -1255,8 +1278,8 @@ A registry is a folder (or a web location) of signed pack archives. `keygen` mak
 signs it and adds it, `verify` re-checks a registry against a publisher's public key.
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack keygen --out data/build/keys/me.pem
-drishti-console/.venv/bin/python tools/drishti.py pack publish data/build/curves-demo --registry data/build/registry \
+python3 tools/drishti.py pack keygen --out data/build/keys/me.pem
+python3 tools/drishti.py pack publish data/build/curves-demo --registry data/build/registry \
     --key data/build/keys/me.pem --publisher me
 ```
 
@@ -1354,7 +1377,7 @@ needs. Memory is bounded: `--max-distinct` (default 10,000) values are tracked p
 `>=10000` and the field cannot be a key or a match column.
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py data profile data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --kind trade
+$ python3 tools/drishti.py data profile data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --kind trade
 data profile: 1 file(s), 4198 document(s), 1 kind(s)
 
 == trade: 4198 document(s), 107 field(s)
@@ -1423,14 +1446,14 @@ are written beside their parent in all three stores.
 else its name's date (`trade.2026-11-03.jsonl`: kind `trade`, 2026-11-03), else the business today. A document's own date field never
 decides; documents whose own date differs are loaded and counted (*1 row of trade.2026-11-03.jsonl carried another date in AS_OF; loaded
 under 2026-11-03*). `--date-from name` refuses a file whose name carries no date. `--mode` defaults to `append`. `lake build` and the data
-inbox follow the same rules ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-feeds-the-table-and-business-date-of-a-file)).
+inbox follow the same rules ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#28-feeds-the-table-and-business-date-of-a-file)).
 
 The curves of the test data into the files store of the `curves-demo` pack made [above](#pack-new-a-complete-pack-from-json-lines)
 (its `ingest:` block gives the key `CURVE_ID` and the date `AS_OF`; `--kind` because the file names are not kinds):
 
 ```bash
 # look first
-drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/testdata/market-data/ir-curve --kind ir-curve \
+python3 tools/drishti.py data ingest --from data/testdata/market-data/ir-curve --kind ir-curve \
     --pack data/build/curves-demo --store files --root data/build/files2 --dry-run
 ```
 
@@ -1444,7 +1467,7 @@ total rows: 196
 ```
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/testdata/market-data/ir-curve --kind ir-curve \
+python3 tools/drishti.py data ingest --from data/testdata/market-data/ir-curve --kind ir-curve \
     --pack data/build/curves-demo --store files --root data/build/files2
 ```
 
@@ -1583,7 +1606,7 @@ serves offline (`DRISHTI_OFFLINE=true`). `--dry-run` lists the 91 ids without fe
 [data/testdata/README.md](../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline).
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py testdata capture-market
+python3 tools/drishti.py testdata capture-market
 ```
 
 ### `data load`: the demo data, at three sizes
@@ -1592,7 +1615,7 @@ drishti-console/.venv/bin/python tools/drishti.py testdata capture-market
 store, and with `--trades N` a generated trade book of N trades a day for `--days` days (`tools/storeload.py`). Stores: `delta`,
 `files`, `postgres`, `duckdb`, `iceberg`, `mongodb`, `redis`, `aerospike`, `cassandra`. A relative root or database means what it means
 where you type the command. Each store's own options are in [section 15](#15-store-loaders-data-load); an option the store does not
-take is refused (exit 2). Everything about the stores and the sizes is in [DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data).
+take is refused (exit 2). Everything about the stores and the sizes is in [BANK_DATA_GUIDE.md section 9](BANK_DATA_GUIDE.md#9-the-demo-data).
 
 | Size | Command | Use |
 |---|---|---|
@@ -1609,9 +1632,9 @@ python3 tools/drishti.py data load --store files data/demo-files --trades 1000 -
 ```
 
 ```text
-/opt/drishti/drishti-console/.venv/bin/python /opt/drishti/tools/packgen/banking/make_data.py --jsonl /opt/drishti/data/build/loader-rows/banking.tar
+python3 /opt/drishti/tools/packgen/banking/make_data.py --jsonl /opt/drishti/data/build/loader-rows/banking.tar
 /usr/lib/jvm/temurin-21/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Djdk.nio.maxCachedBufferSize=262144 -Ddrishti.home=/opt/drishti -Ddrishti.modules.home=/opt/drishti/modules -Xmx4g -Dloader.main=com.ash.drishti.plugin.file.JsonlLoader -jar /opt/drishti/lib/drishti-server-<version>-exec.jar /opt/drishti/data/build/loader-rows/banking.tar /opt/drishti/data/demo-files
-/opt/drishti/drishti-console/.venv/bin/python /opt/drishti/tools/samplegen/bulk_trades.py --trades 1000 --days 2 --jsonl /opt/drishti/data/build/loader-rows/bulk-trades.tar
+python3 /opt/drishti/tools/samplegen/bulk_trades.py --trades 1000 --days 2 --jsonl /opt/drishti/data/build/loader-rows/bulk-trades.tar
 /usr/lib/jvm/temurin-21/bin/java ... -Dloader.main=com.ash.drishti.plugin.file.JsonlLoader -jar /opt/drishti/lib/drishti-server-<version>-exec.jar /opt/drishti/data/build/loader-rows/bulk-trades.tar /opt/drishti/data/demo-files
 ```
 
@@ -1654,9 +1677,9 @@ dropped in a folder, loaded by the server; module `tools/dataloadcli.py`). Admin
 | `dataload undo LOAD [--lake NAME] [--yes]` | removes one load's rows from the lake it went to, found in the ledger |
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py dataload status
-drishti-console/.venv/bin/python tools/drishti.py dataload run
-drishti-console/.venv/bin/python tools/drishti.py dataload retry trades-endur-2026-11-03.jsonl.gz
+python3 tools/drishti.py dataload status
+python3 tools/drishti.py dataload run
+python3 tools/drishti.py dataload retry trades-endur-2026-11-03.jsonl.gz
 ```
 
 Exit codes: `0` done, `1` the server said no (a file that is not in `failed/`), `2` usage, `3` the inbox is off on every server (`DRS-1020`).
@@ -1697,7 +1720,7 @@ the Delta connector reads:
 * one row per document: `id` (`--key`, a dotted path), `doc` (the **whole** document as JSON: nested arrays such as `LEGS[]` and
   `LEGS[].CASH_FLOWS[]` stay inside it, as the Sutras expect), `business_date` (each file's: `--as-of`, else its `.ready` file's
   `business-date:`, else its name's date, `trades.2026-11-03.jsonl.gz`, else the business today; a document's own `--date` field is only
-  counted when it differs: [DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-feeds-the-table-and-business-date-of-a-file));
+  counted when it differs: [DATA_GUIDE.md section 2.8](DATA_GUIDE.md#28-feeds-the-table-and-business-date-of-a-file));
 * partitioned by `business_date` and then any number of **classifier** columns (`--partition-by PRODUCT_TYPE[,DESK...]`, up to
   four), as Hive folders `business_date=2026-10-16/PRODUCT_TYPE=ComSwap/`;
 * **promoted** columns (`--promote COUNTERPARTY,PORTFOLIO,QUANTITY`): real columns a reader filters on without parsing the
@@ -1723,7 +1746,7 @@ bounded by rows (`--batch-rows`, 50,000) and bytes (`--batch-mb`, 128). The stag
 files, go in a folder beside the lake (never the system temp folder), removed when the run ends. Sizing a large load: [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md).
 
 **Archives.** An archive is read in place, its JSON Lines members in name order, by the rule every loader shares
-([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): other members are skipped with a note; a build writes one
+([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#27-archives-zip-and-tarballs)): other members are skipped with a note; a build writes one
 table, so an archive's folders, if it has any, must all be that table's name (`--table`, else the kind), and any other folder is
 refused and named; an archive that breaks Lake's archive rule is refused whole before a row is read ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#rules-that-apply-to-every-load)). A reject names its member:
 `trades.zip!/part-2.jsonl:14`. `tools/build_demo_lakes.py --endur-dir` takes the same feeds (`trade_endur.2026-10-28.jsonl.zip`, or a tar
@@ -1735,7 +1758,7 @@ of `trade_endur/<date>/` folders), and `tools/samplegen/load_rows.py --rows` a t
 often it is present, its types and most frequent values, then suggests an id, a business date and classifiers:
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake scan data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --limit 500 | tail -n 8
+$ python3 tools/drishti.py lake scan data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --limit 500 | tail -n 8
 PRECIOUS_METAL_FLAG                    500         2  text  (456), Y(44)
 TT_GROUP                               500         1  text  (500)
 TT_BOOK                                500         1  text  (500)
@@ -1755,7 +1778,7 @@ The walk-through below uses `--as-of` for another day, 2026-09-22.
 ### 7.2 The first load
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
+$ python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY \
     --lake lake --domain trading
 engine: java-loader (the parallel lake loader (the default engine))
@@ -1784,7 +1807,7 @@ The next file of the book holds the day's changes (159 trades). Two bad lines ad
 
 ```
 $ (zcat data/testdata/trades/endur/trade_endur.2026-09-23.jsonl.gz; echo '{"PRODUCT_TYPE": "Cash"}'; echo 'not json') | gzip > day2.jsonl.gz
-$ drishti-console/.venv/bin/python tools/drishti.py lake build --from day2.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-23 --partition-by PRODUCT_TYPE \
+$ python3 tools/drishti.py lake build --from day2.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-23 --partition-by PRODUCT_TYPE \
     --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake --domain trading
 engine: java-loader (the parallel lake loader (the default engine))
 business date  PRODUCT_TYPE           rows
@@ -1822,7 +1845,7 @@ applies each day's changes to the previous day by key and writes the whole book 
 ### 7.4 Re-running a day replaces that day only
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz ... --lake lake --domain trading -q
+$ python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz ... --lake lake --domain trading -q
 2026-10-17T17:44:01-04:00 lake-build ok exit=0 run=20261017T174358-1340108 domain=trading kind=trade engine=java-loader mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=3.14
 $ find lake -maxdepth 4 -type d | sort
 lake
@@ -1965,7 +1988,7 @@ removed by the next run, which holds the lock. With `--lake NAME` (a lake of `co
 `lake status` reads them back, lists the lake's tables and says whether a run holds the lock now:
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake status --lake lake
+$ python3 tools/drishti.py lake status --lake lake
 tables (1):
   table          rows   files  size    partitions        dates  latest date  last build
   trading/trade  5,169  9      7.5 MB  9 (PRODUCT_TYPE)  2      2026-09-23   2026-10-17 21:54:10Z
@@ -2007,7 +2030,7 @@ The pack has three Delta connectors for `trade`, so the run names one with `--co
 sixteen promoted columns); captured as a dry run:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --pack modules/banking/packs/trading \
+python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --pack modules/banking/packs/trading \
     --kind trade --connector trade-endur --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --lake lake3 --dry-run --json
 # "pack": "trading", "domain": "trading", "kind": "trade", "table": "lake3/trading/trade_endur", "promote": ["TRADE_ID", "SOURCE_SYSTEM",
 # "PRODUCT_TYPE", ... "TRADER_ID"] (16), "documents": 4407, "status": "dry-run", "exitCode": 0
@@ -2016,7 +2039,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdat
 In production the same run names the real lake and tells the server (the ETL's last step):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake build --from /srv/drop/endur-2026-10-16.json.gz --pack modules/banking/packs/trading --kind trade --connector trade-endur \
+python3 tools/drishti.py lake build --from /srv/drop/endur-2026-10-16.json.gz --pack modules/banking/packs/trading --kind trade --connector trade-endur \
     --key TRADE_ID --as-of 2026-10-16 --partition-by PRODUCT_TYPE --lake /srv/drishti/delta \
     --signal http://drishti.internal:18480 --token-file /etc/drishti/loads.token
 ```
@@ -2077,11 +2100,11 @@ without paths (the 10,000-trade local limit). `--exposure committed` loads the c
 first, then each system over it) chooses where each source system's trades are stored:
 
 ```bash
-drishti-console/.venv/bin/python tools/build_demo_lakes.py --store calypso=iceberg                     # CALYPSO in Iceberg, ENDUR and MUREX in Delta
-drishti-console/.venv/bin/python tools/build_demo_lakes.py --store all=iceberg                         # every system in Iceberg
-drishti-console/.venv/bin/python tools/build_demo_lakes.py --only trades/calypso --store calypso=iceberg --as-of 2026-10-16
-drishti-console/.venv/bin/python tools/build_demo_lakes.py --source-dir ~/calypso --system calypso --files-only --store calypso=iceberg
-drishti-console/.venv/bin/python tools/build_demo_lakes.py --store all=delta                           # every system back in Delta
+python3 tools/build_demo_lakes.py --store calypso=iceberg                     # CALYPSO in Iceberg, ENDUR and MUREX in Delta
+python3 tools/build_demo_lakes.py --store all=iceberg                         # every system in Iceberg
+python3 tools/build_demo_lakes.py --only trades/calypso --store calypso=iceberg --as-of 2026-10-16
+python3 tools/build_demo_lakes.py --source-dir ~/calypso --system calypso --files-only --store calypso=iceberg
+python3 tools/build_demo_lakes.py --store all=delta                           # every system back in Delta
 ```
 
 A system in Iceberg is built as Delta first (`lake demo`, or `lake build` of your files into `<data>/build/iceberg-stage`), so its
@@ -2098,7 +2121,7 @@ closing lines list the store and table of every system and what was done to each
 connector by itself (live reload); with `--server` it is also told once (trading, `trade`, the newest date). The equality test,
 `tools/lake/stores_equality.py --work <empty folder> --port <port>`, builds the same synthetic days all-Delta and mixed and compares
 trade pages, `TRD <id> 10`, counterparty-trades pages, searches and a BI query through a running server
-([DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#112-mixed-delta-and-iceberg-storage)).
+([BANK_DATA_GUIDE.md section 9](BANK_DATA_GUIDE.md#92-mixed-delta-and-iceberg-storage)).
 
 `drishti.py testdata capture-market` refreshes the committed market snapshot that `lake demo` builds for offline demos
 (`data/testdata/news-and-markets/{quote,news}`): it starts a scratch server (or uses `--server`) and fetches the twenty companies'
@@ -2116,7 +2139,7 @@ local. A lake in Amazon S3 is loaded in two steps: `lake build` into a fresh scr
 copied to the S3 table's folder (`aws s3 sync`, without `_delta_log/`) and `lake publish` commits them:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake publish --from /scratch/run-1/trading/trade_endur \
+python3 tools/drishti.py lake publish --from /scratch/run-1/trading/trade_endur \
     --to s3://acme-drishti-prod-lake/lake/trading/trade_endur --dates 2026-10-20 --storage-option AWS_REGION=eu-west-2
 lake publish: ok exit=0 published <n> file(s), <bytes> bytes, dates 2026-10-20 to s3://acme-drishti-prod-lake/lake/trading/trade_endur version=<v>
 ```
@@ -2148,18 +2171,18 @@ with the reason, what the simulator does not honour.
 | Simulator | What it tests | Runs on |
 |---|---|---|
 | Adobe S3Mock 4.12.4, in the test JVM (Maven test dependency) | the content store's S3 contract; the Iceberg native engine's table on S3 | Linux and Windows |
-| moto 5.2.3 (`moto[server]`, pure Python, started with the venv's own python) | Delta on S3 through deltalake's storage options; `lake publish` on S3 (new table, a day restated, a missing file refused, three publishes at once) | Linux and Windows |
+| moto 5.2.3 (`moto[server]`, pure Python, started with the tests' own Python) | Delta on S3 through deltalake's storage options; `lake publish` on S3 (new table, a day restated, a missing file refused, three publishes at once) | Linux and Windows |
 | the MinIO server binary | all of the above, the most faithful | Linux only: skipped on Windows, offline, or when no binary can be had |
 
 ```bash
 # Java: the content store and the Iceberg table on S3Mock (and MinIO when it can run)
 ./mvnw -q -pl :drishti-identity,plugins/drishti-plugin-iceberg -am test \
   -Dtest='S3ContentStoreTest,S3MockContentStoreTest,MinioContentStoreTest,NativeOnS3SimulatorTest' -Dsurefire.failIfNoSpecifiedTests=false
-# Python: moto (once: drishti-console/.venv/bin/python -m pip install "moto[server]==5.2.3", or uv pip install --python …)
-drishti-console/.venv/bin/python -m unittest -v tools/lake/test_s3_simulators.py
+# Python: moto (once, into the Python you test with: python3 -m pip install "moto[server]==5.2.3")
+python3 -m unittest -v tools/lake/test_s3_simulators.py
 ```
 
-On Windows: `mvnw.cmd` and `drishti-console\.venv\Scripts\python.exe` instead (see the QA guide). MinIO: give the tests a binary
+On Windows: `mvnw.cmd` and `py` instead (see the QA guide). MinIO: give the tests a binary
 with `DRISHTI_MINIO_BIN=/path/to/minio` or put one in `tools/cache/minio/` (git-ignored); MinIO no longer serves its community
 binaries, so the default download answers `410 Gone` and the MinIO tests skip saying so. The drill runs all three (the Java ones in its
 verify, the Python one with uv).
@@ -2215,7 +2238,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 
 | Key | Default | Meaning |
 |---|---|---|
-| `source.files` | (required) | a file, a folder (its `*.jsonl`, `*.ndjson`, `*.json`, `*.gz`, `*.zst` and archives `*.zip`, `*.tar.gz`, `*.tgz`, `*.tar`), or a glob (`/data/pv/*.jsonl.gz`, `C:\pv\cob-*.jsonl`, `**` for any depth; on S3 in the last segment: `s3://bucket/pv/2026-10-28/*.jsonl.gz`); a list for several. An archive is read in place by the archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): its JSON Lines members in name order, one reader taking the archive in one pass |
+| `source.files` | (required) | a file, a folder (its `*.jsonl`, `*.ndjson`, `*.json`, `*.gz`, `*.zst` and archives `*.zip`, `*.tar.gz`, `*.tgz`, `*.tar`), or a glob (`/data/pv/*.jsonl.gz`, `C:\pv\cob-*.jsonl`, `**` for any depth; on S3 in the last segment: `s3://bucket/pv/2026-10-28/*.jsonl.gz`); a list for several. An archive is read in place by the archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#27-archives-zip-and-tarballs)): its JSON Lines members in name order, one reader taking the archive in one pass |
 | `source.dataset` | the archive's name | an archive without folders is one dataset named after the file (`trade.tar.gz` → `trade`); this names it instead (`--dataset NAME`) |
 | `source.archive.max-mb`, `max-ratio`, `max-members` | `lake.archive.*` | the archive caps; the rule and the defaults are Lake's ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#rules-that-apply-to-every-load)) |
 | `source.archive.validate` | `rows` | with several datasets: `rows` reads and checks every dataset (a dry run) before the first commit, so one that would fail stops the run with nothing loaded; `structure` checks the archives' listing only |
@@ -2225,7 +2248,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 | `source.format` | `jsonl` | JSON Lines (the data standard); `.gz` and `.zst` decompressed as streams, multi-member gzip included |
 | `source.pack`, `source.connector` | none | a pack folder (as `--pack`): the connector's domain and table, `layout.<kind>.columns`, `vectors`, `flatten`, `ingest.<kind>.key` and `date`; the keys below win |
 | `source.id` | `id` (or the pack's) | the id field (`--key`), a dotted path |
-| `source.as-of` | none | one business date for every file of the input; else each file's: its `.ready` file's `business-date:`, its name's date (`<table>.<YYYY-MM-DD>.jsonl.gz`), the business today; a tar's members their folders' ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-feeds-the-table-and-business-date-of-a-file)) |
+| `source.as-of` | none | one business date for every file of the input; else each file's: its `.ready` file's `business-date:`, its name's date (`<table>.<YYYY-MM-DD>.jsonl.gz`), the business today; a tar's members their folders' ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#28-feeds-the-table-and-business-date-of-a-file)) |
 | `source.date` | the pack's | a row's own date field: never the partition, only counted when it differs from its file's date (`fileDates`, `otherDateRows`, `dateNotes` in the summary) |
 | `--as-of`, `--table`, `--pack`, `--kind`, `--mode`, `--key`, `--date-from`, `--plan`, `--run-id` | | the command line's options over the file: `source.as-of`, `target.table`, `source.pack`, `target.kind`, `target.mode` (`append`, the default, or `replace`), `source.id`, `source.date-from`, a dry run; `--run-id` gives the run's id (its rows' `_load_id` is `<run-id>.<n>`; the data inbox passes one for every table of an archive) |
 | `source.date-from` | `auto` | `auto` as above; `name`: a file whose name carries no date (and no `as-of`, no `.ready` date) refuses the load |
@@ -2374,8 +2397,7 @@ a tiny budget: identical tables; the 10K throughput; `ArchivesTest`: the shared 
 ### 7.14 The AWS connectors' tool scripts: S3 Tables and Delta Lake on S3
 
 Two Python scripts make, check and remove the AWS resources of the two AWS connectors, with `boto3` (no AWS CLI, so Windows works the
-same); `.sh` and `.ps1` wrappers start them with the console's Python environment (`drishti-console/.venv`), else `DRISHTI_PYTHON`
-or `python3`:
+same); `.sh` and `.ps1` wrappers start them with the Python you run Drishti with (`DRISHTI_PYTHON`, else `python3`; `py` on Windows):
 
 | Script | Connector | `create` | `check` | `remove` |
 |---|---|---|---|---|
@@ -2393,8 +2415,8 @@ deploy/aws/delta-s3/delta-s3.sh check --bucket acme-drishti-lake --prefix delta 
 
 Their tests need no AWS account (`python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3`: botocore's
 Stubber, an in-memory S3, Delta tables written by the deltalake package). They have not been run against AWS: no AWS account is
-available to the build, and the live run waits for an AWS sandbox account. The guides: [`deploy/aws/s3-tables/README.md`](../../deploy/aws/s3-tables/README.md)
-and [`deploy/aws/delta-s3/README.md`](../../deploy/aws/delta-s3/README.md).
+available to the build, and the live run waits for an AWS sandbox account. The guides: [`docs/guides/CLUSTER_GUIDE.md`](CLUSTER_GUIDE.md#deployawss3-tables-the-s3-tables-connectors-aws-resources)
+and [`docs/guides/CLUSTER_GUIDE.md`](CLUSTER_GUIDE.md#deployawsdelta-s3-the-delta-lake-on-s3-connectors-aws-resources).
 
 ### 7.15 lake delete: whole business dates out of a table
 
@@ -2459,7 +2481,7 @@ balancer's check script.
 ### `server health`
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py server health
+python3 tools/drishti.py server health
 ```
 
 On the quick-start server (the demo lakes, sign-in on, the token in `DRISHTI_TOKEN`) after tutorials 10 and 22, which add the
@@ -2507,18 +2529,18 @@ once while the old pages serve. `purge all` drops every cache. Everything purged
 purge is safe at any time; it needs an administrator and is written to the audit log.
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py server caches purge trade-pages
-drishti-console/.venv/bin/python tools/drishti.py server caches purge var.hot-files --date 2026-09-29 --cluster
+python3 tools/drishti.py server caches purge trade-pages
+python3 tools/drishti.py server caches purge var.hot-files --date 2026-09-29 --cluster
 ```
 
 ### `admin capacity`: Admin → Capacity from a terminal
 
-`admin capacity` is **Admin → Capacity** from a terminal ([OPERATIONS_GUIDE.md 12.4](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan)): it reads the planner the server serves (`GET /api/v1/admin/capacity`, administrators) and evaluates it here with the evaluator the workbook is checked with, then prints the answers (`-Xmx`, the collector, `drishti.var.open-heap-mb`, RAM, disk, cores), the warnings that are not OK, the YAML block of the settings for `./application.local.yaml` and the whole JVM command line. `--set Name=value` changes any input by its workbook name (repeat it); `--live` puts this server's measured figures into the inputs and prints them (`GET /api/v1/admin/capacity/live`); `--all` prints every result line band by band; `--json` the inputs, the live figures and every result. `--xlsx FILE` downloads the formula workbook instead (`--inputs plan`, `live` or `both`), audited on the server as `capacity-workbook-downloaded`.
+`admin capacity` is **Admin → Capacity** from a terminal ([OPERATIONS_GUIDE.md 14.6](OPERATIONS_GUIDE.md#146-admin--capacity-today-against-the-plan)): it reads the planner the server serves (`GET /api/v1/admin/capacity`, administrators) and evaluates it here with the evaluator the workbook is checked with, then prints the answers (`-Xmx`, the collector, `drishti.var.open-heap-mb`, RAM, disk, cores), the warnings that are not OK, the YAML block of the settings for `./application.local.yaml` and the whole JVM command line. `--set Name=value` changes any input by its workbook name (repeat it); `--live` puts this server's measured figures into the inputs and prints them (`GET /api/v1/admin/capacity/live`); `--all` prints every result line band by band; `--json` the inputs, the live figures and every result. `--xlsx FILE` downloads the formula workbook instead (`--inputs plan`, `live` or `both`), audited on the server as `capacity-workbook-downloaded`.
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py admin capacity --set Trades=450000 --set Positions=450000
-drishti-console/.venv/bin/python tools/drishti.py admin capacity --live
-drishti-console/.venv/bin/python tools/drishti.py admin capacity --xlsx capacity.xlsx --inputs both
+python3 tools/drishti.py admin capacity --set Trades=450000 --set Positions=450000
+python3 tools/drishti.py admin capacity --live
+python3 tools/drishti.py admin capacity --xlsx capacity.xlsx --inputs both
 ```
 
 ### `server packs`: list, load, unload, on and off
@@ -2529,7 +2551,7 @@ drishti-console/.venv/bin/python tools/drishti.py admin capacity --xlsx capacity
 (packs in `DRISHTI_PACKS` stay).
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py server packs list
+python3 tools/drishti.py server packs list
 ```
 
 ```text
@@ -2588,9 +2610,15 @@ smoke: passed
 
 ### `doctor`: is this machine ready
 
+**`doctor --acceptance`** is the end-to-end proof the release workflow and the launcher **Drishti: check acceptance** run once the demo
+stack is up: it signs in to the console (`--console URL`, default `http://127.0.0.1:<console.server.port, else 17480>`) as the development
+administrator, types `VAR BANK` and asks the VaR screen's figures through the console (so the console and the server are proved to share
+their secrets), and compares them with the release's demo figures, VaR 167,372,692 and ES 210,131,972 (`--expect-var`, `--expect-es` for
+others); `--wait SECONDS` waits for the console; exit 0 only when both agree. `--server URL` names the server it checks (default the settings files' `server.port`, else 18480). It signs in as the development administrator only on a demo stack: `--profile demo`, or a server whose `/public/about` says `"profile": "demo"` (started with `--demo`); otherwise it stops with one `[FAIL]` and the command that fixes it. Its calls never go through a proxy.
+
 Green, yellow and red lines, each with a fix; exit 1 on any red. It checks Java (on `JAVA_HOME` or the PATH, 21 or newer, vendor),
 the server jar (and its version), Python and the optional libraries (`pyyaml`, `deltalake`, `pyarrow`, with install hints), the
-repository layout (`config/packs/`, `drishti-console/.venv`), the directories you configured (`DRISHTI_DELTA_ROOT`, `DRISHTI_FILES_ROOT`,
+repository layout (`config/packs/`), the directories you configured (`DRISHTI_DELTA_ROOT`, `DRISHTI_FILES_ROOT`,
 `DRISHTI_PACKS_INSTALLED`, `DRISHTI_PACKS_DIR`: readable, writable), and ports 18480 and 17480 (override with `DRISHTI_DOCTOR_PORTS=18971:server,17971:console` to check other ports instead; free, or in use by Drishti; only a
 GET of `/actuator/health` on localhost, nothing is killed or changed). With `--server` it also checks reachability, the version
 and whether the token is accepted, with the exact id, scopes and expiry of the token the call used (`GET /api/v1/me/token`; a signed-in session has none).
@@ -2602,12 +2630,10 @@ GREEN  server jar              ~/drishti/lib/drishti-server-<version>-exec.jar (
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
-                               fix: pip install deltalake   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...
+                               fix: python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt   (in drishti-console; Drishti installs nothing)
 YELLOW python pyarrow          not installed (needed for data ingest --store delta)
-                               fix: pip install pyarrow   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...
+                               fix: python3.13 -m pip install --no-index --find-links ~/drishti-wheels -r requirements.txt   (in drishti-console; Drishti installs nothing)
 GREEN  repo config/packs/             ~/drishti/packs
-YELLOW console venv            ~/drishti/drishti-console/.venv
-                               fix: cd drishti-console && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18971              in use by Drishti: status UP
 GREEN  port 17971              free (the default console port)
@@ -2697,22 +2723,52 @@ connectors of desk-demo   [files in /srv/drishti/config/connectors; change them 
 ### `setup`, `build jar`, `start`, `stop` and `status`: install, build, run and stop Drishti
 
 One command, `tools/drishti.py`, prepares the machine, builds the server jar, and starts, stops and shows the server, the console and a
-cluster. It is the same on Linux, macOS and Windows; on Windows write `py tools\drishti.py ...` (or `python`) and backslash paths. The
-settings file goes **before** the command: `python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo`, and so does a
-**profile**: `--profile NAME` adds the install's `config/profiles/<NAME>.ini` (`demo`, `samples`, `qa`) after the settings files, so it
+cluster. It is the same on Linux, macOS and Windows; on Windows write `py -3.13 tools\drishti.py ...` and backslash paths. The
+settings file goes **before** the command: `python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo`; with no
+`--settings`, every command but `setup` takes `~/drishti-envs/dev.ini` (Windows `%USERPROFILE%\drishti-envs\dev.ini`) by itself when that
+file names this checkout as `drishti.home` (another copy's file is never taken), so `python tools/drishti.py start all --demo` is enough. A
+**profile** goes before the command too: `--profile NAME` adds the install's `config/profiles/<NAME>.ini` (`demo`, `samples`, `qa`) after the settings files, so it
 wins over them (`python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa start all`: the QA pair on 18580 and 17580;
-`--demo` is `--profile demo`). The tools' `--server` default follows the files too (`console.backend.url`, else a profile's `server.port`).
+`--demo` is `--profile demo`). **The trust rule**: with no `--settings`, a `DRISHTI_HOME`, `DRISHTI_DATA_DIR`, `DRISHTI_MODULES_HOME`,
+`DRISHTI_LIB_PATH` or `DRISHTI_TMP_DIR` naming a folder outside this checkout (an old `setx`) is ignored by every command, in one `[WARN]`
+line; a settings file named with `--settings` may point anywhere. **`start` makes no data folder**: before setup it stops with
+`[FAIL] this checkout is not set up ... Fix: <the setup line>`; `--demo` with no demo lake built stops with the `lake demo` line; `start
+all` checks the console's Python and both ports before the server starts, and gives the console the server's loopback address. Every
+failure is one `[FAIL] <what>: <why>. Fix: <command>` line (an unexpected one names a log file with the details; no traceback), and every
+printed command is pasteable: the running interpreter (`py -3.13` on Windows), quoted paths. Setup ends with `Drishti is ready.` or
+`Drishti is NOT ready: N to fix (above).`. The tools' `--server` default follows the files too (`console.backend.url`, else a profile's `server.port`).
 
-**The roots.** The install folder (`DRISHTI_HOME`) is `--home`, else `DRISHTI_HOME`, else `drishti.home` of the settings file, else the
-folder `tools/drishti.py` lives in; a named one must be an absolute path (a relative one is refused as relative) and that same folder. The data folder is `--data-dir`, else `drishti.data.dir` of the settings file, else `DRISHTI_DATA_DIR`, else
-`<home>/data`; its `run/` (pid files), `logs/` and `tmp/` hold what a started process leaves. Drishti's own server jar (exactly one; `start` refuses two) is in
+**The roots.** One order for every root, as on the Java side: an explicit option, else the settings file, else the environment, else this
+checkout. The install folder (`DRISHTI_HOME`) is `--home`, else `drishti.home` of the settings file, else `DRISHTI_HOME`, else the
+folder `tools/drishti.py` lives in; a named one must be an absolute path (a relative one is refused as relative); `--home` naming another
+folder is refused, a settings file or `DRISHTI_HOME` naming one is a WARNING and the tools' own folder is used. The data folder is `--data-dir`, else `drishti.data.dir` of the settings file, else `DRISHTI_DATA_DIR`, else
+`<home>/data`; the modules folder is `drishti.modules.home` of the settings file, else `DRISHTI_MODULES_HOME`, else `<home>/modules`; its `run/` (pid files), `logs/` and `tmp/` hold what a started process leaves. Drishti's own server jar (exactly one; `start` refuses two) is in
 `<home>/lib`; the site's jars (JDBC drivers, connector plugins) are in `<home>/lib/ext` (`drishti.lib.path`, `DRISHTI_LIB_PATH`), kept on an upgrade. **Java** is found in one order:
 `--java FILE`, `--java-home`, `drishti.java.home` of the settings file, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, `java` on the `PATH`; a Java older than 21 is refused.
 
-**`drishti.py setup`** prepares the machine and is safe to repeat: it checks Python 3.11+ and Java 21+, makes the data folder's layout
-(`run/ logs/ tmp/ dumps/ modules/ delta/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths
-filled in (an existing file is never overwritten), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`,
-rewritten every time: `launchers --machine`), makes `drishti-console/.venv`, and prints the next steps.
+**`drishti.py setup`** prepares the machine and is safe to repeat. It has two parts and a command for each:
+
+| Command | What it does |
+|---|---|
+| `setup` | the Drishti part, then the check of the libraries of the Python running it |
+| the Drishti part | checks Python 3.13 and Java 21+, makes the data folder's layout (`run/ logs/ tmp/ dumps/ delta/ dataload/`), copies `config/settings.examples/dev.ini` to `~/drishti-envs/dev.ini` with its paths filled in (one whose `drishti.home` names this checkout is kept as it is, also when its data folder is elsewhere: setup then makes nothing there unless `--data-dir` is passed; one whose `drishti.home` names another folder, or that names none and a folder outside this checkout, is moved into a dated folder, `~/drishti-envs/replaced-YYYY-MM-DD-HHMM`, and a fresh one written; `--check` says what it would move), writes the IDE server launchers' JVM options (`~/drishti-envs/jvm-<profile>.args`; one that differs is moved into the same dated folder: setup never overwrites a file (it adds only `drishti.python`, once, to a kept `dev.ini`) and makes no folder outside this checkout, the settings folder and an explicit `--data-dir`; a `DRISHTI_*` folder variable naming another folder is a WARNING and never used), checks the server jar and the modules |
+| the library check | the libraries of the Python running setup: the pinned Lake wheel first, then `drishti-console/requirements.txt` and `config/compute/locks/python.lock`, checked name by name; **nothing is installed**. Missing or wrong: one `[FAIL] libraries` line naming them and the pip command to run (exit 1); all in order: `[  ok] libraries` and the closing line "Drishti is ready." |
+
+Drishti never makes a virtual environment: the Python is yours (the system's, a dedicated one, or a virtual environment you made yourself; run setup with it, or name it in `drishti.python`).
+**Drishti never installs Python packages**: not `setup`, not `start`, not the server's compute environments (they run with `drishti.python` as it is; a missing library is an error naming it and the pip command). The command is yours: you install them yourself with the two pip commands above. The settings file, `drishti.python` and the JVM argument files are written in either case. An operating system's own Python (PEP 668, *EXTERNALLY-MANAGED*, as Debian's and
+Ubuntu's `python3`) is one `[FAIL]` line, *this Python is managed by the operating system: run setup with a Python you prepared for Drishti ... your own
+virtual environment is fine*, and pip
+never runs (never `--break-system-packages`); a wheel pack built for another Python version (`cp313` wheels on a 3.14) is one `[FAIL]` line
+naming both versions. The **next steps** list `start` only when no `[FAIL]` or `[todo]` remains: until then the
+fixes come first, then `setup` again.
+
+The check covers both `drishti-console/requirements.txt` and `config/compute/locks/python.lock` (the server's compute pool checks its interpreter against the lock; a missing pin names its file; the two files must agree on every pin) and prints the missing list as one `py -3.13 -m pip install name==ver ...` line.
+
+`--check` changes nothing; it verifies the libraries name by name (every requirement's installed version against its
+spec, the Lake wheel against `lib/lake-wheel.pin`) and names what is missing or wrong (exit 1). The Python setup ran with is written into the settings file as `drishti.python` (`dev.ini`; with `--settings <file>` that file, and no `dev.ini` is made;
+a value naming another Python that is there is kept; one naming a missing file is replaced, and setup says so): `start console`, the cluster and the feed schedules run it, and the server uses it for its Python
+work wherever that work's own setting is blank ([CONFIGURATION.md](../admin/CONFIGURATION.md): `drishti.python`; `DRISHTI_PYTHON` overrides it). On
+Windows pip uses the Windows certificate store (pip's `truststore`), so it works behind a company proxy as Maven does.
 
 | Option | Meaning |
 |---|---|
@@ -2720,9 +2776,6 @@ rewritten every time: `launchers --machine`), makes `drishti-console/.venv`, and
 | `--home HOME`, `--data-dir DIR` | the install and data folders to use |
 | `--envs-dir DIR` | the settings folder (default `~/drishti-envs`; Windows `%USERPROFILE%\drishti-envs`) |
 | `--java-home DIR` | the JDK to check |
-| `--python FILE` | the Python that makes `drishti-console/.venv` (default the one running) |
-| `--skip-venv` | leave `drishti-console/.venv` alone |
-| `--reinstall` | remake `drishti-console/.venv` and install `drishti-console/requirements.txt` |
 
 **`build jar|modules|all`** refuses in one line while a server of this install runs (from an IDE, a terminal or `start`): *stop the server
 first: pid N on port P runs the jar and the modules this build replaces* (Windows keeps a running jar locked). **`build jar`** runs one Maven command, `clean package -DskipTests -pl :drishti-app -am` (never `install`), with the install's Maven
@@ -2739,8 +2792,8 @@ says which modules are missing or stale for the new jar.
 
 | Command | What it does |
 |---|---|
-| `start server` | the server, alone or as a cluster node: temp folder, memory settings and logs under the data folder, waits for health, prints the LAN address |
-| `start console` | the console in `drishti-console/.venv` (made on first use), pointed at `--server`; waits for `/healthz` |
+| `start server` | the server, alone or as a cluster node (with no settings file, neither `--settings` nor `~/drishti-envs/dev.ini` of this checkout, and no `--data-dir`, it refuses with the `setup` line, even when a data folder is there): temp folder, memory settings and logs under the data folder, waits for health, prints the LAN address |
+| `start console` | the console on the one Python (`DRISHTI_PYTHON`, else `drishti.python` of the settings file, else the Python running `drishti.py`), pointed at `--server`; waits for `/healthz`. It never makes an environment or installs anything: a Python lacking the console's libraries is refused with the list and the pip command, before anything is made (`start all` asks before the server starts) |
 | `start all` | one server and one console on this machine, in the background |
 | `start cluster` | a cluster on one machine from a cluster file (`--cluster FILE`, default `deploy/stack/stack.yaml`): the nodes, then the console; or only the nodes named (`console` names the console) |
 | `stop server`, `stop console`, `stop all`, `stop cluster` | stop by the pid file only, never by name: graceful first, forced after `--timeout` |
@@ -2752,7 +2805,7 @@ Options of `start server`, `start console` and `start all`:
 | `--home`, `--data-dir`, `--java-home` | the roots and the JDK, as above (`start console` has no `--java-home`) |
 | `--env-file FILE` | `KEY=VALUE` lines put into the process's environment; secrets stay off the command line and are never printed |
 | `--demo` | the demo profile, `config/profiles/demo.ini` (the offline demo on the lakes; the file **Drishti: run server (demo)** names), with development secrets and the `drishti-dev-admin` account: not for production |
-| `--distribution NAME` | `risk`, `finance`, `genomics`, `all` or a file path (`DRISHTI_DISTRIBUTION`; [DISTRIBUTIONS.md](../architecture/DISTRIBUTIONS.md)) |
+| `--distribution NAME` | `risk`, `finance`, `genomics`, `all` or a file path (`DRISHTI_DISTRIBUTION`; [KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md)) |
 | `--background` | detach: log and pid file under `logs/` and `run/` |
 | `--port PORT` | the server's port (default `server.port` of the settings files, else `DRISHTI_PORT`, else 18480); the console's (default `DRISHTI_CONSOLE_PORT`, else `console.server.port`, else 17480). `start all` has `--server-port` and `--console-port` |
 | `--heap SIZE` | the server's `-Xmx` (default `drishti.launch.heap` of the settings files: 4g in the demo profile; else 2g) |
@@ -2763,7 +2816,7 @@ Options of `start server`, `start console` and `start all`:
 | `--wait SECONDS` | how long to wait for the health answer (server 300, console 90) |
 | `--node NODE`, `--node-dir DIR`, `--node-data DIR`, `--seed HOST:PORT`, `--advertise IP` | a cluster node: its id (pid, log and temp folder are named after it), its Drishti\*net folder, its own data folder, a member to join through, the address it advertises (default this machine's real address, never a loopback one) |
 | `--server URLS` | `start console`: the server, or a cluster's entry nodes, comma-separated (default `DRISHTI_SERVER_URL`, else `console.backend.url` or a profile's `server.port`) |
-| `--name NAME`, `--python FILE`, `--reinstall` | `start console`: a name when several consoles run from one data folder (`run/console-<name>.pid`); the Python for the `.venv`; remake the `.venv` |
+| `--name NAME` | `start console`: a name when several consoles run from one data folder (`run/console-<name>.pid`) (start makes no environment; `setup` checks the libraries) |
 
 `stop` takes `--data-dir`, `--env-file` and `--timeout SECONDS`; `stop server` takes `--node NODE` and `--all-nodes` (every server pid
 file of the data folder), `stop console` takes `--name NAME`, `stop all` takes `--all-nodes`, `stop cluster` takes `--cluster FILE` and node
@@ -2775,10 +2828,16 @@ command line, its port from the settings files it names; `--cluster FILE` adds t
 `--env-file`, `--cluster`. Exit 0 when every process found runs and answers (or none was started), 1 when one is not running or not
 answering.
 
-**`drishti.py launchers`** writes the IDE launchers (`run-configs/`, `drishti-console/run-configs/`) and the tables of IDE_GUIDE section 4
+**`drishti.py launchers`** writes the IDE launchers (into each project's own `run-configs/`: IntelliJ's (`drishti`: the Maven and JAR Application launchers, folders `IntelliJ-drishti-build`, `-run`, `-test`) and PyCharm's (`drishti-console/run-configs/`: the Python ones, `PyCharm-console-setup`, `-data`, `-run`, `-check`); no `.idea` is in the source; every Python launcher runs on the project interpreter you choose) and the tables of IDE_GUIDE section 4
 from one table, `tools/launch/launchers.yaml`; the files are committed. `launchers --check` changes nothing and exits 1 naming each file
 that differs (the drill's gate runs it). `launchers --machine` writes this machine's `~/drishti-envs/jvm-<profile>.args`, the JVM options
 of the server launchers: `serverstart.jvm_flags`, the function `start server` runs, with the data folder of `dev.ini` and the profile.
+`launchers --list` prints every committed launcher by group with the exact command it runs and its working folder (Maven: `mvnw` + goals; Python: the one
+Python (`DRISHTI_PYTHON`, else `drishti.python`, else the running Python) + script + parameters; JAR Application: `java` + VM options, `@` files included,
++ `-jar` + arguments), read from the `run-configs/*.run.xml` files themselves. `launchers --run "<name>"` (the whole name or a prefix that names one launcher,
+e.g. `--run "Drishti: run server (demo)"`) runs exactly that command in that folder with the launcher's environment variables, streams the output and returns
+the exit code; an unknown or ambiguous name is one `[FAIL] launcher "<x>": <why>. Fix: <the --list command>` (exit 1). A launcher that asks for a value in the IDE (the file of **Drishti: run loader (file into the lake)**) takes it from `--input`, e.g.
+`launchers --run "Drishti: run loader" --input C:\data\trades.jsonl`.
 
 ```
 python tools/drishti.py setup                                                        # once per machine
@@ -2815,7 +2874,7 @@ connector does not work; **2** usage (no such file, unknown option). The server 
 `DRS-5032` instead of being overwritten. A new connector needs no version. A literal credential in the file is refused with `DRS-5031`; write `${ENV_VAR}` or `file:/path`.
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector list
+$ python3 tools/drishti.py connector list
 24 connector(s) in <repo>/config/connectors   (watching: WATCHING)
   name               origin  plugin    kinds                                                        state           used by            problems
   -----------------  ------  --------  -----------------------------------------------------------  --------------  -----------------  --------
@@ -2952,14 +3011,14 @@ $ python3 tools/drishti.py connector history orders-lake
 Switching off or deleting a connector packs use asks first (`DRS-5032`, exit 1) and goes ahead with `--confirm`; a connector a pack's template suggests is never deleted:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector disable trade-endur
+$ python3 tools/drishti.py connector disable trade-endur
 drishti: the server said 409 DRS-5032: DRS-5032 disabling connector 'trade-endur' would stop serving pack trading (trade); repeat with confirm=true to go ahead
 [exit 1]
-$ drishti-console/.venv/bin/python tools/drishti.py connector disable trade-endur --confirm
+$ python3 tools/drishti.py connector disable trade-endur --confirm
 trade-endur is off (disabled)
-$ drishti-console/.venv/bin/python tools/drishti.py connector enable trade-endur
+$ python3 tools/drishti.py connector enable trade-endur
 trade-endur is on (running)
-$ drishti-console/.venv/bin/python tools/drishti.py connector delete trade-endur
+$ python3 tools/drishti.py connector delete trade-endur
 drishti: the server said 409 DRS-5032: DRS-5032 connector 'trade-endur' is named by pack trading's template, so it is not deleted: reset it to the pack's default, or disable it
 [exit 1]
 $ python3 tools/drishti.py connector delete orders-lake
@@ -2981,7 +3040,7 @@ kinds: [trade]
 settings:
   root: <repo>/lake
   domain: trading
-$ drishti-console/.venv/bin/python tools/drishti.py connector test --file tools-trade.yaml --server http://127.0.0.1:19590
+$ python3 tools/drishti.py connector test --file tools-trade.yaml --server http://127.0.0.1:19590
 tools-trade (delta): reachable, health UP (engine: native), 38 ms
   kind   business date  rows  note
   -----  -------------  ----  ----
@@ -3208,7 +3267,7 @@ drishti.py convert bundle.zip                          bundle/trade.jsonl, bundl
 | `--force` | replace an existing output file |
 | `--dataset NAME` | an archive without folders: the name of its one dataset, so of the output (default: the archive's name, `trade.tar.gz` → `trade.jsonl`) |
 
-An archive (`.zip`, `.tar.gz`, `.tgz`, `.tar`) is read by the loaders' archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)):
+An archive (`.zip`, `.tar.gz`, `.tgz`, `.tar`) is read by the loaders' archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#27-archives-zip-and-tarballs)):
 without folders, its JSON Lines members become one file; with folders one level deep, one file per folder in the folder `--out` names
 (default: the archive's name beside it); other members are skipped with a note, and an unsafe or mixed archive is refused.
 
@@ -3221,7 +3280,7 @@ without folders, its JSON Lines members become one file; with folders one level 
 
 The same designs the **Build** workbench shows, from a terminal or a pipeline: create one from samples and/or a Sutra file,
 check it against every sample, save edits made in your editor, send it for review, and let an approver decide. Everything the
-screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-saving-and-proposing); the endpoints are in
+screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#322-saving-and-proposing); the endpoints are in
 [API_REFERENCE.md](API_REFERENCE.md).
 
 | Command | Does | Endpoint |
@@ -3312,16 +3371,16 @@ The one Approvals queue from the terminal (`tools/approvalscli.py`; [USER_GUIDE.
 Exit codes are `0`, `1` (the server said no) and `2` (usage; a rejection without `--comment` is refused before it is sent).
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py approvals list
-drishti-console/.venv/bin/python tools/drishti.py approvals show sutra P-000042
-drishti-console/.venv/bin/python tools/drishti.py approvals approve function asha:wret@1 --comment reviewed --param scope=group:rates
-drishti-console/.venv/bin/python tools/drishti.py approvals ask change chg-01M5V6GM7NCKSR506RQ86M7YVV "Which ticket?"
+python3 tools/drishti.py approvals list
+python3 tools/drishti.py approvals show sutra P-000042
+python3 tools/drishti.py approvals approve function asha:wret@1 --comment reviewed --param scope=group:rates
+python3 tools/drishti.py approvals ask change chg-01M5V6GM7NCKSR506RQ86M7YVV "Which ticket?"
 ```
 
 ### `change` and `edits`: write-back
 
-Write-back from the terminal (`tools/changecli.py`, [APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals),
-[APPROVALS_GUIDE.md section 4a](APPROVALS_GUIDE.md#4-submitting-a-change)), as the caller's token (it needs the `edit` scope):
+Write-back from the terminal (`tools/changecli.py`, [ARCHITECTURE.md › 31 Collaboration, write-back and approvals](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals),
+[USER_GUIDE.md › Submitting a change](USER_GUIDE.md#submitting-a-change)), as the caller's token (it needs the `edit` scope):
 
 - `change propose --kind KIND --id ID --set FIELD=VALUE [...] [--from FIELD=VALUE ...] [--reason TEXT] [--sutra S --panel P] [--date YYYY-MM-DD] [--override]`
   proposes a change to a record's fields: the same request as a form's Submit. A field must be editable by a Sutra's form with `save:`;
@@ -3338,10 +3397,10 @@ Write-back from the terminal (`tools/changecli.py`, [APPROVALS_GUIDE.md](../arch
 Exit codes are `0`, `1` (refused, conflicted, or the server said no) and `2` (usage).
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py change propose --kind trade --id MX-20000012 --set NOTIONAL=28001250 --from NOTIONAL=28000000 --reason "booking typo"
-drishti-console/.venv/bin/python tools/drishti.py change list --state awaiting
-drishti-console/.venv/bin/python tools/drishti.py approvals approve change chg-01M5V6GM7NCKSR506RQ86M7YVV --comment "ticket 4411"
-drishti-console/.venv/bin/python tools/drishti.py edits status
+python3 tools/drishti.py change propose --kind trade --id MX-20000012 --set NOTIONAL=28001250 --from NOTIONAL=28000000 --reason "booking typo"
+python3 tools/drishti.py change list --state awaiting
+python3 tools/drishti.py approvals approve change chg-01M5V6GM7NCKSR506RQ86M7YVV --comment "ticket 4411"
+python3 tools/drishti.py edits status
 ```
 
 ## 12. `bi` and `tables`
@@ -3404,8 +3463,8 @@ drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv|js
 BI reads tables and models of the table layer and Rachana only; a dataset or model file in an older form is refused where it is read (`DRS-9196`).
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py bi expr validate "sum(trades.NOTIONAL) / count(trades)" --model trading-risk
-drishti-console/.venv/bin/python tools/drishti.py tables check
+python3 tools/drishti.py bi expr validate "sum(trades.NOTIONAL) / count(trades)" --model trading-risk
+python3 tools/drishti.py tables check
 ```
 
 Captured, with a lower-case name the second time (the model's columns are the packs' UPPER_SNAKE names):
@@ -3422,7 +3481,7 @@ console the migration's state is on Admin → **BI** (items that could not be co
 ### `bi model`, `bi mq`: models and model queries
 
 What the model designer and a report's visuals do, over REST as the token's user (the server checks every model and answers every query with your row
-rules and masks; [MODELS_AND_DATASETS_FOR_REPORTS.md section 23](bi/MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads)). Reads need no scope.
+rules and masks; [TABLES_AND_MODELS.md section 23](bi/TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads)). Reads need no scope.
 
 ```
 drishti.py bi model list [--kind model|implicit|compat]          the models and datasets you may read, with the name@major a query uses
@@ -3673,7 +3732,7 @@ with `--window` keeps the comparison ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#1
 
 The same designs the **Build** workbench shows, from a terminal or a pipeline: create one from samples and/or a Sutra file,
 check it against every sample, save edits made in your editor, send it for review, and let an approver decide. Everything the
-screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-saving-and-proposing); the endpoints are in
+screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#322-saving-and-proposing); the endpoints are in
 [API_REFERENCE.md](API_REFERENCE.md).
 
 ### `exposure`: the exposure engine
@@ -3751,9 +3810,9 @@ Position sensitivities and FRTB-SA as the token's user sees them (`tools/frtbcli
   workbook of live formulas, a recipe; `play frtb --recipe FR-...` replays a recipe and exits 1 when it does not reproduce to the cent.
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py frtb sa DESK:DESK-RATES
-drishti-console/.venv/bin/python tools/drishti.py play frtb EXAMPLE --compare girr-correlation=exact
-drishti-console/.venv/bin/python tools/drishti.py play frtb EXAMPLE --xlsx frtb-cases.xlsx
+python3 tools/drishti.py frtb sa DESK:DESK-RATES
+python3 tools/drishti.py play frtb EXAMPLE --compare girr-correlation=exact
+python3 tools/drishti.py play frtb EXAMPLE --xlsx frtb-cases.xlsx
 ```
 
 ### `simm` and `play simm`
@@ -3771,10 +3830,10 @@ ISDA SIMM as the token's user sees it (`tools/simmcli.py`; [SIMM_GUIDE.md](SIMM_
   does not reproduce to the cent.
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py simm versions
-drishti-console/.venv/bin/python tools/drishti.py simm show NS-ALDERSHOT-LDN
-drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --compare concentration=off
-drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --side post --xlsx aldershot.xlsx
+python3 tools/drishti.py simm versions
+python3 tools/drishti.py simm show NS-ALDERSHOT-LDN
+python3 tools/drishti.py play simm NS-ALDERSHOT-LDN --compare concentration=off
+python3 tools/drishti.py play simm NS-ALDERSHOT-LDN --side post --xlsx aldershot.xlsx
 ```
 
 ### `pivot`: the pivot engine
@@ -3818,16 +3877,16 @@ The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT.md](bi
   `pivot rollups remove ID` (administrators; audited).
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pivot fields trade
-drishti-console/.venv/bin/python tools/drishti.py pivot run --source trade --rows productType,counterparty --values "count()" --open productType=IRS
-drishti-console/.venv/bin/python tools/drishti.py pivot run --source var --rows DESK --cols CURRENCY --values "var()" --values "es()"
-drishti-console/.venv/bin/python tools/drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx
-drishti-console/.venv/bin/python tools/drishti.py pivot run --source var --rows MGMT.DESK --cols RISK_CLASS --values "comp_var()" --option horizon=10d
-drishti-console/.venv/bin/python tools/drishti.py pivot mr ladder --scope DESK:RATES --grid FRTB-GIRR
-drishti-console/.venv/bin/python tools/drishti.py pivot functions test wret.yaml --sample rows.csv --group DESK
-drishti-console/.venv/bin/python tools/drishti.py pivot live start --view asha/desk-risk
-drishti-console/.venv/bin/python tools/drishti.py pivot comments asha/desk-risk --cell DESK=RATES --add "checked with the desk" --measure Notional
-drishti-console/.venv/bin/python tools/drishti.py pivot explain --source trade --rows productType --values "sum(notional)" --cell productType=IRS --other-cell productType=FXFWD --by counterparty
+python3 tools/drishti.py pivot fields trade
+python3 tools/drishti.py pivot run --source trade --rows productType,counterparty --values "count()" --open productType=IRS
+python3 tools/drishti.py pivot run --source var --rows DESK --cols CURRENCY --values "var()" --values "es()"
+python3 tools/drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx
+python3 tools/drishti.py pivot run --source var --rows MGMT.DESK --cols RISK_CLASS --values "comp_var()" --option horizon=10d
+python3 tools/drishti.py pivot mr ladder --scope DESK:RATES --grid FRTB-GIRR
+python3 tools/drishti.py pivot functions test wret.yaml --sample rows.csv --group DESK
+python3 tools/drishti.py pivot live start --view asha/desk-risk
+python3 tools/drishti.py pivot comments asha/desk-risk --cell DESK=RATES --add "checked with the desk" --measure Notional
+python3 tools/drishti.py pivot explain --source trade --rows productType --values "sum(notional)" --cell productType=IRS --other-cell productType=FXFWD --by counterparty
 ```
 
 ## 14. `compute`, `contract` and `feed`
@@ -3861,7 +3920,7 @@ path-sum-java BOOK-FX~delay-ms=900  REFUSED  (req-mvncbpgc-b05a980336d9)
 ```
 
 Exit codes: 0 (`ready`, `computing` or `stale`); 1 when the answer is `failed` or `refused`, or the server said no; 2 for usage.
-[Tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector) walks through them.
+[Tutorial 19, Part C](../tutorials/25-computed-panels.md) walks through them.
 
 ### `contract`: data contracts and the command catalog
 
@@ -3895,13 +3954,13 @@ forms). `--check` fails when it is stale; a console test runs the same check.
 Drishti Elements (the JavaScript libraries the console draws with) is a separate project vendored at a pinned version; its own
 `tools/elements/cli.py pack|dist` builds a packed pair of files or the release tree
 ([USING.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/USING.md)). Drishti has no `elements` command; how the console
-holds the pin and how to move it: [ELEMENTS_IN_DRISHTI.md](../architecture/ELEMENTS_IN_DRISHTI.md).
+holds the pin and how to move it: [THIN_CONSOLE_DESIGN.md](../architecture/THIN_CONSOLE_DESIGN.md).
 
 ### `feed`: the data feeds
 
 drishti-feeds, the data feeds that pull external data and load it into the lakes (`tools/feeds/`, one file a feed in `config/feeds/`;
 the guide [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)). The pull is Python; the load is `lake build` (the parallel loader by default) or the data
-inbox. `python tools/drishti.py feed run <feed>` runs it on every system; cron, systemd and Task Scheduler run it with the console's Python (`drishti-console/.venv/bin/python`, on Windows `drishti-console\.venv\Scripts\python.exe`).
+inbox. `python tools/drishti.py feed run <feed>` runs it on every system; cron, systemd and Task Scheduler run it with the one Python (`drishti.python` of the settings file, its full path; `DRISHTI_PYTHON` overrides).
 
 - `feed list [--json]`: every feed: its lake, load route, schedule, licence (internal only or not) and datasets.
 - `feed run <feed>|--all [--date D | --since D] [--load java|python|inbox|none] [--lake L] [--dry-run] [--snapshot [--internal-ok]]
@@ -3959,7 +4018,7 @@ its name, the business today), never the row's own `date`, which it only counts 
 [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), the same as `lake build`'s.
 
 **Scheduling.** The loaders apply Lake's guards ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md#rules-that-apply-to-every-load): future dates, the zone, the drop share) and replace each day they reach in one step, so a nightly cron entry
-that re-runs is safe; the details are in `tools/storeload.py` and [DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#11-the-demo-data). The connectors.
+that re-runs is safe; the details are in `tools/storeload.py` and [BANK_DATA_GUIDE.md section 9](BANK_DATA_GUIDE.md#9-the-demo-data). The connectors.
 guides are listed in [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connectors).
 
 ## 16. Generators: `tools/packgen`, `tools/samplegen`, `tools/realdata`
@@ -3980,6 +4039,7 @@ guides are listed in [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connect
 | `tools/knowledge.py` | the Knowledge pages' glossaries (`docs/knowledge/`): writes each page's terms and the home's A to Z from `docs/knowledge/glossary.yaml`; `--check` fails when a page differs or the glossary is invalid (`tools/test_knowledge_pages.py`) |
 | `tools/tmpguard.py` | gives each test session a private temp folder, removed at the end (`tools/conftest.py` and the console tests' `conftest.py` install it); `DRISHTI_TMP_STRICT=1` fails a session that leaves its own paths in `/tmp` |
 | `tools/lane_servers.py` | one Drishti server and console per test lane, shared by every pytest worker: the first worker starts them under a lock, the others attach through a state file, a watchdog stops them when no worker is left (`DRILL_TEST_SERVER_HEAP`, default 12g); docs/architecture/TEST_HARNESS.md section 3.32 |
+| `tools/packgen/module_readme.py` | a module's `docs/README.md`, generated whole from its `module.yaml` and its `docs/about.yaml` (`front`, `body`); `--all --check` fails on a stale one |
 | `tools/packgen/readme.py` | a pack's `README.md` (the README standard, [BUILD_GUIDE.md Part IV](BUILD_GUIDE.md#303-the-readme-standard)) for a pack without a generator of its own; `--all --check` fails on any pack whose README is missing, stale or breaks the standard |
 | `tools/packgen/common/guide_data.py` | every pack guide's *Data contracts* and *Data retrieval* sections (from the contracts and `data_retrieval.yaml`; the pack generators call it); run alone it writes compute-demo's guide and the generated block of the news-and-markets guide; `--check` fails when they are stale ([BUILD_GUIDE.md Part IV](BUILD_GUIDE.md#303-the-readme-standard)) |
 | `tools/connector_readmes.py` | the settings tables of every connector README (from `plugin-settings.yaml`) and the file tables of the template folders' READMEs; `--check` fails when one is stale ([DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#1014-the-readme-standard-for-connectors)) |
@@ -3987,14 +4047,14 @@ guides are listed in [DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-connect
 | `tools/packgen/climate/make.py`, `liquidity/make.py`, `oprisk/make.py`, `retail/make.py` | the climate-risk, liquidity-risk, operational-risk and retail-banking packs, built on the banking data |
 | `tools/packgen/genomics/make.py` | the genomics pack (public reference facts, synthetic samples) |
 | `tools/packgen/world/make.py` (the halves `economics/make.py`, `politics/make.py`) with `tools/realdata/realdata.py` | the world-economy pack from real public data (World Bank, IMF; internal demos only) |
-| `tools/packgen/trades/make_trades.py` | **The trading pack's trades of three source systems** in the common schema (upper-snake, `LEGS` → `CASH_FLOWS` → `RESETS`, `EVENTS`): `--trades N` per system (ENDUR, CALYPSO, MUREX), `--days D` business days with about 6% amended each day, one `<out>/<system>/trade_<system>.<date>.jsonl.gz` a day; with `--lake <root>` each goes through `lake build --connector trade-<system>` into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`). Deterministic; 10,000 trades or fewer on a laptop. `drishti-console/.venv/bin/python tools/packgen/trades/make_trades.py --trades 50 --days 2 --out data/build/trades` prints `ENDUR: 50 trades x 2 days -> data/build/trades/endur` and the same for CALYPSO and MUREX. |
+| `tools/packgen/trades/make_trades.py` | **The trading pack's trades of three source systems** in the common schema (upper-snake, `LEGS` → `CASH_FLOWS` → `RESETS`, `EVENTS`): `--trades N` per system (ENDUR, CALYPSO, MUREX), `--days D` business days with about 6% amended each day, one `<out>/<system>/trade_<system>.<date>.jsonl.gz` a day; with `--lake <root>` each goes through `lake build --connector trade-<system>` into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`). Deterministic; 10,000 trades or fewer on a laptop. `python3 tools/packgen/trades/make_trades.py --trades 50 --days 2 --out data/build/trades` prints `ENDUR: 50 trades x 2 days -> data/build/trades/endur` and the same for CALYPSO and MUREX. |
 | `tools/packgen/var/make_var_data.py` | **The VaR engine's inputs** ([VAR_GUIDE.md Part II](VAR_GUIDE.md#14-the-contract-at-a-glance)) from the committed trades and desks, as an upstream risk batch delivers them: per position by default, each record a position's 509 scenario PVs (7,993 records of 9,572 live trades; `--position-systems ""` and `--pv-systems` give trade grain and P&L vectors) with the terms the server derives positions from (a synthetic `SECURITY_ID` shared by several trades for securities and listed products, by the market-risk pack's `positions:` rules), the scenario set and the limits (of the nodes and the system baskets), written to `data/testdata/market-risk/<kind>/` with their `testdata.yaml` entries, the pack's samples and Sutra tests, and the demo's 28 system baskets (a desk's, a legal entity's, rules and baskets, overlapping) as the pack's seed, `seeds/system-baskets.yaml` (not data: imported once into the basket store, [VAR_GUIDE.md section 5.7](VAR_GUIDE.md#57-system-baskets)). No position, VaR or node history is written: the server derives and computes them. `--budget N` values at most N trades per book (default 0: every live trade), `--out` writes elsewhere, and `--check` fails when the committed files differ. The form is a choice per system: `--pv-systems ENDUR` (the default: Endur's trades as scenario PVs in their own currency, with the scenario FX), `--pnl-systems` (as P&L vectors), `--all-vectors` (every trade a P&L vector: the bank 112,035,906 / 160,132,107). `--position-systems MUREX` sends those systems per position (`GRAIN: POSITION`, naming their trades in `TRADE_IDS`); `--inputs-config` prints the `drishti.var.inputs` pins matching the data. Deterministic; `tools/packgen/var/test_var_data.py` checks the data. |
-| `tools/packgen/sensitivity/make_sensitivity_data.py` | **The demo position sensitivities and the factor dictionary** (the planned kinds [`position-sensitivity`](../contracts/samples/market-risk.md#position-sensitivity) ([contract](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity)) and [`risk-factor`](../contracts/samples/market-risk.md#risk-factor) ([contract](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor)), [SENSITIVITIES_AND_FRTB_SA.md](FRTB_SA_GUIDE.md)) from the VaR factor model, into `data/testdata/market-risk/`; run by `tools/testdata/make_testdata.py` |
-| `tools/pvgen/morning.py`, `intraday.py`, `publish_kafka.py`, `check.py` (each with a `.sh` beside it; the Python files run on every system with the console's Python) | **A stand-in pricing system** ([VAR_GUIDE.md section 15.12](VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)): JSONL only, every line one row of its kind's contract. Every record leads with what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`); `--grain position` (or `--position-systems SYS`) sends per position instead of per trade. `morning.py` writes a full day's [`scenario-pv`](../contracts/samples/market-risk.md#scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)), [`pnl-vector`](../contracts/samples/market-risk.md#pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)) and [`fx-scenario`](../contracts/samples/market-risk.md#fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) (per-system forms as above, `--date`, `--lake`, `--server`); `intraday.py` N small batches of amended, new and cancelled trades (`--batches 20 --trades-per-batch 15`, `--seed`, `--first` for a second run, `--lake`, `--server`, `--every 30s`); `publish_kafka.py` the same to the PV topic, each message JSONL text of `--per-message` records, a cancel a cancel line (`--rate`, `--seconds`; kafka-python); `check.py` recomputes the bank's and the desks' VaR and ES from the files and compares them with the server. Each has `--help` and `--dry-run`; `tools/pvgen/test_pvgen.py` checks them. `drishti-console/.venv/bin/python tools/pvgen/morning.py --dry-run` prints `morning run of 2026-09-30: 1,339 trades as scenario PVs (ENDUR), 8,233 as P&L vectors, scenario FX for 6 currencies; computed at 2026-09-30T06:00:00Z`. |
-| `tools/packgen/ccr/make_ccr_data.py` | **The exposure engine's inputs** ([EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md)) from the committed netting sets, as an upstream exposure simulator delivers them: a simulation run ([`simulation-run`](../contracts/samples/counterparty-risk.md#simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)): 200 paths, 13 primary dates 1W .. 10Y and their 10-business-day look-back dates) and every live member trade's MtM on every path at every grid date up to its maturity ([`exposure-path`](../contracts/samples/counterparty-risk.md#exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path))) for eight netting sets, written to `data/testdata/counterparty-risk/<kind>/` with their `testdata.yaml` entries, the pack's samples and `drishti-compute`'s parity reference (`ccrmath.py`'s figures). No exposure figure is written. `--check` fails when the committed files differ, `--full --out DIR` writes every netting set that fits in 10,000 trades with 500 paths (local benchmarks), `--demo --out DIR` writes the demo lake's run (whole counterparties within 9,500 trades, 200 paths: 74 netting sets, 8,022 live trades on the data's date; what `lake demo --exposure demo` loads), `--reconcile I/N --stored DIR` compares stored profiles with the computed ones. Deterministic; `tools/packgen/ccr/test_ccr_data.py` checks the data. |
-| `tools/testdata/sample_docs.py` | **The data samples** ([docs/contracts/samples/README.md](../contracts/samples/README.md)): one page per data type of `data/testdata` (and per kind a bank or a public source produces that has only pack samples), each with a real record pretty-printed as JSON, long arrays folded, one record per sub-type (a trade's product type, a P&L or PV form, a curve type), every field explained from the kind's data contract, the fields only other rows have, and a checklist for the production query; the index groups them by what the bank produces and lists the kinds Drishti computes. Reads every row of the test data (four worker processes, about 25 s). `--check` fails when a page is stale; `audit` compares every contract with all its committed rows (fields missing from the contract, required fields null, types and enums that differ). `tools/test_sample_docs.py` runs both. |
+| `tools/packgen/sensitivity/make_sensitivity_data.py` | **The demo position sensitivities and the factor dictionary** (the planned kinds [`position-sensitivity`](../contracts/packs/market-risk.md#example-market-risk-position-sensitivity) ([contract](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity)) and [`risk-factor`](../contracts/packs/market-risk.md#example-market-risk-risk-factor) ([contract](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor)), [SENSITIVITIES_AND_FRTB_SA.md](FRTB_SA_GUIDE.md)) from the VaR factor model, into `data/testdata/market-risk/`; run by `tools/testdata/make_testdata.py` |
+| `tools/pvgen/morning.py`, `intraday.py`, `publish_kafka.py`, `check.py` (each with a `.sh` beside it; the Python files run on every system with the console's Python) | **A stand-in pricing system** ([VAR_GUIDE.md section 15.12](VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)): JSONL only, every line one row of its kind's contract. Every record leads with what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`); `--grain position` (or `--position-systems SYS`) sends per position instead of per trade. `morning.py` writes a full day's [`scenario-pv`](../contracts/packs/market-risk.md#example-market-risk-scenario-pv) ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv)), [`pnl-vector`](../contracts/packs/market-risk.md#example-market-risk-pnl-vector) ([contract](../contracts/packs/market-risk.md#pnlv-pl-vector-one-pl-per-scenario-pnl-vector)) and [`fx-scenario`](../contracts/packs/market-risk.md#example-market-risk-fx-scenario) ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)) (per-system forms as above, `--date`, `--lake`, `--server`); `intraday.py` N small batches of amended, new and cancelled trades (`--batches 20 --trades-per-batch 15`, `--seed`, `--first` for a second run, `--lake`, `--server`, `--every 30s`); `publish_kafka.py` the same to the PV topic, each message JSONL text of `--per-message` records, a cancel a cancel line (`--rate`, `--seconds`; kafka-python); `check.py` recomputes the bank's and the desks' VaR and ES from the files and compares them with the server. Each has `--help` and `--dry-run`; `tools/pvgen/test_pvgen.py` checks them. `python3 tools/pvgen/morning.py --dry-run` prints `morning run of 2026-09-30: 1,339 trades as scenario PVs (ENDUR), 8,233 as P&L vectors, scenario FX for 6 currencies; computed at 2026-09-30T06:00:00Z`. |
+| `tools/packgen/ccr/make_ccr_data.py` | **The exposure engine's inputs** ([EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md)) from the committed netting sets, as an upstream exposure simulator delivers them: a simulation run ([`simulation-run`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-simulation-run) ([contract](../contracts/packs/counterparty-risk.md#xrun-exposure-simulation-run-simulation-run)): 200 paths, 13 primary dates 1W .. 10Y and their 10-business-day look-back dates) and every live member trade's MtM on every path at every grid date up to its maturity ([`exposure-path`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-exposure-path) ([contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path))) for eight netting sets, written to `data/testdata/counterparty-risk/<kind>/` with their `testdata.yaml` entries, the pack's samples and `drishti-compute`'s parity reference (`ccrmath.py`'s figures). No exposure figure is written. `--check` fails when the committed files differ, `--full --out DIR` writes every netting set that fits in 10,000 trades with 500 paths (local benchmarks), `--demo --out DIR` writes the demo lake's run (whole counterparties within 9,500 trades, 200 paths: 74 netting sets, 8,022 live trades on the data's date; what `lake demo --exposure demo` loads), `--reconcile I/N --stored DIR` compares stored profiles with the computed ones. Deterministic; `tools/packgen/ccr/test_ccr_data.py` checks the data. |
+| `tools/testdata/sample_docs.py` | **The data samples** ([docs/contracts/packs/README.md](../contracts/packs/README.md)): one page per data type of `data/testdata` (and per kind a bank or a public source produces that has only pack samples), each with a real record pretty-printed as JSON, long arrays folded, one record per sub-type (a trade's product type, a P&L or PV form, a curve type), every field explained from the kind's data contract, the fields only other rows have, and a checklist for the production query; the index groups them by what the bank produces and lists the kinds Drishti computes. Reads every row of the test data (four worker processes, about 25 s). `--check` fails when a page is stale; `audit` compares every contract with all its committed rows (fields missing from the contract, required fields null, types and enums that differ). `tools/test_sample_docs.py` runs both. |
 | `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days: one JSONL file a day under `data/build/bulk/<system>/`, then each through `lake build` into the system's trade table (`data load --store delta --trades`; `--no-lake` writes the JSONL only, `--jsonl FILE.tar` loader rows for the other stores: a tar of `trade/<YYYY-MM-DD>/` folders; a plain file or `-` only with `--days 1`) |
-| `tools/demonames.py` | the bank's own names in the demo data (`config/demo/names.yaml`): the mapping `lake demo --names` and `build_demo_lakes.py --names` apply as they load, and the pack generators as they write samples ([DATA_GUIDE.md section 11](DATA_GUIDE.md#1114-your-banks-names)) |
+| `tools/demonames.py` | the bank's own names in the demo data (`config/demo/names.yaml`): the mapping `lake demo --names` and `build_demo_lakes.py --names` apply as they load, and the pack generators as they write samples ([BANK_DATA_GUIDE.md section 9](BANK_DATA_GUIDE.md#914-your-banks-names)) |
 | `tools/convertcmd.py` (`drishti.py convert FILE`) | CSV (deprecated input), a JSON array or a folder of per-entity `.json` files into JSON Lines ([section 10](#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)) |
 | `tools/samplegen/lake.py`, `tools/samplegen/load_rows.py` | one pack's sample history as dated JSONL loader rows (`<name>-history.tar`, `<name>-restated.tar`), and the loader that puts such rows into Delta ([DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
 
@@ -4006,7 +4066,7 @@ same bytes on every Python version and machine: amounts that are sums (a netting
 of another size, or a JSON array as a booking system exports it (`--array`; without it, JSON Lines), the generators write one:
 
 ```
-$ drishti-console/.venv/bin/python tools/packgen/comswap_synth.py --deals 2000 --mix --array --out build/tools-walk/book-2026-10-16.json
+$ python3 tools/packgen/comswap_synth.py --deals 2000 --mix --array --out build/tools-walk/book-2026-10-16.json
 wrote 2000 synthetic deals to build/tools-walk/book-2026-10-16.json
 ```
 
@@ -4025,7 +4085,7 @@ of Parquet.
 | `tools/drill-known.txt` | the console tests the drill accepts when they fail: one line each, its pytest id, a `|` and the reason; reported at the end of the lane, never hidden |
 | `tools/sizing_planner.py` | reads the planner's one file, `kernel/drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [CLUSTER_GUIDE.md section 9.7](CLUSTER_GUIDE.md#155-the-sizing-planner)), the server's workbook template (`kernel/drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`kernel/drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [section 8](#admin-capacity-admin--capacity-from-a-terminal) |
-| `tools/domain_strings.py` | the domain boundaries' rule 4 ([DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
+| `tools/domain_strings.py` | the domain boundaries' rule 4 ([KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md) section 4): counts the banking names (command words, engine ids, connectors, API and console paths, packages) in the core's code against `tools/domain_strings_allowed.yaml`, which only shrinks; `--write` lowers the list after names moved into the module (a quick file check in the drill: `tools/test_domain_strings.py`) |
 | `tools/version.py` | the product version from its one home, `.mvn/maven.config`: `python3 tools/version.py` prints it (`<version>`), `--tag` the release tag (`v<version>`, an i-step written `i_<n>`), `--check <tag>` fails when a tag is not the version's; every tool that names the version reads it here |
 | `tools/code_cap.py` | the one line cap of a code file (`CODE_LINE_CAP`, 2,500): the Python guards import it and the Java `SourceFileSizeTest` reads it; a documentation page has its own cap |
 | `tools/resolved.py` | where every pack, module and connector is, as the server's resolver says (`java -jar <server jar> resolve --json`, no server running): the tools and generators ask it, never a folder of their own; the answer is kept under `<data>/tmp/resolved/` until an input changes (the packs and modules folders, the switch files, the connectors, the override folders of `drishti.overrides.dir`) |
@@ -4082,6 +4142,22 @@ python3 tools/bench/net_soak.py --work ~/drishti-scale-test/net-2h --users 20 --
 It prints the latency and error table (one line per action, `history` its own) and the verdict, and keeps them in
 `<work>/soak-report.txt` beside the full `<work>/soak.json` (the per-minute samples are its `resources`).
 
+### `docs generate`: every generated document
+
+One command runs every documentation generator, in the order that is right (a page that lists other pages comes after them): the
+settings catalogue (`CONFIGURATION.md`), the under-construction page, the command catalogue, the data contracts' pages, the CSV formats,
+the feed pages, the glossaries, the pack, module and connector READMEs, the IDE launchers and their guide table, the guides' data
+sections, the pinned Rachana and Elements documents under `docs/products/` (copied from the product clones at the pinned tags; Help shows them offline), the Help map and the corpus tables. Run it after changing a pack, a setting, a contract, a mapping or a registry.
+
+```bash
+python3 tools/drishti.py docs generate                       # write every generated document
+python3 tools/drishti.py docs generate --check               # write nothing; exit 1 naming each stale document and the command that fixes it
+python3 tools/drishti.py docs generate --only CONFIGURATION   # the generators whose name contains the text (repeatable)
+```
+
+It reads the built server jar (`build jar`). CI and the drill run `--check`; the list of generators is `tools/docs/generate.py`
+(`GENERATORS`), the one place a new generator is added, and `tools/test_docs_generated.py` checks each of them.
+
 ### `docs shots`: screenshots
 
 `docs shots` regenerates the screenshots of the guides (Playwright, against a scratch server and console on their own ports,
@@ -4122,7 +4198,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/dataprofile.py`, `tools/packmake.py`, `tools/packregen.py`, `tools/packdiff.py`, `tools/packcatalogue.py`, `tools/packi18n.py`,
 `tools/packform.py` (the `form:` section a pack check reads), `tools/schemapack.py` (`--schema`), `tools/sutragen.py` (`sutra gen`),
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
-`tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
+`tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/matrix_oracles.py` (the three checks of the first-run tests: files written, output lines, no network), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
 `tools/approvalscli.py` (`approvals`), `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/datacli.py` (`data get`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
 `tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, section 7.5), `tools/lake/childload.py` (child kinds in `lake build`: each array the pack declares is built as a table of its own after its parent), `tools/test_child_parity.py` (child tables give the same rows in Delta, Iceberg and files), `tools/lake/demo.py` (`lake demo`), `tools/lake/undo.py` (`lake undo`), `tools/lake/delete.py` (`lake delete`), `tools/lake/feedroute.py` (a feed file paired with its `.ready` file and routed to a pack and kind), `tools/lake/feedfiles.py` (our own generators' dated feed files, by the load rules), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/dataloadcli.py` (`dataload status|run|retry`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/compare_lakes.py` (two Delta lakes compared table by table, partition by partition, by row counts from their logs: `compare_lakes.py LAKE_A LAKE_B [--out result.json]`, exit 1 on any difference), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [DATA_GUIDE.md section 9](../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) "Upgrades").
 
@@ -4137,16 +4213,16 @@ Run and debug the tools from PyCharm, and the Java `sutra` from IntelliJ IDEA: [
 You have JSON Lines: one file per kind (`trade.jsonl`, `counterparty.jsonl`), or a file mixing kinds with an envelope
 `{"kind": "...", "doc": {...}}`, or (as here) files named by day with `--kind`; every document has an id and a business date. Run on the
 quick-start server (the demo lakes, sign-in on, an administrator's token in `DRISHTI_TOKEN`) with the test data's interest-rate curves
-as a pack of its own. Its kind is `demo-curve`: a kind name is unique across the loaded packs, and [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) is market-data's.
+as a pack of its own. Its kind is `demo-curve`: a kind name is unique across the loaded packs, and [`ir-curve`](../contracts/packs/market-data.md#example-market-data-ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) is market-data's.
 
 ```bash
 # 1. build the pack in the server's packs folder and put the documents in the files store the server reads (<data>/files)
-drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-demo --title "Curves demo" \
+python3 tools/drishti.py pack new data/testdata/market-data/ir-curve --name curves-demo --title "Curves demo" \
     --kind demo-curve --key CURVE_ID --date AS_OF --match CURVE_TYPE --store files --files-root data/files
 
 # 2. check it, and list the help text still to write
-drishti-console/.venv/bin/python tools/drishti.py pack check config/packs/curves-demo
-drishti-console/.venv/bin/python tools/drishti.py pack about-check config/packs/curves-demo
+python3 tools/drishti.py pack check config/packs/curves-demo
+python3 tools/drishti.py pack about-check config/packs/curves-demo
 ```
 
 ```text
@@ -4173,7 +4249,7 @@ config/packs/curves-demo/sutras/demo-curve/demo-curve-government.v1.sutra.yaml:1
    load (one switched off, or one in `drishti.packs.installed-dir`); for this one it answers that it is loaded already:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py server packs load curves-demo
+$ python3 tools/drishti.py server packs load curves-demo
 drishti: the server said 400 DRS-5001: DRS-5001 'curves-demo' is already loaded
 ```
 
@@ -4214,9 +4290,11 @@ A GitHub Actions job (the jar is built once and reused):
 ```yaml
 - uses: actions/setup-java@v4
   with: { distribution: temurin, java-version: 21 }
-- run: ./mvnw -q -DskipTests -pl :drishti-app -am package
-- uses: astral-sh/setup-uv@v5
-- run: uv run --with pyyaml python tools/drishti.py pack check config/packs/my-bank --strict --junit build/reports
+- run: ./mvnw -B -q -DskipTests package    # the jar and the modules
+- uses: actions/setup-python@v5
+  with: { python-version: "3.13" }
+- run: python -m pip install pyyaml    # a CI runner you control; Drishti itself never installs
+- run: python tools/drishti.py pack check config/packs/my-bank --strict --junit build/reports
 - uses: actions/upload-artifact@v4
   if: always()
   with: { name: pack-reports, path: build/reports }
@@ -4261,7 +4339,7 @@ python3 tools/drishti.py data load --store delta --trades 10000 --days 3        
 ```
 
 Larger books (hundreds of thousands to a million trades a day) are for a machine sized for them: see
-[DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data) for the sizes and what each store needs.
+[BANK_DATA_GUIDE.md section 9](BANK_DATA_GUIDE.md#9-the-demo-data) for the sizes and what each store needs.
 
 ## 19. JSON output, exit codes and troubleshooting
 
@@ -4359,8 +4437,8 @@ Some commands add codes of their own, each named in its section:
 | `no server jar in <home>/lib: run python tools/drishti.py build jar` | the Java commands need the exec jar | `python tools/drishti.py build jar` |
 | `drishti: jar not found: ...` | `--jar` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set drishti.java.home in the settings file` | no JDK found | set `drishti.java.home` in your settings file (or `JAVA_HOME`) to a JDK 21+ |
-| `drishti: PyYAML is not installed: run with uv run --with pyyaml ...` | the system Python has no PyYAML | use `uv run --with pyyaml`, or a venv |
-| `drishti: deltalake is not installed; run uv run --with pyyaml --with deltalake --with pyarrow ...` | a Delta write needs them | use that `uv run` line, or `--store files` |
+| `drishti: PyYAML is not installed ...` | the Python you run Drishti with lacks its libraries | the pip command above for that Python (`setup` then checks; Drishti installs nothing) |
+| `drishti: deltalake is not installed in this Python ...` | a Delta write needs them | `python tools/drishti.py setup` (from the offline wheel pack), or `--store files` |
 | `drishti: cannot reach http://localhost:18480: [Errno 111] Connection refused; is the server running?` | nothing listens there | start the server; check `--server` / `DRISHTI_SERVER`; the port is `DRISHTI_PORT` |
 | `drishti: the server said 401 ...: (no or bad token: set DRISHTI_TOKEN or --token-file)` | sign-in is on and the token is missing, expired or unsigned | send a signed token ([section 3](#3-connecting-to-a-server-url-tokens-and-permissions)) |
 | `the server said 403 DRS-5002: DRS-5002 API tokens only read` | a personal `drk_` token on a write | use a signed token, or sign-in off with `--user` |
@@ -4376,6 +4454,397 @@ Some commands add codes of their own, each named in its section:
 | `drishti: <path> is not a pack folder (no pack.yaml)` | `pack check` needs a pack folder | pass the folder with `pack.yaml` |
 | `sutra lint` shows `DRS-2047 field 'x' is shown but has no glossary entry` | a field has no help text | `pack about-check`, then `config/about.yaml` |
 | a view says `DRS-1001 <pack>-store holds trade for <date> and does not list trade/<id>` | the document is not in the store for that business date | pick a date you ingested; check with `data ingest --dry-run` |
+
+## 20. The command line (the box in the top bar)
+
+The command line is the box beside the brand in the top bar. Press `/` anywhere to jump to it.
+
+### 20.1 The form of a command
+
+```text
+<MNEMONIC> <ID> <GO>
+```
+
+- The **mnemonic** names a kind of entity: `TRD` is a trade, `NSET` a netting set, `ECON` an economy.
+- The **id** names one entity of that kind: `MX-20000001`.
+- `<GO>` means "press Enter".
+
+Examples:
+
+```text
+TRD MX-20000001      an interest rate swap (MUREX)
+TRD 1000001          a commodity swap (ENDUR)
+TRD CLY-3000025      an FX option (CALYPSO)
+TRD CLY-3000157      a government bond (CALYPSO)
+NSET NS-SUMMIT-NY    a netting set
+CRV CRV-USD-OIS      the USD SOFR discount curve
+CPTY CP-NORTHBRIDGE  a counterparty
+ECON ECON-USA        an economy (world-economy)
+```
+
+**A bare id** works when its shape tells Drishti the kind. Type `MX-20000001` and press Enter: it opens
+the same trade as `TRD MX-20000001`.
+
+**Case** never matters: `trd mx-20000001` opens `MX-20000001`.
+
+**One match opens; several give a pick list.** If what you typed names exactly one entity, it opens. If it
+names several (`TRD MX-200000`, the start of an id), you get a table to pick from. See
+[Pick lists](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities).
+
+**A range after the id shows the entity over time.** `TRD 1000015 30` opens the trade's
+[History](USER_GUIDE.md#history-an-entity-over-time): one row per business day it has data, the last 30 such days.
+
+```text
+TRD 1000015 30            the last 30 business days on which the trade has data
+EQ EQ-CSCA 3M             the last 3 months (also 30D, 2W, 1Y): every business day in the span that has data
+FX FX-AUDUSD YTD          since 1 January (also MTD, QTD)
+CRV CRV-USD-SOFR FROM 2026-09-01 TO 2026-09-30
+TRD 1000015 30 DIFF       only what changed, day by day
+```
+
+The range is always the last words, never the first word after the mnemonic: `TRD 30` still opens trade `30`, and an id that really
+contains the words (`BOND UST 2030`) opens the entity. A search (`TRD desk=rates 30`, `TRD MX-2* 30`) stays a search. A prefix that names
+several trades (`TRD MX-2000 30`) gives the pick list, and each of its rows opens that trade's history. Aliases keep the range:
+`MYBOOK 30` is `BOOK BOOK-RATES-1 30`.
+
+Mnemonics come from the packs that are switched on. Every command, with what it does and an example, is in
+[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [BUILD_GUIDE.md](BUILD_GUIDE.md#311-the-packs-that-ship). The most used ones, from the seven default packs:
+
+| Mnemonic | Kind | Example |
+|---|---|---|
+| `TRD` | trade | `TRD MX-20000001` |
+| `CPTY` | counterparty | `CPTY CP-NORTHBRIDGE` |
+| `BOOK` | book | `BOOK BOOK-RATES-1` |
+| `NSET` | netting set | `NSET NS-SUMMIT-NY` |
+| `LIM` | credit limit | `LIM LIM-SUMMIT` |
+| `CRV` | interest rate curve | `CRV CRV-USD-OIS` |
+| `FXV` | FX volatility surface | `FXV FXV-EURUSD` |
+| `VAR` | VaR / expected shortfall | `VAR VAR-RATES` |
+| `TVAL` | trade valuation (MTM, P&L, DV01) | `TVAL TVAL-MX-20000001` |
+| `ECON` | economy | `ECON ECON-USA` |
+
+**VaR in another currency.** The VaR explorer (`VAR BANK`, `VAR DESK DESK-RATES`) has a **Reporting currency** select at the
+right end of its status line: the configured currencies (USD, EUR, CAD, JPY, GBP by default) and **More…** for any other currency with
+scenario FX on the date. Every figure of the page follows it (the tiles say `VaR 99% · 1 day · EUR`), the choice stays while you work in
+that browser tab, and it goes into the page's link (`&ccy=EUR`), so a link you send opens in the same currency. Type it too: any VAR
+command ends with `IN <currency>`, `VAR DESK DESK-RATES IN EUR <GO>`. The tab **In other currencies** (loaded when you open it) shows the
+scope's VaR and ES in each configured currency side by side, with each one's VaR in the page's currency at today's rate; click a row to
+move the page to it. A currency's VaR is never the USD VaR at a rate: the currency move on each scenario day is part of its risk
+([VAR_GUIDE.md section 15.11](VAR_GUIDE.md#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)).
+
+**10-day VaR and another confidence.** Beside **Reporting currency** the VaR explorer has **Horizon** (*1-day*, *10-day (√10)*,
+*10-day (sum)*), **Confidence** (95%, 97.5%, 99%, 99.5%: the configured list, 99% the default) and **ES** (its own, 97.5% by default).
+*10-day (√10)* is the 1-day figures × √10; *10-day (sum)* adds 10 consecutive scenario days of the scope's own P&L (509 days give 500
+overlapping windows). Every panel follows the choice, the strip under the tiles says the horizon, the method and the confidences, the
+link keeps it (`&h=10d&m=sum&q=0.95`), and the next VaR page you open remembers it. **Limit use** shows only at the limit's own horizon
+and confidence (1-day 99%), otherwise the tile says *limit is for 1-day 99%: not comparable*; **backtest exceptions** only at 1 day.
+Type it too: `VAR BANK 10D`, `VAR BANK 10D SUM`, `VAR BANK 10D SQRT`, `VAR BANK 95`, `VAR BANK 10D SUM 97.5`, `VAR BANK ES 95`; the
+type-ahead offers them once a scope is typed. Official end-of-day records stay 1-day at 99% ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)).
+**Stressed VaR.** The **Scenarios** picker beside Horizon chooses *Normal* or *Stressed*: stressed VaR is today's positions revalued
+under the market moves of a 12-month stress period (in the demo, a synthetic 2008-07-01 to 2009-06-30, said on the page), in USD. Every
+panel follows; the third tile shows the 12-week average of the node's official stressed VaR; limit use and backtest exceptions are not
+shown for it. Horizon and Confidence work the same. The link keeps it (`&set=stressed`); type `VAR BANK SVAR` or `VAR BANK SVAR 10D SUM`.
+A date without a stress set says so ([VAR_GUIDE.md section 18.8](VAR_GUIDE.md#188-stressed-var)).
+**The scenario matrix.** `SMAT <trade, position or VaR scope> [N] <GO>` (`SMAT DESK RATES 20`, `SMAT POS <position>`,
+`SMAT TRD <trade> 30`) shows one trade, position or node across its last N business dates (20 by default, at most 60): the scenarios
+down, by historical day, the dates across, each cell its scenario P&L. Each date's VaR scenario and ES tail are outlined and marked **V**
+and **E**; the foot of the table keeps each date's VaR (with its rank), ES and base PV. Switch to **PV** (base PV plus the P&L) or
+**Change vs day before**, show **Only tail scenarios**, sort by the worst on any date, or, for a position, see it **By trade**. The chart
+beside the matrix has two views: **Scenarios** (the default) charts the selected date's column, every scenario day in the order of its
+date, in the values shown (scenario P&L, scenario PV or the change), with the tail marked and the selected scenario larger (click a point
+to select that scenario in the matrix); **Across dates** charts the selected row across the business dates (it needs two or more dates
+open: with one it shows the value and says so). The reference line follows the values: **−VaR** for the P&L, **PV at VaR** (base PV less
+VaR) and the base PV for the PV, none for the change; the legend names what is drawn. **Line · Dots · Area · Bars** switches the chart
+type for both views (your choice is remembered in this browser); points beyond VaR or in the tail are diamonds, never colour alone. The matrix and the chart fill the window's height, and follow it when the window is resized. The
+details give the cell's rank that day, its PV, the FX used, its days in the tail and where the
+numbers came from (open in memory, read from the lake by id, the official capture, or the engine), linked to the record. A date with no
+values says why in its column header (`DRS-5203`, refused) and never shows zeros. **Export CSV · Arrow** downloads the whole matrix. A
+**Scenario matrix** link opens it from a trade, a position, a P&L vector (`PNLV`), a scenario PV (`SPV`) and the VaR page; on a phone it
+is the selected scenario's line and its tail count. It is part of Drishti Risk and Drishti Trading
+([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat); [the VaR tutorial, step 16](VAR_GUIDE.md#step-16--the-scenario-matrix-scenarios-across-the-days)).
+
+**The VaR Playground.** `PLAY VAR <scope> <GO>` (`PLAY VAR DESK RATES`, `PLAY VAR BANK 10D SUM`, `PLAY VAR POS-10442 T-1001` for a few
+positions or trades), or **Playground** on the VaR page, works the scope's VaR out cell by cell: a spreadsheet-like grid of each
+position's scenario P&L (positions across, the 509 scenarios down, Portfolio, Rank and the **V** and **E** marks at the right, each
+position's standalone, component and incremental figures below), a formula bar with the selected cell's formula as the workbook writes
+it, and a tall explanation that walks through the selected cell's calculation with the real numbers. Click a cell or use the arrow keys.
+At most 500 positions are shown; a larger scope keeps the 500 largest by |component VaR| and combines the rest in one **Rest of scope**
+column, so its VaR is still the VaR page's. **Export to Excel** downloads the same calculation as a workbook of real formulas (100, 500,
+1,000, 10,000 or All positions, each choice's size, recalculation time and applications stated first) whose **ALL CHECKS PASS** band
+says it equals the engine to the cent. On a phone: the headline and the explanation. Part of Drishti Risk and Drishti Trading
+([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [the VaR tutorial, step 18](VAR_GUIDE.md#step-18--work-the-var-out-by-hand-the-var-playground)).
+
+**The VaR page's layout.** The hierarchy tree is on the left (click **▸** to open a node, its name to see its VaR); the toolbar above
+the figures has two searchable drop-downs, **System baskets** (key **B**: the bank's own, kept in Drishti) and **My baskets** (key **M**: the
+baskets you saved and those shared with you), where you type to search by name or description, move with ↑ ↓ and open with Enter;
+**Explain ›** (key **E**) opens the Explain drawer of the scope's VaR ([Explain: one for every number](USER_GUIDE.md#explain-one-for-every-number);
+[VAR_GUIDE.md section 3.2](VAR_GUIDE.md#32-the-screen)).
+
+**Construct your basket.** On the VaR page, **+ New basket** in the toolbar (or `Alt+B`) opens the basket's sheet across its top, one
+sheet like Excel: the VaR of any mix of trades, positions, system baskets, books, desks, limit letters and counterparties, a column per kind
+and the Op column (+ adds, − takes away). Type in a cell, pick a hint (it lands in its kind's column), use **+ basket** on any row, or
+paste whole columns from Excel; **Start from the whole bank** makes the basket the bank and the rows refine it. The server checks every
+cell (a red cell says why it is not found) and computes the basket's VaR, ES, sum of the parts and diversification under the sheet; then
+a pre-deal what-if, **Save basket and open VaR** and **Download as .xlsx**. It is on the VaR page only; what it holds stays in your
+browser, so it is there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
+
+**Editing your baskets.** In the toolbar's *My baskets* drop-down (key **M**; *System baskets*, key **B**, lists the bank's own: whoever holds `var:system-baskets` changes those under the sheet, [VAR_GUIDE.md section 5.7](VAR_GUIDE.md#57-system-baskets)) each basket of yours has **Edit**: it opens in the sheet and **Save as version *n***
+keeps its name as a new version. A portfolio (the bank's) and a basket shared with you have **Edit a copy**: it opens as your own basket,
+to save under your own name. An administrator may edit anyone's basket; you get a notice in your inbox saying who.
+
+**Deleting your ad-hoc scopes.** The baskets you saved are listed in *My baskets* on the VaR page. Open it and point at one (or
+Tab to it) and press **Delete**: a dialog names the basket and whom you shared it with (they lose it too) and asks first; **Keep it** or
+**Esc** keeps it. The list refreshes at once; a view of the basket that was open says it was deleted. Captures you took of it are kept and
+still open, saying the basket no longer exists. You can delete only your own; an administrator may delete anyone's (you get a notice in
+your inbox saying who and why). On the command line: `drishti.py var basket-delete <name>`.
+
+**Many positions in one scope.** The **Contributions** tab lists at most `drishti.var.max-parts` rows (5,000): when a scope has more
+positions or trades, it lists the largest by gross size and says so above the table, for example *5,000 of 18,567 positions shown (the
+largest by gross size); totals are over all 18,567*. The **Total** row, the sum of standalone VaRs and the diversification are always
+over every position ([VAR_GUIDE.md section 27a](VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)).
+
+**One year or two; 99% or 95%.** The page's labels say the confidence the figures are at (*VaR 95% · 1 day* when the
+server is set to 95%), and Explain's *Inputs & lineage* says the scenario window (*newest 250 of 509 scenarios*);
+`drishti.py var show BANK --window 250 --confidence 0.95` compares on the command line, never official.
+
+**The top of the tree.** The VaR tree's top node shows the hierarchy data's name (*Drishti Bank* in the demo); an administrator
+can set any name with `drishti.module.banking.var.root-name` (or one per hierarchy with `drishti.var.root-names`), and the page, the command line and new
+captures follow it ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+
+**Hierarchies and limit letters.** The select above the tree lists the date's hierarchies by name: *Management*, *Legal
+entities* and, in the demo, *Limit letters*: the letter of authority each trade's VaR limit is granted under, then its desks. A letter
+may hold part of a book: its VaR is exactly that of its own trades. Choose one and the tree, the breadcrumbs and the contributions
+follow it, and the link keeps it (`&hierarchy=LL`); a letter's limit bar reads its own limit (blank when it has none). Type a letter in
+the scope box (`LL:LL-0003`, `LL:LL-0003/DESK-RATES`) or search for it. Which hierarchies exist, and from which columns, is set by an
+administrator ([VAR_GUIDE.md section 15.14](VAR_GUIDE.md#1514-hierarchies-from-promoted-columns)).
+
+**Any form, any grain.** Explain's *Inputs & lineage* says, per source system, whether its figures came as scenario PVs or P&L
+vectors, per trade or per position. A position its system sends whole answers `POS:<id>`; its trades have no VaR of their own on that
+date (the trade page says so and links the position).
+
+**Intraday.** When pricing systems re-send trades during the day (amended, new or cancelled), the VaR page applies them as they
+land and shows an **intraday** badge in its status line (*intraday · 5 trades · 2026-09-30 11:00*): its figures are the morning run with
+those trades updated; point at the badge for the batches. The official end-of-day records stay the morning run's. `drishti.py var
+intraday` lists what each date holds; the updates may come as files or from a Kafka topic (the `pv-updates` connector, off by default:
+an administrator's **Apply now** on its Admin page applies the waiting window at once) ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)).
+
+**Trade currency.** Every trade page's strip says **Trade currency**: the currency the trade's PVs come in (`EUR · as priced`) when the
+VaR engine holds it as scenario PVs, else the trade's own currency (`USD · as booked`). Its **Risk** group adds where it comes from and
+the trade's **Base PV** in it. (The strip holds eight figures: the source system moved from the strip to the deal ticket, F2 DES.) The
+VaR explorer's contributions and worst scenarios, a position's trades and the trade tables of the counterparty, portfolio, legal
+entity and index pages list it too.
+
+### 20.2 Reserved words
+
+Six words are keywords of the console itself, not mnemonics of a pack, and no pack may define a mnemonic with
+their name. They work in any case, and each has type-ahead.
+
+| Type | You get | More |
+|---|---|---|
+| `WHAT <GO>` | Knowledge, the home of the [Knowledge pages](#203-knowledge-what-the-words-mean): what the words of your data mean and how the data connects | `WHAT PFE <GO>`, `WHAT netting set <GO>`, `WHAT value at risk <GO>` open the term's glossary entry (its long name or a synonym works too, any case); other words (`WHAT collateral posted <GO>`) search the Knowledge pages. The type-ahead lists the terms as you type |
+| `FUNC <GO>` | Functions, `/func`: every command you can use, by pack, with what it does and an example ([ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)) | `FUNC exposure <GO>` opens it filtered (every word must appear in a command's code, title, description or its pack); `FUNC trading` lists one pack's commands. Click a command to open it with its example, a pack to open its search form |
+| `DATAMAP <GO>` | the [data map](#205-the-data-map), `/datamap`: every kind of data your packs hold, how much of it there is, and how the kinds join | `DATAMAP trade <GO>` opens it on one kind (its name, mnemonic or label: `DATAMAP CPTY`), `DATAMAP organisation` or `DATAMAP counterparty-risk` on one domain; other words fill its Find box |
+| `EXPORT <GO>` | the [Export data](#206-export-data), `/data`: every dataset you may open, its format and the dates it holds; download a day as `.jsonl.gz` | `EXPORT trade-valuation 2026-09-30 <GO>` opens it on a dataset (its kind or its command: `EXPORT TVAL`) and a date; other words fill its Filter box |
+| `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](USER_GUIDE.md#search-with-a-form-form-pack)) |
+| `BI <GO>` | the Build home, `/build` (`/bi` opens it too; only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([README.md](bi/README.md)) |
+| `RUPAKA <GO>` | the same as `BI`, the older name | everything that works after `BI` works after `RUPAKA` |
+
+A pack's code typed alone (`MKT <GO>`) opens that pack's overview ([A pack at a glance](#2010-a-pack-at-a-glance)). Anything else
+that is not a command but reads as words (`live trades over 5m`) is offered as a question
+([Asking in plain words](USER_GUIDE.md#asking-in-plain-words)).
+
+### 20.3 Knowledge: what the words mean
+
+*See what your data hasn't told you yet.* The **Knowledge** section at the top of the help centre has one page per domain:
+[Market risk](../knowledge/risk.md#1-market-risk), [Counterparty credit risk](../knowledge/risk.md#2-counterparty-credit-risk),
+[Trades and products](../knowledge/risk.md#3-trades-and-products), [Entities and ownership](../knowledge/data.md#2-entities-and-ownership),
+[Market data](../knowledge/data.md#1-market-data), [Data and contracts](../knowledge/data.md#3-data-and-contracts),
+[Economies](../knowledge/world.md#2-economies) and [Companies, funds and ETFs](../knowledge/world.md#1-companies-funds-and-etfs). Each says what the domain is in plain words, gives a glossary with the command that shows each
+term, draws how the kinds connect (with their id conventions), works an example through on the demo data, lists ready-made questions to
+ask your data, and clears up the common confusions (VaR against ES, why PFE does not add up, why posted collateral raises exposure).
+The [Knowledge home](../knowledge/README.md) lists every term A to Z.
+
+Reach it three ways: `WHAT <GO>` (or `WHAT <term> <GO>` for one entry), **Create → Learn → Knowledge** or **Help → Knowledge**, and
+the **What does this mean?** link on a data page: the VaR explorer, `VRES` and `DESK` open Market risk; `CPTY`, `NSET`, `CSA` and the
+exposure explorer open Counterparty credit risk. F1 and **?** open the page's help.
+
+### 20.4 The pre-deal check
+
+*Does this new trade fit the counterparty's credit limit?* **Counterparties → Pre-deal check** (`PREDEAL <GO>`, or **Pre-deal check ›**
+in the exposure explorer at a counterparty or a netting set) asks the server. On the right, the trade: the counterparty, the netting set
+it goes into, a booked trade to copy (the exact method) or the trade described by asset class and maturity (a proxy, which only
+refers), the notional (`250m`, `1.5bn`) and the side; **Check**. The answer: **approve**, **refer** or **decline** with the reason; the
+limit and each tenor bucket **within**, **near the limit** (from 80% of it, a setting) or **over the limit**, with the numbers before and
+with the trade, the increment and the headroom; EPE and EAD before and after; the profile with the trade over the profile before against
+the limit, the incremental PFE per tenor, and the table by tenor. **Explain ›** (or **E**, or a tile) shows how each number was made.
+Typed with its words the check is made at once: `PREDEAL CP-ALDERSHOT LIKE MX-30001587 250M <GO>`; the same on the command line:
+`drishti.py exposure predeal "PREDEAL CP-ALDERSHOT LIKE MX-30001587 250M"`. Every check is audited. On a phone the verdict comes first.
+Details: [EXPOSURE_GUIDE.md section 7](EXPOSURE_GUIDE.md#7-pre-deal-what-if) and [section 18.9](EXPOSURE_GUIDE.md#189-the-pre-deal-check).
+
+### 20.5 The data map
+
+**Views → Data map** (`/datamap`, or `DATAMAP <GO>`) shows every kind of data your packs hold, how much of it there is on the business
+date, and how the kinds join. Nothing on it is drawn by hand; it is inferred each time from what is loaded:
+
+- **Domains and kinds** come from the packs switched on for you: each pack's kinds, titled by their data contracts
+  (`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
+  what-ifs) is drawn as a **diamond** (a stored kind is a square): it is computed on demand and never stored, so it has no count.
+- **Joins** are what the contracts declare: their `links:`, their fields' `link:` and the fields a pack's `graph.fields` names (the
+  trade's `COUNTERPARTY` → counterparty, `PORTFOLIO` → book, `TRADER_ID` → trader; the P&L vector's and the exposure paths' `TRADE_ID`
+  → trade). Each join is **checked against the data**: the server reads the field over the kind's rows (as columns where the lake keeps
+  them so, else from the documents; at most 20,000 rows a kind, `drishti.datamap.max-rows`) and counts how many of the ids name an
+  entity that exists, so a join reads *15,000 of 15,000 ids match (100%)*. A join under 95% is a **finding**, listed above the map,
+  drawn thin, its kind badged in the warning colour: the contract promises a link the data does not keep.
+- **Counts** are read from the lake when you open the page (the server keeps them for the business date for 15 minutes,
+  `drishti.datamap.ttl`). The first visit of a day may say *Counting and checking the data*: the map fills in as the server goes.
+- **Positions** come from an automatic layout (the map is a Drishti Elements graph, drishti-graph): each domain a frame, its kinds in
+  a grid, the most joined first. **Layered** draws the joins as a lineage DAG instead (what refers to what, top to bottom);
+  force, radial and circular are there too, and the layout you pick is in the address (`layout=layered`).
+
+Two views share one selection, the domain chips and the **Find** box (a kind, a mnemonic or a field: `LEI`, `PORTFOLIO`); the view
+and the selection are in the address, so a link opens the same picture.
+
+- **Map** (the default): click a kind to light its joins and dim the rest. The side panel shows its join fields with their coverage,
+  the kinds that join to it, the commands that open it (its example from Functions, its search form) and its *Data contract*, its pack's
+  guide and its *WHAT* entry. Double-click a kind to open it directly; Esc clears the selection. The wheel zooms, a drag pans, the
+  minimap moves the view, the arrow keys walk from a kind to the kinds it joins, and ▦ lists every kind with what it joins to and what
+  joins to it (the text alternative). Find marks the kinds that match and dims the rest.
+- **Cards**: one card per domain with its largest counts. Open one for a table of its kinds with their counts, joins (→ to, ← from,
+  with the field) and the command that opens each, **Comes from** (the pack README's sources) and **Crosses into** (the other domains
+  its joins reach, and through which fields).
+
+![DATAMAP trade: the Map view with the trade selected, its joins lit and the side panel showing their coverage](img/datamap/01-map-trade.jpg)
+
+![The Cards view with the Trades domain open: its kinds, counts and joins, where the data comes from and the domains it crosses into](img/datamap/02-cards.jpg)
+
+Domains follow `drishti-console/config/datamap.yaml`, which is presentation only: their names, their order and which packs they hold
+(and, rarely, a kind to draw dashed that its contract does not mark computed). A pack the file does not name appears as a domain of its
+own under its pack title, with its kinds and joins, with no configuration at all.
+
+### 20.6 Export data
+
+**Views → Export data** (`/data`, or `EXPORT <GO>`; `DATA`, the older word, works too) lists every data source and its datasets, and downloads a day of one of them as JSON Lines,
+gzip-compressed (`.jsonl.gz`). It is **download only**: it never shows the rows in a grid. `EXPORT <dataset> [date] <GO>` opens it on
+that dataset and date (`EXPORT trade-valuation 2026-09-30`; the dataset's command works too: `EXPORT TVAL 2026-09-30`).
+
+- **The list** (left): the datasets you may open, grouped by pack, each with its **format** (Delta, Iceberg, JSON Lines, Database ...)
+  and the number of **dates** it holds. *internal only* marks a dataset whose source's terms restrict reuse (the IMF figures, the Yahoo
+  prices, the news headlines); where the edition or the server refuses them, they stay listed but cannot be downloaded. *not dated*
+  marks a source that holds current rows only: its download is those rows. Type in **Filter** to narrow the list.
+- **The dataset** (right): its source (connector and table), format, the dates it holds and its column count, with links to its data
+  contract, Knowledge and `DATAMAP`. A column masked for you is left out and counted (*1 masked for you, left out*).
+- **Date**: a month calendar with the dates that hold data filled; only those can be picked (or choose one in the list under it).
+- **Columns**: every column as a chip, all ticked by default; *all* and *none*; the count (*9 of 21*).
+- **Filter lines**: *attribute · operator · value*, as many as you need, every line joined by AND. The operators are **equals**,
+  **not equals**, **one of** (values separated by commas: OR within one attribute), **contains**, **starts with**, **greater than**,
+  **less than**, **between** (two values, both included), **is empty** and **is not empty**. Numbers compare as numbers, everything
+  else as text; *contains* and *starts with* ignore case. It is deliberately not SQL: no joins, no grouping, no expressions.
+- **Your selection**: the selection read back in plain words (*From trade-valuation on 2026-09-30: 9 columns, rows where DESK is
+  DESK-COMM, and MTM is greater than 1000000.*) and as a SQL-like line, for reference only (it cannot be edited or run). Under it, how
+  the rows are read: *pushed down* when the connector filters as it reads its columns (Delta Lake and Iceberg tables whose columns are
+  promoted), else filtered on the way as the rows stream.
+- **Download**: the **row count before you download** (*412 of 12,076 on the date*) and the estimated size; **Download
+  trade-valuation_2026-09-30.jsonl.gz**; **Copy link**; and the same download as a [`drishti.py data get`](CLI_REFERENCE.md#data-get-a-dataset-as-jsonlgz-export-data)
+  command. A selection that matches no row shows 0 and leaves Download off.
+
+The selection lives in the address (`/data?kind=trade-valuation&date=2026-09-30&columns=TRADE_ID,DESK,MTM&where=DESK+%3D+DESK-COMM`),
+so a link is the selection: whoever opens it sees the same choice, through their own entitlements and masks. The download is streamed from
+the connector and never held whole, on the server or in the console, so a dataset of any size downloads; each line is one row with the
+chosen columns in order. Every download is audited (who, the dataset, the date, the selection and the rows written: Admin → Audit,
+action `data.download`). On a phone the list and the facts show; choosing and downloading are for the desk.
+
+The word (`EXPORT`, and its alias `DATA`) and the page follow the edition (`commands.words.DATA` switches both, `features.data`) and the site (`features.data` in the console,
+`drishti.data-view.enabled` on the server); [DATA_GUIDE.md](DATA_GUIDE.md#6-export-data-download-a-dataset) has the API, the rules for
+masks, internal-only datasets and pushdown, and the settings.
+
+### 20.7 Suggestions as you type
+
+The command line suggests as you type, in a dropdown, like the Bloomberg terminal. The dropdown holds up to
+**25 suggestions** and scrolls when there are more than fit.
+
+| You have typed | You see |
+|---|---|
+| nothing (click in the box) | the entities you opened recently, marked `recent ·` |
+| `T` | mnemonics that start with T (`TFLOW` Trade flow, `TRD` Trade, `TRDR` Trader, `TRIAL` Clinical trial), then recent entities |
+| `TRD ` (with a space) | trades: `MX-20000001`, `MX-20000002`, … |
+| `TRD MX-2000010` | trades whose id starts that way: `MX-20000100`, `MX-20000101`, … |
+| `NSET SUMMIT` | netting sets whose id or title contains it: `NS-SUMMIT-LDN`, `NS-SUMMIT-NY` |
+| `XYZ Q` | `No matches for "XYZ Q"` |
+| `B`, `BI` (with the `bi` power) | the `BI` keyword, then `BI ` lists *Catalogue*, *My workspace* and the published reports whose id or title match |
+| `FORM `, then `FORM tra` | the packs you may open that have a form, then (after a space) their kinds: `FORM trading trade` |
+
+Each suggestion shows the mnemonic, the id (the letters you typed are highlighted) and a subtitle, for
+example:
+
+```text
+TRD   MX-20000002   Trade · MUREX · IRS_FIXFLOAT · CP-HALCYON · EUR 110.0m
+```
+
+If your role sees some fields masked ([Masked fields](USER_GUIDE.md#masked-fields)), the subtitle is the entity's view title as you
+see it (`Rates · Interest rate swap (fixed/float) · •••` when the counterparty is masked), and typing a masked value
+(`Meridian`) finds nothing through it.
+
+| Key in the command line | Does |
+|---|---|
+| `↓` / `↑` | Highlight the next / previous suggestion (the list scrolls with you) |
+| `Tab` | Copy the highlighted suggestion into the box (the first one if none is highlighted). For an entity the box then reads `CPTY CP-NORTHBRIDGE <GO>`; for a mnemonic it reads `TRD ` and the dropdown refreshes |
+| `Enter` | With a suggestion highlighted: open it straight away. With none highlighted: run what you typed as a command (it opens one entity or a pick list) |
+| `Esc` | Close the dropdown |
+
+Worked example:
+
+1. Press `/` and type `CPTY north`.
+2. The dropdown shows one line: `CPTY  CP-NORTHBRIDGE  Counterparty · Northbridge Capital LLP`. Press `↓` to
+   highlight it.
+3. Press `Tab`: the box now reads `CPTY CP-NORTHBRIDGE <GO>`.
+4. Press `Enter`: the counterparty opens.
+
+Without steps 2 and 3, pressing `Enter` on `CPTY north` gives the same result: the command names one
+counterparty, so it opens at once.
+
+The number of suggestions is a server setting (`drishti.commands.suggest-limit`, environment
+`DRISHTI_SUGGEST_LIMIT`, default 25). A program can ask for a different number, up to 50:
+`curl -s 'http://localhost:18480/api/v1/command/suggest?q=TRD%20T-1&limit=50'`.
+
+### 20.8 Earlier commands and your own aliases
+
+- **History.** Press `↑` in the empty command line to bring back your last command, again for the one before (up to
+  50); `↓` goes forward. The server keeps your history, so it follows you to another browser. Only commands that
+  could be read are kept.
+- **Aliases.** On **My account → Aliases**, give a command a short word: `MYBOOK` for `BOOK BOOK-RATES-1`, or `REVS`
+  for `TRD PRODUCT_TYPE=FX_QUANTO`. Typing `MYBOOK <GO>` then does the same as the command; anything you add after
+  the word is kept (`MYBOOK F3`). A mnemonic or a pack code cannot be an alias. The same through the API:
+  `GET` / `PUT /api/v1/command/aliases` and `GET /api/v1/command/history`.
+- **A range that cannot be read.** After an id, what reads as a range but is none answers with its code and what to type, on the
+  terminal page: `TRD 1000001 0` gives *DRS-4022 a history of 0 days is empty: ask for 1 or more (TRD 1000001 30)*; `-5`, `1.5M`,
+  `3X`, `30.`, `1e3`, `FROM yesterday`, `FROM 2026-02-30`, `FROM 2026-10-01 TO` (*TO needs a date*), `TO 2026-10-01` (*TO follows
+  FROM*), `DIFF DIFF`, a bare `DIFF`, `DIFF 30` (*DIFF follows a range: TRD 1000001 30 DIFF*) and two ranges (`30 30`) are `DRS-4022`
+  too, and a number of days past the limit (`99999`) is `DRS-4021`. The same after a bare id (`1000015 -5`, `1000015 since yesterday`).
+  Full-width digits are read as digits (`３0` is `30`). It never opens today's view as if the range was not typed, nor a search that
+  drops the id. A lone word after the mnemonic stays an id, never a range (`TRD 0` looks up the id `0`).
+
+### 20.9 When a command does not work
+
+| You see | Meaning | What to do |
+|---|---|---|
+| `DRS-4001 cannot read command 'XYZ MX-20000001'; type <MNEMONIC> <ID> <GO> with a mnemonic such as AGR, BOOK, CPTY, …` on the terminal page (the mnemonics are those of the packs loaded) | The first word is not a mnemonic, and the text is not an id any pack recognises | Type the first letter and pick from the suggestions; check the pack is switched on ([Domain packs](USER_GUIDE.md#domain-packs-choosing-what-you-see)) |
+| A page headed *Pick a trade* that says `0 of 0 trades match` and *Nothing matches.* | The mnemonic is fine, but no trade's id starts with what you typed (`TRD MX-29999999`) and no title contains it | Type less of the id (`TRD MX-2`) and pick from the list |
+| `DRS-1001 no source holds trade/MX-29999999` | You opened an address such as `/v/trade/MX-29999999` directly, and no source has that id | Check the id; use the command line to find it |
+| `DRS-4004 'XYZ' is neither a mnemonic nor a kind; type it alone to see suggestions` | A pick list or search started with an unknown word | Type the first letter and pick a mnemonic |
+| `DRS-4004 no trade has a field 'producttyp'; did you mean PRODUCT_TYPE, PRODUCT_GROUP?` | A pick list or search names a field the kind does not have (case does not matter, spelling does) | Use the name it suggests |
+| `DRS-4004 limit must be a whole number from 1 to 1000, not '0'` | `limit` outside its range | A number from 1 to 1000 |
+| `DRS-5002 <you> may not open trade-valuation entities` | Your roles, or the packs you have switched on, do not include that kind | Switch the pack on in the box menu; otherwise ask an administrator |
+| `DRS-4023 the command TRD (trade) is not part of the edition 'world'`, and under it *You are inside the Drishti World lens, which does not include trades: leave the lens (Views → Leave) or choose an entity it shows* | You opened an entity (a link, a bookmark, a shared view) whose kind the lens you are inside leaves out. The id is right: the lens hides it, for you only | **Views → Leave Drishti World** shows everything your roles open again; or open something the lens shows. On a server that runs an edition (not a lens) the line says so, and an administrator can add the command |
+| A page that says **FRTB is not active on this server**, *Off since 2026-10-24* | An administrator turned the command off for everyone (on Functions, `FUNC`, [ADMIN_GUIDE.md (Functions)](ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)). It is not active anywhere: typed, by its page, in search and type-ahead (it is not suggested), in exports and AI; a link to it on another page is struck through and says *not active*, and a panel that reads it says *not active (turned off by an administrator)* | Ask an administrator if you need it; an open page follows when it is turned on again |
+
+### 20.10 A pack at a glance
+
+Type a pack's code alone, for example `MKT <GO>`, to see what the market-data pack holds: each kind with its mnemonic
+(`CRV`, `FXV`, `IRV`, …), how many there are, an example you can open, and the fields its pick list shows. Click a
+mnemonic to list that kind. Below the kinds, **What the pack holds** gives the pack README's summary, its data sources (with
+any internal-only flag) and, folded, its *Data structures*: each kind's id rule, fields with an example and a description, and
+nested structures by path, for the kinds you may open only. Every pack has a code (`CORE`, `MKT`, `TRDS`, `CCR`, `MRSK`, `WRLD`,
+`NWMK`, … see [BUILD_GUIDE.md](BUILD_GUIDE.md#316-pack-codes)); the pack's name (`market-data`) works too.
 
 ## 14. Running the tools from PyCharm (and the Java `sutra` from IntelliJ)
 

@@ -15,7 +15,7 @@
 """Lake maintenance as Admin -> Lakes and the CLI share it: the YAML round trip, the ownership rule (only tables lake build built),
 the scheduler (cron text, the friendly words, catch-up after a stop, after-build), the history, dry-run estimates, cancel and the lock.
 
-    uv run --with deltalake --with pyarrow --with pyyaml python -m unittest tools/lake/test_maintain_admin.py
+    python -m unittest tools/lake/test_maintain_admin.py
 """
 import io
 import json

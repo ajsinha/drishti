@@ -43,7 +43,7 @@ PRESENCE_HEADERS = {"req.", "req", "presence", "required"}
 
 def pages() -> list[Path]:
     """The computed-measure contract pages: every Markdown page directly under docs/contracts except its README."""
-    return sorted(p for p in CONTRACTS.glob("*.md") if p.name != "README.md")
+    return sorted(p for p in CONTRACTS.glob("*.md") if p.name not in ("README.md", "CSV_FORMATS.md"))   # CSV_FORMATS.md is generated (tools/mrloader/kind_docs.py)
 
 
 def _names(cell: str) -> set[str]:

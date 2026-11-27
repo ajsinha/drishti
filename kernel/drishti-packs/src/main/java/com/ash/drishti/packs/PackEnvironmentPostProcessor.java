@@ -110,7 +110,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
             suppressed.addAll(SamplePolicy.sampleOnlyConnectors(resolution, loader));
         }
         // a pack of a module that is off is not loaded, and neither the connectors only such packs use nor the module's own start
-        // (docs/architecture/ACCESS_MODEL.md: module off = gone everywhere)
+        // (docs/architecture/KERNEL_AND_MODULES.md: module off = gone everywhere)
         com.ash.drishti.registry.AccessRegistry access = Modules.of(env);
         List<Pack> offPacks = packs.stream().filter(p -> !access.packOn(p.name(), p.domain())).toList();
         if (!offPacks.isEmpty()) {

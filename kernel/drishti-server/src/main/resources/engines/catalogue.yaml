@@ -129,7 +129,7 @@ engines:
     console: [/admin/data-out, /admin/api/data-out]
     words: []
     menus: []
-    help: [flight-guide]
+    help: [integration-guide]
     landings: []
     tiles: []
     lenses: []

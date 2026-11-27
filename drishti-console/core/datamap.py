@@ -125,10 +125,16 @@ def build(server: dict, functions: dict, config: dict, packs: list[dict], lib=No
         slug = by_file.get(Path(path).resolve()) if path else None
         return f"/help/{slug}" + (f"#{anchor}" if anchor else "") if slug else ""
 
+    moved = getattr(lib, "moved", {}) or {}
+
     def pack_guide(name: str) -> dict | None:
         for g in (console_packs.get(name) or {}).get("guides") or []:
             if g.get("slug") in guides:
                 return {"href": f"/help/{g['slug']}", "title": g.get("title") or "Pack guide"}
+        # a pack whose guide merged into a feature guide: help.yaml moved: names its home (e.g. trading -> bank-data-guide)
+        home = moved.get(name, "")
+        if home and home.split("#")[0] in guides:
+            return {"href": f"/help/{home}", "title": guides[home.split("#")[0]].title}
         return None
 
     kinds = []

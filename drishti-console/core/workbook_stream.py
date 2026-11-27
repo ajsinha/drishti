@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""One workbook streamer for every server workbook the console hands on (docs/architecture/DOMAIN_MODULES.md section 5, C4): the
+"""One workbook streamer for every server workbook the console hands on (docs/architecture/KERNEL_AND_MODULES.md section 21.5, C4): the
 playgrounds' workbooks of any module, the capacity planner, why VaR moved. The server's .xlsx is passed through as it streams, as the
 person, with its file name; a refusal answers the server's code and words."""
 from __future__ import annotations

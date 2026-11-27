@@ -14,8 +14,8 @@
 
 # The module's Help section: one page per feature, merged into the kernel's Help when the module loads.
 sections:
-  - id: genomics
-    title: Genomics
-    pages:
-      - {title: "Genomics: the guide", file: guide.md}
-      - {title: "Genomics: the tutorial", file: tutorial.md}
+- id: genomics
+  title: Genomics
+  pages:
+  - title: 'Genomics: the guide'
+    file: guide.md

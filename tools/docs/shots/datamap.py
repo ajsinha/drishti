@@ -16,7 +16,7 @@
 (the trade selected, its joins lit, the side panel), and the Cards view with the Trades domain open. A view of the QUICKSTART packs, the real
 console:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide datamap
+    python3 tools/docs/screenshots.py --guide datamap
 """
 from __future__ import annotations
 

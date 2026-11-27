@@ -35,7 +35,7 @@ import com.ash.drishti.packs.distribution.Distribution;
 import com.ash.drishti.packs.distribution.Distributions;
 
 /**
- * Loads the distribution's filter (docs/architecture/DISTRIBUTIONS.md) as a property layer just above the product's own defaults
+ * Loads the distribution's filter (docs/architecture/KERNEL_AND_MODULES.md) as a property layer just above the product's own defaults
  * ({@code application.yaml} in the jar) and below the site's configuration (application.local.yaml, the packs overlay, environment
  * variables, arguments), before the packs load (it runs right after the configuration files are read; the packs' post-processor runs
  * last). Drishti All: only the distribution's facts, no filter.
@@ -61,7 +61,7 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
-        Distribution dist = Distributions.of(env);                         // the distribution file: the one way (DISTRIBUTIONS.md)
+        Distribution dist = Distributions.of(env);                         // the distribution file: the one way (KERNEL_AND_MODULES.md)
         RetiredNames.refuse(retiredKeys(env));                             // the old product keys stop the start, as the console refuses them
         Map<String, Object> props = new LinkedHashMap<>(distributionProps(env, dist));
         // the product's name and notices: the distribution file is their one home, above every setting a site made (the old keys are not read)

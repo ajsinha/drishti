@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave D in the console (docs/guides/bi/README.md sections 29.8 to 29.11, bi/README.md, EMBED_GUIDE.md): the Subscribe and alert forms offer webhooks and texts only when the server has them and send them in the server's
+"""Wave D in the console (docs/guides/bi/README.md sections 29.8 to 29.11, bi/README.md, INTEGRATION_GUIDE.md): the Subscribe and alert forms offer webhooks and texts only when the server has them and send them in the server's
 words (no AI summary: AI is not in this release's console)."""
 from __future__ import annotations
 

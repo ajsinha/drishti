@@ -56,11 +56,16 @@ class SettingsFileTest(unittest.TestCase):
         self.assertTrue(any(a.startswith("-Ddrishti.home=") for a in cmd), cmd)
         self.assertEqual(javacmd.server_tmp(env={}), Path("/from/the/file/tmp/server"))
 
-    def test_the_roots_reach_the_python_tools_unless_the_environment_sets_them(self):
-        env = {"DRISHTI_HOME": "/mine"}
-        got = sf.apply_roots({"drishti.home": "/file/home", "drishti.data.dir": "/file/data", "lake.demo.root": "/x"}, env)
-        self.assertEqual(got, ["DRISHTI_DATA_DIR"])
-        self.assertEqual(env, {"DRISHTI_HOME": "/mine", "DRISHTI_DATA_DIR": "/file/data"})
+    def test_the_roots_reach_the_python_tools_and_the_file_beats_the_environment(self):
+        """The Java order (LaunchRoots): the settings file beats a stale DRISHTI_* variable of an old setx; the old value is remembered."""
+        sf.REPLACED.clear()
+        env = {"DRISHTI_HOME": "/mine", "DRISHTI_MODULES_HOME": "/file/modules"}
+        got = sf.apply_roots({"drishti.home": "/file/home", "drishti.data.dir": "/file/data", "drishti.modules.home": "/file/modules",
+                              "lake.demo.root": "/x"}, env)
+        self.assertEqual(got, ["DRISHTI_HOME", "DRISHTI_DATA_DIR"])
+        self.assertEqual(env, {"DRISHTI_HOME": "/file/home", "DRISHTI_DATA_DIR": "/file/data", "DRISHTI_MODULES_HOME": "/file/modules"})
+        self.assertEqual(sf.REPLACED, {"DRISHTI_HOME": "/mine"})
+        sf.REPLACED.clear()
 
     def test_explicit_beats_the_file(self):
         f = self.write("a=1\nb=2\n")
@@ -96,3 +101,29 @@ class SettingsFileTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_a_settings_file_naming_another_checkout_is_a_warning(tmp_path):
+    """An old dev.ini from an earlier copy: the tools and the console say so (WARNING), and the same folder says nothing."""
+    import importlib.util, sys as _sys
+    here = Path(__file__).resolve().parents[1]
+    other = tmp_path / "drishti-orig"
+    other.mkdir()
+    w = sf.other_home({"drishti.home": str(other)}, here)
+    assert w and w.startswith("WARNING: your settings file names drishti.home=") and "setup" in w
+    assert sf.other_home({"drishti.home": str(here)}, here) is None
+    assert sf.other_home({"drishti.home": str(here) + "/"}, here) is None
+    assert sf.other_home({}, here) is None
+    ini = tmp_path / "dev.ini"
+    ini.write_text(f"drishti.home={other}\n", encoding="utf-8")
+    _sys.path.insert(0, str(here / "drishti-console"))
+    spec = importlib.util.spec_from_file_location("run_drishti_web_t", here / "drishti-console" / "run_drishti_web.py")
+    web = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(web)
+    argv = ["--settings", str(ini), "--profile", "demo"]
+    assert web.foreign_settings(argv) == str(ini)                       # another checkout's file: none of its roots followed (R6)
+    assert web.drop_settings(argv) == ["--profile", "demo"]
+    ini.write_text(f"drishti.home={here}\n", encoding="utf-8")
+    assert web.foreign_settings([f"--settings={ini}"]) is None
+    assert sf.names_home({"drishti.home": str(here)}, here) and not sf.names_home({"drishti.home": str(other)}, here)
+    assert not sf.names_home({}, here), "a file naming no home is not this checkout's"

@@ -37,7 +37,7 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
- * The protein workbench's answers (docs/architecture/GENOMICS_SHOWCASE.md sections 4, 5 and 9): the deep mutational scan with its residue
+ * The protein workbench's answers (modules/genomics/docs/guide.md sections 4, 5 and 9): the deep mutational scan with its residue
  * tracks, the structure, the design campaign by round over its fitness surface, the rounds' quantiles, the leaderboard, and the Explain
  * of a cell of the scan and of a design. A protein is named by itself or by its gene (HLXK7). The console draws; it computes nothing.
  */

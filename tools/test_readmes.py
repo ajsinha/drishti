@@ -43,6 +43,7 @@ def _load(name: str, path: Path):
 R = _load("drishti_pack_readme", ROOT / "tools" / "packgen" / "common" / "readme.py")
 PACKS_CLI = _load("drishti_pack_readme_cli", ROOT / "tools" / "packgen" / "readme.py")
 CONN = _load("drishti_connector_readmes", ROOT / "tools" / "connector_readmes.py")
+MODS = _load("drishti_module_readmes", ROOT / "tools" / "packgen" / "module_readme.py")
 
 PACKS = list(R.PP.pack_dirs().values())
 TYPES = CONN.type_readmes()
@@ -104,3 +105,33 @@ def test_a_pack_readme_data_structure_table_names_fields_types_and_nested_lists(
     data = R.sections(body)["Data structures"]
     assert "| `TRADE_ID` | string |" in data
     assert "`LEGS[].CASH_FLOWS[]`" in data and "`LEGS[].CASH_FLOWS[].RESETS[]`" in data
+
+
+@pytest.mark.parametrize("module", MODS.module_dirs(), ids=lambda d: d.name)
+def test_a_module_readme_is_what_its_manifest_and_about_yaml_write(module):
+    assert MODS.check(module) == []
+
+
+def test_every_module_with_a_readme_has_its_text_in_docs_about_yaml():
+    for m in sorted((ROOT / "modules").iterdir()):
+        if (m / "docs" / "README.md").is_file():
+            assert (m / "docs" / "about.yaml").is_file(), f"{m.name}: docs/README.md is generated from docs/about.yaml"
+
+
+def test_a_stale_generated_readme_is_caught(tmp_path):
+    mod = tmp_path / "m"
+    (mod / "docs").mkdir(parents=True)
+    (mod / "module.yaml").write_text("id: m\ntitle: M\ndomain: d\n", encoding="utf-8")
+    (mod / "docs" / "about.yaml").write_text("front: |\n  summary: s\nbody: |\n  # M\n", encoding="utf-8")
+    assert MODS.check(mod)                                      # missing
+    (mod / "docs" / "README.md").write_text(MODS.render(mod), encoding="utf-8")
+    assert MODS.check(mod) == []
+    (mod / "docs" / "README.md").write_text(MODS.render(mod) + "a hand edit\n", encoding="utf-8")
+    assert "stale" in MODS.check(mod)[0]
+
+
+def test_a_pack_readme_has_its_intro_in_the_packs_about_yaml():
+    for pack in PACKS:
+        about = yaml.safe_load((pack / "config" / "about.yaml").read_text(encoding="utf-8"))
+        assert about.get("intro", {}).get("sections", {}).get("What it is"), f"{pack.name}: intro: in config/about.yaml"
+        assert not list((ROOT / "tools" / "packgen").rglob("*.intro.md"))

@@ -110,11 +110,24 @@ def test_each_kind_has_a_picture_options_linked_to_the_reference_and_a_yaml_exam
         body = by_kind[kind]
         assert f"](img/panels/kind-{kind}.jpg)" in body, kind
         assert f"**The keys of `{kind}`.**" in body, kind                 # the catalogue entry and the kind's keys: one section
-        for label in ("Use it when:", "Not when:", "Key options:", "Empty when", "Masked:", "No access:", "Live:", "Phone:", "CSV:"):
+        general = ("Use it when:", "Not when:", "Key options:")       # the general kinds' three moved to Drishti Rachana's PANEL_KINDS.md (one linked line); links and provenance are Drishti's
+        assert "Use it when, not when, key options and every option of" in body or all(label in body for label in general), kind
+        for label in ("Empty when", "Masked:", "No access:", "Live:", "Phone:", "CSV:"):
             assert label in body, (kind, label)
         yaml = re.search(r"```yaml\n(.*?)\n```", body, re.S)
         assert yaml and f"kind: {kind}" in yaml.group(1), kind
         assert yaml.group(1) in examples, f"the {kind} example is not a verbatim excerpt of docs/guides/examples"
+
+
+def test_each_kinds_line_to_rachana_links_to_that_kind_in_panel_kinds_md():
+    """The linked line of a kind points at its own heading of Rachana's PANEL_KINDS.md (``#<kind>``), never at another kind's or at the top."""
+    sections = re.split(r"^#### ", KINDS_DOC.read_text(), flags=re.M)[1:]
+    by_kind = {s.split("\n", 1)[0].strip(): s for s in sections}
+    link = re.compile(r"\]\((https://github\.com/drishti-platform/drishti-rachana/blob/[^/)]+/docs/PANEL_KINDS\.md)#([a-z0-9-]+)\)")
+    for kind in KINDS:
+        targets = {m.group(2) for m in link.finditer(by_kind[kind])}
+        linked = "Use it when, not when, key options and every option of" in by_kind[kind]     # Drishti's own kinds (provenance, links) have none
+        assert targets == ({kind} if linked else set()), (kind, targets)
 
 
 def test_the_help_links_into_the_catalogue_use_headings_that_exist():

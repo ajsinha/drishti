@@ -50,14 +50,18 @@ settings:
 - tls.*
 auth: Credentials in the uri as ${ENV} references (a literal password is refused); TLS through tls.* (or tls=true in the uri); x.509 certificate log-in with auth-mechanism x509.
 licence: MongoDB Java driver, sync (Apache-2.0), bundled; no native library.
-windows: Works the same on Windows (pure Java driver); the server is yours to run, and python tools/drishti.py data load --store mongodb loads it from any system.
+windows: Works the same on Windows (pure Java driver); the server is yours to run, and python3.13 tools/drishti.py data load --store mongodb loads it from any system.
 doc: plugins/drishti-plugin-mongodb/README.md
 ---
 # The mongodb connector
 
 Plugin `mongodb` (`plugins/drishti-plugin-mongodb`): a document per entity per day, read as columns. One entity is one `_id` lookup;
 a day's promoted fields come from a narrow second collection, so a search over a million trades does not decompress a million
-documents. `python tools/drishti.py data load --store mongodb` (or any writer keeping the same layout) fills it.
+documents. `python3.13 tools/drishti.py data load --store mongodb` (or any writer keeping the same layout) fills it.
+
+## Build and use
+
+A connector file in `config/connectors/` with `plugin: mongodb` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
 
 ## What it reads
 
@@ -133,7 +137,7 @@ settings:
 ```
 
 Ready-made files for the six banking domains: `config/connectors.examples/mongodb/`; over TLS: `other/positions-mongo.yaml`. Load data
-with `python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti` (add `--trades N --days D`, `--keep-days N` or `--ttl-days N`).
+with `python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti` (add `--trades N --days D`, `--keep-days N` or `--ttl-days N`).
 
 ## Troubleshooting
 
@@ -187,27 +191,18 @@ text. The layout's `sort-by`, `file-rows` and `row-group-rows` do not apply.
 
 ## Loading
 
-`python tools/drishti.py data load --store mongodb` loads the banking packs' samples (`tools/packgen/banking/make_data.py`), and optionally a generated book,
+`python3.13 tools/drishti.py data load --store mongodb` loads the banking packs' samples (`tools/packgen/banking/make_data.py`), and optionally a generated book,
 through `MongoLoader` (in the plugin):
 
-Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                            # the samples: 1,791 documents x 10 days
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000 --days 3    # and a book of trades, streamed
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --keep-days 90             # then delete days beyond the 90 newest
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --ttl-days 130             # documents expire 130 days after their date
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                            # the samples: 1,791 documents x 10 days
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000 --days 3    # and a book of trades, streamed
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --keep-days 90             # then delete days beyond the 90 newest
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --ttl-days 130             # documents expire 130 days after their date
 ```
 
-- **Input:** loader rows, one JSON line per entity per day (`{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`),
-  as `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write them: tars of `<kind>/<YYYY-MM-DD>/rows.jsonl`
-  folders; `-` reads standard input (one kind on one date). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and
-  `.jsonl.gz` in it, in name order.
-- **Business dates come from outside the row** ([the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
-  a tar's folder names the date; a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-`) is one kind on one date: `--as-of`, else
-  its `.ready` file's `business-date:`, else the date in its name, else the business today. Rows whose own `date` differs are loaded
-  under the file's date and counted; a plain file of two kinds, or `--as-of` with a tar, is refused. A row dated after tomorrow in
-  the business zone is not loaded and the load ends with an error.
+- **Input and business dates:** as for every loader ([DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares)).
 - **Each line is a replace-or-insert by `_id`** in the domain's collection and, with promoted fields, another in `<domain>_columns`,
   in unordered bulk writes of `--batch` operations, at most `--in-flight` batches at once on virtual threads. Loading the same rows
   again changes nothing; a restated entity replaces its document of the day. Nothing is deleted: an entity the stream no longer
@@ -221,8 +216,8 @@ python tools/drishti.py data load --store mongodb mongodb://localhost:27017 dris
   by the source of the rows rather than by the writes.
 
 Options: `--keep-days N`, `--ttl-days N`, `--doc-format string|bson` (`string`), `--batch N` (1000), `--in-flight N` (16),
-`--pool-size N` (20), `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar), `--future-days N` (1), `--zone Z`
-(`LAKE_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--trades N --days D` (the script only).
+`--pool-size N` (20), `--trades N --days D` (the script only), and the options every loader takes (`--as-of`, `--future-days`, `--zone`,
+`--max-drop-share`, `--force-drop`: [Table mode: loading](../drishti-plugin-jdbc/README.md#table-mode-loading)).
 
 **Your own writer** (a Kafka consumer, a batch job) writes the same documents: `MongoLayout.record(...)` builds the domain document,
 `MongoLayout.columnsRecord(record)` its narrow copy and `MongoLayout.prepare(db, collection, ttl)` the collections and indexes. Any
@@ -398,8 +393,8 @@ A quick start (MongoDB 8.0 does not start on some recent Linux kernels; `mongo:7
 
 ```bash
 docker run -d --name mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                       # the samples, 10 business days
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000        # and 10,000 trades a day for 3 days
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                       # the samples, 10 business days
+python3.13 tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000        # and 10,000 trades a day for 3 days
 cp config/connectors.examples/mongodb/*.yaml config/connectors/               # the banking domains on MongoDB
 ```
 

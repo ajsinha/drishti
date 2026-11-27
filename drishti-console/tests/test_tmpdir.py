@@ -125,3 +125,15 @@ def test_a_crashed_workers_old_folder_goes_at_start_and_nothing_outside_it(tmp_p
     assert not dead.exists()
     assert (outside / "keep.txt").read_text() == "not ours"
     assert young.exists() and live.exists() and notours.exists() and linked.is_symlink()
+
+
+def test_the_temp_folder_is_never_made_outside_the_checkout_and_the_data_folder(tmp_path, fresh, monkeypatch, capsys):
+    """i7g gate F2: an old DRISHTI_TMP_DIR naming another clone's folder that is not there is said and not made: the data folder's."""
+    scratch = tmp_path / "scratch"
+    scratch.mkdir()
+    monkeypatch.setattr(tempfile, "tempdir", str(scratch))
+    monkeypatch.setenv("DRISHTI_DATA_DIR", str(tmp_path / "data"))
+    monkeypatch.setenv("DRISHTI_TMP_DIR", str(tmp_path / "old-clone" / "tmp"))
+    root = tmpdir.start("")
+    assert not (tmp_path / "old-clone").exists() and root.parent == (tmp_path / "data" / "tmp" / "console").resolve()
+    assert "[WARN] the console's temp folder" in capsys.readouterr().err

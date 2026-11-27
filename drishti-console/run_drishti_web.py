@@ -14,10 +14,16 @@
 
 """Drishti console entry point.
 
-    python drishti-console/run_drishti_web.py [--server.port=17480] [--backend.url=http://...]
+    python drishti-console/run_drishti_web.py [--settings FILE] [--profile demo] [--server.port=17480] [--backend.url=http://...]
+
+Run bare (no argument at all, no DRISHTI_BACKEND_URL: an IDE's "Run current file"), it is the launcher **Drishti: run console**: the
+settings file ~/drishti-envs/dev.ini (when there) with the demo profile, and the development secrets where none is set (the ones
+``drishti.py start all --demo`` gives the server: tools/launch/devsecrets.py), each said in one line. A Python without the console's
+libraries stops at once with the setup line (start installs nothing).
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import secrets
 import os
@@ -26,6 +32,40 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+#: the libraries without which the console cannot start (import name: distribution); the full list is checked by drishti.py setup
+NEEDS = {"fastapi": "fastapi", "uvicorn": "uvicorn", "httpx": "httpx", "yaml": "pyyaml", "jinja2": "jinja2", "drishti_lake": "drishti-lake"}
+def setup_line() -> str:
+    """The setup command, pasteable on this system (core/settings_ini.py setup_line, the one console copy of procs.command()'s rule)."""
+    from core import settings_ini
+    return settings_ini.setup_line()
+
+
+def missing_libraries(find=importlib.util.find_spec) -> list[str]:
+    """The distributions of :data:`NEEDS` this Python cannot import."""
+    return [dist for mod, dist in NEEDS.items() if find(mod) is None]
+
+
+def check_libraries() -> None:
+    """Stops at once, with the setup line, when this Python lacks a library the console needs (never a traceback minutes later)."""
+    lacking = missing_libraries()
+    if lacking:
+        raise SystemExit(f"[FAIL] the console's Python: {sys.executable} lacks {', '.join(lacking)} (Drishti installs nothing). Fix: {pip_line()}")
+
+
+def pip_line() -> str:
+    """The command the owner may run himself (Drishti never installs a library), as setup prints it: from drishti-console, offline from
+    ~/drishti-wheels when it holds wheels, else from the package index."""
+    q = lambda w: f'"{w}"' if " " in w else w                      # noqa: E731
+    py = f"py -{sys.version_info[0]}.{sys.version_info[1]}" if os.name == "nt" else q(sys.executable)
+    pack = Path(os.environ.get("USERPROFILE" if os.name == "nt" else "HOME") or Path.home()) / "drishti-wheels"
+    offline = f"--no-index --find-links {q(str(pack))} " if pack.is_dir() and any(pack.rglob("*.whl")) else ""
+    lock = "..\\config\\compute\\locks\\python.lock" if os.name == "nt" else "../config/compute/locks/python.lock"
+    return (f"cd {q(str(HERE))}   then   {py} -m pip install {offline}-r requirements.txt   then   {py} -m pip install {offline}-r {lock}"
+            f"   (or {setup_line()}, which checks every library)")
+
+
+if __name__ == "__main__":
+    check_libraries()
 
 import uvicorn  # noqa: E402
 
@@ -71,7 +111,97 @@ def log_config() -> dict:
     return cfg
 
 
+def foreign_settings(argv: list[str]) -> str | None:
+    """The --settings file when it names another drishti.home (an old settings file of an earlier copy, passed by a launcher's fixed
+    path): None when it is this checkout's (core.settings_ini.names_home, the tools' rule too)."""
+    from core import settings_ini
+    named = next((argv[i + 1] for i, a in enumerate(argv[:-1]) if a == "--settings"), None) \
+        or next((a.split("=", 1)[1] for a in argv if a.startswith("--settings=")), None)
+    if not named:
+        return None
+    entries = settings_ini.read_all(named)
+    return None if settings_ini.names_home(entries, HERE.parent) else named
+
+
+def drop_settings(argv: list[str]) -> list[str]:
+    """``argv`` without its --settings: another checkout's file gives this console no roots (FIRST_RUN_ROBUSTNESS.md R6)."""
+    out, skip = [], False
+    for a in argv:
+        if skip:
+            skip = False
+        elif a == "--settings":
+            skip = True
+        elif not a.startswith("--settings="):
+            out.append(a)
+    return out
+
+
+def devsecrets():
+    """tools/launch/devsecrets.py of this install (the one place the development secrets are spelled), or None when it is not here."""
+    path = HERE.parent / "tools" / "launch" / "devsecrets.py"
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("drishti_devsecrets", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def bare_defaults(argv: list[str], env: dict, home: Path | None = None) -> tuple[list[str], list[str]]:
+    """A bare run (no argument, no DRISHTI_BACKEND_URL(S)) is the launcher Drishti: run console: ``--settings ~/drishti-envs/dev.ini``
+    (when there) ``--profile demo``, and the development secrets into ``env`` where none is set. (the arguments, the lines to print);
+    any other run is left as it is."""
+    if argv or (env.get("DRISHTI_BACKEND_URL") or env.get("DRISHTI_BACKEND_URLS") or "").strip():
+        return argv, []
+    ini = (home or Path.home()) / "drishti-envs" / "dev.ini"
+    said = []
+    from core import settings_ini
+    if ini.is_file() and not settings_ini.names_home(settings_ini.read_all(str(ini)), HERE.parent):
+        said.append(f"[WARN] {ini} belongs to another checkout: not used (Fix: {setup_line()})")
+        argv = ["--profile", "demo"]
+    elif ini.is_file():
+        argv = ["--settings", str(ini), "--profile", "demo"]
+        said.append(f"no arguments: the settings file {ini} with the demo profile (as the launcher Drishti: run console)")
+    else:
+        argv = ["--profile", "demo"]
+        said.append(f"no arguments and no settings file at {ini} ({setup_line()} writes it): the demo profile only")
+    mod = devsecrets()
+    if mod is not None:
+        used = mod.apply(env, mod.CONSOLE)
+        if used:
+            said.append("WARNING: " + mod.warning(used))
+    return argv, said
+
+
+def trust_roots(argv: list[str], environ, scratch: str | None = None) -> list[str]:
+    """The tools' trust rule for a console run directly (an IDE's launcher; FIRST_RUN_ROBUSTNESS.md R5): every DRISHTI_* folder variable
+    (settings_ini.ROOT_VARS) naming a folder outside this checkout is removed from ``environ``, unless it is the folder the accepted
+    settings file of ``argv`` names, or under ``scratch`` (the system temp folder: a test's run). ``drishti.py start`` (it sets
+    DRISHTI_STOP_KEY) has applied the rule already and passes its own resolved roots: left alone. The [WARN] lines to print."""
+    from core import settings_ini
+    if (environ.get("DRISHTI_STOP_KEY") or "").strip():
+        return []
+    named = settings_ini.pop_option(list(argv))[1]
+    entries = settings_ini.read_all(named) if named else {}
+    return settings_ini.drop_foreign_vars(environ, HERE.parent, entries, scratch)
+
+
 def main() -> None:
+    import tempfile
+    from core import settings_ini
+    try:
+        argv, said = bare_defaults(sys.argv[1:], os.environ)
+        for line in said:
+            print(line, file=sys.stderr)
+        sys.argv[1:] = argv
+        other = foreign_settings(sys.argv[1:])
+        if other:                                      # another checkout's file: warned, and none of its roots followed (R6)
+            print(f"[WARN] {other} belongs to another checkout: not used (Fix: {setup_line()})", file=sys.stderr)
+            sys.argv[1:] = drop_settings(sys.argv[1:])
+        for line in trust_roots(sys.argv[1:], os.environ, tempfile.gettempdir()):
+            print(line, file=sys.stderr)
+    except settings_ini.SettingsError as e:            # e.g. the launcher's ~/drishti-envs/dev.ini before setup: one line, no traceback
+        raise SystemExit(settings_ini.fail(e)) from None
     settings = load_settings(HERE / "config", sys.argv[1:])
     from core.launcher_stop import MAIN_PID_ENV
     os.environ[MAIN_PID_ENV] = str(os.getpid())   # the launcher's stop signals this process, whichever worker takes the request (core/launcher_stop.py)

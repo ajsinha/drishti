@@ -392,8 +392,8 @@ opened; the stored group pages were retired.
 
 - [Funds and ETFs guide](../guides/WORLD_DATA_GUIDE.md): FUND, HELD and TRACK with worked numbers, the data contract of every kind, the
   sources and the refresh script.
-- [The world data tutorial, Part C: funds and ETFs](../guides/WORLD_DATA_GUIDE.md#part-c--funds-and-etfs) and [the groupings tutorial: groupings and analytics](../guides/bi/GROUPINGS_AND_ANALYTICS.md) (a World Bank region).
-- [The us-equities pack's guide](../../modules/capital-markets/packs/us-equities/guides/us-equities.md) and [the gleif pack's guide](../../config/packs/core/gleif/guides/gleif.md).
+- [The world data tutorial, Part C: funds and ETFs](../guides/WORLD_DATA_GUIDE.md#21-worked-example-from-a-feed-to-a-screen) and [the groupings tutorial: groupings and analytics](../guides/bi/GROUPINGS_AND_ANALYTICS.md) (a World Bank region).
+- [The us-equities pack's guide](../guides/WORLD_DATA_GUIDE.md#the-us-equities-pack) and [the gleif pack's guide](../guides/WORLD_DATA_GUIDE.md#the-gleif-pack).
 - [Groupings and analytics guide](../guides/bi/GROUPINGS_AND_ANALYTICS.md): section 4 (SIC), section 5 (ECG) and section 7 (USEQ, FACT
   and IDX) with worked numbers.
 - [External data](../guides/WORLD_DATA_GUIDE.md): SEC EDGAR, N-PORT, N-CEN, Wikidata, GLEIF, World Bank, IMF, UNDP and the CIA Factbook,

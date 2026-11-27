@@ -54,7 +54,7 @@ def test_no_inline_script_or_handlers():
 
 
 def test_python_files_under_limit():
-    over = [str(p) for p in CONSOLE.rglob("*.py") if ".venv" not in p.parts and len(p.read_text().splitlines()) > CODE_LINE_CAP]
+    over = [str(p) for p in CONSOLE.rglob("*.py") if ".venv" not in p.parts and len(p.read_text().splitlines()) > CODE_LINE_CAP]  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
     assert over == []
 
 

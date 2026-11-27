@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * Where a pack's folder is: the one rule every Java reader follows (docs/architecture/DOMAIN_MODULES.md section 8). A packs root
+ * Where a pack's folder is: the one rule every Java reader follows (docs/architecture/KERNEL_AND_MODULES.md section 8). A packs root
  * ({@code config/packs}, the installed packs, {@code examples/packs}) holds packs directly ({@code <root>/<pack>/pack.yaml}) or one level
  * down in <b>domain folders</b> ({@code <root>/<domain>/<pack>/pack.yaml}): a folder of the root with no {@code pack.yaml} of its own.
  * The product's packs live in the module that owns them ({@code modules/banking/packs/trading}, found by

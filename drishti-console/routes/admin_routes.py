@@ -420,7 +420,7 @@ async def loads_inbox(request: Request, partial: int = 0):
 
 @router.get("/loads/feeds")
 async def loads_feeds(request: Request):
-    """Admin → Data loads → Feeds (docs/guides/WORLD_DATA_GUIDE.md section 6): every data feed with its last run, last success, rows, duration,
+    """Admin → Data loads → Feeds (docs/guides/WORLD_DATA_GUIDE.md section 19.6): every data feed with its last run, last success, rows, duration,
     failures since the last success and the last error, Run now, and the latest runs of the ledger. Every figure is the server's
     (GET /api/v1/admin/feeds, from config/feeds and <data>/datafeeds/ledger.jsonl)."""
     me = ident(request)
@@ -821,7 +821,7 @@ async def health(request: Request, partial: int = 0):
 
 
 def _console_distribution(app) -> dict:
-    """This console's distribution for Health (docs/architecture/DISTRIBUTIONS.md) and the old keys it still reads."""
+    """This console's distribution for Health (docs/architecture/KERNEL_AND_MODULES.md) and the old keys it still reads."""
     d = app.state.editions.distribution
     return {**d.about(), "own": app.state.editions.own_distribution}
 
@@ -960,7 +960,7 @@ async def act(request: Request, username: str, action: str):
     return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)
 
 
-# -- Admin → White label (docs/guides/ADMIN_GUIDE.md, "White label"; DISTRIBUTIONS.md; mock-up white-label A) ------------------------------
+# -- Admin → White label (docs/guides/ADMIN_GUIDE.md, "White label"; KERNEL_AND_MODULES.md; mock-up white-label A) ------------------------------
 
 @router.get("/white-label")
 async def white_label_page(request: Request):

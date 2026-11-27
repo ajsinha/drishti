@@ -136,7 +136,7 @@ management:
           include: readinessState,nodeReadiness
 
 drishti:
-  # The distribution (docs/architecture/DISTRIBUTIONS.md): risk, finance, genomics or all, or the path of a site's own file; it names
+  # The distribution (docs/architecture/KERNEL_AND_MODULES.md): risk, finance, genomics or all, or the path of a site's own file; it names
   # config/distributions/drishti.<name>.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank:
   # Drishti All, exactly as before. Also --distribution=<name> on the command line (drishti.py start server --distribution <name>).
   distribution: ${DRISHTI_DISTRIBUTION:}
@@ -201,7 +201,7 @@ drishti:
     dir: ${DRISHTI_ENGINES_DIR:${drishti.config.dir}/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
     drain: 30s                       # an engine turned off live: requests in flight finish within this, then are cancelled
     watch-seconds: 5                 # how often the engine files are compared with what was read (an edit by hand takes effect as from the page)
-  modules:                           # the modules (docs/architecture/ACCESS_MODEL.md; POST /api/v1/admin/modules): each on when installed, licensed and enabled
+  modules:                           # the modules (docs/architecture/KERNEL_AND_MODULES.md; POST /api/v1/admin/modules): each on when installed, licensed and enabled
     dir: ${DRISHTI_MODULES_DIR:${drishti.config.dir}/modules}   # the folder of the modules' switches (config/modules/<id>.yaml: enabled), written by POST /api/v1/admin/modules; drishti.modules.<id>.enabled (DRISHTI_MODULES_<ID>_ENABLED) wins over a file
     watch-seconds: 5                 # how often the module and access files are compared with what was read (a change to a module takes effect at the next start; lenses and the licence at once)
     dev: ${DRISHTI_MODULES_DEV:false}   # development mode: the module source folders of the modules folder (drishti.modules.home) load without a .dmod, unverified; refused in a cluster and under the prod or production profile
@@ -218,7 +218,7 @@ drishti:
     store-format: delta              # the lake format a stored output (outputs.<name>.store) is written in: delta or iceberg
   launcher:                          # the Python launcher's stop (docs/DEPLOYMENT_AND_QA_GUIDE.md section 7.1; POST /launcher/stop)
     stop-key: ${DRISHTI_STOP_KEY:}   # the key `drishti.py start server` makes and keeps in the pid file; `stop server` sends it straight from this machine (loopback, no proxy header) to stop gracefully on every OS; empty: every call refused (403); never logged
-  access:                            # the access model's files (docs/architecture/ACCESS_MODEL.md): the access registry reads them, nothing else does
+  access:                            # the access model's files (docs/architecture/KERNEL_AND_MODULES.md): the access registry reads them, nothing else does
     dir: ${DRISHTI_ACCESS_DIR:${drishti.config.dir}/access}     # licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed
   metrics:                           # the platform metrics and alerts (docs/guides/OPERATIONS_GUIDE.md section 13.6; CLUSTER_GUIDE.md 8.3, 8.5)
     enabled: ${DRISHTI_METRICS_ENABLED:true}  # export the platform gauges (caches, memory budget, disk, sources, feeds, loads) on /actuator/prometheus and evaluate the alert rules
@@ -229,20 +229,21 @@ drishti:
       file: ${DRISHTI_ALERTS_FILE:${drishti.config.dir}/alerts/platform-alerts.yaml}  # the rules: metric, threshold, how long, severity (a missing file: no rules, and Health says so)
       notify-roles: admin            # the roles told in their inbox (and the bell) when an alert opens, comma-separated; blank: nobody
       keep: 200                      # alerts opened and closed kept for the page, newest first (in memory: a restart starts afresh)
-  feeds:                             # the data feeds as the server sees them (docs/guides/WORLD_DATA_GUIDE.md section 6; Admin -> Data loads -> Feeds)
+  python: ${DRISHTI_PYTHON:}         # the ONE Python (the console, the tools and the server's Python work: yours, Drishti makes no virtual environment), as an absolute path (tools/drishti.py setup writes the Python it ran with into the settings file; a value naming a missing file is replaced): used where the work's own setting (drishti.feeds.python, compute.python) is blank; DRISHTI_PYTHON beats every setting; blank: the work's own default (python3, python on Windows)
+  feeds:                             # the data feeds as the server sees them (docs/guides/WORLD_DATA_GUIDE.md section 19.6; Admin -> Data loads -> Feeds)
     config: ${DRISHTI_FEEDS_CONFIG:${drishti.config.dir}/feeds}   # the feed files' folder (config/feeds/<feed>.yaml); the run ledger is <data folder>/datafeeds/ledger.jsonl
     root: ${DRISHTI_FEEDS_ROOT:${drishti.home}}    # the installation's folder (the one holding tools/drishti.py): Run now starts `tools/drishti.py feed run <feed>` there
-    python: ${DRISHTI_FEEDS_PYTHON:}  # the Python Run now starts (blank: the console's drishti-console/.venv, else python3, python on Windows)
+    python: ${DRISHTI_FEEDS_PYTHON:}  # the Python Run now starts (blank: drishti.python, else python3, python on Windows)
     sample-seconds: 60               # how often the ledger is read for the gauge drishti.datafeed.failed (the alert rule data-feed-failed)
   store:
     # The content store (docs/architecture/DATA_ARCHITECTURE.md): user content every node of a cluster can reach. Its settings are in their own file.
     file: ${DRISHTI_STORE_FILE:${drishti.config.dir}/store/store.yaml}
     root: ${DRISHTI_STORE_ROOT:}   # the filesystem backend's root, over the file's filesystem.root (empty: the file's, else <data folder>/fstore)
   edit:
-    # Write-back (docs/guides/APPROVALS_GUIDE.md): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
+    # Write-back (docs/guides/ADMIN_GUIDE.md section 28, settings in 28.7): its settings are in their own folder (edit.yaml, lanes.yaml, policy.yaml, retention.yaml).
     # Off as shipped (edit.enabled: false there): a fresh install or an upgrade is read-only.
     file: ${DRISHTI_EDIT_FILE:${drishti.config.dir}/edit/edit.yaml}
-  live-sets:                         # the live tables behind blotters, FORM results, searches and bare mnemonics, at /api/v1/rdp (docs/guides/LIVE_RESULTS_GUIDE.md section 7)
+  live-sets:                         # the live tables behind blotters, FORM results, searches and bare mnemonics, at /api/v1/rdp (docs/guides/USER_GUIDE.md, Live results and blotters: The engine: snapshot, deltas, scale, retention)
     flush-ms: 50                     # how often each viewer's waiting changes are sent, coalesced per record (milliseconds, at least 10)
     window-capacity: 5000            # records waiting for one viewer before it is told to resync instead (back-pressure)
     default-max-rows: 250000         # the most records a kind's default set reads into memory when its store cannot page it (a kind a lake keeps as columns is paged from the lake, uncapped); beyond it the set says capped
@@ -465,10 +466,10 @@ drishti:
           - POST /api/v1/compute/sandboxes/*/copy
           - DELETE /api/v1/compute/requests/*
       "[data:read]":
-        description: "Read data through Arrow Flight (FLIGHT_GUIDE.md): kinds, BI models, pivot views, VaR vectors and the in-memory lake, as your roles, masks and row rules allow, every read audited. It opens no HTTP call. data:read:<domain> (a pack such as trading, bi, var, a lake) opens one domain only."
+        description: "Read data through Arrow Flight (INTEGRATION_GUIDE.md): kinds, BI models, pivot views, VaR vectors and the in-memory lake, as your roles, masks and row rules allow, every read audited. It opens no HTTP call. data:read:<domain> (a pack such as trading, bi, var, a lake) opens one domain only."
         allow: []
       "[edit]":
-        description: "Submit changes through write-back (APPROVALS_GUIDE.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
+        description: "Submit changes through write-back (ADMIN_GUIDE.md: forms, the CLI's change propose), and approve, reject or withdraw them in the one Approvals queue (kind change). No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
         allow:
           - POST /api/v1/changes
           - POST /api/v1/rdp/tables/*/write
@@ -639,7 +640,7 @@ drishti:
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
       - PUT /api/v1/tables/editor/prefs         # a person's editor view: personal, in the console
       - "* /api/v1/me/**"
-      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (APPROVALS_GUIDE.md)
+      - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (ADMIN_GUIDE.md)
       - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
@@ -706,7 +707,7 @@ drishti:
       author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (USER_GUIDE.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
       pivot-approver: { kinds: ["*"], bi: [bi] }   # approves custom pivot functions someone else wrote (four eyes; drishti.pivot.functions.approver-role)
-      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (APPROVALS_GUIDE.md; editing itself is off until config/edit/edit.yaml turns it on)
+      admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (ADMIN_GUIDE.md section 28; editing itself is off until config/edit/edit.yaml turns it on)
     oidc:                              # single sign-on: the console runs the flow, the server verifies the ID token
       enabled: ${DRISHTI_OIDC_ENABLED:false}  # verify single-sign-on ID tokens
       issuer: ${DRISHTI_OIDC_ISSUER:}  # the OIDC issuer URL
@@ -730,7 +731,7 @@ drishti:
     mask-copies-min-length: 3  # shortest text value scrubbed as a copy (numbers from four digits)
     mask-copies-max-nodes: 50000  # a document with more nodes is not scanned for copies (its masked fields are still masked)
     mask-copies-max-values: 64  # most distinct masked values scrubbed per document
-  embed:                             # embedded views in other web applications (docs/guides/EMBED_GUIDE.md; API_REFERENCE, Embedding)
+  embed:                             # embedded views in other web applications (docs/guides/INTEGRATION_GUIDE.md; API_REFERENCE, Embedding)
     enabled: ${DRISHTI_EMBED_ENABLED:false}   # off: no token endpoint, embed tokens refused. Needs drishti.security.enabled
     issuer: ${DRISHTI_PUBLIC_URL:}            # the iss of embed tokens: this server's public URL
     audiences: ["${DRISHTI_CONSOLE_URL:}"]      # the consoles that may accept embed tokens (their public URLs); the first is the default
@@ -739,7 +740,7 @@ drishti:
     mask: always                              # embed calls always mask drishti.security.redact fields, whatever the user's roles
     allow-wildcard-origins: false             # let an application register https://*.suffix origins (review apps)
     assertion-max-age: 60s                    # longest life of a client or user assertion a host signs
-    sign-in-window: ${DRISHTI_EMBED_SIGN_IN_WINDOW:true}   # the renderer's auth: 'popup' (EMBED_GUIDE.md 10.1): a registered host's page signs its user in
+    sign-in-window: ${DRISHTI_EMBED_SIGN_IN_WINDOW:true}   # the renderer's auth: 'popup' (INTEGRATION_GUIDE.md 10.1): a registered host's page signs its user in
                                               # through single sign-on in a window it opens on a click; needs drishti.security.oidc. false: token exchange only
     scopes:                                  # what each embed scope opens; a token calls nothing else, and never writes
       "[embed:view]":
@@ -762,7 +763,7 @@ drishti:
     jitter: 0.2                      # each wait varies by up to this fraction either way
     permanent-after: 3               # a failure waiting cannot fix (refused credentials, bad settings) seen this often in a row is retried only every max
     # packs: {initial: 2s}           # drishti.retry.<area>.<key> overrides any of these for one area: packs, connectors, ai, mcp
-  ai:                                # LLM provider layer (docs/guides/AI_GUIDE.md): OFF by default, the ONE switch of all AI (MCP, Ask, BI hooks); not in this release's console
+  ai:                                # LLM provider layer (docs/guides/ADMIN_GUIDE.md): OFF by default, the ONE switch of all AI (MCP, Ask, BI hooks); not in this release's console
     enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the LLM provider layer: provider files in drishti.ai.dir are read and models become callable
     dir: ${DRISHTI_AI_DIR:${drishti.config.dir}/ai}        # one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names
     watch: auto                      # auto | poll | off: how edits to the folder are noticed (live reload, like connectors)
@@ -777,7 +778,7 @@ drishti:
       cost-per-user-per-day: 0       # in the unit of the models' cost-per-1k-* prices
       features: {}                   # per feature: "[ask]": {roles: [..], per-user-per-minute: 6}
       # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/bi/README.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
-  mcp:                               # MCP client (docs/guides/AI_GUIDE.md): OFF by default
+  mcp:                               # MCP client (docs/guides/ADMIN_GUIDE.md): OFF by default
     enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the MCP client (also needs drishti.ai.enabled): server files in drishti.mcp.dir are read and their tools become callable
     dir: ${DRISHTI_MCP_DIR:${drishti.config.dir}/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
     watch: auto  # auto | poll | off: how edits to the folder are noticed (live reload)
@@ -786,7 +787,7 @@ drishti:
     server-roles: {}                 # "[server]": [roles]   absent = every signed-in user
     tool-roles: {}                   # "[server/tool]": [roles]
     server-features: {}              # "[server]": [features]
-  approvals:                         # the one Approvals queue (docs/architecture/SHARED_SCREENS.md section 2; USER_GUIDE.md, Approvals)
+  approvals:                         # the one Approvals queue (docs/architecture/THIN_CONSOLE_DESIGN.md section 8.2; USER_GUIDE.md, Approvals)
     due-soon-days: 3                 # an item due within this many days (or overdue) is pinned at the top as due soon
     due-days:                        # per kind: an item with a period is due this many days after its period ends
       var-report: 30                 # a regulatory report run (VAR_GUIDE.md section 18.14)
@@ -986,21 +987,21 @@ drishti:
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
     enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
   homes:                             # role Homes (docs/architecture/ROLE_HOME_SUTRAS.md): one Home per role, the person may arrange their own unless the Home is locked
-    enabled: ${DRISHTI_HOMES_ENABLED:true}
+    enabled: ${DRISHTI_HOMES_ENABLED:true}   # role Homes on or off (off: no Home opens, the landing pages stay)
     dir: ${DRISHTI_HOMES_DIR:${drishti.config.dir}/homes}   # <module>/<home>.home.yaml with its .sutra.yaml and .measures.yaml (absolute)
     data-dir: ${DRISHTI_HOMES_DATA_DIR:${drishti.data.dir}}   # the cut-off snapshots, change events and drivers are kept under <data-dir>/homes (absolute)
     cutoff: "17:00"                  # the reference cut-off of "what changed since", in the site's time zone (a Home's measures file may name its own)
     keep-days: 30                    # days of snapshots kept (the KPI sparklines' history)
     roles:                           # role -> the Homes it opens, first is the default; an administrator opens every Home (Admin, Roles edits this)
-      risk-manager: [risk-manager]
-      trader: [trader]
-      risk-officer: [risk-officer]
-      cro: [risk-officer]
-      credit-officer: [credit-officer]
-      operations: [operations]
-      quant: [quant]
-      analyst: [quant]
-      economist: [economist]
+      risk-manager: [risk-manager]   # the risk manager's Home
+      trader: [trader]   # the trader's Home
+      risk-officer: [risk-officer]   # the risk officer's Home
+      cro: [risk-officer]   # the CRO opens the risk officer's Home
+      credit-officer: [credit-officer]   # the credit officer's Home
+      operations: [operations]   # the operations Home
+      quant: [quant]   # the quant's Home
+      analyst: [quant]   # an analyst opens the quant's Home
+      economist: [economist]   # the economist's Home
   trading:                           # the Trading landings' figures (the trading module's server part, /api/v1/trading/landing; LENSES.md › The design)
     people: {}                       # user: {trader: TRDR-…} or {desk: DESK-…, role: desk-head}: "my" scope, over the lens's trading.people (a name in both: this)
   explain:                           # About this page (docs/guides/RACHANA_REFERENCE.md): GET /api/v1/views/{kind}/{id}/explain
@@ -1008,7 +1009,7 @@ drishti:
     cache-ttl: 60s                   # how long an answer is served before it is derived again
     ask:                             # Ask about this page (RACHANA_REFERENCE.md): OFF by default; while off no call to any model is ever made
       enabled: ${DRISHTI_ASK_ENABLED:false}  # turn on Ask about this page (also needs drishti.ai.enabled; list packs in drishti.explain.ask.packs)
-      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/AI_GUIDE.md)
+      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/guides/ADMIN_GUIDE.md)
       packs: []                      # packs where the Ask box is on; empty = none (per-pack opt-in)
       values: labels-only            # labels-only | shown: whether the page's rendered text (values) goes into the prompt; masked values never do
       max-question-chars: 500  # longer questions are refused (400)

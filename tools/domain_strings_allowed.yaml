@@ -12,6 +12,6 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Rule 4 of the domain boundaries (docs/architecture/DOMAIN_MODULES.md section 4): the core files that still name banking, and how
+# Rule 4 of the domain boundaries (docs/architecture/KERNEL_AND_MODULES.md section 21.4): the core files that still name banking, and how
 # many times. Written by tools/domain_strings.py --write; it only shrinks.
 allowed: {}

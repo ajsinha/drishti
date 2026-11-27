@@ -26,6 +26,7 @@ import sys
 from pathlib import Path
 
 import procs
+import devsecrets  # noqa: E402 - the one place the development secrets are spelled
 from procs import LaunchError, say, warn
 
 TOOLS = procs.TOOLS
@@ -36,23 +37,15 @@ import lakeconfig  # noqa: E402 - the one name of the demo lake's root variable
 import settingsfile  # noqa: E402 - tools/ is on the path through procs
 
 #: the development secrets (D6: kept as they are, here once): drishti.py start --demo and the generated launchers take them from here
-DEV = {"DRISHTI_SEED_PASSWORD": "drishti-dev-admin123",
-       "DRISHTI_TOKEN_SECRET": "drishti-dev-only-token-secret-change-me-0123456789",
-       "DRISHTI_SESSION_SECRET": "drishti-dev-only-session-secret-change-me-0123456789",
-       "DRISHTI_NET_SECRET": "drishti-dev-only-cluster-key-change-me-0123456789"}
+DEV = devsecrets.DEV                     # the development secrets: tools/launch/devsecrets.py, the one place they are spelled
 #: the profile key of the server's heap (a JVM option the launchers and start server read from the settings files; the server ignores it)
 HEAP_KEY = "drishti.launch.heap"
 HEADER = "".join(line + "\n" for line in Path(__file__).read_text(encoding="utf-8").splitlines()[:13])
 
 
 def dev_secrets(env: dict, names) -> list:
-    """The development secrets, only where none is set; the names set."""
-    out = []
-    for n in names:
-        if not (env.get(n) or "").strip():
-            env[n] = DEV[n]
-            out.append(n)
-    return out
+    """The development secrets, only where none is set; the names set (devsecrets.apply)."""
+    return devsecrets.apply(env, names)
 
 
 def roots_line(roots: dict, java: str | None = None, why: str = "") -> list:
@@ -104,7 +97,7 @@ def memory_flags(workdir: Path, env: dict) -> list:
     out = []
     for flag, fmt in (("--extra-only", lambda n: f"-XX:MaxDirectMemorySize={256 + n}m"), ("--arrow-only", lambda n: f"-Ddrishti.arrow.max-bytes={n * 1048576}")):
         try:
-            r = subprocess.run([procs.tools_python(env), str(TOOLS / "lake" / "memory_caps.py"), flag], cwd=str(workdir), env=env,
+            r = subprocess.run([procs.tools_python(env)[0], str(TOOLS / "lake" / "memory_caps.py"), flag], cwd=str(workdir), env=env,
                                capture_output=True, text=True, timeout=60)
             n = int(r.stdout.strip() or 0)
         except (OSError, ValueError, subprocess.SubprocessError):
@@ -174,8 +167,8 @@ def check_modules(a, modules: Path, jar: Path) -> str:
     dmods = modulesbuild.packages(modules)
     problems = modulesbuild.missing_report(modules) or modulesbuild.fresh_report(modules, jar)
     if problems:
-        raise LaunchError("the modules beside the jar are not current:\n  " + "\n  ".join(problems)
-                          + "\n(python tools/drishti.py build all builds the jar and every module; build modules <id> rebuilds one, then start again)")
+        raise LaunchError(procs.fail("the modules beside the jar", "not current (" + "; ".join(problems) + "); build all builds the jar "
+                                     "and every module, build modules <id> rebuilds one, then start again", procs.command("build", "all")))
     if not dmods:
         return f"modules: none ({modules} holds no .dmod: the server starts with no module)"
     return f"modules: {len(dmods)} package(s) in {modules}: {', '.join(p.name.removesuffix(modulesbuild.PACKAGE) for p in dmods)}"
@@ -192,6 +185,28 @@ def profiled(a) -> tuple:
     return settings or "", keys
 
 
+def require_set_up(data: Path, why: str = "") -> None:
+    """The data folder exists with its layout (setup makes it): else one [FAIL] with the setup line; start makes no root."""
+    if not (data / "run").is_dir():
+        raise LaunchError(procs.fail("this checkout is not set up", f"the data folder {data}{f' ({why})' if why else ''} has no run/ folder",
+                                     procs.setup_line(javacmd.settings()[0] or None) + (f" --data-dir {data}" if why.startswith("--data") else "")), 1)
+
+
+def require_settings(a) -> None:
+    """No settings file (no --settings, no ~/drishti-envs/dev.ini naming this checkout) and no --data-dir: one [FAIL] with the setup line
+    (a data folder that happens to be there is never taken for a set-up checkout); an explicit --data-dir still works."""
+    if not (getattr(a, "data_dir", None) or javacmd.settings()[0]):
+        raise LaunchError(procs.fail("this checkout is not set up", "there is no settings file (--settings, or ~/drishti-envs/dev.ini of this checkout)",
+                                     procs.setup_line()), 1)
+
+
+def demo_lake_ready(data: Path, env: dict, given=None) -> None:
+    """--demo needs the demo lake: one [FAIL] with the lake line when it is not built (never an empty answer shown as a figure)."""
+    root = Path(given or env.get(lakeconfig.DEMO_ROOT_ENV) or lakeconfig.default_root("demo", data)).expanduser()
+    if not any(root.glob("*/*/_delta_log")):
+        raise LaunchError(procs.fail("the demo lake is not built", f"{root} holds no table", procs.command("lake", "demo", "--engine", "java")), 1)
+
+
 def start(a, env: dict | None = None) -> int:
     """Starts one server (or a cluster node) from the options of ``drishti.py start server``; the exit code."""
     env = dict(os.environ if env is None else env)
@@ -200,13 +215,19 @@ def start(a, env: dict | None = None) -> int:
         procs.load_env_file(a.env_file, env)
     if a.distribution:
         env["DRISHTI_DISTRIBUTION"] = a.distribution         # the server reads it as drishti.distribution
+    require_settings(a)
     settings, keys = profiled(a)
     roots = javacmd.launch_roots(getattr(a, "home", None), a.data_dir, env, keys)
     home = roots["home"][0]
     data = roots["data"][0]
-    data.mkdir(parents=True, exist_ok=True)
+    require_set_up(data, roots["data"][1])           # start makes no data root: only setup does (another clone's folder is never made)
     server_data = Path(a.node_data).resolve() if a.node_data else data
-    server_data.mkdir(parents=True, exist_ok=True)
+    if a.node_data and not server_data.is_dir():
+        if not settingsfile.inside(server_data, data):
+            raise LaunchError(procs.fail("the node's data folder", f"{server_data} does not exist", f"make it, or give one under {data}"), 2)
+        server_data.mkdir(parents=True, exist_ok=True)   # a node's own folder under the data folder (its run/, logs/ follow)
+    if a.demo:
+        demo_lake_ready(data, env, getattr(a, "lake_root", None))
     env["DRISHTI_DATA_DIR"] = str(server_data)
     # the launch roots, absolute (docs/admin/CONFIGURATION.md, "Launch roots"): the server takes no root from its working folder
     env["DRISHTI_HOME"] = str(home)
@@ -228,9 +249,13 @@ def start(a, env: dict | None = None) -> int:
         if f != pid_file:
             p, fl = procs.read_pid(f)
             if fl.get("data") == str(server_data) and procs.alive(p, procs.SERVER_MARK):
-                raise LaunchError(f"{f.stem} (pid {p}) already uses the data folder {server_data}: give this node its own with --node-data", 3)
+                other = f.stem.removeprefix("server-") if f.stem != "server" else ""
+                raise LaunchError(procs.fail(f"{f.stem} (pid {p})", f"it already uses the data folder {server_data}",
+                                             procs.command("stop", "server", *(["--node", other] if other else []))
+                                             + ", or give this node its own with --node-data"), 3)
     if procs.port_in_use(port):
-        raise LaunchError(f"port {port} is in use by another process: stop it, or pick another with --port", 3)
+        raise LaunchError(procs.fail(f"port {port}", "it is in use by another process",
+                                     procs.command("stop", "all") + ", or pick another with --port"), 3)
 
     java = javacmd.find_java(None, a.java_home, env)
     why = javacmd.locate_java(None, a.java_home, env)[1]
@@ -283,7 +308,7 @@ def start(a, env: dict | None = None) -> int:
     if net:
         say(f"  Drishti*net folder {net}, advertising {url}")
     if dev:
-        warn(f"DEVELOPMENT secrets in use (NOT FOR PRODUCTION): {' '.join(dev)}. Put your own in an --env-file for anything shared.")
+        warn(devsecrets.warning(dev))
 
     # the one way a Drishti tool starts a JVM (tools/javacmd.py): the flags above win; it adds compact object headers on Java 25+
     cmd = javacmd.java_cmd(java, [*flags, "-jar", str(jar), *args], cwd=workdir, env=env)

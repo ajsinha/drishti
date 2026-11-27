@@ -16,7 +16,7 @@
 from a lake file's entry and from the maintenance file, validated, floored for the risk domains, handed to the Delta, Iceberg and files steps (the
 Java side's parity across the four stores is RetentionParityTest).
 
-    drishti-console/.venv/bin/python -m pytest tools/lake/test_maintain_rows.py -q
+    python3 -m pytest tools/lake/test_maintain_rows.py -q
 """
 import json
 import sys

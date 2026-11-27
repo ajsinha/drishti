@@ -28,6 +28,8 @@ import com.ash.drishti.compute.env.JavaLibraries;
 import com.ash.drishti.compute.env.LockFile;
 import com.ash.drishti.compute.env.Requires;
 import com.ash.drishti.compute.worker.ReadOnly;
+import com.ash.lake.tck.TestRoots;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -40,6 +42,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,9 +64,9 @@ class EnvironmentTest {
     void python() throws Exception {
         String py = TestCompute.python();
         assumeTrue(py != null, "no Python 3.10+ interpreter");
-        Process p = new ProcessBuilder(py, "-c", "import ensurepip, venv, sys; print('%d.%d' % sys.version_info[:2])").redirectErrorStream(true).start();
+        Process p = new ProcessBuilder(py, "-c", "import sys; print('%d.%d' % sys.version_info[:2])").redirectErrorStream(true).start();
         String out = new String(p.getInputStream().readAllBytes()).strip();
-        assumeTrue(p.waitFor(30, TimeUnit.SECONDS) && p.exitValue() == 0, "the interpreter has no venv/ensurepip: " + out);
+        assumeTrue(p.waitFor(30, TimeUnit.SECONDS) && p.exitValue() == 0, "the interpreter cannot be run: " + out);
         version = out;
     }
 
@@ -122,12 +125,47 @@ class EnvironmentTest {
         Files.writeString(dir.resolve("risk.lock"), "demo-pkg==1.0.0 --hash=sha256:" + LockFile.sha256(lockedAs) + "\n");
     }
 
+    /**
+     * The owner's own install of the wheel (Drishti never installs one): its files unpacked into {@code <dir>/owner-libs}, and an
+     * interpreter that sees that folder (a small script around the test's Python), as one the owner prepared himself.
+     */
+    private String ownersPython(byte[] wheel) throws Exception {
+        Path libs = dir.resolve("owner-libs");
+        Files.createDirectories(libs);
+        try (ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(wheel))) {
+            for (ZipEntry e; (e = z.getNextEntry()) != null; ) {
+                Path to = libs.resolve(e.getName());
+                Files.createDirectories(to.getParent());
+                Files.write(to, z.readAllBytes());
+            }
+        }
+        Path py = dir.resolve("owners-python");
+        Files.writeString(py, "#!/bin/sh\nPYTHONPATH=\"" + libs + "${PYTHONPATH:+:$PYTHONPATH}\" exec \"" + TestCompute.python() + "\" \"$@\"\n");
+        assertThat(py.toFile().setExecutable(true)).isTrue();
+        return py.toString();
+    }
+
+    private ComputeSettings settingsWith(String python) {
+        return TestCompute.settings(dir, """
+                compute:
+                  enabled: true
+                  python: "%s"
+                  pools:
+                    risk:
+                      engines: [demo_pkg.engine:DemoEngine]
+                      workers: { min: 0, max: 2 }
+                      environment: { python: "%s", lock: risk.lock, index: shipped }
+                """.formatted(python, version));
+    }
+
     @Test
-    void anApprovedEnvironmentBuildsOfflineAndATamperedFileStopsTheWorker() throws Exception {
+    void anApprovedEnvironmentIsCheckedNeverInstalledAndRunsTheOwnersOwnLibrary() throws Exception {
+        assumeTrue(!TestCompute.WINDOWS, "a POSIX script stands for the owner's interpreter");
         byte[] w = wheel(42);
         ship(w, w);
+        String python = ownersPython(w);
         Approvals approvals = new Approvals(new ApprovalStore.Memory(), null, Clock.systemUTC(), 0);
-        ComputeSettings s = settings(null);
+        ComputeSettings s = settingsWith(python);
         try (ComputeService c = new ComputeService(s, "test", dir, approvals, PeerTransport.NONE).start()) {
             ComputeRequest req = ComputeRequest.on("risk", "value", "asha").build();
             assertThatThrownBy(() -> c.run(req)).isInstanceOfSatisfying(ComputeException.class, e -> {
@@ -142,46 +180,52 @@ class EnvironmentTest {
             Environments.Built b = c.build("risk", "admin1");
             assertThat(b.dir()).isEqualTo(s.envs().resolve(b.id()));
             assertThat(Files.isWritable(b.dir().resolve("drishti-environment.json"))).isFalse();
+            try (Stream<Path> st = Files.walk(b.dir())) {
+                assertThat(st.filter(Files::isRegularFile).map(p -> p.getFileName().toString()).toList()).containsExactly("drishti-environment.json");
+            }
             ComputeResult r = c.run(req);
             assertThat(r.rows().get(0)).containsEntry("value", 42);
-            assertThat(String.valueOf(r.rows().get(0).get("file"))).startsWith(b.dir().toString());
-            assertThat(c.build("risk", "admin1").reused()).isTrue();             // never changed in place
-            Path init;
-            try (Stream<Path> st = Files.walk(b.dir())) {
-                init = st.filter(p -> p.endsWith(Path.of("demo_pkg", "__init__.py"))).findFirst().orElseThrow();
-            }
-            ReadOnly.undo(b.dir());
-            Files.writeString(init, "VALUE = 666\n");
-            ReadOnly.apply(b.dir());
+            assertThat(String.valueOf(r.rows().get(0).get("file"))).startsWith(dir.resolve("owner-libs").toString());   // the owner's own
+            assertThat(c.build("risk", "admin1").reused()).isTrue();
+            ReadOnly.delete(dir.resolve("owner-libs").resolve("demo_pkg-1.0.0.dist-info"));       // the owner removed it since
             try (ComputeService fresh = new ComputeService(s, "test", dir, approvals, PeerTransport.NONE).start()) {
                 assertThatThrownBy(() -> fresh.run(req)).isInstanceOfSatisfying(ComputeException.class, e -> {
                     assertThat(e.code()).isEqualTo(ComputeException.Code.REFUSED);
-                    assertThat(e.getMessage()).contains("changed after it was built").contains("demo_pkg/__init__.py");
+                    assertThat(e.getMessage()).contains("lacks demo-pkg==1.0.0 (not installed)").contains("Drishti installs nothing")
+                            .contains("-m pip install --no-index --find-links");
                 });
             }
         }
     }
 
     @Test
-    void aTamperedWheelFailsTheBuildAndLeavesNothingBehind() throws Exception {
-        byte[] good = wheel(42);
-        ship(wheel(43), good);                                                  // the shipped wheel is not the one the lock pins
+    void aMissingLibraryFailsTheCheckNamesThePipCommandAndInstallsNothing() throws Exception {
+        byte[] w = wheel(42);
+        ship(w, w);
         Approvals approvals = new Approvals(new ApprovalStore.Memory(), null, Clock.systemUTC(), 0);
         ComputeSettings s = settings(null);
         try (ComputeService c = new ComputeService(s, "test", dir, approvals, PeerTransport.NONE).start()) {
             approvals.approve(approvals.recent(5).get(0).id(), "admin1", "ok");
             assertThatThrownBy(() -> c.build("risk", "admin1")).isInstanceOfSatisfying(ComputeException.class, e -> {
-                assertThat(e.getMessage()).contains("pip refused the lock").containsIgnoringCase("demo");
-                assertThat(e.getMessage()).containsIgnoringCase("hash");
+                assertThat(e.getMessage()).contains("lacks demo-pkg==1.0.0 (not installed)").contains("Drishti installs nothing")
+                        .contains(" -m pip install --no-index --find-links ").contains(s.shipped().toString()).contains("demo-pkg==1.0.0");
             });
             String id = Environments.id(version, new Requires(s.pool("risk").locked(), List.of(), List.of()).lock(dir));
             assertThat(s.envs().resolve(id)).doesNotExist();
-            assertThat(c.ready(s.pool("risk"))).hasValueSatisfying(w -> assertThat(w).contains("the last build failed"));
-            assertThat(s.work()).isDirectory();
+            assertThat(c.ready(s.pool("risk"))).hasValueSatisfying(x -> assertThat(x).contains("the last build failed"));
             try (Stream<Path> st = Files.list(s.work())) {
                 assertThat(st.filter(p -> p.getFileName().toString().startsWith("build-")).toList()).isEmpty();
             }
+            Process p = new ProcessBuilder(TestCompute.python(), "-c", "import demo_pkg").redirectErrorStream(true).start();
+            p.getInputStream().readAllBytes();
+            assertThat(p.waitFor(30, TimeUnit.SECONDS) && p.exitValue() != 0).as("nothing was installed into the interpreter").isTrue();
         }
+    }
+
+    @Test
+    void noPipIsEverStartedByTheEnvironments() throws Exception {
+        String src = Files.readString(Path.of(TestRoots.module(), "src", "main", "java", "com", "ash", "drishti", "compute", "env", "Environments.java"));
+        assertThat(src).doesNotContain("\"pip\", \"install\"").doesNotContain("--target");
     }
 
     @Test

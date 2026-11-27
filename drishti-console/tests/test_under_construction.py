@@ -50,25 +50,25 @@ def test_every_registered_place_exists_and_the_document_is_current():
 
 def test_a_help_page_under_construction_carries_the_chip(backend, monkeypatch):
     app = _app(backend, monkeypatch)
-    assert under_construction.of(app).help_marked("docs-contracts-saccr")         # the shipped registry
-    page = _client(app).get("/help/docs-contracts-saccr")
+    assert under_construction.of(app).help_marked("docs-plans-contracts-saccr")         # the shipped registry
+    page = _client(app).get("/help/docs-plans-contracts-saccr")
     assert page.status_code == 200 and 'class="drishti_uc-banner"' in page.text and "drishti_uc-chip" in page.text
     assert "drishti_under-construction.css" in page.text
-    plain = _client(app).get("/help/docs-contracts-lim").text
+    plain = _client(app).get("/help/docs-contracts-simm").text
     assert "drishti_uc-banner" not in plain
 
 
 def test_menu_items_and_help_pages_honour_their_treatment(backend, monkeypatch):
     app = _app(backend, monkeypatch)
     app.state.under_construction = under_construction.Registry([
-        {"id": "a", "treatment": "hidden", "menus": ["fxv"], "help": ["docs-contracts-wwr"]},
+        {"id": "a", "treatment": "hidden", "menus": ["fxv"], "help": ["docs-plans-contracts-wwr"]},
         {"id": "b", "treatment": "under-construction", "menus": ["cpty"]},
     ])
     page = _client(app).get("/t").text
     assert not re.search(r'data-cmd="FXV"|/go\?q=FXV|cmd=FXV', page), "a hidden menu item is left out"
     if "Counterparties" in page:
         assert re.search(r"Counterparties <span class=\"drishti_uc-chip\"", page), "an item under construction carries the chip"
-    assert _client(app).get("/help/docs-contracts-wwr").status_code == 404           # a hidden help page is not reached by its address
+    assert _client(app).get("/help/docs-plans-contracts-wwr").status_code == 404           # a hidden help page is not reached by its address
 
 
 @pytest.mark.static

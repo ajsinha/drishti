@@ -17,7 +17,7 @@ package com.ash.drishti.kernel.api.pivot;
 
 
 /**
- * A pivot source a module contributes (docs/architecture/DOMAIN_MODULES.md, the cycles: J1): a bean of this type gives the pivot engine one
+ * A pivot source a module contributes (docs/architecture/KERNEL_AND_MODULES.md, the cycles: J1): a bean of this type gives the pivot engine one
  * more provider, asked before the tabular one that answers every kind, panel and table. The core names no module's source; a module's
  * configuration registers its own (the banking module: the VaR source and the MR cube's lens).
  */

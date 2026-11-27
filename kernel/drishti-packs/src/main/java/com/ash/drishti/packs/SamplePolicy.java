@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -86,7 +85,7 @@ public final class SamplePolicy {
                 Files.createDirectories(file.getParent());
                 Path tmp = com.ash.drishti.common.TempFiles.createFile(file.getParent(), "samples-", ".tmp");
                 Files.writeString(tmp, m + "\n", StandardCharsets.UTF_8);
-                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, file);
             } catch (IOException e) {
                 throw new java.io.UncheckedIOException(e);
             }

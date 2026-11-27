@@ -89,7 +89,7 @@ def test_every_property_a_configuration_properties_class_binds_is_documented():
 def test_every_setting_the_console_code_reads_by_name_is_documented():
     read = set()
     for path in (ROOT / "drishti-console").rglob("*.py"):
-        if "tests" in path.parts or ".venv" in path.parts:
+        if "tests" in path.parts or ".venv" in path.parts:  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
             continue
         read |= set(re.findall(r"settings\.get\(\s*\"([a-z_]+\.[a-z_.]+)\"", path.read_text(encoding="utf-8")))
     missing = sorted(k for k in read if not _documented(k))

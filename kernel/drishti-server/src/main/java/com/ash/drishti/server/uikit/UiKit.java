@@ -172,7 +172,7 @@ public class UiKit {
             return new LinkedHashMap<>();
         }
         try {
-            Map<String, Object> m = YAML.readValue(f.toFile(), new TypeReference<LinkedHashMap<String, Object>>() {});
+            Map<String, Object> m = YAML.readValue(java.nio.file.Files.readAllBytes(f), new TypeReference<LinkedHashMap<String, Object>>() {});
             return m == null ? new LinkedHashMap<>() : m;
         } catch (IOException e) {
             LOG.warn("cannot read the UI kit brand {}: {}", f, e.getMessage());

@@ -20,7 +20,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * A function (ACCESS_MODEL.md section 3): a command word ({@code VAR}, {@code TRD}, {@code EQV}, {@code EXP}), the finest unit of access,
+ * A function (KERNEL_AND_MODULES.md section 19.3): a command word ({@code VAR}, {@code TRD}, {@code EQV}, {@code EXP}), the finest unit of access,
  * as a Bloomberg function is. Each belongs to exactly one module (a word no module declares is the core's); lenses bundle functions;
  * roles will grant or deny single functions (2.9.11.i). Off (its module off, or switched off by an administrator), it is gone everywhere:
  * on the backend its APIs answer {@code 404 DRS-1026}.

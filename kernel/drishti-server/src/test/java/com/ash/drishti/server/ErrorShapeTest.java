@@ -62,9 +62,12 @@ class ErrorShapeTest {
     @Test
     void sutraPathsAreRelativeToTheSutraRoot() {
         String root = Path.of(props.allDirs().get(0)).toAbsolutePath().normalize().toString();
-        List<SutraProblem> shown = sutras.relative(List.of(new SutraProblem("DRS-2001", "cannot read: " + root + "/a/b.sutra.yaml",
-                new SourceLocation(root + "/a/b.sutra.yaml", 3, 4))));
+        String file = Path.of(root, "a", "b.sutra.yaml").toString();        // as this operating system writes it (a\b on Windows)
+        List<SutraProblem> shown = sutras.relative(List.of(new SutraProblem("DRS-2001", "cannot read: " + file + ": denied",
+                new SourceLocation(file, 3, 4))));
+        // the client sees the portable form on every operating system
         assertThat(shown.get(0).location().file()).isEqualTo("a/b.sutra.yaml");
-        assertThat(shown.get(0).message()).doesNotContain(root);
+        assertThat(shown.get(0).message()).isEqualTo("cannot read: a/b.sutra.yaml: denied").doesNotContain(root);
+        assertThat(sutras.relative("under " + root + " itself")).isEqualTo("under . itself");
     }
 }

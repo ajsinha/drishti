@@ -14,7 +14,7 @@
 
 # The logical mapping of a joined PVF row (tools/mrloader/pvf_join.py) to one scenario-pv record (the market-risk pack's contract:
 # modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml, found by the kind). Read by tools/mrloader/pvf_export_gz.py; every
-# decision is explained in tools/mrloader/README.md, "The mapping, field by field". The id rules shared with every other kind of the PVF
+# decision is explained in docs/guides/BANK_DATA_GUIDE.md, "The mapping, field by field". The id rules shared with every other kind of the PVF
 # source (legal entity, division, desk, book, position) are in kinds/shared/ids.pvf.yaml: a change there changes every kind that uses it.
 #
 # NAMES: every attribute name in the output is UPPER_SNAKE (the contract's names, and any pass-through column upper-cased); the joined

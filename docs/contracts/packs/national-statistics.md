@@ -17,7 +17,7 @@
 
 # Data contracts of the national-statistics pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/economy/packs/national-statistics/guides/national-statistics.md](../../../modules/economy/packs/national-statistics/guides/national-statistics.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/economy/packs/national-statistics/README.md](../../../modules/economy/packs/national-statistics/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -40,7 +40,6 @@ One Statistics Canada series by vector: the latest value, the change on the peri
 | Cadence | daily (due: the national-statistics feed's schedule (0 14 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `statistics.statistics-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | modules/economy/packs/national-statistics/samples |
-| Worked example | [national-statistics/statistics-series](../samples/national-statistics.md#statistics-series) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -98,3 +97,53 @@ One Statistics Canada series by vector: the latest value, the change on the peri
 
 - Stored in the worldlake lake (config/lakes/worldlake.yaml), table <data>/delta/worldlake/statistics/statistics-series/, one JSONL.gz a business date loaded with mode replace (a rerun of a day is idempotent).
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
+
+<a id="example-national-statistics-statistics-series"></a>
+**Example: `modules/economy/packs/national-statistics/samples/statistics-series.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CHANGE": 80343.0,
+  "CHANGE_PCT": 0.1926,
+  "FREQUENCY": "quarterly",
+  "GEOGRAPHY": "Canada",
+  "HISTORY": [
+    {
+      "PERIOD": "2021-01-01",
+      "VALUE": 38058291.0
+    },
+    {
+      "PERIOD": "2021-04-01",
+      "VALUE": 38140918.0
+    },
+    "… 21 more elements of the same shape"
+  ],
+  "LATEST": 41798407.0,
+  "LATEST_PERIOD": "2026-07-01",
+  "MEMBERS": null,
+  "NAME": "Population of Canada",
+  "PREVIOUS": 41718064.0,
+  "PREVIOUS_PERIOD": "2026-04-01",
+  "PROVENANCE": {
+    "ATTRIBUTION": "Source: Statistics Canada, <table>. Reproduced and distributed on an \"as is\" basis with the permission of Statistics Canada (Statistics Canada Open Licence).",
+    "DATASET": "Statistics Canada table 17-10-0009-01, vector v1",
+    "INTERNAL_ONLY": false,
+    "LICENCE": "Statistics Canada Open Licence",
+    "RETRIEVED_AT": "2026-11-06",
+    "SOURCE": "Statistics Canada",
+    "URL": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710000901"
+  },
+  "RELEASED": "2026-09-23T08:30",
+  "SCALE": "units",
+  "SERIES_ID": "NSTAT-V1",
+  "TABLE_ID": "17-10-0009-01",
+  "TABLE_TITLE": "Population estimates, quarterly",
+  "TITLE": "Population of Canada",
+  "TOPIC": "Population",
+  "UNIT": "persons",
+  "VECTOR": "v1",
+  "YEAR_ON_YEAR_PCT": 0.4553
+}
+```

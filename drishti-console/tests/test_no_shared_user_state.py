@@ -27,14 +27,14 @@ from conftest import CONSOLE
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
-DIRS = ("core", "routes", "plugins")   # plugins: each domain module's console code (DOMAIN_MODULES.md)
+DIRS = ("core", "routes", "plugins")   # plugins: each domain module's console code (KERNEL_AND_MODULES.md)
 MUTABLE_CALLS = {"dict", "list", "set", "defaultdict", "OrderedDict", "deque", "Counter", "WeakValueDictionary", "WeakKeyDictionary", "LRU"}
 CHANGES = {"append", "add", "update", "pop", "popitem", "clear", "setdefault", "extend", "insert", "remove", "discard", "move_to_end",
            "appendleft", "__setitem__", "sort"}
 
 #: module-level mutable state, each with why it holds nothing one person could read of another
 ALLOWED = {
-    "core/plugins.py:_commands": "the modules' command hooks, registered at import (code, not data: DOMAIN_MODULES.md C2)",
+    "core/plugins.py:_commands": "the modules' command hooks, registered at import (code, not data: KERNEL_AND_MODULES.md C2)",
     "core/plugins.py:_retired": "the modules' retired-link hooks, registered at import (code, not data)",
     "core/plugins.py:_type_ahead": "the modules' type-ahead hooks, registered at import (code, not data: C3)",
     "core/plugins.py:_hints": "the modules' type-ahead lines, registered at import (code, not data: C3)",

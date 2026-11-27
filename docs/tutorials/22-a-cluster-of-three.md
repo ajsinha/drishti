@@ -19,16 +19,15 @@ One Drishti server answers everything it holds. **Drishti*net** joins several se
 they find each other by gossip, and any of them answers any request, forwarding it to the node that holds the data and applying the caller's
 masks on both. The console is given one server and learns the others; when that server stops, the console moves to another and the user does
 not sign in again. This tutorial builds three nodes on one machine, opens a trade that only one of them holds through another, asks
-**Explain** where a request goes, drains a node, stops one and watches the console carry on. The reference is [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet); the
-design is [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet).
+**Explain** where a request goes, drains a node, stops one and watches the console carry on. The reference and the design are [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet).
 
 ## Time to complete
 
-About 45 minutes.
+About 40 minutes.
 
 ## Before you start
 
-- Tutorial 1, Part A done: the built server jar (`./mvnw -o -q package -DskipTests -pl :drishti-app -am`), the console's Python, the demo lakes.
+- [Tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around) done: the built server jar and modules (`./mvnw -B clean package -DskipTests`, or `python3 tools/drishti.py build all`), the console's Python, the demo lakes.
 - Three free ports for the servers (here 18783, 18784, 18785) and one for the console (17784). On three machines, use each machine's address.
 - A cluster key: one secret of at least 32 bytes, the same on every node, given to each server as `DRISHTI_NET_SECRET`. Generate it, never
   invent it: `openssl rand -hex 32`.
@@ -41,7 +40,7 @@ The outputs of the command line below were captured on this version; paths are s
 without the steps, use `deploy/stack/` at the repository's root: `python tools/drishti.py start cluster` starts three servers (your own stack on 18480 with
 the demo lakes, and two more on 18791 and 18792 with synthetic ENDUR, CALYPSO and MUREX trades) and a console on 17480 given the first
 alone; `drishti.py status --cluster deploy/stack/stack.yaml` shows the members and `drishti.py stop cluster` stops them by process id. The secrets are made on the first start and stay out of git.
-See [deploy/stack/README.md](../../deploy/stack/README.md).
+See [deploy/stack/README.md](../guides/CLUSTER_GUIDE.md#deploystack-a-ready-made-local-drishtinet-cluster).
 
 ## What you will learn
 
@@ -50,7 +49,8 @@ See [deploy/stack/README.md](../../deploy/stack/README.md).
 - how a request for data held elsewhere is answered (forwarded, or the data fetched), and how **Explain** shows it;
 - the cluster key, nodes per role and peer-only packs;
 - a console with several servers: discovery, failover and recovery; draining a node for maintenance;
-- what follows a user from node to node (saved searches, layouts, pivots) and what does not (alerts).
+- what follows a user from node to node (saved searches, layouts, pivots) and what does not (alerts);
+- what to watch on a cluster (liveness, readiness, Admin → Health) and how to upgrade it one node at a time.
 
 ## Step 1 · Each node's folder and its key
 
@@ -164,7 +164,7 @@ python tools/drishti.py start server --node drishti-c --port 18785 --node-dir ~/
 python tools/drishti.py status                  # the three running and UP, each with the address it advertises
 ```
 
-On Windows the same with `py tools\drishti.py`. Each node advertises this machine's real address (`--advertise` names another); every
+On Windows the same with `py -3.13 tools\drishti.py`. Each node advertises this machine's real address (`--advertise` names another); every
 option, and the layout on three machines: [DEPLOYMENT_AND_QA_GUIDE.md › section 11.6](../DEPLOYMENT_AND_QA_GUIDE.md#116-start-order-and-joining).
 
 Each logs its join and each member it learns. Node b's log, as captured:
@@ -366,9 +366,28 @@ $ curl -s http://$IP:18785/api/v1/admin/users/rita -H "Authorization: Bearer $DR
 copied ...: N changes sent, M applied here*), your saved search in the list on b after the failover, and on b's **Admin → Audit** the user
 `rita` as `user-created` by `net:drishti-a`.
 
+## Step 9 · What to watch, and an upgrade node by node
+
+Every node answers the same three questions a load balancer asks, with no token. Ask node b:
+
+```text
+$ curl -s http://$IP:18784/actuator/health/liveness       # restart the process if this fails
+{"status":"UP"}
+$ curl -s http://$IP:18784/actuator/health/readiness      # send traffic only when this is UP (DOWN while a node joins or its newest dates open)
+{"status":"UP"}
+$ curl -s http://$IP:17784/readyz                         # the console can reach a server
+{"status":"UP","server":"reachable"}
+```
+
+You should see `UP` three times; on the node you drained in step 7 the readiness answer is `OUT_OF_SERVICE` until you undrain it. For people, **Admin → Health** shows the status of the node the console is on (`OK`, `DEGRADED` when a source is down or a pack has a problem), the version and the heap, and what is being retried; **Admin → Cluster → Members** shows every node. Monitoring with Prometheus and the suggested alerts are in [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#13-monitoring-and-health), the single-server checklist in [DEPLOYMENT_AND_QA_GUIDE.md](../DEPLOYMENT_AND_QA_GUIDE.md#14-a-production-checklist-step-by-step).
+
+A cluster is upgraded one node at a time, so it never stops answering: **drain** the node (step 7, wait for *Safe to stop*), stop it, replace its jar and `config/packs/` (keep its `config/net/` and its `application.local.yaml`), start it, wait for its readiness to be `UP` and for it to be `alive` in Members, then do the next. Upgrade the console together with the servers (a new console cannot sign anyone in to an older server). `python tools/rolling.py` does the loop for you ([CLUSTER_GUIDE.md, rolling upgrades](../guides/CLUSTER_GUIDE.md#82-rolling-upgrades)); rolling back is the same loop with the old jar.
+
+You should see Members with all three nodes `alive` at the new version after the last one, and the console's page never reloading to the sign-in.
+
 ## Next steps
 
-- [OPERATIONS_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet): every file and setting, the capability map, sizing, the meters (`drishti.net.members`, `.forwarded`,
+- [CLUSTER_GUIDE.md](../guides/CLUSTER_GUIDE.md#1-several-servers-as-one-drishtinet): every file and setting, the capability map, sizing, the meters (`drishti.net.members`, `.forwarded`,
   `.gossip.rounds`, `.peer.latency`).
 - [OPERATIONS_GUIDE.md section 12a](../guides/OPERATIONS_GUIDE.md): backups of `config/net/` and `<data dir>/net/`, rolling upgrades.
 

@@ -266,7 +266,7 @@ public final class ModuleHomes {
     public static Home development(Path dir) {
         Map<?, ?> m;
         try {
-            Object v = YAML.readValue(dir.resolve(MANIFEST).toFile(), Object.class);
+            Object v = YAML.readValue(java.nio.file.Files.readAllBytes(dir.resolve(MANIFEST)), Object.class);
             m = v instanceof Map<?, ?> x ? x : Map.of();
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(dir.resolve(MANIFEST) + " cannot be read: " + e.getMessage(), e);

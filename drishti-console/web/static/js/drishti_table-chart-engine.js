@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, sections 6 to 15): pure functions, no DOM. It classifies a
+/* Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, sections 5.6 to 5.15): pure functions, no DOM. It classifies a
    table's columns (date, number, text; masked; identifiers), picks the smart defaults, normalises a settings document,
    maps the settings onto the pivot engine (X -> rows, split -> columns, series -> values; the server's engine aggregates), turns its cube into drawn
    series (date buckets, Top N with Others, split cap, sort, percent, gaps), refuses what cannot be drawn honestly (a pie

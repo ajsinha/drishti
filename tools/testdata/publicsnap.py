@@ -58,7 +58,7 @@ PACKS: dict[str, dict] = {
     "funds": {"connector": "funds-store",
               "source": "SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)",
               "keys": {"fund": "TICKER", "fund-holder": "TICKER", "index-funds": "INDEX"}, "part-bytes": 1_200_000},
-    # the genomics module's showcase (docs/architecture/GENOMICS_SHOWCASE.md): synthetic, seeded, so the date is the generator's own
+    # the genomics module's showcase (modules/genomics/docs/guide.md): synthetic, seeded, so the date is the generator's own
     "genomics-showcase": {"connector": "genomics-showcase-store", "captured": "2026-11-16",
                           "source": "the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)",
                           "keys": {"study-gene": "GENE", "study-sample": "SAMPLE_ID", "study-variant": "VARIANT_ID",
@@ -290,7 +290,7 @@ def generate(pack: str, pack_dir: Path, docs: dict[str, dict[str, dict]], text: 
         f.unlink()
     written = write(testdata, pack, docs)
     total = sum(f.stat().st_size for f in written if f.name.endswith(".gz"))
-    print(f"wrote {rel(Path(pack_dir))} (reference samples, guide, README) and {rel(Path(testdata))}/{pack}: "
+    print(f"wrote {rel(Path(pack_dir))} (reference samples, README) and {rel(Path(testdata))}/{pack}: "
           f"{ {k: len(v) for k, v in docs.items()} }; {len(written) - 1} snapshot files, {total / 1e6:.1f} MB")
     return 0
 

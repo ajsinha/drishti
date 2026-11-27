@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The netting sets (docs/plans/CSV_LOADERS.md section 3.2): the terms and links only. Its trades are the trade valuations that name it;
+# The netting sets (docs/guides/BANK_DATA_GUIDE.md section 3.2): the terms and links only. Its trades are the trade valuations that name it;
 # its MtM, collateral, limit and CVA are computed.
 format: 1
 kind: netting-set

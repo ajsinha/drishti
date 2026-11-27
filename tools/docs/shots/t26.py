@@ -16,7 +16,7 @@
 docs/tutorials/img/t26/, over the demo lake's exposure run (see _exp.py). Run it on its own (it builds its own lake and starts its own
 scratch server and console):
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t26
+    python3 tools/docs/screenshots.py --guide t26
 
 The pictures, in the tutorial's order: the bank, a legal entity's counterparty board, CP-ALDERSHOT's netting sets, NS-ALDERSHOT-LDN's
 collateral and trades, a trade alone and in its set, a capture compared with now, a pre-deal what-if by paths and by the addon."""

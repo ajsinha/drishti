@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The banking module's manifest (docs/architecture/ACCESS_MODEL.md, DOMAIN_MODULES.md): shipped in its jar, so the module is installed
+# The banking module's manifest (docs/architecture/KERNEL_AND_MODULES.md, KERNEL_AND_MODULES.md): shipped in its jar, so the module is installed
 # exactly when the jar is on the class path. The access registry reads it; nothing else does. A site switches the module with
 # config/modules/banking.yaml (enabled: true|false, written by POST /api/v1/admin/modules) or DRISHTI_MODULES_BANKING_ENABLED; a licence names it by its feature.
 # Off (not installed, not licensed or switched off): no bean, engine, job or API of it is loaded, its packs and connectors do not load, its
@@ -29,7 +29,7 @@ module:
     packages: [com.ash.drishti.banking]
     engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]
     packs: [trading, market-risk, counterparty-risk]
-    # what a distribution's visibility filter reads besides the packs and functions (DISTRIBUTIONS.md): the top menus and Help it owns
+    # what a distribution's visibility filter reads besides the packs and functions (KERNEL_AND_MODULES.md): the top menus and Help it owns
     menus: [blotter, positions, risk, counterparties]
     help: [banking]
     connectors: [var-engine, var-positions, var-pv-stream, exposure-engine]

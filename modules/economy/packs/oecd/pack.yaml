@@ -15,7 +15,7 @@
 # OECD · the economy module's public-sector OECD pack (docs/guides/WORLD_DATA_GUIDE.md): the cycle, jobs, prices and growth of the OECD
 # members from the OECD Data Explorer (SDMX), filled daily by the oecd feed (config/feeds/oecd.yaml) into worldlake.
 pack: oecd
-domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/KERNEL_AND_MODULES.md)
 version: 1.0.0
 code: OECDP
 title: OECD
@@ -90,4 +90,3 @@ console:
     - ["OECD OECD-CAN", "Canada · leading indicator, unemployment, inflation, growth; the members on a map"]
     - ["OECD OECD-JPN", "Japan"]
     - ["OECDS OECDS-USA-CLI", "The US composite leading indicator, month by month"]
-  help: config/help.yaml

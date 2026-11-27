@@ -378,7 +378,6 @@ console:
     - Book · top trades, MTM, DV01
   - - DESK DESK-RATES
     - Desk · books, VaR
-  help: config/help.yaml
 python:
   enabled: true
 lake:

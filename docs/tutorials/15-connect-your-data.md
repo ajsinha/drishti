@@ -15,6 +15,9 @@
 -->
 # Tutorial 15 · Connect your data
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 A **connector** is one small YAML file that tells Drishti where a store of data is and how to read it. In this tutorial you connect a folder of JSON Lines files (a desk's end-of-day
 quotes) with the shipped `file` plugin, use **Test connection**, read the connector's own page, and then see what a connector that cannot connect looks like: a PostgreSQL connector with TLS and
 a pool size, aimed at a port where nothing listens, so it never touches a real database.
@@ -109,7 +112,7 @@ Everything the page does has a command. First, what the `file` plugin reads:
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector plugins file
+$ python3 tools/drishti.py connector plugins file
 plugin file
   setting               type                    default             what it is
   --------------------  --------------------    ----------------    ----------------------------------------------------------------------------------
@@ -134,11 +137,11 @@ plugin file
 ```
 
 (`union` is how the trading pack's three trade stores serve one kind: each is one booking system's slice.) Delete the connector you just made
-(`drishti-console/.venv/bin/python tools/drishti.py connector delete desk-quotes`) and make it from the file in the repository instead, **testing first**: `--test-first` starts a
+(`python3 tools/drishti.py connector delete desk-quotes`) and make it from the file in the repository instead, **testing first**: `--test-first` starts a
 throwaway instance and applies the file only if it works.
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector apply docs/tutorials/data/connectors/desk-quotes.yaml --test-first
+$ python3 tools/drishti.py connector apply docs/tutorials/data/connectors/desk-quotes.yaml --test-first
 applied desk-quotes: running; changed (new connector), id-field, root, lookback-days, rescan-seconds; version 8d514db5f63a52da
   note kinds: kind 'desk-quote' is not owned by a loaded pack (loaded: agreement, bond, book, calendar, cap-vol-surface, ccp, clearing-account, collateral-balance, and 60 more)
 ```
@@ -147,7 +150,7 @@ You should see `applied desk-quotes: running`, which settings changed, a version
 file's text in its history:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector get desk-quotes
+$ python3 tools/drishti.py connector get desk-quotes
 connector desk-quotes   origin file   plugin file   running   version 8d514db5f63a52da
   file ~/drishti/config/connectors/desk-quotes.yaml
   kinds desk-quote
@@ -164,7 +167,7 @@ connector desk-quotes   origin file   plugin file   running   version 8d514db5f6
 And `connector test` is Test connection:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector test desk-quotes
+$ python3 tools/drishti.py connector test desk-quotes
 desk-quotes (file): reachable, health UP, 2 ms
   note: kinds: kind 'desk-quote' is not owned by a loaded pack (loaded: agreement, bond, book, calendar, cap-vol-surface, ccp, clearing-account, collateral-balance, and 60 more)
   kind        business date  rows  note
@@ -179,7 +182,7 @@ desk-quotes (file): reachable, health UP, 2 ms
 **In the UI** the form refuses a literal password before it sends anything. **From the command line**: the file `desk-ledger-literal-password.yaml` has `password: hunter2` in it. Apply it:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector apply docs/tutorials/data/connectors/desk-ledger-literal-password.yaml
+$ python3 tools/drishti.py connector apply docs/tutorials/data/connectors/desk-ledger-literal-password.yaml
 drishti: the server said 422 DRS-5031: DRS-5031 the connector is not valid: settings.password: a credential is never written into a connector file; use an environment reference such as ${PASSWORD} or a file: reference such as file:/run/secrets/password
 [exit 1]
 ```
@@ -194,7 +197,7 @@ file and the last good one keeps running.)
 not have, so it can fail safely. Test first:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector apply docs/tutorials/data/connectors/desk-ledger.yaml --test-first
+$ python3 tools/drishti.py connector apply docs/tutorials/data/connectors/desk-ledger.yaml --test-first
 desk-ledger (jdbc): PROBLEM: DOWN: Connection to 127.0.0.1:59997 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections. (reconnecting)
   note: kinds: kind 'ledger-entry' is not owned by a loaded pack (loaded: agreement, bond, book, calendar, cap-vol-surface, ccp, clearing-account, collateral-balance, and 60 more)
 
@@ -206,7 +209,7 @@ You should see the test fail in words, with the reason, and `not applied: the te
 it anyway, as you would a connector for a database that is down for maintenance, and look at it:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector apply docs/tutorials/data/connectors/desk-ledger.yaml
+$ python3 tools/drishti.py connector apply docs/tutorials/data/connectors/desk-ledger.yaml
 applied desk-ledger: running; changed (new connector), url, user, table, pool-size, pool-connection-timeout, tls.enabled; version 086f9413013aa740
   note kinds: kind 'ledger-entry' is not owned by a loaded pack (loaded: agreement, bond, book, calendar, cap-vol-surface, ccp, clearing-account, collateral-balance, and 60 more)
 ```
@@ -232,7 +235,7 @@ on, which protocols it offers, whether the host name is checked, and when each c
 The server's side of the same story, from the command line:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector test desk-ledger
+$ python3 tools/drishti.py connector test desk-ledger
 desk-ledger (jdbc): PROBLEM: DOWN: Connection to 127.0.0.1:59997 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections. (reconnecting)
   note: kinds: kind 'ledger-entry' is not owned by a loaded pack (loaded: agreement, bond, book, calendar, cap-vol-surface, ccp, clearing-account, collateral-balance, and 60 more)
 [exit 1]
@@ -259,7 +262,7 @@ The page then shows the effective proxy, masked, and where it came from; **Test 
 **In the UI**, Admin → Connectors without a filter. **From the command line:**
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector list --origin file
+$ python3 tools/drishti.py connector list --origin file
 23 connector(s) in ~/drishti/config/connectors   (watching: WATCHING)
   name              origin  plugin    kinds                                                        state     used by            problems
   ----------------  ------  --------  -----------------------------------------------------------  --------  -----------------  --------
@@ -293,7 +296,7 @@ left it, `desk-ledger` down. The connector files of the packs were written by th
 history (under `data/connectors/history/`), and `connector history` lists the versions, which you can restore in the page's **History** tab or with the API:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector history desk-quotes
+$ python3 tools/drishti.py connector history desk-quotes
   version             kept at                         bytes
   ------------------  ------------------------------  -----
   20261017T213952520  2026-10-17T21:39:52.519270886Z  826
@@ -302,12 +305,12 @@ $ drishti-console/.venv/bin/python tools/drishti.py connector history desk-quote
 Switch the ledger connector off, then delete it (a connector a pack uses asks first; one that is not used goes at once, its text kept in the history folder):
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector disable desk-ledger
+$ python3 tools/drishti.py connector disable desk-ledger
 desk-ledger is off (disabled)
 ```
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py connector delete desk-ledger
+$ python3 tools/drishti.py connector delete desk-ledger
 deleted desk-ledger (its text is kept in <data>/connectors/history/)
 ```
 

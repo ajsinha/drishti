@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The sample engine's engine file for the drop-in test (docs/architecture/TEST_HARNESS.md 3.30): copied to <home>/config/engines/wmean.yaml.
+# The sample engine's engine file for the drop-in test (docs/architecture/TEST_HARNESS.md 3.33): copied to <home>/config/engines/wmean.yaml.
 drishti:
   engines:
     wmean:

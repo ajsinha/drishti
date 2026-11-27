@@ -28,7 +28,7 @@ string, a null) and a date partition (``business_date``).
 An empty partition string reads back as null, as Spark and delta-rs read it. The Java parts need the server's exec jar (<home>/lib,
 made by python tools/drishti.py build jar) and a JDK (javac compiles the small reader against the jar's own libraries).
 
-    uv run --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest tools/lake/test_delta_interop.py -q
+    python -m pytest tools/lake/test_delta_interop.py -q
 """
 import datetime
 import json

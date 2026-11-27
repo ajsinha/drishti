@@ -26,7 +26,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.HexFormat;
@@ -133,7 +132,7 @@ public final class MinioServer implements AutoCloseable {
                 throw new IllegalStateException("the MinIO download from " + url + " has SHA-256 " + actual + ", expected " + expected);
             }
             part.toFile().setExecutable(true);
-            Files.move(part, cached, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(part, cached);
             return cached;
         } catch (IOException offline) {
             skipUnless(false, "cannot download MinIO (offline?): " + offline);

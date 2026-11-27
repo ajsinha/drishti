@@ -32,7 +32,7 @@ into files of file-rows each, so every file holds its own contiguous id range an
 per column, which deltalake writes by default) let a reader skip every other file. Kinds without a layout keep
 id, doc and business_date only.
 
-Needs pyarrow and deltalake to write, and pyyaml to read the packs (uv run --with deltalake --with pyarrow --with pyyaml).
+Needs pyarrow and deltalake to write, and pyyaml to read the packs (pip install deltalake pyarrow pyyaml).
 """
 from __future__ import annotations
 

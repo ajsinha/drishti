@@ -1032,7 +1032,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
 
     /**
      * Every change of any entity of {@code kind} from the kind's live sources (its {@code live:} binding: Kafka, RabbitMQ, ActiveMQ), each
-     * named after its connector: a live result set's deltas (docs/guides/LIVE_RESULTS_GUIDE.md). {@link Subscription#NONE} when nothing pushes
+     * named after its connector: a live result set's deltas (docs/guides/USER_GUIDE.md). {@link Subscription#NONE} when nothing pushes
      * the kind (the result set then stays a snapshot).
      */
     public Subscription subscribeKind(String kind, java.util.function.Consumer<EntityDocument> listener) {
@@ -1063,7 +1063,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
             return subscribeSource(ref, listener);
         }
         // every tick carries what is laid over it; an applied change to the record reads it again and ticks it, also for a record
-        // that no source streams (write-back's viewers, APPROVALS_GUIDE.md › The design and its reasons, section 18.5)
+        // that no source streams (write-back's viewers, ADMIN_GUIDE.md › The design and its reasons, section 18.5)
         Subscription source = subscribeSource(ref, d -> listener.accept(l.apply(d, AsOf.LATEST)));
         Subscription edits = l.watch(ref, () -> fetch(ref).thenAccept(listener));
         if (source == Subscription.NONE && edits == Subscription.NONE) {

@@ -15,8 +15,8 @@
 """lake publish: a table lake build wrote, copied and committed into another table (a local folder standing in for S3), one commit
 per run, dates replaced whole, missing files and column changes refused. Small synthetic books only.
 
-    drishti-console/.venv/bin/python -m unittest tools/lake/test_publish.py
-    uv run --with deltalake --with pyarrow --with pyyaml python -m unittest tools/lake/test_publish.py
+    python3 -m unittest tools/lake/test_publish.py
+    python -m unittest tools/lake/test_publish.py
 """
 import json
 import os

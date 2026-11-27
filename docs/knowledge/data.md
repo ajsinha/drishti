@@ -329,7 +329,7 @@ counterparty's economy. Every page in this Knowledge section draws its diagram f
 `DATAMAP <GO>` draws all of it for the packs you have: every kind with how many entities it holds today, every link its contract
 declares, and how well the data keeps each link (*15,000 of 15,000 ids match*; a link whose ids mostly name nothing is listed as a
 finding). Nothing on it is drawn by hand: it is read from the contracts and checked against the lake when you open it
-([The data map](../guides/USER_GUIDE.md#the-data-map)).
+([The data map](../guides/CLI_REFERENCE.md#205-the-data-map)).
 
 **Id conventions.** A kind's ids start with its prefix (`CP-`, `NS-`, `CSA-`, `LIM-`, `CRV-`, `ECON-`), except where the world already
 has an id (an LEI, an ISIN, a ticker, a booking system's trade id). A computed kind's id is what you asked for: a scope

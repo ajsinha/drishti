@@ -718,7 +718,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(role_home_routes.router)            # the person's role Home (ROLE_HOME_SUTRAS.md)
     app.include_router(edition_routes.router)              # an edition's landings and the lens (LENSES.md › The design)
     from core import plugins as _plugins
-    # the domain modules' routers (C1, DOMAIN_MODULES.md section 5): each plugins/<module>/plugin.yaml lists its own, in order; before the
+    # the domain modules' routers (C1, KERNEL_AND_MODULES.md section 21.5): each plugins/<module>/plugin.yaml lists its own, in order; before the
     # core's terminal and pivot routes, as they always were; while a module is off its routes answer 404 (core/modules.py)
     app.state.plugins = _plugins.include(app)
     app.include_router(history_routes.router)          # history queries: before the terminal (/v/{kind}/{id}) and export routes
@@ -729,14 +729,14 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(live_routes.router)              # the live tables: /live/<name> and /api/rdp (the Data Protocol, the grid's live mode)
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
-    app.include_router(render_routes.router)            # the client-side renderer's playground (EMBED_GUIDE.md section 13)
+    app.include_router(render_routes.router)            # the client-side renderer's playground (INTEGRATION_GUIDE.md section 1.6.8)
     app.include_router(elements_routes.router)          # the Drishti Elements gallery (Drishti Elements' docs/DESIGN.md)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
     app.include_router(build_routes.router)
     app.include_router(pack_routes.router)
     app.include_router(connector_designer_routes.router)
-    app.include_router(approval_routes.router)          # the one Approvals queue (SHARED_SCREENS.md section 2) and the old review pages' redirects
+    app.include_router(approval_routes.router)          # the one Approvals queue (THIN_CONSOLE_DESIGN.md section 8.2) and the old review pages' redirects
     app.include_router(ship_routes.router)
     app.include_router(admin_routes.router)
     app.include_router(help_routes.router)
@@ -765,14 +765,14 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (ADMIN_GUIDE.md)
     from routes import config_editor_routes
     app.include_router(config_editor_routes.router)     # Admin -> Configuration: every setting in three tiers, changes proposed (OPERATIONS_GUIDE.md)
-    app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (FLIGHT_GUIDE.md)
+    app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (INTEGRATION_GUIDE.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)
     app.include_router(lake_routes.router)
     app.include_router(net_routes.router)
     from routes import module_admin_routes
     app.include_router(module_admin_routes.router)     # Admin -> Modules; a module's paths when it is off or unknown (KERNEL_AND_MODULES.md)
-    app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (SHARED_SCREENS.md 3)
+    app.include_router(explain_routes.router)          # Explain: one for every number, the preview, the drawer and the page (THIN_CONSOLE_DESIGN.md 8.3)
     app.include_router(lake_maint_routes.router)
     app.include_router(form_routes.router)
     if app.state.bi_on:
@@ -782,7 +782,7 @@ def create_app(settings: Settings) -> FastAPI:
         app.state.notebook_limits = Limits.from_settings(settings)     # the Notebook (docs/guides/USER_GUIDE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
         app.include_router(model_routes.router)
-        app.include_router(tables_editor_routes.router)     # Build › Tables & models: the editors on the table layer (docs/architecture/SHARED_SCREENS.md)
+        app.include_router(tables_editor_routes.router)     # Build › Tables & models: the editors on the table layer (docs/architecture/THIN_CONSOLE_DESIGN.md)
         app.include_router(python_routes.router)
         app.include_router(notebook_routes.router)         # the Notebook (/bi/notebook): SQL on the server, Python on its compute pool
         app.include_router(transform_routes.router)        # wave C: the Transform editor (/bi/transform), step by step
@@ -792,6 +792,6 @@ def create_app(settings: Settings) -> FastAPI:
     if app.state.embed.enabled:                   # off by default: nothing under /embed/ exists otherwise
         from routes import embed_signin_routes, embed_v2_routes
 
-        app.include_router(embed_signin_routes.router)       # the renderer's optional sign-in window (auth: 'popup', EMBED_GUIDE.md 10.1)
+        app.include_router(embed_signin_routes.router)       # the renderer's optional sign-in window (auth: 'popup', INTEGRATION_GUIDE.md 10.1)
         app.include_router(embed_v2_routes.router)           # the embed API v2: the ViewModel as JSON, the renderer, Elements 2.x
     return app

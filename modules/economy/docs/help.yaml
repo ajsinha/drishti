@@ -17,21 +17,5 @@ sections:
 - id: economy
   title: Economy and public sector
   pages:
-  - title: 'World economy: world economy'
-    file: ../packs/world-economy/guides/world-economy.md
-  - title: 'News and markets: news and markets'
-    file: ../packs/news-and-markets/guides/news-and-markets.md
-  - title: 'World development: world development'
-    file: ../packs/world-development/guides/world-development.md
-  - title: 'Central banks: central banks'
-    file: ../packs/central-banks/guides/central-banks.md
-  - title: 'National statistics: national statistics'
-    file: ../packs/national-statistics/guides/national-statistics.md
-  - title: 'OECD: oecd'
-    file: ../packs/oecd/guides/oecd.md
-  - title: 'Official news: official news'
-    file: ../packs/official-news/guides/official-news.md
-  - title: 'GDELT events: gdelt events'
-    file: ../packs/gdelt-events/guides/gdelt-events.md
-  - title: 'Tutorial: public sector data'
+  - title: World and public data
     file: ../guides/WORLD_DATA_GUIDE.md

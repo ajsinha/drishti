@@ -15,7 +15,7 @@
 """Reads Iceberg tables with pyiceberg and prints their rows as JSON, for drishti-iceberg's write interop test
 (PyicebergReadsNativeTest): what drishti-iceberg writes, an independent reader reads.
 
-    uv run --no-project --with pyiceberg --with pyiceberg-core --with pyarrow --with sqlalchemy python tools/iceberg/readback.py METADATA.json [...]
+    python tools/iceberg/readback.py METADATA.json [...]
 
 Prints one JSON object: metadata path to {"rows": [...], "snapshots": n}, values as fixtures.py records them.
 """

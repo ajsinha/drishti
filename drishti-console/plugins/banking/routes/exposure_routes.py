@@ -188,7 +188,7 @@ def predeal_redirect(typed: str) -> RedirectResponse | None:
     return RedirectResponse(predeal_page(command=" ".join(words) if len(words) > 1 else ""), status_code=303)
 
 
-# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2) ----------------------------------------------------------------------
+# ---- the core's hooks (core/plugins.py, KERNEL_AND_MODULES.md C2) ----------------------------------------------------------------------
 _plugins.command(predeal_redirect, needs=("EXP",))                            # PREDEAL ...: the pre-deal check
 _plugins.command(redirect_for, needs=("EXP",))                                # EXP NSET NS-X, EXP EXP-X (retired): exposure-result
 _plugins.retired(retired_link)                                                # a retired stored exposure profile (EXP-X-FRA): NSET:NS-X-FRA

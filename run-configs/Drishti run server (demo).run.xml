@@ -21,7 +21,7 @@
   Generated from tools/launch/launchers.yaml by python tools/drishti.py launchers: never edit this file, edit the table.
 -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Drishti: run server (demo)" type="JarApplication" folderName="Drishti">
+  <configuration default="false" name="Drishti: run server (demo)" type="JarApplication" folderName="IntelliJ-drishti-run">
     <option name="JAR_PATH" value="$PROJECT_DIR$/lib/drishti-server-exec.jar" />
     <option name="VM_PARAMETERS" value="&quot;@$USER_HOME$/drishti-envs/jvm-demo.args&quot; &quot;-Ddrishti.home=$PROJECT_DIR$&quot; &quot;-Ddrishti.settings.file=$USER_HOME$/drishti-envs/dev.ini,$PROJECT_DIR$/config/profiles/demo.ini&quot;" />
     <option name="PROGRAM_PARAMETERS" value="" />

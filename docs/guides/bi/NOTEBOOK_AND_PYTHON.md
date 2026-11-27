@@ -15,7 +15,11 @@
 -->
 # The Notebook and Python
 
-Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](MODELS_AND_DATASETS_FOR_REPORTS.md) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · [Distribution, subscriptions and alerts](DISTRIBUTION_AND_ALERTS.md) · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · **The Notebook and Python** · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
+<!-- nav:begin -->
+Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](TABLES_AND_MODELS.md#models-and-datasets-for-reports) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · [Distribution, subscriptions and alerts](DISTRIBUTION_AND_ALERTS.md) · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · **The Notebook and Python** · [Calc: Python in your own browser](CALC.md) · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
+<!-- nav:end -->
 
 Where code runs; the Notebook (SQL and Python cells, extract, save, promote, profile); Python measures and visuals; Transforms and the Transform editor; the command line, the sandbox, limits and how an administrator turns Python on; with the tutorial.
 
@@ -39,6 +43,7 @@ walk-through of everything here is [the Notebook tutorial](NOTEBOOK_AND_PYTHON.m
 7. [The sandbox and who sees what](#7-the-sandbox-and-who-sees-what)
 8. [Limits and errors](#8-limits-and-errors)
 9. [For administrators: turning Python on](#9-for-administrators-turning-python-on)
+10. [Calc: Python in your own browser](CALC.md)
 
 ### 1. Where code runs
 
@@ -78,7 +83,7 @@ only on a Linux server; elsewhere every page says why it cannot run.
 
 The **Python console** is the Notebook: its address `/pyconsole` (and `/bi/explore`) opens `/bi/notebook`, where Python over a
 masked extract runs on the server. Python **in your own browser** on a view's rows is a different thing: **Calc**, a scratch pad behind a
-Labs switch that never publishes ([USER_GUIDE.md › Calc](../USER_GUIDE.md#calc-python-on-any-view)).
+Labs switch that never publishes ([USER_GUIDE.md › Calc](CALC.md)).
 
 ### 2. The Notebook
 
@@ -1009,10 +1014,7 @@ There are two ways to give the pool that environment:
 * **`environment: system`** (as shipped): the site's interpreter. Install the pinned versions into it, for example
   `python3 -m pip install --require-hashes --no-deps -r config/compute/locks/python.lock`. Before any run the server asks the pool for its
   interpreter's versions and refuses every run, naming each package, while one differs from its pin.
-* **A locked environment**: `environment: { python: "3.13", lock: locks/python.lock, index: <name> }`. The environment is built under the
-  data folder from exactly those files by hash (offline, from the named package source in `compute.indexes`, never public PyPI unless the
-  site names it), read-only once built, and checked at every worker start. Build it from Admin → Compute (or automatically with
-  `compute.build: on-approval`).
+* **A locked environment**: `environment: { python: "3.13", lock: locks/python.lock, index: <name> }`. Drishti does not build it: the operator installs those pinned libraries into the Python the pool runs (`drishti.python`) with pip, and the pool checks them against the lock at every worker start; a missing one is an error naming it and the pip command.
 
 **To add or change a library** (for example `statsmodels`, `scikit-learn` or `polars`):
 
@@ -1035,6 +1037,11 @@ Nothing is resolved at install time: the lock is the whole environment.
 * `GET /api/v1/bi/python/runtime` says whether Python runs and why not ([section 8.3](#83-does-python-run-here)).
 * On **Windows** Python runs stay off by design (no network namespace, no Landlock): every run says so with `DRS-9074`.
 
+### 10. Calc: Python in your own browser
+
+Calc is a Labs feature (off as shipped) that runs Python in your browser on a view's rows and never publishes. It has its own page:
+[Calc: Python in your own browser](CALC.md).
+
 ## Tutorial: The Notebook and Python
 
 SQL measures cover most questions. When a figure needs a real function (a standard deviation of P&L per desk, a histogram, a model) you write it in **Python**, and Drishti runs it **sandboxed, on the rows the person looking may see**. And when you do not yet know the question, the **Notebook** gives you
@@ -1049,11 +1056,11 @@ About 60 minutes (step 12: 15 minutes).
 
 - The quick-start environment of [the reports tutorial](REPORTS.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
   business date 2026-10-16) and tutorial 10 done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (SQL cells need only `bi`).
-- Python on the server: compute switched on, and the server's compute pool `python` pointed at an interpreter that carries the pinned libraries (`DRISHTI_COMPUTE_ENABLED=true`, `DRISHTI_PYTHON=<python with pandas, numpy, pyarrow and scipy at the versions of config/compute/locks/python.lock>`; [OPERATIONS_GUIDE.md](../../guides/OPERATIONS_GUIDE.md)). Every Python item runs on that pool, in a strict sandbox (no network, files held to its own folder), never in the console or your browser; on a Windows server Python is off and says why.
+- Python on the server: compute switched on, and the server's compute pool `python` pointed at an interpreter that carries the pinned libraries (`DRISHTI_COMPUTE_ENABLED=true`, `DRISHTI_PYTHON=<python with pandas, numpy, pyarrow and scipy at the versions of config/compute/locks/python.lock>`; [OPERATIONS_GUIDE.md](../OPERATIONS_GUIDE.md)). Every Python item runs on that pool, in a strict sandbox (no network, files held to its own folder), never in the console or your browser; on a Windows server Python is off and says why.
   the browser. **Calc** (the step that asks a BI model from a view, Alt+C) is the one exception: it is Python on the screen you are on, in your browser, so its
-  runtime must be installed once on the console with `python tools/drishti.py calc install` ([OPERATIONS_GUIDE.md](../../guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine)); without it Calc says
+  runtime must be installed once on the console with `python tools/drishti.py calc install` ([OPERATIONS_GUIDE.md](../OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine)); without it Calc says
   *Python runtime not installed* and Run stays disabled.
-- Two small files in [data/](../../tutorials/data/): [notional-by-desk.python.yaml](../../tutorials/data/notional-by-desk.python.yaml) (a Python visual) and [desk-python.report.yaml](../../tutorials/data/desk-python.report.yaml) (a report on the model `trades-basic@1` that uses it).
+- Two small files in [data/](../../tutorials/data): [notional-by-desk.python.yaml](../../tutorials/data/notional-by-desk.python.yaml) (a Python visual) and [desk-python.report.yaml](../../tutorials/data/desk-python.report.yaml) (a report on the model `trades-basic@1` that uses it).
 - The personal API token of [tutorial 1, step 9](../../tutorials/01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN` (with `bi:write`),
   and `DRISHTI_SERVER`. The Notebook and Calc calls quoted below are the console's, made with your session: a personal token does not reach them.
 
@@ -1272,7 +1279,7 @@ You should see the Pivot open with its source picker: choose the trades' table, 
 
 Open the **SQL** tab (it opens first). A SQL cell is **one read-only SELECT** in **Drishti SQL over the model**, asked of the **server** as you, so its
 answers are true totals, not the extract's. Its tables are the model's aliases and a measure is `MEASURE('name')`
-([API_REFERENCE.md › Drishti SQL](../../guides/API_REFERENCE.md#8-drishti-sql-apiv1bisql)):
+([API_REFERENCE.md › Drishti SQL](../API_REFERENCE.md#8-drishti-sql-apiv1bisql)):
 
 ```sql
 SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional
@@ -1422,7 +1429,7 @@ You should see, beside the button, that a Python Transform draft was saved in yo
 cell's `result` is returned, and the next step is *a dataset of its table: source: { python: <this item>, inputs: { <name>: <a model query> } }, one
 input per parameter of run(), in this order*. Open the draft, **Check the Python**, publish it, and make that dataset. Nothing is published by promoting.
 
-**In the UI** the Python dataset is the dataset wizard's source **A Python Transform** ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](MODELS_AND_DATASETS_FOR_REPORTS.md#110-a-table-of-your-own-step-by-step)):
+**In the UI** the Python dataset is the dataset wizard's source **A Python Transform** ([BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](TABLES_AND_MODELS.md#110-a-table-of-your-own-step-by-step)):
 **Models → New dataset**, choose the Transform by its title, give each input of `run()` its model query (a model, the fields and the measures to hand
 over), and list the columns the Transform returns with their types; **Preview** runs it for you before you save. **From the YAML** it is the
 `source: { python: ..., inputs: { ... } }` above; **Make it a model** on its page puts a model over it, where its measures go.
@@ -1480,7 +1487,7 @@ filter `trade.CURRENCY eq USD`) below what was there. The reader understands Dri
 ```
 
 A SQL cell of **another** model is not added to an existing report (a report reads one model: `DRS-9070` names both); promote it to a new draft.
-[USER_GUIDE.md › The Notebook](../../guides/USER_GUIDE.md#the-notebook) section 6 has the details.
+[USER_GUIDE.md › The Notebook](../USER_GUIDE.md#the-notebook) section 6 has the details.
 
 ### Step 11 · Calc: the BI engine as a DataFrame; a Python measure in an alert
 
@@ -1624,7 +1631,7 @@ The steps run where every Python item runs, on the server's compute pool; the sn
 
 - [Tutorial 10](../../tutorials/10-ai-assistant.md): ask the data in words.
 - [BI_GUIDE.md](#3-python-measures-and-visuals): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, section 13 for the Transform and
-  section 17 for the Transform editor and the snippets. [USER_GUIDE.md](../../guides/USER_GUIDE.md#the-notebook): the page, limits and notebooks. [USER_GUIDE.md](../../guides/USER_GUIDE.md#calc-python-on-any-view) is Calc, the Python panel inside a screen.
+  section 17 for the Transform editor and the snippets. [USER_GUIDE.md](../USER_GUIDE.md#the-notebook): the page, limits and notebooks. [USER_GUIDE.md](CALC.md) is Calc, the Python panel inside a screen.
 
 ### If something goes wrong
 
@@ -1640,3 +1647,30 @@ The steps run where every Python item runs, on the server's compute pool; the sn
 | the Transform editor's steps do not run | running them needs `bi-author`; the page still writes the YAML |
 | `DRS-9108 the kind 'trade' has no column [X]` | a field the kind does not have; the message lists the kind's columns |
 | `DRS-9026 connector 'x' is not running` | the input names a connector that is off; leave it empty to read whichever serves the kind |
+
+## Compute demo pack
+
+Sample pack for reactive connectors: three books of synthetic P&L strips (250 scenario days each) and the sum of a book's paths computed when it is asked for, by a Python engine in a compute pool (path-sum) and by its Java twin in the server (path-sum-java), with progress on the screen and a state per panel. Synthetic numbers only. Not loaded unless named in DRISHTI_PACKS.
+
+**Code:** `CMPD` · **Kinds:** 4 · enable it with `DRISHTI_PACKS=compute-demo` (a sample pack; `drishti.packs.samples` hides it from business users).
+
+### Using it
+
+| Type | Shows |
+|---|---|
+| `PBOOK BOOK-RATES <GO>` | A book's path computed twice: by the Python engine and by the Java engine, with progress |
+| `PSTRIP STRIP-FX-001 <GO>` | One strip: its 250 scenario P&Ls |
+| `PSUMJ BOOK-FX <GO>` | The computed answer itself, with its stamp (parameters ride on the id: BOOK-FX~delay-ms=50) |
+
+| Command | Kind | Opens |
+|---|---|---|
+| `PBOOK` | `path-book` | Path book |
+| `PSTRIP` | `path-strip` | P&L strip |
+| `PSUM` | `path-sum` | Book path (Python) |
+| `PSUMJ` | `path-sum-java` | Book path (Java) |
+
+A book's page asks both engines for the sum of its strips' paths: the Python engine runs in the compute pool `sample` (`config/compute/compute.yaml`), the Java twin in the server; each panel shows its own progress and state. Parameters ride on the id (`BOOK-FX~delay-ms=50`). How reactive connectors work: [DATA_ARCHITECTURE.md](../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors).
+
+### Data retrieval
+
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../../config/packs/core/compute-demo/README.md#data-contracts) and [*Data retrieval*](../../../config/packs/core/compute-demo/README.md#data-retrieval).

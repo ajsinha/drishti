@@ -22,7 +22,7 @@
 # tools/build_demo_lakes.py and served by the Delta connector funds-store below), a few reference samples, the README and
 # guides/funds.md, from the downloads drishti.py feed run funds keeps in the data folder. No prices or NAV history.
 pack: funds
-domain: capitalmarkets   # the domain it serves (docs/architecture/ACCESS_MODEL.md): it loads only while a module of the domain is on
+domain: capitalmarkets   # the domain it serves (docs/architecture/KERNEL_AND_MODULES.md): it loads only while a module of the domain is on
 version: 1.0.0
 code: FUNDS            # typed alone, opens this pack's overview
 title: Funds and ETFs
@@ -65,7 +65,6 @@ console:
     - ["FUND AGG", "iShares Core U.S. Aggregate Bond ETF · a bond fund: debt by issuer type, no index tab"]
     - ["HELD AAPL", "Apple · every fund of the pack that holds it, by value, and the share of Apple they own"]
     - ["TRACK SP500", "The S&P 500 · the funds that track it, by net assets, with their expense ratio and active share"]
-  help: config/help.yaml
 columns:
   fund: [TICKER, NAME, TYPE, NET_ASSETS, EXPENSE_RATIO, HOLDING_COUNT]
   fund-holder: [TICKER, NAME, FUNDS, TOTAL_VALUE, PCT_OF_SHARES]

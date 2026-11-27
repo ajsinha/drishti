@@ -17,7 +17,7 @@
 
 # Data contracts of the gleif pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/core/gleif/guides/gleif.md](../../../config/packs/core/gleif/guides/gleif.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [config/packs/core/gleif/README.md](../../../config/packs/core/gleif/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -45,7 +45,6 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 | Binding hint | lake table `gleif.lei-entity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `LEI`, `NAME`, `LEI_COUNTRY`, `LEGAL_CITY`, `LEGAL_FORM`, `REGISTRATION_STATUS`, `RENEWAL_LATE`, `SEGMENT`, `NEXT_RENEWAL`, `US_COMPANY` |
 | Test data | data/testdata/gleif/lei-entity |
-| Worked example | [gleif/lei-entity](../samples/gleif.md#lei-entity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -169,6 +168,90 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 - a snapshot refreshed when the gleif data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: CATEGORY, OTHER_NAMES[].TYPE, PARENT_EXCEPTIONS[].LEVEL, PARENT_EXCEPTIONS[].REASON, PARENT_EXCEPTIONS[].MEANING, PARENTS[].RELATIONSHIP: confirm they are closed lists.
 
+<a id="example-gleif-lei-entity"></a>
+**Example: `data/testdata/gleif/lei-entity`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "LEI": "29DX7H14B9S6O3FD6V18",
+  "NAME": "COSTCO WHOLESALE CORPORATION",
+  "OTHER_NAMES": [
+    {
+      "NAME": "Costco Companies Inc",
+      "TYPE": "previous legal name"
+    }
+  ],
+  "LEGAL_FORM": "Profit Corporation",
+  "JURISDICTION": "US-WA",
+  "LEI_COUNTRY": "US",
+  "COUNTRY_NAME": "United States of America (the)",
+  "LEGAL_ADDRESS": "C/O JOHN SULLIVAN, 999 LAKE DR, 98027-8990 ISSAQUAH, US-WA, US",
+  "LEGAL_CITY": "ISSAQUAH",
+  "HQ_ADDRESS": "C/O John Sullivan, 999 Lake Drive, 98027 Issaquah, US-WA, US",
+  "REGISTERED_AS": "601 024 674",
+  "ENTITY_STATUS": "ACTIVE",
+  "CREATED": "1987-05-11",
+  "REGISTRATION_STATUS": "ISSUED",
+  "INITIAL_REGISTRATION": "2012-06-06",
+  "LAST_UPDATE": "2025-11-24",
+  "NEXT_RENEWAL": "2026-12-21",
+  "RENEWAL_LATE": false,
+  "MANAGING_LOU": "EQS Group GmbH",
+  "BICS": "COWOUS6IXXX",
+  "BIC_COUNT": 1,
+  "ISIN_COUNT": 5,
+  "OPENCORPORATES": "us_wa/601024674",
+  "LEI_GROUP": "29DX7H14B9S6O3FD6V18",
+  "PARENT_EXCEPTIONS": [
+    {
+      "LEVEL": "Direct parent",
+      "REASON": "NO_KNOWN_PERSON",
+      "MEANING": "No known person controls it (shares widely held)"
+    },
+    {
+      "LEVEL": "Ultimate parent",
+      "REASON": "NO_KNOWN_PERSON",
+      "MEANING": "No known person controls it (shares widely held)"
+    }
+  ],
+  "CHILDREN": [
+    {
+      "LEI": "5493006ZNNV3BSMHNN80",
+      "NAME": "COSTCO WHOLESALE INTERNATIONAL, INC.",
+      "COUNTRY": "US",
+      "KIDS": 7
+    },
+    {
+      "LEI": "549300FOSJF54CS8VZ05",
+      "NAME": "코스트코 코리아",
+      "COUNTRY": "KR"
+    },
+    "… 10 more elements of the same shape"
+  ],
+  "CHILD_COUNT": 12,
+  "DIRECT_CHILDREN_GLEIF": 12,
+  "ULTIMATE_CHILDREN_GLEIF": 28,
+  "GLEIF_GROUP_SIZE": 29,
+  "MAPPING_IDS": [
+    "COWOUS6IXXX",
+    "US22160K1051",
+    "US22160KAM71",
+    "… 3 more strings"
+  ],
+  "SEGMENT": "US equities",
+  "US_COMPANY": "COST",
+  "US_COMPANY_NAME": "Costco",
+  "PROVENANCE": {
+    "SOURCE": "GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)",
+    "RETRIEVED_AT": "2026-10-25",
+    "LICENCE": "CC0 1.0 (GLEIF's terms: free of charge, no restriction; attribution appreciated)",
+    "URL": "https://search.gleif.org/#/record/29DX7H14B9S6O3FD6V18"
+  }
+}
+```
+
 ## LEIG: LEI ownership group (`lei-group`)
 
 An ownership group, computed from the entities when asked: the ultimate parent with its whole tree, every member, and counts by country and legal form.
@@ -273,7 +356,6 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 | Binding hint | lake table `gleif.lei-relationship`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `RELATIONSHIP_ID`, `LEVEL`, `CHILD_ENTITY`, `PARENT_ENTITY`, `RELATIONSHIP_STATUS` |
 | Test data | data/testdata/gleif/lei-relationship |
-| Worked example | [gleif/lei-relationship](../samples/gleif.md#lei-relationship) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -326,6 +408,35 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 - required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-relationship/lei-relationship.2026-10-25.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when the gleif data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: LEVEL, REGISTRATION_STATUS, ACCOUNTING_STANDARD, PERIODS[].TYPE: confirm they are closed lists.
+
+<a id="example-gleif-lei-relationship"></a>
+**Example: `data/testdata/gleif/lei-relationship`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "RELATIONSHIP_ID": "LEIREL-0292001381F1R1IB5B85-DIRECT",
+  "LEVEL": "Direct",
+  "CHILD_ENTITY": "0292001381F1R1IB5B85",
+  "PARENT_ENTITY": "2549003PEZXUT7MDBU41",
+  "RELATIONSHIP_STATUS": "ACTIVE",
+  "START": "2006-01-25",
+  "PERIODS": [
+    {
+      "TYPE": "accounting period",
+      "START": "2017-01-01",
+      "END": "2017-12-31"
+    }
+  ],
+  "ACCOUNTING_STANDARD": "IFRS",
+  "REGISTRATION_STATUS": "PUBLISHED",
+  "INITIAL_REGISTRATION": "2016-07-14",
+  "LAST_UPDATE": "2026-07-27",
+  "NEXT_RENEWAL": "2027-07-13",
+  "LEI_GROUP": "2549003PEZXUT7MDBU41"
+}
+```
 
 ## LEIC: LEI country (`lei-country`)
 
@@ -412,7 +523,6 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 | Binding hint | lake table `gleif.lei-mapping`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `IDENTIFIER`, `TYPE`, `ENTITY_LEI`, `ENTITY_NAME` |
 | Test data | data/testdata/gleif/lei-mapping |
-| Worked example | [gleif/lei-mapping](../samples/gleif.md#lei-mapping) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -444,3 +554,21 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 - required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-mapping/lei-mapping.2026-10-25.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when the gleif data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: TYPE, MAPPING_FILE: confirm they are closed lists.
+
+<a id="example-gleif-lei-mapping"></a>
+**Example: `data/testdata/gleif/lei-mapping`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "IDENTIFIER": "US9297401088",
+  "TYPE": "ISIN",
+  "ENTITY_LEI": "06BTX5UWZD0GQ5N5Y745",
+  "ENTITY_NAME": "WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION",
+  "COUNTRY": "US",
+  "LEI_GROUP": "06BTX5UWZD0GQ5N5Y745",
+  "ISIN_COUNT": 909,
+  "MAPPING_FILE": "isin-lei-20261024T071512.zip"
+}
+```

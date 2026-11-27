@@ -38,7 +38,7 @@ import java.util.function.Supplier;
 
 /**
  * Managing the system baskets (VAR_GUIDE.md section 5.7): create, edit and retire them in the basket sheet, import and export them as
- * YAML. Every change needs the permission {@code var:system-baskets} (a role that lists it, or an administrator: ACCESS_MODEL.md
+ * YAML. Every change needs the permission {@code var:system-baskets} (a role that lists it, or an administrator: KERNEL_AND_MODULES.md
  * section 8) and is checked on save against the business date (a node no hierarchy holds, a rule over a column the positions do not
  * have, a position or trade the date does not hold: {@code DRS-5220} with the reason). Each change is one audit entry
  * ({@code var-system-basket-create}, {@code -edit}, {@code -retire}, {@code -import}) and, when the person changing it is not its owner,

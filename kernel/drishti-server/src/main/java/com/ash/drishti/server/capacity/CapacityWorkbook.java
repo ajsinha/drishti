@@ -54,12 +54,18 @@ public final class CapacityWorkbook {
             JsonNode meta = new ObjectMapper().readTree(read(BASE + "template.json"));
             Map<String, String> parts = new LinkedHashMap<>();
             for (JsonNode p : meta.get("parts")) {
-                parts.put(p.asText(), read(BASE + p.asText()));
+                parts.put(p.asText(), read(BASE + file(meta, p.asText())));
             }
             return new CapacityWorkbook(meta, WorkbookTemplate.of(parts));       // the copyright comments each part carries are dropped
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    /** The resource a part is kept under: Excel names the root relationships {@code _rels/.rels}, a hidden name, so the source keeps them as {@code _rels/root.rels.xml} (template.json "files"). */
+    private static String file(JsonNode meta, String part) {
+        JsonNode f = meta.path("files").path(part);
+        return f.isTextual() ? f.asText() : part;
     }
 
     private static String read(String resource) throws IOException {

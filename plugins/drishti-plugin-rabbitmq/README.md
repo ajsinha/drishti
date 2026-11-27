@@ -54,6 +54,10 @@ doc: plugins/drishti-plugin-rabbitmq/README.md
 Plugin `rabbitmq` (`plugins/drishti-plugin-rabbitmq`, on the shared `MessageStateSource` of `drishti-common` (package `messaging`), as `activemq`):
 entity changes from RabbitMQ queues, kept on local disk, with views that update on every message.
 
+## Build and use
+
+A connector file in `config/connectors/` with `plugin: rabbitmq` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
+
 ## What it reads
 
 One AMQP connection and one channel, named `drishti-<source-name>`. For each queue in `queues` it declares the queue durable (unless

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The checks across kinds (docs/plans/CSV_LOADERS.md section 11): each link of a kind's records (its contract's ``link:`` fields, and
+"""The checks across kinds (docs/guides/BANK_DATA_GUIDE.md section 11): each link of a kind's records (its contract's ``link:`` fields, and
 the mapping's ``checks.links``, which set a policy or name another target) is looked up in the target kind's output of the same day
 (``mr-<date>/<target>.<date>.jsonl[.gz]``) or in ``--against`` folders (yesterday's outputs, for a master not re-sent today). A target
 found nowhere is reported as *not checked*, never as passed. The policy is ``warn`` unless the mapping says ``refuse`` (or the run says

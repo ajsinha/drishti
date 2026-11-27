@@ -61,8 +61,8 @@ tests. Maven is not needed: every repository carries its own (`./mvnw`, `mvnw.cm
 | | Linux (Ubuntu, Debian) | macOS | Windows (PowerShell) |
 |---|---|---|---|
 | JDK 21 | `sudo apt install openjdk-21-jdk` | `brew install openjdk@21` | the Temurin 21 MSI or ZIP (a ZIP needs no installer) |
-| Python 3.13 | `uv python install 3.13`, or the system's | `brew install python@3.13`, or uv | python.org's installer or its embeddable ZIP |
-| uv (recommended) | the installer script from astral.sh (`install.sh`) | `brew install uv` | optional: `py -3.13 -m venv` works without it |
+| Python 3.13 (the one Python Drishti runs with: the system's, a dedicated one, or a virtual environment you made yourself) | a dedicated `python3.13` (the OS's own is externally managed on Debian/Ubuntu: section 3.1) | `brew install python@3.13` | python.org's installer or its embeddable ZIP |
+| uv (only to build the Lake wheel when you work from a git clone, section 2; the source zip and the wheel pack carry it) | the installer script from astral.sh (`install.sh`) | `brew install uv` | optional |
 | Node (Elements tests) | `sudo apt install nodejs` | `brew install node` | optional: the Node tests skip without it |
 | `JAVA_HOME` | `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64` | `export JAVA_HOME=$(/usr/libexec/java_home -v 21)` | `$env:JAVA_HOME = 'C:\jdk-21'` |
 
@@ -80,7 +80,7 @@ The platform lives in one folder, every repository a sibling of the index reposi
 ```
 
 **A. From the source bundle** (no git needed): download the bundle ZIP from the index repository's release and unpack it into
-`~/IdeaProjects/drishti-platform/`. It holds every repository at the tags that go together, with `build_all.py`; the Lake wheel is not in it (section 2 builds it).
+`~/IdeaProjects/drishti-platform/`. It holds every repository at the tags that go together, with `build_all.py`; the pinned Lake wheel is already in it, in `drishti/lib/wheels/` (only a git clone builds it, section 2).
 
 **B. With git:** clone the index repository into the folder that will hold them all, and let `clone_all.py` clone the rest at the release's
 tags (it puts the repositories in the folder *above* the index repository, so the index repository goes one level down):
@@ -89,7 +89,7 @@ tags (it puts the repositories in the folder *above* the index repository, so th
 mkdir -p ~/IdeaProjects/drishti-platform && cd ~/IdeaProjects/drishti-platform
 git clone https://github.com/drishti-platform/drishti-platform.git
 cd drishti-platform
-python3 clone_all.py --release i7b         # Windows: py clone_all.py --release i7b; --parent <folder> puts them elsewhere
+python3 clone_all.py --release <release>         # Windows: py -3.13 clone_all.py --release <release>; --parent <folder> puts them elsewhere
 ```
 
 `--release` is required (a release name from `platform.yaml`; `--develop` clones every repository at `develop` instead). `make_bundle.py` (the
@@ -102,22 +102,24 @@ From the `drishti` folder (every command below runs from it):
 
 ```bash
 cd ~/IdeaProjects/drishti-platform/drishti
-uv build --wheel ../drishti-lake/python --out-dir lib/wheels           # the Lake wheel first (section 2 explains it): the requirements name it
-python tools/lake/lakewheel.py                                         # exit 0 and (ok): lib/wheels holds exactly the pinned wheel
-uv venv --python 3.13 drishti-console/.venv
-uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements-test.txt
-drishti-console/.venv/bin/python -m playwright install chromium        # the browser tests' Chromium, once
-drishti-console/.venv/bin/python tools/drishti.py doctor
+# Source zip or wheel pack: lib/wheels already holds the pinned Lake wheel, nothing to build. From a git clone only: build it (section 2)
+#   uv build --wheel ../drishti-lake/python --out-dir lib/wheels
+python3 tools/lake/lakewheel.py                                        # exit 0 and (ok): lib/wheels holds exactly the pinned wheel
+# first YOU install the libraries with the two pip commands and run `drishti.py setup` (Drishti runs no pip): see the line below the block
+python3 -m playwright install chromium        # the browser tests' Chromium, once
+python3 tools/drishti.py doctor
 ```
 
 The Lake wheel comes first because `requirements.txt` installs `drishti-lake==<version>` from `lib/wheels`, and no package index has it; `../drishti-lake`
-must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release i7b` leaves it there). On Windows the environment's Python is `drishti-console\.venv\Scripts\python.exe` (`py -3.13 -m venv drishti-console\.venv`, then
-`drishti-console\.venv\Scripts\python.exe -m pip install -r drishti-console\requirements-test.txt`); Playwright's browsers go into the
+must be at the tag `lib/lake-wheel.pin` names (`clone_all.py --release <release>` leaves it there). On every system Drishti never makes a virtual
+environment: the Python you run it with holds the libraries, which you install with the two pip commands and then check with `drishti.py setup`
+(per system: [DEPLOYMENT_AND_QA_GUIDE.md 1.6](DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)); a developer adds
+`-r drishti-console/requirements-test.txt` (`requirements.txt` plus pytest, pytest-xdist and Playwright) into the same Python. Playwright's browsers go into the
 user's profile, no administrator rights needed.
 
 **You should see** `doctor` end with `doctor: all clear` (the Java, the Python and its libraries, the ports 18480 and 17480 free).
 
-**Your settings file**, once: `python tools/drishti.py setup` makes `~/drishti-envs/dev.ini` for you (it never overwrites one), and `tools/drishti.py` takes it with `--settings` ([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)); the IDE launchers need it too ([IDE_GUIDE.md](guides/IDE_GUIDE.md#21-the-settings-file-drishti-envsdevini)).
+**Your settings file**, once: `python tools/drishti.py setup` makes `~/drishti-envs/dev.ini` for you (one that names this checkout is kept; one from another copy is moved into `~/drishti-envs/replaced-<date>` and a fresh one written), and `tools/drishti.py` takes it with `--settings` ([DEPLOYMENT_AND_QA_GUIDE.md › The settings file](DEPLOYMENT_AND_QA_GUIDE.md#51-the-settings-file)); the IDE launchers need it too ([IDE_GUIDE.md](guides/IDE_GUIDE.md#21-the-settings-file-drishti-envsdevini)).
 `requirements-test.txt` is `requirements.txt` plus pytest, pytest-xdist and Playwright: a developer needs both. The IDE setup: [IDE_GUIDE.md](guides/IDE_GUIDE.md) (IntelliJ and PyCharm), [IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code) (VS Code).
 
 ## 2. Build
@@ -127,13 +129,13 @@ The products install into `~/.m2` at the versions the root `pom.xml` pins (`dris
 
 ```bash
 cd ~/IdeaProjects/drishti-platform/drishti-platform
-python3 build_all.py --release i7b [--skip-tests] [--repo-local]       # Windows: py build_all.py --release i7b
+python3 build_all.py --release <release> [--skip-tests] [--repo-local]       # Windows: py -3.13 build_all.py --release <release>
 ```
 
-`build_all.py` checks that each repository is at the release's tag (it stops and says so if not: `clone_all.py --release i7b` puts them there), then runs
+`build_all.py` checks that each repository is at the release's tag (it stops and says so if not: `clone_all.py --release <release>` puts them there), then runs
 `mvnw -B clean install` in `drishti-tools/java`, `drishti-rachana/java` and `drishti-lake/java` in that order (their tests included unless `--skip-tests`),
 and then `mvnw -B clean verify` in `drishti`: the whole Drishti suite, not `build all`. It repeats what is already built (nothing is skipped), builds neither the
-Elements bundles (Drishti vendors them, [ELEMENTS_IN_DRISHTI.md](architecture/ELEMENTS_IN_DRISHTI.md)) nor the Lake wheel, and does not start Drishti.
+Elements bundles (Drishti vendors them, [ELEMENTS_IN_DRISHTI.md](architecture/THIN_CONSOLE_DESIGN.md)) nor the Lake wheel, and does not start Drishti.
 `--repo-local` installs into `<parent>/.m2-drishti` instead of `~/.m2`; `--dry-run` prints the commands. For the Drishti jar and modules alone, with the products already
 installed, use `python tools/drishti.py build all` below. By hand, per repository, the same order (each repository's README, section *Build and run in the IDE*,
 names its launchers):
@@ -164,7 +166,7 @@ with the reason.
 **Drishti itself:**
 
 ```bash
-python tools/drishti.py build all        # Windows: py tools\drishti.py build all
+python tools/drishti.py build all        # Windows: py -3.13 tools\drishti.py build all
 ls lib/*-exec.jar modules/*.dmod
 ```
 
@@ -174,18 +176,46 @@ what it builds: [DEVELOPER_GUIDE.md › Maven commands](guides/DEVELOPER_GUIDE.m
 
 ## 3. Run the server and the console on the demo lake
 
+### 3.1 Without an IDE: every command, from the unzipped platform folder
+
+The whole path on the command line, nothing but Java 21 and Python 3.13 (the wheel packs are built for it; `setup` checks 3.11 as the floor). Windows commands are for `cmd` from the
+unzipped platform folder (`C:\Users\you\drishti-platform`, holding `build_all.py` and `drishti\`); Linux and macOS are the same with
+`python3` and `/`, where `python3` is a dedicated Python 3.13 for Drishti (for example `/opt/python3.13/bin/python3.13`): the operating
+system's own `python3` of Debian or Ubuntu is *externally managed* (PEP 668) and setup refuses it in one line. Unzip the offline wheel
+pack (built for Python 3.13) into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`) first and install it yourself, once, with the two pip commands ([DEPLOYMENT_AND_QA_GUIDE.md 1.6](DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)); Drishti never installs Python packages, `setup` only checks them.
+
+| Step | Windows (`cmd`) | Linux and macOS |
+|---|---|---|
+| 1. Build everything (the products, then Drishti's jar and modules; no tests) | `py -3.13 build_all.py --bundle . --skip-tests` | `python3 build_all.py --bundle . --skip-tests` |
+| ... or Drishti alone (the products already in `~/.m2`) | `cd drishti` then `mvnw.cmd -B clean package -DskipTests -Dspotless.check.skip=true` | `cd drishti && ./mvnw -B clean package -DskipTests -Dspotless.check.skip=true` |
+| 2. Prepare the machine (settings file, data folder, checks the libraries of THIS Python) | `cd drishti` then `py -3.13 tools\drishti.py setup` | `cd drishti && python3 tools/drishti.py setup` |
+| 3. The demo lake (about 15 minutes, 3.4 GB) | `py -3.13 tools\drishti.py lake demo --engine java` | `python3 tools/drishti.py lake demo --engine java` |
+| 4. Start the server and the console | `py -3.13 tools\drishti.py start all --demo` | `python3 tools/drishti.py start all --demo` |
+| ... see them, stop them | `py -3.13 tools\drishti.py status`, `py -3.13 tools\drishti.py stop all` | `python3 tools/drishti.py status`, `python3 tools/drishti.py stop all` |
+| 5. Use it | open `http://localhost:17480`, sign in as `drishti-dev-admin` / `drishti-dev-admin123`, type `VAR BANK` and press Enter | the same |
+| ... or prove it on the command line | `py -3.13 tools\drishti.py doctor --acceptance` | `python3 tools/drishti.py doctor --acceptance` |
+
+**You should see** in step 2 `[  ok] libraries`, `drishti.python=<this Python>`, "Drishti is ready." and, as the last next step,
+`start all --demo`: while a `[FAIL]` remains the next steps name the fix instead (a missing library: the pip command to run). Step
+4 ends with `console: up on http://<address>:17480` and runs the console on the Python setup wrote (`drishti.python`); it never makes
+an environment or installs anything. In step 5 `VAR BANK` shows the bank's 99% one-day VaR **167,372,692** and expected shortfall
+**210,131,972**. No command needs `--settings`: every `tools/drishti.py` command takes `~/drishti-envs/dev.ini` by itself when that file
+names this folder as `drishti.home` (setup writes it so); pass `--settings <file>` for another.
+
+### 3.2 The same, step by step
+
 Build the demo lake once (about ninety tables, sixty business days ending today, about 15 minutes and 3.4 GB under `data/delta/demo/`;
 with the jar built, Drishti's Java loader writes it), then start both programs with `tools/drishti.py`:
 
 ```bash
-python tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java
-python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo   # the server on :18480, then the console on :17480, in the background
+python tools/drishti.py lake demo --engine java                 # ~/drishti-envs/dev.ini is taken by itself (it names this folder)
+python tools/drishti.py start all --demo                         # the server on :18480, then the console on :17480, in the background
 python tools/drishti.py status                                               # both running and UP, with the addresses to open
 python tools/drishti.py stop all                                             # the console, then the server (by their pid files)
 ```
 
-On Windows (`cmd` or PowerShell; Java and Python only) the same commands run as `py tools\drishti.py ...`, with the settings file
-`%USERPROFILE%\drishti-envs\dev.ini`.
+On Windows (`cmd` or PowerShell; Java and Python only) the same commands run as `py -3.13 tools\drishti.py ...` (the settings file
+`%USERPROFILE%\drishti-envs\dev.ini`, taken by itself).
 
 **You should see** `server: up on http://<this machine's address>:18480` and `console: up on http://<this machine's address>:17480`, with a
 warning that the demo's **development** secrets are in use (fine on your machine, never on a shared one). Open the console's address,
@@ -199,7 +229,7 @@ env-file for your own secrets, a cluster of several servers with `--node`, the c
 and what to do when a command stops with an error: [DEPLOYMENT_AND_QA_GUIDE.md › section 7](DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console)
 and [CLI_REFERENCE.md](guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti).
 A cluster of three servers and a console on this machine, from one file: `python tools/drishti.py start cluster`, `python tools/drishti.py status --cluster deploy/stack/stack.yaml`, `python tools/drishti.py stop cluster`
-([deploy/stack/README.md](../deploy/stack/README.md)). From the IDEs: [IDE_GUIDE.md](guides/IDE_GUIDE.md). Why each
+([deploy/stack/README.md](guides/CLUSTER_GUIDE.md#deploystack-a-ready-made-local-drishtinet-cluster)). From the IDEs: [IDE_GUIDE.md](guides/IDE_GUIDE.md). Why each
 setting: [OPERATIONS_GUIDE.md › Start the server](guides/OPERATIONS_GUIDE.md#25-start-the-server) and
 [› Start the console](guides/OPERATIONS_GUIDE.md#26-start-the-console).
 
@@ -209,10 +239,10 @@ Everything the two write at run time is under `data/` (git-ignored except `data/
 ### Starting a white-labelled instance
 
 The same build starts as **Drishti Risk**, **Drishti Finance**, **Drishti Genomics** or **Drishti All** with one argument
-(`config/distributions/drishti.<name>.yaml`; [DISTRIBUTIONS.md](architecture/DISTRIBUTIONS.md)). Without it you run Drishti All, every
+(`config/distributions/drishti.<name>.yaml`; [DISTRIBUTIONS.md](architecture/KERNEL_AND_MODULES.md)). Without it you run Drishti All, every
 module: what the drill, the page walk and the tutorials use.
 
-| Distribution | Start (Windows: `py tools\drishti.py ...`) | You should see |
+| Distribution | Start (Windows: `py -3.13 tools\drishti.py ...`) | You should see |
 |---|---|---|
 | Drishti Risk | `python tools/drishti.py start all --demo --distribution risk` | **Drishti Risk**, navy dark; Risk, Counterparties and Markets menus; `VAR BANK` works, `ECON CAN` answers *not in Drishti Risk*; Help titled *Drishti Risk Help* |
 | Drishti Finance | `python tools/drishti.py start all --demo --distribution finance` | **Drishti Finance**, light; Economies, Markets and Companies menus, no Risk menu; `CRV` works, `VAR BANK` answers *not in Drishti Finance*; Help titled *Drishti Finance Help* with no VaR guide |
@@ -240,7 +270,7 @@ capitalmarkets, economy, market-data, trading and one module per trading system 
 | `lake-io`, `lake-delta`, `lake-iceberg`, `lake-load` | the lakes: the lake core (their files and file access), Delta, Iceberg, and loading (the parallel loader, the data inbox, the in-memory lake) |
 | `drishti-identity`, `drishti-net`, `drishti-compute`, `drishti-bicompute`, `drishti-tables`, `drishti-flight`, `drishti-ai` | users and tokens; Drishti\*net (clusters); compute workers; the pivot and BI engine; tables and models; Arrow Flight; the AI layer |
 | `drishti-server` | the Spring Boot application: controllers, the core's configuration, the exec jar (`lib/*-exec.jar`) |
-| `drishti-app` | the assembly the release ships: the server with the banking module and the plugins (`-pl :drishti-app -am`) |
+| `drishti-app` | the assembly the release ships: the server with the banking module and the plugins (`-pl :drishti-app -am` builds the jar only; `build all` adds the modules) |
 | `plugins/drishti-connectors`, `plugins/drishti-plugin-*` | the connectors: the built-in light ones (file, rest, feed, news, demo, yfinance) in one module, and a plugin each for delta, iceberg, jdbc, kafka, s3 and more ([DATA_GUIDE.md](guides/DATA_GUIDE.md)) |
 | `drishti-elements`, `drishti-console/web/static/elements/` | Drishti Elements, the JavaScript libraries every screen is made of (core, inputs, grid, chart, data, insight, renderer, risk, graph, tree, designer), and their WebJar ([ELEMENTS_API.md](https://github.com/drishti-platform/drishti-elements/blob/main/docs/API.md)) |
 | `drishti-console/` | `run_drishti_web.py`, `core/` (one module per feature), `routes/`, `web/templates/`, `plugins/<module>/` (a module's console pages, help and static files: `banking`, `economy`), `config/` (`application.yaml`, `help.yaml`), `tests/` |
@@ -248,7 +278,7 @@ capitalmarkets, economy, market-data, trading and one module per trading system 
 | `config/` (the rest) | `modules/`, `lenses/<module>/`, `lakes/`, `engines/`, `tables/`, `bi/`, `feeds/`: the site's switches and files ([CONFIGURATION.md](admin/CONFIGURATION.md)) |
 | `bin/` | a README only: every command is `tools/drishti.py` (a node's drain: `drishti.py node drain`, [CLUSTER_GUIDE.md](guides/CLUSTER_GUIDE.md)) |
 | `tools/` | `drishti.py` (the command line: `setup`, `build jar`, `start`, `stop`, `status` and the rest), `lake/`, `docs/` (screenshots, the PDFs), `drill.sh` (the release drill) |
-| `run-configs/`, `drishti.code-workspace` | the IntelliJ and PyCharm launchers and the VS Code workspace ([IDE_GUIDE.md](guides/IDE_GUIDE.md), [IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code)) |
+| `run-configs/`, `drishti-console/run-configs/`, `drishti.code-workspace` | the IntelliJ launchers (project `drishti`), the PyCharm launchers (project `drishti-console`) and the VS Code workspace ([IDE_GUIDE.md](guides/IDE_GUIDE.md), [IDE_GUIDE.md section 10](guides/IDE_GUIDE.md#10-visual-studio-code)) |
 | `docs/` | `guides/`, `tutorials/`, `admin/`, `architecture/`, `contracts/`; the index is [docs/README.md](README.md) |
 | `drishti-it`, `drishti-benchmarks` | the architecture and repository rule tests; the JMH benchmarks |
 
@@ -259,12 +289,11 @@ Run these before every commit; each takes seconds to a few minutes. The whole te
 
 | Check | Command | What it covers |
 |---|---|---|
-| The quick file checks | `drishti-console/.venv/bin/python -m pytest -q -m static drishti-console/tests` | every test that reads files and starts nothing: docs and help, asset names, branding, CSS tokens, guards, licences |
+| The quick file checks | `python3 -m pytest -q -m static drishti-console/tests` | every test that reads files and starts nothing: docs and help, asset names, branding, CSS tokens, guards, licences |
 | The Elements unit tests | `node --test drishti-console/tests/elements/` (or `pytest drishti-console/tests/test_elements_node.py`) | the libraries in Node, no browser |
-| One browser file | `drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_elements_gallery_browser.py` | Chromium on a real console; name the file of the screen you changed |
+| One browser file | `python3 -m pytest -q drishti-console/tests/test_elements_gallery_browser.py` | Chromium on a real console; name the file of the screen you changed |
 | One Java module | `./mvnw -q verify -pl :drishti-registry -am` | that module's tests and the rules it must keep |
 | Several targeted tests together | `./mvnw -q verify -pl :drishti-registry,:drishti-engine -am -Dtest='A*Test,B*Test' -Dsurefire.failIfNoSpecifiedTests=false` | build once, name every test you need in one Maven run, never one Maven run per test |
-| The lake tests of `drishti-modules-it` | `./mvnw -q verify -pl :drishti-modules-it -am -Dtest='Packaged*Test' -Dsurefire.failIfNoSpecifiedTests=false` | they build their lakes with `drishti-console/.venv/bin/python` (the interpreter the drill uses), which needs `drishti_lake`: installed there or the pinned wheel in `lib/wheels`; `-Ddrishti.python=<python>` names another; a missing one fails the test saying so |
 | What your branch touched | `tools/drill.sh --affected` (`--base REF`, default `origin/develop`; `--dry-run` lists the selection) | only the Maven modules and test files the diff can reach; shared infrastructure selects more; never a release proof |
 | The gate | `tools/drill.sh --gate` | everything the release drill checks first (headers, generated files, docs, static tests, the rule tests and one build); a few minutes, on any branch, no push |
 
@@ -309,7 +338,7 @@ a test, a guide and a screenshot together.
    (390 px, the browser's device toolbar).
 5. **Update the docs in the same commit**: the guide section that describes the behaviour, the tutorial step if a step changes, the
    Help entry (`drishti-console/config/help.yaml`) if a page is added or moves, the screenshots of the step
-   (`drishti-console/.venv/bin/python tools/docs/screenshots.py --guide <guide>`), and one line under the open release in `CHANGELOG.md`.
+   (`python3 tools/docs/screenshots.py --guide <guide>`), and one line under the open release in `CHANGELOG.md`.
    A setting goes into CONFIGURATION.md through its generator, never by hand.
 6. **Run the fast checks** (section 5): `-m static`, the test files you touched, the Elements tests for a library change, then
    `tools/drill.sh --gate`.

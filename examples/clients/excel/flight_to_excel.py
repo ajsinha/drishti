@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""An Excel workbook from a Flight read, with no add-in to install (examples/clients/excel/README.md).
+"""An Excel workbook from a Flight read, with no add-in to install (examples/clients/README.md).
 
     python3 flight_to_excel.py --out desk-rates.xlsx [--scope DESK:RATES] [--date 2026-09-30]
 

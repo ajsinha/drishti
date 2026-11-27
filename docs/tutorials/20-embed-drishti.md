@@ -15,29 +15,24 @@
 -->
 # Tutorial 20 · Embed Drishti
 
-Your own web application can show a live Drishti view **inside its own page**, with no iframe: `<drishti-view>` (Drishti Elements). The user is **your** user, signed in to **your** application; Drishti never sees their password, and your page
-never sees Drishti's secrets. In this tutorial you register a host application in **Admin → Embedding**, run the sample host that ships with Drishti on its own origin under a **strict content-security policy**, watch a view and a report appear in it, and see how **tokens** and **limits** work.
+Your own web application can show a live Drishti view **inside its own page**, with no iframe: `<drishti-view>` (Drishti Elements). The user is **your** user, signed in to **your** application; Drishti never sees their password, and your page never sees Drishti's secrets. In this tutorial you register a host application in **Admin → Embedding**, run the sample host that ships with Drishti on its own origin under a strict content-security policy, watch a view appear in it, and meet the token and the limits. The pieces and every attribute are in the [integration guide](../guides/INTEGRATION_GUIDE.md#1-embed-drishti-in-your-pages); this page is the one task.
 
 ## Time to complete
 
-About 40 minutes.
+About 30 minutes.
 
 ## Before you start
 
-- The quick-start environment of [the reports tutorial](../guides/bi/REPORTS.md#before-you-start) (the demo lakes, **Drishti: run server (demo)** with sign-in
-  on), with the **demo ticker on** as in [the reports tutorial](../guides/bi/REPORTS.md#before-you-start) (`DRISHTI_DEMO_ENABLED=true`): the live view of
-  the views of step 5 tick only with it. The host shows two **trade valuations** of the market-risk pack, `TVAL-1000008` and `TVAL-1000002`
-  (a valuation's MTM and one-day P&L move with the demo; a trade itself does not tick: it changes when its source books a new version).
-- Embedding is **off by default**. This tutorial turns it on (step 1). It needs a third port for the host application (the sample host uses 17968 by default; the commands below use 17944, and the pictures were taken with the host on 17782), and the two demo users `viewer` and `author` in Drishti (step 2).
-- The sample host is [tools/elements-demo](../../tools/elements-demo/README.md): a small Python program with its own sign-in and its own backend. It signs its requests with a **demo key** that ships in the repository: never use it for anything real.
+- The quick-start environment ([tutorial 1, Part A](01-first-15-minutes.md#part-a--install-start-and-look-around)): the demo lakes, the server and the console with sign-in on, and the **demo ticker on** (`DRISHTI_DEMO_ENABLED=true`): the live view of step 5 ticks only with it. The host shows two **trade valuations** of the market-risk pack, `TVAL-1000008` and `TVAL-1000002` (a valuation's MTM and one-day P&L move with the demo; a trade itself does not tick: it changes when its source books a new version).
+- Embedding is **off by default**; step 1 turns it on. You need a third port for the host application (the sample host uses 17968 by default; the commands below use 17944), and the two demo users `viewer` and `author` in Drishti (step 2).
+- The sample host is [tools/elements-demo](../../tools/elements-demo/README.md): a small Python program with its own sign-in and backend. It signs with a **demo key** that ships in the repository: never use it for anything real.
 
 ## What you will learn
 
-- the pieces: the **host application**, its **backend** (which holds a secret), the **console** (which serves the library and the views), and the **server** (which issues tokens);
-- how to **register** a host: exact origins, how it signs in, scopes, and which kinds it may show;
-- what the **embed token** is, how short its life is, and why it is read-only and always masked;
-- what the host page needs: the one script line, a token provider, and a CSP that names the console and nothing else;
-- the **limits** (calls per minute, per user) and the codes you will meet.
+- how to **register** a host: exact origins, how it signs in, scopes and the kinds it may show;
+- what the **embed token** is, and why it is short-lived, read-only and always masked;
+- what the host page needs: one script line, a token provider and a CSP that names the console and nothing else;
+- the **limits** and the codes you will meet.
 
 ## Step 1 · Switch embedding on
 
@@ -74,7 +69,7 @@ Fill it in:
 | Origins | `http://127.0.0.1:17944` | the **exact** origin of the host's pages (scheme, host, port, no path). A page on any other origin is refused (`DRS-8002`); `null` and wildcards are refused |
 | How it signs in | **Both** | a **client secret** (shown once) and a **public key** (a JWK set): the host's backend authenticates with the secret and signs a short assertion about its user with its private key. For the sample host paste the JWK set made from `tools/elements-demo/demo-host-key.json` (its public half: `n`, `e`, `kid`) |
 | Scopes | `embed:view`, `embed:about` | what the host may ask a token for: views and the About text |
-| Kinds | `trade, trade-valuation` | an allow-list: **the kinds `trade` and [`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation))** and **two reports**: the live desk report (step 6) and a report on a model (step 6, last part). Every report is `report:*`; empty means everything the user's roles open |
+| Kinds | `trade, trade-valuation` | an allow-list: **the kinds `trade` and [`trade-valuation`](../contracts/packs/market-risk.md#example-market-risk-trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation))** and **two reports**: the live desk report (step 6) and a report on a model (step 6, last part). Every report is `report:*`; empty means everything the user's roles open |
 | Calls per minute, per user per minute | `6000`, `600` | the defaults (600 and 60) are for a quiet page; a live view asks again at every tick |
 | Token life | `300` seconds | the lifetime of a token; never more than the server's `drishti.embed.token-max-seconds` |
 
@@ -131,10 +126,6 @@ scope=embed:view embed:about
     "scope": "embed:view embed:about"}
 ```
 
-(Captured against a stack on ports 19590 and 19591 with the client authenticated by `private_key_jwt` instead of the secret: a
-`client_assertion` signed with the same demo key, `iss` = `sub` = `harbour-crm`; [API_REFERENCE.md](../guides/API_REFERENCE.md) lists both ways. The sample
-host itself sends the secret, as above.)
-
 The token the page receives is a short **ES256** JWT; its header and claims are plain to read (here decoded from a real one):
 
 ```text
@@ -144,7 +135,7 @@ claims   {"iss": "http://127.0.0.1:19590", "aud": "http://127.0.0.1:19591", "sub
           "jti": "emb_ikzuTg317DGVdoqv", "typ": "drishti-embed+jwt"}
 ```
 
-What to notice: **five minutes** (`exp - iat = 300`), the application (`azp`), the **origin** it is good for and its **scope**. On **every call** the server checks the signature, the audience, the expiry, the application, the user (their roles **as they are now**), the origin, the scope and the kind or report, and the rates, then acts **as that user, read-only, with every field mask applied whatever their roles say**. The library asks the provider for a new token a minute before the old one ends, so nothing redraws.
+Notice **five minutes** (`exp - iat = 300`), the application (`azp`), the **origin** it is good for and its **scope**. On every call the server checks all of them and acts as that user, read-only, with every field mask applied ([INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md#141-the-token-exchange) lists the checks). The library asks the provider for a new token a minute before the old one ends, so nothing redraws.
 
 ## Step 5 · A live view in someone else's page
 
@@ -194,14 +185,9 @@ You should see `DRS-8004 over the embed call rate; retry in 51 s` in the visuals
 
 If an element stays in `loading` with no event at all, the token provider never answered: open the browser's network tab; the first request is to **your** backend.
 
-## Step 8 · Pin the version, and stay safe
+## Step 8 · Your page picks the entity
 
-The console serves the library at an **exact semantic version**, immutably, with the SHA-384 of every file at `/embed/v2/render/<version>/integrity.json`. A production page pins the version and puts the `integrity` on the script line, so the bytes it runs are the bytes it reviewed; `/embed/v2/elements/2/drishti-elements.js` follows the console's newest 2.x and is for development. Keep the client secret in the backend's environment, rotate it
-from the row's **Rotate** button (with a grace period so a rolling restart does not fail), and make the application's origins, scopes and kinds as narrow as the page needs: **a registered application can show exactly the kinds and reports it lists and nothing else**, whatever the user's roles allow. You should see the file list and its hashes by opening `/embed/v1/elements/<version>/integrity.json` on the console (the version is in the address of the script line).
-
-## Step 9 · The page's own controls, and the framework samples
-
-The element draws what the server sends for one entity; **what picks the entity is the host's own page**: a list, a search box of the host's, a link. Set `kind` and `entity` and the element reloads in place and cancels the request it was making. A typed Drishti command (`TRD 1000001`) can be resolved to the entity it names with `DrishtiElements.resolve(text)` (scope `embed:view`; read-only), for the host's own search box:
+The element draws what the server sends for one entity; **what picks the entity is the host's own page**. Set `kind` and `entity` and the element reloads in place and cancels the request it was making:
 
 ```html
 <input id="pick" type="search" placeholder="A trade id">
@@ -213,12 +199,13 @@ The element draws what the server sends for one entity; **what picks the entity 
 </script>
 ```
 
-The repository has the same page as **React, Vue and Angular** samples in `docs/guides/examples/embed/`. Fetch the framework builds once (`bash docs/guides/examples/embed/fetch-vendor.sh`; they are not in the repository), register the host with the scopes `embed:view embed:about`, and open `/samples/react/`, `/samples/vue/` or `/samples/angular/` on the sample host. You should see the page's own box above the view; type the id of another trade and press Enter, and the view follows. The page keeps the strict policy of step 6. [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#7-react-angular-and-vue) says how each framework wires events.
+You should see the view follow the id you type. Pinning the library version with its integrity hash, the React, Vue and Angular samples and the rest are in [INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md#110-versions-integrity-and-lifecycle).
 
 ## Next steps
 
-- [Tutorial 21](21-run-it-in-production.md): the production checklist (security on, users, tokens, backups).
-- [EMBED_GUIDE.md](../guides/EMBED_GUIDE.md#5-the-elements-one-by-one): every attribute, property, method and event of the elements, the npm package, the CSP, the cookbook. [../guides/bi/README.md](../guides/bi/DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions) section 5 covers the reports a host application's users receive; [tools/elements-demo](../../tools/elements-demo/README.md) is the host you ran.
+- [INTEGRATION_GUIDE.md](../guides/INTEGRATION_GUIDE.md): every attribute, property, method and event of the elements ([1.5](../guides/INTEGRATION_GUIDE.md#15-the-elements-one-by-one)), pinning a version and the integrity file ([1.10](../guides/INTEGRATION_GUIDE.md#110-versions-integrity-and-lifecycle)), the React, Vue and Angular samples ([1.7](../guides/INTEGRATION_GUIDE.md#17-react-angular-and-vue)), the cookbook and the Content-Security-Policy.
+- [The distribution guide](../guides/bi/DISTRIBUTION_AND_ALERTS.md#1-distribution-the-reports-page-export-and-subscriptions): the reports a host application's users receive.
+- [Tutorial 17](17-data-out-with-arrow-flight.md): the same data to a program instead of a page.
 
 ## If something goes wrong
 

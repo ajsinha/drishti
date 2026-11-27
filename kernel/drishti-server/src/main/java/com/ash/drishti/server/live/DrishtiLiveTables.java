@@ -568,7 +568,7 @@ public class DrishtiLiveTables {
     }
 
     /**
-     * A declaration's problems beyond what Rachana checks (docs/guides/LIVE_RESULTS_GUIDE.md section 6): every named format is known, every
+     * A declaration's problems beyond what Rachana checks (docs/guides/USER_GUIDE.md, Live results and blotters: The declaration): every named format is known, every
      * column is in the kind's data contract (when the kind has one), a link is a path of this console, an editable table's form names where
      * its changes go ({@code save:}) and every editable field binds a record field the write-back may set.
      */
@@ -662,7 +662,7 @@ public class DrishtiLiveTables {
     /** The top-level fields of one contract file ({@code fields} and {@code nested}); empty when it cannot be read or names none. */
     static Optional<Set<String>> contractFields(Path file) {
         try {
-            return contractFields(new ObjectMapper(new YAMLFactory()).readTree(file.toFile()));
+            return contractFields(new ObjectMapper(new YAMLFactory()).readTree(java.nio.file.Files.readAllBytes(file)));
         } catch (IOException e) {
             return Optional.empty();
         }
@@ -701,7 +701,7 @@ public class DrishtiLiveTables {
             Path f = p.dir().resolve("contracts").resolve(kind + ".contract.yaml");
             if (Files.isRegularFile(f)) {
                 try {
-                    return Optional.of(new ObjectMapper(new YAMLFactory()).readTree(f.toFile()));
+                    return Optional.of(new ObjectMapper(new YAMLFactory()).readTree(java.nio.file.Files.readAllBytes(f)));
                 } catch (IOException e) {
                     return Optional.empty();
                 }

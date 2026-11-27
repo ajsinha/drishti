@@ -13,6 +13,9 @@
   "xl/worksheets/sheet3.xml",
   "xl/worksheets/sheet4.xml"
  ],
+ "files": {
+  "_rels/.rels": "_rels/root.rels.xml"
+ },
  "inputsSheet": "xl/worksheets/sheet1.xml",
  "valueColumn": "B",
  "extraColumn": "F",

@@ -22,7 +22,7 @@
 # connector us-equities-store below), a few reference samples and guides/us-equities.md from the cache tools/packgen/us_equities/fetch.py
 # fills. No index weights or levels, no GICS, and no prices: price-history is read live by an off-by-default connector, for internal use only.
 pack: us-equities
-domain: capitalmarkets   # the domain it serves (docs/architecture/ACCESS_MODEL.md): it loads only while a module of the domain is on
+domain: capitalmarkets   # the domain it serves (docs/architecture/KERNEL_AND_MODULES.md): it loads only while a module of the domain is on
 version: 1.0.0
 code: USEQS            # typed alone, opens this pack's overview
 title: US equities
@@ -91,7 +91,6 @@ console:
     - ["SIC ALL", "Every SIC code covered, by revenue (computed)"]
     - ["EDGAR 8-K", "The latest current reports; a click opens the filing beside"]
     - ["FACT AAPL-REVENUE", "Apple's revenue over ten fiscal years"]
-  help: config/help.yaml
 columns:
   us-company: [TICKER, NAME, EXCHANGE, SIC_DESCRIPTION, INDEX_TEXT, REVENUE]
   filing: [ACCESSION, COMPANY, FORM, FILED, REPORT_DATE]

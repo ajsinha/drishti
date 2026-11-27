@@ -15,7 +15,12 @@
 -->
 # Distribution, subscriptions and alerts
 
-Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](MODELS_AND_DATASETS_FOR_REPORTS.md) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · **Distribution, subscriptions and alerts** · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · [The Notebook and Python](NOTEBOOK_AND_PYTHON.md) · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
+<!-- nav:begin -->
+Business intelligence: [Index](README.md) · [Pivot](PIVOT.md) · [Pivot at scale and the risk cubes](PIVOT_SCALE_AND_CUBES.md) · [Tables and models](TABLES_AND_MODELS.md) · [Reports and the designer](REPORTS.md) · [The report file, formatting and statements](REPORT_FILE_FORMAT_STATEMENTS.md) · [Models and datasets for reports](TABLES_AND_MODELS.md#models-and-datasets-for-reports) · [Live reports, boards and background runs](LIVE_REPORTS_AND_BOARDS.md) · **Distribution, subscriptions and alerts** · [Governing BI and AI in BI](GOVERNANCE_AND_AI.md) · [The Notebook and Python](NOTEBOOK_AND_PYTHON.md) · [Calc: Python in your own browser](CALC.md) · [Groupings and analytics](GROUPINGS_AND_ANALYTICS.md)
+<!-- nav:end -->
 
 The Reports page and scheduled searches, export (PDF, PNG, Excel, CSV), subscriptions, webhooks and text messages, alerts on numbers, and embedding a report; with the tutorials for BI that runs itself and for scheduled searches.
 
@@ -385,7 +390,7 @@ The environment, the sign-in and the token are those of [Reports, Before you sta
 
 **Part D · BI that runs itself.**
 
-- [Part A](REPORTS.md#part-a--your-first-bi-report) done (it made the workspace `Economics desk`), and [tutorial 1, Part D](../../tutorials/01-first-15-minutes.md#part-d--share-and-collaborate) for the colleague `vera`
+- [Part A](REPORTS.md#part-a--your-first-bi-report) done (it made the workspace `Economics desk`), and [tutorial 1, Part D](../../tutorials/04-share-and-collaborate.md) for the colleague `vera`
   (a user with the `viewer` role and the address `vera@example.com`); [Part E](#part-e--scheduled-searches-and-subscriptions) for how the **Reports** page lists subscriptions.
 - A personal token **reads** and writes BI items, but it never calls your own
   `/me/...` addresses (subscriptions, alerts): those are made in the console, and steps 31 and 34 say so.
@@ -396,7 +401,7 @@ The environment, the sign-in and the token are those of [Reports, Before you sta
 
 **Part E · Scheduled searches and subscriptions.**
 
-- [Tutorial 1, Part A](../../tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around) done (signed in as the development administrator, the token for the command line set) and [tutorial 1, Part D](../../tutorials/01-first-15-minutes.md#part-d--share-and-collaborate) for the user `vera`.
+- [Tutorial 1, Part A](../../tutorials/01-first-15-minutes.md#part-a--install-start-and-look-around) done (signed in as the development administrator, the token for the command line set) and [tutorial 1, Part D](../../tutorials/04-share-and-collaborate.md) for the user `vera`.
 - Email needs an SMTP server, which a fresh install does not have. The tutorial shows what Drishti does without one (it keeps the run and retries); [OPERATIONS_GUIDE.md](../../guides/OPERATIONS_GUIDE.md) says how to set `spring.mail.host` and the email channel.
 
 ### What you will learn
@@ -431,13 +436,13 @@ yet), and **as YAML** (what the UI writes, which you can keep in git).
 
 ### Step 30 · A dataset that refreshes itself
 
-A dataset keeps its rows in layers it builds from the source. They are rebuilt when a data load arrives ([tutorial 12](../../tutorials/12-a-day-of-bank-data.md)), when someone
+A dataset keeps its rows in layers it builds from the source. They are rebuilt when a data load arrives ([tutorial 12](../../tutorials/16-load-your-own-data-into-a-new-lake.md)), when someone
 asks, and on a **schedule** set on the dataset. A dataset is one table of the **model layer** (`rachana: 2`): it says where the rows come from and
-what one row is, and its measures live in a **model** over it ([BI_GUIDE.md section 23](MODELS_AND_DATASETS_FOR_REPORTS.md#1-models-and-datasets-what-a-report-reads)).
+what one row is, and its measures live in a **model** over it ([BI_GUIDE.md section 23](TABLES_AND_MODELS.md#1-models-and-datasets-what-a-report-reads)).
 
 **In the UI** there are two ways to set the schedule, and neither needs the YAML:
 
-- **In the dataset wizard** (**Models → New dataset**, the wizard of [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](MODELS_AND_DATASETS_FOR_REPORTS.md#110-a-table-of-your-own-step-by-step)):
+- **In the dataset wizard** (**Models → New dataset**, the wizard of [BI_GUIDE.md › Datasets: the YAML, the expression language and the security rules, section 15](TABLES_AND_MODELS.md#110-a-table-of-your-own-step-by-step)):
   on the *Columns* step choose **Refresh** *business days at 06:30* (or *when new data loads*); the YAML of the *Save* step shows the line it writes,
   `refresh: business-days 06:30`.
 - **On the dataset's own page**, when it has no schedule: the **Refresh** section says *No refresh schedule* and, for an author who may edit the draft,
@@ -943,7 +948,7 @@ BI reports.
 
 ### Step 38 · Start from a search
 
-Run a search that finds what you want to see every day: the trades whose valuation lost more than 200 million. Valuations are their own kind, [`trade-valuation`](../../contracts/samples/market-risk.md#trade-valuation) ([contract](../../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation))
+Run a search that finds what you want to see every day: the trades whose valuation lost more than 200 million. Valuations are their own kind, [`trade-valuation`](../../contracts/packs/market-risk.md#example-market-risk-trade-valuation) ([contract](../../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation))
 (mnemonic `TVAL`, one per trade per day, from the market-risk pack); the trade itself carries no MTM. Type:
 
 ```text
@@ -1062,7 +1067,7 @@ Open **Views** in the top bar and choose **Reports** (it is an entry of Views, w
 
 ![The Views menu with Reports highlighted: Every report you have: scheduled reports, subscriptions, alerts, and BI reports](../../tutorials/img/t09/06-reports-menu.jpg)
 
-You should see **Reports** under **Look up** with the words "Every report you have". It opens **one page** with the links at its top: **My subscriptions**, **My alerts** ([tutorial 12](../../tutorials/12-a-day-of-bank-data.md)), **BI reports and boards** (the published reports of Rūpaka, the catalogue filtered to reports) and, for administrators, **All subscriptions** and **All alerts**; a **Find** box
+You should see **Reports** under **Look up** with the words "Every report you have". It opens **one page** with the links at its top: **My subscriptions**, **My alerts** ([tutorial 12](../../tutorials/16-load-your-own-data-into-a-new-lake.md)), **BI reports and boards** (the published reports of Rūpaka, the catalogue filtered to reports) and, for administrators, **All subscriptions** and **All alerts**; a **Find** box
 (*Find a report or subscription: name, what, when, to...*) narrows the list as you type, and the list is one list:
 
 ![Reports and subscriptions: Big losers (REPORT) and Swap for Vera (SUBSCRIPTION) in one list, each with when, to, next and last run](../../tutorials/img/t09/07-reports-list.jpg)

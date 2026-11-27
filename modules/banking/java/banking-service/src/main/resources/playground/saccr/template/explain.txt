@@ -15,7 +15,7 @@
 # The Explain tab of the SA-CCR Playground workbook, one entry a row: a line "## <title>" then its text (lines starting with "#" are
 # dropped; the text lines of an entry are joined with spaces). Same format as playground/var/template/explain.txt, read by
 # PlaygroundTemplate.explain(). {Name} and {Name:v} cell references are added when the generator names Main's cells; until then the
-# entries name the tab and the column, never a cell. The design is docs/architecture/COUNTERPARTY_ENGINES.md (section 3 for the method,
+# entries name the tab and the column, never a cell. The design is docs/plans/COUNTERPARTY_ENGINES.md (section 3 for the method,
 # 8.1 for the tabs, 9 for the worked numbers: cases S1 to S7). Paragraph numbers are the consolidated Basel Framework's chapter CRE52.
 # The entries come in three parts: the idea in plain words, the steps with one worked number each, and every term of every tab.
 ## In plain words: what this workbook answers

@@ -45,7 +45,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.identity.iterations=1000",
-        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db", "drishti.feeds.python=python3"})
+        "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class DataFeedsRunApiTest {
 
@@ -61,7 +61,8 @@ class DataFeedsRunApiTest {
         Files.writeString(install.resolve("config/feeds/demo.yaml"), "title: Demo feed\n");
         Files.createDirectories(install.resolve("tools"));
         Files.writeString(install.resolve("tools/drishti.py"),
-                "import os, sys\nopen(os.path.join(os.environ['DRISHTI_DATA_DIR'], 'ran-' + sys.argv[3] + '.txt'), 'w').write(' '.join(sys.argv[1:]))\n");
+                "import os, sys\nout = os.path.join(os.environ['DRISHTI_DATA_DIR'], 'ran-' + sys.argv[3] + '.txt')\n"
+                        + "with open(out + '.part', 'w') as f:\n    f.write(' '.join(sys.argv[1:]))\nos.replace(out + '.part', out)\n");
         r.add("drishti.feeds.config", () -> install.resolve("config/feeds").toString());
         r.add("drishti.feeds.root", install::toString);
         r.add("drishti.data.dir", data::toString);

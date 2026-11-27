@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 
 /**
- * Write-back's settings (APPROVALS_GUIDE.md › The design and its reasons, section 13), read once at start from the folder {@code config/edit/} ({@code drishti.edit.file}
+ * Write-back's settings (ADMIN_GUIDE.md › The design and its reasons, section 13), read once at start from the folder {@code config/edit/} ({@code drishti.edit.file}
  * points at its {@code edit.yaml}): {@code edit.yaml} (the site switch, which shared log, the edit primary), {@code lanes.yaml} (lanes,
  * depth, warnings, the lease, the source command timeout), {@code policy.yaml} (approval per target, approver roles, self-approval, the
  * restate and override roles, per kind) and {@code retention.yaml}. Every key has its default, so a missing file means the shipped
@@ -121,7 +121,7 @@ public record EditSettings(boolean enabled, String log, String primary, Duration
             return Map.of();
         }
         try {
-            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(file.toFile(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(java.nio.file.Files.readAllBytes(file), new TypeReference<Map<String, Object>>() {});
             return doc == null ? Map.of() : doc;
         } catch (IOException e) {
             throw new IllegalArgumentException(file + " is not valid YAML: " + e.getMessage(), e);
