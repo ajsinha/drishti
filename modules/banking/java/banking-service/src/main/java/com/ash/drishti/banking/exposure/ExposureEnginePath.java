@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * R2 (docs/plans/R2_CUT_PLAN.md, "Switching a route"): the exposure routes answered by Drishti Risk's counterparty engine ({@code ccr})
- * through the kernel's {@link Engines} service, never by a Risk type. One switch per route family, {@code drishti.module.banking.exposure.path}:
+ * through the kernel's {@link Engines} service, never by a Risk type. One switch per route family, {@code drishti.module.banking.exposure.route}:
  * {@code in-tree} or {@code engine}; a request may name its path ({@code path=engine} or {@code path=in-tree}) so both answers can be compared
  * on one server. The engine's figures are unrounded; the route rounds them to whole units as the in-tree route does and gives the exact
  * doubles beside them ({@code ...Exact}) for the raw-bit check. What the engine path does not answer yet is refused in one sentence naming
@@ -43,7 +43,7 @@ public class ExposureEnginePath {
 
     /** The engine's id (config/engines/ccr.yaml). */
     public static final String ENGINE = "ccr";
-    static final String SETTING = "drishti.module.banking.exposure.path";   // engines/exposure.yaml
+    static final String SETTING = "drishti.module.banking.exposure.route";   // engines/exposure.yaml
 
     private final ObjectProvider<Engines> engines;
     private final Environment env;

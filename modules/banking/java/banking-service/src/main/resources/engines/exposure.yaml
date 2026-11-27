@@ -21,7 +21,7 @@ drishti:
       exposure:
         limit-confidence: 0.95         # the PFE credit limits are set on; the default q of an answer
         rank-rule: kth                 # kth (the ceil(P q)-th smallest exposure) or interpolated
-        path: ${DRISHTI_EXPOSURE_PATH:in-tree}   # R2 (docs/plans/R2_CUT_PLAN.md): in-tree, or engine (the exposure routes asked of Drishti Risk's ccr engine through the host); a request may name its own (path=)
+        route: ${DRISHTI_EXPOSURE_ROUTE:in-tree}   # R2 (docs/plans/R2_CUT_PLAN.md): in-tree, or engine (the exposure routes asked of Drishti Risk's ccr engine through the host); a request may name its own (path=; the setting is not called path: a key ending in .path is a folder)
   engines:
     exposure:
       enabled: ${DRISHTI_EXPOSURE_ENABLED:true}   # run the exposure engine on this node: /api/v1/exposure, EXP, the exposure-engine connector (live)
