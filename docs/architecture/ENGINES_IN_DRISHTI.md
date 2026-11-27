@@ -96,7 +96,9 @@ The schema is the engine specification's section 9. The file never names a JAR o
 4. None conforms and the input is required. The engine is blocked (`ENG-2011`).
 5. None conforms and the input is optional. The input reads as absent, and the outputs that need it answer not found.
 
-**How a bound kind is read.** By default an input holds the snapshot date's rows. Two binding keys change that, each said in the
+**How a bound kind is read.** By default an input holds the snapshot date's rows. An input the engine declares `per: []` (not read
+per date: an official-records history, the desk P&L of every day, a parameter file by version) holds the rows of every date its kind
+holds, oldest first; the engine selects by date (the market-risk engine's `var-history` and `desk-pnl`). Two binding keys change that, each said in the
 binding's words on Admin -> Engines: `as-of: on-or-before` reads each record's latest version on or before the date (a reference kind
 loaded once and not every day, such as `csa`: the read the in-tree loaders make of documents as of a date), and `field: <list field>`
 makes the items of each record's list-of-records field the input's rows, each with its record's fields beside its own (a credit limit's

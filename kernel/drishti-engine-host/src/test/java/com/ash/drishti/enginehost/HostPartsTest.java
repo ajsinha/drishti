@@ -100,6 +100,46 @@ class HostPartsTest {
         assertThat(data.reads.get()).as("read once per session").isEqualTo(1);
     }
 
+    /**
+     * An input the engine declares {@code per: []} (not read per date: an official-records history) holds the rows of every date its
+     * kind holds, oldest first, each date's read under the caller's rule; an input without {@code per} holds the snapshot date's rows.
+     */
+    @Test
+    void anInputDeclaredPerNothingHoldsEveryDateTheKindHolds() throws Exception {
+        String history = DESCRIPTOR.replace("    scope-columns: [ GROUP ]\n", "    scope-columns: [ GROUP ]\n    per: []\n");
+        assertThat(history).contains("per: []");
+        LocalDate d1 = LocalDate.of(2026, 9, 28);
+        LocalDate d2 = LocalDate.of(2026, 9, 29);
+        Fixtures.Kinds data = new Fixtures.Kinds() {
+            @Override
+            public java.util.Optional<java.util.NavigableSet<LocalDate>> dates(String kind) {
+                return java.util.Optional.of(new java.util.TreeSet<>(Set.of(d2, d1)));
+            }
+
+            @Override
+            public java.util.Optional<ColumnSet> columns(String kind, java.util.Collection<String> paths, LocalDate date) {
+                reads.incrementAndGet();
+                String day = date == null ? "latest" : date.toString();
+                return java.util.Optional.of(new ColumnSet(new String[] {"r-" + day}, Map.of("QTY", new double[] {date == null ? 0 : date.getDayOfMonth()}),
+                        Map.of("TT_GROUP", new String[] {"A"}, "OWNER", new String[] {day}), date));
+            }
+        };
+        Map<String, InputBinder.Bound> bound = Map.of("items", new InputBinder.Bound("items", "sample/item@1", List.of("item"), 1, "named",
+                Map.of("GROUP", "TT_GROUP"), null));
+        List<String> rows = new ArrayList<>();
+        new LakeInputs(Descriptors.parse(history), bound, data, Fixtures.viewer("ann", Map.of(), Set.of()), d1, Map.of(), new AtomicLong())
+                .table("items").scan(new Scan(List.of("OWNER", "QTY"), Filter.ALL, 10), b -> {
+                    for (int i = 0; i < b.rows(); i++) {
+                        rows.add(b.texts("OWNER")[i] + ":" + b.integers("QTY")[i]);
+                    }
+                });
+        assertThat(rows).as("every held date, oldest first, whatever the snapshot date").containsExactly("2026-09-28:28", "2026-09-29:29");
+        List<String> one = new ArrayList<>();
+        new LakeInputs(Descriptors.parse(DESCRIPTOR), bound, data, Fixtures.viewer("ann", Map.of(), Set.of()), d1, Map.of(), new AtomicLong())
+                .table("items").scan(new Scan(List.of("OWNER"), Filter.ALL, 10), b -> one.add(b.texts("OWNER")[0]));
+        assertThat(one).as("no per: the snapshot date's rows").containsExactly("2026-09-28");
+    }
+
     @Test
     void rowRulesTheSitesWhereAndMasksAreAppliedBeforeDelivery() throws Exception {
         ViewerAccess bob = Fixtures.viewer("bob", Map.of("item", Fixtures.eq("TT_GROUP", "A")), Set.of("OWNER"));

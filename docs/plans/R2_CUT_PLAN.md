@@ -147,7 +147,10 @@ view types. The first route switched end to end is the VaR headline (`GET /api/v
 | The reporting currency setting `drishti.module.banking.var.reporting-currency` (USD as shipped) | (the host passes it as `currency`) | `RiskSideBySideCadTest` (one server at CAD): a request naming no currency is answered in CAD on both paths, **to the bit as `ccy=CAD` (1,572 of 1,572)**; trades and limits equal between the paths; CAD figures: heap tier every field and raw bit asserted equal (convert first, 6.6 (2)); mapped tier last units (MC-12) | setting available; default USD |
 | Every currency other than USD on every route: the book converted first (decision 6.6 (2)) | `market-risk` `scope-var` and the row-set outputs on the converted book; `basket-var` limit converted | `RiskSideBySideTest` with `-Dsbs.tier=heap`: tree, contributions, path, horizons, scope kinds, what-ifs, headline **EUR 0 differences, 0 raw-bit differences**; `RiskSideBySideCadTest` heap: CAD every field asserted. Re-recorded: 9 EUR answers of `PackagedVarGoldenTest` (mapped tier), the EUR `basket-var` limits of `MarketRecordedIT` (336 cells); USD goldens unchanged | rule in both paths; default `in-tree`, USD |
 | The parametric block of a node's headline and the tree's parametric cells (`parametric` absent or true) | `market-risk` `node-pvar` (with `SKEW`, `EXCESS_KURTOSIS`, `Z_ES`, `ES_FACTOR`, `K`, `SCENARIO_SET`, `LAST_DAY`) | `RiskSideBySideTest.theParametricFiguresOfEveryGoldenNodeAreWithinRelative1e12OnBothPaths`: 2,358 blocks, **32,226 numbers within relative 1e-12 (all)**, words equal (decision 6.6 (4)). Refused on the engine path: `parametric=true` through a horizon or the stress set; path curve, contributions' columns and matrix stay `parametric=false` | path available; default `in-tree` |
-| `GET /api/v1/risk/var/scope/history`, the replay (a scope without official records: today's members over the newest `history-days` scenario days against today's VaR, its backtest) | `market-risk` `scope-backtest` (new: the row set summed as `scope-var` sums it, `Backtest.of` with the scaled Basel light, 6.6 (3)), `scope-scenarios` | `RiskSideBySideTest.theReplayedHistoryOfEveryGoldenNodeAndScopeKindIsTheSameOnBothPaths` (heap tier): 864 answers (3 dates x USD/EUR, every golden node, 8 scope kinds, the ad-hoc lists), **655,776 numbers, all within relative 1e-12, every row, zone and word equal**. Refused on the engine path: a lens; a node with official records (two days or more): the official mode reads Drishti's records (VaR, ES, hypothetical P&L of the same record, each day against the day before), which the engine's `backtest-days` does not yet hold (it compares desk P&L and has no ES): next | path available; default `in-tree` |
+| `GET /api/v1/risk/var/scope/history`, the replay (a scope without official records: today's members over the newest `history-days` scenario days against today's VaR, its backtest) | `market-risk` `scope-backtest` (new: the row set summed as `scope-var` sums it, `Backtest.of` with the scaled Basel light, 6.6 (3)), `scope-scenarios` | `RiskSideBySideTest.theReplayedHistoryOfEveryGoldenNodeAndScopeKindIsTheSameOnBothPaths` (heap tier): 604 replay answers (3 dates x USD/EUR, every golden node without two official records, 8 scope kinds, the ad-hoc lists), every row, zone and word equal (the counts with the official mode below). Refused on the engine path: a lens | path available; default `in-tree` |
+| `GET /api/v1/risk/var/scope/history`, the official mode (a node with two or more official records the caller sees whole: its records' VaR, ES and hypothetical P&L, each day tested against the record before) | `market-risk` `official-history` and `official-backtest` (new, over `var-history`: the published records, the latest result version of each date at the engine's confidence, the newest `days`, `Backtest.of` as in-tree); the host reads an input the engine declares `per: []` on every date its kind holds (`LakeInputs`, `KindData.dates`: the engine selects by date) | Same test, the side by side capturing 2026-09-28, -29 and -30 officially at start (`POST /var/official`, oldest first; `PackagedServer` points the published records' reader, `LAKE_VAR_OFFICIAL_ROOT`, at the publisher's root): **864 answers, 260 of them official (649 official rows: USD nodes on 09-29 and 09-30), 0 in-tree only; 462,723 numbers, all within relative 1e-12 (VaR, ES, P&L whole units equal; only the likelihood ratios and p-values may differ in the last bits), every row, flag, zone and word equal**. Refused on the engine path in words: official records in a currency other than USD (only USD is published); the engine reading fewer records than the store holds (publish off, or a session opened before a capture: no `data-version` trigger on `market-risk` yet) | path available; default `in-tree` |
+| `GET /api/v1/risk/var/statistics` (a node's period statistics of the official records: period end, average, high, low with each record's date, version and capture id, the weekdays without a record, the capital formula's VaR and stressed VaR averages) | `market-risk` `official-statistics` (new, over `var-history` with `CAPTURE_ID`, and `desk-pnl` for holidays: the averages summed in the in-tree order, so the figures are its bits) on the newest official date; a scope word resolved by the engine's index | `RiskSideBySideTest.theStatisticsOfEveryGoldenNodeAreTheSameOnBothPaths`: 2,144 answers (131 golden nodes and BANK, DESK:RATES, LE:LE-NY x VaR, ES, stressed VaR and ES x the default fiscal year, FY2026Q4, a two-day range, FY2025), 1,340 with figures, **15,946 numbers: every field equal, every number to the bit (0 differences)**. Refused on the engine path in words: no official record yet; a period holding a synthetic demo history (never published); the engine reading other records than the store (publish off, a session opened before a capture); other fiscal-year, average-day or stress-week settings in the engine's options | path available; default `in-tree` |
+| The P&L path's parametric block and normal curve (`GET /scope/path`, `parametric` absent or true, a node with child nodes) | `market-risk` `node-pvar`; the block and the curve over the histogram's raw edges shaped by Drishti's `VarParametric` as in-tree (decision 6.6 (4)) | `RiskSideBySideTest.theParametricFiguresOfEveryGoldenNodeAreWithinRelative1e12OnBothPaths` (heap tier): 246 path blocks with their curves (3 dates x USD/EUR, every golden node with child nodes) beside the 2,358 headline and tree blocks: **107,256 numbers, all within relative 1e-12, every word equal**. Refused on the engine path: the parametric block of a scope that is not a node (one trade: `parametric=false` or in-tree) | path available; default `in-tree` |
 | the rest of 6.3 | | | |
 
 ## 5. Risks
@@ -317,29 +320,34 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
    headline's parametric block of a node (offered lens) and the tree's parametric cells from `node-pvar` (which now also carries
    `SKEW`, `EXCESS_KURTOSIS`, `Z_ES`, `ES_FACTOR`, `K`, `SCENARIO_SET`, `LAST_DAY`), shaped by Drishti's `VarParametric` as in-tree.
    `RiskSideBySideTest.theParametricFiguresOfEveryGoldenNodeAreWithinRelative1e12OnBothPaths` (heap tier): 2,358 blocks (1,572 headline
-   blocks + 786 tree cells), **32,226 numbers, all 32,226 within relative 1e-12**, every word equal. Still in-tree only: the P&L path's
-   curve, contributions' parametric columns and the matrix, a parametric block through a horizon or the stress set, a block of a scope
+   blocks + 786 tree cells), **32,226 numbers, all 32,226 within relative 1e-12**, every word equal. The P&L path's block and normal
+   curve of a node followed (lane G part 4: 246 blocks; 107,256 numbers in all, all within). Still in-tree only: contributions'
+   parametric columns and the matrix, a parametric block through a horizon or the stress set, a block of a scope
    that is not a node.
 
-### Status, lane G (2026-11-27 08:5x, branch `r2/var-routes`; drishti-risk `r2/var-routes`)
+### Status, lane G (2026-11-27 09:3x, branch `r2/var-routes`; drishti-risk `r2/var-routes`)
 
-- **Green at this stop**: `PackagedVarGoldenTest` (USD 167,372,692 / 210,131,972 and every USD case as recorded; 9 EUR answers
-  re-recorded, 6.6 (2)); VaR headline 1,572 answers, **3,918 of 3,918** golden raw bits; `MarketRecordedIT` (EUR basket limits
-  re-recorded); `VarGoldenMatrixTest` and the banking `Var*` tests (261; the intraday ones compare another currency to the cent,
-  6.6 (2)); `RiskSideBySideTest` on the heap tier: every route EUR and USD
-  equal; `RiskSideBySideCadTest` heap: CAD every field and raw bit.
-- **Added in part 3 (behind `var.route` / `path=engine`, defaults unchanged: `in-tree`, USD; Appendix A rows)**: convert first on both
-  paths (6.6 (2), built; nothing else re-recorded); parametric VaR from `node-pvar` within relative 1e-12 (6.6 (4)): the headline's
-  block of a node and the tree's cells, 2,358 blocks, 32,226 numbers all within; `GET /scope/history`, the replay, from the new
-  `scope-backtest`: 864 answers, 655,776 numbers all within relative 1e-12, rows, zone and words equal. `MarketKitIT`'s hand case
-  `parametric-var` passes again (rows in the engine's order; extended by hand for the new columns).
-- **Open**: (a) the default mapped tier: EUR/CAD a few units apart between the paths (the in-tree book is converted from float32 rows;
-  USD row sets likewise, MC-12's float32 view closes both); (b) `MarketKitIT` still fails on drishti-risk for reasons outside lane G
-  (kit checks: CEILING/NORMSINV outside the common function set, absence laws, coverage, the `what-if-a-supplied-vector` FACTOR type).
-- **Remaining VaR routes** (in-tree only, refused on the engine path in words), next in order: the official history (a node with two
-  or more official records: extend `backtest-days`, or a new output over `var-history`, to hold each record's VaR, ES and hypothetical
-  P&L as the in-tree store does, then the side by side with captures of the three dates, `POST /var/official`); backtesting and period
-  statistics routes; compare/captures (Drishti's stored captures; their figures come from the headline); the parametric curve of the
-  P&L path, contributions' parametric columns and the matrix; a parametric block through a horizon or the stress set or of a scope that
-  is not a node; leaf-node and expression paths and contributions; other confidences; matured items; `within` trees; the Homes'
-  engine tables (lane E).
+- **Green at this stop** (default mapped tier unless said): `PackagedVarGoldenTest` (USD 167,372,692 / 210,131,972, every USD case as
+  recorded); VaR headline 1,572 answers, **3,918 of 3,918** golden raw bits; `MarketRecordedIT`; `RiskSideBySideTest` (now 11 tests: the
+  three dates captured officially at start) and `RiskSideBySideCadTest`; the history and parametric tests also on the heap tier; the
+  engine host's tests (`HostPartsTest`: an input declared `per: []` holds every date its kind holds).
+- **Added in part 4 (behind `var.route` / `path=engine`, defaults unchanged; Appendix A rows)**: (1) `GET /scope/history` of a node with
+  official records, from the new `official-history` and `official-backtest` over `var-history`: 260 official answers, 649 rows, every
+  field equal; the host reads an input the engine declares `per: []` (not per date) on every date its kind holds (`LakeInputs`,
+  `KindData.dates`; documented in ENGINES_IN_DRISHTI.md), and `PackagedServer` points the published records' reader at the publisher's
+  root (`LAKE_VAR_OFFICIAL_ROOT`). (2) `GET /statistics` from the new `official-statistics`: 2,144 answers, 15,946 numbers, every field
+  and bit equal. (4, part) the P&L path's parametric block and normal curve of a node: 246 blocks within relative 1e-12.
+- **Open**: (a) the default mapped tier: EUR/CAD a few units apart between the paths (MC-12's float32 view closes it); (b) `MarketKitIT`
+  still fails on drishti-risk for reasons outside lane G (kit checks; its coverage gate now also names the new outputs, with the many it
+  named before); (c) an engine session opened before an official capture keeps the records it read until it closes (`market-risk` has
+  no `data-version` trigger; the published reader refreshes every 10 s): the engine path then refuses in words (records differ from the
+  store); the side by side waits 11 s after its captures; (d) **`GET /backtesting` is blocked on the published contract**: the in-tree
+  answer counts exceptions at every configured confidence (0.99 and 0.975) from each record's `varAt`, which `risk-results/var-official`
+  does not publish (one row per node at the official confidence); the engine's `backtest`/`backtest-days` read the published records,
+  so the 97.5% counts would be missing. It needs a decision: publish the other confidences (a row per confidence, or a `VAR_AT` column:
+  the contract `var-official` moves) or answer them in-tree.
+- **Remaining VaR routes** (in-tree only, refused on the engine path in words), next in order: `GET /backtesting` (see (d)); the
+  compare/captures (Drishti's stored captures; their figures come from the headline, contributions and path, and a capture stores
+  in-tree fields the engine path does not give yet: `provenance`, `dataVersion`, `label`, `kind`); contributions' parametric columns
+  and the matrix; a parametric block through a horizon or the stress set or of a scope that is not a node; leaf-node and expression
+  paths and contributions; other confidences; matured items; `within` trees; the Homes' engine tables (lane E).

@@ -66,8 +66,11 @@ public class VarRegulatoryController {
     private final RegulatoryProperties props;
     private final Entitlements entitlements;
 
-    VarRegulatoryController(VarService svc, VarRegulatory reg, RegulatoryProperties props, Entitlements entitlements) {
+    private final VarEnginePath enginePath;
+
+    VarRegulatoryController(VarService svc, VarRegulatory reg, RegulatoryProperties props, Entitlements entitlements, VarEnginePath enginePath) {
         this.svc = svc;
+        this.enginePath = enginePath;
         this.backtesting = reg.backtesting();
         this.stats = reg.stats();
         this.reports = reg.reports();
@@ -91,6 +94,24 @@ public class VarRegulatoryController {
             return s.substring(5);
         }
         String node = svc.scoped(p, s, null).res().node();
+        if (node == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "regulatory VaR is kept for the hierarchies' nodes (their official records): BANK, "
+                    + "DESK:RATES, LE:LE-NY or NODE:<id>, not " + s);
+        }
+        return node;
+    }
+
+    /** {@link #node} on the engine path: a scope other than {@code NODE:<id>} is resolved by the engine's index of the newest official date. */
+    private String engineNode(Principal p, String scope) {
+        seesAll(p);
+        String s = scope == null || scope.isBlank() ? "BANK" : scope.strip();
+        if (s.toUpperCase(java.util.Locale.ROOT).startsWith("NODE:")) {
+            return s.substring(5);
+        }
+        if (svc.official().dates().isEmpty()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "no official VaR record yet: ask it in-tree (path=in-tree)");
+        }
+        String node = enginePath.node(p, s, svc.official().dates().last(), null);
         if (node == null) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "regulatory VaR is kept for the hierarchies' nodes (their official records): BANK, "
                     + "DESK:RATES, LE:LE-NY or NODE:<id>, not " + s);
@@ -129,12 +150,19 @@ public class VarRegulatoryController {
 
     @GetMapping("/statistics")
     public Map<String, Object> statistics(@RequestParam(required = false) String scope, @RequestParam(required = false) String period,
-            @RequestParam(defaultValue = "var") String measure, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        String node = node(p, scope);
+            @RequestParam(defaultValue = "var") String measure, @RequestParam(name = "path", required = false) String route,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        boolean engine = enginePath.engine(route);                    // R2: the market-risk engine's official-statistics (VarEnginePath)
+        String node = engine ? engineNode(p, scope) : node(p, scope);
         try {
             String t = period == null || period.isBlank() ? VarPeriodStats.fiscalYear(svc.official().dates().isEmpty() ? LocalDate.now(java.time.ZoneOffset.UTC)
                     : svc.official().dates().last(), props.yearEnd()) : period;
-            Map<String, Object> out = stats.stats(node, measure.toLowerCase(java.util.Locale.ROOT), VarPeriodStats.period(t, props.yearEnd()));
+            String m = measure.toLowerCase(java.util.Locale.ROOT);
+            if (engine && !VarPeriodStats.MEASURES.contains(m)) {
+                throw new IllegalArgumentException("a statistic reads " + VarPeriodStats.MEASURES + " of the official records, not " + m);
+            }
+            Map<String, Object> out = engine ? enginePath.statistics(p, node, m, VarPeriodStats.period(t, props.yearEnd()), props.averageDays(),
+                    svc.props().stress().averageWeeks()) : stats.stats(node, m, VarPeriodStats.period(t, props.yearEnd()));
             out.put("fiscalYearEnd", props.fiscalYearEnd());
             return out;
         } catch (IllegalArgumentException e) {

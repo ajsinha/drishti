@@ -304,8 +304,32 @@ public class VarController {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the P&L path on the offered lens for now; "
                         + "a lens or matured items are answered in-tree (path=in-tree)");
             }
-            parametricOff(parametric, "the P&L path");
+            String node = !Boolean.FALSE.equals(parametric) && pOn() ? enginePath.node(p, scope(scope), date(asOf), ccy) : null;
+            if (node == null) {
+                parametricOff(parametric, "the P&L path of a scope that is not a node");
+            }
             Map<String, Object> answer = enginePath.path(p, scope(scope), date(asOf), page, size, ccy);
+            double[] edges = (double[]) answer.remove("edgesExact");
+            if (node != null) {                                        // the normal curve over the histogram from node-pvar, shaped as in-tree
+                VarEnginePath.Parametric x = enginePath.parametric(p, date(asOf), (String) answer.get("currency"), enginePath.window(null),
+                        svc.props().defaultLens().confidence(), svc.props().defaultLens().esConfidence(), views.parametric().props().settings())
+                        .get(node);
+                if (x != null) {
+                    double var = (Double) answer.get("varExact");
+                    Map<String, Object> block = views.parametric().path(views.parametric().headline(x.figures(), svc.props().defaultLens(),
+                            enginePath.nodeName(p, date(asOf), (String) answer.get("currency"), node), x.set(), x.lastDay(), var,
+                            (Double) answer.get("esExact"), x.k()), x.figures(), edges, var);
+                    Map<String, Object> a2 = new LinkedHashMap<>();
+                    answer.forEach((k, v) -> {
+                        a2.put(k, v);
+                        if (k.equals("histogram")) {
+                            a2.put("parametric", block);              // where the in-tree answer has it
+                        }
+                    });
+                    answer = a2;
+                }
+            }
+            answer = parametric(answer, parametric);
             if (!exact) {
                 answer.remove("varExact");
                 answer.remove("esExact");

@@ -72,6 +72,12 @@ class RiskSideBySideTest {
         SideBySide.dropJars(Path.of(jars), work);
         String tier = System.getProperty("sbs.tier", "");               // -Dsbs.tier=heap: the in-tree rows as float64 (the default mapped tier keeps them float32)
         server = tier.isBlank() ? PackagedServer.start(work, lake, "2026-09-30") : PackagedServer.start(work, lake, "2026-09-30", java.util.Map.of("DRISHTI_VAR_TIER", tier, "DRISHTI_VAR_MEMORY_MB", "900"));
+        for (String d : List.of("2026-09-28", "2026-09-29", "2026-09-30")) {   // the official records of the three dates, oldest first: a
+            server.post("/api/v1/risk/var/official?asOf=" + d, "{}");          // node's history on 09-29 and 09-30 is its records (mode official)
+        }
+        // the published records' reader (var-results, Delta) checks the table's latest version every refresh-seconds (10): the engine's
+        // first read of var-history (lazy, once per session) comes after it has seen the three captures
+        Thread.sleep(11_000);
         long end = System.currentTimeMillis() + 180_000;               // the engine answers once its day is read: wait for it, once
         while (true) {
             try {
@@ -95,7 +101,8 @@ class RiskSideBySideTest {
 
     /**
      * Parametric VaR (R2_CUT_PLAN 6.6 (4), owner decision 2026-11-27): the headline's block of every golden node (3 dates x 509/250 x
-     * USD/EUR) and the tree's cell of every node (3 dates x USD/EUR x 3 hierarchies), in-tree against the engine's {@code node-pvar}:
+     * USD/EUR), the tree's cell of every node (3 dates x USD/EUR x 3 hierarchies) and the P&amp;L path's block with its normal curve of
+     * every node with child nodes (3 dates x USD/EUR), in-tree against the engine's {@code node-pvar}:
      * every number within relative 1e-12 (the normal quantile's last bits; the whole-unit figures equal), every word equal. Historical
      * VaR and ES stay the bit-exact proof of the other tests.
      */
@@ -136,20 +143,43 @@ class RiskSideBySideTest {
                 }
             }
         }
+        int curves = 0;                                                 // the P&L path's block and normal curve of every node with child nodes
+        for (String date : List.of("2026-09-28", "2026-09-29", "2026-09-30")) {
+            for (String ccy : List.of("USD", "EUR")) {
+                Iterator<String> ids = golden.get(date + "/509/" + ccy).get("nodes").fieldNames();
+                while (ids.hasNext()) {
+                    String id = ids.next();
+                    String q = "/api/v1/risk/var/scope/path?scope=" + URLEncoder.encode("NODE:" + id, StandardCharsets.UTF_8) + "&asOf=" + date
+                            + "&ccy=" + ccy + "&size=1";
+                    JsonNode engine;
+                    try {
+                        engine = server.get(q + "&path=engine");
+                    } catch (IllegalStateException e) {
+                        assertThat(e.getMessage()).as(date + " NODE:" + id).contains("path=in-tree");   // a leaf node: in-tree
+                        continue;
+                    }
+                    JsonNode inTree = server.get(q + "&path=in-tree");
+                    parametricSame(sbs, numbers, date + "/" + ccy + " path NODE:" + id + " parametric", inTree.path("parametric"), engine.path("parametric"));
+                    curves++;
+                }
+            }
+        }
         System.out.println("side by side, parametric (tier " + System.getProperty("sbs.tier", "mapped") + "): " + blocks + " blocks (headline "
-                + "and tree cells) on both paths; " + numbers[0] + " numbers compared, " + numbers[1] + " within relative 1e-12; differences "
+                + "and tree cells) and " + curves + " P&L path blocks with their curves on both paths; " + numbers[0] + " numbers compared, " + numbers[1] + " within relative 1e-12; differences "
                 + sbs.differences.size() + " (USD " + sbs.differences.stream().filter(x -> x.contains("/USD")).count() + "); first: "
                 + sbs.differences.stream().limit(8).map(x -> x.substring(0, Math.min(300, x.length()))).toList() + "; fields: "
                 + sbs.differences.stream().map(x -> x.replaceAll("^.* parametric\\.?([a-zA-Z]*).*$", "$1")).distinct().toList());
         assertThat(blocks).as("parametric blocks compared").isGreaterThan(2000);
+        assertThat(curves).as("P&L path parametric blocks compared").isGreaterThan(100);
         assertThat(asserted(sbs.differences)).as("parametric figures that differ beyond relative 1e-12 or in words").isEmpty();
     }
 
     /**
-     * The history of a scope without official records ({@code GET /scope/history}, the replay): every golden node and every scope kind of
-     * {@link #everyScopeKindIsTheSameOnBothPaths}, 3 dates x USD/EUR, in-tree against the engine's {@code scope-backtest}: every row
-     * (date, VaR, ES, P&amp;L, exception), the backtest (days, exceptions, zone; the likelihood ratios and p-values within relative 1e-12)
-     * and the words. A node with official records (two days or more) is answered in-tree only: counted.
+     * The history ({@code GET /scope/history}): every golden node and every scope kind of {@link #everyScopeKindIsTheSameOnBothPaths}, 3
+     * dates x USD/EUR, in-tree against the engine: a scope without official records replays ({@code scope-backtest}); a node with official
+     * records (USD, two days or more: the captures of the three dates in {@link #start}) is its records ({@code official-history} and
+     * {@code official-backtest} over {@code var-history}, the published records). Every row (date, VaR, ES, P&amp;L, exception), the
+     * backtest (days, exceptions, zone; the likelihood ratios and p-values within relative 1e-12) and the words.
      */
     @Test
     void theReplayedHistoryOfEveryGoldenNodeAndScopeKindIsTheSameOnBothPaths() throws Exception {
@@ -158,6 +188,8 @@ class RiskSideBySideTest {
         int official = 0;
         int refused = 0;
         int answers = 0;
+        int officialAnswers = 0;
+        int officialRows = 0;
         for (String c : List.of("2026-09-28/509/USD", "2026-09-28/509/EUR", "2026-09-29/509/USD", "2026-09-29/509/EUR", "2026-09-30/509/USD",
                 "2026-09-30/509/EUR")) {
             String[] k = c.split("/");
@@ -192,19 +224,76 @@ class RiskSideBySideTest {
                     throw e;
                 }
                 answers++;
+                if ("official".equals(inTree.path("mode").asText())) {
+                    officialAnswers++;
+                    officialRows += inTree.path("rows").size();
+                }
                 com.fasterxml.jackson.databind.node.ObjectNode e2 = engine.deepCopy();
                 e2.remove("path");
                 parametricSame(sbs, numbers, what + " history", inTree, e2);
             }
         }
-        System.out.println("side by side, history (replay, tier " + System.getProperty("sbs.tier", "mapped") + "): " + answers + " answers on both "
-                + "paths (" + official + " nodes with official records: in-tree only; " + refused + " refused on both); " + numbers[0] + " numbers compared, " + numbers[1]
+        System.out.println("side by side, history (tier " + System.getProperty("sbs.tier", "mapped") + "): " + answers + " answers on both "
+                + "paths (" + officialAnswers + " of them official, " + officialRows + " official rows; " + official + " in-tree only; " + refused
+                + " refused on both); " + numbers[0] + " numbers compared, " + numbers[1]
                 + " within relative 1e-12; differences " + sbs.differences.size() + " (USD " + sbs.differences.stream().filter(x -> x.contains("/USD"))
                 .count() + "); first: " + sbs.differences.stream().limit(8).map(x -> x.substring(0, Math.min(300, x.length()))).toList());
         assertThat(answers).as("history answers compared").isGreaterThan(500);
+        assertThat(officialAnswers).as("official histories compared (USD nodes on 09-29 and 09-30)").isGreaterThan(200);
+        assertThat(official).as("nodes answered in-tree only").isZero();
         // the mapped tier: a node's figures are its stored aggregate (USD asserted); other scopes sum float32 rows (MC-12): counted
         assertThat(asserted(sbs.differences).stream().filter(x -> HEAP || x.contains(" NODE:")).toList())
                 .as("history answers that differ between in-tree and engine").isEmpty();
+    }
+
+    /**
+     * The period statistics of the official records ({@code GET /statistics}): every golden node and three scope words, each measure
+     * (VaR, ES, stressed VaR and ES), four periods (the default fiscal year, a quarter, a range of two days, a year with no record), in-tree
+     * against the engine's {@code official-statistics} over the published records (the three dates captured at start): every field equal,
+     * every number to the bit (the averages summed in the in-tree order).
+     */
+    @Test
+    void theStatisticsOfEveryGoldenNodeAreTheSameOnBothPaths() throws Exception {
+        List<String> scopes = new ArrayList<>(List.of("BANK", "DESK:RATES", "LE:LE-NY"));
+        golden.get("2026-09-30/509/USD").get("nodes").fieldNames().forEachRemaining(id -> scopes.add("NODE:" + id));
+        List<String> differences = new ArrayList<>();
+        int answers = 0;
+        int withFigures = 0;
+        int numbers = 0;
+        for (String scope : scopes) {
+            for (String measure : List.of("var", "es", "svar", "ses")) {
+                for (String period : List.of("", "FY2026Q4", "2026-09-28..2026-09-29", "FY2025")) {
+                    String q = "/api/v1/risk/var/statistics?scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8) + "&measure=" + measure
+                            + (period.isEmpty() ? "" : "&period=" + period);
+                    JsonNode inTree = server.get(q + "&path=in-tree");
+                    com.fasterxml.jackson.databind.node.ObjectNode engine = server.get(q + "&path=engine").deepCopy();
+                    assertThat(engine.path("path").asText()).isEqualTo("engine");
+                    engine.remove("path");
+                    answers++;
+                    withFigures += inTree.has("periodEnd") ? 1 : 0;
+                    numbers += countNumbers(inTree);
+                    if (!inTree.equals(engine)) {
+                        differences.add(scope + " " + measure + " " + period + ": in-tree " + inTree + ", engine " + engine);
+                    }
+                }
+            }
+        }
+        System.out.println("side by side, statistics: " + answers + " answers on both paths (" + withFigures + " with figures), " + numbers
+                + " numbers; differences " + differences.size() + "; first: " + differences.stream().limit(3).map(x -> x.substring(0, Math.min(900,
+                x.length()))).toList());
+        assertThat(withFigures).as("statistics with figures compared").isGreaterThan(500);
+        assertThat(differences).as("statistics that differ between in-tree and engine (every field, every bit)").isEmpty();
+    }
+
+    private static int countNumbers(JsonNode n) {
+        if (n.isNumber()) {
+            return 1;
+        }
+        int c = 0;
+        for (JsonNode x : n) {
+            c += countNumbers(x);
+        }
+        return c;
     }
 
     /** One parametric block on both paths: numbers within relative 1e-12, whole-unit figures and words equal. */

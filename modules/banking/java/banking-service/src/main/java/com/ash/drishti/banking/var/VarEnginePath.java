@@ -383,6 +383,7 @@ public class VarEnginePath {
         hist.put("edges", e);
         hist.put("counts", ints(x.get("COUNTS")));
         out.put("histogram", hist);
+        out.put("edgesExact", edges);                               // the host's parametric curve reads the raw edges (removed before answering)
         List<Map<String, Object>> worst = new ArrayList<>();
         for (int k = 0; k < Math.min(25, order.length); k++) {
             worst.add(scenarioRow(dates, order[k], k + 1, v[order[k]]));
@@ -579,7 +580,9 @@ public class VarEnginePath {
      * in-tree: the engine's {@code scope-backtest} (the newest {@code history-days} scenario P&amp;Ls of the scope's rows against its VaR
      * of the date, each day tested against the VaR before it; in-sample) and {@code scope-scenarios} (the days' dates), shaped as the
      * in-tree route shapes them: {@code currency}, {@code lens}, {@code mode: replay}, {@code note}, {@code backtest}, {@code rows}. A node
-     * with official records (two days or more) is answered from them in-tree for now, said in one sentence.
+     * with official records (two days or more) that the caller sees whole is answered from them ({@code mode: official}): the engine's
+     * {@code official-history} and {@code official-backtest} over {@code var-history}, the published records (USD); a node with official
+     * records in another currency is answered in-tree, said in one sentence.
      */
     public Map<String, Object> history(Principal p, String scope, LocalDate date, String ccy,
             java.util.function.IntFunction<Map<String, Object>> lens) {
@@ -594,18 +597,24 @@ public class VarEnginePath {
         int window = dateWindow();
         EngineScopeBook book = index(p, date, currency);
         ScopeResolver.Resolution res = resolve(p, book, scope, date);
+        // a node's official records (two days or more) are its history, in-tree from its store, here from the engine's var-history (the
+        // published records: USD, the one currency published); the replay otherwise, and when the caller does not see the whole node
+        int stored = 0;
         if (res.node() != null) {
             VarOfficialStore.NodeHistory h = svc.official().history(res.node(), date, svc.props().historyDays(), currency);
-            if (h != null && h.dates().length > 1) {
-                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the replayed history for now; " + res.canonical()
-                        + " has official records (" + h.dates().length + " days): ask it in-tree (path=in-tree)");
+            stored = h == null ? 0 : h.dates().length;
+            if (stored > 1 && !VarDate.USD.equals(currency)) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path reads the published official records (USD): " + res.canonical()
+                        + " has official records in " + currency + " (" + stored + " days): ask it in-tree (path=in-tree)");
             }
         }
+        boolean officialToo = stored > 1;
         Map<String, Object> params = params(window, currency);
         params.put("rows", ordinals(res.set()));
         params.put("node", res.node() == null ? "" : res.node());
         params.put("days", svc.props().historyDays());
-        Map<String, Object> a = ask(p, List.of("scope-backtest"), params, Map.of("date", date.toString()));
+        Map<String, Object> a = ask(p, officialToo ? List.of("scope-backtest", "official-history", "official-backtest") : List.of("scope-backtest"),
+                params, Map.of("date", date.toString()));
         List<Map<String, Object>> r = rows(a, "scope-backtest");
         if (r.isEmpty()) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " answered no history for " + res.canonical() + " on "
@@ -619,6 +628,16 @@ public class VarEnginePath {
         for (Map<String, Object> d : rows(ask(p, List.of("scope-scenarios"), Map.of("window", window), Map.of("date", date.toString())),
                 "scope-scenarios")) {
             dates.add(String.valueOf(d.get("DATE")));
+        }
+        if (officialToo && res.set().size() == ((Number) x.get("MEMBERS")).intValue()) {
+            List<Map<String, Object>> days = rows(a, "official-history");
+            List<Map<String, Object>> b = rows(a, "official-backtest");
+            if (days.size() != stored || b.isEmpty()) {
+                throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine " + ENGINE + " reads " + days.size() + " official records of "
+                        + res.canonical() + " to " + date + ", the official store holds " + stored + " (published: drishti.var.official.publish)"
+                        + missing(a) + ": ask it in-tree (path=in-tree)");
+            }
+            return official(currency, lens.apply(dates.size()), days, b.get(0));
         }
         if (first + pnl.length != dates.size()) {
             throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine " + ENGINE + " replayed " + pnl.length + " days from scenario "
@@ -649,6 +668,171 @@ public class VarEnginePath {
         out.put("rows", rows);
         out.put("path", "engine");
         return out;
+    }
+
+    /** The history of a node with official records, shaped as the in-tree route shapes it ({@code mode: official}). */
+    private static Map<String, Object> official(String currency, Map<String, Object> lens, List<Map<String, Object>> days, Map<String, Object> b) {
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Map<String, Object> d : days) {
+            rows.add(VarViews.historyRow(LocalDate.parse(String.valueOf(d.get("DATE")).substring(0, 10)), num(d.get("VAR")), num(d.get("ES")),
+                    num(d.get("HYPO_PNL")), Boolean.TRUE.equals(d.get("EXCEPTION"))));
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("currency", currency);
+        out.put("lens", lens);
+        out.put("mode", "official");
+        out.put("note", "the node's official end-of-day captures, one a business day (" + rows.size() + " days)");
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("days", ((Number) b.get("DAYS")).intValue());
+        m.put("exceptions", ((Number) b.get("EXCEPTIONS")).intValue());
+        m.put("light", b.get("ZONE"));
+        m.put("kupiecLr", num(b.get("KUPIEC_LR")));
+        m.put("kupiecPValue", num(b.get("KUPIEC_P")));
+        m.put("christoffersenLr", num(b.get("CHRISTOFFERSEN_LR")));
+        m.put("christoffersenPValue", num(b.get("CHRISTOFFERSEN_P")));
+        out.put("backtest", m);
+        out.put("rows", rows);
+        out.put("path", "engine");
+        return out;
+    }
+
+    /**
+     * A node's period statistics through the engine ({@code GET /statistics}, {@code path=engine}): the engine's {@code official-statistics}
+     * over {@code var-history} (the published records) on the newest official date, shaped as {@link VarPeriodStats#stats} shapes them.
+     * Refused in words when the engine's records are not the store's (publish off, a session opened before a capture, or a synthetic demo
+     * history, which is never published) or when its period, average days or stress weeks are configured otherwise than here.
+     */
+    public Map<String, Object> statistics(Principal p, String node, String measure, VarPeriodStats.Period period, int averageDays, int stressWeeks) {
+        VarService svc = service.getIfAvailable();
+        if (svc == null) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the VaR service is not configured here: the statistics are answered nowhere");
+        }
+        VarOfficialStore store = svc.official();
+        if (store.dates().isEmpty()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "no official VaR record yet: the engine path opens the newest official date; ask it "
+                    + "in-tree (path=in-tree)");
+        }
+        LocalDate newest = store.dates().last();
+        int stored = 0;
+        for (LocalDate d : store.dates().subSet(period.from(), true, period.to(), true)) {
+            Map<String, Object> rec = store.index(d).orElse(null);
+            if (rec != null && Boolean.TRUE.equals(rec.get("synthetic"))) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the official records of " + period.name() + " hold a synthetic demo history, "
+                        + "which is never published: the engine reads the published records; ask it in-tree (path=in-tree)");
+            }
+            if (rec != null && rec.get("nodes") instanceof Map<?, ?> nodes && nodes.get(node) instanceof Map<?, ?> f
+                    && Double.isFinite(VarOfficialStore.num(f.get(measure)))) {
+                stored++;
+            }
+        }
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("node", node);
+        params.put("period", period.name());
+        params.put("measure", measure);
+        Map<String, Object> a = ask(p, List.of("official-statistics"), params, Map.of("date", newest.toString()));
+        List<Map<String, Object>> r = rows(a, "official-statistics");
+        if (r.isEmpty()) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " answered no statistics of " + node + missing(a));
+        }
+        Map<String, Object> x = r.get(0);
+        String engineNewest = x.get("NEWEST") == null ? null : String.valueOf(x.get("NEWEST"));
+        String engineOldest = x.get("OLDEST") == null ? null : String.valueOf(x.get("OLDEST"));
+        int records = ((Number) x.get("RECORDS")).intValue();
+        if (!newest.toString().equals(engineNewest) || !store.dates().first().toString().equals(engineOldest) || records != stored) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine " + ENGINE + " reads " + records + " official records of " + node
+                    + " in " + period.name() + " (" + engineOldest + " to " + engineNewest + "), the official store " + stored + " ("
+                    + store.dates().first() + " to " + newest + "; published: drishti.var.official.publish): ask it in-tree (path=in-tree)");
+        }
+        if (!period.from().toString().equals(String.valueOf(x.get("FIRST_DAY"))) || !period.to().toString().equals(String.valueOf(x.get("LAST_DAY")))
+                || ((Number) x.get("AVERAGE_N_DAYS")).intValue() != averageDays || ((Number) x.get("STRESS_WEEKS")).intValue() != stressWeeks) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine " + ENGINE + " reads " + period.name() + " as " + x.get("FIRST_DAY")
+                    + " to " + x.get("LAST_DAY") + " with " + x.get("AVERAGE_N_DAYS") + " days and " + x.get("STRESS_WEEKS") + " weeks, here "
+                    + period.from() + " to " + period.to() + " with " + averageDays + " and " + stressWeeks + " (its regulatory options differ): "
+                    + "ask it in-tree (path=in-tree)");
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("node", node);
+        out.put("measure", measure);
+        out.put("period", period.name());
+        out.put("from", period.from().toString());
+        out.put("to", period.to().toString());
+        boolean preview = newest.isBefore(period.to());
+        out.put("preview", preview);
+        if (preview) {
+            out.put("previewNote", period.name() + " closes " + period.to() + ": the figures run to the newest official record, " + newest
+                    + "; the run of record is made on the period end");
+        }
+        out.put("records", records);
+        out.put("synthetic", 0L);                                       // never published: refused above when the period holds one
+        if (records == 0) {
+            out.put("note", "no official " + measure + " of " + node + " in " + period.name());
+            out.put("path", "engine");
+            return out;
+        }
+        out.put("periodEnd", point(x, "END_DATE", "PERIOD_END", "END_VERSION", "END_CAPTURE"));
+        out.put("average", num(x.get("AVERAGE")));
+        out.put("high", point(x, "HIGH_DATE", "HIGH", "HIGH_VERSION", "HIGH_CAPTURE"));
+        out.put("low", point(x, "LOW_DATE", "LOW", "LOW_VERSION", "LOW_CAPTURE"));
+        List<String> missing = new ArrayList<>(dates(x.get("MISSING")));
+        LocalDate first = store.dates().first();
+        if (first.isAfter(period.from())) {
+            missing.add(0, "before " + first + ": no official record at all (the records start " + first + ")");
+        }
+        out.put("missing", missing);
+        if ("var".equals(measure)) {
+            String upTo = String.valueOf(x.get("END_DATE"));
+            int took = ((Number) x.get("AVERAGE_N_RECORDS")).intValue();
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("days", averageDays);
+            m.put("records", took);
+            m.put("from", x.get("AVERAGE_N_FROM") == null ? null : String.valueOf(x.get("AVERAGE_N_FROM")));
+            m.put("to", upTo);
+            m.put("average", x.get("AVERAGE_N") == null ? null : num(x.get("AVERAGE_N")));
+            if (took < averageDays) {
+                m.put("note", "only " + took + " official records to " + upTo + ", of the " + averageDays + " the average takes");
+            }
+            out.put("average" + averageDays, m);
+            List<String> used = dates(x.get("STRESSED_DATES"));
+            List<String> without = dates(x.get("WITHOUT_STRESSED"));
+            Map<String, Object> st = new LinkedHashMap<>();
+            st.put("weeks", stressWeeks);
+            st.put("from", String.valueOf(x.get("STRESS_FROM")));
+            st.put("to", upTo);
+            st.put("records", used.size());
+            st.put("average", x.get("STRESSED_AVERAGE") == null ? null : num(x.get("STRESSED_AVERAGE")));
+            st.put("dates", used);
+            st.put("withoutStressedVar", without);
+            st.put("note", used.isEmpty() ? "no official stressed VaR of this node in the " + stressWeeks + " weeks to " + upTo
+                    : "the mean of the official stressed VaR of " + used.size() + " business date" + (used.size() == 1 ? "" : "s") + " in the "
+                    + stressWeeks + " weeks to " + upTo + (without.isEmpty() ? "" : "; " + without.size() + " official date"
+                    + (without.size() == 1 ? "" : "s") + " without one left out"));
+            out.put("stressedAverage", st);
+        }
+        out.put("path", "engine");
+        return out;
+    }
+
+    private static Map<String, Object> point(Map<String, Object> x, String date, String value, String version, String capture) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("date", String.valueOf(x.get(date)));
+        m.put("value", num(x.get(value)));
+        m.put("resultVersion", x.get(version) == null ? null : ((Number) x.get(version)).longValue());
+        m.put("captureId", x.get(capture));
+        return m;
+    }
+
+    /** A comma-separated list of dates (empty: none). */
+    private static List<String> dates(Object text) {
+        String t = text == null ? "" : String.valueOf(text);
+        return t.isEmpty() ? List.of() : List.of(t.split(","));
+    }
+
+    /** The node a scope names (a node the caller may ask whole: its parametric figures are node-pvar's), or null for any other scope. */
+    String node(Principal p, String scope, LocalDate date, String ccy) {
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path needs the business date: give asOf");
+        }
+        return resolve(p, index(p, date, VarCurrencies.normalise(ccy)), scope, date).node();
     }
 
     /** A node's name as the tree and the headline's label show it (the reference entity's name when the level has one). */

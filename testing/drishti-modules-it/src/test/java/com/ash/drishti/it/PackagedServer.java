@@ -210,6 +210,7 @@ final class PackagedServer implements AutoCloseable {
         env.put("DRISHTI_VAR_SCENARIO_WINDOW", "all");                                  // the whole scenario set (509 in the test data), not the 250-day default
         env.put("DRISHTI_VAR_HOT_DIR", work.resolve("var-hot").toString());
         env.put("DRISHTI_VAR_OFFICIAL_ROOT", work.resolve("var-official").toString());
+        env.put("LAKE_VAR_OFFICIAL_ROOT", work.resolve("var-official").toString());     // its reader (var-results: BI, the engine's var-history) reads where it publishes
         env.put("DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT", work.resolve("ccr-official").toString());
         overrides.forEach((k, v) -> {
             if (v == null || v.isEmpty()) {
