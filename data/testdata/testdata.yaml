@@ -21585,127 +21585,127 @@ datasets:
   connector: news-store
   key: QUOTE_ID
   snapshot: true
-  captured: '2026-10-18T03:24:33Z'
+  captured: '2026-11-27T22:34:37Z'
   source: Yahoo Finance (yfinance connector)
   documents: 20
   files:
-  - quote.2026-10-18.jsonl.gz
-  bytes: 133684
+  - quote.2026-11-27.jsonl.gz
+  bytes: 137126
 - folder: news-and-markets/news
   pack: news-and-markets
   kind: news
   connector: news-store
   key: NEWS_ID
   snapshot: true
-  captured: '2026-10-18T03:24:33Z'
+  captured: '2026-11-27T22:34:37Z'
   source: Google News (news connector)
   documents: 71
   files:
-  - news.2026-10-18.jsonl.gz
-  bytes: 144798
+  - news.2026-11-27.jsonl.gz
+  bytes: 149514
 - folder: us-equities/us-company
   pack: us-equities
   kind: us-company
   connector: us-equities-store
   key: TICKER
   snapshot: true
-  captured: '2026-10-24'
+  captured: '2026-11-27'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
   documents: 586
   files:
-  - us-company.2026-10-24.jsonl.gz
-  bytes: 491135
+  - us-company.2026-11-27.jsonl.gz
+  bytes: 491688
 - folder: us-equities/index-membership
   pack: us-equities
   kind: index-membership
   connector: us-equities-store
   key: INDEX
   snapshot: true
-  captured: '2026-10-24'
+  captured: '2026-11-27'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
-  documents: 6
+  documents: 7
   files:
-  - index-membership.2026-10-24.jsonl.gz
-  bytes: 25976
+  - index-membership.2026-11-27.jsonl.gz
+  bytes: 26083
 - folder: us-equities/filing-feed
   pack: us-equities
   kind: filing-feed
   connector: us-equities-store
   key: FEED
   snapshot: true
-  captured: '2026-10-24'
+  captured: '2026-11-27'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
   documents: 6
   files:
-  - filing-feed.2026-10-24.jsonl.gz
-  bytes: 22503
+  - filing-feed.2026-11-27.jsonl.gz
+  bytes: 21542
 - folder: us-equities/filing
   pack: us-equities
   kind: filing
   connector: us-equities-store
   key: ACCESSION
   snapshot: true
-  captured: '2026-10-24'
+  captured: '2026-11-27'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
-  documents: 11691
+  documents: 11686
   files:
-  - filing.2026-10-24.jsonl.gz
-  bytes: 320445
+  - filing.2026-11-27.jsonl.gz
+  bytes: 319893
 - folder: us-equities/financial-fact
   pack: us-equities
   kind: financial-fact
   connector: us-equities-store
   key: FACT_ID
   snapshot: true
-  captured: '2026-10-24'
+  captured: '2026-11-27'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
   documents: 4026
   files:
-  - financial-fact.2026-10-24.jsonl.gz
-  bytes: 418308
+  - financial-fact.2026-11-27.jsonl.gz
+  bytes: 418699
 - folder: gleif/lei-entity
   pack: gleif
   kind: lei-entity
   connector: gleif-store
   key: LEI
   snapshot: true
-  captured: '2026-10-25'
+  captured: '2026-11-27'
   source: GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif)
-  documents: 9937
+  documents: 10207
   files:
-  - lei-entity.2026-10-25.jsonl.gz
-  bytes: 2081825
+  - lei-entity.2026-11-27.jsonl.gz
+  bytes: 2160006
 - folder: gleif/lei-relationship
   pack: gleif
   kind: lei-relationship
   connector: gleif-store
   key: RELATIONSHIP_ID
   snapshot: true
-  captured: '2026-10-25'
+  captured: '2026-11-27'
   source: GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif)
-  documents: 9347
+  documents: 9572
   files:
-  - lei-relationship.2026-10-25.jsonl.gz
-  bytes: 460787
+  - lei-relationship.2026-11-27.jsonl.gz
+  bytes: 473677
 - folder: gleif/lei-mapping
   pack: gleif
   kind: lei-mapping
   connector: gleif-store
   key: IDENTIFIER
   snapshot: true
-  captured: '2026-10-25'
+  captured: '2026-11-27'
   source: GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif)
-  documents: 3381
+  documents: 3514
   files:
-  - lei-mapping.2026-10-25.jsonl.gz
-  bytes: 43100
+  - lei-mapping.2026-11-27.jsonl.gz
+  bytes: 45235
 - folder: funds/fund
   pack: funds
   kind: fund
   connector: funds-store
   key: TICKER
   snapshot: true
-  captured: '2026-10-26'
+  captured: '2026-11-27'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)
   documents: 200
   files:
@@ -21717,11 +21717,11 @@ datasets:
   connector: funds-store
   key: TICKER
   snapshot: true
-  captured: '2026-10-26'
+  captured: '2026-11-27'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)
   documents: 586
   files:
-  - fund-holder.2026-10-26.jsonl.gz
+  - fund-holder.2026-11-27.jsonl.gz
   bytes: 682851
 - folder: funds/index-funds
   pack: funds
@@ -21729,11 +21729,11 @@ datasets:
   connector: funds-store
   key: INDEX
   snapshot: true
-  captured: '2026-10-26'
+  captured: '2026-11-27'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)
   documents: 3
   files:
-  - index-funds.2026-10-26.jsonl.gz
+  - index-funds.2026-11-27.jsonl.gz
   bytes: 1096
 - folder: genomics-showcase/study-gene
   pack: genomics-showcase
