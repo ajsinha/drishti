@@ -236,7 +236,13 @@ class RiskSideBySideTest {
                             ce.path("parametric"));
                     if (ci.path("rows").size() >= 2) {                  // the parts' covariance and correlation matrix (scope-pmatrix)
                         JsonNode mi = server.get(c + "&matrix=true&path=in-tree").path("parametric").path("matrix");
-                        JsonNode me = server.get(c + "&matrix=true&path=engine").path("parametric").path("matrix");
+                        JsonNode me;
+                        try {
+                            me = server.get(c + "&matrix=true&path=engine").path("parametric").path("matrix");
+                        } catch (IllegalStateException e) {               // a leaf node's positions' matrix: in-tree (Appendix A)
+                            assertThat(e.getMessage()).as(date + " matrix NODE:" + id).contains("path=in-tree");
+                            continue;
+                        }
                         parametricSame(sbs, numbers, date + "/" + ccy + " matrix NODE:" + id, mi, me);
                         matrices++;
                     }

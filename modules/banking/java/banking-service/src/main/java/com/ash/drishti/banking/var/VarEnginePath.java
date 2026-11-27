@@ -1421,6 +1421,10 @@ public class VarEnginePath {
         EngineScopeBook book = index(p, date, currency);
         ScopeResolver.Resolution res = resolve(p, book, scope, date);
         List<String> kids = res.node() == null ? List.of() : book.children.getOrDefault(res.node(), List.of());
+        if (kids.isEmpty() && res.node() != null) {                   // a leaf node: its parts are positions (lane G part 6)
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the matrix of a node's child nodes; the matrix of a leaf "
+                    + "node's positions (" + res.canonical() + "): ask it in-tree (path=in-tree)");
+        }
         if (kids.size() < 2) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "matrix=true needs a scope with parts (" + res.canonical() + " has " + kids.size() + ")");
         }
