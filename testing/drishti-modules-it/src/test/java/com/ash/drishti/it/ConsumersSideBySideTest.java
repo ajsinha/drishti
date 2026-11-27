@@ -33,15 +33,18 @@ import org.junit.jupiter.api.Test;
  * R2 consumers other than the role Homes (R2_CUT_PLAN Appendix A): what reads VaR figures inside Drishti, read with
  * {@code var.consumers.route} in-tree and again on the engine (two servers over one lake, the family switch the only difference), each
  * after the official records of the three dates are captured and published. Now: the regulatory VaR report runs (every report of the
- * reports folder for its current period: the table's period statistics, its facts' backtest, the backtesting chart). Every field equal,
- * every number to the bit, but the run's {@code frozenAt} (the clock) and each server's own folder in the texts (written {@code <server>}). Skipped when no folder of Risk JARs is given (-Ddrishti.risk.jars).
+ * reports folder for its current period: the table's period statistics, its facts' backtest, the backtesting chart) and the VaR figures
+ * of the desk and legal-entity pages (VarFigures' {@code VAR_ENGINE}: the headline, and each of an entity's books' VaR), the whole page
+ * as the view answers it (its figures as the page renders them: the bits are RiskSideBySideTest's, the node headline). Every field equal,
+ * every number to the bit, but the clocks (a run's {@code frozenAt}, a view's {@code fetchedAt} and {@code timings}) and each server's
+ * own folder in the texts (written {@code <server>}). Skipped when no folder of Risk JARs is given (-Ddrishti.risk.jars).
  */
 class ConsumersSideBySideTest {
 
     static final Path FOLDER = Path.of(System.getProperty("drishti.g14.dir")).toAbsolutePath().resolve("consumers-side-by-side");
 
     @Test
-    void theRegulatoryReportRunsAreTheSameOnBothPaths() throws Exception {
+    void theVarConsumersAreTheSameOnBothPaths() throws Exception {
         String jars = System.getProperty("drishti.risk.jars", "");
         assumeTrue(!jars.isBlank() && Files.isDirectory(Path.of(jars)), "no folder of Drishti Risk JARs given (-Ddrishti.risk.jars)");
         Path lake = FOLDER.resolve("lake-desk-pnl");
@@ -62,7 +65,11 @@ class ConsumersSideBySideTest {
         }
         System.out.println("side by side, consumers: " + inTree.size() + " answers (" + refused + " refused in-tree), keys " + inTree.keySet()
                 + "; differences " + differences.size() + ": " + differences);
-        assertThat(inTree.size() - refused).as("report runs compared").isGreaterThan(0);
+        assertThat(inTree.size() - refused).as("answers compared").isGreaterThan(0);
+        long pages = inTree.entrySet().stream().filter(e -> !e.getKey().startsWith("report ") && figures(e.getValue()) > 0).count();
+        int items = inTree.entrySet().stream().filter(e -> !e.getKey().startsWith("report ")).mapToInt(e -> figures(e.getValue())).sum();
+        System.out.println("side by side, desk and legal-entity pages: " + pages + " with the engine's VaR figures, " + items + " items shown");
+        assertThat(pages).as("desk and legal-entity pages with VaR figures compared").isEqualTo(inTree.size() - 2L);
         assertThat(differences).as("consumer answers that differ between in-tree and engine").isEmpty();
     }
 
@@ -110,14 +117,48 @@ class ConsumersSideBySideTest {
                 String id = r.path("report").asText();
                 out.put("report " + id, run(server, "/api/v1/risk/var/reports/" + id + "/runs", work.toString()));
             }
+            for (String kind : List.of("desk", "legal-entity")) {   // the pages' VaR figures (VarFigures, VAR_ENGINE), every desk and entity
+                for (String id : ids(kind)) {
+                    JsonNode v;
+                    try {
+                        v = server.get("/api/v1/views/" + kind + "/" + id + "?asOf=2026-09-30");
+                        strip(v, work.toString());
+                    } catch (IllegalStateException e) {
+                        v = PackagedServer.JSON.readTree("{\"refused\":" + PackagedServer.JSON.writeValueAsString(e.getMessage()) + "}");
+                    }
+                    out.put(kind + " " + id, v);
+                }
+            }
             if (path.equals("engine")) {                              // the runs were the engine's (the switch reached the reports)
-                server.close();
                 assertThat(Files.readString(work.resolve("server.log"))).contains("figures from the market-risk engine");
             }
             return out;
         } finally {
             server.close();
         }
+    }
+
+    /** The ids of a kind's records of the date in the lake's test data (core/desk, core/legal-entity). */
+    private static List<String> ids(String kind) throws IOException {
+        Path f = PackagedServer.REPO.resolve("data/testdata/core/" + kind + "/" + kind + ".2026-09-30.jsonl.gz");
+        List<String> out = new ArrayList<>();
+        try (var r = new java.io.BufferedReader(new java.io.InputStreamReader(new java.util.zip.GZIPInputStream(Files.newInputStream(f)),
+                java.nio.charset.StandardCharsets.UTF_8))) {
+            for (String line = r.readLine(); line != null; line = r.readLine()) {
+                JsonNode n = PackagedServer.JSON.readTree(line);
+                out.add(n.path(kind.equals("desk") ? "DESK_ID" : "ENTITY_ID").asText());
+            }
+        }
+        return out;
+    }
+
+    /** How many of a view's items show the engine's VaR figures (their {@code path} under {@code $.VAR_ENGINE}). */
+    static int figures(JsonNode n) {
+        int c = n.isTextual() && n.asText().startsWith("$.VAR_ENGINE") ? 1 : 0;
+        for (JsonNode x : n) {
+            c += figures(x);
+        }
+        return c;
     }
 
     /** A run generated now, without its clock ({@code frozenAt}); a refusal as its words. */
@@ -131,10 +172,12 @@ class ConsumersSideBySideTest {
         }
     }
 
-    /** Leaves out the clock and writes each server's own folder (in a definition's file and the cells' lineage) as {@code <server>}. */
+    /** Leaves out the clocks and writes each server's own folder (in a definition's file and the cells' lineage) as {@code <server>}. */
     private static void strip(JsonNode n, String folder) {
         if (n instanceof ObjectNode o) {
             o.remove("frozenAt");
+            o.remove("fetchedAt");                                    // a view's clock and its own timings
+            o.remove("timings");
             List<String> names = new ArrayList<>();
             o.fieldNames().forEachRemaining(names::add);
             for (String k : names) {

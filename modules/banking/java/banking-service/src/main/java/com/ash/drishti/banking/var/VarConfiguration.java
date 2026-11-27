@@ -338,8 +338,8 @@ public class VarConfiguration {
 
     /** The VaR figures views show (the kernel collects every ViewAugmenter: its own context's beans, a module's through the bridge). */
     @Bean
-    VarFigures varFigures(VarService svc, VarViews views) {
-        return new VarFigures(svc, views);
+    VarFigures varFigures(VarService svc, VarViews views, org.springframework.beans.factory.ObjectProvider<VarEnginePath> engine) {
+        return new VarFigures(svc, views, engine.getIfAvailable());   // R2: var.consumers.route
     }
 
     /** A trade page's Risk links: its P&L vector and its VaR. */

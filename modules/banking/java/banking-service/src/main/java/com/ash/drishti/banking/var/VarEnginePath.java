@@ -910,6 +910,14 @@ public class VarEnginePath {
         return resolve(p, index(p, date, VarCurrencies.normalise(ccy)), scope, date).node();
     }
 
+    /** The canonical form of a scope as Drishti's resolver writes it over the engine's index of the date (the reporting currency's). */
+    String canonical(Principal p, String scope, LocalDate date) {
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path needs the business date: give asOf");
+        }
+        return resolve(p, index(p, date, VarCurrencies.normalise(null)), scope, date).canonical();
+    }
+
     /** A node's name as the tree and the headline's label show it (the reference entity's name when the level has one). */
     String nodeName(Principal p, LocalDate date, String currency, String node) {
         VarService svc = service.getIfAvailable();
