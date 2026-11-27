@@ -45,6 +45,8 @@ drishti:
           - { name: listed, types: [ BOND_FUTURE, STIR_FUTURE, STIR_FUT_OPT, EQ_FUTURE_SINGLE, EQ_INDEX_FUTURE, EQ_OPTION_LISTED, EQ_INDEX_OPTION, CMD_FUTURE,
               CMD_FUT_OPTION, ComFut, EMISSIONS_FUTURE ], key: [ SECURITY_ID, CONTRACT ] }
           - { name: otc }
+        # the rows as the VaR tier keeps them (drishti.var.tier.mode): mapped = float32 position rows as the hot file, so the two paths agree to the bit
+        vector-tier: ${drishti.var.tier.mode:${DRISHTI_VAR_TIER:mapped}}
       snapshot: { hot: 1 }               # one business date's session kept open (its books released when another date is asked)
       limits: { memory-mb: 768 }         # the books of one date: every window and currency asked of it
       access:

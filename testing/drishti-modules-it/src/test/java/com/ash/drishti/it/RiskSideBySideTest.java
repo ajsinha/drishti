@@ -43,22 +43,32 @@ import org.junit.jupiter.api.Test;
 class RiskSideBySideTest {
 
     /**
-     * True on the heap tier ({@code -Dsbs.tier=heap}): the in-tree rows are float64, so a currency other than USD (the book converted first,
-     * owner decision 2026-11-27, R2_CUT_PLAN 6.6 (2)) is the engine's to the bit. On the default mapped tier the in-tree book is converted
-     * from its float32 rows (MC-12): those answers are counted and printed, not asserted.
+     * The differences asserted: all of them, on both tiers. The heap tier ({@code -Dsbs.tier=heap}) keeps the in-tree rows as float64 and
+     * the engine reads them so; the default mapped tier keeps every position as one float32 row of its hot file and the engine reads its
+     * rows the same way (option {@code vector-tier: mapped}, R2_CUT_PLAN MC-12), so every currency and every position part is the same bits.
      */
-    static final boolean HEAP = "heap".equals(System.getProperty("sbs.tier", ""));
+    static final boolean HEAP = "heap".equals(System.getProperty("sbs.tier", ""));                 // -Dsbs.tier=heap
 
-    /** The differences asserted on this tier: all of them on the heap tier, the USD ones on the mapped tier. */
     static java.util.List<String> asserted(java.util.List<String> differences) {
-        return HEAP ? differences : differences.stream().filter(x -> !x.contains("/EUR ") && !x.startsWith(POSITIONS)).toList();
+        return differences;
     }
 
     /**
-     * The tag of a difference in a leaf node's position parts (lane G part 6). On the default mapped tier the in-tree book reads a whole
-     * position from the hot file's float32 position rows while the engine sums the position's rows, so those figures may differ in the
-     * last bits there (counted and printed, MC-12's float32 view closes it, as EUR/CAD); on the heap tier they are asserted to the bit.
+     * The raw-bit reference of a node's VaR and ES ({@code {var, es}}): the golden's doubles, except another currency on the mapped tier.
+     * There the in-tree book is converted from the hot file's float32 USD rows (decision 6.6 (2) on the mapped tier) while the golden file
+     * holds the float64 conversion (PackagedVarGoldenTest names the nine whole-unit answers that move), so the reference is the in-tree
+     * route's own exact figures, which the engine reading the float32 rows (MC-12) must equal to the bit. The golden file is not edited.
      */
+    static double[] reference(JsonNode golden, String currency, String node, String date, String window) throws Exception {
+        if (HEAP || "USD".equals(currency)) {
+            return new double[] {golden.path("var").asDouble(), golden.path("es").asDouble()};
+        }
+        JsonNode t = server.get("/api/v1/risk/var/scope?scope=" + URLEncoder.encode("NODE:" + node, StandardCharsets.UTF_8) + "&asOf=" + date
+                + "&ccy=" + currency + "&window=" + window + "&exact=true&path=in-tree");
+        return new double[] {t.path("varExact").asDouble(), t.path("esExact").asDouble()};
+    }
+
+    /** The label of a difference in a leaf node's position parts (lane G part 6), to tell them apart in the printed counts; asserted as any. */
     static final String POSITIONS = "[positions] ";
 
     /** Tags the differences from {@code from} on as a leaf node's position parts when {@code positions}. */
@@ -329,8 +339,7 @@ class RiskSideBySideTest {
         assertThat(answers).as("history answers compared").isGreaterThan(500);
         assertThat(officialAnswers).as("official histories compared (USD nodes on 09-29 and 09-30)").isGreaterThan(200);
         assertThat(official).as("nodes answered in-tree only").isZero();
-        // the mapped tier: a node's figures are its stored aggregate (USD asserted); other scopes sum float32 rows (MC-12): counted
-        assertThat(asserted(sbs.differences).stream().filter(x -> HEAP || x.contains(" NODE:")).toList())
+        assertThat(asserted(sbs.differences))
                 .as("history answers that differ between in-tree and engine").isEmpty();
     }
 
@@ -586,10 +595,12 @@ class RiskSideBySideTest {
                 JsonNode g = golden.get(c).get("nodes").get(id);
                 JsonNode official = golden.get(k[0] + "/509/" + k[2]).get("nodes").get(id);
                 if (!k[2].equals("USD") && official.hasNonNull("limit") && official.path("limit").asDouble() != 0) {
-                    sbs.bits(what + " LIMIT_USE", official.path("var").asDouble() / official.path("limit").asDouble(), both[1].path("limitUse").asDouble());
+                    sbs.bits(what + " LIMIT_USE", reference(official, k[2], id, k[0], "509")[0] / official.path("limit").asDouble(),
+                            both[1].path("limitUse").asDouble());
                 }
-                sbs.bits(what + " VAR", g.path("var").asDouble(), both[1].path("varExact").asDouble());
-                sbs.bits(what + " ES", g.path("es").asDouble(), both[1].path("esExact").asDouble());
+                double[] ref = reference(g, k[2], id, k[0], k[1]);
+                sbs.bits(what + " VAR", ref[0], both[1].path("varExact").asDouble());
+                sbs.bits(what + " ES", ref[1], both[1].path("esExact").asDouble());
             }
         }
         System.out.println("side by side, VaR headline: " + sbs.compared + " node answers on both paths; " + sbs.sameBits
@@ -655,7 +666,7 @@ class RiskSideBySideTest {
                 + sbs.differences.stream().limit(5).map(x -> x.substring(0, Math.min(400, x.length()))).toList()
                 + "; first raw-bit differences: " + sbs.bitDifferences.stream().limit(10).toList());
         assertThat(sbs.compared).as("node paths compared").isGreaterThan(100);
-        // both paths sum the book converted first (R2_CUT_PLAN 6.6 (2)): every field equal on the heap tier, USD on both tiers
+        // both paths sum the book converted first (R2_CUT_PLAN 6.6 (2)): every field equal on both tiers
         assertThat(asserted(sbs.differences)).as("path answers that differ between in-tree and engine").isEmpty();
         assertThat(asserted(sbs.bitDifferences)).as("engine figures whose raw bits differ from the in-tree").isEmpty();
     }
@@ -701,8 +712,8 @@ class RiskSideBySideTest {
     /**
      * The pre-deal what-if on every scope kind that is not a node (expressions, system baskets, ad-hoc trade and position lists, a
      * counterparty), each date, USD: the engine's what-if over the scope's row set; before, after, change, every item and the limit block
-     * (a system basket's own) equal on both paths. The row sums are the scope kinds': equal on the heap tier ({@code -Dsbs.tier=heap}); the
-     * mapped tier keeps rows as float32 (MC-12), so there the differences are counted, not asserted.
+     * (a system basket's own) equal on both paths. The row sums are the scope kinds': equal on both tiers (the mapped tier's float32
+     * position rows read by the engine as the host keeps them, MC-12).
      */
     @Test
     void theWhatIfOnEveryScopeKindIsTheSameOnBothPaths() throws Exception {
@@ -739,9 +750,7 @@ class RiskSideBySideTest {
                 + " what-ifs on both paths (" + refused + " refused on both); differences " + sbs.differences.size() + "; first: " + sbs.differences.stream().limit(6)
                 .map(x -> x.substring(0, Math.min(400, x.length()))).toList());
         assertThat(sbs.compared).as("what-ifs compared").isGreaterThan(30);
-        if ("heap".equals(System.getProperty("sbs.tier", ""))) {
-            assertThat(sbs.differences).as("what-if answers that differ between in-tree and engine").isEmpty();
-        }
+        assertThat(sbs.differences).as("what-if answers that differ between in-tree and engine").isEmpty();
     }
 
     /**
@@ -775,9 +784,9 @@ class RiskSideBySideTest {
                         usd ? new String[] {"trades", "var", "es", "limit", "limitUse"} : new String[] {"trades", "var", "es", "limit"});
                 String node = both[1].path("node").asText(null);
                 if (!usd && node != null) {                             // a node whole in another currency: the golden is the reference
-                    JsonNode g = golden.get(c).get("nodes").get(node);
-                    sbs.bits(what + " VAR", g.path("var").asDouble(), both[1].path("varExact").asDouble());
-                    sbs.bits(what + " ES", g.path("es").asDouble(), both[1].path("esExact").asDouble());
+                    double[] ref = reference(golden.get(c).get("nodes").get(node), k[2], node, k[0], k[1]);
+                    sbs.bits(what + " VAR", ref[0], both[1].path("varExact").asDouble());
+                    sbs.bits(what + " ES", ref[1], both[1].path("esExact").asDouble());
                 } else {
                     sbs.bits(what + " VAR", both[0].path("varExact").asDouble(), both[1].path("varExact").asDouble());
                     sbs.bits(what + " ES", both[0].path("esExact").asDouble(), both[1].path("esExact").asDouble());
@@ -795,10 +804,8 @@ class RiskSideBySideTest {
                 + " engine VaR and ES figures equal to the in-tree raw bits; first differences: " + sbs.differences.stream().limit(10).toList()
                 + "; first raw-bit differences: " + sbs.bitDifferences.stream().limit(10).toList());
         assertThat(sbs.compared).as("scope answers compared").isGreaterThanOrEqualTo(300);
-        if (HEAP) {                                                     // the mapped tier's row sums are float32 rows (MC-12): counted above
-            assertThat(sbs.differences).as("route answers that differ between in-tree and engine").isEmpty();
-            assertThat(sbs.bitDifferences).as("engine figures whose raw bits differ from the in-tree").isEmpty();
-        }
+        assertThat(sbs.differences).as("route answers that differ between in-tree and engine").isEmpty();
+        assertThat(sbs.bitDifferences).as("engine figures whose raw bits differ from the in-tree").isEmpty();
     }
 
     /**
@@ -844,8 +851,9 @@ class RiskSideBySideTest {
                         }
                     }
                     if (g.has(a.get(i))) {
-                        sbs.bits(what + " " + a.get(i) + " VAR", g.get(a.get(i)).path("var").asDouble(), y.path("varExact").asDouble());
-                        sbs.bits(what + " " + a.get(i) + " ES", g.get(a.get(i)).path("es").asDouble(), y.path("esExact").asDouble());
+                        double[] ref = reference(g.get(a.get(i)), k[2], a.get(i), k[0], "509");
+                        sbs.bits(what + " " + a.get(i) + " VAR", ref[0], y.path("varExact").asDouble());
+                        sbs.bits(what + " " + a.get(i) + " ES", ref[1], y.path("esExact").asDouble());
                     }
                 }
             }
@@ -856,7 +864,7 @@ class RiskSideBySideTest {
                 .map(x -> x.replaceAll("^\\S+ \\S+ \\S+ (\\S+):.*$", "$1")).distinct().toList() + "); first: "
                 + sbs.differences.stream().limit(8).toList() + "; first raw-bit differences: " + sbs.bitDifferences.stream().limit(10).toList());
         assertThat(nodes).as("tree rows compared").isGreaterThan(500);
-        assertThat(asserted(sbs.differences)).as("tree answers that differ (EUR too on the heap tier)").isEmpty();
+        assertThat(asserted(sbs.differences)).as("tree answers that differ (EUR too, both tiers)").isEmpty();
         assertThat(sbs.bitDifferences).as("engine figures whose raw bits differ from the golden").isEmpty();
     }
 
@@ -895,8 +903,9 @@ class RiskSideBySideTest {
                 JsonNode[] both = sbs.both(server, what, "/api/v1/risk/var/scope/contributions?" + q + "&parametric=false&exact=true",
                         "canonical", "currency", "by", "var", "es", "sumStandalone", "sumComponent", "diversification", "truncated", "total",
                         "shown", "rows");
-                sbs.bits(what + " VAR", g.get(id).path("var").asDouble(), both[1].path("varExact").asDouble());
-                sbs.bits(what + " ES", g.get(id).path("es").asDouble(), both[1].path("esExact").asDouble());
+                double[] ref = reference(g.get(id), k[2], id, k[0], "509");
+                sbs.bits(what + " VAR", ref[0], both[1].path("varExact").asDouble());
+                sbs.bits(what + " ES", ref[1], both[1].path("esExact").asDouble());
                 sbs.both(server, what + " headline", "/api/v1/risk/var/scope?" + q, "children", "childKind",
                         "sumStandalone", "diversification");
                 boolean leaf = "position".equals(both[0].path("by").asText());
@@ -912,7 +921,7 @@ class RiskSideBySideTest {
                 .map(x -> x.substring(0, Math.min(400, x.length()))).toList() + "; first raw-bit differences: "
                 + sbs.bitDifferences.stream().limit(10).toList());
         assertThat(sbs.compared).as("answers compared").isGreaterThan(100);
-        // both paths sum the book converted first (R2_CUT_PLAN 6.6 (2)): EUR equal too on the heap tier
+        // both paths sum the book converted first (R2_CUT_PLAN 6.6 (2)): EUR equal too, both tiers
         assertThat(asserted(sbs.differences)).as("answers that differ").isEmpty();
         assertThat(sbs.bitDifferences).as("raw bits that differ from the golden").isEmpty();
     }
@@ -965,7 +974,7 @@ class RiskSideBySideTest {
                 .map(x -> x.substring(0, Math.min(300, x.length()))).toList() + "; first raw-bit differences: "
                 + sbs.bitDifferences.stream().limit(8).toList());
         assertThat(sbs.compared).as("answers compared").isGreaterThan(1000);
-        assertThat(asserted(sbs.differences)).as("answers that differ (EUR too on the heap tier)").isEmpty();
+        assertThat(asserted(sbs.differences)).as("answers that differ (EUR too, both tiers)").isEmpty();
         assertThat(asserted(sbs.bitDifferences)).as("raw bits that differ").isEmpty();
     }
 
@@ -1012,7 +1021,7 @@ class RiskSideBySideTest {
         assertThat(sbs.compared).as("answers compared").isGreaterThan(1000);
         assertThat(pBlocks).as("parametric blocks at other confidences").isGreaterThan(1000);
         assertThat(asserted(pSbs.differences)).as("parametric figures at other confidences beyond relative 1e-12 or in words").isEmpty();
-        assertThat(asserted(sbs.differences)).as("answers that differ (EUR too on the heap tier)").isEmpty();
+        assertThat(asserted(sbs.differences)).as("answers that differ (EUR too, both tiers)").isEmpty();
         assertThat(asserted(sbs.bitDifferences)).as("raw bits that differ").isEmpty();
     }
 

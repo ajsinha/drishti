@@ -138,12 +138,9 @@ class RiskSideBySideCadTest {
         assertThat(sbs.compared).as("answers compared").isGreaterThan(500);
         assertThat(setting.bitDifferences).as("the setting's answer is not ccy=CAD's to the bit").isEmpty();
         assertThat(setting.sameBits).as("setting answers checked").isGreaterThan(500);
-        // between the paths in CAD: both sum the book converted first (R2_CUT_PLAN 6.6 (2)): every field equal on the heap tier; on the
-        // mapped tier the in-tree book is converted from its float32 rows (MC-12): figures counted and printed, trades and limits equal
-        assertThat(sbs.differences.stream().filter(x -> RiskSideBySideTest.HEAP || x.contains(" trades:") || x.contains(" limit:")
-                || x.contains(" currency:")).toList()).as("CAD answers that differ between in-tree and engine").isEmpty();
-        if (RiskSideBySideTest.HEAP) {
-            assertThat(sbs.bitDifferences).as("CAD raw bits that differ between in-tree and engine").isEmpty();
-        }
+        // between the paths in CAD: both sum the book converted first (R2_CUT_PLAN 6.6 (2)), the engine reading its rows as the tier keeps
+        // them (MC-12): every field and raw bit equal on both tiers
+        assertThat(sbs.differences).as("CAD answers that differ between in-tree and engine").isEmpty();
+        assertThat(sbs.bitDifferences).as("CAD raw bits that differ between in-tree and engine").isEmpty();
     }
 }
