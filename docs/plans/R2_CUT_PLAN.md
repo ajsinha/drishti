@@ -365,6 +365,9 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
 - **Still in-tree only**: tree, distribution, what-if, captures/compare, official records, contributions by counterparty or trade, GROUP:
   scopes, run/strict, proxy pre-deal, SIMM routes, `ExposureFigures` (netting-set and counterparty pages: they need the run id, path count
   and the 99% profile beside the 95%), the explain routes; the engine path writes no audit line yet (the in-tree contributions route does).
+- **Regression (mapped tier, 18:18)**: `PackagedVarGoldenTest` (167,372,692 / 210,131,972), `RiskSideBySideTest` 14/14 (headline 3,918 raw
+  bits), `HomesSideBySideTest` (1,054 rows) green on this branch; `CcrRecordedIT` green with the new options and outputs; no tolerance
+  widened.
 - **Next**: the tree on `counterparty-summary`/`netting-set-summary` with the host's names, groups and known sets; `ExposureFigures`;
   distribution and what-if outputs; then the family's default switch (EXPOSURE_GUIDE 18.1 line) with the owner.
 
