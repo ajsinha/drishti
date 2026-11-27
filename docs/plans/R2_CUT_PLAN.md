@@ -347,6 +347,33 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
    on the capture). `GET /compare?b=now&path=engine` reads now from the engine. A lens other than the offered one and a scope whose
    parts are positions or terms are refused in words on the engine path (captured in-tree).
 
+### Status, MC-12 (2026-11-27 16:0x, branch `r2/var-routes` 234a03971; drishti-risk `r2/var-routes` 673c097)
+
+- **Done: the engine reads the rows as the host's tier keeps them, same element type and reduction order.** New engine option
+  `vector-tier` (`heap` default: float64 as delivered; `mapped`): each book (USD, and each book converted from it) keeps every position as
+  one float32 row (the float64 sum of its trades, converted once) and the trades of positions of several trades as float32 rows, in the
+  hot file's layout and pieces (`MappedMatrix.held`, `VarBook.withFloat32Rows`), read through the same `GroupedVectors`, so every sum
+  reads float32 into float64 in the mapped book's order; aggregates stay float64. Drishti's `config/engines/market-risk.yaml` sets it
+  from `drishti.var.tier.mode` (`DRISHTI_VAR_TIER`), so it follows the tier; route defaults unchanged. `VarHotFileTest`: a heap book with
+  float32 rows equals a hot file's book to the bit (every position, trade, scope, 30 random sets, every node; 1 and 4 threads).
+- **Mapped tier (default), all asserted, `[positions]` and EUR carve-outs removed**: `RiskSideBySideTest` 14/14 green (2,785 s): scope kinds
+  300 answers 0 differences (35 before), 678 raw bits; contributions 1,572 answers, 0 position-part differences (542 before); captures
+  786 pairs 0 (117 before); P&L path 786, 1,572 raw bits; what-if on scope kinds 39, 0; parametric 2,023,570 numbers all within 1e-12
+  (16,020 USD outside before); headline 3,918/3,918 raw bits; tree, horizons, other confidences, history, statistics, backtest 0
+  differences. `RiskSideBySideCadTest` every field and raw bit (786). `PackagedVarGoldenTest` (167,372,692 / 210,131,972),
+  `HomesSideBySideTest`, `ConsumersSideBySideTest`, `MarketRecordedIT` green. A node in another currency on the mapped tier is checked
+  against the in-tree route's exact figures (the golden file, unedited, holds the float64 conversion; the nine whole-unit answers of 6.6
+  (2) are that difference).
+- **Heap tier (`-Dsbs.tier=heap`)**: `RiskSideBySideTest` 14/14 green (2,527 s; parametric 2,023,570 numbers, history 864 answers, what-ifs 39, all 0 differences), `RiskSideBySideCadTest` green; the engine there stays float64 (`vector-tier: heap`).
+- **Intraday tests not re-tightened**: `VarIntradayApiTest`, its Risk-edition subclass and `VarPvStreamTest` compare two in-tree paths
+  (a full reload converts the hot file's float32 USD rows, the stream converts the batch's own float64 figures); no engine is involved,
+  so MC-12 cannot remove that noise; it is not in the CAD fixture itself, which only makes it visible (half-unit figures tie either way
+  at whole units). Closing it needs the in-tree stream to convert from the same float32 rows (in-tree change, not done).
+- **Open (zero copy proper, 3a.1)**: the engine builds its float32 rows itself, from the trade rows it is delivered (half the bytes of
+  the float64 rows they replace, released after the build); the host's own hot-file rows are not yet handed over as a read-only
+  `FloatVectors` view (`InputTable.vectorView`; the engine API already has the type, the host's `LakeInputs` and the banking hot file do
+  not serve it yet). The seam is `VarBook.withFloat32Rows`: the view replaces the rows built there, the bits are already proven equal.
+
 ### Status, consumers (2026-11-27 13:5x, lane E work in lane G's branch `r2/var-routes`; drishti-risk unchanged)
 
 - **Done (behind `drishti.module.banking.var.consumers.route`, default `in-tree` unchanged; Appendix A rows)**: (1) the role Home VaR panels
