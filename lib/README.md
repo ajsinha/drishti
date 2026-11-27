@@ -26,7 +26,7 @@ holds the server's JVM options (`deploy/jvm/*.args`, generated from the function
   (their pattern `drishti-server-*-exec.jar` does not match it).
 - `<home>/lib/ext` holds YOUR jars (JDBC drivers, connector plugins, a company's own libraries): kept on an upgrade, read by the server
   at start (`drishti.lib.path`, `DRISHTI_LIB_PATH`; see below). A Drishti server jar put there is skipped.
-- `<home>/lib/engines` holds engine JARs (`drishti.engine-lib.path`; see [engines/README.md](engines/README.md)): each read at start in its
+- `<home>/lib/engines` holds engine JARs (`drishti.engine-lib.path`; see lib/engines below): each read at start in its
   own class loader, kept on an upgrade. An engine JAR put in `lib/ext` is skipped.
 
 An upgrade replaces the Drishti jar in `<home>/lib` only and keeps `lib/ext` and `lib/engines`. Jars found in `<data>/lib` (the previous default) are moved
@@ -42,3 +42,11 @@ once into `lib/ext` at the next start; Admin → Health says so.
 `<home>/lib/ext` is the site's shared lib folder (`drishti.lib.path`, `DRISHTI_LIB_PATH`; this folder is the default): JDBC drivers, connector plugins and a company's own libraries. Every jar here is read once, at start, into one lib class loader under the kernel's; connectors and modules see it, and it never replaces a kernel class. Restart the server after a change. Admin → Health lists each jar with its SHA-256.
 
 An upgrade keeps this folder; Drishti's server jar never goes here (one found here is skipped with a warning). Jars found in `external_lib/java` are moved here once, listed in `moved-<date-time>.bak`. Only administrators should be able to write here: what is in it runs inside the server. The repository keeps the folder empty apart from `.gitignore`. Details: docs/guides/ADMIN_GUIDE.md section 22.1.
+
+## lib/engines: engine JARs
+
+An engine JAR is built outside Drishti against drishti-engine's `engine-api`, read once at start in a class loader of its own, and sees
+only the platform packages the server provides and its own classes. Each engine is bound from `config/engines/<id>.yaml`; Admin → Engines
+lists each JAR with its SHA-384, its engines and versions. Restart after a change. Only administrators should write here: what is in it runs
+inside the server (trust `folder`); under `drishti.engine-lib.trust: pinned` an engine also needs its version and SHA-384 in its engine file.
+The repository keeps the folder empty. Details: docs/architecture/ENGINES_IN_DRISHTI.md.

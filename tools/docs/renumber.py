@@ -154,8 +154,8 @@ def tracked_markdown(changelog: bool = False) -> list[str]:
             if changelog or f != "CHANGELOG.md"]
 
 
-LANE_A = ("docs/guides/USER_GUIDE.md", "docs/guides/ADMIN_GUIDE.md", "docs/guides/AI_GUIDE.md", "docs/guides/APPROVALS_GUIDE.md",
-          "docs/guides/LIVE_RESULTS_GUIDE.md", "docs/guides/BANK_DATA_GUIDE.md", "docs/guides/WORLD_DATA_GUIDE.md", "docs/guides/EXPOSURE_GUIDE.md",
+LANE_A = ("docs/guides/USER_GUIDE.md", "docs/guides/ADMIN_GUIDE.md", "docs/guides/ADMIN_GUIDE.md", "docs/guides/ADMIN_GUIDE.md",
+          "docs/guides/USER_GUIDE.md", "docs/guides/BANK_DATA_GUIDE.md", "docs/guides/WORLD_DATA_GUIDE.md", "docs/guides/EXPOSURE_GUIDE.md",
           "docs/guides/bi/", "docs/tutorials/", "docs/knowledge/")
 
 

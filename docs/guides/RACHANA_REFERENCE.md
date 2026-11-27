@@ -602,7 +602,7 @@ panels:
 ```
 
 The long form needs no declaration: `{ use: core@1/record-card@1 }`. A library fragment is always used with its major (`DRS-2048` without
-it). One resolver chain answers every `use:`; a library fragment (`lib/fragment@N` of a declared library) and a pack's own (`pack/fragment@N`)
+it). One resolver chain answers every `use:`; a library fragment (`use: core/record-card@1`, a fragment of a declared library) and a pack's own (`pack/fragment@N`)
 cannot collide because a library use is qualified by a library the Sutra declared; the UI kit's plain names (`series-line@1`) are never
 library names. A pack namespace equal to a library name is answered by the library in a Sutra that declares it, and loading warns about it:
 name packs differently from `core`, `finance` and the other library names.

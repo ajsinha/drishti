@@ -3069,6 +3069,41 @@ limited to the people who may use the module, and answers only while the module 
 - The module archetype (`mvn archetype:generate` of `drishti-module-archetype`): `GET /api/v1/<artifactId>/greeting/{name}` answers `{name, greeting}`,
   the smallest module route a new module starts from.
 
+## 39. Hosted engines, lifecycle and role Homes
+
+An engine JAR in `lib/engines` is served by the engine host ([ENGINES_IN_DRISHTI.md](../architecture/ENGINES_IN_DRISHTI.md)); every module, pack and connector has one
+lifecycle ([LIFECYCLE.md](../architecture/LIFECYCLE.md)); a role's Home is a Sutra with its tables ([ROLE_HOME_SUTRAS.md](../architecture/ROLE_HOME_SUTRAS.md)).
+Errors: DRS-1036 and DRS-1037 (the table below), and the engine host's ENG- codes in the answer's `code`.
+
+| Method | Path | Does |
+|---|---|---|
+| `GET` | `/engines/platform` | the platform the host offers an engine JAR: the packages it sees and the API version |
+| `GET` | `/engines/{id}` | one hosted engine: version, state with its words, inputs and the outputs it answers (what the caller may see) |
+| `GET` | `/engines/{id}/health` | the engine's health: `{state, words, checks[]}` |
+| `GET` | `/engines/{id}/stats` | the engine's counters: asks, time, sessions open, triggers waiting |
+| `POST` | `/engines/{id}/output` | asks an output by name, the parameters and the snapshot's dimensions in the body; the answer is the output's table |
+| `GET` | `/engines/{id}/outputs/{output}` | the same ask with the parameters in the query |
+| `GET` | `/engines/{id}/outputs/{output}/live` | the output as a live table (Data Protocol): the snapshot, then the changes |
+| `GET` | `/admin/engines/host` | Admin → Engines: every hosted engine with its JAR, SHA-384, binding of each input, sessions and triggers waiting |
+| `GET` | `/admin/engines/{id}/lifecycle` | the engine's lifecycle state and the transitions it allows now |
+| `POST` | `/admin/engines/{id}/lifecycle/{action}` | one transition (`start`, `suspend`, `resume`, `shutdown`); refused with DRS-1036 when the state does not allow it |
+| `GET` | `/admin/engines/{id}/template` | `text/plain`: a `config/engines/<id>.yaml` for the engine from its descriptor |
+| `POST` | `/admin/engines/{id}/asks/{name}` | runs one of the engine's declared asks as the administrator (Admin → Engines › Try) |
+| `GET` | `/admin/lifecycle` | every module, pack and connector with its lifecycle state |
+| `GET` | `/admin/lifecycle/graph` | the dependency graph between them, for a shutdown that cascades |
+| `GET` | `/admin/{type}/{name}/lifecycle` | one component's state and its allowed transitions (`type`: `modules`, `packs` or `connectors`) |
+| `POST` | `/admin/{type}/{name}/lifecycle/{transition}` | one transition; `cascade=true` on a pack's shutdown also shuts down the running packs that depend on it |
+| `GET` | `/admin/{type}/{name}/health` | the component's health |
+| `GET` | `/admin/{type}/{name}/stats` | the component's counters, and a connector's backlog |
+| `GET` | `/homes` | the Homes the caller is offered, the one to open first marked (one role, one Home) |
+| `GET` | `/homes/{home}` | the Home's Sutra as served, with `user-can-arrange` and the name the caller's arrangement is kept under |
+| `GET` | `/homes/{home}/tables/{table}` | one of the Home's tables, for the caller (rights and masks apply) |
+| `GET` | `/homes/{home}/status` | the snapshot the panels stand on, and why "Since" may be empty, in words |
+| `GET` | `/homes/{home}/why` | the engine's explanation of one change: the move and each driver's share |
+| `PUT` | `/homes/me` | the caller's own start Home, one they are offered |
+| `POST` | `/homes/admin/snapshot` | administrator: take the snapshot now (after a late load) |
+| `POST` | `/homes/admin/reload` | administrator: read the Home files again |
+
 ## Error code table
 
 The complete list (from `ErrorCode` in `drishti-common`). The first digit groups them: 1 sources and data,
@@ -3107,6 +3142,8 @@ and the fix for the codes that need more than the meaning.
 | DRS-1046 | — | connector file not used | a site connector file says `template: <owner>` (or an earlier release generated it) and that template is not here (its module is off or removed): the file is listed, never run on its own |
 | DRS-1048 | — | inbox rules unreadable | a module's `dataload.yaml` cannot be read: its files are not matched by the inbox until it is fixed (Admin → Health) |
 | DRS-1035 | 409 | needs data | a function that is installed and on but whose required data no source serves (`EXP needs data: exposure-path is not bound; ask your data administrator`): its API answers this with the need and `function`; its console page is the needs-data page (200, links to Admin → Data bindings and Help) and the command line says the same words. Binding the data turns it on; never 404 |
+| DRS-1036 | 409 | lifecycle refused | a transition the component's state does not allow (resume of one that is not suspended, suspend of one that is not running); nothing was changed ([LIFECYCLE.md](../architecture/LIFECYCLE.md)) |
+| DRS-1037 | 503 | component suspended | a suspended module, pack or connector answers no new request until it is resumed; its state and caches are kept |
 | DRS-1032 | 503 | module part unavailable | a module part runs on no node that is up (or is not placed at all, or a forwarded request reached a node it is not placed on); it is never run on an unplaced node |
 | DRS-1017 | 403 | edition pack refused | the server's edition lists its packs with allow-only ([LENSES.md](ADMIN_GUIDE.md#12-what-a-lens-is)): Admin → Packs load, Deploy archive (a failed check) and the registry install refuse any other pack. Add the pack to the edition's packs, or set `drishti.edition-spec.packs.allow-only=false` |
 | DRS-1015 | 503 | connector restarting | the connector the kind is routed to is being restarted (its file changed, a retry) and was not back within 30 s; a read waits that long for it (and for any connector of the kind being restarted) before answering; try again |

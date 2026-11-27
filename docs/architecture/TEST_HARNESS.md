@@ -689,7 +689,7 @@ python3 -m pytest -q drishti-console/tests/test_release_from_other_folder.py   #
 tools/drill.sh --lanes anywhere --no-push                                                              # the same, through the drill
 ```
 
-### 3.30 The drop-in test (plug and play, proven every release)
+### 3.33 The drop-in test (plug and play, proven every release)
 
 Every full drill proves that a compute engine, a pack and a connector are added and removed by copying files, with the server jar as built
 (acceptance tests A3 to A7 of the drishti-engine specification, `spec/1/SPEC.md` section 0). The drill's **`dropin`** lane

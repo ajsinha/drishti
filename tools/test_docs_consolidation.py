@@ -36,8 +36,8 @@ def test_every_rule_row_matches_and_totals_are_the_plans():
     rows, unmatched = corpus.build()
     assert unmatched == []
     n = corpus.counts(rows)
-    assert len(rows) == 410
-    assert (n["merge"], n["delete"], n["generate"], n["move"], n["rename"], n["connector"]) == (105, 64, 94, 5, 2, 22)
+    assert len(rows) == 418                       # main's 410 and i8's eight documents (three architecture, four plans, lib/engines merged into lib/README.md)
+    assert (n["merge"], n["delete"], n["generate"], n["move"], n["rename"], n["connector"]) == (106, 64, 94, 5, 2, 22)
     assert len({r[0] for r in rows}) == len(rows)
 
 

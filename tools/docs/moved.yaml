@@ -145,6 +145,7 @@ moved:
   - {from: 'examples/packs/logistics/guides/logistics.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'examples/packs/operational-risk/guides/operational-risk.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'examples/packs/retail-banking/guides/retail-banking.md', to: '', how: delete, note: 'deleted outright'}
+  - {from: 'lib/engines/README.md', to: 'lib/README.md', how: merge}
   - {from: 'modules/banking/packs/counterparty-risk/guides/counterparty-risk.md', to: 'docs/guides/EXPOSURE_GUIDE.md', how: merge}
   - {from: 'modules/banking/packs/market-risk/guides/market-risk.md', to: 'docs/guides/VAR_GUIDE.md', how: merge}
   - {from: 'modules/banking/packs/trading/guides/trading-products.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}

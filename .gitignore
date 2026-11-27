@@ -52,9 +52,8 @@ external_lib/python/*
 /lib/wheels/*.whl
 # the site's jars: <home>/lib/ext (drishti.lib.path), kept on an upgrade; never committed (lib/ext/README.md is)
 /lib/ext/*
-# the engine JARs: <home>/lib/engines (drishti.engine-lib.path), kept on an upgrade; never committed (lib/engines/README.md is)
+# the engine JARs: <home>/lib/engines (drishti.engine-lib.path), kept on an upgrade; never committed
 /lib/engines/*
-!/lib/engines/README.md
 !/lib/ext/README.md
 
 # deploy/stack/ (the local Drishti*net cluster, deploy/stack/README.md): the repository is public, so its secrets (the token, session and

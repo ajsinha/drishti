@@ -89,6 +89,7 @@ files:
   - {path: 'docs/architecture/DOCS_PLAN.md', class: delete, lane: B}
   - {path: 'docs/architecture/DOMAIN_MODULES.md', class: merge, lane: B}
   - {path: 'docs/architecture/ELEMENTS_IN_DRISHTI.md', class: merge, lane: B}
+  - {path: 'docs/architecture/ENGINES_IN_DRISHTI.md', class: keep, lane: B}
   - {path: 'docs/architecture/FIGMA_INTEGRATION.md', class: move, lane: B}
   - {path: 'docs/architecture/FINANCIAL_CRIME.md', class: move, lane: B}
   - {path: 'docs/architecture/FUNCTION_CATALOGUE.md', class: keep, lane: B}
@@ -97,6 +98,8 @@ files:
   - {path: 'docs/architecture/IFRS9_ECL.md', class: move, lane: B}
   - {path: 'docs/architecture/KERNEL_AND_MODULES.md', class: keep, lane: B}
   - {path: 'docs/architecture/LENSES.md', class: keep, lane: B}
+  - {path: 'docs/architecture/LIFECYCLE.md', class: keep, lane: B}
+  - {path: 'docs/architecture/ROLE_HOME_SUTRAS.md', class: keep, lane: B}
   - {path: 'docs/architecture/SHARED_SCREENS.md', class: merge, lane: B}
   - {path: 'docs/architecture/TEST_HARNESS.md', class: keep, lane: B}
   - {path: 'docs/architecture/THIN_CONSOLE_DESIGN.md', class: keep, lane: B}
@@ -250,10 +253,13 @@ files:
   - {path: 'docs/plans/AI_MANAGEMENT.md', class: keep, lane: B}
   - {path: 'docs/plans/COUNTERPARTY_ENGINES.md', class: keep, lane: B}
   - {path: 'docs/plans/CSV_LOADERS.md', class: delete, lane: B}
+  - {path: 'docs/plans/DRISHTI_RISK_DESIGN.md', class: keep, lane: B}
   - {path: 'docs/plans/ELEMENTS_SPLIT_RUNBOOK.md', class: delete, lane: B}
+  - {path: 'docs/plans/ENGINE_INTEGRATION_DESIGN.md', class: keep, lane: B}
   - {path: 'docs/plans/FIGMA_INTEGRATION.md', class: keep, lane: B}
   - {path: 'docs/plans/FINANCIAL_CRIME.md', class: keep, lane: B}
   - {path: 'docs/plans/G4_REHEARSAL.md', class: delete, lane: B}
+  - {path: 'docs/plans/H2_INVENTORY.md', class: keep, lane: B}
   - {path: 'docs/plans/HIGH_PERFORMANCE_NATIVE.md', class: keep, lane: B}
   - {path: 'docs/plans/I7A_BUILD_PLAN.md', class: delete, lane: B}
   - {path: 'docs/plans/I7A_IMPACT.md', class: delete, lane: B}
@@ -262,6 +268,7 @@ files:
   - {path: 'docs/plans/LAUNCHER_REVIEW.md', class: delete, lane: B}
   - {path: 'docs/plans/LENSES_PROPOSALS.md', class: keep, lane: B}
   - {path: 'docs/plans/QUANT_SERVICE.md', class: keep, lane: B}
+  - {path: 'docs/plans/R2_CUT_PLAN.md', class: keep, lane: B}
   - {path: 'docs/plans/contracts/COLL.md', class: keep, lane: C}
   - {path: 'docs/plans/contracts/CVA.md', class: keep, lane: C}
   - {path: 'docs/plans/contracts/GRP.md', class: keep, lane: C}
@@ -334,6 +341,7 @@ files:
   - {path: 'examples/packs/retail-banking/guides/retail-banking.md', class: delete, lane: C}
   - {path: 'external_lib/README.md', class: note, lane: C}
   - {path: 'lib/README.md', class: note, lane: C}
+  - {path: 'lib/engines/README.md', class: merge, lane: C}
   - {path: 'modules/banking/docs/README.md', class: generate, lane: C, tool: 'tools/packgen (module manifest)'}
   - {path: 'modules/banking/packs/counterparty-risk/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
   - {path: 'modules/banking/packs/counterparty-risk/guides/counterparty-risk.md', class: merge, lane: A}

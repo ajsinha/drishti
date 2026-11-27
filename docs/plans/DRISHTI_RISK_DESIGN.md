@@ -15,9 +15,8 @@
 -->
 # Drishti Risk: the risk engine as a product
 
-**Status: design for the owner, written 2026-11-21. Nothing built, nothing run, no decision taken beyond the owner's of this
-date.** Read from git only: Drishti `main` at `9ce7c3170`; [DRISHTI_LAKE_DESIGN](DRISHTI_LAKE_DESIGN.md);
-[I7B_PRODUCTS_PLAN](I7B_PRODUCTS_PLAN.md); `drishti-rachana` `docs/design/{LIBRARIES,LIVE_TABLES,DATA_PROTOCOL}.md` on
+**Status: design, not built (the engine API, kit and seam are built: see ENGINES_IN_DRISHTI.md). Written 2026-11-21. Nothing built, nothing run, no decision taken beyond the owner's of this
+date.** Read from git only: Drishti `main` at `9ce7c3170`; the Lake design and the i7b products plan (branch wip/i7b-products); the Rachana library, live-table and Data Protocol designs on
 `origin/g2/integration`. Line counts are `wc -l` over `src/main` and `src/test` on that commit; groups marked "about" were sorted
 by imports (Spring, host packages), not file by file: step K0 reviews the list file by file. Timings are quoted from
 `docs/admin/BENCHMARK.md`; nothing was measured for this document.
@@ -260,7 +259,7 @@ does not pass the kit and cannot be released.
 | `banking-service/exposure` less its adapters | about 5,500 | `risk-ccr` |
 | `banking-service/frtb`, `/simm` less controllers and properties | about 2,600 + 2,200 | `risk-market`, `risk-ccr` (with their playground books, 1,314 and 891) |
 | playground templates and engine defaults (`resources/playground`, `resources/engines`), 42 files | | with their modules |
-| `tools/pvgen` (synthetic scenario PVs, Python, 1,335) | | `tools/samples` in the product: the kit's sample day |
+| `tools/pvgen` (synthetic scenario PVs, Python, 1,335) | | the samples folder in the product: the kit's sample day |
 | tests of all the above | about 24,000 | with their code, or into the kit |
 | **Total** | **about 52,000 main, 24,000 test** | |
 

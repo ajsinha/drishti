@@ -440,7 +440,10 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     catalogue += yaml.safe_load((ENGINES_JAR / "catalogue.yaml").read_text(encoding="utf-8")).get("engines") or []
     files = {e["file"] for e in catalogue}
     on_disk = {p.name for p in ENGINES_DIR.glob("*.yaml")}
-    for name in sorted(on_disk - files):
+    # a hosted engine (an engine JAR in <home>/lib/engines, docs/architecture/ENGINES_IN_DRISHTI.md) has its file and no catalogue entry: the
+    # host reads every file of config/engines itself; its file says so in its first comment
+    hosted = {n for n in on_disk - files if "<home>/lib/engines" in (ENGINES_DIR / n).read_text(encoding="utf-8")}
+    for name in sorted(on_disk - files - hosted):
         problems.append(f"config/engines/{name}: no engine of the catalogue (kernel/drishti-server/src/main/resources/engines/catalogue.yaml) names it")
     lakes = ROOT / "config" / "lakes"                                               # the shipped lake files and their jar copies (Lakes):
     for lake in sorted([*lakes.glob("*.yaml"), *lakes.glob("*/*.yaml")]):            # a domain folder's in its module's jar

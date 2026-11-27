@@ -294,7 +294,6 @@ Run these before every commit; each takes seconds to a few minutes. The whole te
 | One browser file | `python3 -m pytest -q drishti-console/tests/test_elements_gallery_browser.py` | Chromium on a real console; name the file of the screen you changed |
 | One Java module | `./mvnw -q verify -pl :drishti-registry -am` | that module's tests and the rules it must keep |
 | Several targeted tests together | `./mvnw -q verify -pl :drishti-registry,:drishti-engine -am -Dtest='A*Test,B*Test' -Dsurefire.failIfNoSpecifiedTests=false` | build once, name every test you need in one Maven run, never one Maven run per test |
-| The lake tests of `drishti-modules-it` | `./mvnw -q verify -pl :drishti-modules-it -am -Dtest='Packaged*Test' -Dsurefire.failIfNoSpecifiedTests=false` | they build their lakes with `drishti-console/.venv/bin/python` (the interpreter the drill uses), which needs `drishti_lake`: installed there or the pinned wheel in `lib/wheels`; `-Ddrishti.python=<python>` names another; a missing one fails the test saying so |
 | What your branch touched | `tools/drill.sh --affected` (`--base REF`, default `origin/develop`; `--dry-run` lists the selection) | only the Maven modules and test files the diff can reach; shared infrastructure selects more; never a release proof |
 | The gate | `tools/drill.sh --gate` | everything the release drill checks first (headers, generated files, docs, static tests, the rule tests and one build); a few minutes, on any branch, no push |
 
