@@ -57,7 +57,10 @@ class RiskSideBySideCadTest {
         Path work = FOLDER.resolve("server");
         RiskSideBySideTest.deleteTree(work);
         SideBySide.dropJars(Path.of(jars), work);
-        server = PackagedServer.start(work, lake, "2026-09-30", Map.of("DRISHTI_VAR_REPORTING_CURRENCY", "CAD"));
+        server = RiskSideBySideTest.HEAP                                  // -Dsbs.tier=heap: the in-tree rows as float64
+                ? PackagedServer.start(work, lake, "2026-09-30", Map.of("DRISHTI_VAR_REPORTING_CURRENCY", "CAD", "DRISHTI_VAR_TIER", "heap",
+                        "DRISHTI_VAR_MEMORY_MB", "900"))
+                : PackagedServer.start(work, lake, "2026-09-30", Map.of("DRISHTI_VAR_REPORTING_CURRENCY", "CAD"));
         long end = System.currentTimeMillis() + 180_000;
         while (true) {
             try {
@@ -135,9 +138,12 @@ class RiskSideBySideCadTest {
         assertThat(sbs.compared).as("answers compared").isGreaterThan(500);
         assertThat(setting.bitDifferences).as("the setting's answer is not ccy=CAD's to the bit").isEmpty();
         assertThat(setting.sameBits).as("setting answers checked").isGreaterThan(500);
-        // between the paths in CAD: trades and limits equal; the figures are the open non-USD canonical (per-currency totals against the
-        // converted book, last digits apart, R2_CUT_PLAN 6.6): counted and printed, not asserted, until it is settled
-        assertThat(sbs.differences.stream().filter(x -> x.contains(" trades:") || x.contains(" limit:") || x.contains(" currency:")).toList())
-                .as("CAD trades, limits or currency that differ between in-tree and engine").isEmpty();
+        // between the paths in CAD: both sum the book converted first (R2_CUT_PLAN 6.6 (2)): every field equal on the heap tier; on the
+        // mapped tier the in-tree book is converted from its float32 rows (MC-12): figures counted and printed, trades and limits equal
+        assertThat(sbs.differences.stream().filter(x -> RiskSideBySideTest.HEAP || x.contains(" trades:") || x.contains(" limit:")
+                || x.contains(" currency:")).toList()).as("CAD answers that differ between in-tree and engine").isEmpty();
+        if (RiskSideBySideTest.HEAP) {
+            assertThat(sbs.bitDifferences).as("CAD raw bits that differ between in-tree and engine").isEmpty();
+        }
     }
 }

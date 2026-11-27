@@ -644,20 +644,6 @@ public final class VarService implements AutoCloseable {
         return CurrencyTotals.of(usd.book(), set, fx(usd), sums);
     }
 
-    /**
-     * The vector of a set in a reporting currency other than USD, from the per-trade-currency totals of the USD book (exact, and cheap for a
-     * node); the converted book's own sum when the date's FX lacks a currency the totals need.
-     */
-    private double[] inCurrencyVector(VarDate d, OrdinalSet set, ScopeResolver.Resolution res) {
-        VarDate usd = load(d.date(), 0);
-        usd = MORNING.get() ? usd.morning() : usd;
-        if (!usd.date().equals(d.date())) {
-            return vector(d, set, res);
-        }
-        double[] v = totals(usd, set, res.node()).in(fx(usd), d.currency());
-        return v != null ? v : vector(d, set, res);
-    }
-
     // ---------------------------------------------------------------------------------------------------------- matured items
 
     /**
@@ -1515,8 +1501,9 @@ public final class VarService implements AutoCloseable {
         int hidden = res.set().size() - set.size();
         VarDate dd = d;
         VarShardRows.Stats st = d.book().morning().sharded() ? new VarShardRows.Stats() : null;
-        double[] v = st == null ? (VarDate.USD.equals(d.currency()) ? vector(d, set, res) : inCurrencyVector(d, set, res))
-                : VarShardRows.counting(st, () -> VarDate.USD.equals(dd.currency()) ? vector(dd, set, res) : inCurrencyVector(dd, set, res));
+        // the book converted to the reporting currency first, then summed (owner decision 2026-11-27, R2_CUT_PLAN 6.6 (2)): one rule in every
+        // currency; limit use divides this VaR, a node's and a system basket's limit are the converted book's
+        double[] v = st == null ? vector(d, set, res) : VarShardRows.counting(st, () -> vector(dd, set, res));
         VarCalc.Measures m = calc.measures(v);
         String kind = kindOf(res, parsed);
         Scoped s = new Scoped(d, view, res, set, hidden, v, m, kind, label(d, res, parsed, kind, p), (System.nanoTime() - t0) / 1_000_000, false,
