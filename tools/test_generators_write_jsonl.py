@@ -44,7 +44,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PY = sys.executable
 
 #: the generators whose source is read (data generators; tests and fixtures under them are skipped)
-GENERATORS = ["tools/packgen/**/*.py", "tools/samplegen/*.py", "tools/testdata/*.py", "tools/realdata/*.py", "tools/feeds/*.py", "tools/feeds/sources/*.py",
+GENERATORS = ["tools/packgen/**/*.py", "tools/samplegen/*.py", "tools/testdata/*.py", "tools/realdata/*.py", "tools/loaders/common/*.py", "tools/loaders/external/*.py", "tools/loaders/news/*.py",
               "tools/sutragen.py", "tools/schemapack.py", "tools/bench/trades.py", "tools/convertcmd.py", "tools/pvgen/*.py",
               "modules/*/packs/*/tools/*.py", "modules/banking/packs/*/tools/*.py", "config/packs/*/*/tools/*.py",
               "examples/packs/*/tools/*.py"]
@@ -56,7 +56,7 @@ LOADERS = {"tools/samplegen/layout.py", "tools/samplegen/load_rows.py"}
 ALLOWED_NAMES = {"MANIFEST.json", "manifest.json", "meta.json", "cache-index.json", "testdata.yaml", "trackers.json", "factbook_ref.json",
                  "fetch.json", "rr.json", "wikidata.json", "reference.json", "last-run.json", "help-coverage.txt", "expect.yaml",
                  "index.json"}   # index.json: the recorded responses' index (request key -> raw response file) of a feed's test fixtures
-                                 # (tools/feeds/sources/publicsector.py Recorder), a manifest like cache-index.json, not data
+                                 # (tools/loaders/common/publicsector.py Recorder), a manifest like cache-index.json, not data
 
 #: non-data files a pack generator writes beside its samples (the pack itself, its docs)
 NON_DATA_SUFFIXES = (".yaml", ".yml", ".md", ".txt", ".sutra.yaml", ".svg", ".png", ".jpg", ".html", ".css", ".js", ".py")

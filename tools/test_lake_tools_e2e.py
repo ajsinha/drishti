@@ -340,14 +340,14 @@ def test_lake_demo_builds_the_demo_lake_and_its_dates_delete(work, jar):
 # ---- mr_run: the sample day, loaded, and its delete plan run -------------------------------------------------------------------------
 
 def test_mr_run_sample_day_loads_and_its_delete_plan_removes_it(work, jar):
-    from mrloader import mr_gen
+    from loaders.mrloader import mr_gen
     day = "2026-11-18"
     src = work.dir / "src"
     mr_gen.generate(src, day)
     mr_gen.generate_pvf(src, day)
     lake = work.dir / "e2elake"                                   # a name that is no lake file is a folder under the working folder
-    dayfile = TOOLS / "mrloader" / "days" / "sample.yaml"
-    base = [sys.executable, str(TOOLS / "mrloader" / "mr_run.py"), "--date", day, "--from", str(src), "--day", str(dayfile), "--lake", "e2elake"]
+    dayfile = TOOLS / "loaders" / "mrloader" / "days" / "sample.yaml"
+    base = [sys.executable, str(TOOLS / "loaders" / "mrloader" / "mr_run.py"), "--date", day, "--from", str(src), "--day", str(dayfile), "--lake", "e2elake"]
     env = {**work.env, "DRISHTI_JAR": jar}
     r = subprocess.run(base + ["--out", str(work.dir / "out"), "--load"], env=env, cwd=str(work.dir), capture_output=True, text=True, timeout=1800)
     assert r.returncode == 0, r.stdout[-2500:] + r.stderr[-2500:]

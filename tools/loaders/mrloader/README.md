@@ -1,0 +1,227 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+-->
+
+# mrloader: load the bank's market-risk files every day
+
+For the person who loads the bank's own files each business day: the PVF scenario PVs, the daily scenario set, the scenario FX and the
+CSV datasets (desks, books, limits, sensitivities, exposure inputs). Nothing here is downloaded: you drop files in a folder, run one
+command, and the day lands in the lake **`risklake`** (or the lake you name) for the VaR and exposure engines.
+Depth, column by column: [BANK_DATA_GUIDE.md](../../../docs/guides/BANK_DATA_GUIDE.md) (sections 1 to 7). The generated page of every
+CSV kind: [CSV_FORMATS.md](../../../docs/contracts/CSV_FORMATS.md).
+
+On Linux write `python3`; on Windows write `py -3.13` and `\` in paths. Below, `PY` stands for that interpreter.
+
+## What it loads
+
+| Your file | Script | Table written (lake `risklake`) | Date comes from |
+|---|---|---|---|
+| `pvf_path_YYYYMMDD.csv` + `pos_YYYYMMDD.csv` + `portfolio_d2.csv` | `pvf_run.py` | `risk/scenario-pv` (one record per position, 251 PVs) | the `--date` you type, never the file name |
+| the day's 251 scenario days (dates file, or the 251 weekdays before the date) | `pvf_scenario_set.py`, or inside `pvf_run.py` | `risk/scenario-set` | `--date` |
+| `fx_YYYYMMDD.csv` (optional, long or wide form) | `pvf_fx_scenario.py`, or `pvf_run.py --fx` | `risk/fx-scenario` | `--date` |
+| one CSV of any other kind (`legal-entity`, `desk`, `book`, `counterparty-group`, `counterparty`, `agreement`, `csa`, `netting-set`, `collateral-balance`, `credit-limit`, `risk-factor`, `var-limit`, `position-sensitivity`, `trade-valuation`, `desk-pnl`) | `csv_load.py --kind K` | the kind's own table | `--date` |
+| a whole folder of those CSVs | `mr_run.py` with a day file | every kind of the day, in dependency order | `--date` |
+
+Never loaded from CSV (Drishti computes them from what you load): FRTB, SIMM, SA-CCR, CVA, stress results, P&L explain. The reason of each
+is in the BANK_DATA_GUIDE section "Never loaded from CSV".
+
+All the scripts of this folder:
+
+| Script | Does |
+|---|---|
+| `pvf_run.py` | **the PVF driver**: join positions, portfolio and per-path PVs, map, check, write the loadable files (set, FX, PVs), then `--inbox` or `--load` |
+| `pvf_scenario_set.py` | add or `--remove` a date's scenario set |
+| `pvf_fx_scenario.py` | add or `--remove` a date's scenario FX |
+| `pvf_validate.py` | check scenario-pv and scenario-set files against their contract |
+| `pvf_join.py`, `pvf_export_gz.py` | the steps inside `pvf_run.py`, runnable alone |
+| `pvf_gen.py` | synthetic PVF inputs to practise on |
+| `csv_load.py` | **one CSV kind**: convert and check; `--template` prints the header and an example row; `--kinds` lists every kind |
+| `mr_run.py` | **one day of CSV kinds**: convert all, check them against each other, hand over or load |
+| `validate.py` | any kind's files against its contract |
+| `kind_docs.py` | writes the generated `docs/contracts/CSV_FORMATS.md` (developers) |
+| `mr_gen.py` | a synthetic day of every CSV kind (the committed `samples/`) |
+
+## Prerequisites (once)
+
+1. `PY tools/drishti.py setup` checks the Python and its libraries and prints the `pip` command for anything missing; you run it. The
+   PVF scripts need Polars and NumPy: `PY -m pip install -r drishti-console/requirements-polars.txt`
+   (Windows `py -3.13 -m pip install -r drishti-console\requirements-polars.txt`). Converting needs no Java and no server.
+2. A server jar for the packs and contracts, and Java 21 to load: `PY tools/drishti.py build jar` puts it in `lib/`.
+3. **Point the connectors at your lake.** `risklake` ships empty and nothing reads it until you write `config/connectors/risk-store.yaml`
+   (or use Admin → Connectors), then restart the server:
+
+   ```yaml
+   template: pack market-risk
+   settings:
+     lake: risklake
+     lake-tables: risk.scenario-pv,risk.scenario-set,risk.fx-scenario,risk.var-limit
+     refresh-seconds: 30
+   ```
+
+   Check: `PY tools/drishti.py lake check`.
+4. For the CSV kinds: a **day file** (below) kept with your site's settings, not in the product.
+
+## The daily routine, step by step
+
+Run from the Drishti folder. Dates are ISO (`2026-10-29`). Oldest day first when you load several.
+
+### A. The PVF day (scenario set, FX, PVs)
+
+1. **Drop the files** in one folder, for example `data/pvf/` (Windows `data\pvf\`): `pvf_path_20261029.csv`, `pos_20261029.csv`,
+   `portfolio_d2.csv`, and `fx_20261029.csv` if you send FX. The names are a convention; the date is the one you type.
+2. **Check without writing anything:**
+
+   ```text
+   Linux     PY tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv --date 2026-10-29 --dry-run
+   Windows   py -3.13 tools\loaders\mrloader\pvf_run.py --pv data\pvf\pvf_path_20261029.csv --portfolio data\pvf\portfolio_d2.csv --positions data\pvf\pos_20261029.csv --date 2026-10-29 --dry-run
+   ```
+
+   A first trial on 2,000 positions takes seconds (`--limit 2000`); the full extract (200,000 positions) takes minutes and a few GB.
+3. **Load it** (set, then FX, then PVs, stopping at the first failure). Say what it would do first with `--plan`:
+
+   ```text
+   Linux     PY tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv --date 2026-10-29 --fx data/pvf/fx_20261029.csv --load --lake risklake --server http://localhost:18480
+   Windows   py -3.13 tools\loaders\mrloader\pvf_run.py --pv data\pvf\pvf_path_20261029.csv --portfolio data\pvf\portfolio_d2.csv --positions data\pvf\pos_20261029.csv --date 2026-10-29 --fx data\pvf\fx_20261029.csv --load --lake risklake --server http://localhost:18480
+   ```
+
+   `--server` tells a running server the date landed (leave it off when it is stopped; it notices within 30 seconds anyway; a secured
+   server needs `--token-file FILE`). **Or hand the files to the running server** with `--inbox` instead of `--load`: they are copied to
+   `data/dataload/inbox` and the node that owns the data load loads them (needs `DRISHTI_DATALOAD_ENABLED`).
+4. **Look at what was left out**, in `mr-<date>/` beside the output: `pvf_joined.<date>.audit.csv` (positions excluded:
+   `MISSING_PORTFOLIO`, `MISSING_BASE_PV`), `...fills.csv` (gaps in the paths filled by `--fill-policy forward|base|refuse`),
+   `scenario-pv.<date>.rejects.csv`, `scenario-pv.<date>.summary.json` (rows, seconds, peak memory).
+5. **Check it landed** (below).
+
+If your 251 days follow your own calendar, give them once per date: `--scenario-dates data/pvf/scenario_dates_20261029.txt` (one date a
+line, oldest first). The set, FX or PVs alone: `pvf_scenario_set.py --date D --dates FILE --inbox`, `pvf_fx_scenario.py --date D --fx FILE
+--inbox`, `pvf_run.py ... --no-scenario-set --scenario-set-id HS-PVF-251 --inbox`. Order always: **set, FX, PVs**.
+
+### B. The CSV day (limits, desks, books, sensitivities, exposure inputs)
+
+1. **Write the day file once** (`/path/to/site/day.yaml`), saying which file is which kind. `{YYYYMMDD}` is replaced by the date:
+
+   ```yaml
+   format: 1
+   lake: risklake
+   kinds:
+     legal-entity:         {csv: "legal_entity.csv"}
+     desk:                 {csv: "desk.csv"}
+     book:                 {csv: "portfolio_d2.csv", source: pvf}
+     scenario-pv:          {run: pvf, pv: "pvf_path_{YYYYMMDD}.csv", positions: "pos_{YYYYMMDD}.csv", portfolio: "portfolio_d2.csv", fx: "fx_{YYYYMMDD}.csv"}
+     var-limit:            {csv: "var_limits_{YYYYMMDD}.csv"}
+     position-sensitivity: {csv: "sens_positions_{YYYYMMDD}.csv", child: {SENSITIVITIES: "sens_{YYYYMMDD}.csv"}, source-system: MUREX}
+   required: [scenario-pv]
+   ```
+
+   `days/sample.yaml` is a full example. A bank's own column names go in a **mapping file of your own** (a copy of `kinds/<kind>.yaml`
+   with the `from:` columns renamed), named in the day file as `mapping: /path/to/site/mappings/var-limit.yaml`. Never edit the shipped ones.
+2. **Drop the day's files** in one folder, e.g. `data/mr/2026-10-29/`.
+3. **Check, then hand over:**
+
+   ```text
+   Linux     PY tools/loaders/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day /path/to/site/day.yaml --dry-run
+             PY tools/loaders/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day /path/to/site/day.yaml --inbox
+   Windows   py -3.13 tools\loaders\mrloader\mr_run.py --date 2026-10-29 --from data\mr\2026-10-29 --day C:\site\day.yaml --dry-run
+             py -3.13 tools\loaders\mrloader\mr_run.py --date 2026-10-29 --from data\mr\2026-10-29 --day C:\site\day.yaml --inbox
+   ```
+
+   It converts every kind in dependency order (masters, then set and PVs, then limits and sensitivities), checks the kinds against each
+   other and only then hands over: **a day that fails leaves the lake as it was.** Use `--load --lake risklake` instead of `--inbox` to
+   load now, `--keep-going` to deliver the kinds that do not depend on a refused one.
+4. **One kind only:** `PY tools/loaders/mrloader/csv_load.py --kind var-limit --csv FILE --date 2026-10-29 --inbox`
+   (`--template` prints the header and an example row; `--kinds` lists every kind; `--limit N` is a trial).
+
+### Load several days
+
+Oldest first, so each date's set precedes its PVs. Linux:
+
+```bash
+for d in 20261027 20261028 20261029; do
+  iso="${d:0:4}-${d:4:2}-${d:6:2}"
+  python3 tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_$d.csv --portfolio data/pvf/portfolio_d2.csv \
+     --positions data/pvf/pos_$d.csv --date $iso --load --lake risklake --server http://localhost:18480 || break
+done
+```
+
+Windows PowerShell:
+
+```powershell
+foreach ($d in "20261027","20261028","20261029") {
+  $iso = $d.Substring(0,4) + "-" + $d.Substring(4,2) + "-" + $d.Substring(6,2)
+  py -3.13 tools\loaders\mrloader\pvf_run.py --pv data\pvf\pvf_path_$d.csv --portfolio data\pvf\portfolio_d2.csv `
+     --positions data\pvf\pos_$d.csv --date $iso --load --lake risklake --server http://localhost:18480
+  if ($LASTEXITCODE -ne 0) { break }
+}
+```
+
+### Load a day again, restate, remove
+
+- **The same day again:** run the same command. Each file replaces its kind's date as a whole; the other dates are untouched.
+- **Restate a past date:** run it with that `--date` and the corrected files (kinds with a `RESTATEMENT` field take `--restatement 1`, 2 ... in `csv_load.py`). To change one row, send the whole file again.
+- **Remove a date:** `PY tools/drishti.py lake delete --lake risklake --kind var-limit --date 2026-10-29 --dry-run`, then without `--dry-run`.
+  The set and FX: `pvf_scenario_set.py --date D --remove --lake risklake --dry-run` then `--yes`; same for `pvf_fx_scenario.py`.
+  A whole CSV day: `mr_run.py --date D --from DIR --day FILE --delete-plan` prints every delete line, vectors first.
+- **Reclaim space** after deleting: `PY tools/drishti.py lake maintain`. Keep only the last N days: BANK_DATA_GUIDE section 5.3.
+- **A master that skips a day** is answered from its last delivery (the reference tables are read as *effective*); a row left out of
+  today's master does **not** disappear: delete its earlier dates, or keep sending it with its status.
+
+## Date and file naming rules
+
+- **The business date is always the `--date` you type**, never the digits in a file name. A file with no rows for that date is refused in one
+  line, not loaded empty. Files carrying another `VALID_DT` are refused with the count.
+- Output files are named `<table>.<date>.jsonl.gz` (+ a `.ready` marker naming the lake); the lake takes the date from that name.
+- The inbox is `data/dataload/inbox` (`DRISHTI_DATALOAD_DIR` changes it). Plain JSONL, `.gz`, `.zip` and `.tar.gz` are read.
+- **Format is declared, never guessed:** delimiter, encoding, decimal and thousands separators, date format and null words are the
+  mapping's `csv:` block over `kinds/shared/csv.yaml`. A cell that does not fit rejects its row with a code.
+- Export from the source system; do not round-trip a file through Excel (long ids become `2.00001E+11`, dates are rewritten to the
+  machine's locale). If you must, import every column as text.
+
+## How to check it worked
+
+```text
+Linux     PY tools/drishti.py lake status --lake risklake
+Windows   py -3.13 tools\drishti.py lake status --lake risklake
+```
+
+Expect one `scenario-pv` row per record written (the run printed the count), one `scenario-set` row per date, and your dates in the list.
+Then `PY tools/drishti.py dataload status` (files waiting, loaded, failed with reasons; the same as **Admin → Data loads → Inbox**), and a
+VaR on the date: `PY tools/drishti.py var show BANK --date 2026-10-29`, or `VAR` in the console. `PY tools/drishti.py doctor` checks the machine.
+
+## Scheduling
+
+These loaders take files you deliver, so schedule them *after* your extract lands. Linux cron, 19:30 on weekdays:
+`30 19 * * 1-5 cd /opt/drishti && python3 tools/loaders/mrloader/mr_run.py --date $(date +\%F) --from /data/mr/$(date +\%F) --day /site/day.yaml --inbox >> $HOME/mr.log 2>&1`.
+Windows Task Scheduler: a small `.ps1` that computes the date (`Get-Date -Format yyyy-MM-dd`) and runs the same `py -3.13 tools\loaders\mrloader\mr_run.py ...`;
+`schtasks /Create /TN "Drishti mr day" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 19:30 /TR "powershell -File C:\site\mr-day.ps1"`. The task's
+*Last Run Result* is the exit code (0 done, 1 refused with one line saying why).
+
+## When something goes wrong
+
+| You see | It means | Do this |
+|---|---|---|
+| *no server jar in .../lib* | the tools read the packs from the jar | `PY tools/drishti.py build jar` |
+| *has no usable path rows of 2026-10-28 (41,127 of another VALID_DT ...)* | `--date` is not the date inside the file | use the date of the `valid_dt` column |
+| *lake ...: a lake's name, lower-case letters...* | you gave a folder to `--lake` | give the name: `--lake risklake` |
+| `MISSING_PORTFOLIO` in the audit | portfolio not in PORTFOLIO_D2 on that date | send the right portfolio file; the other positions load |
+| `MISSING_BASE_PV` in the audit | no path -1 for the position | the source must send it; the position is left out |
+| reject `BAD_DATE` / `BAD_NUMBER` | locale dates, a currency symbol, a decimal comma | export ISO dates and plain numbers, or declare `csv: {dates: DD/MM/YYYY}` / `decimal: ","` in your mapping |
+| reject `MISSING_REQUIRED`, `EXCEL_NUMBER_ID`, `DUPLICATE_KEY` | empty required cell, id turned into a number, same key twice | fix the source and send again; a duplicate refuses the kind |
+| *kind refused* | masters and limits refuse on any rejected row (`on-reject: refuse`) | fix the file, run the day again |
+| the VaR page shows nothing for the date | connectors still read `demo`, or no set/FX for the date | prerequisite 3, restart the server; load the set and the FX |
+| a trade in a currency is rejected by VaR | no FX for the date | send `fx_<date>.csv` |
+| `lake delete` exit 3 / exit 2 | another load holds the lock / deleted but the server could not be told | wait and repeat / the server notices within 30 s |
+| Windows: path cut at a space, *can't open file* | an unquoted path with a space | put the path in quotes |
+| memory error on the full extract | one chunk too large | `--chunk 20000` (default 50,000) |
+
+More: BANK_DATA_GUIDE section 6.
+
+## Licences and internal data
+
+Your files are yours and go to your lakes only. The shipped `samples/` and `days/sample.yaml` are synthetic (`mr_gen.py`, seeded); nothing
+in this folder carries a real extract, and real extracts are never committed.
+
+## Tests
+
+`PY -m pytest tools/loaders/mrloader` (needs the server jar in `lib/`). Samples and expected outputs: `samples/`.

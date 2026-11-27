@@ -6267,7 +6267,7 @@ One file per data feed: the source, its datasets and the lake they load, the sch
 | `feed` | string | `gleif` |  | drishti.py feed (each run) | the feed's name (lower case, digits, dashes): the file's name, and `drishti.py feed run <feed>` | live |  | admin |
 | `title` | string | `GLEIF legal entities, ownership and identifier mappings` |  | drishti.py feed (each run) | one line for feed list, Admin -&gt; Data loads -&gt; Feeds and the docs | live |  | admin |
 | `description` | text | `>-` |  | drishti.py feed (each run) | what the feed holds, in a sentence or two | live |  | admin |
-| `class` | string | `gleif.GleifFeed` |  | drishti.py feed (each run) | the Feed class that pulls: &lt;module&gt;.&lt;Class&gt;, the module in tools/feeds/sources/ (or beside this file) | live |  | admin |
+| `class` | string | `gleif.GleifFeed` |  | drishti.py feed (each run) | the Feed class that pulls: &lt;module&gt;.&lt;Class&gt;, the module in tools/loaders/(external\|news)/ (or beside this file) | live |  | admin |
 | `source.provider` | string | `GLEIF` |  | drishti.py feed (each run) | who publishes it | live |  | admin |
 | `source.url` | string | `https://www.gleif.org` |  | drishti.py feed (each run) | the provider's page | live |  | admin |
 | `source.pause` | number | `1.0` |  | drishti.py feed (each run) | seconds between requests: the rate limit (GLEIF asks for at most one API call a second) | live |  | admin |

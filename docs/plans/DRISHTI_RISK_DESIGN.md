@@ -271,7 +271,7 @@ does not pass the kit and cannot be released.
 | Access (`VarAccess`, `ExposureAccess`), pivot (`VarPivotProvider`, `VarPivotLens`, `VarPivotCodes`, `MrCubeExtras`), Flight (`VarFlightForm`), intraday stream (`VarPvStream`, `VarPvStreamPlugin`), `VarReadyRule`, saved views and basket edits on the content store, sign-off and approvals, number explainers and why-panels on the kernel's explain API, shard rows and peers, providers | about 8,200 | each is Drishti's access rules, cluster, content store, BI or transport |
 | Official sinks (`official/*`), `BankingVocabulary`, `BankingOfficialResults`, `RiskOperations` | about 600 | lake writes and vocabulary |
 | The three packs (`market-risk`, `counterparty-risk`, `trading`): 595 files, 162 Sutra files, samples, pack Python, the contract profiles | | domain packs |
-| `tools/mrloader`, `tools/packgen/var`, the `var`, `exp`, `frtb`, `simm` commands of `tools/drishti.py` | | loading and operator commands |
+| `tools/loaders/mrloader`, `tools/packgen/var`, the `var`, `exp`, `frtb`, `simm` commands of `tools/drishti.py` | | loading and operator commands |
 | Cluster (Drishti*net, shard ownership), engine switches, admission, capacity, the kernel and `.dmod` assembly, editions | | the host |
 
 Amended 2026-11-22: none of what stays may name a Risk type. Properties classes become the engines' `options` (old keys as

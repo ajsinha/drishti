@@ -33,7 +33,7 @@ One publisher of official news (a central bank, a regulator, a government): its 
 | Contract | [release-source.contract.yaml](../../../modules/economy/packs/official-news/contracts/release-source.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: Federal Reserve Board; European Central Bank; Bank of Canada; Bank of England; US Securities and Exchange Commission; OSFI; US Federal Register; Canada Gazette, Part II; Canada Gazette, Part I, pulled by the official-news feed (config/feeds/official-news.yaml, tools/feeds/sources/) |
+| Source | public data: Federal Reserve Board; European Central Bank; Bank of Canada; Bank of England; US Securities and Exchange Commission; OSFI; US Federal Register; Canada Gazette, Part II; Canada Gazette, Part I, pulled by the official-news feed (config/feeds/official-news.yaml, tools/loaders/(external\|news)/) |
 | Grain | One row per official press releases, keyed by SOURCE_ID. |
 | Key | `SOURCE_ID` |
 | Id pattern | `^PRESS-` |
@@ -172,7 +172,7 @@ One official press release: its title, publisher, date, summary and the link to 
 | Contract | [press-release.contract.yaml](../../../modules/economy/packs/official-news/contracts/press-release.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: Federal Reserve Board; European Central Bank; Bank of Canada; Bank of England; US Securities and Exchange Commission; OSFI; US Federal Register; Canada Gazette, Part II; Canada Gazette, Part I, pulled by the official-news feed (config/feeds/official-news.yaml, tools/feeds/sources/) |
+| Source | public data: Federal Reserve Board; European Central Bank; Bank of Canada; Bank of England; US Securities and Exchange Commission; OSFI; US Federal Register; Canada Gazette, Part II; Canada Gazette, Part I, pulled by the official-news feed (config/feeds/official-news.yaml, tools/loaders/(external\|news)/) |
 | Grain | One row per press release, keyed by RELEASE_ID. |
 | Key | `RELEASE_ID` |
 | Id pattern | `^PREL-` |

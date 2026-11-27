@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The public-sector module's screens in Chromium over the real server and console (ports 18971 and 17971): the six feeds run on their
-recorded fixtures (tools/feeds/tests/fixtures/publicsector, never the network) and load into a scratch worldlake and newslake through
+recorded fixtures (tools/loaders/common/tests/fixtures/publicsector, never the network) and load into a scratch worldlake and newslake through
 drishti-feeds. Java route (once per source hash, tools/drillkit/lake_cache.py; each run a copy), the demo source off, then each function's screen is drawn from the lakes: WDI (indicators, the world map),
 CBANK (policy rate, series linked), NSTAT, OECD (the members' map), PRESS (the releases with their original links, internal only said)
 and GDELT (categories, the map, the stories). PRESS is in the World lens too. Skipped when Playwright, Chromium or the built
@@ -50,9 +50,9 @@ from datetime import date
 from pathlib import Path
 import yaml
 root = Path(sys.argv[1]); feeds = sys.argv[2].split(",")
-sys.path[:0] = [str(root / "tools/feeds"), str(root / "tools/feeds/sources")]
+sys.path[:0] = [str(root / "tools/loaders/common"), str(root / "tools/loaders/common/sources")]
 import feedbase as FB, feedrunner as R, publicsector as PS
-fix = root / "tools/feeds/tests/fixtures/publicsector"
+fix = root / "tools/loaders/common/tests/fixtures/publicsector"
 sel = yaml.safe_load((fix / "selection.yaml").read_text())
 for f in feeds:
     rc, entry = R.run_feed(FB.load_spec(f), R.RunOptions(business_date=date.fromisoformat(sys.argv[3]), load="java", sets=sel.get(f) or {}),

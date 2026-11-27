@@ -35,19 +35,19 @@ files:
   - {path: 'config/connectors.examples/postgres/README.md', class: generate, lane: C, tool: 'tools/connector_readmes.py'}
   - {path: 'config/connectors.examples/redis/README.md', class: generate, lane: C, tool: 'tools/connector_readmes.py'}
   - {path: 'config/connectors.examples/s3tables/README.md', class: generate, lane: C, tool: 'tools/connector_readmes.py'}
-  - {path: 'config/feeds/central-banks.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/funds.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/gdelt-events.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/gleif.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/market-data.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/national-statistics.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/news-and-markets.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/oecd.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/official-news.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/us-equities.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/world-development.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/world-economy.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
-  - {path: 'config/feeds/yahoo-prices.md', class: generate, lane: C, tool: 'tools/feeds/feedreadme.py'}
+  - {path: 'config/feeds/central-banks.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/funds.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/gdelt-events.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/gleif.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/market-data.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/national-statistics.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/news-and-markets.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/oecd.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/official-news.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/us-equities.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/world-development.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/world-economy.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/yahoo-prices.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
   - {path: 'config/packs/core/compute-demo/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
   - {path: 'config/packs/core/compute-demo/guides/compute-demo.md', class: merge, lane: A}
   - {path: 'config/packs/core/core/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
@@ -139,7 +139,7 @@ files:
   - {path: 'docs/connectors/types/reactive/README.md', class: connector, lane: C}
   - {path: 'docs/connectors/types/rest/README.md', class: connector, lane: C}
   - {path: 'docs/connectors/types/yfinance/README.md', class: connector, lane: C}
-  - {path: 'docs/contracts/CSV_FORMATS.md', class: generate, lane: B, tool: 'tools/mrloader/kind_docs.py'}
+  - {path: 'docs/contracts/CSV_FORMATS.md', class: generate, lane: B, tool: 'tools/loaders/mrloader/kind_docs.py'}
   - {path: 'docs/contracts/FRTB.md', class: keep, lane: B}
   - {path: 'docs/contracts/README.md', class: keep, lane: B}
   - {path: 'docs/contracts/SIMM.md', class: keep, lane: B}

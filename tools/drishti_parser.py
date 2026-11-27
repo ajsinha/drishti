@@ -444,7 +444,7 @@ def build_parser(h) -> argparse.ArgumentParser:
     adm = load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.11)
     load_module("enginescli", "enginescli.py").register(sv, adm, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # server engines, admin engines (2.9.11)
     load_module("dataloadcli", "dataloadcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # dataload status|run|retry
-    load_module("feedcli", "feeds/cli.py").register(groups)                                                          # feed list|run|status|schedule (2.9.11.g)
+    load_module("feedcli", "loaders/common/cli.py").register(groups)                                                          # feed list|run|status|schedule (2.9.11.g)
     load_module("calcruntime", "calcruntime.py").register(groups)                                                    # calc install (Pyodide for Calc)
     load_module("bicompute_unit", "dev/bicompute_unit.py").register(groups)                                          # dev bicompute-unit
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap

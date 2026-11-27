@@ -18,6 +18,8 @@
 This guide is everything about the data a bank brings to Drishti: what its systems send each day, how that is loaded into the lake, and what the
 banking, trading and market-data modules do with it. Every figure in it is made up; your files stay on your machine and are never committed.
 
+**The daily routine, on one page, for Windows and Linux:** [tools/loaders/mrloader/README.md](../../tools/loaders/mrloader/README.md) (every script, the exact commands, naming and date rules, scheduling, checks and errors). This guide is the depth behind it.
+
 **Contents**
 
 - **The PVF files, step by step** (sections 1 to 6 below): a day's per-path PV file, the positions file and the portfolio file become the
@@ -40,8 +42,8 @@ Commands are written for **Linux** and **Windows**. `PY` stands for the Python s
 
 | | `PY` is | a path looks like |
 |---|---|---|
-| Linux | `python3` (the Python setup prepared) | `tools/mrloader/pvf_run.py` |
-| Windows (PowerShell, no `.exe` of ours) | `py` | `tools\mrloader\pvf_run.py` |
+| Linux | `python3` (the Python setup prepared) | `tools/loaders/mrloader/pvf_run.py` |
+| Windows (PowerShell, no `.exe` of ours) | `py` | `tools\loaders\mrloader\pvf_run.py` |
 
 Run every command from the install folder (the one holding `tools/`). On Windows write your own paths with `\` and put a path that has a
 space in quotes; the examples use `data/pvf/...`, which Windows also accepts.
@@ -54,7 +56,7 @@ space in quotes; the examples use `data/pvf/...`, which Windows also accepts.
 | `pos_YYYYMMDD.csv` | the day's positions: links each position to its portfolio, gives currency, trade, amount | joined into every scenario-pv record (no table of its own) | the same `--date` |
 | `portfolio_d2.csv` | PORTFOLIO_D2: the portfolios, desks, limits | joined into scenario-pv (desk, book, entity); as its own **book** table with `mr_run.py` | rows valid on `--date` (`valid_dt <= date < valid_to_dt`) |
 | (made by the run) | the date's 251 scenario days | **scenario-set** (`risk/scenario-set`), loaded first | `--date` |
-| `fx_YYYYMMDD.csv` (optional, yours) | scenario FX per currency ([pvf_fx_scenario.py](../../tools/mrloader/pvf_fx_scenario.py) `--help`: long or wide form) | **fx-scenario** (`risk/fx-scenario`), loaded between the set and the PVs | `--date` |
+| `fx_YYYYMMDD.csv` (optional, yours) | scenario FX per currency ([pvf_fx_scenario.py](../../tools/loaders/mrloader/pvf_fx_scenario.py) `--help`: long or wide form) | **fx-scenario** (`risk/fx-scenario`), loaded between the set and the PVs | `--date` |
 
 The data contracts and sample records of the kinds: scenario-pv ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv), [sample](../contracts/packs/market-risk.md#example-market-risk-scenario-pv)), scenario-set ([contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set), [sample](../contracts/packs/market-risk.md#example-market-risk-scenario-set)) and fx-scenario ([contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario), [sample](../contracts/packs/market-risk.md#example-market-risk-fx-scenario)).
 
@@ -100,9 +102,9 @@ Convert one day into checked files, writing nothing to the lake. A first trial o
 extract (200,000 positions, 37 million path rows) takes minutes and a few GB of memory.
 
 ```bash
-PY tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv --date 2026-10-29 --dry-run
-PY tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv --date 2026-10-29 --out data/pvf/work
-PY tools/mrloader/pvf_validate.py data/pvf/work/mr-2026-10-29/scenario-pv.2026-10-29.jsonl.gz data/pvf/work/mr-2026-10-29/scenario-set.2026-10-29.jsonl.gz
+PY tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv --date 2026-10-29 --dry-run
+PY tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv --date 2026-10-29 --out data/pvf/work
+PY tools/loaders/mrloader/pvf_validate.py data/pvf/work/mr-2026-10-29/scenario-pv.2026-10-29.jsonl.gz data/pvf/work/mr-2026-10-29/scenario-set.2026-10-29.jsonl.gz
 ```
 
 The first line checks inputs, columns and mapping. The second writes `data/pvf/work/mr-2026-10-29/` (`--out` is where `mr-<date>/` goes; default
@@ -138,8 +140,8 @@ the days once per date: `--scenario-dates data/pvf/scenario_dates_20261029.txt` 
 what each load would do and writes nothing to the lake.
 
 ```bash
-PY tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv --date 2026-10-29 --load --plan --lake risklake
-PY tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv --date 2026-10-29 --load --lake risklake --server http://localhost:18480
+PY tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv --date 2026-10-29 --load --plan --lake risklake
+PY tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv --date 2026-10-29 --load --lake risklake --server http://localhost:18480
 ```
 
 Add `--fx data/pvf/fx_20261029.csv` to build the date's scenario FX in the same run (a trade in a currency with no FX is rejected by the
@@ -159,7 +161,7 @@ Linux:
 ```bash
 for d in 20261027 20261028 20261029; do
   iso="${d:0:4}-${d:4:2}-${d:6:2}"
-  PY tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_$d.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_$d.csv \
+  PY tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_$d.csv --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_$d.csv \
      --date $iso --load --lake risklake --server http://localhost:18480 || break
 done
 ```
@@ -169,7 +171,7 @@ Windows (PowerShell):
 ```powershell
 foreach ($d in "20261027","20261028","20261029") {
   $iso = $d.Substring(0,4) + "-" + $d.Substring(4,2) + "-" + $d.Substring(6,2)
-  py -3.13 tools\mrloader\pvf_run.py --pv data\pvf\pvf_path_$d.csv --portfolio data\pvf\portfolio_d2.csv `
+  py -3.13 tools\loaders\mrloader\pvf_run.py --pv data\pvf\pvf_path_$d.csv --portfolio data\pvf\portfolio_d2.csv `
      --positions data\pvf\pos_$d.csv --date $iso --load --lake risklake --server http://localhost:18480
   if ($LASTEXITCODE -ne 0) { break }
 }
@@ -188,8 +190,8 @@ required: [scenario-pv]
 ```
 
 ```bash
-PY tools/mrloader/mr_run.py --date 2026-10-29 --from data/pvf --day /path/to/site/pvf-day.yaml --dry-run
-PY tools/mrloader/mr_run.py --date 2026-10-29 --from data/pvf --day /path/to/site/pvf-day.yaml --load --lake risklake
+PY tools/loaders/mrloader/mr_run.py --date 2026-10-29 --from data/pvf --day /path/to/site/pvf-day.yaml --dry-run
+PY tools/loaders/mrloader/mr_run.py --date 2026-10-29 --from data/pvf --day /path/to/site/pvf-day.yaml --load --lake risklake
 ```
 
 ### 4.3 Check that it landed
@@ -233,7 +235,7 @@ PY tools/drishti.py lake delete --lake risklake --kind scenario-pv --from 2026-1
 PY tools/drishti.py lake delete --lake risklake --kind scenario-pv --date 2026-10-26,2026-10-27
 ```
 
-Skip the `fx-scenario` line if you never loaded FX. `PY tools/mrloader/mr_run.py --date D --from DIR --day FILE --delete-plan` prints the
+Skip the `fx-scenario` line if you never loaded FX. `PY tools/loaders/mrloader/mr_run.py --date D --from DIR --day FILE --delete-plan` prints the
 lines for a whole day, in the right order, and runs nothing. A set alone can also be removed with `pvf_scenario_set.py --date D --remove --lake risklake`.
 
 The **safety**:
@@ -320,27 +322,27 @@ Run it on a schedule with `lake maintain --daemon` or the console's schedules ([
 
 ### The CSV loader: one kind at a time
 
-`tools/mrloader/csv_load.py` turns one dataset's CSV into checked records of its kind, written as the data inbox and `lake build` take
+`tools/loaders/mrloader/csv_load.py` turns one dataset's CSV into checked records of its kind, written as the data inbox and `lake build` take
 them; it loads nothing itself. Every kind is a mapping file (`kinds/<kind>.yaml`: the CSV columns named as the contract's fields) and a
 section of the one generated page [CSV_FORMATS.md](../contracts/CSV_FORMATS.md); the day's runbook is [The daily run](#7-the-daily-run-csv-extracts-to-var-and-exposure-inputs).
 
 ```bash
-python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29             # convert and check
-python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29 --inbox     # ... and hand it to the data inbox
-python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29 --load --lake risklake
-python3 tools/mrloader/csv_load.py --kind var-limit --template                                                          # the CSV's header and an example row
-python3 tools/mrloader/csv_load.py --kinds                                                                              # every kind with a mapping
-python3 tools/mrloader/validate.py data/mr/mr-2026-10-29                                                                # any kind's files against its contract
-python3 tools/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day /path/to/site/day.yaml --inbox       # the whole day, in order
+python3 tools/loaders/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29             # convert and check
+python3 tools/loaders/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29 --inbox     # ... and hand it to the data inbox
+python3 tools/loaders/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29 --load --lake risklake
+python3 tools/loaders/mrloader/csv_load.py --kind var-limit --template                                                          # the CSV's header and an example row
+python3 tools/loaders/mrloader/csv_load.py --kinds                                                                              # every kind with a mapping
+python3 tools/loaders/mrloader/validate.py data/mr/mr-2026-10-29                                                                # any kind's files against its contract
+python3 tools/loaders/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day /path/to/site/day.yaml --inbox       # the whole day, in order
 ```
 
 | Script | Does |
 |---|---|
-| `tools/mrloader/csv_load.py` | **one kind**: its CSV (and child files) to checked records; `--inbox`, `--load` |
-| `tools/mrloader/mr_run.py` | **one day**: every kind of the day's folder (a day file says which file is which), in dependency order (the scenario PVs through `pvf_run.py`), checked against each other (`links.py`), then handed over or loaded in that order; `--delete-plan` |
-| `tools/mrloader/validate.py` | any kind's files against its contract |
-| `tools/mrloader/kind_docs.py` | writes (`--check`: checks) the generated page of every kind's CSV, `docs/contracts/CSV_FORMATS.md` |
-| `tools/mrloader/mr_gen.py` | a seeded synthetic day of every kind's CSV (the committed samples; `--with-pvf` adds the day's PVF extract) |
+| `tools/loaders/mrloader/csv_load.py` | **one kind**: its CSV (and child files) to checked records; `--inbox`, `--load` |
+| `tools/loaders/mrloader/mr_run.py` | **one day**: every kind of the day's folder (a day file says which file is which), in dependency order (the scenario PVs through `pvf_run.py`), checked against each other (`links.py`), then handed over or loaded in that order; `--delete-plan` |
+| `tools/loaders/mrloader/validate.py` | any kind's files against its contract |
+| `tools/loaders/mrloader/kind_docs.py` | writes (`--check`: checks) the generated page of every kind's CSV, `docs/contracts/CSV_FORMATS.md` |
+| `tools/loaders/mrloader/mr_gen.py` | a seeded synthetic day of every kind's CSV (the committed samples; `--with-pvf` adds the day's PVF extract) |
 
 The kinds shipped: wave 1 for VaR (`legal-entity`, `desk`, `book` and `book.pvf`, [`risk-factor`](../contracts/packs/market-risk.md#example-market-risk-risk-factor) ([contract](../contracts/packs/market-risk.md#rfac-risk-factor-dictionary-risk-factor)), [`var-limit`](../contracts/packs/market-risk.md#example-market-risk-var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit)), `desk-pnl`,
 [`position-sensitivity`](../contracts/packs/market-risk.md#example-market-risk-position-sensitivity) ([contract](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity)); the scenario PVs, set and FX through the PVF scripts below) and wave 2 for exposure (`counterparty-group`,
@@ -358,35 +360,35 @@ kept with the site's settings), never edited into the shipped ones. Kinds that a
 
 ### The PVF loader
 
-The loaders are run directly by path from the repository root (the `pvf_*.py` names are the PVF source format; the folder is `tools/mrloader`; the owner's files stay in `data/pvf/`). The PVF loader turns a PVF extract (per-path present values of every position under
+The loaders are run directly by path from the repository root (the `pvf_*.py` names are the PVF source format; the folder is `tools/loaders/mrloader`; the owner's files stay in `data/pvf/`). The PVF loader turns a PVF extract (per-path present values of every position under
 each historical-VaR path, with the positions and their portfolios) into the records of the market-risk pack's **scenario-pv** kind, the
 form of scenario P&L the VaR engine reads, in the layout Drishti's loaders take.
 
 ### The command
 
 ```bash
-python3 tools/mrloader/pvf_run.py \
+python3 tools/loaders/mrloader/pvf_run.py \
     --pv data/pvf/pvf_path_20261029.csv \
     --portfolio data/pvf/portfolio_d2.csv \
     --positions data/pvf/pos_20261029.csv \
     --date 2026-10-29
 ```
 
-That one command joins, maps (`tools/mrloader/kinds/scenario-pv.pvf.yaml`), checks every record against the contract, and writes
+That one command joins, maps (`tools/loaders/mrloader/kinds/scenario-pv.pvf.yaml`), checks every record against the contract, and writes
 everything under `data/pvf/mr-2026-10-29/` (`--out DIR` puts `mr-<date>/` elsewhere; the default is the PV file's folder). Try it first on
 a slice and without writing:
 
 ```bash
-python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
+python3 tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
     --positions data/pvf/pos_20261029.csv --date 2026-10-29 --dry-run          # check inputs, columns and mapping; write nothing
-python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
+python3 tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
     --positions data/pvf/pos_20261029.csv --date 2026-10-29 --limit 2000       # the first 2,000 positions only
 ```
 
 Then check the result and load it (section "Loading into Drishti"):
 
 ```bash
-python3 tools/mrloader/pvf_validate.py data/pvf/mr-2026-10-29/scenario-pv.2026-10-29.jsonl.gz data/pvf/mr-2026-10-29/scenario-set.2026-10-29.jsonl.gz
+python3 tools/loaders/mrloader/pvf_validate.py data/pvf/mr-2026-10-29/scenario-pv.2026-10-29.jsonl.gz data/pvf/mr-2026-10-29/scenario-set.2026-10-29.jsonl.gz
 ```
 
 **Why three input files.** `--positions` is required: the PV file carries only `position_id` (with `valid_dt`, `risk_metric_cd`,
@@ -409,27 +411,27 @@ No Java, no server and no network are needed to convert; loading uses Drishti's 
 
 | Script | Does |
 |---|---|
-| `tools/mrloader/pvf_run.py` | **the driver**: join, map, check, write one file per kind and date with its marker, one summary; `--inbox` or `--load` |
-| `tools/mrloader/pvf_join.py` | the join on its own: the three CSV files to one JSON Lines row per position, the audit, the fill list |
-| `tools/mrloader/pvf_export_gz.py` | the mapping on its own: a joined file to `scenario-pv.<date>.jsonl.gz` (+ `.ready`) and the date's scenario set |
-| `tools/mrloader/pvf_scenario_set.py` | **add or remove** a date's scenario set (every day; section "Scenario set") |
-| `tools/mrloader/pvf_fx_scenario.py` | **add or remove** a date's scenario FX from a daily CSV (section "Scenario FX") |
-| `tools/mrloader/pvf_validate.py` | every record of a file, folder or `.tar` against the scenario-pv and scenario-set contracts |
-| `tools/mrloader/pvf_gen.py` | a synthetic extract in the same CSV shape (`--positions 2000`), seeded: for trials and tests |
+| `tools/loaders/mrloader/pvf_run.py` | **the driver**: join, map, check, write one file per kind and date with its marker, one summary; `--inbox` or `--load` |
+| `tools/loaders/mrloader/pvf_join.py` | the join on its own: the three CSV files to one JSON Lines row per position, the audit, the fill list |
+| `tools/loaders/mrloader/pvf_export_gz.py` | the mapping on its own: a joined file to `scenario-pv.<date>.jsonl.gz` (+ `.ready`) and the date's scenario set |
+| `tools/loaders/mrloader/pvf_scenario_set.py` | **add or remove** a date's scenario set (every day; section "Scenario set") |
+| `tools/loaders/mrloader/pvf_fx_scenario.py` | **add or remove** a date's scenario FX from a daily CSV (section "Scenario FX") |
+| `tools/loaders/mrloader/pvf_validate.py` | every record of a file, folder or `.tar` against the scenario-pv and scenario-set contracts |
+| `tools/loaders/mrloader/pvf_gen.py` | a synthetic extract in the same CSV shape (`--positions 2000`), seeded: for trials and tests |
 
 Each has `--help` with examples; `pvf_join.py`, `pvf_export_gz.py` and `pvf_run.py` have `--dry-run` and a limit (`--limit-positions`,
 `--limit`, `--limit`). The modules beside them: `common.py` (the UPPER_SNAKE rule, dates, checksums), `package.py` (the files of a kind
 and date and their markers), `hooks.py` (`--inbox` and `--load`), `rejects.py` (the reject report), `contract.py` (any kind's contract, found
 by the kind under the packs, never copied), `mapping.py` (the mapping grammar and the scenario set). The mapping is
 `kinds/scenario-pv.pvf.yaml`; its id rules (legal entity, division, desk, book, position) are in `kinds/shared/ids.pvf.yaml`, shared by
-every kind of the PVF source. `test_pvf.py` tests them on small hand-made extracts (`pytest tools/mrloader`).
+every kind of the PVF source. `test_pvf.py` tests them on small hand-made extracts (`pytest tools/loaders/mrloader`).
 
 The separate steps, as the driver runs them:
 
 ```bash
-python3 tools/mrloader/pvf_join.py --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv \
+python3 tools/loaders/mrloader/pvf_join.py --portfolio data/pvf/portfolio_d2.csv --positions data/pvf/pos_20261029.csv \
     --paths data/pvf/pvf_path_20261029.csv --out data/pvf/mr-2026-10-29/pvf_joined.2026-10-29.jsonl
-python3 tools/mrloader/pvf_export_gz.py --joined data/pvf/mr-2026-10-29/pvf_joined.2026-10-29.jsonl --out data/pvf/mr-2026-10-29
+python3 tools/loaders/mrloader/pvf_export_gz.py --joined data/pvf/mr-2026-10-29/pvf_joined.2026-10-29.jsonl --out data/pvf/mr-2026-10-29
 ```
 
 ### The inputs
@@ -480,7 +482,7 @@ original `pvf_join.py` (whose output was `path_pv_final.jsonl` and `bad_position
 
 ### The mapping, field by field
 
-`tools/mrloader/kinds/scenario-pv.pvf.yaml` maps a joined row to a scenario-pv record
+`tools/loaders/mrloader/kinds/scenario-pv.pvf.yaml` maps a joined row to a scenario-pv record
 ([contract](../../modules/banking/packs/market-risk/contracts/scenario-pv.contract.yaml)). The export refuses a mapping that names a
 field the contract does not have, leaves a required field without a rule (unless `omit-required` names it with its reason) or breaks the
 grammar, before reading a row.
@@ -575,11 +577,11 @@ The scripts convert and load nothing themselves. Two optional hooks end a run, a
 
 ```bash
 # hand the files to the data inbox the running server watches (data/dataload/inbox, or --inbox DIR)
-python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
+python3 tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261029.csv --portfolio data/pvf/portfolio_d2.csv \
     --positions data/pvf/pos_20261029.csv --date 2026-10-29 --inbox
 
 # or load them now: one `drishti.py lake build --engine java` per file, the scenario set first, stopping at the first failure
-python3 tools/mrloader/pvf_run.py ... --load --lake risklake            # --plan: what each load would do, nothing written
+python3 tools/loaders/mrloader/pvf_run.py ... --load --lake risklake            # --plan: what each load would do, nothing written
 ```
 
 `--inbox` copies every data file first (each under a visible temporary name, renamed into place), the scenario set, then the FX, then
@@ -606,11 +608,11 @@ refuses a vector of another length (never padded). Make it every day, before the
 order it says is refused), or `--weekdays N` (the N weekdays before the date, no holiday calendar):
 
 ```bash
-python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates data/pvf/scenario_dates_20261118.txt            # Linux / macOS
-py -3.13 tools\mrloader\pvf_scenario_set.py --date 2026-11-18 --dates data\pvf\scenario_dates_20261118.txt               # Windows
-python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates FILE --order newest-first --dry-run             # check only
-python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --weekdays 251 --inbox --lake risklake                  # hand it to the inbox
-python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --weekdays 251 --load --lake risklake                   # or load it now
+python3 tools/loaders/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates data/pvf/scenario_dates_20261118.txt            # Linux / macOS
+py -3.13 tools\loaders\mrloader\pvf_scenario_set.py --date 2026-11-18 --dates data\pvf\scenario_dates_20261118.txt               # Windows
+python3 tools/loaders/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates FILE --order newest-first --dry-run             # check only
+python3 tools/loaders/mrloader/pvf_scenario_set.py --date 2026-11-18 --weekdays 251 --inbox --lake risklake                  # hand it to the inbox
+python3 tools/loaders/mrloader/pvf_scenario_set.py --date 2026-11-18 --weekdays 251 --load --lake risklake                   # or load it now
 ```
 
 It checks, before writing anything: no repeated day, every day before the business date, `SCENARIO_COUNT` = the number of days,
@@ -631,9 +633,9 @@ first).
 **Remove.** Whole dates only, through Drishti's own `lake delete` (no second deleter):
 
 ```bash
-python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --remove --lake risklake --dry-run      # what would go
-python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --remove --lake risklake --server http://<host>:18480 --token-file ~/drishti-token
-python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --remove --lake risklake --yes --no-signal    # scripts; tell no server
+python3 tools/loaders/mrloader/pvf_scenario_set.py --date 2026-11-18 --remove --lake risklake --dry-run      # what would go
+python3 tools/loaders/mrloader/pvf_scenario_set.py --date 2026-11-18 --remove --lake risklake --server http://<host>:18480 --token-file ~/drishti-token
+python3 tools/loaders/mrloader/pvf_scenario_set.py --date 2026-11-18 --remove --lake risklake --yes --no-signal    # scripts; tell no server
 ```
 
 (`--settings FILE` is passed to `drishti.py`; the token needs the `loads:write` scope.) **What it does to VaR:** without the date's
@@ -664,9 +666,9 @@ every problem (nothing is written).
 `.jsonl[.gz]`, `.tar` or folder), or `--dates FILE [--order ...] --scenario-set-id ID`:
 
 ```bash
-python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx data/pvf/fx_20261118.csv                  # Linux / macOS
-py -3.13 tools\mrloader\pvf_fx_scenario.py --date 2026-11-18 --fx data\pvf\fx_20261118.csv                     # Windows
-python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx FILE --scenario-set path/scenario-set.2026-11-18.jsonl.gz --inbox
+python3 tools/loaders/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx data/pvf/fx_20261118.csv                  # Linux / macOS
+py -3.13 tools\loaders\mrloader\pvf_fx_scenario.py --date 2026-11-18 --fx data\pvf\fx_20261118.csv                     # Windows
+python3 tools/loaders/mrloader/pvf_fx_scenario.py --date 2026-11-18 --fx FILE --scenario-set path/scenario-set.2026-11-18.jsonl.gz --inbox
 ```
 
 It writes `fx-scenario.<date>.jsonl.gz` + `.ready` and the plain `.jsonl` (`FX_SCENARIO_ID` `FXS-<CCY>-<set id>`, `RATE` today, `RATES` per day, `QUOTE`, `SOURCE`
@@ -676,8 +678,8 @@ It writes `fx-scenario.<date>.jsonl.gz` + `.ready` and the plain `.jsonl` (`FX_S
 per-currency removal; add the date again with the full file):
 
 ```bash
-python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --remove --lake risklake --dry-run
-python3 tools/mrloader/pvf_fx_scenario.py --date 2026-11-18 --remove --lake risklake --yes --no-signal
+python3 tools/loaders/mrloader/pvf_fx_scenario.py --date 2026-11-18 --remove --lake risklake --dry-run
+python3 tools/loaders/mrloader/pvf_fx_scenario.py --date 2026-11-18 --remove --lake risklake --yes --no-signal
 ```
 
 Without the date's FX, trades priced in a non-USD currency are rejected and that currency cannot be asked as a reporting currency
@@ -688,7 +690,7 @@ Without the date's FX, trades priced in a non-USD currency are rejected and that
 Order matters: **set, then FX, then PVs** (the PVs and FX are sized from the set). Either one driver call:
 
 ```bash
-python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261118.csv --portfolio data/pvf/portfolio_d2.csv \
+python3 tools/loaders/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261118.csv --portfolio data/pvf/portfolio_d2.csv \
     --positions data/pvf/pos_20261118.csv --date 2026-11-18 --scenario-dates data/pvf/scenario_dates_20261118.txt \
     --fx data/pvf/fx_20261118.csv --inbox
 ```
@@ -697,13 +699,13 @@ python3 tools/mrloader/pvf_run.py --pv data/pvf/pvf_path_20261118.csv --portfoli
 inbox gets set, FX, PVs in that order) or the three scripts, each with `--inbox`:
 
 ```bash
-python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates data/pvf/scenario_dates_20261118.txt --inbox
-python3 tools/mrloader/pvf_fx_scenario.py  --date 2026-11-18 --fx data/pvf/fx_20261118.csv --inbox
-python3 tools/mrloader/pvf_run.py --pv ... --portfolio ... --positions ... --date 2026-11-18 --no-scenario-set --scenario-set-id HS-PVF-251 --inbox
+python3 tools/loaders/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates data/pvf/scenario_dates_20261118.txt --inbox
+python3 tools/loaders/mrloader/pvf_fx_scenario.py  --date 2026-11-18 --fx data/pvf/fx_20261118.csv --inbox
+python3 tools/loaders/mrloader/pvf_run.py --pv ... --portfolio ... --positions ... --date 2026-11-18 --no-scenario-set --scenario-set-id HS-PVF-251 --inbox
 ```
 
-On Windows use `py -3.13 tools\mrloader\<script>.py` and backslashes. Synthetic samples to try it on (a 251-day dates file, EUR GBP JPY CAD AUD CHF
-in both forms) are in `tools/mrloader/samples/`. To try a load: build set and FX from the samples with `--load --lake demo` and a settings file whose `[lake.demo] root=` is a
+On Windows use `py -3.13 tools\loaders\mrloader\<script>.py` and backslashes. Synthetic samples to try it on (a 251-day dates file, EUR GBP JPY CAD AUD CHF
+in both forms) are in `tools/loaders/mrloader/samples/`. To try a load: build set and FX from the samples with `--load --lake demo` and a settings file whose `[lake.demo] root=` is a
 scratch folder, `lake status`, then remove with `--remove ... --yes --no-signal`.
 
 ### Performance and memory
@@ -729,7 +731,7 @@ scratch folder, `lake status`, then remove with `--remove ... --yes --no-signal`
 
 ## The CSV loaders' kinds
 
-*Generated by `tools/mrloader/kind_docs.py`: do not edit.* One page per kind; the day's runbook is [DAILY_RUNBOOK.md](BANK_DATA_GUIDE.md); the tool and its conventions: [the README](BANK_DATA_GUIDE.md).
+*Generated by `tools/loaders/mrloader/kind_docs.py`: do not edit.* One page per kind; the day's runbook is [DAILY_RUNBOOK.md](BANK_DATA_GUIDE.md); the tool and its conventions: [the README](BANK_DATA_GUIDE.md).
 
 | # | Kind | Wave | Pack | Inputs | Load first | Sources |
 |---|---|---|---|---|---|---|
@@ -783,7 +785,7 @@ server jar); `--inbox` needs the node that owns the data load running (`DRISHTI_
 ### 7.1 The files and the day file
 
 Every day the extracts land in one folder, for example `data/mr/2026-10-29/`. A **day file** says which file is which kind, once
-(`tools/mrloader/days/sample.yaml` is the sample's; a site's own lives with its settings and is given by path):
+(`tools/loaders/mrloader/days/sample.yaml` is the sample's; a site's own lives with its settings and is given by path):
 
 ```yaml
 format: 1
@@ -801,14 +803,14 @@ required: [scenario-pv]
 ```
 
 A kind whose extract has the bank's own column names gets `mapping: /path/to/site/mappings/var-limit.yaml` in its entry: a copy of the
-shipped `tools/mrloader/kinds/<kind>.yaml` with the `from:` columns renamed (and the `csv:` block for the file's delimiter, decimal and
+shipped `tools/loaders/mrloader/kinds/<kind>.yaml` with the `from:` columns renamed (and the `csv:` block for the file's delimiter, decimal and
 date format). Never edit the shipped mappings.
 
 ### 7.2 The one command
 
 ```bash
-python3 tools/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day /path/to/site/day.yaml --dry-run   # check everything first
-python3 tools/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day /path/to/site/day.yaml --inbox     # then convert and hand over
+python3 tools/loaders/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day /path/to/site/day.yaml --dry-run   # check everything first
+python3 tools/loaders/mrloader/mr_run.py --date 2026-10-29 --from data/mr/2026-10-29 --day /path/to/site/day.yaml --inbox     # then convert and hand over
 ```
 
 It converts every kind of the folder in dependency order (masters, then the scenario set and PVs, then limits and sensitivities), checks
@@ -855,7 +857,7 @@ counterparty's page.
 - **The same day again:** run the same command. Every file replaces its kind's date as a whole; unchanged files have the same bytes.
 - **Restate a past date:** run it with that `--date` and the corrected files; the kinds with a `RESTATEMENT` field take
   `--restatement 1` (then 2 ...) in `csv_load.py`. To change one row, send the whole file again.
-- **One kind only:** `python3 tools/mrloader/csv_load.py --kind var-limit --csv FILE --date 2026-10-29 --inbox`.
+- **One kind only:** `python3 tools/loaders/mrloader/csv_load.py --kind var-limit --csv FILE --date 2026-10-29 --inbox`.
 - **Remove a kind's date:** `python3 tools/drishti.py lake delete --lake risklake --kind var-limit --date 2026-10-29 --dry-run`, then
   without `--dry-run`. **Remove a whole day:** `mr_run.py --date 2026-10-29 --from DIR --day FILE --delete-plan` prints every line, vectors first.
 - **A master that skips a day** is answered from its last delivery (the reference tables are read as *effective*), and the page says
@@ -878,11 +880,11 @@ digits. The loader refuses what it can detect (`EXCEL_NUMBER_ID`, `EXCEL_ERROR`,
 | `scenario_dates_2026-11-18.txt` | the 251 weekdays before 2026-11-18, oldest first, one per line (`pvf_scenario_set.py --dates`) |
 | `fx_2026-11-18.csv` | scenario FX, **wide** form: EUR, GBP, JPY, CAD, AUD, CHF; `RATE_TODAY` and one column per scenario day |
 | `fx_long_2026-11-18.csv` | the same rates in **long** form: `CURRENCY,SCENARIO_DATE,RATE`, today's rate on the row dated 2026-11-18 |
-| `<kind>.csv`, `<kind>.expected.jsonl` | **the sample day** of the CSV kinds (legal-entity, desk, book, risk-factor, var-limit, desk-pnl, position-sensitivity and its child file `position-sensitivity.SENSITIVITIES.csv`; the exposure masters counterparty-group, counterparty, agreement, csa (+ `csa.ELIGIBLE.csv`), netting-set, collateral-balance (+ `collateral-balance.POSITIONS.csv`), credit-limit (+ `credit-limit.BUCKETS.csv`) and trade-valuation), written by `mr_gen.py --day tools/mrloader/samples`: four legal entities, six desks, twelve books, twenty positions, four groups and eight counterparties that every file shares, so every link resolves; beside each, the records `csv_load.py` must make of it (`--computed-at 2026-11-18T22:00:00Z --source-system SYNTHETIC-RISK`). `tools/mrloader/days/sample.yaml` is its day file |
+| `<kind>.csv`, `<kind>.expected.jsonl` | **the sample day** of the CSV kinds (legal-entity, desk, book, risk-factor, var-limit, desk-pnl, position-sensitivity and its child file `position-sensitivity.SENSITIVITIES.csv`; the exposure masters counterparty-group, counterparty, agreement, csa (+ `csa.ELIGIBLE.csv`), netting-set, collateral-balance (+ `collateral-balance.POSITIONS.csv`), credit-limit (+ `credit-limit.BUCKETS.csv`) and trade-valuation), written by `mr_gen.py --day tools/loaders/mrloader/samples`: four legal entities, six desks, twelve books, twenty positions, four groups and eight counterparties that every file shares, so every link resolves; beside each, the records `csv_load.py` must make of it (`--computed-at 2026-11-18T22:00:00Z --source-system SYNTHETIC-RISK`). `tools/loaders/mrloader/days/sample.yaml` is its day file |
 
 ```bash
-python3 tools/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates tools/mrloader/samples/scenario_dates_2026-11-18.txt
-python3 tools/mrloader/pvf_fx_scenario.py  --date 2026-11-18 --fx tools/mrloader/samples/fx_2026-11-18.csv --dates tools/mrloader/samples/scenario_dates_2026-11-18.txt --scenario-set-id HS-PVF-251
+python3 tools/loaders/mrloader/pvf_scenario_set.py --date 2026-11-18 --dates tools/loaders/mrloader/samples/scenario_dates_2026-11-18.txt
+python3 tools/loaders/mrloader/pvf_fx_scenario.py  --date 2026-11-18 --fx tools/loaders/mrloader/samples/fx_2026-11-18.csv --dates tools/loaders/mrloader/samples/scenario_dates_2026-11-18.txt --scenario-set-id HS-PVF-251
 ```
 
 ## Trading pack

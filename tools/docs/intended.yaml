@@ -46,7 +46,7 @@ intended:
             "kernel/drishti-server/src/main/java/com/ash/drishti/server/explain/PackGuides.java"]
   - decision: GENERATED
     why: "plan section 4: one example per kind on the contract pages (docs/contracts/samples deleted), one CSV_FORMATS page for the loader pages, the guides' data sections, the three kept PDFs"
-    paths: ["tools/contracts.py", "tools/testdata/sample_docs.py", "tools/mrloader/kind_docs.py", "tools/docs/guide_data.py", "tools/docs/md_to_pdf.py"]
+    paths: ["tools/contracts.py", "tools/testdata/sample_docs.py", "tools/loaders/mrloader/kind_docs.py", "tools/docs/guide_data.py", "tools/docs/md_to_pdf.py"]
   - decision: POSITIONING
     why: "owner 2026-11-24: Drishti is a platform for any domain, banking one module; the About page says so"
     paths: ["drishti-console/web/templates/help/about.html"]

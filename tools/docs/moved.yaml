@@ -177,21 +177,21 @@ moved:
   - {from: 'tools/mrloader/README.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
   - {from: 'tools/mrloader/docs/DAILY_RUNBOOK.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
   - {from: 'tools/mrloader/docs/README.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
-  - {from: 'tools/mrloader/docs/agreement.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/book.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/collateral-balance.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/counterparty-group.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/counterparty.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/credit-limit.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/csa.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/desk-pnl.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/desk.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/legal-entity.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/netting-set.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/position-sensitivity.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/risk-factor.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/trade-valuation.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
-  - {from: 'tools/mrloader/docs/var-limit.md', to: '', how: delete, note: 'tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/agreement.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/book.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/collateral-balance.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/counterparty-group.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/counterparty.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/credit-limit.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/csa.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/desk-pnl.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/desk.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/legal-entity.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/netting-set.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/position-sensitivity.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/risk-factor.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/trade-valuation.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
+  - {from: 'tools/mrloader/docs/var-limit.md', to: '', how: delete, note: 'tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)'}
   - {from: 'tools/mrloader/samples/README.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
   # --- lane rows below (appended by hand; kept by --write) ---
   # lane C (READMEs under the README standard)

@@ -47,8 +47,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CACHE = ROOT / "data" / "cache" / "us-equities"
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "feeds"))
-from pullkit import user_agent  # noqa: E402  (the one User-Agent of every feed: tools/feeds/pullkit.py)
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "loaders" / "common"))
+from pullkit import user_agent  # noqa: E402  (the one User-Agent of every feed: tools/loaders/common/pullkit.py)
 USER_AGENT = user_agent()   # DRISHTI_FEEDS_USER_AGENT, else the feeds' default
 INDEXES = {"DJIA": "Q180816", "NDX": "Q507306", "SP500": "Q242345"}
 # curated lists, kept here (not in Wikidata): code -> (name, tickers as the SEC ticker file lists them). Only SEC filers can be in this

@@ -83,7 +83,7 @@ codes and, where it helps scripts, `--json`.
 | `approvals`, `change`, `edits` | `approvals` list, show, approve, reject, withdraw, ask; `change` propose, submit, list, show, history; `edits status` | REST | [11](#approvals-the-one-approvals-queue) |
 | `bi`, `tables` | `bi workspace`, `catalogue`, `expr`, `migrate`, `sql`, `model`, `mq`, `transform`, `item`, `dataset`, `runs`, `statement`; `tables` list, check, preview, lineage, offer, migrate | REST; the Java `tables` tool | [12](#12-bi-and-tables) |
 | `var`, `exposure`, `sens`, `frtb`, `simm`, `play`, `pivot` | the VaR, exposure, FRTB-SA, SIMM and pivot engines | REST | [13](#13-the-risk-engines-var-exposure-sens-frtb-simm-pivot) |
-| `compute`, `contract`, `feed` | reactive connectors; data contracts; the data feeds | REST; `tools/contracts.py`; `tools/feeds/` | [14](#14-compute-contract-and-feed) |
+| `compute`, `contract`, `feed` | reactive connectors; data contracts; the data feeds | REST; `tools/contracts.py`; `tools/loaders/common/` | [14](#14-compute-contract-and-feed) |
 | `docs` | `docs generate [--check]`, `docs shots` | `tools/docs/generate.py`; `tools/docs/screenshots.py` (Playwright) | [17](#docs-generate-every-generated-document); [17](#docs-shots-screenshots) |
 | `calc`, `dev` | `calc install` (Calc's Python runtime); `dev bicompute-unit` (the pivot engine without Maven) | `tools/calcruntime.py`; `tools/dev/bicompute_unit.py` | [17](#17-developer-tools) |
 | `completion` | `completion bash`, `zsh`, `powershell` | the command tree | [2](#shell-completion) |
@@ -3958,7 +3958,7 @@ holds the pin and how to move it: [THIN_CONSOLE_DESIGN.md](../architecture/THIN_
 
 ### `feed`: the data feeds
 
-drishti-feeds, the data feeds that pull external data and load it into the lakes (`tools/feeds/`, one file a feed in `config/feeds/`;
+drishti-feeds, the data feeds that pull external data and load it into the lakes (the loaders' READMEs: [tools/loaders/README.md](../../tools/loaders/README.md); `tools/loaders/common/`, one file a feed in `config/feeds/`;
 the guide [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)). The pull is Python; the load is `lake build` (the parallel loader by default) or the data
 inbox. `python tools/drishti.py feed run <feed>` runs it on every system; cron, systemd and Task Scheduler run it with the one Python (`drishti.python` of the settings file, its full path; `DRISHTI_PYTHON` overrides).
 

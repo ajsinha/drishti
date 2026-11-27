@@ -19,6 +19,8 @@ The public data of the world packs: companies, economies, funds and ETFs, entiti
 sector. Each part says what the data is, where it comes from, how to refresh it and what it may be used for. The last two parts are
 the worked example, on the committed data.
 
+**The daily routine, on one page, for Windows and Linux:** [tools/loaders/external/README.md](../../tools/loaders/external/README.md) (reference, statistics and market feeds) and [tools/loaders/news/README.md](../../tools/loaders/news/README.md) (news and events); the engine behind them is [tools/loaders/common/README.md](../../tools/loaders/common/README.md). This guide is the depth behind them.
+
 ## Contents
 
 - [Funds and ETFs](#funds-and-etfs)
@@ -506,23 +508,23 @@ file and the data inbox are the [data lake guide](DATA_LAKE_GUIDE.md).
 
 ### 19.1 The module
 
-drishti-feeds is the Python package `tools/feeds/` beside the other command-line tools, with one feed file per feed in
+drishti-feeds is the Python package `tools/loaders/common/` beside the other command-line tools, with one feed file per feed in
 `config/feeds/`. It is a package of the tools rather than a Maven module because the pull is Python (every source is an HTTP API or a
 bulk file that Python reads with its standard library) and the load is not new code at all: the module calls `drishti.py lake build`,
 which runs the parallel loader in the server's jar, or drops files into the data inbox. Nothing in it writes a lake.
 
 | Part | File | Does |
 |---|---|---|
-| the Feed base class, the feed file, one run's files | `tools/feeds/feedbase.py` | section 8; checks `config/feeds/<feed>.yaml` (section 7) |
-| one run end to end, the run ledger | `tools/feeds/feedrunner.py` | lock → pull → files → check → load → state → ledger → one log line |
-| the three load routes | `tools/feeds/feedload.py` | section 4 |
-| the schedule entries | `tools/feeds/feedschedule.py` | section 5 |
-| the command line | `tools/feeds/cli.py` | `drishti.py feed list|run|status|schedule` |
-| the polite HTTP client and download cache | `tools/feeds/pullkit.py` | User-Agent, pause, retries with back-off, `Retry-After`, the cache |
-| each source's pull | `tools/feeds/sources/<module>.py` | one module per source (a feed file's `class:`) |
+| the Feed base class, the feed file, one run's files | `tools/loaders/common/feedbase.py` | section 8; checks `config/feeds/<feed>.yaml` (section 7) |
+| one run end to end, the run ledger | `tools/loaders/common/feedrunner.py` | lock → pull → files → check → load → state → ledger → one log line |
+| the three load routes | `tools/loaders/common/feedload.py` | section 4 |
+| the schedule entries | `tools/loaders/common/feedschedule.py` | section 5 |
+| the command line | `tools/loaders/common/cli.py` | `drishti.py feed list|run|status|schedule` |
+| the polite HTTP client and download cache | `tools/loaders/common/pullkit.py` | User-Agent, pause, retries with back-off, `Retry-After`, the cache |
+| each source's pull | `tools/loaders/(external|news)/<module>.py` | one module per source (a feed file's `class:`) |
 | the command | `python3 tools/drishti.py feed run` (Linux, macOS), `py -3.13 tools\drishti.py feed run` (Windows) | what cron, systemd and Task Scheduler run |
 
-Every external source of the packs is pulled this way: each pack's source module in `tools/feeds/sources/` (gleif, us-equities, funds,
+Every external source of the packs is pulled this way: each pack's source module in `tools/loaders/(external|news)/` (gleif, us-equities, funds,
 world-economy, news-and-markets, market-data) is a feed's pull, and the same module refreshes its pack's committed demo snapshot with
 `feed run <feed> --snapshot` (section 3.4). There is one way to pull external data.
 
@@ -818,7 +820,7 @@ feed: gleif                            # the name: lower case, digits, dashes; t
 title: GLEIF legal entities, ownership and identifier mappings
 description: >-                        # optional: what it holds, in a sentence or two
   The Global LEI Foundation's golden copy ...
-class: gleif.GleifFeed                 # <module>.<Class>: tools/feeds/sources/<module>.py (or a module beside the feed file)
+class: gleif.GleifFeed                 # <module>.<Class>: tools/loaders/(external|news)/<module>.py (or a module beside the feed file)
 source:
   provider: GLEIF
   url: https://www.gleif.org
@@ -864,7 +866,7 @@ A feed is a feed file (section 7) and one class. The class pulls; the base class
 dated files and their manifest, the state, the lock, the ledger, the load.
 
 ```python
-# tools/feeds/sources/worldbank.py
+# tools/loaders/(external|news)/worldbank.py
 from feedbase import Feed, FeedError
 
 BASE = "https://api.worldbank.org/v2"
@@ -903,7 +905,7 @@ options:
   indicators: [NY.GDP.MKTP.CD, SP.POP.TOTL]
 ```
 
-**The API** (stable; `tools/feeds/feedbase.py`):
+**The API** (stable; `tools/loaders/common/feedbase.py`):
 
 | Call | Gives |
 |---|---|
@@ -952,13 +954,13 @@ them (`drishti.py feed run world-economy -- --no-imf`) or get permission.
 
 ### 19.10 Tests
 
-`tools/feeds/tests/` runs every feed against **recorded responses** (`tools/feeds/tests/fixtures/`), never the network: the feed file's
+`tools/loaders/common/tests/` runs every feed against **recorded responses** (`tools/loaders/common/tests/fixtures/`), never the network: the feed file's
 checks, a pull with its dated files, manifest and state, the next run pulling only what is new, an idempotent re-run, retries with
 back-off, the lock, the ledger and status, the inbox route's `.ready` and tar, the java and python routes into a temporary lake (with the
 server's jar), the command line and the schedule output. One `--live` smoke per feed is for a person to run by hand:
 
 ```bash
-python3 -m pytest tools/feeds/tests/test_live.py --live -k gleif        # the real source, into a scratch data folder
+python3 -m pytest tools/loaders/common/tests/test_live.py --live -k gleif        # the real source, into a scratch data folder
 ```
 ### 19.11 Every external source at a glance
 
@@ -1743,7 +1745,7 @@ renderer's tests; they are never served beside the lake: demo and real data neve
 ### 20.5 The feeds
 
 Each pack has one feed on drishti-feeds: a feed file `config/feeds/<pack>.yaml` (every key: [External data](WORLD_DATA_GUIDE.md))
-and a Feed class in `tools/feeds/sources/`. Each pulls only what is new, writes one JSON Lines file a kind and business date with its
+and a Feed class in `tools/loaders/(external|news)/`. Each pulls only what is new, writes one JSON Lines file a kind and business date with its
 manifest (rows, SHA-256), and is loaded into its lake, replacing that date (a re-run is idempotent).
 
 | Feed | Source | Default selection (`options:`) | Incremental by | Daily at (local) |
@@ -1826,12 +1828,12 @@ says what is missing.
 
 ### 20.8 Tests
 
-All run without the network, on recorded responses (`tools/feeds/tests/fixtures/publicsector/`, recorded on 2026-11-07 for the business
+All run without the network, on recorded responses (`tools/loaders/common/tests/fixtures/publicsector/`, recorded on 2026-11-07 for the business
 date 2026-11-06 with a narrower selection, `selection.yaml`):
 
 | Test | Checks |
 |---|---|
-| `tools/feeds/tests/test_publicsector.py` | each feed's documents against their contracts (fields, types, keys, patterns); the files, manifest and the inbox's `.ready`; the second run of the day finds nothing new; the runner and its ledger; no FRED key: the Bank of Canada still loads; one publisher down never fails the others; every source's licence; internal-only releases; the parsers (RSS 2.0, RSS 1.0, Atom, debug text before the XML, SDMX-JSON, GDELT's columns); the samples and READMEs current |
+| `tools/loaders/common/tests/test_publicsector.py` | each feed's documents against their contracts (fields, types, keys, patterns); the files, manifest and the inbox's `.ready`; the second run of the day finds nothing new; the runner and its ledger; no FRED key: the Bank of Canada still loads; one publisher down never fails the others; every source's licence; internal-only releases; the parsers (RSS 2.0, RSS 1.0, Atom, debug text before the XML, SDMX-JSON, GDELT's columns); the samples and READMEs current |
 | `tools/test_empty_lakes.py` | `worldlake` and `newslake` hold exactly these packs' tables, only these packs read them, the other named lakes ship empty |
 | `EconomyModuleOffTest`, `PublicSectorLensTest` (drishti-banking) | the economy module off: its eight packs, connectors, functions and both lenses gone, banking, capital markets and GLEIF unaffected; on: the six packs, their connectors, functions and the lens there |
 | `drishti-console/tests/test_public_sector_browser.py` | the feeds' recorded output loaded into a scratch worldlake and newslake, a real server and console: each screen drawn with its map, chart, table and links |

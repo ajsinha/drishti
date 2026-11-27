@@ -221,7 +221,7 @@ one your team already uses. Drishti needs only its packages installed in it.
 1. Find its path. Windows: `py -0p` lists every installed Python with its path (for example
    `C:\Users\you\AppData\Local\Programs\Python\Python313\python.exe`); Linux and macOS: `which python3`.
 2. Drishti Lake's pinned Python wheel is in `lib/wheels` when you start from the platform source zip or the wheel pack; only a git clone builds it (see [QUICKSTART_DEVELOPERS.md section 1.3](../QUICKSTART_DEVELOPERS.md#13-the-consoles-environment); `python tools/lake/lakewheel.py` checks it). Then install the libraries yourself, once, with that Python. Unzip the offline wheel pack into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`). Windows:
-   the two pip commands from `drishti-console` ([DEPLOYMENT_AND_QA_GUIDE.md 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup); your own Python works too). Then, from the clone, run `<that python> tools/drishti.py setup`: it writes the settings, the JVM files and `drishti.python` and CHECKS the libraries ("Drishti is ready."); `setup --check` names every library that is missing or has the wrong version (exit 1) and changes nothing. `pip install -r drishti-console/requirements-polars.txt` is only for `tools/mrloader`.
+   the two pip commands from `drishti-console` ([DEPLOYMENT_AND_QA_GUIDE.md 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup); your own Python works too). Then, from the clone, run `<that python> tools/drishti.py setup`: it writes the settings, the JVM files and `drishti.python` and CHECKS the libraries ("Drishti is ready."); `setup --check` names every library that is missing or has the wrong version (exit 1) and changes nothing. `pip install -r drishti-console/requirements-polars.txt` is only for `tools/loaders/mrloader`.
 
    Drishti never runs pip: not `setup`, not `start`, not the server's compute environments. When a library is missing, setup prints that same pip command
    for the Python that ran it. `setup` needs nothing installed beforehand, not even PyYAML. Setup writes the Python it ran with as `drishti.python` in `dev.ini` (when absent, or when it names a missing Python;
@@ -234,9 +234,9 @@ one your team already uses. Drishti needs only its packages installed in it.
    compute environments run with `drishti.python` as it is, and a missing library is an error naming it and the pip command. In PyCharm: the launcher **Drishti: setup**.
 3. Choose it in PyCharm (section 2.3, step 2). Every Python launcher then uses it: they store no interpreter path of their own.
 
-The command-line tools in `tools/mrloader/` use Polars; the one Python may not carry it: either
+The command-line tools in `tools/loaders/mrloader/` use Polars; the one Python may not carry it: either
 `python3 -m pip install -r drishti-console/requirements-polars.txt` into it, or give those scripts another interpreter (Python 3.13
-or later with Polars, NumPy and PyYAML) in their own run configuration. The details are in `tools/mrloader/README.md`.
+or later with Polars, NumPy and PyYAML) in their own run configuration. The details are in `tools/loaders/mrloader/README.md`.
 
 ### 2.3 PyCharm: open `drishti\drishti-console`
 

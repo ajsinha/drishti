@@ -32,7 +32,7 @@ What the world's news reported about one country yesterday (GDELT): events, tone
 | Contract | [event-country.contract.yaml](../../../modules/economy/packs/gdelt-events/contracts/event-country.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: The GDELT Project, pulled by the gdelt-events feed (config/feeds/gdelt-events.yaml, tools/feeds/sources/) |
+| Source | public data: The GDELT Project, pulled by the gdelt-events feed (config/feeds/gdelt-events.yaml, tools/loaders/(external\|news)/) |
 | Grain | One row per world events by country, keyed by EVENT_COUNTRY_ID. |
 | Key | `EVENT_COUNTRY_ID` |
 | Id pattern | `^GDELT-` |

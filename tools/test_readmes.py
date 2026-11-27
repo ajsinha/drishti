@@ -135,3 +135,43 @@ def test_a_pack_readme_has_its_intro_in_the_packs_about_yaml():
         about = yaml.safe_load((pack / "config" / "about.yaml").read_text(encoding="utf-8"))
         assert about.get("intro", {}).get("sections", {}).get("What it is"), f"{pack.name}: intro: in config/about.yaml"
         assert not list((ROOT / "tools" / "packgen").rglob("*.intro.md"))
+
+
+# ------------------------------------------------------------------------------------------------ the loaders' READMEs
+
+LOADERS = ROOT / "tools" / "loaders"
+DAILY = ("mrloader", "external", "news")          # the loaders run every day: the full set of sections, Windows and Linux commands
+SECTIONS = ("## What it loads", "## Prerequisites", "## How to check it worked", "## When something goes wrong")
+
+
+@pytest.mark.parametrize("folder", ["", "mrloader", "external", "news", "genomics", "common"])
+def test_every_loader_folder_has_a_readme_with_the_license_header(folder):
+    text = (LOADERS / folder / "README.md").read_text(encoding="utf-8")
+    assert text.startswith("<!--") and "Ashutosh Sinha" in text.split("-->")[0], f"tools/loaders/{folder}/README.md: the copyright header"
+    assert (LOADERS / folder / "README.md").read_text(encoding="utf-8").count("\n") <= 420, "a loader README stays about 400 lines: link the guides for depth"
+
+
+@pytest.mark.parametrize("folder", DAILY)
+def test_a_daily_loader_readme_has_the_operators_sections_and_both_operating_systems(folder):
+    text = (LOADERS / folder / "README.md").read_text(encoding="utf-8")
+    for s in SECTIONS:
+        assert s in text, f"tools/loaders/{folder}/README.md: section {s!r}"
+    assert "daily routine" in text.lower()
+    assert "py -3.13" in text and "python3" in text, f"tools/loaders/{folder}/README.md: commands for Windows (py -3.13) and Linux (python3)"
+    assert ".venv" not in text, "no virtual environment, ever"
+
+
+def test_every_feed_is_named_in_the_external_or_the_news_readme():
+    text = (LOADERS / "external" / "README.md").read_text(encoding="utf-8") + (LOADERS / "news" / "README.md").read_text(encoding="utf-8")
+    for f in sorted((ROOT / "config" / "feeds").glob("*.yaml")):
+        assert f"`{f.stem}`" in text, f"config/feeds/{f.name}: name the feed in tools/loaders/external/README.md or tools/loaders/news/README.md"
+
+
+def test_every_runnable_script_of_a_loader_is_named_in_its_readme():
+    for folder in ("mrloader", "external", "news"):
+        text = (LOADERS / folder / "README.md").read_text(encoding="utf-8")
+        for py in sorted((LOADERS / folder).glob("*.py")):
+            body = py.read_text(encoding="utf-8")
+            if py.name.startswith("test_") or "__main__" not in body and folder == "mrloader":
+                continue
+            assert py.name in text or py.stem in text, f"tools/loaders/{folder}/README.md does not name {py.name}"

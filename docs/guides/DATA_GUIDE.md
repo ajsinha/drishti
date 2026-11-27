@@ -720,6 +720,8 @@ there, Drishti simply has not been told. Until it is, expectations will (rightly
 
 ## 2. Data formats: JSON Lines is the standard
 
+The loaders you run every day (the bank's files, the public feeds, the news) are one family under `tools/loaders/`, each with a README for the daily routine on Windows and Linux: [tools/loaders/README.md](../../tools/loaders/README.md).
+
 **JSON Lines (JSONL) is Drishti's data format**: one JSON object per line, UTF-8, in a `.jsonl` file (`.jsonl.gz` where
 the repository gzips large files). Every generator writes it, every loader reads it, and every export and download offers it. This
 page says what that means for data coming in, data going out, and the files Drishti keeps.

@@ -103,9 +103,18 @@ def audit(sources: dict[str, str], homes: dict[str, str], docs: dict[str, str], 
     return bad
 
 
+#: code folders moved after the reference tag (the loaders under tools/loaders/): a source document's commands name the new place, as the merged text does
+CODE_MOVES = (("tools/mrloader/", "tools/loaders/mrloader/"), ("tools\\mrloader\\", "tools\\loaders\\mrloader\\"))
+
+
 def git_show(ref: str, path: str) -> str | None:
     r = subprocess.run(["git", "-C", str(ROOT), "show", f"{ref}:{path}"], capture_output=True, text=True)
-    return r.stdout if r.returncode == 0 else None
+    if r.returncode != 0:
+        return None
+    out = r.stdout
+    for old, new in CODE_MOVES:
+        out = out.replace(old, new)
+    return out
 
 
 def main(argv: list[str]) -> int:

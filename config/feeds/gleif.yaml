@@ -22,7 +22,7 @@ title: GLEIF legal entities, ownership and identifier mappings   # one line for 
 description: >-                        # what the feed holds, in a sentence or two
   The Global LEI Foundation's golden copy (level 2 relationships and reporting exceptions), the LEI records of the pack's universe from
   the LEI API, and the ISIN/BIC-to-LEI mapping files: core reference data for every counterparty.
-class: gleif.GleifFeed                 # the Feed class that pulls: <module>.<Class>, the module in tools/feeds/sources/ (or beside this file)
+class: gleif.GleifFeed                 # the Feed class that pulls: <module>.<Class>, the module in tools/loaders/(external|news)/ (or beside this file)
 source:                                # the external source
   provider: GLEIF                      # who publishes it
   url: https://www.gleif.org           # the provider's page

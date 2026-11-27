@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Writes the public-sector packs' samples and READMEs (docs/guides/WORLD_DATA_GUIDE.md): each feed is run on its recorded
-fixtures (tools/feeds/tests/fixtures/publicsector, never the network) with the tests' narrower selection, a few documents of each
+fixtures (tools/loaders/common/tests/fixtures/publicsector, never the network) with the tests' narrower selection, a few documents of each
 kind are kept as the pack's samples (samples/<kind>.jsonl and catalog.jsonl), and the README is rendered from the pack, the samples
 and the `intro:` of its config/about.yaml.
 
@@ -38,10 +38,10 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT / "tools") not in sys.path:
     sys.path.insert(0, str(ROOT / "tools"))
 from resolved import pack_dir as _pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
-FEEDS = ROOT / "tools" / "feeds"
+FEEDS = ROOT / "tools" / "loaders" / "common"
 FIXTURES = FEEDS / "tests" / "fixtures" / "publicsector"
 AS_OF = date(2026, 11, 6)                  # the business date the fixtures were recorded for
-for _p in (FEEDS, FEEDS / "sources"):
+for _p in (FEEDS, FEEDS.parent / "external", FEEDS.parent / "news"):
     sys.path.insert(0, str(_p))
 import feedbase as FB  # noqa: E402
 import publicsector as PS  # noqa: E402

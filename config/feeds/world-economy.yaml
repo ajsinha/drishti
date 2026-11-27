@@ -27,7 +27,7 @@ description: >-
   Economies, macro indicators, labour markets, fiscal positions and forecasts of every country and region (World Bank WDI, read from
   the world-development feed, and WGI, IMF World Economic Outlook, UNDP Human Development Index), and jurisdictions, parties, office
   holders and elections (CIA World Factbook).
-class: world_economy.WorldEconomyFeed  # tools/feeds/sources/world_economy.py
+class: world_economy.WorldEconomyFeed  # tools/loaders/external/world_economy.py
 source:
   provider: World Bank (WGI and country list; WDI from the world-development feed), IMF, UNDP, CIA World Factbook
   url: https://data.worldbank.org

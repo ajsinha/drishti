@@ -22,7 +22,7 @@ title: Listed companies' quotes and headlines (Yahoo Finance, Google News; inter
 description: >-
   Quotes and daily price history of the listed companies the news-and-markets pack follows, and the headlines about them and its
   topics, captured through Drishti's own live connectors (yfinance, news) so the documents have exactly the pack's shape.
-class: news_and_markets.NewsAndMarketsFeed   # tools/feeds/sources/news_and_markets.py
+class: news_and_markets.NewsAndMarketsFeed   # tools/loaders/news/news_and_markets.py
 source:
   provider: Yahoo Finance, Google News
   url: https://news.google.com

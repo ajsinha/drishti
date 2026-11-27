@@ -1696,7 +1696,7 @@ answer is `?locale=` on the explain request, else the user's *Language of help t
 
 **Generated packs.** A generated pack's `config/about.yaml` is copied from a hand-kept source in the generator folder
 (`tools/packgen/banking/about/<pack>.yaml`, `tools/packgen/<generator>/about.yaml`): edit that source and regenerate. A pack built on public data
-has its refresh script in `tools/feeds/` ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#198-writing-a-feed)).
+has its refresh script in `tools/loaders/common/` ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#198-writing-a-feed)).
 
 **Check it.** Load the pack: a file with a problem lists it (`DRS-2040` to `DRS-2044`). Press `?` on an entity, also as a user whose role is not `raw`.
 `sutra lint modules/<module>/packs/<pack>` warns (`DRS-2046`, `DRS-2047`) about a `panels.<id>` that matches no panel and each field a Sutra shows that
@@ -4688,7 +4688,7 @@ commands: {BKC: book-copy, LOAN: loan, LIBS: pack overview}
 depends-on: {packs: [core], connectors: [library-store], plugins: [delta], settings: [DRISHTI_LAKE_ENABLED]}
 sources:
 - {name: The library's catalogue, licence: Proprietary, internal-only: false, used-for: book-copy}
-refresh: tools/feeds/library.py      # or the generator, when the data has no refresh script
+refresh: tools/loaders/common/library.py      # or the generator, when the data has no refresh script
 generated-by: tools/packgen/library/make.py
 ---
 # The library pack

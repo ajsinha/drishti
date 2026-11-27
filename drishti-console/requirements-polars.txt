@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 #
-# Optional: Polars and NumPy for the tools that need them (tools/mrloader: the PVF extract to scenario PVs, docs/guides/BANK_DATA_GUIDE.md). Install
+# Optional: Polars and NumPy for the tools that need them (tools/loaders/mrloader: the PVF extract to scenario PVs, docs/guides/BANK_DATA_GUIDE.md). Install
 # beside requirements.txt, in the same environment:
 #
 #     pip install -r requirements.txt -r requirements-polars.txt

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The gdelt-events feed (docs/guides/WORLD_DATA_GUIDE.md section 20.5): the GDELT 1.0 daily event files reduced to events and tone by
-# country and CAMEO category, into newslake, for the gdelt-events pack. Class: tools/feeds/sources/gdelt_events.py. Daily (a day's
+# country and CAMEO category, into newslake, for the gdelt-events pack. Class: tools/loaders/news/gdelt_events.py. Daily (a day's
 # file is complete the morning after, about 06:00 UTC); incremental (only the days after the last one processed; each about 7 MB
 # zipped, read as it streams, never kept). No key.
 # Run: python3 tools/drishti.py feed run gdelt-events (WORLD_DATA_GUIDE.md); options.sources holds each source's licence and terms; the rest of

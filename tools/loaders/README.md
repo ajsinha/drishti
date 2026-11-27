@@ -1,0 +1,67 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+-->
+
+# Loaders: how data gets into Drishti every day
+
+Everything you run to push data into Drishti lives in this folder, in four families and one for later. Each has its own README written
+for the person who does the daily loads.
+
+| Folder | What it loads | Start with |
+|---|---|---|
+| [`mrloader/`](mrloader/README.md) | **the bank's own market-risk files**: PVF scenario PVs, the daily scenario set and FX, the CSV datasets of VaR and exposure | [mrloader/README.md](mrloader/README.md) |
+| [`external/`](external/README.md) | **public reference, statistics and market data** pulled from the internet: GLEIF, funds, US equities, central banks, national statistics, OECD, official market data, the world economy | [external/README.md](external/README.md) |
+| [`news/`](news/README.md) | **public news and events**: official press releases, news and quotes, GDELT world events | [news/README.md](news/README.md) |
+| [`genomics/`](genomics/README.md) | planned: public genomics sources and your own genomics files | [genomics/README.md](genomics/README.md) |
+| [`common/`](common/README.md) | the one engine behind `external/` and `news/` (the feed engine); for developers | [common/README.md](common/README.md) |
+
+## Which one do I use?
+
+| You have | Use | Command group |
+|---|---|---|
+| files from your own systems (PVF extracts, CSV extracts of limits, desks, sensitivities) | mrloader | `tools/loaders/mrloader/<script>.py` (by path) |
+| JSON lines of your own (trades, anything else) | the data inbox, no loader needed | `drishti.py dataload ready` or `drishti.py data ingest`, see [DATA_GUIDE.md](../../docs/guides/DATA_GUIDE.md) |
+| data that is public on the internet | a feed | `drishti.py feed run <feed>` |
+
+## The same on both operating systems
+
+Every command in these READMEs is shown for **Linux** (`python3 ...`) and **Windows** (`py -3.13 ...`, PowerShell or Command Prompt).
+Only the interpreter and the path separator change; the arguments are identical. Rules that hold everywhere:
+
+- **No virtual environment, and nothing is installed for you.** Drishti runs in the Python you start it with. `drishti.py setup` only
+  checks the libraries and prints the exact `pip` command when one is missing; you run it yourself (Windows
+  `py -3.13 -m pip install ...`). Where the console's `requirements-polars.txt` is needed (the PVF loader), it says so.
+- **Run from the Drishti folder** (the one that holds `tools\`). Paths with a space go in quotes.
+- **The server jar and Java 21** are needed to *load* (`lib\drishti-server-<version>-exec.jar`; `drishti.py build jar`), not to convert.
+- **Exit codes.** 0 done. Anything else is refused or failed, with one line saying why; a scheduler can alert on it.
+- **Re-running is safe.** Every load replaces its business date as a whole and leaves the other dates alone.
+
+## Check that the machine is ready (once, and after any upgrade)
+
+```text
+Linux     python3 tools/drishti.py doctor
+Windows   py -3.13 tools\drishti.py doctor
+```
+
+`doctor` prints green, yellow and red lines with a fix for each (Java, the jar, the Python libraries, the folders, the ports) and exits
+1 on any red. It changes nothing. Add `--server http://localhost:18480` to also check the running server.
+
+## Check that a day's load worked (any family)
+
+| Question | Command (Linux; Windows `py -3.13 tools\drishti.py ...`) |
+|---|---|
+| What is in the inbox, what failed and why? | `python3 tools/drishti.py dataload status` |
+| Load the inbox now | `python3 tools/drishti.py dataload run` |
+| Row counts and business dates per table of a lake | `python3 tools/drishti.py lake status --lake risklake` |
+| Did the feeds run, and when did each last succeed? | `python3 tools/drishti.py feed status` |
+| Undo a whole load | `python3 tools/drishti.py dataload undo <load-id>` (then `--yes`) |
+
+In the UI: **Admin → Data loads** (inbox, outbox, failed, lakes, feeds).
+
+## Where the depth is
+
+[BANK_DATA_GUIDE.md](../../docs/guides/BANK_DATA_GUIDE.md) (the bank's files), [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md)
+(the public feeds), [DATA_GUIDE.md](../../docs/guides/DATA_GUIDE.md) and [DATA_LAKE_GUIDE.md](../../docs/guides/DATA_LAKE_GUIDE.md) (the
+inbox, lakes, `.ready` files), [CLI_REFERENCE.md](../../docs/guides/CLI_REFERENCE.md) (every command).

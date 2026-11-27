@@ -33,7 +33,7 @@ One country's World Development Indicators: the latest of each, the world map sh
 | Contract | [development-profile.contract.yaml](../../../modules/economy/packs/world-development/contracts/development-profile.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/feeds/sources/) |
+| Source | public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/loaders/(external\|news)/) |
 | Grain | One row per development profile, keyed by PROFILE_ID. |
 | Key | `PROFILE_ID` |
 | Id pattern | `^WDI-` |
@@ -177,7 +177,7 @@ One World Development Indicator of one country by year: the history, the latest 
 | Contract | [development-series.contract.yaml](../../../modules/economy/packs/world-development/contracts/development-series.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
-| Source | public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/feeds/sources/) |
+| Source | public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/loaders/(external\|news)/) |
 | Grain | One row per development indicator series, keyed by SERIES_ID. |
 | Key | `SERIES_ID` |
 | Id pattern | `^WDIS-` |

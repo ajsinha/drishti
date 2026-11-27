@@ -416,7 +416,7 @@ gate_java() {
 # ---- stage two ---------------------------------------------------------------------------------------------------------------
 # The tools' tests: EVERY test file under tools/ (tools/**/test_*.py, and the tests/ folders as folders), found, not listed: a test
 # file nobody named never ran. Each file runs in a pytest process of its own (the tools put themselves on sys.path; a module of one
-# must not shadow another's), all in one uv environment (deltalake, pyarrow, PyYAML, pytest, moto for the S3 simulators, polars and numpy for tools/mrloader); a failed
+# must not shadow another's), all in one uv environment (deltalake, pyarrow, PyYAML, pytest, moto for the S3 simulators, polars and numpy for tools/loaders/mrloader); a failed
 # file fails its lane after every file ran, so one drill shows every failure. Two lanes run side by side (about 15 minutes each
 # beside each other): tools-a the tools' own command tests and the test data check, tools-b the tools' folders (lake, generators, public data,
 # benchmarks) with three long command tests (schema to pack, the sample pages, the generators). The gate built the exec jar: the tests that start the Java loader run.

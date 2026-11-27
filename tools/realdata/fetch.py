@@ -31,18 +31,18 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "feeds"))
-from pullkit import user_agent  # noqa: E402  (the one User-Agent of every feed: tools/feeds/pullkit.py)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "loaders" / "common"))
+from pullkit import user_agent  # noqa: E402  (the one User-Agent of every feed: tools/loaders/common/pullkit.py)
 UA = user_agent()   # DRISHTI_FEEDS_USER_AGENT, else the feeds' default
 
 
 def _publicsector():
-    """tools/feeds/sources/publicsector.py (wdi_rows), by its path: that folder is not put on sys.path, where its feed modules would
+    """tools/loaders/common/publicsector.py (wdi_rows), by its path: that folder is not put on sys.path, where its feed modules would
     shadow the pack generators' own modules of the same names."""
     if "publicsector" in sys.modules:
         return sys.modules["publicsector"]
     import importlib.util
-    spec = importlib.util.spec_from_file_location("publicsector", Path(__file__).resolve().parents[1] / "feeds" / "sources" / "publicsector.py")
+    spec = importlib.util.spec_from_file_location("publicsector", Path(__file__).resolve().parents[1] / "loaders" / "common" / "publicsector.py")
     mod = importlib.util.module_from_spec(spec)
     sys.modules["publicsector"] = mod
     spec.loader.exec_module(mod)

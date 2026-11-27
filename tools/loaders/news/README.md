@@ -1,0 +1,86 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+-->
+
+# news: official press releases, news and quotes, world events
+
+For the person who keeps the news and events lake fresh. Same machinery, same commands and same daily routine as
+[external/README.md](../external/README.md) (read its "daily routine", "scheduling", "when something goes wrong" and "how to check it worked"; they are
+not repeated here). This page says what the three news feeds load, what is special about them, and how to run them.
+Depth: [WORLD_DATA_GUIDE.md](../../../docs/guides/WORLD_DATA_GUIDE.md) sections 19 and 20.
+
+On Linux write `python3`; on Windows `py -3.13` and `\` in paths. `PY` below stands for that interpreter.
+
+## What it loads
+
+| Feed | What it pulls | Lake | Tables written | Runs (local) | Licence / use |
+|---|---|---|---|---|---|
+| `official-news` | press releases of central banks and regulators (Fed, SEC, US Federal Register, ECB, Bank of Canada, Bank of England, OSFI, Canada Gazette) by RSS or API | `newslake` | `release-source`, `press-release` | daily 19:00 | per publisher, see below |
+| `news-and-markets` | Google News headlines and Yahoo quotes with daily history, through the news and yfinance connectors | `newslake` | `quote`, `news` | daily 07:30 | **internal only** |
+| `gdelt-events` | GDELT 1.0 daily event files reduced to events and tone by country and CAMEO category (about 7 MB zipped a day, streamed, never kept) | `newslake` | `event-country` | daily 04:30 | free with a citation |
+
+Source code: `official_news.py`, `news_and_markets.py`, `gdelt_events.py` in this folder (`countries.json`: ISO3 to country name, Natural
+Earth, public domain). The shared helpers for the public-sector feeds are in [common/](../common/README.md) (`publicsector.py`).
+Each feed is declared in `config/feeds/<feed>.yaml` with a generated page `config/feeds/<feed>.md`.
+
+## Prerequisites (once)
+
+Python, the server jar and Java 21, and the contact in `DRISHTI_FEEDS_USER_AGENT`: exactly as in
+[external/README.md](../external/README.md#prerequisites-once). No key is needed. `news-and-markets` starts a scratch server from the built
+jar (`options.server: ""`) or talks to a running server whose news and yfinance connectors are on; if that server is secured, set
+`DRISHTI_TOKEN` in the environment.
+
+## The daily routine
+
+```text
+Linux     PY tools/drishti.py feed run official-news --dry-run
+          PY tools/drishti.py feed run official-news
+          PY tools/drishti.py feed run gdelt-events
+          PY tools/drishti.py feed run news-and-markets
+Windows   py -3.13 tools\drishti.py feed run official-news --dry-run
+          py -3.13 tools\drishti.py feed run official-news
+          py -3.13 tools\drishti.py feed run gdelt-events
+          py -3.13 tools\drishti.py feed run news-and-markets
+```
+
+Each prints a closing line (`feed ok exit=0 feed=... rows=... loaded=...`). Or all enabled feeds, news included: `feed run --all`.
+Schedule them with `feed schedule --cron | --systemd | --windows`; they run at the times above.
+
+- **A day**, **several days**, **again:** `--date 2026-11-06` and `--since 2026-10-20` as for every feed. GDELT is incremental: each run
+  reads the days after the last one processed (a day's file is complete about 06:00 UTC the next morning, so the 04:30 local run
+  may get yesterday); the same date again replaces it whole.
+- **Offline:** `--offline` uses the download cache only.
+- **Choose what is pulled:** the publishers of `official-news` are the `options.sources` of `config/feeds/official-news.yaml`; add, remove
+  or mark a source `internal-only` there (a copy kept with your site's settings via `--config DIR`), not in code.
+
+## How to check it worked
+
+`PY tools/drishti.py feed status` (exit 1 when a feed's last run failed), `PY tools/drishti.py lake status --lake newslake` for rows per
+table and date, Admin → Data loads → Feeds, and the pages of the packs (`press-release`, `event-country`, `news`, `quote`).
+
+## When something goes wrong
+
+The exit codes and the general table are in [external/README.md](../external/README.md#when-something-goes-wrong-exit-codes-and-fixes). Specific to news:
+
+| You see | It means | Do this |
+|---|---|---|
+| a publisher's feed times out or returns nothing | that RSS source is down or moved | the other publishers still load; run again later; the closing line counts what was pulled |
+| GDELT: fewer days than expected | the newest day's file is not published yet | run again after about 06:00 UTC |
+| `news-and-markets`: no quotes | no server for the connectors, or the connectors are off | start a server with the news and yfinance connectors on, or leave `options.server` empty to use a scratch one from the jar |
+| exit 2 *internal-only ... committed folder* | internal data would go into the repository | load into the data folder (the default); `--internal-ok` only with `--snapshot` for an internal demo |
+
+## Licences and internal-only data
+
+- **Internal only, never redistributed:** Google News headlines and Yahoo quotes (`news-and-markets`); and, in `official-news`, the
+  Bank of England, OSFI and the Canada Gazette Parts I and II (non-commercial or internal use without permission). They load into your own
+  lakes like everything else; they must not leave your organisation.
+- **Free with attribution:** ECB and Bank of Canada releases, GDELT (cite "The GDELT Project").
+- **Public domain:** the Fed, the SEC and the Federal Register.
+- The licence and the `internal-only` flag of each source are in its feed file, in every dated `manifest.json` and in `feed list`.
+
+## Rate limits and caches
+
+`pause` seconds between requests (1 to 2), three retries (2, 4, 8 s, or the server's `Retry-After`). Downloads are cached `cache-hours`
+(12) in `data/datafeeds/<feed>/cache/`, so a run that broke resumes. The GDELT day files are streamed and not kept.

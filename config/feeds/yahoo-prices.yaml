@@ -21,7 +21,7 @@ title: Yahoo Finance daily prices of the US equities companies (internal use onl
 description: >-
   The daily price history of every us-equities company, read through Drishti's own us-equities-prices connector so the documents have
   exactly the pack's shape. For internal use only.
-class: us_equities.YahooPricesFeed     # tools/feeds/sources/us_equities.py
+class: us_equities.YahooPricesFeed     # tools/loaders/external/us_equities.py
 source:
   provider: Yahoo Finance
   url: https://finance.yahoo.com

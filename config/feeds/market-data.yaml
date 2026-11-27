@@ -22,7 +22,7 @@ title: Official market data (ECB FX reference rates, US Treasury par curve, SOFR
 description: >-
   The ECB's euro foreign exchange reference rates, the US Treasury par yield curve, SOFR from the New York Fed and the euro short-term
   rate from the ECB, in the market-data pack's own shapes (fx-spot, ir-curve, rate-fixing).
-class: official_market_data.MarketDataFeed   # tools/feeds/sources/official_market_data.py
+class: official_market_data.MarketDataFeed   # tools/loaders/external/official_market_data.py
 source:
   provider: European Central Bank, U.S. Department of the Treasury, Federal Reserve Bank of New York
   url: https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates

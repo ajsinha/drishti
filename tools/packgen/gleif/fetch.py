@@ -50,8 +50,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CACHE = ROOT / "data" / "cache" / "gleif"
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "feeds"))
-from pullkit import user_agent  # noqa: E402  (the one User-Agent of every feed: tools/feeds/pullkit.py)
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "loaders" / "common"))
+from pullkit import user_agent  # noqa: E402  (the one User-Agent of every feed: tools/loaders/common/pullkit.py)
 USER_AGENT = user_agent()   # DRISHTI_FEEDS_USER_AGENT, else the feeds' default
 API = "https://api.gleif.org/api/v1"
 GOLDEN = "https://goldencopy.gleif.org/api/v2/golden-copies/publishes/latest"

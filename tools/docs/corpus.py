@@ -67,7 +67,7 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"config/bi/README\.md", "note", "C", "", ""),
     (r"config/bi/(python|reports)/README\.md", "merge", "C", "config/bi/README.md", ""),
     (r"config/connectors\.examples/[^/]+/README\.md", "generate", "C", "", "tools/connector_readmes.py"),
-    (r"config/feeds/[^/]+\.md", "generate", "C", "", "tools/feeds/feedreadme.py"),
+    (r"config/feeds/[^/]+\.md", "generate", "C", "", "tools/loaders/common/feedreadme.py"),
     (KERNEL_PACKS + r"/[^/]+/README\.md", "generate", "C", "", PACKGEN),
     (_pack("compute-demo") + r"/guides/[^/]+\.md", "merge", "A", GL + "bi/NOTEBOOK_AND_PYTHON.md", ""),
     (_pack("core") + r"/guides/[^/]+\.md", "merge", "A", BANK, ""),
@@ -90,7 +90,7 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"docs/architecture/(ELEMENTS_IN_DRISHTI|SHARED_SCREENS)\.md", "merge", "B", TC, ""),
     (r"docs/architecture/GENOMICS_SHOWCASE\.md", "merge", "B", GEN, ""),
     (r"docs/architecture/DECISIONS\.md", "keep", "B", "", ""),
-    (r"docs/contracts/CSV_FORMATS\.md", "generate", "B", "", "tools/mrloader/kind_docs.py"),
+    (r"docs/contracts/CSV_FORMATS\.md", "generate", "B", "", "tools/loaders/mrloader/kind_docs.py"),
     (r"docs/architecture/adr/README\.md", "rename", "B", "docs/architecture/DECISIONS.md", ""),
     (r"docs/architecture/adr/[^/]+\.md", "merge", "B", "docs/architecture/DECISIONS.md", ""),
     (r"docs/architecture/kernel-and-modules/.+\.md", "merge", "B", KM, ""),
@@ -155,7 +155,7 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"tools/dev/asset_prefix_docs\.md", "merge", "A", GL + "DEVELOPER_GUIDE.md", ""),
     (r"tools/elements-demo/README\.md", "note", "C", "", ""),
     (r"tools/mrloader/(README|docs/README|docs/DAILY_RUNBOOK|samples/README)\.md", "merge", "A", BANK, ""),
-    (r"tools/mrloader/docs/[^/]+\.md", "delete", "B", "", "tools/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)"),
+    (r"tools/mrloader/docs/[^/]+\.md", "delete", "B", "", "tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)"),
     (r"tools/packgen/.+\.intro\.md", "merge", "C", "", "the pack's config/about.yaml intro:"),
 ]
 RULES = [(re.compile(p + r"\Z"), c, lane, t, tool) for p, c, lane, t, tool in R]

@@ -26,7 +26,7 @@ description: >-
   The companies of the Dow 30, the S&P 500, the Nasdaq-100 and the Russell 2000 (index membership from SPY, DIA, QQQ and IWM N-PORT
   holdings) and major US, Canadian and UK banks: SEC EDGAR companies, SIC sectors, recent filings and ten years of annual XBRL
   financials, LEIs from GLEIF, headquarters and websites from Wikidata.
-class: us_equities.UsEquitiesFeed      # tools/feeds/sources/us_equities.py
+class: us_equities.UsEquitiesFeed      # tools/loaders/external/us_equities.py
 source:
   provider: SEC EDGAR, Nasdaq Trader, GLEIF, Wikidata
   url: https://www.sec.gov/edgar

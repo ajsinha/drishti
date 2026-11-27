@@ -22,7 +22,7 @@ title: US funds and ETFs from SEC Form N-PORT and N-CEN
 description: >-
   The largest US mutual funds and ETFs: their holdings (Form N-PORT), census data (Form N-CEN), fees and risk/return summaries, the
   funds holding each listed company, and the funds tracking each index.
-class: funds.FundsFeed                 # tools/feeds/sources/funds.py
+class: funds.FundsFeed                 # tools/loaders/external/funds.py
 source:
   provider: SEC (Form N-PORT, Form N-CEN, risk/return summaries), Nasdaq Trader, GLEIF
   url: https://www.sec.gov/dera/data
