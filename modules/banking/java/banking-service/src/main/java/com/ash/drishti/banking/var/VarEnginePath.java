@@ -336,30 +336,6 @@ public class VarEnginePath {
         };
     }
 
-    /** Every row of an answer's table, each a map by column name (rows are positional, in the columns' order). */
-    @SuppressWarnings("unchecked")
-    static List<Map<String, Object>> rows(Map<String, Object> answer, String table) {
-        List<Map<String, Object>> out = new ArrayList<>();
-        for (Object t : (List<Object>) answer.getOrDefault("tables", List.of())) {
-            Map<String, Object> tm = (Map<String, Object>) t;
-            if (table.equals(tm.get("name"))) {
-                List<String> names = new ArrayList<>();
-                for (Object c : (List<Object>) tm.getOrDefault("columns", List.of())) {
-                    names.add(String.valueOf(((Map<String, Object>) c).get("name")));
-                }
-                for (Object r : (List<Object>) tm.getOrDefault("rows", List.of())) {
-                    Object[] cells = r instanceof Object[] a ? a : ((List<Object>) r).toArray();
-                    Map<String, Object> rm = new java.util.HashMap<>();
-                    for (int i = 0; i < names.size() && i < cells.length; i++) {
-                        rm.put(names.get(i), cells[i]);
-                    }
-                    out.add(rm);
-                }
-            }
-        }
-        return out;
-    }
-
     private Map<String, Object> ask(Principal p, List<String> outputs, Map<String, Object> params, Map<String, String> snapshot) {
         Engines e = engines.getIfAvailable();
         if (e == null || !e.running(ENGINE)) {
