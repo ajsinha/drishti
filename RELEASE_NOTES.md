@@ -13,6 +13,347 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.i7n: release notes
+
+*A documentation release on i7m: the guide merges.* No product behaviour changes.
+
+- **Integration in one guide:** embedding Drishti, data out over Arrow Flight and the developer API are one guide, `INTEGRATION_GUIDE.md`.
+- **Fewer, fuller guides:** AI set-up, approvals and live results live in the Administration and User guides; guide numbering is consistent and every link resolves.
+- **One rules section for connectors;** settings tables link the configuration document; planned AI parts sit in `docs/plans`.
+
+---
+
+# Drishti 2.9.11.i7m: release notes
+
+*A documentation release on i7l: structure first. The guide merges and tutorial rewrites are the next release (i7n).* No product behaviour
+changes.
+
+## What changes for readers
+
+- **Offline Help for the products:** the pinned Rachana and Elements documents are in the install and Help links to them without a network.
+- **Only what is built is in the contracts and the lens document:** the twelve computed-measure contracts that are not built are designs
+  under `docs/plans/contracts/`, still reachable from the under-construction notes; `LENSES.md` describes what each lens answers today and
+  the lens mechanism, and the proposals are in `docs/plans/LENSES_PROPOSALS.md`.
+- **Section numbers are unique:** the later parts of the kernel and thin-console design documents continue the numbering (19 to 22 and 8
+  and 9); every old link still opens the right place.
+- **Less repeated text:** the static-asset naming rules and the data-section introduction of the measure guides have one home each.
+
+## Known limits
+
+The guides are still 39 files (17 planned); ten documents still number their appended parts from 1 again (listed in
+`tools/test_docs_consolidation.py`); the connector READMEs still repeat their loading paragraphs.
+
+# Drishti 2.9.11.i7l: release notes
+
+*A documentation release on i7k, across the whole platform.* No product behaviour changes; the server, console, figures and settings
+are as in i7k.
+
+## What changes for readers
+
+- **Fewer, truer documents in every product:** Drishti Rachana 71 to 14, Elements 14 to 10, Tools 13 to 4, Lake 19 to 15; each fact
+  checked against the code, finished plans removed, and what is designed but not built kept in a short `ROADMAP.md` per product.
+- **Rachana's language has its home in Rachana:** panel kinds, layout, controls, forms, recipes and the expression guide moved there;
+  Drishti's Rachana reference keeps what is Drishti's own and links the rest. Every Help page and address is unchanged.
+- **One home per procedure in Drishti:** repeated install, setup and service commands are links; release history is gone from the
+  design texts; the 125-product catalogue is generated.
+- **The platform's start pages** point at the production section of the Operations guide.
+
+## Known limits
+
+As in i7k.
+
+# Drishti 2.9.11.i7k: release notes
+
+*On i7j: the documentation consolidated (one home per fact, generated wherever it can be), the platform described first, and Drishti
+fixed and tested on Windows.*
+
+## What changes for readers
+
+- **400 tracked Markdown files become 214:** 117 hand-written, 82 generated, 169 merged into their new homes or removed; nothing a
+  reader needs was lost (every heading and code block of the 108 merged documents is in its new home). Architecture is 9 documents and
+  one `DECISIONS.md`; each feature has one guide that took in its pack, module and tool pages (`PVF_LOADING` is now `BANK_DATA_GUIDE`).
+- **Generated, never hand-edited:** pack, module and connector-template READMEs, the contract pages (one real example per kind),
+  `CSV_FORMATS.md`, `CONFIGURATION.md`, the launcher tables. `python tools/drishti.py docs generate` writes them all; `--check`
+  names each stale file.
+- **Help and About follow:** every Help page resolves, old addresses redirect, the About drawer links the real guide pages, and About
+  lists the installed modules. Ask reads a pack's kind section from its README.
+- **Drishti is described as a platform for any domain**, banking risk its first module (README, How it fits, About, the decks); the
+  embedding guide links Rachana's new guides for Flask/FastAPI apps and GenUI (Rachana `v1.0.1-ide3`).
+
+## What changes for developers
+
+- **GitHub checks work:** `fast` builds Tools, Rachana and Lake from their tags (nothing from a public registry), packages Drishti,
+  runs `docs generate --check`, the licence headers, the docs, Help and About tests on every push and pull request; `windows` runs the
+  lake, connector and server suites and the identity tests on Windows.
+
+## Fixed (found by the Windows suite; most matter on every OS)
+
+- Sutra paths are shown to clients in one portable form; Studio's design blocks no longer vanish when another context reloads its Sutras.
+- Alerts: pausing, resuming or saving an alert takes the alert's lock, so a running evaluation cannot write the old rule back.
+- BI: a stop waits for a running refresh (at most 10 s) so its result is saved.
+- Cluster: a peer whose connection times out is unreachable (the next holder is asked, `DRS-5052`), not a slow answer.
+- Windows: a file being read can be replaced (`FileReplace`, retried only on Windows); preferences, design store (owner-only),
+  the pack registry signing, feeds and compute use one Python setting (macOS feeds now `python3`).
+
+## Known limits
+
+- On Windows, the `drishti-api` module's tests are not yet in the Windows check; two of them show a memory-mapped file cannot be
+  replaced while mapped (next release). Disk-cache "lock" warnings on Windows are harmless.
+- The `windows` check passes every Java test suite on Windows; its later step that loads a small lake with the Python loader
+  (`make_data.py` + `load_rows.py`) writes no trade table there yet (next release). `drishti.py lake demo --engine java` works on Windows.
+- The 125-product catalogue in `BANK_DATA_GUIDE` is still written by hand (a generator next release).
+
+# Drishti 2.9.11.i7j: release notes
+
+*A point release on i7i: the IDE launchers can be listed and run from the command line.*
+Everything else is as in i7i.
+
+## What changes for developers
+
+- **`launchers --list` and `launchers --run "<name>"`.** `py -3.13 tools\drishti.py launchers --list` prints every launcher, its group and the exact
+  command it runs (Maven, Python or JAR Application) with its working folder; `launchers --run "Drishti: run server (demo)"` (the whole name or a prefix
+  that names one) runs exactly what the launcher file holds, in its folder and with its environment variables, and returns its exit code. Both read the
+  committed `run-configs/*.run.xml` themselves, so the IDE and the command line never drift apart. An unknown or ambiguous name is one
+  `[FAIL] launcher "<x>": <why>. Fix: <the --list command>`.
+- **PRODUCTION_DEPLOYMENT.md** opens with a ten-step Quick path (dedicated Python 3.13, unzipped wheel pack, the two pip commands, setup, disk guard, units, verify), explains each setup `[FAIL]` with its fix, and ends with a Command line reference; `doctor --acceptance` is said to be demo-only. **IDE_GUIDE.md** gains a "which IDE opens what" table, the launchers' command lines and an IDE-setup and troubleshooting section.
+
+## Known limits
+
+Carried from i7g. On macOS the demo lake may report "locked by another run" and fall back to the Python loader. The server reads a settings
+file saved as "UTF-8 with BOM" without its first line (save it as plain UTF-8, Notepad's default; the tools and the console read both).
+
+# Drishti 2.9.11.i7i: release notes
+
+## What changes in the IDEs
+
+- **The launchers are back in `run-configs/` folders (no `.idea` in the source), grouped by IDE, component and purpose: IntelliJ-drishti-build/-run/-test, PyCharm-console-setup/-data/-run/-check;
+  the platform's is IntelliJ-platform.** IntelliJ IDEA opens `drishti` and reads `run-configs/*.run.xml` (folders **IntelliJ-drishti-build**, **-run**, **-test**); PyCharm opens
+  `drishti\drishti-console` and reads `drishti-console/run-configs/*.run.xml` (folders **PyCharm-console-setup**, **-data**, **-run**, **-check**). No step numbers; Nothing else changes: the same launchers,
+  the project interpreter, no fixed SDK path. `.idea/` is git-ignored entirely (your own IDE files).
+
+# Drishti 2.9.11.i7h: release notes
+
+*A point release on i7g: a missing capacity template no longer stops the server, `start` before `setup` refuses, and three messages say the right command.*
+Everything else is as in i7g.
+
+## What changes for administrators
+
+- **The capacity planner is read when first used.** A missing part of its template stops only Admin → Capacity (`DRS-1032`, "the capacity template is
+  missing <part>"); the server starts. The template's root relationships part is kept in the source as `_rels/root.rels.xml` (no hidden file) and
+  written into the downloaded workbook as `_rels/.rels`, as Excel requires: the workbook is unchanged.
+- **`start server` with no settings file refuses.** With neither `--settings` nor `~/drishti-envs/dev.ini` of this checkout, and no `--data-dir`,
+  it prints one `[FAIL] ... Fix: <the setup command>` instead of starting because a `data/run` folder happens to exist. `--data-dir` still works.
+- **Messages.** The demo-lake "Next" text prints the command for your system (`py -3.13 tools\drishti.py ...` on Windows, the running Python
+  elsewhere).
+- **`doctor --acceptance`** checks the server named by `--server` (it used the default port), and works on a demo stack started in another window
+  without `--profile demo`: a demo server says `"profile": "demo"` in `/public/about` (`config/profiles/demo.ini`).
+
+## Known limits
+
+Carried from i7g. On macOS the demo lake may report "locked by another run" and fall back to the Python loader. The server reads a settings
+file saved as "UTF-8 with BOM" without its first line (save it as plain UTF-8, Notepad's default; the tools and the console read both).
+
+# Drishti 2.9.11.i7g: release notes
+
+*A point release on i7f: Drishti makes and names no virtual environment, `start` never installs anything, each IDE opens its own project.*
+Everything else is as in i7f.
+
+## What changes for administrators
+
+- **One Python, yours, on every system.** Drishti never makes a virtual environment and names none: it runs with `DRISHTI_PYTHON`, else
+  `drishti.python` of the settings file, else the Python running the tool. That Python may be the system's, a dedicated one (Linux:
+  `/opt/python3.13`), or a virtual environment you made yourself and run Drishti with (or name in `drishti.python`).
+- **Drishti never installs Python packages** (not `setup`, not `start`, not the server's compute environments). You install the libraries
+  yourself, once: unzip the offline wheel pack into `%USERPROFILE%\drishti-wheels` (`~/drishti-wheels`), then Windows `cd "<drishti>\drishti-console"` and
+  `py -3.13 -m pip install --no-index --find-links "C:\Users\<you>\drishti-wheels" -r requirements.txt`; Linux and macOS the same with `python3.13` and `/`
+  (or your own Python). **`setup` only checks** the libraries of the Python running it: it prints that exact command when something is missing
+  and "Drishti is ready." when all is in order, and writes the settings file, `drishti.python` and the JVM argument files either way. An operating
+  system's own Python (PEP 668, *EXTERNALLY-MANAGED*) and a pack for another Python version are one `[FAIL]` line each, never `--break-system-packages`.
+- **`setup` writes `drishti.python`** (the Python it ran with) into the settings file: `~/drishti-envs/dev.ini`, or the file `--settings`
+  names (a production `/etc/drishti/prod.ini`; then no developer `dev.ini` and no IDE JVM options are made). A value naming a missing
+  Python is replaced and said; another Python you named is kept.
+- **`start` only starts.** `start console`, `start all`, `stop`, `status` and `run_drishti_web.py` never make an environment and never
+  install: the Python is checked first and a missing library is refused at once with the list and the pip command, before anything is
+  made (`start all` asks before the server starts). The owner's Windows case (the server started, then the console went to the company
+  index and got a 401) cannot recur.
+- **Setup's next steps never say `start` while a `[FAIL]` or `[todo]` remains**: the fixes come first, then `setup` again.
+- **No `--settings` needed.** Every `tools/drishti.py` command but `setup` takes `~/drishti-envs/dev.ini` by itself when it names this
+  folder as `drishti.home`; a command run with a Python that lacks the libraries runs again in the one `drishti.python` names.
+- **The server's compute environments install nothing and make no virtual environment**: the workers run with `drishti.python` as it is; a
+  library missing or differing from the lock is a clear error naming it and the pip command for the operator.
+- **The console run bare** (`run_drishti_web.py` with no arguments, PyCharm's *Run current file*) is the launcher **Drishti: run
+  console**: `~/drishti-envs/dev.ini` with the demo profile and the development secrets `drishti.py start all --demo` gives the server,
+  each said in one line (*DEVELOPMENT secrets in use (NOT FOR PRODUCTION)*). The development secrets have one source,
+  `tools/launch/devsecrets.py`. A console whose secret the server rejects logs one line (*the server rejects this console's secret:
+  start both with the same settings ...*) and backs off (5 s, 15 s, 1 min, 5 min) instead of a 401 every second. A Python without the
+  console's libraries (for example no `drishti_lake`) stops at once with the `setup` line.
+- The feed schedules, the AWS wrappers, the data feeds and the ECS loader image use the one Python.
+- **First run, fool-proof** (docs/plans/FIRST_RUN_ROBUSTNESS.md, section D): an old `DRISHTI_*` folder variable (`setx`) naming another
+  folder is ignored by every command unless a settings file is named with `--settings`; `start` makes no data folder and stops before setup
+  with the setup line; `start --demo` stops when the demo lake is not built; `start all` checks both ports and the console's Python before
+  it starts anything and gives the console the server's loopback address; the bare console and the launchers never follow another
+  checkout's settings file; every failure is one `[FAIL] ... Fix: <command>` line with a command you can paste (`py -3.13 tools\drishti.py`
+  on Windows), an unexpected one a log file, never a traceback; Drishti's own calls never go through a proxy; pip from the pack runs
+  `--isolated` (a company `pip.ini` plays no part); the wheel pack zip is found in `%USERPROFILE%\drishti-wheels`, the platform folder or
+  Downloads; setup ends with `Drishti is ready.` and a second run changes nothing.
+- **`drishti.py doctor --acceptance`** (the launcher **Drishti: check acceptance**): signs in to the console, asks `VAR BANK` through it and
+  compares VaR 167,372,692 and ES 210,131,972 with the release's.
+
+- **PRODUCTION_DEPLOYMENT.md** (Linux production): the source zip built with `build_all.py`, the py313 wheel pack, a dedicated Python
+  3.13 prepared by the operator, `setup --settings /etc/drishti/prod.ini`, systemd, TLS, backups, upgrades.
+
+## What changes in the IDEs
+
+- **Each IDE opens its own project and sees only its own launchers**, in that project's `.idea/runConfigurations/` (of `.idea` only that
+  folder is committed). IntelliJ IDEA opens `drishti`: **Drishti-java 1 Build**, **2 Run**, **3 Test**; PyCharm opens `drishti\drishti-console`:
+  **Drishti-python 1 Setup**, **2 Data**, **3 Run**, **4 Check** (with the new **Drishti: check setup** and **Drishti: check acceptance**), which
+  reach the install folder as `$PROJECT_DIR$/..` and run on the project interpreter you choose (*Settings → Project → Python Interpreter*:
+  the Python setup prepared; Cancel PyCharm's offer to create a virtual environment). No launcher names an interpreter path. VS Code keeps
+  one workspace with both.
+- The PyCharm setup launcher is **Drishti: setup** (it checks the libraries and installs nothing); the two *system Python* ones and the *package index* one are gone.
+- **Without an IDE**: every step on the command line, Windows and Linux, in QUICKSTART_DEVELOPERS.md section 3.1 and IDE_GUIDE.md section 11.
+
+## What changes for developers
+
+- `procs.tools_python` is the one Python resolver; no tool holds an environment's folder name except as an ignore pattern (a user's own
+  environment in the tree is never packed or scanned), and `tools/test_no_venv.py` fails on any other. The drill and the Java tests take
+  their Python from `DRISHTI_PYTHON` / `-Ddrishti.compute.test.python`, passed in from outside, else `python3` on the PATH.
+
+## Known limits
+
+No site-configuration overlay folder yet: what Admin saves goes into the release's `config/`; compare it on an upgrade
+(PRODUCTION_DEPLOYMENT.md). Carried from i7d: where Program Files is not writable, pip falls back to the user's own folder; the server's
+pivot Python workers start Python isolated (`-I`) and do not see it.
+
+# Drishti 2.9.11.i7f: release notes
+
+*A point release on i7e: `setup` can no longer write into another folder, and nothing is left for you to rename or delete by hand.*
+Everything else is as in i7e.
+
+## What changes for administrators
+
+- **An old settings file is moved, never followed.** When `~/drishti-envs/dev.ini` (Windows `%USERPROFILE%\drishti-envs\dev.ini`) names
+  another copy's `drishti.home` (or names none and a folder outside this checkout), `setup` moves it into a dated folder of the settings
+  folder, `drishti-envs\replaced-YYYY-MM-DD-HHMM`, writes a fresh one for this checkout and says so in one line. The same for a JVM
+  arguments file (`jvm-demo.args`, `jvm-qa.args`, `jvm-samples.args`) that differs from what setup writes now. Nothing is lost, nothing is
+  overwritten, and identical files are left alone. A `dev.ini` that names this checkout is kept as it is, with your own lines and a data
+  folder you chose elsewhere (setup says so and makes nothing there unless you pass `--data-dir` again; it adds only `drishti.python`,
+  once). `setup --check` says what it would move and moves nothing; `--settings <old dev.ini> setup` works too. A file another program
+  holds open is a `[FAIL]` line naming it, never written over. The i7e rename-it-yourself step is gone.
+- **`launchers --machine` works the same way**: a JVM arguments file that differs is moved into a dated folder first, and an old
+  `dev.ini` is named in a WARNING.
+- **Setup makes no folder outside this checkout,** the settings folder and a `--data-dir` you pass (it is recorded in the new `dev.ini`).
+  The JVM arguments files only name their folders; setup makes them under the data folder it resolved.
+- **The settings file beats the environment** in the Python tools and the console, as it already did in the server: explicit option, then the settings
+  file, then the environment, then this checkout, for every folder. A `DRISHTI_HOME`, `DRISHTI_DATA_DIR`, `DRISHTI_MODULES_HOME`,
+  `DRISHTI_LIB_PATH` or `DRISHTI_TMP_DIR` left by an old `setx` that names another folder is shown by setup as a WARNING (*ignored: your
+  settings file wins; you may delete it in Environment Variables*) and never used.
+- **Warn, never refuse, at run time.** The server, the console and the tools WARN when a settings file names another folder's
+  `drishti.home` (the warning says to run setup) and still run: the server and the console on that folder, the tools on their own
+  folder (they never drive another install; `--home` naming one is still refused). The same for a `DRISHTI_HOME` naming another
+  folder. A `DRISHTI_TMP_DIR` outside the checkout that does not exist is a WARNING and the default temp folder is used.
+- The deployment guide no longer tells you to `setx DRISHTI_HOME` or `DRISHTI_DATA_DIR`: the folders live in the settings file.
+
+## What changes for developers
+
+- The Module SDK parent pom takes `drishti.home` only from `-Ddrishti.home=` (no `${env.DRISHTI_HOME}` default); a guard test fails when
+  any `pom.xml` reads `${env.DRISHTI_*}` or `${user.home}`.
+- `javacmd.launch_roots` is the one Python resolver, in the Java order; `settingsfile.apply_roots` lets the file win;
+  `launchers.machine_files` renders the JVM arguments files without writing or making anything.
+
+## Known limits
+
+Carried from i7d (below): where Program Files is not writable, pip falls back to the user's own folder; setup, PyCharm and the
+console see it, but the server's pivot Python workers start Python isolated (`-I`) and do not. Use a Python the user can write to, or have
+IT run step 4 as administrator.
+
+# Drishti 2.9.11.i7e: release notes
+
+*A point release on i7d: the IDE launchers are grouped by language, the loader asks for its file, and setup checks an old settings file.*
+Everything else is as in i7d.
+
+## What changes for administrators
+
+- **`setup` checks an existing `dev.ini`.** When its `drishti.home` names another folder than this checkout, `setup --check` shows
+  `[FAIL] settings file` and `setup` a `[WARN]`, both saying: your settings file `…\dev.ini` points at `<other folder>`, not this one: rename
+  it (`ren …\dev.ini dev-old.ini`) and run setup again. The file is never overwritten.
+- **The server, the console and every tool print a WARNING** at start when the settings file names a `drishti.home` other than the
+  folder they are installed in (an old `dev.ini` from an earlier copy); they still start, using that folder, and the warning says how to
+  replace the file.
+- **pytest is no longer a runtime requirement** of the console (it stays in `requirements-test.txt`): setup and the offline wheel packs
+  install one library less.
+
+## What changes for developers
+
+- **Launchers are grouped by folder.** One `run-configs/` folder is read by both IDEs: every Maven and JAR Application launcher is in the
+  folder **Drishti-java** (IntelliJ), every Python one in **Drishti-python** (PyCharm). Each IDE shows the other's folder as not runnable
+  (a red cross): that is expected. `tools/launch/launchers.py` and `launchers.yaml` generate this; their tests and docstrings are current.
+- **Drishti: run loader (file into the lake)** asks for the file when it runs (`$Prompt$`); it no longer names a file of one person.
+- **VS Code workspace**: `${userHome}` for the home folder, `py -3.13` on Windows (per-OS commands), no Linux-only interpreter or JDK path
+  (the JDK is `JAVA_HOME`); the loader task asks for the file.
+- The guides' examples carry no personal or old-layout paths (the platform layout, `IdeaProjects/drishti-platform/drishti`).
+- IDE_GUIDE, CLI_REFERENCE, DEVELOPER_GUIDE and OPERATIONS_GUIDE describe the one `run-configs/` folder.
+
+## Known limits
+
+Carried from i7d (below): where Program Files is not writable, pip falls back to the user's own folder; setup, PyCharm and the
+console see it, but the server's pivot Python workers start Python isolated (`-I`) and do not. Use a Python the user can write to, or have
+IT run step 4 as administrator.
+
+# Drishti 2.9.11.i7d: release notes
+
+*A point release on i7c: setup no longer needs the package index.* Everything else is as in i7c.
+
+## What changes for administrators
+
+- **Setup installs only what is missing** and never runs pip when every library is already installed (the Lake wheel included, at its pin).
+- **When pip fails, setup says why in one sentence** (the index rejected the login, 401/403, naming its host; the index could not be reached
+  or its certificate is not trusted; the index lacks `name==ver`), then prints the missing libraries as one copy-ready `py -m pip install ...`
+  line. pip's own output is always shown.
+- **Setup installs and `--check` verifies both** `drishti-console/requirements.txt` and `config/compute/locks/python.lock` (the compute pool's environment: numpy, pandas, pyarrow, scipy, ...), the Lake wheel first; a missing pin names its file, and two files that disagree on a pin stop setup in words naming both.
+- **`--wheels <folder or wheel-pack .zip>`** for `setup`, `setup venv`, `setup libs` and `setup --system` (and `DRISHTI_WHEELS`): installs only
+  from that folder (`pip --no-index --find-links`), the Lake wheel first; a wheel the folder lacks is named and nothing is installed.
+
+## What changes for developers
+
+- PyCharm launcher **Drishti: setup (system Python, offline wheels)** (`--wheels $USER_HOME$/drishti-wheels`); VS Code workspace regenerated.
+- Spotless uses `lineEndings` UNIX: `spotless:check` accepts the repository's LF files on Windows without git.
+
+## Known limits
+
+Carried from i7c (below), and one more: where Program Files is not writable, pip falls back to the user's own folder; setup, PyCharm and the
+console see it, but the server's pivot Python workers start Python isolated (`-I`) and do not. Use a Python the user can write to, or have
+IT run step 4 as administrator.
+
+# Drishti 2.9.11.i7c: release notes
+
+*A point release on i7b: the Python set-up is split, and the server's Python work finds the interpreter from one setting.* Everything else is
+as in i7b.
+
+## What changes for administrators
+
+- **`tools/drishti.py setup` is split in parts**: `setup drishti` (settings folder, `dev.ini`, data folder, JVM files, Java, jar and module
+  checks), `setup venv` (`drishti-console/.venv`: the pinned Lake wheel first, then `requirements.txt`), `setup libs` (the same libraries
+  into the current Python, no venv) and `setup --system` (drishti plus libs, for machines that forbid a `.venv`). `setup` alone is drishti
+  then venv; `--skip-venv` is `setup drishti`.
+- **`--check` verifies the libraries** name by name (version specs and the Lake wheel's pin) and exits 1 naming what is missing.
+- **`drishti.python` is written once** into `dev.ini` by setup (never over an existing value). The server uses it for the feeds' Run now, the
+  compute pool and the pivot Python functions when their own setting is blank. Precedence (`PythonSetting`): `DRISHTI_PYTHON`, then the work's
+  own setting, then `drishti.python`.
+  `drishti.py start console` (and `start all`) runs the console on it too, so a machine with no `.venv` starts the console with no
+  environment variable to set (`--python` or `--reinstall` still ask for the `.venv`).
+- **pip on Windows uses the Windows certificate store** (`--use-feature=truststore` before pip 24.2), so machines behind a TLS-inspecting proxy install.
+
+## What changes for developers
+
+- Two PyCharm launchers, **Drishti: setup** and **Drishti: setup (system Python)**.
+- IDE_GUIDE 2.3 (no `.venv` allowed: `setup --system`, the libraries into the system Python, System Interpreter) and 9.5 (from the release
+  zip: the platform's IDE_GUIDE.md and the clean-install launcher, then this guide's launchers).
+
+## Known limits
+
+Carried from i7b unchanged (below).
+
 # Drishti 2.9.11.i7b: release notes
 
 **Drishti is one of five.** The language, the lake, the screens' libraries and the shared utilities are products of their own, in their own

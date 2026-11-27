@@ -18,7 +18,7 @@ They are made on the report browser tests' scratch stack (drishti-console/tests/
 packs, the model trades-basic over a small synthetic lake). Its ports come from DRISHTI_BI_REPORT_SERVER_PORT and DRISHTI_BI_REPORT_CONSOLE_PORT, so run:
 
     DRISHTI_BI_REPORT_SERVER_PORT=18990 DRISHTI_BI_REPORT_CONSOLE_PORT=17990 \\
-        drishti-console/.venv/bin/python tools/docs/screenshots.py --guide bistudio --base http://127.0.0.1:17990"""
+        python3 tools/docs/screenshots.py --guide bistudio --base http://127.0.0.1:17990"""
 from __future__ import annotations
 
 import json

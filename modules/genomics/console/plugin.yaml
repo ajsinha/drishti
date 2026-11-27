@@ -23,7 +23,7 @@ routes:
   - {id: gene, path: "/genes/{id}", page: explorer.html, function: GENE, title: "Gene"}
   - {id: cohorts, path: /cohorts, page: explorer.html, title: "Cohorts"}
   - {id: cohort, path: "/cohorts/{id}", page: explorer.html, function: COHORT, title: "Cohort"}
-  # the showcase (docs/architecture/GENOMICS_SHOWCASE.md): the linked board, its guided mode, the protein workbench
+  # the showcase (modules/genomics/docs/guide.md): the linked board, its guided mode, the protein workbench
   - {id: board, path: /showcase, page: showcase.html, title: "Cohort showcase"}
   - {id: guided, path: /showcase/guided, page: showcase.html, title: "Cohort showcase, guided"}
   - {id: gwas, path: "/gwas/{id}", page: showcase.html, function: GWAS, title: "Association"}

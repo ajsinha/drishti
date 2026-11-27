@@ -6,7 +6,9 @@
 
 # How Drishti fits together
 
-A short tour for someone new to Drishti: an architect at a bank, a developer, an administrator. One idea per section, one picture per
+Drishti is a platform for any domain: live, explainable analytics on the data you already have, with screens written in one grammar
+(Rachana, drawn by Elements) and everything specific to a field brought by a module (banking risk, capital markets, economic data and
+genomics are modules today). A short tour for someone new to it: an architect, a developer, an administrator. One idea per section, one picture per
 idea, one small real example each. The long references are linked at the end; this page only shows how the pieces connect.
 Also as a [PDF](HOW_IT_FITS.pdf).
 
@@ -293,7 +295,7 @@ What a distribution leaves out **does not exist in it**: not on the command line
 `VRES` typed in Drishti Finance answers *DRS-4023 VRES is not in Drishti Finance*.
 
 - **Choosing one**: `--distribution <name|path>` on `tools/drishti.py start all`, `start server` and `start console`, else
-  `DRISHTI_DISTRIBUTION`, else `drishti.distribution`. On Windows: `py tools\drishti.py start all --distribution risk`.
+  `DRISHTI_DISTRIBUTION`, else `drishti.distribution`. On Windows: `py -3.13 tools\drishti.py start all --distribution risk`.
 - **Two consoles over one cluster**: a console started with its own distribution keeps it whatever the servers run. A stack file's
   `consoles:` list (`{ name: risk, port: 17480, distribution: risk }`, `{ name: finance, port: 17481, distribution: finance }`) gives
   Drishti Risk and Drishti Finance side by side over the same kernels.
@@ -389,7 +391,7 @@ exists and the next ones only narrow it.
 | To understand | Read |
 |---|---|
 | the full design of the kernel, modules, loading, data needs, placement and the distribution file | [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) |
-| each distribution, what is shared, and how to start it | [DISTRIBUTIONS.md](docs/architecture/DISTRIBUTIONS.md) |
+| each distribution, what is shared, and how to start it | [DISTRIBUTIONS.md](docs/architecture/KERNEL_AND_MODULES.md) |
 | building a module: the SDK, the archetype, the three ways to pack, the genomics sample step by step | [DEVELOPER_GUIDE.md section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk) |
 | modules on or off, the `modules/` and `lib/` folders, data bindings, white label, Admin → Modules | [ADMIN_GUIDE.md section 22](docs/guides/ADMIN_GUIDE.md#22-modules-on-or-off) to [section 25](docs/guides/ADMIN_GUIDE.md#25-modules) |
 | several servers as one, placement and installing across a cluster | [CLUSTER_GUIDE.md section 1.9](docs/guides/CLUSTER_GUIDE.md#19-module-placement) and [1.10](docs/guides/CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster) |

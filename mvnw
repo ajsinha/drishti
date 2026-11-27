@@ -154,6 +154,8 @@ exec_maven() {
   *-Djava.io.tmpdir=*) ;;
   *)
     _mvnw_tmp="${DRISHTI_MAVEN_TMP:-$(cd "$(dirname "$0")" && pwd)/data/tmp/maven}"
+    # MAVEN_OPTS is split on spaces: a folder with a space in its path (a checkout under "John Smith") goes to a space-free one.
+    case "$_mvnw_tmp" in *" "*) _mvnw_tmp="${TMPDIR:-/tmp}/drishti-maven-$(id -u)" ;; esac
     mkdir -p "$_mvnw_tmp" 2>/dev/null && MAVEN_OPTS="-Djava.io.tmpdir=$_mvnw_tmp ${MAVEN_OPTS-}" && export MAVEN_OPTS
     ;;
   esac

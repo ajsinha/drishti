@@ -52,7 +52,7 @@ class DrishtiProfileConformanceTest {
     static final List<String> SKIP = List.of("expect", "verified", "source", "note", "tags", "id");
 
     /**
-     * Known differences, each to be resolved (docs/plans/G4_REHEARSAL.md, Pass 3): {@code el/limits#call-chain-past-the-depth} is refused
+     * Known differences, each to be resolved (docs/architecture/TEST_HARNESS.md, Pass 3): {@code el/limits#call-chain-past-the-depth} is refused
      * with {@code RCH-2101} on the reference instance and overflows the stack on Drishti's (StackOverflowError) in this test's thread.
      */
     static final List<String> KNOWN = List.of("el/limits#call-chain-past-the-depth");

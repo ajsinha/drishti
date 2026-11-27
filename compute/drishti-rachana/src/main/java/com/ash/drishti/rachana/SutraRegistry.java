@@ -194,14 +194,31 @@ public final class SutraRegistry implements AutoCloseable {
         for (String d : props.allDirs()) {
             String root = Path.of(d).toAbsolutePath().normalize().toString();
             if (!root.isEmpty() && !root.equals("/")) {
-                out = out.replace(root + java.io.File.separator, "").replace(root, ".");
+                out = underRoot(out, root, ".");
             }
         }
         java.util.Optional<Path> kit = DrishtiRachana.blocks().kit();   // the Drishti UI kit: ui-kit/fragments/x
         if (kit.isPresent() && kit.get().getParent() != null) {
-            out = out.replace(kit.get().getParent().toString() + java.io.File.separator, "");
+            out = underRoot(out, kit.get().getParent().toString(), null);
         }
         return out;
+    }
+
+    /**
+     * {@code text} with each path under {@code root} written relative to it, in the portable form a client sees on every operating
+     * system ({@code a/b.sutra.yaml}, never {@code a\b.sutra.yaml} from a Windows server); {@code root} itself becomes {@code bare}
+     * (null: left as it is). The path ends at a blank, a quote, a bracket or the {@code :} before a line number.
+     */
+    static String underRoot(String text, String root, String bare) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile(java.util.regex.Pattern.quote(root) + "(?:[\\\\/]([^\\s'\",;:()\\[\\]<>]*))?").matcher(text);
+        StringBuilder sb = new StringBuilder();
+        while (m.find()) {
+            String rel = m.group(1);
+            String repl = rel != null ? (java.io.File.separatorChar == '\\' ? rel.replace('\\', '/') : rel) : bare == null ? m.group() : bare;
+            m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(repl));
+        }
+        m.appendTail(sb);
+        return sb.toString();
     }
 
     /** The problems with their file names made relative (see {@link #relative(String)}). */
@@ -259,7 +276,7 @@ public final class SutraRegistry implements AutoCloseable {
         List<Path> files = files();
         lastGood.keySet().retainAll(files);
         // the shared panel blocks first (<name>.v<N>.block.yaml): a Sutra's { use: <block> } reads them while it is parsed
-        for (SutraProblem p : DrishtiRachana.blocks().load(props.allDirs().stream().map(d -> Path.of(d).toAbsolutePath().normalize()).toList())) {
+        for (SutraProblem p : DrishtiRachana.loadBlocks(this, props.allDirs().stream().map(d -> Path.of(d).toAbsolutePath().normalize()).toList())) {
             problems.computeIfAbsent(p.location() == null ? "blocks" : p.location().file(), k -> new ArrayList<>()).add(DrishtiRachana.drs(p));
         }
         // a pack (or site) block named like a Drishti UI kit fragment: the kit's wins, the pack's answers only to pack/name
@@ -525,6 +542,7 @@ public final class SutraRegistry implements AutoCloseable {
     @Override
     public void close() {
         releaseRegistrations();
+        DrishtiRachana.releaseBlocks(this);
         if (watchThread != null) {
             watchThread.interrupt();
         }

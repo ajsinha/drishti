@@ -43,7 +43,7 @@ public record PivotFunctionProperties(Boolean formula, Boolean sqlMacros, Boolea
      * {@code drishti.pivot.functions.python}.
      *
      * @param enabled Python functions on this node
-     * @param interpreter the Python to run (blank: python3, python on Windows)
+     * @param interpreter the Python to run (blank: drishti.python of the settings file, else python3, python on Windows)
      * @param workers worker processes in the {@code pivot-fn} pool
      * @param timeoutSeconds the longest one call (a batch, a merge) may take
      * @param memoryMb memory per worker

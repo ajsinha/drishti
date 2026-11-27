@@ -17,7 +17,7 @@
 They are made on a scratch stack of their own (drishti-console/tests/bi_stack.py: the built server jar with sign-in on, the trading pack, five users
 with different BI powers, a shared workspace with published, certified and draft items, two shipped files). The ports are 18983 and 17983, so run:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide bi --base http://127.0.0.1:17983"""
+    python3 tools/docs/screenshots.py --guide bi --base http://127.0.0.1:17983"""
 from __future__ import annotations
 
 import sys

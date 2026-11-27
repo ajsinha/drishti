@@ -24,14 +24,14 @@ from the measured 5, 25 and 75 GB points, labelled so, never presented as measur
     # what would run, the disk it needs; nothing written
     python3 tools/bench/pivot_bench.py plan --nodes 3
     # the warm-up lake of 5 GB under a folder on the data disk; refuses under 150 GB free, never under /tmp
-    drishti-console/.venv/bin/python tools/bench/pivot_bench.py generate --data-dir /data/drishti-bench/pivot --gb 5
+    python3 tools/bench/pivot_bench.py generate --data-dir /data/drishti-bench/pivot --gb 5
     # the views against the servers (the bench lake wired as the kind bench_trade, see BENCHMARK.md 16.2), cold then warm, no rollup
     python3 tools/bench/pivot_bench.py run --servers http://10.0.0.11:18480,http://10.0.0.12:18480,http://10.0.0.13:18480 \\
         --token-file token.txt --gb 5 --nodes 3 --cache cold --rollups without --out results/pivot.jsonl
     # the tables for BENCHMARK.md, with the extrapolated sizes
     python3 tools/bench/pivot_bench.py report results/pivot.jsonl
     # everything at both sizes, then the generated data deleted (--keep keeps it)
-    drishti-console/.venv/bin/python tools/bench/pivot_bench.py all --data-dir /data/drishti-bench/pivot --nodes 3 --servers ... --token-file token.txt
+    python3 tools/bench/pivot_bench.py all --data-dir /data/drishti-bench/pivot --nodes 3 --servers ... --token-file token.txt
 
 Rules (BENCHMARK.md section 2.1): scratch on a disk, never a memory-backed folder (/tmp here is a tmpfs shared with RAM), never the
 repository's data/; one heavy job at a time; the machine otherwise idle. The runner deletes what it generated when it ends, unless --keep.
@@ -223,7 +223,7 @@ def generate(data_dir: Path, gb: float, seed: int = 20261102, years: int = 5, cp
     lake, tmp = data_dir / "delta", data_dir / "tmp"
     lake.mkdir(parents=True, exist_ok=True)
     tmp.mkdir(parents=True, exist_ok=True)
-    python = python or str(ROOT / "drishti-console" / ".venv" / "bin" / "python")
+    python = python or str(Path(os.environ.get("DRISHTI_PYTHON") or sys.executable))
     days = business_days(date(2026, 10, 30), years * 252)
     target = gb * 1e9
     state_file = data_dir / "generated.json"                          # a second, larger size appends days; never rewrites one
@@ -438,7 +438,7 @@ def main(argv: list[str] | None = None) -> int:
     g.add_argument("--gb", type=float, default=WARM_UP_GB, help="the lake's size in GB (it grows to it: days appended)")
     g.add_argument("--seed", type=int, default=20261102)
     g.add_argument("--rows-per-day", type=int, default=0, help="fixed rows a day (default: aimed at the size)")
-    g.add_argument("--python", help="the Python with deltalake and pyarrow (default: the console's .venv)")
+    g.add_argument("--python", help="the Python with deltalake and pyarrow (default DRISHTI_PYTHON, else this one)")
     r = sub.add_parser("run", help="the views against running servers, one configuration")
     r.add_argument("--servers", required=True, help="comma-separated server URLs (the first answers; the others are its cluster)")
     r.add_argument("--token-file", required=True)

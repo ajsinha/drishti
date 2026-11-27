@@ -16,7 +16,7 @@
 trading pack's Delta tables, one per system (trade_endur, trade_calypso, trade_murex), each read by its own connector.
 
     python3 tools/packgen/trades/make_trades.py --trades 3000 --days 7 --out data/build/trades
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/trades/make_trades.py --trades 3000 --days 7 \\
+    python tools/packgen/trades/make_trades.py --trades 3000 --days 7 \\
         --out data/build/trades --lake data/delta/demo
 
 --trades is per system (ENDUR, CALYPSO, MUREX; --systems picks some). Each system writes <out>/<system>/trade_<system>.<date>.jsonl.gz (the load rules' name), one file

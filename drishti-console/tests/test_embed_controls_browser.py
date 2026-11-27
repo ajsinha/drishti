@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Controls inside <drishti-view> (EMBED_GUIDE.md, ARCHITECTURE.md §28 8.1) in Chromium, Firefox and WebKit, against a host application on another origin and a
+"""Controls inside <drishti-view> (INTEGRATION_GUIDE.md, ARCHITECTURE.md §28 8.1) in Chromium, Firefox and WebKit, against a host application on another origin and a
 real scratch server (the stack of embed_stack.py, which this file reuses: ports 18966/17966/17965 by default; set
 DRISHTI_ELEMENTS_SERVER_PORT, DRISHTI_ELEMENTS_CONSOLE_PORT and DRISHTI_ELEMENTS_HOST_PORT to run it beside another run).
 
@@ -21,7 +21,7 @@ console for only the panels that read the control (the others do not move); the 
 host as a composed `drishti:controls` event; the control works from the keyboard. The trade (static since 2.3.0) shows the controls; a live netting set
 shows that the live subscription is built with the values.
 
-    drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_embed_controls_browser.py"""
+    python3 -m pytest -q drishti-console/tests/test_embed_controls_browser.py"""
 import json
 import os
 import re

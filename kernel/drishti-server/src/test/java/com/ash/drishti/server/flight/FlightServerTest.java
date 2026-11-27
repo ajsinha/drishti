@@ -47,7 +47,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 /**
- * Arrow Flight in the server (docs/guides/FLIGHT_GUIDE.md): the engine on, TLS from a throw-away PKI, a person's API token with
+ * Arrow Flight in the server (docs/guides/INTEGRATION_GUIDE.md): the engine on, TLS from a throw-away PKI, a person's API token with
  * {@code data:read}. A kind is read as the person (a masked column left out, the audit line {@code data.flight}), a token without the
  * scope and a domain it does not open are refused with their codes, an application acts on behalf of a person, and Admin → Data out lists
  * the read.

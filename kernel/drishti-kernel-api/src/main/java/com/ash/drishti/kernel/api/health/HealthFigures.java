@@ -16,7 +16,7 @@
 package com.ash.drishti.kernel.api.health;
 
 /**
- * A figure a module's engine adds to {@code /api/v1/health} (docs/architecture/DOMAIN_MODULES.md, the cycles: J4), under its own key: the
+ * A figure a module's engine adds to {@code /api/v1/health} (docs/architecture/KERNEL_AND_MODULES.md, the cycles: J4), under its own key: the
  * banking module's {@code hierarchiesSkipped}, for one. The core names no module's figure.
  */
 public interface HealthFigures {

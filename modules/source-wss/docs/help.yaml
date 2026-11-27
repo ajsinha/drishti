@@ -17,5 +17,5 @@ sections:
 - id: source-wss
   title: Source WSS
   pages:
-  - title: 'Source WSS'
-    file: guide.md
+  - title: Source WSS
+    file: ../guides/BANK_DATA_GUIDE.md

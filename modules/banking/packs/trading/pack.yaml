@@ -439,7 +439,6 @@ console:
     - Warehouse warrants (Endur) · inventory, delivery and payment legs
   - - CTRD CP-ALDERSHOT
     - A counterparty's trades in every system · payments, notional by product
-  help: config/help.yaml
 python:
   enabled: true
 roles:

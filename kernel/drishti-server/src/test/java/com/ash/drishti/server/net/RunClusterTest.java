@@ -93,7 +93,7 @@ class RunClusterTest {
         Path identity = root.resolve("identity");
         for (String n : List.of("a", "b")) {
             cluster.off(n, "finance-lake");
-            cluster.connector(n, "run-lake", "plugin: file", "kinds:", "  - trade", "settings:", "  root: \"" + root.resolve("lake") + "\"", "  id-field: TRADE_ID",
+            cluster.connector(n, "run-lake", "plugin: file", "kinds:", "  - trade", "settings:", "  root: " + NetNodes.yaml(root.resolve("lake")), "  id-field: TRADE_ID",
                     "  rescan-seconds: \"3600\"");
         }
         List<String> common = List.of("--drishti.bi.dir=" + root.resolve("bi"), "--drishti.tables.root=" + root.resolve("bi").resolve("tables"), "--drishti.sources.plugins.file.enabled=false",

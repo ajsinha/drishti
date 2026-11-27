@@ -18,7 +18,7 @@
 # Per guide:   id, file, number (the section's number: the table is <number>.1, the datasets <number>.2 …), note (after the table).
 # Per dataset: kind; contract (the contract's kind when it differs, null when the kind has none); label (instead of `kind`); title;
 #              sample (a glob under data/testdata: a .jsonl.gz, or a tar of <table>/<date>/*.jsonl.gz; its folder <domain>/<table> names
-#              the example's section, docs/contracts/samples/<domain>.md#<table>); required; for (the table's one line); guide (a link
+#              the example's section, docs/contracts/packs/<pack>.md#example-<domain>-<table>); required; for (the table's one line); guide (a link
 #              to the guide's own section); about (the explanation, by hand: what it is for, never its fields or a record); sample_note
 #              and contract_note (said instead when there is no sample or no contract).
 
@@ -492,7 +492,7 @@ guides:
         required: "**one of the two**, per trade"
         for: "the MR cube preset: every trade's vector; its columns as dimensions"
         guide: "[7.3](#73-the-inputs)"
-        sample_note: none in the demo data (it ships scenario PVs); the record's shape is [its sample](../../contracts/samples/market-risk.md#pnl-vector).
+        sample_note: none in the demo data (it ships scenario PVs); the record's shape is [its sample](../../contracts/packs/market-risk.md#example-market-risk-pnl-vector).
         about: |
           Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`,
           `COUNTERPARTY`, …) are the cube's dimensions.

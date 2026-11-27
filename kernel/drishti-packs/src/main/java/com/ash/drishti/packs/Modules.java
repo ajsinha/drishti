@@ -20,7 +20,7 @@ import com.ash.drishti.registry.EmbeddedAccessRegistry;
 import org.springframework.core.env.Environment;
 
 /**
- * The access registry of a server's environment (docs/architecture/ACCESS_MODEL.md): one per environment, made the first time it is asked,
+ * The access registry of a server's environment (docs/architecture/KERNEL_AND_MODULES.md): one per environment, made the first time it is asked,
  * so the packs' start ({@link PackEnvironmentPostProcessor}), the modules' conditions and the server's {@code AccessRegistry} bean ask the
  * same one. The settings it reads are {@link AccessRegistries}'s.
  */

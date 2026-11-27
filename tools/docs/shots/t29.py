@@ -17,7 +17,7 @@ docs/tutorials/img/t29/. Its own stack, built as the tutorial says: the VaR test
 table beside the Iceberg ones) with `build_demo_lakes.py --as-of data --store risk=iceberg`, the official results to Iceberg under the
 Iceberg root (application.local.yaml), then the scratch server and console, and var-results reset to the pack's default. Run it on its own:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t29
+    python3 tools/docs/screenshots.py --guide t29
 
 The scratch folder's path is shown as `data` in the pictures (the reader's own default data folder): the pages print the lake roots."""
 from __future__ import annotations

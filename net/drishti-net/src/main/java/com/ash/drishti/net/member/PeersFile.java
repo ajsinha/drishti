@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -79,7 +78,7 @@ public final class PeersFile {
             Path tmp = com.ash.drishti.common.TempFiles.createFile(file.getParent(), "peers-", ".tmp");
             try {
                 Files.writeString(tmp, json.writeValueAsString(s), StandardCharsets.UTF_8);
-                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, file);
             } finally {
                 Files.deleteIfExists(tmp);
             }

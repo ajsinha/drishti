@@ -163,7 +163,8 @@ def classify(files: list[str], root: Path = ROOT) -> Plan:
     rows = load_map(root)
     console = sorted(str(p.relative_to(root)) for p in (root / CONSOLE_TESTS).glob("test_*.py"))
     console_paths = [root / c for c in console]
-    tool_tests = sorted(p for p in (root / "tools").rglob("test_*.py") if ".venv" not in p.parts and "cache" not in p.parts)
+    # an IGNORE pattern only: a user's own virtual environment inside the tree is never scanned (Drishti makes and names none)
+    tool_tests = sorted(p for p in (root / "tools").rglob("test_*.py") if ".venv" not in p.parts and "cache" not in p.parts)  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
     plan = Plan()
 
     def all_of_console(path: str, why: str) -> None:
@@ -280,16 +281,17 @@ def commands(plan: Plan, root: Path = ROOT) -> list[tuple[str, list[str]]]:
         wanted = [m for m in sorted(plan.modules) if m in mods]
         cmds.append(("maven", ["./mvnw", "-o", "-q", "clean", "verify", "-T", "1C", "-pl", ",".join(wanted), "-am", "-Dtest=" + test_classes(set(wanted), root),
                                "-Dsurefire.failIfNoSpecifiedTests=false"]))
-    py = "drishti-console/.venv/bin/python"
+    py = os.environ.get("DRISHTI_PYTHON") or "python3"          # the tests' Python, passed in from outside (as tools/drill.sh)
     if plan.everything or plan.all_console:
         targets = [CONSOLE_TESTS]
     else:
         targets = sorted(plan.console)
     if targets:
         cmds.append(("console", [py, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-n", str(CONSOLE_WORKERS), "--dist", "loadfile", *targets]))
+    # an IGNORE pattern only (a user's own virtual environment is never scanned): IGNORE pattern
     tools = [str(p.relative_to(root)) for p in (root / "tools").rglob("test_*.py") if ".venv" not in p.parts and "cache" not in p.parts] \
         if plan.everything or plan.all_tools else sorted(plan.tools)
-    uv = ["uv", "run", "-q", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "--with", "pytest", "--with", "moto[server]==5.2.3", "python", "-m", "pytest", "-q", "-p", "no:cacheprovider"]
+    uv = [py, "-m", "pytest", "-q", "-p", "no:cacheprovider"]
     for t in tools:
         cmds.append((t, [*uv, t]))
     return cmds

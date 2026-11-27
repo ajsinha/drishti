@@ -86,7 +86,7 @@ def _page(request: Request, template: str, page: str, **context):
 
 @router.get("/bi")
 async def home(request: Request):
-    """BI Studio's own home is folded into the one Build home (docs/architecture/SHARED_SCREENS.md section 1): the address stays, as a
+    """BI Studio's own home is folded into the one Build home (docs/architecture/THIN_CONSOLE_DESIGN.md section 8.1): the address stays, as a
     redirect; the catalogue (/bi/catalogue) is where published reports and boards are read."""
     return RedirectResponse("/build", status_code=302)
 

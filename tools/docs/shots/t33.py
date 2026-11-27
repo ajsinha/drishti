@@ -17,7 +17,7 @@ guide's worked examples over entity documents (docs/guides/bi/README.md, Documen
 (it builds its own lake from the demo test data, the trades of the three source systems and the VaR data, and starts its own scratch server
 and console):
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t33
+    python3 tools/docs/screenshots.py --guide t33
 
 Every view is saved through the API and opened on the pivot screen; the answer of each is written into the scratch folder as
 pivot-figures.json, so the guide quotes the figures the run produced (DRISHTI_SHOTS_WORK keeps the folder)."""

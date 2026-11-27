@@ -17,5 +17,5 @@ sections:
 - id: source-endur
   title: Source Endur
   pages:
-  - title: 'Source Endur'
-    file: guide.md
+  - title: Source Endur
+    file: ../guides/BANK_DATA_GUIDE.md

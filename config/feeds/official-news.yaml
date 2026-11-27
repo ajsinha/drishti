@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The official-news feed (docs/guides/WORLD_DATA_GUIDE.md section 5): press releases and notices of central banks, regulators and
+# The official-news feed (docs/guides/WORLD_DATA_GUIDE.md section 20.5): press releases and notices of central banks, regulators and
 # governments from their own feeds into newslake, for the official-news pack. Class: tools/feeds/sources/official_news.py. Daily;
 # incremental (a release already kept is not added again; no new release, nothing written). No key.
 # Each publisher below is a source with its own terms. A publisher whose terms allow no commercial reuse is internal-only: its releases

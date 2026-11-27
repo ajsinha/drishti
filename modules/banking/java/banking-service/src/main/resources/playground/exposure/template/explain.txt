@@ -15,7 +15,7 @@
 # The Explain tab of the Exposure Playground workbook, one entry a row: a line "## <title>" then its text (lines starting with "#" are
 # dropped; the text lines of an entry are joined with spaces). Same format as playground/var/template/explain.txt, read by
 # PlaygroundTemplate.explain(). {Name} and {Name:v} cell references are added when the generator names Main's cells; until then the
-# entries name the tab and the column, never a cell. The design is docs/architecture/COUNTERPARTY_ENGINES.md (section 4 for the method,
+# entries name the tab and the column, never a cell. The design is docs/plans/COUNTERPARTY_ENGINES.md (section 4 for the method,
 # 8.2 for the tabs, 9 for the worked numbers: cases X1 and X2) and docs/guides/EXPOSURE_GUIDE.md section 18 (the engine as built).
 # Worked numbers are in USD millions. The entries come in three parts: the idea in plain words, the steps with one worked number each,
 # and every term of every tab.

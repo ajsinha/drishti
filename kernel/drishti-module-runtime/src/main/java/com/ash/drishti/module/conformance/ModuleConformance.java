@@ -469,7 +469,7 @@ public final class ModuleConformance {
     private static List<String> packManifest(Path dir, String f, String text) {
         Object doc;
         try {
-            doc = YAML.readValue(dir.resolve(f).toFile(), Object.class);
+            doc = YAML.readValue(java.nio.file.Files.readAllBytes(dir.resolve(f)), Object.class);
         } catch (IOException e) {
             Matcher k = CONNECTOR_KEY.matcher(text);
             return k.find() ? List.of(f + " has \"" + k.group().trim() + "\" and does not read as YAML: " + e.getMessage()) : List.of();
@@ -494,7 +494,7 @@ public final class ModuleConformance {
     private static List<String> templateValues(Path dir, String f) {
         Object doc;
         try {
-            doc = YAML.readValue(dir.resolve(f).toFile(), Object.class);
+            doc = YAML.readValue(java.nio.file.Files.readAllBytes(dir.resolve(f)), Object.class);
         } catch (IOException e) {
             return List.of(f + ": the connector template does not read as YAML: " + e.getMessage());
         }
@@ -527,7 +527,7 @@ public final class ModuleConformance {
     private static String connectorKey(Path dir, String f, String text) {
         Object doc;
         try {
-            doc = YAML.readValue(dir.resolve(f).toFile(), Object.class);
+            doc = YAML.readValue(java.nio.file.Files.readAllBytes(dir.resolve(f)), Object.class);
         } catch (IOException e) {
             Matcher k = CONNECTOR_KEY.matcher(text);
             return k.find() ? k.group() : null;
@@ -793,7 +793,7 @@ public final class ModuleConformance {
 
     private static Map<String, Object> yaml(Path dir, String f) {
         try {
-            Object o = YAML.readValue(dir.resolve(f).toFile(), Object.class);
+            Object o = YAML.readValue(java.nio.file.Files.readAllBytes(dir.resolve(f)), Object.class);
             return map(o);
         } catch (IOException e) {
             throw new IllegalArgumentException(f + " does not read as YAML: " + e.getMessage().lines().findFirst().orElse(""), e);

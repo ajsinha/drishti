@@ -166,7 +166,7 @@ async def template(request: Request, positions: int = 10, scenarios: int = 509):
     return await stream(request, risk_api.path("/var/playground/template"), {"positions": positions, "scenarios": scenarios}, "var-playground-template.xlsx")
 
 
-# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2 and C3) ---------------------------------------------------------------
+# ---- the core's hooks (core/plugins.py, KERNEL_AND_MODULES.md C2 and C3) ---------------------------------------------------------------
 def _type_ahead(request, m) -> list[dict]:
     """PLAY VAR <scope|ids>: the VaR Playground's own line in the type-ahead."""
     w = (m.group(1) or "").strip()

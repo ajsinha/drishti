@@ -224,7 +224,7 @@ public final class SettingProposals {
             return List.of();
         }
         try {
-            return JSON.readValue(store.toFile(), new TypeReference<List<Proposal>>() { });
+            return JSON.readValue(java.nio.file.Files.readAllBytes(store), new TypeReference<List<Proposal>>() { });
         } catch (IOException e) {
             throw new DrishtiException(ErrorCode.PROPOSAL_CONFLICT, "the proposals file " + store + " cannot be read: " + e.getMessage(), e);
         }

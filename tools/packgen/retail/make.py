@@ -17,7 +17,7 @@ collections cases and IFRS 9 portfolio segments, booked in the core legal entiti
 
     python3 tools/packgen/retail/make.py            write examples/packs/retail-banking (a retired example pack)
     python3 tools/packgen/retail/make.py --check    fail if the pack differs from what would be written
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/retail/make.py --lake data/delta/demo   (JSONL rows under data/build/lake-rows, then loaded)
+    python tools/packgen/retail/make.py --lake data/delta/demo   (JSONL rows under data/build/lake-rows, then loaded)
 """
 from __future__ import annotations
 
@@ -262,8 +262,6 @@ def spec(bank: dict) -> PB.PackSpec:
         examples=[("CUST CUST-100231", "Customer · products held and profile"), ("ACCT ACCT-100231-CUR", "Current account · transactions (live)"),
                   ("MTG MTG-100231", "Mortgage · amortisation, property, payments"), ("CARD CARD-100238", "Credit card · spend by category, statements"),
                   ("BRN BRN-LDN-CITY", "Branch · product mix and NPS"), ("RPF RPF-US-CARD", "IFRS 9 · ECL by stage, delinquency")],
-        overview="Retail customers belong to branches, and branches and portfolio segments to the core legal entities. A customer view lists "
-                 "every product the customer holds; each product links back to its holder, and delinquent cards and loans open collections cases.",
         external_ids={"legal-entity": set(bank["legal-entity"])},
         roles={"retail": {"kinds": [k.kind for k in KINDS] + ["legal-entity"], "raw": True}})
 

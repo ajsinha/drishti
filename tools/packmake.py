@@ -205,7 +205,7 @@ def readme_text(v: dict) -> str:
     ids = v["sample_ids"]
     d1, d2 = v["dates"][0], v["dates"][-1]
     dated = bool(v["date_field"])
-    pkgs = "pyyaml" + (" --with deltalake --with pyarrow" if store == "delta" else "")
+    pkgs = "pyyaml" + (" deltalake pyarrow" if store == "delta" else "")
     L = []
     w = L.append
     w(f"{v['title']}  ({n} {v['version']})")
@@ -233,7 +233,8 @@ def readme_text(v: dict) -> str:
     w("-" * 72)
     w(f"  * A Drishti server, version {v['server_version']} or newer, as the exec jar (drishti-server-X.Y.Z-exec.jar), and JDK 21 or newer.")
     w("  * To re-check or re-ingest (steps 4 to 6): Python 3.10+ and the Drishti repository's tools/ folder:")
-    w(f"        uv run --with {pkgs} python tools/drishti.py ...\n")
+    w(f"        (the Python you run Drishti with: Windows py -3.13, else python3.13; it has {pkgs} after setup)")
+    w("        python tools/drishti.py ...\n")
     w("3. DEPLOY")
     w("-" * 72)
     w("  Quickest, on this machine (nothing is copied):")
@@ -282,7 +283,7 @@ def readme_text(v: dict) -> str:
             w("  `server health` shows 'UP (engine: native)' when the lake is reachable.")
             w("  Add new days.  Re-run the ingest tool on the new JSON Lines, into the SAME lake; the default mode 'overwrite-dates' replaces only the dates")
             w("  present in the input and commits atomically through Delta, so readers never see a half-written day:")
-            w(f"      uv run --with {pkgs} python tools/drishti.py data ingest \\")
+            w("      python tools/drishti.py data ingest \\          (the Python you run Drishti with)")
             w(f"          --from /path/to/new-days --pack pack/{n} --lake /path/to/lake      (add --dry-run first to see what it would write)")
             w("  Point at a lake that already exists elsewhere.  Do not copy anything: set DRISHTI_DELTA_ROOT=/mnt/lake, or s3a://bucket/prefix, before starting")
             w(f"  the server (for S3 also AWS_REGION and credentials). The tables must be at <root>/{n}/{kind}/ with the business_date partition;")

@@ -59,7 +59,7 @@ settings:
 - tls.*
 auth: Redis ACL user and password (${ENV} or file:, overriding the uri's); TLS with a rediss:// uri and the shared tls.* settings, including a client certificate.
 licence: Lettuce (MIT) and zstd-jni (BSD-2-Clause), bundled; zstd-jni carries its native library inside the jar.
-windows: Works on Windows as a plain network client (the native zstd library is inside the jar, no .exe); the server is yours to run, and python tools/drishti.py data load --store redis loads it from any system.
+windows: Works on Windows as a plain network client (the native zstd library is inside the jar, no .exe); the server is yours to run, and python3.13 tools/drishti.py data load --store redis loads it from any system.
 doc: plugins/drishti-plugin-redis/README.md
 ---
 # The redis connector
@@ -68,13 +68,17 @@ Plugin `redis` (`plugins/drishti-plugin-redis`): a million trades a day in memor
 80 to 250 ms, and live updates pushed to open views. Redis holds the recent days; Delta Lake or Iceberg behind it holds the years,
 and Drishti asks that store for any date Redis does not hold.
 
+## Build and use
+
+A connector file in `config/connectors/` with `plugin: redis` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
+
 ## What it reads
 
 A data domain (`trading`) is a key prefix. The kinds come from `<domain>:kinds`, each kind's days from a sorted set, an entity's
 document from one `GET` (or one `MGET` over its candidate days), and a day's promoted fields from one hash read field by field. Days
 are replaced atomically through generations, so a reader sees a whole old day or a whole new one. With `live: true` (the default) it
 subscribes to `<domain>:changes` and re-reads an open entity, or refreshes the catalogue for a whole day. Retention is a TTL on every
-key (`--ttl-days`). It never writes; `python tools/drishti.py data load --store redis` (`RedisLoader`) does.
+key (`--ttl-days`). It never writes; `python3.13 tools/drishti.py data load --store redis` (`RedisLoader`) does.
 
 ## Settings
 
@@ -153,7 +157,7 @@ settings:
 ```
 
 Ready-made files for the six banking domains: `config/connectors.examples/redis/`. Load data with
-`python tools/drishti.py data load --store redis redis://localhost:6379` (add `--trades N --days D`, `--ttl-days N`, `--merge` to add to a day, `--publish` to
+`python3.13 tools/drishti.py data load --store redis redis://localhost:6379` (add `--trades N --days D`, `--ttl-days N`, `--merge` to add to a day, `--publish` to
 announce changes to open views; [Loading](#loading) has every option).
 
 ## Why this layout
@@ -225,17 +229,16 @@ the pack's template wholesale, so it repeats the promoted layout the pack declar
 
 ## Loading
 
-`python tools/drishti.py data load --store redis` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated
+`python3.13 tools/drishti.py data load --store redis` loads the banking packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated
 book, through `RedisLoader` (in the plugin):
 
-Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-python tools/drishti.py data load --store redis redis://localhost:6379                                  # the samples: 1,791 documents x 10 days
-python tools/drishti.py data load --store redis redis://localhost:6379 --trades 1000000 --days 2       # and a book of a million trades, streamed
-python tools/drishti.py data load --store redis redis://localhost:6379 --merge                         # add to the days instead of replacing them
-python tools/drishti.py data load --store redis redis://localhost:6379 --ttl-days 7                    # every key expires 7 days after it is written
-python tools/drishti.py data load --store redis rediss://loader:secret@redis.internal:6380 --cluster   # TLS, credentials, Redis Cluster
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379                                  # the samples: 1,791 documents x 10 days
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379 --trades 1000000 --days 2       # and a book of a million trades, streamed
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379 --merge                         # add to the days instead of replacing them
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379 --ttl-days 7                    # every key expires 7 days after it is written
+python3.13 tools/drishti.py data load --store redis rediss://loader:secret@redis.internal:6380 --cluster   # TLS, credentials, Redis Cluster
 ```
 
 ```
@@ -244,15 +247,7 @@ redis: trading:trade 2026-09-30: 1,000,000 rows, 19 columns in 2,000 chunks of 1
 redis: loaded 1,000,000 rows into redis://localhost:26479 in 81 s; documents 6,021 MB as JSON, 811 MB stored (7.4 times smaller)
 ```
 
-- **Input:** loader rows, one JSON line per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`.
-  `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write tars of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders;
-  `RedisLoader -` reads standard input (one kind on one date). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and
-  `.jsonl.gz` in it, in name order.
-- **Business dates come from outside the row** ([the load rules](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
-  a tar's folder names the date; a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-`) is one kind on one date: `--as-of`, else
-  its `.ready` file's `business-date:`, else the date in its name, else the business today. Rows whose own `date` differs are loaded
-  under the file's date and counted. A plain file of two kinds is refused (send a tar), and so is `--as-of` with a tar. A row dated
-  after tomorrow in the business zone (`--future-days`, `--zone`) is not loaded and the load ends with an error.
+- **Input and business dates:** as for every loader ([DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares)).
 - **Streaming:** worker threads (`--threads`) parse and compress each line and pipeline its commands over one Lettuce connection:
   `SADD` of the id to the day's journal, then `SET` of the document (`EX` with `--ttl-days`) and `ZADD` of the day to the entity's
   days. At most `--in-flight` lines are unanswered at once. A kind's dictionary is trained on its first `--dict-samples` documents
@@ -282,8 +277,7 @@ redis: loaded 1,000,000 rows into redis://localhost:26479 in 81 s; documents 6,0
 | `--ttl-days N` | no expiry | every key expires N days after it is written; the kinds' days keep N days back from the load's newest business date |
 | `--replace` / `--merge` | replace | each day holds exactly the stream's entities, switched atomically / add to each day in place |
 | `--keep-replaced-seconds N` | `120` | how long a replaced generation stays readable (0: deleted at once) |
-| `--as-of yyyy-MM-dd` | the file's name, else the business today | a plain file's business date (refused for a tar) |
-| `--future-days N`, `--zone Z` | `1`, `LAKE_BUSINESS_ZONE` else `America/New_York` | how far after today a business date may be, in which zone |
+| `--as-of`, `--future-days N`, `--zone Z` | the file's name, else the business today; `1`; `LAKE_BUSINESS_ZONE` else `America/New_York` | the options every loader takes: a plain file's business date, how far after today a date may be, in which zone ([Table mode: loading](../drishti-plugin-jdbc/README.md#table-mode-loading)) |
 | `--max-drop-share F`, `--force-drop` | `0.5`, off | the largest share of a kind's days, or of a day's entities, one run may drop; drop more anyway |
 | `--codec`, `--level N` | `zstd-dict`, `3` | `zstd-dict`, `zstd`, `deflate` or `none`; the compression level |
 | `--chunk-rows N`, `--in-flight N`, `--threads N` | `10000`, `2000`, cores less two | values per column chunk; lines unanswered; worker threads |
@@ -481,8 +475,8 @@ A quick start from nothing (use a free host port if a Redis of yours already lis
 
 ```bash
 docker run -d --name redis -m 2g -p 6379:6379 redis:8 --maxmemory 1gb
-python tools/drishti.py data load --store redis redis://localhost:6379                         # the samples, 10 business days
-python tools/drishti.py data load --store redis redis://localhost:6379 --trades 10000          # and 10,000 trades a day for 3 days
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379                         # the samples, 10 business days
+python3.13 tools/drishti.py data load --store redis redis://localhost:6379 --trades 10000          # and 10,000 trades a day for 3 days
 cp config/connectors.examples/redis/*.yaml config/connectors/      # the banking domains on Redis
 ```
 

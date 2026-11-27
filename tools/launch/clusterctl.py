@@ -29,7 +29,7 @@ running server. Process ids and logs are where ``drishti.py start`` keeps them (
 data and the synthetic lakes in <data>/stack/.
 
 Consoles: the cluster file's ``console:`` block is one console; a ``consoles:`` list (each {name, port, distribution}, the console block
-its defaults) runs several over the same cluster, each with its own distribution (docs/architecture/DISTRIBUTIONS.md section 7): Drishti
+its defaults) runs several over the same cluster, each with its own distribution (docs/architecture/KERNEL_AND_MODULES.md section 20.7): Drishti
 Risk on 17480 and Drishti Finance on 17481. A named console is the process console-<name> (run/console-<name>.pid); ``drishti.py status``
 shows each one's distribution."""
 from __future__ import annotations
@@ -113,7 +113,7 @@ def notice(text: str) -> None:
 # -- configuration -----------------------------------------------------------------------------------------------------------------
 def load_stack() -> dict:
     if clusterlakes is None:
-        sys.exit("needs PyYAML: run with the console's Python (drishti-console/.venv; python tools/drishti.py setup makes it)")
+        sys.exit("needs PyYAML: run with the Python you run Drishti with, its libraries installed (python tools/drishti.py setup)")
     if not at.file.exists():
         sys.exit(f"no cluster file at {at.file} (--cluster FILE; deploy/stack/stack.yaml is the format)")
     return clusterlakes.read_stack(at.file.read_text(encoding="utf-8"))   # YAML 1.2 booleans: a node's off: list stays a list
@@ -148,12 +148,8 @@ def business_today(stack: dict) -> None:
 
 
 def python() -> str:
-    """The console's Python (it has PyYAML, deltalake and the console's packages), else this one."""
-    for rel in ("bin/python", "Scripts/python.exe"):
-        py = ROOT / "drishti-console" / ".venv" / rel
-        if py.exists():
-            return str(py)
-    return sys.executable
+    """The one Python (DRISHTI_PYTHON, drishti.python of the settings files, else this one): procs.tools_python."""
+    return procs.tools_python()[0]
 
 
 def read_env(path: Path) -> dict:
@@ -177,7 +173,7 @@ def secrets() -> dict:
             have[n] = rnd.token_hex(32)
         old = os.umask(0o077)
         try:
-            lines = ["# The cluster's secrets (deploy/stack/README.md). Git-ignored: never commit this file.", ""]
+            lines = ["# The cluster's secrets (docs/guides/CLUSTER_GUIDE.md). Git-ignored: never commit this file.", ""]
             lines += [f"{k}={v}" for k, v in have.items()]
             at.secrets.write_text("\n".join(lines) + "\n", encoding="utf-8")
         finally:
@@ -269,7 +265,7 @@ def pid_file(name: str) -> Path:
 
 
 def consoles(stack: dict) -> list[dict]:
-    """The stack file's consoles (docs/architecture/DISTRIBUTIONS.md section 7): its ``consoles:`` list, each {name, port, distribution,
+    """The stack file's consoles (docs/architecture/KERNEL_AND_MODULES.md section 20.7): its ``consoles:`` list, each {name, port, distribution,
     servers, settings}, so one cluster serves a Risk console on 17480 and a Finance console on 17481; else the one ``console:`` block.
     A named console's process is console-<name> (its pid file, log and temp folder)."""
     base = stack.get("console") or {}
@@ -466,7 +462,7 @@ def start_console(stack: dict, c: dict) -> bool:
     servers = ",".join(f"http://{host}:{by_name[s]['port']}" for s in (c.get("servers") or [stack["nodes"][0]["name"]]))
     args = ["--server", servers, "--port", str(port), "--data-dir", str(at.data), "--env-file", str(at.secrets), "--background"]
     if c.get("distribution"):
-        args += ["--distribution", str(c["distribution"])]              # risk, finance, genomics, all, or a file (DISTRIBUTIONS.md)
+        args += ["--distribution", str(c["distribution"])]              # risk, finance, genomics, all, or a file (KERNEL_AND_MODULES.md)
     if proc != CONSOLE:
         args += ["--name", proc[len(CONSOLE) + 1:]]
     settings = settings_for(stack)
@@ -543,7 +539,7 @@ def token(user: str, secret: str, ttl: int = 300) -> str:
 
 def get_json(url: str, headers: dict | None = None):
     try:
-        with urllib.request.urlopen(urllib.request.Request(url, headers=headers or {}), timeout=5) as r:
+        with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(urllib.request.Request(url, headers=headers or {}), timeout=5) as r:   # no proxy for Drishti itself
             return json.load(r)
     except (OSError, urllib.error.URLError, ValueError):
         return None

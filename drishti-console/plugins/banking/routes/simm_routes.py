@@ -177,5 +177,5 @@ async def template(request: Request):
     return await stream(request, risk_api.path("/simm/playground/template"), {}, "simm-playground-template.xlsx")
 
 
-# ---- the core's hooks (core/plugins.py, DOMAIN_MODULES.md C2) ----------------------------------------------------------------------
+# ---- the core's hooks (core/plugins.py, KERNEL_AND_MODULES.md C2) ----------------------------------------------------------------------
 _plugins.command(redirect_for, needs=("SIMM",))                               # SIMM [<netting set> | CPTY <id>]: ISDA SIMM

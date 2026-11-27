@@ -116,8 +116,25 @@ def _with_front(text: str, updates: dict) -> str:
     return head + "---\n" + yaml.safe_dump(meta, sort_keys=False, allow_unicode=True, width=1000) + "---\n" + body
 
 
+def template_source(folder: Path) -> Path:
+    """The hand-written text of a template folder's README: tools/connector_readmes/<template>.yaml (`summary`, `doc`, `body`)."""
+    return ROOT / "tools" / "connector_readmes" / f"{folder.name}.yaml"
+
+
+def render_template(folder: Path) -> str:
+    """A template folder's README, whole: the licence comment, the front matter (the files and plugins read from the folder), the body
+    of its source file, with `{{files}}` standing for the table of the folder's files."""
+    src = yaml.safe_load(template_source(folder).read_text(encoding="utf-8")) or {}
+    block, files, plugins = files_block(folder)
+    front = {"template": folder.name, "category": "template", "summary": src["summary"], "connectors": plugins, "files": files, "doc": src["doc"]}
+    body = src["body"].replace("{{files}}", block)
+    return R.licence_comment() + "\n" + "---\n" + yaml.safe_dump(front, sort_keys=False, allow_unicode=True, width=1000) + "---\n" + body
+
+
 def regenerate(path: Path, cat: dict) -> str | None:
     """The README text with its generated parts brought up to date (None when it has no front matter to work from)."""
+    if path.parent.parent == EXAMPLES and template_source(path.parent).is_file():
+        return render_template(path.parent)
     text = path.read_text(encoding="utf-8")
     meta, _ = R.split(text)
     if meta is None:
@@ -140,6 +157,8 @@ def main(argv: list[str]) -> int:
     for p in type_readmes() + template_readmes():
         rel = p.relative_to(ROOT)
         probs = R.problems_connector(p)
+        if p.parent.parent == EXAMPLES and not template_source(p.parent).is_file():
+            probs.append(f"no source: write tools/connector_readmes/{p.parent.name}.yaml (summary, doc, body)")
         if p.is_file():
             want = regenerate(p, cat)
             if want is not None and want != p.read_text(encoding="utf-8"):

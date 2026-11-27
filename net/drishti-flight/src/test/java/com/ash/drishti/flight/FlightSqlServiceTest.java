@@ -49,7 +49,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Flight SQL in process, over TLS with a stand-in backend (FLIGHT_GUIDE.md, Flight SQL): a statement names its model by a first-line
+ * Flight SQL in process, over TLS with a stand-in backend (INTEGRATION_GUIDE.md, Flight SQL): a statement names its model by a first-line
  * comment or the header {@code model}, becomes a {@code form: model} request with the SQL, and is read through the same path as every
  * Flight read (audited); the catalog lists one catalog, the models as schemas, their aliases as tables with columns; a prepared statement
  * is read-only and carries its result schema; an update and a statement without a model are refused with words.

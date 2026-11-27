@@ -64,7 +64,7 @@ public interface SourcePlugin extends AutoCloseable {
 
     /**
      * Pushes every new generation (and every deletion) of any entity of {@code kind} to {@code listener} until the subscription is
-     * closed: a live blotter's stream (docs/guides/LIVE_RESULTS_GUIDE.md). Only sources that push (Kafka, RabbitMQ, ActiveMQ) answer it; the
+     * closed: a live blotter's stream (docs/guides/USER_GUIDE.md). Only sources that push (Kafka, RabbitMQ, ActiveMQ) answer it; the
      * others return {@link Subscription#NONE}. The listener runs on the source's own thread and must hand work off quickly.
      */
     default Subscription subscribeKind(String kind, Consumer<EntityDocument> listener) {
@@ -447,7 +447,7 @@ public interface SourcePlugin extends AutoCloseable {
 
     /**
      * The key of a {@code writes:} command's block this plugin performs ({@code jdbc}, {@code rest}), or empty when it is read-only
-     * (APPROVALS_GUIDE.md › The design and its reasons, section 5.4: {@code write} is implemented once per plugin, never per source system). A connector whose plugin has
+     * (ADMIN_GUIDE.md section 28.4: {@code write} is implemented once per plugin, never per source system). A connector whose plugin has
      * none cannot have {@code writes:}.
      */
     default java.util.Optional<String> writeKey() {
@@ -463,7 +463,7 @@ public interface SourcePlugin extends AutoCloseable {
         return List.of("plugin " + manifest().name() + " cannot write");
     }
 
-    /** Performs one command in the source's own transaction, guarded and idempotent by the change id (APPROVALS_GUIDE.md › The design and its reasons, section 5.3). */
+    /** Performs one command in the source's own transaction, guarded and idempotent by the change id (ADMIN_GUIDE.md › The design and its reasons, section 5.3). */
     default com.ash.drishti.api.write.WriteResult write(com.ash.drishti.api.write.WriteCommand command) throws Exception {
         throw new UnsupportedOperationException("plugin " + manifest().name() + " cannot write");
     }

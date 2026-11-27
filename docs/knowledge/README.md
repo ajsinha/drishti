@@ -54,173 +54,173 @@ link beside the help **?** opens the page that explains it: the VaR explorer, `V
 
 165 terms in 3 pages. `WHAT <term>` opens any of them.
 
-| Term | Meaning | Page |
-|---|---|---|
-| [10-day VaR](risk.md#term-10-day-var) | VaR over 10 days, from the same 1-day scenarios: the 1-day VaR × √10 (independent days, a linear book), or the worst of the sums of 10 consecutive scenario days (509 days give 500 overlapping windows). On the demo bank: 354m by √10, 275m by the sum, against 112m for 1 day. | [Risk](risk.md) |
-| [Active share](world.md#term-active-share) | Half the sum of the differences between a fund's and its index's weights: 0% is the index, 100% shares nothing with it. | [World](world.md) |
-| [Adviser](world.md#term-adviser) | The firm that manages a fund's money (The Vanguard Group, BlackRock Fund Advisors), from N-CEN, with its LEI. | [World](world.md) |
-| [Backtesting](risk.md#term-backtesting) | Checking VaR against what happened: a day whose loss exceeds the day's VaR is an exception. Basel's traffic light counts them over 250 days (green up to 4, amber 5 to 9, red 10 or more). | [Risk](risk.md) |
-| [Bank legal entity](data.md#term-bank-legal-entity) | One of the bank's own companies that books trades (LE-NY, LE-LDN, LE-FRA, LE-TKY), with its regulator and desks. | [Data](data.md) |
-| [Basket](risk.md#term-basket) | A scope you saved under a name in the VaR explorer (`BASKET:<owner>/<name>`), so you can open it again or compare it over time. | [Risk](risk.md) |
-| [Beta](data.md#term-beta) | How much an equity moves for a 1% move in its index, from the regression of daily returns. Computed from the closes when asked. | [Data](data.md) |
-| [Bond](data.md#term-bond) | A debt security with its issuer, coupon, maturity and benchmark curve. | [Data](data.md) |
-| [Book](risk.md#term-book) | The account a trade is booked in, owned by one desk. Books are the leaves of both risk hierarchies. | [Risk](risk.md) |
-| [Business date](data.md#term-business-date) | The day the data describes. Every fundamental row is kept per business date; the top bar's date picks which one you read. | [Data](data.md) |
-| [Capture](risk.md#term-capture) | A frozen copy of a scope's answer (figures, members, vector, provenance), kept so you can compare it with now or with another capture. | [Risk](risk.md) |
-| [Cash-flow event](risk.md#term-cash-flow-event) | A dated payment or fixing of a trade. Counterparty trades sums the next 7, 30 and 90 days' payments. | [Risk](risk.md) |
-| [CCP](risk.md#term-ccp) (central counterparty) | A clearing house that steps between the two sides of a cleared trade, with its own margin model and default fund. | [Risk](risk.md) |
-| [CE](risk.md#term-ce) (current exposure) | Today's exposure: the netting set's mark to market less the collateral held, floored at zero. It adds up across netting sets. | [Risk](risk.md) |
-| [CIK](world.md#term-cik) (Central Index Key) | The SEC's ten-digit number for every filer, company or fund trust (Apple 0000320193). It never changes when a ticker or name does. | [World](world.md) |
-| [Close-out netting](risk.md#term-close-out-netting) | The right, on default, to end every trade under an agreement and settle one net amount. Exposure may be netted only where a legal opinion says it is enforceable. | [Risk](risk.md) |
-| [Collateral balance](risk.md#term-collateral-balance) | The collateral held from, and posted to, a counterparty under a CSA for one netting set, after haircuts. Net = held minus posted. | [Risk](risk.md) |
-| [Collateral effect](risk.md#term-collateral-effect) | The change in EE that collateral makes at the peak date. Collateral held lowers exposure; collateral the bank has posted can raise it. | [Risk](risk.md) |
-| [Commodity curve](data.md#term-commodity-curve) | Forward prices of a commodity by delivery month (Brent, WTI, gold, corn ...). | [Data](data.md) |
-| [Component VaR](risk.md#term-component-var) | A part's share of the whole's VaR, measured on the whole's worst days. Components add up to the VaR exactly; a hedge has a negative component. | [Risk](risk.md) |
-| [Computed data](data.md#term-computed-data) | Figures Drishti works out from fundamental data when asked (VaR, exposure, ownership groups, correlations), never stored, so they never drift from their inputs. | [Data](data.md) |
-| [Concentration](world.md#term-concentration) | How much of a fund sits in a few holdings: the top 10's weight, and the Herfindahl index (the sum of the squared weights; 1 is a single holding). | [World](world.md) |
-| [Confidence level](risk.md#term-confidence-level) | How far into the tail a figure looks: 99% for VaR (the 6th worst of 509), 97.5% for ES. Exposure uses 95% and 99% for PFE. On the VaR page you may choose another (95%, 97.5%, 99.5%): another rank of the same sorted scenarios. | [Risk](risk.md) |
-| [Connector](data.md#term-connector) | What reads a kind from where it lives (Delta, Postgres, a REST API, a feed). Several connectors may serve one kind. | [Data](data.md) |
-| [Correlation](data.md#term-correlation) | How closely two factors' daily returns move together, from -1 to 1. Drishti computes a set's correlations from price history when asked. | [Data](data.md) |
-| [Counterparty](risk.md#term-counterparty) | A firm the bank trades with: its rating, sector, country of risk, group, credit limit and netting sets. | [Risk](risk.md) |
-| [Counterparty credit risk](risk.md#term-counterparty-credit-risk) | The risk that a counterparty defaults while it owes the bank money on its trades. Unlike a loan, the amount owed moves with markets, so it is simulated. | [Risk](risk.md) |
-| [Counterparty group](risk.md#term-counterparty-group) | Counterparties that belong together for credit (a parent and its subsidiaries), with one group limit. The scope `GROUP:<id>` adds their exposures. | [Risk](risk.md) |
-| [Counterparty trades](risk.md#term-counterparty-trades) | Every trade with one counterparty from every source system, grouped when asked: counts, notional by product, coming payments. | [Risk](risk.md) |
-| [Country group](world.md#term-country-group) | A World Bank region, an income group or the world, computed from its member economies when opened. | [World](world.md) |
-| [Country of risk](data.md#term-country-of-risk) | The country whose events would most affect the counterparty's ability to pay, which may differ from where it is registered. | [Data](data.md) |
-| [Credit curve](data.md#term-credit-curve) | CDS spreads by maturity for one reference entity, with the recovery rate and the default probabilities they imply. CVA reads it. | [Data](data.md) |
-| [Credit limit](risk.md#term-credit-limit) | The most exposure the bank accepts to a counterparty on a measure (usually peak PFE at 95%), with its use. Above 100% is a breach. | [Risk](risk.md) |
-| [CSA](risk.md#term-csa) (credit support annex) | The part of the agreement that sets the collateral terms: thresholds, minimum transfer amount, independent amount, eligible assets, margin frequency and the margin period of risk. | [Risk](risk.md) |
-| [Current account](world.md#term-current-account) | Net exports plus net income and transfers from abroad, as a share of GDP. A large deficit must be financed from abroad. | [World](world.md) |
-| [CVA](risk.md#term-cva) (credit valuation adjustment) | The market price of the counterparty's possible default, taken off the trades' value: roughly loss given default times EE weighted by default probability. Stored from an upstream XVA engine; Drishti does not compute it yet. | [Risk](risk.md) |
-| [Data contract](data.md#term-data-contract) | The written agreement for one kind: its grain, key, every field with type and meaning, links, where it is stored and how often it comes. | [Data](data.md) |
-| [Debt to GDP](world.md#term-debt-to-gdp) | General government gross debt as a share of a year's GDP (IMF): how heavy public debt is. | [World](world.md) |
-| [Desk](risk.md#term-desk) | A trading team and its books (Rates, FX, Credit, Commodities ...), with a head, a legal entity and limits. | [Risk](risk.md) |
-| [Direct parent](data.md#term-direct-parent) | The entity that consolidates this one directly in its accounts, as reported to GLEIF. | [Data](data.md) |
-| [Diversification](risk.md#term-diversification) | The sum of the parts' standalone VaRs minus the whole's VaR: what holding them together saves, because they do not lose on the same days. | [Risk](risk.md) |
-| [Dividend curve](data.md#term-dividend-curve) | The dividends expected from an equity or index over time, used to price equity forwards and options. | [Data](data.md) |
-| [DV01](risk.md#term-dv01) | The change in value for a one basis point (0.01%) rise in rates. | [Risk](risk.md) |
-| [DVA](risk.md#term-dva) (debit valuation adjustment) | CVA's mirror: the value of the bank's own possible default. FVA prices funding and KVA the cost of capital. All stored on the CVA record; not computed by Drishti. | [Risk](risk.md) |
-| [EAD](risk.md#term-ead) (exposure at default) | The exposure capital is held against. Under the internal model method alpha (1.4) times EEPE; Drishti shows it for information, it is not a capital figure. | [Risk](risk.md) |
-| [Economic forecast](world.md#term-economic-forecast) | The IMF World Economic Outlook's projections of growth, inflation and debt to 2031, by edition (the vintage). Internal use only. | [World](world.md) |
-| [Economy](world.md#term-economy) | A country's output, growth, prices, jobs, debt and external balance, from World Bank, IMF and CIA data. A counterparty links to its economy. | [World](world.md) |
-| [EDGAR](world.md#term-edgar) (the SEC's filing system) | Where every SEC filing is published: annual 10-K, quarterly 10-Q, 8-K events, insiders' Form 4. EDGAR lists the latest by form; FILING opens one. | [World](world.md) |
-| [EE](risk.md#term-ee) (expected exposure) | The average exposure over all paths at a future date: the input to CVA. It adds up across netting sets. | [Risk](risk.md) |
-| [EEE](risk.md#term-eee) (effective expected exposure) | EE that never falls: the running maximum of EE over the dates. Regulators use it so a trade maturing soon does not hide a later roll-over. | [Risk](risk.md) |
-| [EEPE](risk.md#term-eepe) (effective expected positive exposure) | EEE averaged over the first year: the regulatory figure under the internal model method. EEPE is never below EPE. | [Risk](risk.md) |
-| [ENE](risk.md#term-ene) (expected negative exposure) | The average of what the bank would owe the counterparty at a future date, reported negative: the input to DVA. | [Risk](risk.md) |
-| [Entitlement](data.md#term-entitlement) | What a user may see: whole kinds, rows (a desk's trades) or fields (a masked counterparty). Computed answers are over the trades you may see. | [Data](data.md) |
-| [EPE](risk.md#term-epe) (expected positive exposure) | EE averaged over the first year (or to the last maturity if sooner): one average figure for the counterparty. | [Risk](risk.md) |
-| [Equity](data.md#term-equity) | A share with its price, issuer, index, volatility surface and dividend curve. | [Data](data.md) |
-| [Equity index](data.md#term-equity-index) | A basket of shares published as one level (S&P 500, Nasdaq-100, Euro Stoxx 50 ...). | [Data](data.md) |
-| [ES](risk.md#term-es) (expected shortfall) | The average loss on the worst days beyond a confidence level: in Drishti the mean of the 13 worst of 509 days (97.5%). It sees how bad the tail is, which VaR does not. | [Risk](risk.md) |
-| [ETF](world.md#term-etf) (exchange-traded fund) | A fund whose shares trade on an exchange all day; authorised participants create and redeem shares in large blocks (creation units), which keeps the price near the NAV. | [World](world.md) |
-| [Expense ratio](world.md#term-expense-ratio) | The share of a fund's assets taken each year to run it (0.03 is 0.03% a year), net of waivers, per share class, from the prospectus summary. | [World](world.md) |
-| [Exposure](risk.md#term-exposure) | What a counterparty would owe the bank on a path and date after netting and collateral, never below zero: max(value - collateral, 0). | [Risk](risk.md) |
-| [Exposure path](risk.md#term-exposure-path) | One trade's mark to market on every simulated path at one grid date. Every trade uses the same paths, so values add path by path. | [Risk](risk.md) |
-| [Exposure profile](risk.md#term-exposure-profile) | EE, ENE, EEE and PFE of a scope at each future date (1W to 10Y): the shape of the exposure over time. Computed when asked (kind exposure-result). | [Risk](risk.md) |
-| [Exposure what-if](risk.md#term-exposure-what-if) | What a new trade (or an unwind) would do to a counterparty's PFE before it is dealt: exactly on the paths, or by a conservative add-on proxy. | [Risk](risk.md) |
-| [External data](data.md#term-external-data) | Data from outside the bank (World Bank, IMF, GLEIF, SEC EDGAR, Yahoo Finance ...), each with its licence and refresh script. IMF and Yahoo data are for internal use only. | [Data](data.md) |
-| [Financial fact](world.md#term-financial-fact) | One line of a company's annual accounts (revenue, net income, assets ...) over ten fiscal years, as tagged in its XBRL filings. | [World](world.md) |
-| [FRTB](risk.md#term-frtb) (Fundamental Review of the Trading Book) | Basel's market-risk capital rules. Drishti stores the standardised approach's delta, vega and curvature charges per book from an upstream engine; it does not compute them. | [Risk](risk.md) |
-| [Full revaluation](risk.md#term-full-revaluation) | Repricing each trade under each scenario to get its P&L, rather than approximating the P&L from sensitivities (delta, gamma, vega). The scenario set says which the batch used. | [Risk](risk.md) |
-| [Fund overlap](world.md#term-fund-overlap) | How much two funds hold in common: for each company both hold, the smaller of its two weights, added up. Read from the two funds' Look-through tabs. | [World](world.md) |
-| [Fundamental data](data.md#term-fundamental-data) | Data as its owner delivers it (trades, counterparties, curves, GLEIF records). Drishti keeps it as it is and computes everything else from it. | [Data](data.md) |
-| [FX forward curve](data.md#term-fx-forward-curve) | The exchange rate agreed today for later dates; the gap to spot comes from the two currencies' interest rates. | [Data](data.md) |
-| [FX spot](data.md#term-fx-spot) | The price of one currency in another for delivery on the spot date (usually two business days ahead), with bid and ask. | [Data](data.md) |
-| [GDP](world.md#term-gdp) (gross domestic product) | The value of all goods and services an economy produces in a year, in current US dollars. | [World](world.md) |
-| [GDP per capita](world.md#term-gdp-per-capita) | GDP divided by the population: a rough measure of how rich residents are. | [World](world.md) |
-| [GLEIF](data.md#term-gleif) (Global Legal Entity Identifier Foundation) | The foundation that publishes every LEI, its reference data and who owns whom (level 2 data), free to use. The gleif pack reads it. | [Data](data.md) |
-| [Grain](data.md#term-grain) | What one row means: one netting set per business date, one trade's path values at one grid date. | [Data](data.md) |
-| [Held by funds](world.md#term-held-by-funds) | Every fund of the pack holding a company, by value, with their share of its shares outstanding. HELD counts every holding, not only those a fund page keeps. | [World](world.md) |
-| [Hierarchy](risk.md#term-hierarchy) | A tree VaR and exposure roll up, built from the trades' promoted columns as configured (any number): MGMT (DIVISION > DESK > TT_BOOK), LEGAL (LEGAL_ENTITY > DESK > TT_BOOK), LL (LIMIT_LETTER > DESK). A row with an empty level value sits under a (Blank) node. A node's VaR limit is its var-limit row. | [Risk](risk.md) |
-| [Historical simulation](risk.md#term-historical-simulation) | VaR from real past market moves: each of the last 509 business days' moves is applied to today's trades, and the losses are ranked. Equal weights, one-day horizon. | [Risk](risk.md) |
-| [Holiday calendar](data.md#term-holiday-calendar) | The days a market or currency is closed (TARGET2, USNY ...), which decide payment and fixing dates. | [Data](data.md) |
-| [Hypothetical P&L](risk.md#term-hypothetical-p-l) | The P&L the day's positions would have made had they been held unchanged through the next day's market move. The backtest compares it with VaR. | [Risk](risk.md) |
-| [Identifier mapping](data.md#term-identifier-mapping) | GLEIF's files that give an ISIN (a security), BIC (a bank) or MIC (an exchange) its LEI, so a bond or a payment finds its issuer. | [Data](data.md) |
-| [Incremental VaR](risk.md#term-incremental-var) | The whole's VaR minus its VaR without the part: what this trade or book does to my VaR. Below zero means removing it would raise the VaR. | [Risk](risk.md) |
-| [Independent amount](risk.md#term-independent-amount) | Collateral posted up front whatever the exposure, a cushion on top of variation margin. | [Risk](risk.md) |
-| [Index fund](world.md#term-index-fund) | A fund that copies an index rather than picking stocks. TRACK lists the funds whose name names a tracked index (S&P 500, Nasdaq-100, Dow). | [World](world.md) |
-| [Index membership](world.md#term-index-membership) | The companies of an index or list: the S&P 500, Nasdaq-100 and Dow 30 as their tracking ETFs (SPY, QQQ, DIA) report holding them, the bank lists kept by Drishti. No weights or levels. | [World](world.md) |
-| [Index weight](world.md#term-index-weight) | A member's share of an index. Providers do not publish them; Drishti computes market-cap weights from SEC shares outstanding times the price the funds' filings imply. | [World](world.md) |
-| [Inflation](world.md#term-inflation) | The yearly change of consumer prices. Groups of countries use the median. | [World](world.md) |
-| [Inflation index](data.md#term-inflation-index) | A published price index (HICP ex tobacco, US CPI) and the curve of its expected values, for inflation swaps and linkers. | [Data](data.md) |
-| [Initial margin](risk.md#term-initial-margin) | Collateral held against how much the value could move before a defaulted counterparty is closed out. Usually segregated; the bank keeps what it receives on every path. | [Risk](risk.md) |
-| [Input data](data.md#term-input-data) | Large data an upstream engine delivers for Drishti to compute with: P&L vectors, exposure paths, scenario sets, hierarchies. | [Data](data.md) |
-| [Interest rate curve](data.md#term-interest-rate-curve) | Rates by maturity for one currency and purpose: OIS for discounting, projection for a floating index, government or cross-currency basis. | [Data](data.md) |
-| [Issuer](data.md#term-issuer) | The entity behind a bond or the reference entity of a CDS, with its rating and credit curve. | [Data](data.md) |
-| [Jurisdiction](world.md#term-jurisdiction) | A country's government, office holders, elections and parties (CIA World Factbook). The bank's legal entities link to theirs. | [World](world.md) |
-| [Kind](data.md#term-kind) | One type of record (trade, netting-set, economy) with its key and fields. Every command opens a kind. | [Data](data.md) |
-| [Lake](data.md#term-lake) | The Delta tables a pack's connector reads, partitioned by business date. drishti.py lake demo builds them from the committed test data. | [Data](data.md) |
-| [Lapsed LEI](data.md#term-lapsed-lei) | An LEI whose yearly renewal is overdue: its reference data may be stale. Many regulators expect counterparties to keep theirs current. | [Data](data.md) |
-| [Leg](risk.md#term-leg) | One side of a trade's payments: a swap has a pay leg and a receive leg, each with its notional, rate or index and schedule. | [Risk](risk.md) |
-| [Legal entity trades](risk.md#term-legal-entity-trades) | Every trade booked by one of the bank's legal entities, grouped when asked. | [Risk](risk.md) |
-| [LEI](data.md#term-lei) (legal entity identifier) | The 20-character global id of a legal entity (ISO 17442), issued and renewed every year through GLEIF's network. | [Data](data.md) |
-| [LEI country](data.md#term-lei-country) | A country's legal entities and groups in the GLEIF data, with lapsed and late renewals, computed when opened. | [Data](data.md) |
-| [Link](data.md#term-link) | A field that holds another kind's id (a trade's COUNTERPARTY): click it to open that record. Links make the data a graph. | [Data](data.md) |
-| [Look-through](world.md#term-look-through) | Seeing through a fund to what it holds: every holding with its weight, issuer, LEI and company, so exposure to a company counts what you hold through funds. | [World](world.md) |
-| [LOU](data.md#term-lou) (local operating unit) | The organisation that issued an LEI and keeps it up to date (Bloomberg, the London Stock Exchange ...). | [Data](data.md) |
-| [Macro indicator](world.md#term-macro-indicator) | One headline statistic of one economy: its series, latest value, change and rank among economies. | [World](world.md) |
-| [Margin call](risk.md#term-margin-call) | A demand for collateral under a CSA, its amount, who calls whom, its status and any disputed part. | [Risk](risk.md) |
-| [Marginal VaR](risk.md#term-marginal-var) | Component VaR per million of the part's size (a position's market value, a trade's PV): which positions cost the most risk per dollar. | [Risk](risk.md) |
-| [Master agreement](risk.md#term-master-agreement) | The legal contract (ISDA for derivatives, GMRA for repo, GMSLA for securities lending) under which all trades with a counterparty sit, including close-out netting. | [Risk](risk.md) |
-| [Maturity](risk.md#term-maturity) | The date the trade ends. Exposure profiles fall as trades mature; a netting set's EPE horizon stops at its last maturity when that is under a year. | [Risk](risk.md) |
-| [Mnemonic](data.md#term-mnemonic) | The short word that opens a kind (TRD, CPTY, NSET): type it with an id and press Enter. | [Data](data.md) |
-| [MPOR](risk.md#term-mpor) (margin period of risk) | The time between the last collateral received and closing out a defaulted counterparty (10 business days in the demo). Exposure is measured over it. | [Risk](risk.md) |
-| [MTA](risk.md#term-mta) (minimum transfer amount) | The smallest collateral movement either side may call; smaller changes wait. | [Risk](risk.md) |
-| [MTM](risk.md#term-mtm) (mark to market) | The trade's value today at market prices, positive when the counterparty owes the bank. The risk engine's figure is on the trade valuation. | [Risk](risk.md) |
-| [Mutual fund](world.md#term-mutual-fund) | A pooled fund you buy from and sell back to the fund itself, once a day at its NAV. Most have several share classes. | [World](world.md) |
-| [N-PORT](world.md#term-n-port) (Form N-PORT) | The monthly report of every holding a US fund files with the SEC, made public each quarter. N-CEN is its yearly census: adviser, custodian, auditor, ETF facts. | [World](world.md) |
-| [NAV](world.md#term-nav) (net asset value) | What a fund owns less what it owes. Per share it is the price a mutual fund deals at; the funds pack shows the fund's total, as filed on N-PORT. | [World](world.md) |
-| [Netting benefit](risk.md#term-netting-benefit) | How much lower a netting set's exposure is than the sum of its trades' exposures alone, because gains and losses on its trades offset. | [Risk](risk.md) |
-| [Netting set](risk.md#term-netting-set) | The trades that net on close-out under one agreement and CSA. In Drishti one per counterparty and bank legal entity: `NS-<counterparty>-<legal entity>`. | [Risk](risk.md) |
-| [Notional](risk.md#term-notional) | The size the trade's payments are computed on. It is not what can be lost: a 100m swap may be worth 2m. | [Risk](risk.md) |
-| [Official exposure](risk.md#term-official-exposure) | The end-of-day exposure figures of every netting set and counterparty, captured and published once a day as the record of the date. | [Risk](risk.md) |
-| [Official VaR](risk.md#term-official-var) | The end-of-day VaR and ES of every hierarchy node, captured and published once a day as the record of the date (kind var-official). | [Risk](risk.md) |
-| [Ownership group](data.md#term-ownership-group) | An ultimate parent and every entity under it, as a tree, computed from the LEI records when opened. | [Data](data.md) |
-| [P&L explain](risk.md#term-p-l-explain) | A book's daily P&L split into what each risk factor's move explains and the unexplained rest. A large residual points to a missing factor or a pricing difference. | [Risk](risk.md) |
-| [P&L vector](risk.md#term-p-l-vector) (profit and loss vector) | One trade's P&L under each of the 509 scenario days, priced upstream by the risk batch. Drishti adds vectors element by element; every VaR figure is read from the sum. | [Risk](risk.md) |
-| [Pack](data.md#term-pack) | A folder that teaches Drishti one domain: its kinds, commands, links, screens, connectors and contracts (trading, counterparty-risk, market-risk ...). | [Data](data.md) |
-| [Peak PFE](risk.md#term-peak-pfe) | The largest PFE over the future dates, and when it happens: the single number most credit limits use. | [Risk](risk.md) |
-| [PFE](risk.md#term-pfe) (potential future exposure) | The bad case: the exposure at a future date that only 5% (or 1%) of paths exceed. Credit limits are set on it. It does not add up. | [Risk](risk.md) |
-| [Position](risk.md#term-position) | One security held in one book (or one OTC trade): the trades that build or reduce it, netted. Drishti derives positions from trades; nobody delivers them. | [Risk](risk.md) |
-| [Product type](risk.md#term-product-type) | What the trade is: a product type as the system names it (ComSwap, IRS, FXFwd) in a product group (Rates, FX, Credit, Equity, Commodity). | [Risk](risk.md) |
-| [Provenance](data.md#term-provenance) | What an answer was made from: the data version, the batch, the run, the rules. Every computed answer names its inputs. | [Data](data.md) |
-| [Rate fixing](data.md#term-rate-fixing) | The published value of a rate index on a day (SOFR, SONIA, €STR ...): what floating legs pay. | [Data](data.md) |
-| [Real growth](world.md#term-real-growth) | The yearly change of GDP after removing inflation: growth of output, not of prices. | [World](world.md) |
-| [Repo curve](data.md#term-repo-curve) | The rate for borrowing cash against securities, by maturity. | [Data](data.md) |
-| [SA-CCR](risk.md#term-sa-ccr) (standardised approach for counterparty credit risk) | Basel's formula for EAD without a model: 1.4 times (replacement cost plus multiplier times add-ons by asset class). Stored from an upstream engine; Drishti does not compute it. | [Risk](risk.md) |
-| [Scenario matrix](risk.md#term-scenario-matrix) | One trade's, position's or node's scenario P&L laid out by scenario day (rows) and business date (columns), each date's VaR scenario and ES tail outlined: it shows whether a loss scenario is new or has sat in the tail for weeks. | [Risk](risk.md) |
-| [Scenario set](risk.md#term-scenario-set) | The list of historical days whose moves make the scenarios (HS-509: 509 days ending the day before the business date). Position i of every P&L vector is day i. | [Risk](risk.md) |
-| [Scenario shift](risk.md#term-scenario-shift) | How a past day's move is applied to today's market: absolute (add the 12 bp the rate moved) or relative (take off the 3% the price fell). Scenario FX is shifted too. | [Risk](risk.md) |
-| [Scope](risk.md#term-scope) | Any set of trades written as text: BANK, LE:LE-NY, DESK:RATES, CPTY:CP-ALDERSHOT, a portfolio, a rule, joined with + (union), - (difference) and & (intersection). VaR and exposure use the same grammar. | [Risk](risk.md) |
-| [Sensitivity](risk.md#term-sensitivity) | How much a value changes for a small move in one risk factor: delta for the price or rate, vega for volatility, curvature for what delta misses. | [Risk](risk.md) |
-| [Share class](world.md#term-share-class) | One of several kinds of share in the same company or fund, each with its own ticker: Alphabet's GOOGL (votes) and GOOG (no vote); VOO, VFIAX and VFINX of one Vanguard fund, at different fees. | [World](world.md) |
-| [SIC code](world.md#term-sic-code) (Standard Industrial Classification) | The four-digit industry code the SEC gives a filer (3674 semiconductors, 6021 national commercial banks). SIC groups a code's companies when asked. | [World](world.md) |
-| [SIC division](world.md#term-sic-division) | The broad group a SIC code falls in, A to J (D Manufacturing, H Finance, Insurance and Real Estate, I Services). Drishti's sector for companies and fund tilts. | [World](world.md) |
-| [SIMM](risk.md#term-simm) (ISDA Standard Initial Margin Model) | The industry model for initial margin on uncleared derivatives, from sensitivities by risk class. Stored, with IM posted and received. | [Risk](risk.md) |
-| [Simulation run](risk.md#term-simulation-run) | The upstream exposure simulation of a business date: how many market paths (200 in the demo), the grid of future dates and the look-back. | [Risk](risk.md) |
-| [Source system](risk.md#term-source-system) | The system that booked the trade: ENDUR (numeric ids), MUREX (MX-), CALYPSO (CLY-) in the demo. Drishti reads all three as one trade kind. | [Risk](risk.md) |
-| [Standalone VaR](risk.md#term-standalone-var) | The VaR of a part (a desk, a book, a position) measured alone, with its own worst days. Standalone VaRs do not add up to the whole. | [Risk](risk.md) |
-| [Stress test](risk.md#term-stress-test) | The P&L of a desk under a named shock, historical (COVID-19 March 2020) or hypothetical, against a stress limit. Stored results from the upstream risk engine. | [Risk](risk.md) |
-| [Swaption cube](data.md#term-swaption-cube) | Interest-rate option volatilities by expiry, swap tenor and strike; cap and floor volatilities are a surface beside it. | [Data](data.md) |
-| [System basket](risk.md#term-system-basket) | One of the bank's own baskets, kept in Drishti (never a data feed): a hierarchy node, a rule (every short EUR position) or a basket of chosen positions and trades, the same for everyone, changed only with the permission var:system-baskets; its VaR limit is a var-limit row. | [Risk](risk.md) |
-| [Threshold](risk.md#term-threshold) | The exposure one side may run before the other may call collateral. Exposure up to the threshold stays uncollateralised. | [Risk](risk.md) |
-| [Ticker](world.md#term-ticker) | The short code a security trades under (AAPL, QQQ, VFIAX). One company or fund can have several, one per share class; Drishti keys each by one of them. | [World](world.md) |
-| [Trade](risk.md#term-trade) | One deal as the booking system holds it: who, what, how much, when, in which book and legal entity, with its legs and cash-flow events. | [Risk](risk.md) |
-| [Trade status](risk.md#term-trade-status) | Where the trade is in its life (NEW, VALIDATED, AMENDED, CANCELLED, MATURED). Risk counts NEW, VALIDATED and AMENDED. | [Risk](risk.md) |
-| [Trade valuation](risk.md#term-trade-valuation) | The risk engine's daily figures for a trade: MTM, one-day P&L and DV01, with its netting set. | [Risk](risk.md) |
-| [Trader](risk.md#term-trader) | The person who booked the trade, with their desk and books. | [Risk](risk.md) |
-| [Ultimate parent](data.md#term-ultimate-parent) | The top of the ownership chain: the entity no one else consolidates. Its LEI names the ownership group. | [Data](data.md) |
-| [Unemployment](world.md#term-unemployment) | The share of the labour force without work but looking for it (ILO estimate). | [World](world.md) |
-| [Unit investment trust](world.md#term-unit-investment-trust) | A fund with a fixed trust deed and no board or adviser; SPY and DIA are ETFs built this way. They file no prospectus risk/return summary, so no expense ratio in the data. | [World](world.md) |
-| [US company](world.md#term-us-company) | A company that files with the SEC, keyed by its main ticker: its CIK, SIC code, LEI, indexes, filings and ten years of annual financials (us-equities pack). | [World](world.md) |
-| [VaR](risk.md#term-var) (value at risk) | The loss a set of trades should not exceed on 99 days out of 100, over one day. Drishti reads it from the set's P&L under 509 historical days: minus the 6th worst. | [Risk](risk.md) |
-| [VaR limit](risk.md#term-var-limit) | The most VaR a node or portfolio may take. Limit use is VaR divided by the limit; above 100% is a breach. | [Risk](risk.md) |
-| [VaR Playground](risk.md#term-var-playground) | A scope's VaR worked out cell by cell: every position's scenario P&L, the portfolio, its rank, VaR, ES, components and both 10-day methods in a grid with the explanation beside it, and the same as an Excel workbook of real formulas whose figures equal the engine's to the cent. | [Risk](risk.md) |
-| [VaR what-if](risk.md#term-var-what-if) | The VaR of a scope with trades added or removed before they are dealt, computed by the server's VaR engine on request (POST /api/v1/var/what-if). | [Risk](risk.md) |
-| [Variation margin](risk.md#term-variation-margin) | Collateral that follows today's value of the trades, called as it changes (daily under most CSAs). | [Risk](risk.md) |
-| [Volatility surface](data.md#term-volatility-surface) | Implied volatility by expiry and strike (or delta), read from option prices. ATM is at the money; risk reversals and butterflies describe the smile. | [Data](data.md) |
-| [Wrong-way risk](risk.md#term-wrong-way-risk) | When exposure to a counterparty rises as its credit worsens (it sold you protection on itself, or on its own country). Designed in the contracts; not computed by Drishti yet. | [Risk](risk.md) |
+| Term | Page |
+|---|---|
+| [10-day VaR](risk.md#term-10-day-var) | [Risk](risk.md) |
+| [Active share](world.md#term-active-share) | [World](world.md) |
+| [Adviser](world.md#term-adviser) | [World](world.md) |
+| [Backtesting](risk.md#term-backtesting) | [Risk](risk.md) |
+| [Bank legal entity](data.md#term-bank-legal-entity) | [Data](data.md) |
+| [Basket](risk.md#term-basket) | [Risk](risk.md) |
+| [Beta](data.md#term-beta) | [Data](data.md) |
+| [Bond](data.md#term-bond) | [Data](data.md) |
+| [Book](risk.md#term-book) | [Risk](risk.md) |
+| [Business date](data.md#term-business-date) | [Data](data.md) |
+| [Capture](risk.md#term-capture) | [Risk](risk.md) |
+| [Cash-flow event](risk.md#term-cash-flow-event) | [Risk](risk.md) |
+| [CCP](risk.md#term-ccp) (central counterparty) | [Risk](risk.md) |
+| [CE](risk.md#term-ce) (current exposure) | [Risk](risk.md) |
+| [CIK](world.md#term-cik) (Central Index Key) | [World](world.md) |
+| [Close-out netting](risk.md#term-close-out-netting) | [Risk](risk.md) |
+| [Collateral balance](risk.md#term-collateral-balance) | [Risk](risk.md) |
+| [Collateral effect](risk.md#term-collateral-effect) | [Risk](risk.md) |
+| [Commodity curve](data.md#term-commodity-curve) | [Data](data.md) |
+| [Component VaR](risk.md#term-component-var) | [Risk](risk.md) |
+| [Computed data](data.md#term-computed-data) | [Data](data.md) |
+| [Concentration](world.md#term-concentration) | [World](world.md) |
+| [Confidence level](risk.md#term-confidence-level) | [Risk](risk.md) |
+| [Connector](data.md#term-connector) | [Data](data.md) |
+| [Correlation](data.md#term-correlation) | [Data](data.md) |
+| [Counterparty](risk.md#term-counterparty) | [Risk](risk.md) |
+| [Counterparty credit risk](risk.md#term-counterparty-credit-risk) | [Risk](risk.md) |
+| [Counterparty group](risk.md#term-counterparty-group) | [Risk](risk.md) |
+| [Counterparty trades](risk.md#term-counterparty-trades) | [Risk](risk.md) |
+| [Country group](world.md#term-country-group) | [World](world.md) |
+| [Country of risk](data.md#term-country-of-risk) | [Data](data.md) |
+| [Credit curve](data.md#term-credit-curve) | [Data](data.md) |
+| [Credit limit](risk.md#term-credit-limit) | [Risk](risk.md) |
+| [CSA](risk.md#term-csa) (credit support annex) | [Risk](risk.md) |
+| [Current account](world.md#term-current-account) | [World](world.md) |
+| [CVA](risk.md#term-cva) (credit valuation adjustment) | [Risk](risk.md) |
+| [Data contract](data.md#term-data-contract) | [Data](data.md) |
+| [Debt to GDP](world.md#term-debt-to-gdp) | [World](world.md) |
+| [Desk](risk.md#term-desk) | [Risk](risk.md) |
+| [Direct parent](data.md#term-direct-parent) | [Data](data.md) |
+| [Diversification](risk.md#term-diversification) | [Risk](risk.md) |
+| [Dividend curve](data.md#term-dividend-curve) | [Data](data.md) |
+| [DV01](risk.md#term-dv01) | [Risk](risk.md) |
+| [DVA](risk.md#term-dva) (debit valuation adjustment) | [Risk](risk.md) |
+| [EAD](risk.md#term-ead) (exposure at default) | [Risk](risk.md) |
+| [Economic forecast](world.md#term-economic-forecast) | [World](world.md) |
+| [Economy](world.md#term-economy) | [World](world.md) |
+| [EDGAR](world.md#term-edgar) (the SEC's filing system) | [World](world.md) |
+| [EE](risk.md#term-ee) (expected exposure) | [Risk](risk.md) |
+| [EEE](risk.md#term-eee) (effective expected exposure) | [Risk](risk.md) |
+| [EEPE](risk.md#term-eepe) (effective expected positive exposure) | [Risk](risk.md) |
+| [ENE](risk.md#term-ene) (expected negative exposure) | [Risk](risk.md) |
+| [Entitlement](data.md#term-entitlement) | [Data](data.md) |
+| [EPE](risk.md#term-epe) (expected positive exposure) | [Risk](risk.md) |
+| [Equity](data.md#term-equity) | [Data](data.md) |
+| [Equity index](data.md#term-equity-index) | [Data](data.md) |
+| [ES](risk.md#term-es) (expected shortfall) | [Risk](risk.md) |
+| [ETF](world.md#term-etf) (exchange-traded fund) | [World](world.md) |
+| [Expense ratio](world.md#term-expense-ratio) | [World](world.md) |
+| [Exposure](risk.md#term-exposure) | [Risk](risk.md) |
+| [Exposure path](risk.md#term-exposure-path) | [Risk](risk.md) |
+| [Exposure profile](risk.md#term-exposure-profile) | [Risk](risk.md) |
+| [Exposure what-if](risk.md#term-exposure-what-if) | [Risk](risk.md) |
+| [External data](data.md#term-external-data) | [Data](data.md) |
+| [Financial fact](world.md#term-financial-fact) | [World](world.md) |
+| [FRTB](risk.md#term-frtb) (Fundamental Review of the Trading Book) | [Risk](risk.md) |
+| [Full revaluation](risk.md#term-full-revaluation) | [Risk](risk.md) |
+| [Fund overlap](world.md#term-fund-overlap) | [World](world.md) |
+| [Fundamental data](data.md#term-fundamental-data) | [Data](data.md) |
+| [FX forward curve](data.md#term-fx-forward-curve) | [Data](data.md) |
+| [FX spot](data.md#term-fx-spot) | [Data](data.md) |
+| [GDP](world.md#term-gdp) (gross domestic product) | [World](world.md) |
+| [GDP per capita](world.md#term-gdp-per-capita) | [World](world.md) |
+| [GLEIF](data.md#term-gleif) (Global Legal Entity Identifier Foundation) | [Data](data.md) |
+| [Grain](data.md#term-grain) | [Data](data.md) |
+| [Held by funds](world.md#term-held-by-funds) | [World](world.md) |
+| [Hierarchy](risk.md#term-hierarchy) | [Risk](risk.md) |
+| [Historical simulation](risk.md#term-historical-simulation) | [Risk](risk.md) |
+| [Holiday calendar](data.md#term-holiday-calendar) | [Data](data.md) |
+| [Hypothetical P&L](risk.md#term-hypothetical-p-l) | [Risk](risk.md) |
+| [Identifier mapping](data.md#term-identifier-mapping) | [Data](data.md) |
+| [Incremental VaR](risk.md#term-incremental-var) | [Risk](risk.md) |
+| [Independent amount](risk.md#term-independent-amount) | [Risk](risk.md) |
+| [Index fund](world.md#term-index-fund) | [World](world.md) |
+| [Index membership](world.md#term-index-membership) | [World](world.md) |
+| [Index weight](world.md#term-index-weight) | [World](world.md) |
+| [Inflation](world.md#term-inflation) | [World](world.md) |
+| [Inflation index](data.md#term-inflation-index) | [Data](data.md) |
+| [Initial margin](risk.md#term-initial-margin) | [Risk](risk.md) |
+| [Input data](data.md#term-input-data) | [Data](data.md) |
+| [Interest rate curve](data.md#term-interest-rate-curve) | [Data](data.md) |
+| [Issuer](data.md#term-issuer) | [Data](data.md) |
+| [Jurisdiction](world.md#term-jurisdiction) | [World](world.md) |
+| [Kind](data.md#term-kind) | [Data](data.md) |
+| [Lake](data.md#term-lake) | [Data](data.md) |
+| [Lapsed LEI](data.md#term-lapsed-lei) | [Data](data.md) |
+| [Leg](risk.md#term-leg) | [Risk](risk.md) |
+| [Legal entity trades](risk.md#term-legal-entity-trades) | [Risk](risk.md) |
+| [LEI](data.md#term-lei) (legal entity identifier) | [Data](data.md) |
+| [LEI country](data.md#term-lei-country) | [Data](data.md) |
+| [Link](data.md#term-link) | [Data](data.md) |
+| [Look-through](world.md#term-look-through) | [World](world.md) |
+| [LOU](data.md#term-lou) (local operating unit) | [Data](data.md) |
+| [Macro indicator](world.md#term-macro-indicator) | [World](world.md) |
+| [Margin call](risk.md#term-margin-call) | [Risk](risk.md) |
+| [Marginal VaR](risk.md#term-marginal-var) | [Risk](risk.md) |
+| [Master agreement](risk.md#term-master-agreement) | [Risk](risk.md) |
+| [Maturity](risk.md#term-maturity) | [Risk](risk.md) |
+| [Mnemonic](data.md#term-mnemonic) | [Data](data.md) |
+| [MPOR](risk.md#term-mpor) (margin period of risk) | [Risk](risk.md) |
+| [MTA](risk.md#term-mta) (minimum transfer amount) | [Risk](risk.md) |
+| [MTM](risk.md#term-mtm) (mark to market) | [Risk](risk.md) |
+| [Mutual fund](world.md#term-mutual-fund) | [World](world.md) |
+| [N-PORT](world.md#term-n-port) (Form N-PORT) | [World](world.md) |
+| [NAV](world.md#term-nav) (net asset value) | [World](world.md) |
+| [Netting benefit](risk.md#term-netting-benefit) | [Risk](risk.md) |
+| [Netting set](risk.md#term-netting-set) | [Risk](risk.md) |
+| [Notional](risk.md#term-notional) | [Risk](risk.md) |
+| [Official exposure](risk.md#term-official-exposure) | [Risk](risk.md) |
+| [Official VaR](risk.md#term-official-var) | [Risk](risk.md) |
+| [Ownership group](data.md#term-ownership-group) | [Data](data.md) |
+| [P&L explain](risk.md#term-p-l-explain) | [Risk](risk.md) |
+| [P&L vector](risk.md#term-p-l-vector) (profit and loss vector) | [Risk](risk.md) |
+| [Pack](data.md#term-pack) | [Data](data.md) |
+| [Peak PFE](risk.md#term-peak-pfe) | [Risk](risk.md) |
+| [PFE](risk.md#term-pfe) (potential future exposure) | [Risk](risk.md) |
+| [Position](risk.md#term-position) | [Risk](risk.md) |
+| [Product type](risk.md#term-product-type) | [Risk](risk.md) |
+| [Provenance](data.md#term-provenance) | [Data](data.md) |
+| [Rate fixing](data.md#term-rate-fixing) | [Data](data.md) |
+| [Real growth](world.md#term-real-growth) | [World](world.md) |
+| [Repo curve](data.md#term-repo-curve) | [Data](data.md) |
+| [SA-CCR](risk.md#term-sa-ccr) (standardised approach for counterparty credit risk) | [Risk](risk.md) |
+| [Scenario matrix](risk.md#term-scenario-matrix) | [Risk](risk.md) |
+| [Scenario set](risk.md#term-scenario-set) | [Risk](risk.md) |
+| [Scenario shift](risk.md#term-scenario-shift) | [Risk](risk.md) |
+| [Scope](risk.md#term-scope) | [Risk](risk.md) |
+| [Sensitivity](risk.md#term-sensitivity) | [Risk](risk.md) |
+| [Share class](world.md#term-share-class) | [World](world.md) |
+| [SIC code](world.md#term-sic-code) (Standard Industrial Classification) | [World](world.md) |
+| [SIC division](world.md#term-sic-division) | [World](world.md) |
+| [SIMM](risk.md#term-simm) (ISDA Standard Initial Margin Model) | [Risk](risk.md) |
+| [Simulation run](risk.md#term-simulation-run) | [Risk](risk.md) |
+| [Source system](risk.md#term-source-system) | [Risk](risk.md) |
+| [Standalone VaR](risk.md#term-standalone-var) | [Risk](risk.md) |
+| [Stress test](risk.md#term-stress-test) | [Risk](risk.md) |
+| [Swaption cube](data.md#term-swaption-cube) | [Data](data.md) |
+| [System basket](risk.md#term-system-basket) | [Risk](risk.md) |
+| [Threshold](risk.md#term-threshold) | [Risk](risk.md) |
+| [Ticker](world.md#term-ticker) | [World](world.md) |
+| [Trade](risk.md#term-trade) | [Risk](risk.md) |
+| [Trade status](risk.md#term-trade-status) | [Risk](risk.md) |
+| [Trade valuation](risk.md#term-trade-valuation) | [Risk](risk.md) |
+| [Trader](risk.md#term-trader) | [Risk](risk.md) |
+| [Ultimate parent](data.md#term-ultimate-parent) | [Data](data.md) |
+| [Unemployment](world.md#term-unemployment) | [World](world.md) |
+| [Unit investment trust](world.md#term-unit-investment-trust) | [World](world.md) |
+| [US company](world.md#term-us-company) | [World](world.md) |
+| [VaR](risk.md#term-var) (value at risk) | [Risk](risk.md) |
+| [VaR limit](risk.md#term-var-limit) | [Risk](risk.md) |
+| [VaR Playground](risk.md#term-var-playground) | [Risk](risk.md) |
+| [VaR what-if](risk.md#term-var-what-if) | [Risk](risk.md) |
+| [Variation margin](risk.md#term-variation-margin) | [Risk](risk.md) |
+| [Volatility surface](data.md#term-volatility-surface) | [Data](data.md) |
+| [Wrong-way risk](risk.md#term-wrong-way-risk) | [Risk](risk.md) |
 
 <!-- glossary:end -->
 

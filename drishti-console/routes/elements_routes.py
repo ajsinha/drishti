@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The Drishti Elements gallery (docs/architecture/ELEMENTS_IN_DRISHTI.md): ``/elements`` (and ``/elements/gallery``) open the gallery of
+"""The Drishti Elements gallery (docs/architecture/THIN_CONSOLE_DESIGN.md): ``/elements`` (and ``/elements/gallery``) open the gallery of
 the vendored Drishti Elements release tree (``static/vendor/drishti-elements/<version>/gallery/drishti_gallery.html``, offline), with the
 address's query kept (``?mode=docs&c=pivot&tab=api``) and the hosted modules' visuals asked for (``?visuals=/api/elements/visuals``). The
 page is the same file a developer opens from the release tree: it needs no server. ``/elements`` is a Build page: the edition gate answers 404 when the

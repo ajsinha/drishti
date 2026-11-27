@@ -125,7 +125,8 @@ class EffectiveSettingsControllerTest {
                 List.of(new com.ash.drishti.packs.LaunchRoots.Anchored("drishti.collab.dir", "/srv/drishti/collab", "(application.local.yaml)"),
                         new com.ash.drishti.packs.LaunchRoots.Anchored("drishti.x.secret-file", "/srv/drishti/s", "(env)")));
         Map<String, Object> out = EffectiveSettingsController.paths(s);
-        assertThat(out.get("roots").toString()).contains("name=data").contains("path=/srv/drishti/data").contains("exists=true");
+        // an administrator sees the path as the server's operating system writes it (\\srv\\drishti\\data on Windows): the place on its disk
+        assertThat(out.get("roots").toString()).contains("name=data").contains("path=" + java.nio.file.Path.of("/srv/drishti/data")).contains("exists=true");
         assertThat(out.get("anchored").toString()).contains("drishti.collab.dir").contains("/srv/drishti/collab").doesNotContain("/srv/drishti/s,");
         assertThat(EffectiveSettingsController.paths((com.ash.drishti.packs.LaunchRoots.Snapshot) null)).containsEntry("roots", List.of());
     }

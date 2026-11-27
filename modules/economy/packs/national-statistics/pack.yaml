@@ -15,7 +15,7 @@
 # National statistics · the economy module's public-sector national statistics pack (docs/guides/WORLD_DATA_GUIDE.md): Statistics Canada's
 # headline series by vector, filled daily by the national-statistics feed (config/feeds/national-statistics.yaml) into worldlake.
 pack: national-statistics
-domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/KERNEL_AND_MODULES.md)
 version: 1.0.0
 code: STCAN
 title: National statistics
@@ -72,4 +72,3 @@ console:
     - ["NSTAT NSTAT-V41690973", "Canada's consumer price index · the change on the month and the year"]
     - ["NSTAT NSTAT-V2062815", "Canada's unemployment rate, seasonally adjusted"]
     - ["NSTAT NSTAT-V1", "The population of Canada, quarterly"]
-  help: config/help.yaml

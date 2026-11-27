@@ -33,6 +33,7 @@ import contextlib
 import os
 import re
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 
@@ -155,11 +156,29 @@ def locate_java(explicit=None, java_home=None, env=None) -> tuple:
     return None, "none of --java, --java-home, drishti.java.home, DRISHTI_JAVA_HOME, JAVA_HOME names a JDK and no java is on the PATH"
 
 
+def _failure(what: str, why: str, fix: str) -> str:
+    """The text of a first-run failure in the one shape (procs.fail without its ``[FAIL] ``, which the funnel that prints it adds):
+    ``<what>: <why>. Fix: <fix>``."""
+    _cmd()                                      # puts tools/launch on the path
+    import procs
+    return procs.fail(what, why, fix)[len("[FAIL] "):]
+
+
+def _settings_file() -> str:
+    """The settings file a Fix names: the one given to this process, else this machine's ~/drishti-envs/dev.ini."""
+    return settings()[0] or str(Path.home() / "drishti-envs" / "dev.ini")
+
+
+def _java_fix() -> str:
+    return (f"install Java {MIN_JAVA} (a JDK, e.g. Temurin) and set JAVA_HOME to its folder, or set drishti.java.home in "
+            f"{_settings_file()}")
+
+
 def _home_java(home: Path, name: str) -> str:
     b = java_binary(home)
     if not b.is_file():
-        raise JavaError(f"{name} is {home}, which has no {b.relative_to(home) if b.is_absolute() else b}: point it at a JDK {MIN_JAVA} folder "
-                        f"(the folder that holds bin{os.sep}java)")
+        raise JavaError(_failure("Java", f"{name} is {home}, which has no {b.relative_to(home) if b.is_absolute() else b} (point it at a "
+                                 f"JDK {MIN_JAVA} folder, the folder that holds bin{os.sep}java)", _java_fix()))
     return str(b)
 
 
@@ -170,12 +189,12 @@ def find_java(explicit=None, java_home=None, env=None, required: bool = True):
     if not java:
         if not required:
             return None
-        raise JavaError(f"no Java found ({why}): install a JDK {MIN_JAVA} (Temurin) and set drishti.java.home in the settings file (or DRISHTI_JAVA_HOME, JAVA_HOME) to its "
-                        "folder, or pass --java-home")
+        raise JavaError(_failure("Java", f"no Java found ({why})", _java_fix() + ", or pass --java-home"))
     v = java_version(java)
     if v < MIN_JAVA:
-        raise JavaError(f"Drishti runs on Java {MIN_JAVA} or newer; the java from {why} ({java}) is Java {v}: set drishti.java.home in the settings file (or DRISHTI_JAVA_HOME) to a "
-                        f"JDK {MIN_JAVA} folder (they come before JAVA_HOME and the PATH), or pass --java-home")
+        raise JavaError(_failure("Java", f"Drishti runs on Java {MIN_JAVA} or newer; the java from {why} ({java}) is Java {v}",
+                                 f"install Java {MIN_JAVA} and set drishti.java.home in {_settings_file()} (or DRISHTI_JAVA_HOME) to its "
+                                 "folder (they come before JAVA_HOME and the PATH), or pass --java-home"))
     return java
 
 
@@ -197,24 +216,36 @@ class HomeError(RuntimeError):
 
 
 def find_home(explicit=None, env=None, keys=None) -> tuple:
-    """(the install folder, where it came from), the ONE install root of the Python commands, as the server's ``drishti.home``: ``--home``,
-    else ``DRISHTI_HOME``, else ``drishti.home`` in the settings file, else the folder tools/drishti.py lives in. The install is read only;
-    what Drishti writes goes to the data folder. A home named anywhere that is not the folder these tools come from is refused in words:
-    one release's tools never drive another release's install."""
+    """(the install folder, where it came from), the ONE install root of the Python commands, as the server's ``drishti.home``, in the Java
+    order (``LaunchRoots``): ``--home``, else ``drishti.home`` in the settings file, else ``DRISHTI_HOME``, else the folder tools/drishti.py
+    lives in (a stale ``DRISHTI_HOME`` never beats a correct settings file). The install is read only;
+    what Drishti writes goes to the data folder. The install is always the folder these tools come from (one release's tools never drive
+    another release's install): an explicit ``--home`` naming another folder is refused in words; a settings file or ``DRISHTI_HOME``
+    naming one (an old dev.ini or setx of an earlier copy) is a WARNING (the owner's rule: warn, never refuse) and is not used."""
     env = os.environ if env is None else env
     keys = _SETTINGS_KEYS if keys is None else keys
-    for name, value in (("--home", explicit), ("DRISHTI_HOME", (env.get("DRISHTI_HOME") or "").strip()),
-                        ("drishti.home in the settings file", (keys.get("drishti.home") or "").strip())):
+    for name, value in (("--home", explicit), ("drishti.home in the settings file", (keys.get("drishti.home") or "").strip()),
+                        ("DRISHTI_HOME", (env.get("DRISHTI_HOME") or "").strip())):
         if value:
             if not Path(value).expanduser().is_absolute():   # explicit paths: never taken under the working folder
                 raise HomeError(f"{name} is {value}, a relative path: name the install folder as an absolute path (or unset "
                                 f"{name.split(' ')[0]}; the default is the folder tools/drishti.py lives in)")
             home = Path(value).expanduser().resolve()
             if home != REPO.resolve():
-                raise HomeError(f"{name} is {home}, but these tools come from {REPO}: run {home / 'tools' / 'drishti.py'} for that install, "
-                                f"or unset {name.split(' ')[0]} (one release's tools never drive another release's install)")
+                if name == "--home":
+                    raise HomeError(f"--home is {home}, but these tools come from {REPO}: run {home / 'tools' / 'drishti.py'} for that "
+                                    "install (one release's tools never drive another release's install)")
+                if name == "DRISHTI_HOME" and str(home) not in _WARNED:   # the settings file's case is said once by drishti.py itself
+                    _WARNED.add(str(home))
+                    print(f"WARNING: DRISHTI_HOME={home} names another folder than these tools ({REPO}): ignored, the install is {REPO}; "
+                          "you may delete the variable (" + _cmd("setup") + " lists every such variable)", file=sys.stderr)
+                return REPO.resolve(), f"the folder holding tools/drishti.py ({name} names {home}: ignored)"
             return home, name
     return REPO.resolve(), "the folder holding tools/drishti.py"
+
+
+#: the foreign homes already warned about in this process (one line each)
+_WARNED: set = set()
 
 
 #: Every jar is under the install: Drishti's OWN jar(s) in <home>/lib (shipped, replaced on an upgrade) and the SITE's jars (JDBC drivers,
@@ -225,6 +256,15 @@ JAR_GLOB = "drishti-server-*-exec.jar"
 
 class JarError(RuntimeError):
     """No server jar where the install keeps it: said in words, with the command that makes one."""
+
+
+def _cmd(*args: str) -> str:
+    """A pasteable tools/drishti.py command for this system (tools/launch/procs.py command(): the running interpreter, quoted)."""
+    launch = str(Path(__file__).resolve().parent / "launch")
+    if launch not in sys.path:
+        sys.path.insert(0, launch)
+    import procs
+    return procs.command(*args)
 
 
 def lib_dir(home=None) -> Path:
@@ -244,14 +284,14 @@ def server_jar(explicit=None, home=None) -> Path:
     lib = lib_dir(home)
     jars = sorted(lib.glob(JAR_GLOB))
     if not jars:
-        raise JarError(f"no server jar in {lib}: run  python tools/drishti.py build jar  (it builds the jar and copies it there)")
+        raise JarError(_failure("the server jar", f"no server jar in {lib} (build jar builds it and copies it there)", _cmd("build", "jar")))
     if len(jars) > 1:
         raise JarError(f"{lib} holds {len(jars)} server jars ({', '.join(j.name for j in jars)}): an upgrade replaces the old one; remove "
                        "all but the version to run (your own jars belong in lib/ext and are never touched)")
     version = _version_of(home)
     if version and jars[0].name != f"drishti-server-{version}-exec.jar":
-        raise JarError(f"lib/ holds {jars[0].name} but this checkout is {version}: run  python tools/drishti.py build jar  "
-                       "(it replaces the old jar; your own jars in lib/ext are never touched)")
+        raise JarError(_failure("the server jar", f"lib/ holds {jars[0].name} but this checkout is {version} (build jar replaces the old "
+                                "jar; your own jars in lib/ext are never touched)", _cmd("build", "jar")))
     return jars[0]
 
 
@@ -271,9 +311,10 @@ def _home_value(value: str, home) -> str:
 
 
 def launch_roots(home=None, data_dir=None, env=None, keys=None) -> dict:
-    """Every root a launcher uses, each {name: (path, where it came from)}: ``home`` (:func:`find_home`), ``data`` (``--data-dir``, else
-    ``drishti.data.dir`` in the settings file, else ``DRISHTI_DATA_DIR``, else <home>/data), ``modules`` (``DRISHTI_MODULES_HOME``, else
-    ``drishti.modules.home`` in the settings file, else <home>/modules), ``config`` (<home>/config) and ``jar`` (the newest built server jar
+    """Every root a launcher uses, each {name: (path, where it came from)}, the ONE resolver of the Python side, in the Java order for every
+    root (explicit option > settings file > environment > this checkout): ``home`` (:func:`find_home`), ``data`` (``--data-dir``, else
+    ``drishti.data.dir`` in the settings file, else ``DRISHTI_DATA_DIR``, else <home>/data), ``modules`` (``drishti.modules.home`` in the
+    settings file, else ``DRISHTI_MODULES_HOME``, else <home>/modules), ``config`` (<home>/config) and ``jar`` (the newest built server jar
     under <home>, or None). Nothing is made."""
     env = os.environ if env is None else env
     keys = _SETTINGS_KEYS if keys is None else keys
@@ -283,18 +324,16 @@ def launch_roots(home=None, data_dir=None, env=None, keys=None) -> dict:
                                            ("modules", None, "drishti.modules.home", "DRISHTI_MODULES_HOME", "modules")):
         if given:
             out[name] = (Path(given).expanduser().resolve(), f"--{name}-dir" if name == "data" else f"--{name}")
-        elif name == "data" and (keys.get(key) or "").strip():
+        elif (keys.get(key) or "").strip():
             out[name] = (Path(_home_value(keys[key].strip(), h)).expanduser().resolve(), f"{key} in the settings file")
         elif (env.get(var) or "").strip():
             out[name] = (Path(env[var].strip()).expanduser().resolve(), var)
-        elif (keys.get(key) or "").strip():
-            out[name] = (Path(_home_value(keys[key].strip(), h)).expanduser().resolve(), f"{key} in the settings file")
         else:
             out[name] = (h / default, f"<home>/{default}")
     out["config"] = (h / "config", "<home>/config")
     jars = sorted((h / LIB).glob(JAR_GLOB))
     out["jar"] = (jars[0] if len(jars) == 1 else None, "<home>/lib/" + JAR_GLOB if len(jars) == 1 else
-                  "none in <home>/lib yet: python tools/drishti.py build jar" if not jars else f"{len(jars)} server jars in <home>/lib: keep one")
+                  "none in <home>/lib yet: " + _cmd("build", "jar") if not jars else f"{len(jars)} server jars in <home>/lib: keep one")
     out["ext"] = (h / LIB / "ext", "<home>/lib/ext: your jars (drishti.lib.path)")
     return out
 

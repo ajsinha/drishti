@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Customize's settings of a part from the UI kit, and Remove with Undo (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31, core/designer_settings.py).
+/* Customize's settings of a part from the UI kit, and Remove with Undo (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 3.31, core/designer_settings.py).
    A part just added opens its settings in the side panel: one plain-word question for each of the fragment's parameters (Which number?
    [NOTIONAL], Label, Format), the choices from the record's own fields; Apply writes them on the part's with:. A part the person added
    whose required setting names nothing in the record says so on the page, with a button to its settings: never an empty panel without a

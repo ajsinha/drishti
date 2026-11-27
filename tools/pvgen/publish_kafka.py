@@ -15,7 +15,7 @@
 
 """Intraday updates of a stand-in pricing system, published to the PV topic: each message's value JSONL text, one or more records.
 
-    pip install kafka-python   (pure Python; or: uv run --with kafka-python python tools/pvgen/publish_kafka.py ...)
+    pip install kafka-python   (pure Python; or: python tools/pvgen/publish_kafka.py ...)
     python tools/pvgen/publish_kafka.py [--bootstrap localhost:9092] [--topic drishti.risk.pv-updates] [--date 2026-10-27]
                                         [--rate 5] [--seconds 60] [--per-message 10] [--seed 7] [--mix amend=70,new=15,cancel=15]
                                         [--pv-systems ENDUR] [--pnl-systems ...] [--all-vectors] [--save FILE.jsonl] [--dry-run]

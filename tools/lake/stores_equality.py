@@ -14,7 +14,7 @@
 """The equality test of mixed storage: the same synthetic days built all-Delta and mixed (ENDUR in Delta, CALYPSO and MUREX in Iceberg)
 give the same answers through a running server.
 
-    drishti-console/.venv/bin/python tools/lake/stores_equality.py --work ~/drishti-scale-test/mixed --port 18760
+    python3 tools/lake/stores_equality.py --work ~/drishti-scale-test/mixed --port 18760
 
 1. Source files: the first ``--trades`` trades (default 1,000) of each system's committed test data (data/testdata/trades), five business
    days (the snapshot, then four days of changes), under ``<work>/src`` (synthetic only).

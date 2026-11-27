@@ -42,8 +42,8 @@ def run(seed: int, check: bool, testdata: Path) -> int:
     bad = 0
     for pack in (S.GENOMICS, S.PROTEIN):
         pack_dir = FI.MODULE_DIR / "packs" / pack
-        if not check:                       # the guide reads the contracts from the disk: write the other files first, then the guide
-            for p, t in FI.pack_files(pack, docs[pack], story, guide_sections=False).items():
+        if not check:                       # the README reads the contracts from the disk: write the other files first, then the README
+            for p, t in FI.pack_files(pack, docs[pack], story, readme=False).items():
                 p.parent.mkdir(parents=True, exist_ok=True)
                 p.write_text(t, encoding="utf-8")
         bad += SNAP.generate(pack, pack_dir, docs[pack], FI.pack_files(pack, docs[pack], story), check, testdata)

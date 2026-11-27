@@ -174,4 +174,22 @@ class SutraRegistryTest {
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> new RachanaProperties(null, null, null, null, null, null, null, null, null, null,
                 "inotify", null)).isInstanceOf(IllegalArgumentException.class);
     }
+
+    /** Two registries in one JVM (a test's two contexts, an in-JVM cluster): one reloading never drops the blocks the other reads. */
+    @Test
+    void aSecondRegistryReloadingKeepsTheFirstOnesBlocks() throws Exception {
+        Path a = Files.createDirectories(dir.resolve("a/sutras/common"));
+        Files.writeString(a.resolve("two-reg.v1.block.yaml"), "rachana: 1.2\nblock: two-reg\nversion: 1\ndescription: d\npanels:\n  - { id: p, kind: links }\n");
+        Path b = Files.createDirectories(dir.resolve("b/sutras"));
+        RachanaProperties pa = new RachanaProperties(List.of(dir.resolve("a/sutras").toString()), false, Duration.ofMillis(50), null, null, null, null, null, null, null);
+        RachanaProperties pb = new RachanaProperties(List.of(b.toString()), false, Duration.ofMillis(50), null, null, null, null, null, null, null);
+        try (SutraRegistry first = new SutraRegistry(pa, LiveCompiler.of(new com.ash.rachana.el.ElCompiler()))) {
+            assertThat(DrishtiRachana.blocks().find("two-reg@1")).isPresent();
+            try (SutraRegistry second = new SutraRegistry(pb, LiveCompiler.of(new com.ash.rachana.el.ElCompiler()))) {
+                second.reload();
+                assertThat(DrishtiRachana.blocks().find("two-reg@1")).as("the first registry's block").isPresent();
+            }
+            assertThat(DrishtiRachana.blocks().find("two-reg@1")).as("the second closed").isPresent();
+        }
+    }
 }

@@ -83,7 +83,7 @@ class NetLiveBiTest {
             cluster.off(n, "finance-lake");
         }
         for (String n : List.of("a", "b")) {                          // B has the connector too, switched off: it serves none
-            cluster.connector(n, "rep-lake", "plugin: file", "enabled: " + n.equals("a"), "kinds:", "  - trade", "settings:", "  root: \"" + root.resolve("lake") + "\"",
+            cluster.connector(n, "rep-lake", "plugin: file", "enabled: " + n.equals("a"), "kinds:", "  - trade", "settings:", "  root: " + NetNodes.yaml(root.resolve("lake")),
                     "  id-field: TRADE_ID", "  rescan-seconds: \"3600\"");
         }
         // A's trades for a viewer are the ticking samples (bound to the demo explicitly: beside the lake connector nothing else would serve

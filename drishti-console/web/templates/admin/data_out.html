@@ -20,7 +20,7 @@
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-{# Admin -> Data out (docs/guides/FLIGHT_GUIDE.md section 9): one screen, two views of the same answer (GET /admin/api/data-out), switched by
+{# Admin -> Data out (docs/guides/INTEGRATION_GUIDE.md section 2.9): one screen, two views of the same answer (GET /admin/api/data-out), switched by
    the toggle: the page (mock-up A, the default) and the map of clients and nodes (mock-up B). The service bar, the node cards, the stream
    detail and Stop are shared by both views; drishti_admin-data-out.js draws everything from the JSON below and refreshes it every 5 seconds. #}
 <div class="adm dout" data-dout data-dout-view="{{ view }}">
@@ -28,7 +28,7 @@
   {% with tab='data-out' %}{% include "admin/_nav.html" %}{% endwith %}
   <div class="dout-head">
     <h2>Admin → Data out</h2>
-    <span class="dout-meta">Arrow Flight for Python, Java, JDBC and any Flight client · <a href="{{ BASE }}/help/flight-guide">guide</a></span>
+    <span class="dout-meta">Arrow Flight for Python, Java, JDBC and any Flight client · <a href="{{ BASE }}/help/integration-guide#2-data-out-drishtis-data-to-any-client-with-arrow-flight">guide</a></span>
     <div class="dout-toggle" role="radiogroup" aria-label="View">
       <button type="button" role="radio" data-dout-switch="page" aria-checked="{{ 'true' if view == 'page' else 'false' }}"><i class="bi bi-list-ul" aria-hidden="true"></i> Page</button>
       <button type="button" role="radio" data-dout-switch="map" aria-checked="{{ 'true' if view == 'map' else 'false' }}"><i class="bi bi-diagram-2" aria-hidden="true"></i> Map</button>

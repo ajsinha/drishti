@@ -20,7 +20,7 @@ import java.util.function.Predicate;
 import org.springframework.core.env.Environment;
 
 /**
- * Whether a domain folder's content is read (docs/architecture/DOMAIN_MODULES.md section 8): the BI files, the tables and models of
+ * Whether a domain folder's content is read (docs/architecture/KERNEL_AND_MODULES.md section 8): the BI files, the tables and models of
  * {@code config/bi/<kind>/<domain>/} and {@code config/tables/<domain>/}. A folder named after a module is read only while that module is
  * on; any other folder (the core's own, such as {@code bi}) always is.
  */

@@ -16,7 +16,7 @@
 on its own: it starts its own scratch server with the in-memory lake on, the example connector news-store (root: mem://news) in a scratch
 connectors folder and the example store and tables (config/examples/in-memory-lake.yaml) in the scratch folder's application.local.yaml:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t31
+    python3 tools/docs/screenshots.py --guide t31
 
 The pictures, in the tutorial's order: Admin → Connectors on news-store, Admin → Lakes with the store and its four tables, a news page, a
 quote and a company read from memory, Export data, and Admin → Health."""

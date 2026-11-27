@@ -28,6 +28,8 @@ trim:
   - tests
   - tools
 copy:
+- from: ../../docs/guides/BANK_DATA_GUIDE.md
+  to: guides/BANK_DATA_GUIDE.md
 - from: ../../config/lenses/banking/risk.yaml
   to: lenses/risk.yaml
 - from: ../../config/lenses/banking/trading.yaml

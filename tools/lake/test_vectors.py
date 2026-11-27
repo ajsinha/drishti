@@ -17,7 +17,7 @@ document (which keeps a {"$vector": "PNL"} marker), read back equal to the bit; 
 same in both formats: Delta (the default) and Iceberg (--format iceberg, written by the server's exec jar or LAKE_CLASSPATH;
 skipped without one).
 
-    uv run --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest tools/lake/test_vectors.py -q
+    python -m pytest tools/lake/test_vectors.py -q
 """
 import json
 import os
@@ -63,7 +63,7 @@ class VectorStageTest(unittest.TestCase):
         self.assertEqual(st.types(), {"DESK": "string", "PNL": "vector", "_load_id": "string", "_source_file": "string"})
 
 
-@unittest.skipUnless(writers.deltalake_available(), "needs deltalake and pyarrow (uv run --with deltalake --with pyarrow ...)")
+@unittest.skipUnless(writers.deltalake_available(), "needs deltalake and pyarrow (pip install deltalake pyarrow)")
 class VectorBuildTest(unittest.TestCase):
 
     def setUp(self):

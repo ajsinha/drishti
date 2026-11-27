@@ -16,7 +16,7 @@
 the Runs tab in a Terminal theme, the run card on a report while its run runs, the drawer of a finished run in the light theme, its sharing and schedule
 in the Terminal theme, and the rollup suggestions of Admin → BI → Runs.
 
-  drishti-console/.venv/bin/python drishti-console/tests/bi_runs_shots.py     (writes docs/guides/img/bi-runs/*.png)
+  python3 drishti-console/tests/bi_runs_shots.py     (writes docs/guides/img/bi-runs/*.png)
 """
 import sys
 from pathlib import Path

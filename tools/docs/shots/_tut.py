@@ -19,7 +19,7 @@ The tutorials are written for one reader on one machine: they sign in as the dev
 (sharing, discussion, reports for a colleague), as `vera`. Each picture module makes its own people if they are missing, so any one tutorial's
 pictures can be remade on their own:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t03
+    python3 tools/docs/screenshots.py --guide t03
     (DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT move the scratch ports; --base names the console)"""
 from __future__ import annotations
 

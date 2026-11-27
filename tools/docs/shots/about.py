@@ -20,7 +20,7 @@ Sign-in is ON with two people, because what the drawer says depends on who asks:
 for this guide ONLY, as a clearly labelled demo: it makes the VaR page's limit a masked field, so the picture of vera's drawer shows the pack
 text with the mask in it. No shipped configuration masks `limit`. Run it on its own, which starts that server:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide about
+    python3 tools/docs/screenshots.py --guide about
 """
 from __future__ import annotations
 

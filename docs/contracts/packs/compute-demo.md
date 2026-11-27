@@ -17,7 +17,7 @@
 
 # Data contracts of the compute-demo pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/core/compute-demo/guides/compute-demo.md](../../../config/packs/core/compute-demo/guides/compute-demo.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [config/packs/core/compute-demo/README.md](../../../config/packs/core/compute-demo/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -44,7 +44,6 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 | Binding hint | lake table `compute-demo.path-book`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `BOOK_ID`, `NAME`, `DESK`, `STRIP_COUNT` |
 | Test data | config/packs/core/compute-demo/samples |
-| Worked example | [compute-demo/path-book](../samples/compute-demo.md#path-book) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -75,6 +74,32 @@ A book of synthetic P&L strips, and the sum of their paths computed when the pag
 - source 'synthetic' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - the pack also names 'Synthetic P&L strips (a seeded random walk, config/packs/core/compute-demo/tools/make_samples.py)' for this kind (path-book, path-strip): state when each source applies.
 
+<a id="example-compute-demo-path-book"></a>
+**Example: `config/packs/core/compute-demo/samples/path-book.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "BOOK_ID": "BOOK-CREDIT",
+  "NAME": "Credit book",
+  "DESK": "CREDIT",
+  "STRIP_COUNT": 30,
+  "MEMBERS": [
+    "STRIP-CREDIT-001",
+    "STRIP-CREDIT-002",
+    "STRIP-CREDIT-003",
+    "… 27 more strings"
+  ],
+  "PATH_ID": "BOOK-CREDIT",
+  "_meta": {
+    "source": "synthetic",
+    "generation": 1,
+    "live": false
+  }
+}
+```
+
 ## PSTRIP: P&L strip (`path-strip`)
 
 A synthetic P&L strip of the compute-demo pack: one path vector in a path book, summed by the demo engines.
@@ -93,7 +118,6 @@ A synthetic P&L strip of the compute-demo pack: one path vector in a path book, 
 | Binding hint | lake table `compute-demo.path-strip`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `STRIP_ID`, `BOOK_ID`, `INSTRUMENT`, `DAYS` |
 | Test data | config/packs/core/compute-demo/samples |
-| Worked example | [compute-demo/path-strip](../samples/compute-demo.md#path-strip) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -123,6 +147,32 @@ A synthetic P&L strip of the compute-demo pack: one path vector in a path book, 
 - key STRIP_ID is the field holding the sample catalogue's id (STRIP-RATES-001): confirm it is the business key.
 - source 'synthetic' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - the pack also names 'Synthetic P&L strips (a seeded random walk, config/packs/core/compute-demo/tools/make_samples.py)' for this kind (path-book, path-strip): state when each source applies.
+
+<a id="example-compute-demo-path-strip"></a>
+**Example: `config/packs/core/compute-demo/samples/path-strip.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "STRIP_ID": "STRIP-RATES-001",
+  "BOOK_ID": "BOOK-RATES",
+  "DESK": "RATES",
+  "INSTRUMENT": "SWAPTION",
+  "DAYS": 250,
+  "PNL": [
+    -128.64,
+    -848.83,
+    1213.63,
+    "… 247 more numbers (one per scenario, in the scenario set's SCENARIO_DATES order)"
+  ],
+  "_meta": {
+    "source": "synthetic",
+    "generation": 1,
+    "live": false
+  }
+}
+```
 
 ## PSUM: Book path (Python) (`path-sum`)
 

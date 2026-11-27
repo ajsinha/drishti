@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The bank's counterparties (docs/plans/CSV_LOADERS.md section 8.1): the canonical CSV, from the client master. Names, ratings and links
+# The bank's counterparties (docs/guides/BANK_DATA_GUIDE.md section 8.1): the canonical CSV, from the client master. Names, ratings and links
 # only: no exposure figure. KYC is a nested record from the KYC_ columns.
 format: 1
 kind: counterparty

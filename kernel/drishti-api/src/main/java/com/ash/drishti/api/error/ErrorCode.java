@@ -66,7 +66,7 @@ public enum ErrorCode {
     /** The engine's file changed on disk since the page read it, or its folder cannot be written (DRISHTI_ENGINES_DIR). */
     ENGINE_FILE_CONFLICT("DRS-1023", 409),
     /**
-     * A module is off here (docs/architecture/ACCESS_MODEL.md): not installed, not licensed or switched off by an administrator. Its API
+     * A module is off here (docs/architecture/KERNEL_AND_MODULES.md): not installed, not licensed or switched off by an administrator. Its API
      * answers 404 in words, never 403 (nothing is forbidden; the module is not here).
      */
     MODULE_OFF("DRS-1025", 404),
@@ -136,7 +136,7 @@ public enum ErrorCode {
     REGEX_REFUSED("DRS-4010", 400),
     /** A regular expression ran over its time budget on one value. */
     REGEX_TIMEOUT("DRS-4011", 408),
-    /** The AI layer (docs/guides/AI_GUIDE.md) or the MCP client is switched off. */
+    /** The AI layer (docs/guides/ADMIN_GUIDE.md) or the MCP client is switched off. */
     AI_OFF("DRS-4015", 404),
     /** An AI or MCP call failed at the provider or server (never carries a key or a prompt). */
     AI_FAILED("DRS-4016", 502),
@@ -662,7 +662,7 @@ public enum ErrorCode {
     COMPUTE_FAILED("DRS-9205", 502),
     /** Compute: no such approval request or running computation. */
     COMPUTE_NOT_FOUND("DRS-9206", 404),
-    /** Write-back (docs/guides/APPROVALS_GUIDE.md): editing is off on this server ({@code edit.enabled: false} in config/edit/edit.yaml). */
+    /** Write-back (docs/guides/ADMIN_GUIDE.md): editing is off on this server ({@code edit.enabled: false} in config/edit/edit.yaml). */
     EDIT_OFF("DRS-9301", 403),
     /** Write-back: the change is refused: the field is not editable for you (no Sutra says so, a mask, a role, a read-only field, a restatement without the role), or the target is not usable. */
     EDIT_REFUSED("DRS-9302", 403),
@@ -675,7 +675,7 @@ public enum ErrorCode {
     /** Write-back: edits are paused (the edit primary is not reachable, or this cluster has no shared edit log); reading is not affected. */
     EDIT_PAUSED("DRS-9306", 503),
     /**
-     * Live result sets (docs/guides/LIVE_RESULTS_GUIDE.md): a declaration ({@code *.live.yaml}) was set aside at load: its shape, a format
+     * Live result sets (docs/guides/USER_GUIDE.md): a declaration ({@code *.live.yaml}) was set aside at load: its shape, a format
      * not in formats.yaml, a field not in the kind's contract, or an editable field without a write path. Admin lists why.
      */
     LIVE_SET_INVALID("DRS-9307", 422),
@@ -693,7 +693,7 @@ public enum ErrorCode {
     BUSY_PIVOT_VIEW("DRS-9507", 503),
     /** Busy protection: an Arrow Flight read did not start (Arrow memory of the process near its cap, or the server very busy); retry later. */
     BUSY_FLIGHT("DRS-9506", 503),
-    /** Arrow Flight (docs/guides/FLIGHT_GUIDE.md): no token, an unknown, expired or revoked token, or a browser session (never accepted). */
+    /** Arrow Flight (docs/guides/INTEGRATION_GUIDE.md): no token, an unknown, expired or revoked token, or a browser session (never accepted). */
     FLIGHT_UNAUTHENTICATED("DRS-5601", 401),
     /** Arrow Flight: the token lacks the {@code data:read} scope for the domain asked, or the person it acts for may not read it. */
     FLIGHT_SCOPE("DRS-5602", 403),

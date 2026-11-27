@@ -21,7 +21,7 @@ installed with and a 'DR' copy the Data source picture switches to). A second ve
 uploaded in the pictures. Deploying and saving change the server, so the pictures run on a fresh setup (the run starts one):
 
     DRISHTI_SHOTS_SERVER_PORT=18971 DRISHTI_SHOTS_CONSOLE_PORT=17971 \\
-        drishti-console/.venv/bin/python tools/docs/screenshots.py --guide deploy --base http://127.0.0.1:17971
+        python3 tools/docs/screenshots.py --guide deploy --base http://127.0.0.1:17971
 """
 from __future__ import annotations
 
@@ -100,7 +100,7 @@ def start_servers(work: Path) -> list:
                DRISHTI_PACKS_DEPLOY_HISTORY=str(work / "data" / "history.jsonl"))
     (work / "sutras").mkdir()
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
-    py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
+    py = Path(os.environ.get("DRISHTI_PYTHON") or sys.executable)
     py = py if py.exists() else Path(sys.executable)
     cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), DRISHTI_PACKS_DIR=str(packs))
     console = subprocess.Popen([str(py), str(ROOT / "drishti-console" / "run_drishti_web.py")], cwd=ROOT / "drishti-console", env=cenv,

@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * Which samples a call is about (docs/architecture/GENOMICS_SHOWCASE.md section 4, the channel {@code genomics.samples}): a cohort, then
+ * Which samples a call is about (modules/genomics/docs/guide.md section 4, the channel {@code genomics.samples}): a cohort, then
  * optionally clusters ({@code cluster=C3,C1}), a rectangle on the map of samples ({@code box=x0,x1,y0,y1} in the embedding's values) or
  * named samples ({@code samples=S1,S2}, at most 3,000). The page sends what was clicked or drawn; the server finds the members.
  *

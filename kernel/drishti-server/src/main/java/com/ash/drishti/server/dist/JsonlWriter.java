@@ -82,7 +82,7 @@ public final class JsonlWriter {
                 w.write(line(r));
             }
         }
-        java.nio.file.Files.move(tmp, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+        com.ash.drishti.api.FileReplace.atomically(tmp, file);
     }
 
     /** One object as one line, newline included. */

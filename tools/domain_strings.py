@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rule 4 of the domain boundaries (docs/architecture/DOMAIN_MODULES.md section 4): strings count too. The core's code names no banking
+"""Rule 4 of the domain boundaries (docs/architecture/KERNEL_AND_MODULES.md section 21.4): strings count too. The core's code names no banking
 command word, engine id, connector, API path or console path. Today's names are counted per file in an allow list
 (tools/domain_strings_allowed.yaml) that only shrinks: a file not on the list, or one whose count grew, fails; a file whose count fell
 asks for the list to be lowered (``--write`` rewrites it from the tree).
@@ -89,7 +89,7 @@ def problems(now: dict[str, int], allowed: dict[str, int]) -> list[str]:
 def main(argv: list[str]) -> int:
     now = counts()
     if "--write" in argv:
-        header = ("# Rule 4 of the domain boundaries (docs/architecture/DOMAIN_MODULES.md section 4): the core files that still name banking, and how\n"
+        header = ("# Rule 4 of the domain boundaries (docs/architecture/KERNEL_AND_MODULES.md section 21.4): the core files that still name banking, and how\n"
                   "# many times. Written by tools/domain_strings.py --write; it only shrinks.\n")
         ALLOWED.write_text((ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip().replace("\n", "\n# ").join(["# ", "\n\n"])
                            .replace("# \n", "#\n") + header + yaml.safe_dump({"allowed": now}, sort_keys=True), encoding="utf-8")

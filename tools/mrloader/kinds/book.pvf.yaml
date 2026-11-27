@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The PVF source's portfolio file (PORTFOLIO_D2, portfolio_d2.csv) as the book master (docs/plans/CSV_LOADERS.md section 4.1): one book
+# The PVF source's portfolio file (PORTFOLIO_D2, portfolio_d2.csv) as the book master (docs/guides/BANK_DATA_GUIDE.md section 4.1): one book
 # per portfolio valid on the date. The ids come from kinds/shared/ids.pvf.yaml, the rules the scenario-PV run uses, so a book here is
 # the book of its PV rows. The two columns the PVF join suffixes (_D2: the positions file has them too) are renamed the same way, so the
 # shared rules read them unchanged.

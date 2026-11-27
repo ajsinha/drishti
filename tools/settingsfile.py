@@ -36,6 +36,7 @@ SettingsError = _INI.SettingsError
 check, files, read, read_all = _INI.check, _INI.files, _INI.read, _INI.read_all
 profile_path, pop_profile, with_profiles, home_value = _INI.profile_path, _INI.pop_profile, _INI.with_profiles, _INI.home_value
 server_url = _INI.server_url
+names_home = _INI.names_home   # the one test of "this settings file is this checkout's" (the tools and the console)
 
 
 def resolve(named, explicit: dict[str, str] | None = None) -> dict[str, str]:
@@ -49,8 +50,12 @@ def java_flag(named) -> str:
     return FLAG + ",".join(str(f) for f in files(named))
 
 
-#: the launch roots a Python tool reads from its environment (DRISHTI_HOME, DRISHTI_DATA_DIR, DRISHTI_MODULES_HOME)
-ROOTS = ("drishti.home", "drishti.data.dir", "drishti.modules.home")
+#: the launch roots a Python tool reads from its environment (DRISHTI_HOME, DRISHTI_DATA_DIR, DRISHTI_MODULES_HOME, DRISHTI_LIB_PATH)
+ROOTS = ("drishti.home", "drishti.data.dir", "drishti.modules.home", "drishti.lib.path")
+#: every DRISHTI_* variable that names a folder, the test of "outside this checkout" and the trust rule: one copy, the console's reader
+ROOT_VARS, inside, foreign_vars, drop_foreign_vars = _INI.ROOT_VARS, _INI.inside, _INI.foreign_vars, _INI.drop_foreign_vars
+#: the environment values :func:`apply_roots` replaced with the file's (the file wins): {variable: the old value}
+REPLACED: dict[str, str] = {}
 
 
 def env_name(key: str) -> str:
@@ -58,16 +63,61 @@ def env_name(key: str) -> str:
     return key.upper().replace(".", "_").replace("-", "_")
 
 
+
+def dated_folder(edir: Path, now=None) -> Path:
+    """A new folder ``replaced-YYYY-MM-DD-HHMM`` in the settings folder (``-2``, ``-3`` ... when it exists; made atomically, so two runs
+    in the same second never share one): where setup and ``launchers --machine`` move a file they would otherwise overwrite."""
+    import datetime
+    stamp = (now or datetime.datetime.now()).strftime("%Y-%m-%d-%H%M")
+    n = 1
+    while True:
+        folder = edir / (f"replaced-{stamp}" if n == 1 else f"replaced-{stamp}-{n}")
+        try:
+            folder.mkdir(parents=True)
+            return folder
+        except FileExistsError:
+            n += 1
+
+
+def move_to_dated(files, edir: Path, folder: Path | None = None) -> Path:
+    """Moves ``files`` into ``folder`` (a new :func:`dated_folder` of ``edir`` when None) and returns it; nothing is overwritten or
+    deleted. A file another program holds open (Windows) raises :class:`MovedError` naming it, the files before it already moved."""
+    import shutil
+    try:
+        folder = folder or dated_folder(edir)
+    except OSError as e:                            # the settings folder itself may not be written (read only, another account's)
+        names = ", ".join(str(f) for f in files)
+        raise MovedError(f"{names} could not be moved: {edir} is not writable ({e.strerror or e}). Fix: check you may write to {edir} "
+                         f"(or move {names} away yourself) and run the command again") from None
+    for f in files:
+        try:
+            shutil.move(str(f), str(folder / Path(f).name))
+        except OSError as e:
+            raise MovedError(f"{f} could not be moved to {folder} ({e.strerror or e}). Fix: close the program that has {Path(f).name} "
+                             f"open, or check you may write to {folder}, and run the command again") from None
+    return folder
+
+
+class MovedError(OSError):
+    """A settings-folder file could not be moved aside (open in another program): said in one line naming the file."""
+
+
 def apply_roots(entries: dict[str, str], environ=None) -> list[str]:
-    """Puts the launch roots the files name into the environment the Python tools read, unless already set there (an explicit environment
-    variable beats the file, as a -D does on the Java side); the variables set, in order."""
+    """Puts the launch roots the files name into the environment the Python tools read, the Java order: the settings file beats the
+    environment (as ``LaunchRoots`` does: -D, then the file, then the environment), so a stale ``DRISHTI_DATA_DIR`` from an old ``setx``
+    never overrides a correct dev.ini. A value replaced is kept in :data:`REPLACED`; the variables set, in order."""
     import os
     env = os.environ if environ is None else environ
     out = []
-    home = (env.get("DRISHTI_HOME") or entries.get("drishti.home") or "").strip() or str(Path(__file__).resolve().parents[1])
+    home = (entries.get("drishti.home") or "").strip() or (env.get("DRISHTI_HOME") or "").strip() or str(Path(__file__).resolve().parents[1])
     for key in ROOTS:
         value = home_value((entries.get(key) or "").strip(), home)
-        if value and not (env.get(env_name(key)) or "").strip():
+        if not value:
+            continue
+        old = (env.get(env_name(key)) or "").strip()
+        if old and old != value:
+            REPLACED[env_name(key)] = old
+        if old != value:
             env[env_name(key)] = value
             out.append(env_name(key))
     return out
@@ -79,3 +129,26 @@ def pop_option(argv: list[str]) -> tuple[list[str], str | None]:
     if path is not None:
         files(path)
     return rest, path
+
+
+def other_home(entries: dict[str, str], checkout: Path | None = None) -> str | None:
+    """A WARNING when the settings file names a drishti.home other than this checkout (an old settings file from an earlier copy): the
+    tools then read and write that other folder's data and modules. None when they agree or when the file names no drishti.home."""
+    import os
+    named = (entries.get("drishti.home") or "").strip()
+    if not named:
+        return None
+    here = (checkout or Path(__file__).resolve().parents[1])
+    a, b = Path(named).expanduser(), here
+    try:
+        if a.exists() and os.path.samefile(a, b):
+            return None
+    except OSError:
+        pass
+    norm = lambda p: os.path.normcase(os.path.normpath(str(p.expanduser().absolute()))).rstrip("\\/")
+    if norm(a) == norm(b):
+        return None
+    return (f"WARNING: your settings file names drishti.home={named}, but these tools are in {here}: their data and modules come from"
+            f" {named}. If that is not what you want, run python tools/drishti.py setup: it moves the old settings files to a dated folder in"
+            f" drishti-envs and writes fresh ones for this checkout.")
+

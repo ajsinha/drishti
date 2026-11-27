@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The id rules of the PVF source, shared by every kind that reads its files (docs/plans/CSV_LOADERS.md section 7.4): the same source value
+# The id rules of the PVF source, shared by every kind that reads its files (docs/guides/BANK_DATA_GUIDE.md section 7.4): the same source value
 # gives the same id in the scenario PVs, the sensitivities, the book master and a limit's node, or nothing links. A mapping includes this
 # file with `use: [shared/ids.pvf]` and a field says `{use: TT_BOOK}`. The columns are those of the joined PVF row: the positions file's
 # own (POSITION_ID ...) and PORTFOLIO_D2's, a name both files have suffixed _D2 (PORTFOLIO_NM_D2).

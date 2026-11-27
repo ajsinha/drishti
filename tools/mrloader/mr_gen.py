@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Writes a synthetic day of the CSV loaders' inputs, one canonical CSV per kind, seeded, that hangs together: the same four legal
-entities, six desks, twelve books and N positions appear in every file, so every link resolves (docs/plans/CSV_LOADERS.md section 16).
+entities, six desks, twelve books and N positions appear in every file, so every link resolves (docs/guides/BANK_DATA_GUIDE.md section 16).
 Made-up names and numbers only; nothing from any real extract. The committed samples (tools/mrloader/samples/) are this script's output
 with the defaults; a test checks they still are.
 

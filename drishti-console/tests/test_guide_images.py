@@ -78,7 +78,7 @@ def test_every_picture_any_guide_shows_exists_and_is_a_real_image():
         for rel in pictures_of(doc):
             f = doc.parent / rel
             count += 1
-            assert f.is_file(), f"{doc.relative_to(ROOT)} shows {rel}, which is missing: drishti-console/.venv/bin/python tools/docs/screenshots.py --guide <guide>"
+            assert f.is_file(), f"{doc.relative_to(ROOT)} shows {rel}, which is missing: python3 tools/docs/screenshots.py --guide <guide>"
             if f.suffix == ".svg":
                 assert_a_self_contained_diagram(f)
                 continue
@@ -141,9 +141,9 @@ def test_every_picture_the_designer_guide_shows_exists():
 def test_the_guide_covers_the_whole_workbench_and_has_a_worked_example_per_family():
     text = GUIDE.read_text()
     for s in SECTIONS:
-        assert re.search(rf"^### \d+\. {re.escape(s)}", text, re.M), s         # the designer guide's sections, a part of the reference since 2.9.7
+        assert re.search(rf"^### \d+(?:\.\d+)*\.? {re.escape(s)}", text, re.M), s         # the designer guide's sections, a part of the reference since 2.9.7
     for name in FAMILIES:
-        assert f"examples/{name}.md" in text and (ROOT / "docs" / "guides" / "examples" / f"{name}.md").exists(), name
+        assert name in text and f"<!-- example: {name} -->" in (ROOT / "docs" / "guides" / "examples" / "README.md").read_text(encoding="utf-8"), name
     for kind in ("kv", "status", "table", "pivot", "line", "area", "candlestick", "surface", "histogram", "scatter", "gauge", "waterfall", "hbar", "graph", "links",
                  "tabs", "timeline", "ladder"):
         assert f"`{kind}`" in text or kind in text, kind

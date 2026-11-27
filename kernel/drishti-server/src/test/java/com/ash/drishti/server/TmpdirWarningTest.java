@@ -46,10 +46,9 @@ class TmpdirWarningTest {
     }
 
     private String start(Path base, String... jvmFlags) throws Exception {
-        List<String> cmd = new ArrayList<>(List.of(ProcessHandle.current().info().command().orElse("java"), "-Xmx64m"));
-        cmd.addAll(List.of(jvmFlags));
-        cmd.addAll(List.of("-cp", System.getProperty("java.class.path"), TmpdirWarningTest.class.getName(), "--drishti.tmp-dir=" + base));
-        ProcessBuilder pb = new ProcessBuilder(cmd).redirectErrorStream(true);
+        List<String> flags = new ArrayList<>(List.of("-Xmx64m"));
+        flags.addAll(List.of(jvmFlags));
+        ProcessBuilder pb = com.ash.drishti.testkit.ChildJvm.of(flags, TmpdirWarningTest.class.getName(), "--drishti.tmp-dir=" + base).redirectErrorStream(true);
         pb.environment().remove("JAVA_TOOL_OPTIONS");
         pb.environment().remove("JDK_JAVA_OPTIONS");
         pb.environment().remove("_JAVA_OPTIONS");

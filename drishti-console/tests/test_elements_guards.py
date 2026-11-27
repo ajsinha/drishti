@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The console's half of Drishti Elements' rule "No second implementation" (docs/architecture/ELEMENTS_IN_DRISHTI.md): one
+"""The console's half of Drishti Elements' rule "No second implementation" (docs/architecture/THIN_CONSOLE_DESIGN.md): one
 implementation of each thing, in the libraries (the vendored Drishti Elements and Drishti's own under static/elements/). No console script (static/js, the pages' own scripts in templates):
 
 * calls ECharts itself: charts are drishti-chart's (its Chart, its panel charts, its maps);

@@ -52,27 +52,29 @@ BOOKS = ["BOOK-FX-1", "BOOK-FI-1", "BOOK-EQ-1"]
 
 def make_lake(target: Path, days: int = 3) -> str | None:
     """A small Delta lake (a few thousand rows, never millions) made with ``tools/packgen/banking/make_data.py --lake``, which the cross-pack and the cashflow samples
-    read. ``DRISHTI_BI_DELTA_ROOT`` names one that exists; else it is made with ``uv run --with deltalake ...`` (needs uv and its cache); None when neither works.
+    read. ``DRISHTI_BI_DELTA_ROOT`` names one that exists; else it is made with this Python (needs deltalake, pyarrow, pyyaml); None when neither works.
     A lake of its own: the BI tests make it under their own mktemp folder; the docs' screenshots (bi_report_shots.py) still use it."""
     have = os.environ.get("DRISHTI_BI_DELTA_ROOT")
     if have:
         return have
-    uv = shutil.which("uv")
-    if not uv:
+    py = sys.executable
+    try:
+        import deltalake, pyarrow, yaml  # noqa: F401
+    except ImportError:
         return None
     # generate, then load (docs/guides/DATA_GUIDE.md): the history as JSONL rows beside the lake, then those rows into Delta
     rows = target.parent / "build" / "lake-rows"
-    done = subprocess.run([uv, "run", "--offline", "--with", "pyyaml", "python", str(ROOT / "tools/packgen/banking/make_data.py"), "--lake", str(target),
+    done = subprocess.run([py, str(ROOT / "tools/packgen/banking/make_data.py"), "--lake", str(target),
                            "--days", str(days), "--rows", str(rows), "--no-load", "--data-dir", str(target.parent)],
                           capture_output=True, text=True, timeout=600, cwd=ROOT)
     if done.returncode == 0:
-        done = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python", str(ROOT / "tools/samplegen/load_rows.py"),
+        done = subprocess.run([py, str(ROOT / "tools/samplegen/load_rows.py"),
                                "--root", str(target), "--rows", str(rows / "banking-history.tar"), "--restated", str(rows / "banking-restated.tar")],
                               capture_output=True, text=True, timeout=600, cwd=ROOT)
     if done.returncode != 0 or not (target / "trading").exists():
         return None
     # the published official exposure the BI samples read since 2.9.0 (the lake has netting sets but no exposure paths): tests/bi_exposure_fixture.py
-    pub = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "python", str(CONSOLE / "tests" / "bi_exposure_fixture.py"), str(target)],
+    pub = subprocess.run([py, str(CONSOLE / "tests" / "bi_exposure_fixture.py"), str(target)],
                          capture_output=True, text=True, timeout=300, cwd=ROOT)
     return str(target) if pub.returncode == 0 else None
 

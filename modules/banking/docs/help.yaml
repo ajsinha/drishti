@@ -17,17 +17,11 @@ sections:
 - id: banking
   title: Banking and risk
   pages:
-  - title: 'Trading: trading products'
-    file: ../packs/trading/guides/trading-products.md
-  - title: 'Trading: trading'
-    file: ../packs/trading/guides/trading.md
-  - title: 'Market risk: market risk'
-    file: ../packs/market-risk/guides/market-risk.md
-  - title: 'Counterparty risk: counterparty risk'
-    file: ../packs/counterparty-risk/guides/counterparty-risk.md
-  - title: 'Tutorial: var from the bank to a trade'
+  - title: Trading and bank data
+    file: ../guides/BANK_DATA_GUIDE.md
+  - title: 'Market risk: the VaR guide'
     file: ../guides/VAR_GUIDE.md
-  - title: 'Tutorial: exposure from the bank to a trade'
+  - title: 'Counterparty risk: the exposure guide'
     file: ../guides/EXPOSURE_GUIDE.md
   - title: 'Tutorial: frtb sa'
     file: ../guides/FRTB_SA_GUIDE.md

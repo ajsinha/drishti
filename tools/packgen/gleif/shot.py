@@ -12,12 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The picture of the gleif pack's guide (config/packs/core/gleif/guides/gleif.md), written to its guides/images/.
+"""The picture of the gleif pack's guide (docs/guides/WORLD_DATA_GUIDE.md), written to its guides/images/.
 
 The pack is off by default, so this script starts its own scratch server and console with it on (18760/18761 unless
 DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT say otherwise), takes the picture and stops them (build the server first):
 
-    drishti-console/.venv/bin/python tools/packgen/gleif/shot.py [--work DIR]
+    python3 tools/packgen/gleif/shot.py [--work DIR]
 """
 from __future__ import annotations
 

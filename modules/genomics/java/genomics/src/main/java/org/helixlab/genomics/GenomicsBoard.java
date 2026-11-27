@@ -34,7 +34,7 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /**
- * The genomics board's answers (docs/architecture/GENOMICS_SHOWCASE.md sections 4, 5 and 9): the figures, the association plot, the cohort
+ * The genomics board's answers (modules/genomics/docs/guide.md sections 4, 5 and 9): the figures, the association plot, the cohort
  * matrix, the map of samples, the lollipop coloured by the scan, and the Explain of a variant, a site and a cluster. Every figure is made
  * here from the rows of the packs (filter, join, count, sort, sample); the console draws the answer and computes nothing. A selection of
  * samples is a filter of the call ({@link Selection}), never a recount in the page.

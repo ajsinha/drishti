@@ -16,7 +16,7 @@
 # EXAMPLE (design, not built): config/security/identity-map.yaml on the identity kernel (release 2.9.11.i4;
 # docs/architecture/KERNEL_AND_MODULES.md section 10.11). The one home for turning a verified identity (OIDC claims or SAML attributes)
 # into Drishti access. It grows from today's drishti.security.oidc.role-map and replaces it. A change is a four-eyes proposal in the
-# Approvals inbox and is audited. Roles, lenses and row rules themselves are ACCESS_MODEL.md; this file only maps groups to them.
+# Approvals inbox and is audited. Roles, lenses and row rules themselves are KERNEL_AND_MODULES.md; this file only maps groups to them.
 format: 1
 
 claims:                                       # defaults; a provider block in the console may override the claim names

@@ -51,7 +51,7 @@ ALLOWED = {
 #: Harnesses and tests build scratch sites (a tree of their own, never the checkout's files) and start servers with settings: they may
 #: join below a configuration folder of the scratch site, but never list manifests.
 SCRATCH = ("drishti-console/tests/", "tools/docs/shots/", "tools/drillkit/", "tools/bench/", "tools/dev/", "tools/launch/")
-SKIP_DIRS = {".venv", "node_modules", "target", "data", ".git", ".claude", "build", "dist", "__pycache__"}
+SKIP_DIRS = {".venv", "node_modules", "target", "data", ".git", ".claude", "build", "dist", "__pycache__"}  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
 NAMES = {"packs", "connectors", "dataload.yaml"}
 TEXTS = ("config/packs", "config/connectors", "config/dataload.yaml")
 MANIFESTS = ("module.yaml", "pack.yaml")

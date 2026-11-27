@@ -16,6 +16,9 @@
 
 # Packs and screens
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 A **domain pack** teaches Drishti an industry: its kinds of entity, the commands that open them, how they link, how their screens look,
 a vocabulary, sample data, roles, the connectors its data comes through, a guide. It is configuration and content: no Java and no Python
 the server runs. A **Sutra** is one screen of a pack: a YAML layout in Drishti's screen grammar, Rachana. This guide is for the person who
@@ -31,7 +34,7 @@ Who reads what:
 | writing a pack by hand | sections [1](#1-what-a-pack-is) to [7](#7-modelling-content-vocabulary-about-text-help-facts-roles-calc) |
 | turning JSON files or a schema into a pack without writing files | sections [8](#8-the-pack-designer-create--new-pack) to [10](#10-a-pack-from-json-lines-pack-new), [a source system for an existing kind: the source system tutorial](BUILD_GUIDE.md), [tutorial 19, Part A](../tutorials/19-build-a-pack-and-a-screen.md#part-a--build-a-pack-from-your-data) |
 | writing the screens (Sutras) | sections [11](#11-what-a-sutra-is-and-when-one-applies) to [27](#27-common-mistakes-and-their-messages); every key, panel option, format and function is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench's manual in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
-| letting people edit records on a screen | [section 28](#28-forms-letting-people-edit-records); what happens to a change after that (submitting, approval, Admin → Edits) is in [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md) |
+| letting people edit records on a screen | [section 28](#28-forms-letting-people-edit-records); what happens to a change after that (submitting, approval, Admin → Edits) is in [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run) |
 | connecting a pack to a database, a lake or a queue | [DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors), [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) and the per-connector pages they list |
 | changing Drishti's own code | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
 
@@ -56,7 +59,7 @@ Contents:
   [31. The packs that ship](#31-the-packs-that-ship-turning-them-on-who-sees-which) · [32. Designing for phones](#32-designing-for-phones)
 
 Two packs have guides of their own: the funds and ETFs pack ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md): FUND, HELD, TRACK, the look-through,
-the contracts of `fund`, [`fund-holder`](../contracts/samples/funds.md#fund-holder) ([contract](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder)) and [`index-funds`](../contracts/samples/funds.md#index-funds) ([contract](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds)), sources, licences and the refresh script) and the computed groupings and analytics
+the contracts of `fund`, [`fund-holder`](../contracts/packs/funds.md#example-funds-fund-holder) ([contract](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder)) and [`index-funds`](../contracts/packs/funds.md#example-funds-index-funds) ([contract](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds)), sources, licences and the refresh script) and the computed groupings and analytics
 (LEIG, LEIC, SIC, ECG, CORR, EQB, the USEQ ratios, PXH: [README.md](bi/README.md)).
 
 ## 1. What a pack is
@@ -157,7 +160,7 @@ Run these from the Drishti folder (the repository root, or the install folder of
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
   java -jar lib/drishti-server-*-exec.jar
-DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 python3 drishti-console/run_drishti_web.py
 ```
 
 The commands below use `B=http://localhost:18996/api/v1` for the server's API. **Packs follow the folder while the server runs:** a change to
@@ -169,7 +172,7 @@ good version running and shows on Admin → Packs. A pack folder copied into `co
 
 This is the pack **by hand**, to show every file. If your data is JSON Lines or has a JSON Schema you do not need to write these files:
 **Create → New pack** and `drishti.py pack make` ([section 8](#8-the-pack-designer-create--new-pack)) or `drishti.py pack new`
-([section 10](#10-a-pack-from-json-lines-pack-new)) turn a schema or a folder into a pack, and [tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page)
+([section 10](#10-a-pack-from-json-lines-pack-new)) turn a schema or a folder into a pack, and [tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench)
 designs its screen. Each step says what to type and what you should see; the outputs were produced by running the steps on the finished pack
 (your ticking numbers may differ a little: the ticket's age walks up and down).
 
@@ -661,7 +664,7 @@ published public data such as the us-equities and gleif packs):
 3. a Delta connector in the pack's `pack.yaml` serves them (`plugin: delta`, its `domain`, the kinds, `layout.<kind>.columns` for the fields
    searches and the search form filter on, `layout.<kind>.type-ahead` for the columns a name is found by).
 
-**Data a feed fills daily** (the economy module's public-sector packs: [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#5-the-feeds)) is never
+**Data a feed fills daily** (the economy module's public-sector packs: [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#205-the-feeds)) is never
 committed: the pack's Delta connector reads the lake its feed loads (`settings.lake: worldlake`, the feed file's `lake: worldlake` and a
 `datasets:` entry of the pack and kind), and `samples/` keep only a few reference documents. `PacksServedWithoutDemoTest` fails the build when a
 kind of a shipped pack has neither: no Delta connector with committed data, and none reading a lake an enabled feed fills with the kind.
@@ -735,8 +738,8 @@ that one connector. The finished example pack in the repository leaves this step
 
 ```bash
 python3 tools/license_headers.py --fix                                  # a header on every new file
-drishti-console/.venv/bin/python tools/drishti.py pack check config/packs/helpdesk --tail 3
-drishti-console/.venv/bin/python tools/drishti.py pack about-check config/packs/helpdesk
+python3 tools/drishti.py pack check config/packs/helpdesk --tail 3
+python3 tools/drishti.py pack about-check config/packs/helpdesk
 ```
 
 ```text
@@ -753,8 +756,8 @@ With only two glossary entries, `about-check` exits `1` and names the gaps: `tic
 HISTORY.EVENT`. Then sign it and publish it to a registry ([section 29.1](#291-a-signed-pack-registry-publishing-and-installing)):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack keygen --out ~/drishti-keys/acme          # once per publisher
-drishti-console/.venv/bin/python tools/drishti.py pack publish config/packs/helpdesk --registry /srv/drishti-registry \
+python3 tools/drishti.py pack keygen --out ~/drishti-keys/acme          # once per publisher
+python3 tools/drishti.py pack publish config/packs/helpdesk --registry /srv/drishti-registry \
     --key ~/drishti-keys/acme.pem --publisher acme
 ```
 
@@ -1060,9 +1063,9 @@ history:
 
 Unknown keys are warnings; a wrong value is an error (`DRS-2061`) that `sutra lint <pack-dir>` and the deploy check report; on a running server the
 pack shows the problem on Admin → Packs and in Health and the kind keeps its default history. Every day's row is masked exactly as the kind's view is.
-What the shipped packs declare: trading `trade` (derived pages off); market-data `equity`, [`equity-index`](../contracts/samples/market-data.md#equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)), [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)), [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)), [`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)),
-`commodity`, `bond`, [`inflation-index`](../contracts/samples/market-data.md#inflation-index) ([contract](../contracts/packs/market-data.md#inf-inflation-index-inflation-index)) as market charts; counterparty-risk [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), [`credit-limit`](../contracts/samples/counterparty-risk.md#credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)), `cva` and market-risk `var`,
-[`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)), [`pnl-explain`](../contracts/samples/market-risk.md#pnl-explain) ([contract](../contracts/packs/market-risk.md#pnl-pl-explain-pnl-explain)) with their measures as columns.
+What the shipped packs declare: trading `trade` (derived pages off); market-data `equity`, [`equity-index`](../contracts/packs/market-data.md#example-market-data-equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)), [`fx-spot`](../contracts/packs/market-data.md#example-market-data-fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)), [`ir-curve`](../contracts/packs/market-data.md#example-market-data-ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)), [`credit-curve`](../contracts/packs/market-data.md#example-market-data-credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)),
+`commodity`, `bond`, [`inflation-index`](../contracts/packs/market-data.md#example-market-data-inflation-index) ([contract](../contracts/packs/market-data.md#inf-inflation-index-inflation-index)) as market charts; counterparty-risk [`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), [`credit-limit`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-credit-limit) ([contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)), `cva` and market-risk `var`,
+[`trade-valuation`](../contracts/packs/market-risk.md#example-market-risk-trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)), [`pnl-explain`](../contracts/packs/market-risk.md#example-market-risk-pnl-explain) ([contract](../contracts/packs/market-risk.md#pnl-pl-explain-pnl-explain)) with their measures as columns.
 
 ### 4.8 Connectors: the pack names them, the site owns them
 
@@ -1693,7 +1696,7 @@ answer is `?locale=` on the explain request, else the user's *Language of help t
 
 **Generated packs.** A generated pack's `config/about.yaml` is copied from a hand-kept source in the generator folder
 (`tools/packgen/banking/about/<pack>.yaml`, `tools/packgen/<generator>/about.yaml`): edit that source and regenerate. A pack built on public data
-has its refresh script in `tools/feeds/` ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#8-writing-a-feed)).
+has its refresh script in `tools/feeds/` ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md#198-writing-a-feed)).
 
 **Check it.** Load the pack: a file with a problem lists it (`DRS-2040` to `DRS-2044`). Press `?` on an entity, also as a user whose role is not `raw`.
 `sutra lint modules/<module>/packs/<pack>` warns (`DRS-2046`, `DRS-2047`) about a `panels.<id>` that matches no panel and each field a Sutra shows that
@@ -1808,12 +1811,12 @@ roles:
 | `author` | may use the Build workbench and propose Sutras |
 | `approve` | may approve Sutra proposals |
 | `admin` | may administer users |
-| `calc` | may use Calc ([USER_GUIDE.md](USER_GUIDE.md#9-roles-who-may-use-calc)) |
+| `calc` | may use Calc ([USER_GUIDE.md](bi/CALC.md#9-roles-who-may-use-calc)) |
 
 The core always has `viewer`, `author`, `approver` and `admin`. Roles are given to users by an administrator
 ([ADMIN_GUIDE.md](ADMIN_GUIDE.md)); they take effect when security is on. A pack's roles appear in *Admin → Roles* marked
 **built-in**, read-only: change them in the pack (or its generator); an administrator can also define new roles there, with *Add every kind of a
-pack* buttons ([USER_GUIDE.md](USER_GUIDE.md#admin--roles-what-a-role-may-do)). Roles work on top of packs ([section 31.4](#314-who-sees-which-pack)).
+pack* buttons ([USER_GUIDE.md](ADMIN_GUIDE.md#292-admin--roles-what-a-role-may-do)). Roles work on top of packs ([section 31.4](#314-who-sees-which-pack)).
 
 **Field masks.** What is hidden is **site** configuration, not a pack key: `drishti.security.redact` names fields, and a role without `raw` sees every
 such field as `•••` on every path that shows or computes from its value (raw JSON, views, search, Impact, the type-ahead, alert rules, Calc, the
@@ -1829,7 +1832,7 @@ and the counterparty's identifier. Packs that carry personal or confidential fie
 ### 7.6 Calc: Python snippets
 
 Calc is a Python panel on any view (`Alt+C`): code that runs in the user's browser, reads the screen and Drishti with the user's own rights, and
-draws tables and charts ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)). A pack decides whether its kinds offer it, and may ship starters:
+draws tables and charts ([USER_GUIDE.md](bi/CALC.md)). A pack decides whether its kinds offer it, and may ship starters:
 
 ```yaml
 python:
@@ -1868,7 +1871,7 @@ import matplotlib.pyplot as plt
 
 The banking packs enable Calc with a library of 71 snippets (curves, FX, vol surfaces, options, bonds, credit, VaR and its backtest, stress, FRTB,
 exposure, CVA, collateral, SA-CCR, desks, books and counterparties), written by their generator from `tools/packgen/banking/snippets/<pack>/*.py`.
-Every one, with the sample entity it runs on, is in [USER_GUIDE.md › Snippet catalogue](USER_GUIDE.md#18-snippet-catalogue).
+Every one, with the sample entity it runs on, is in [USER_GUIDE.md › Snippet catalogue](bi/CALC.md#18-snippet-catalogue).
 
 ### Unbuilt work: the under-construction registry
 
@@ -1992,7 +1995,7 @@ made a **child kind**: `LEGS` of `trade` becomes the kind `trade-leg`, one row p
 | its **promoted columns** | the link first, then the element's own fields, as for any kind | `TRADE_ID`, `LEG_ID`, `CURRENCY`, `NOTIONAL` |
 | its **own table** | written by the same loader in the same run, beside the parent, under the parent's business date | `<files root>/<pack>/2026-11-03/trade-leg.jsonl`, `<lake>/<pack>/trade-leg/` |
 | its **own Sutra** | one entity screen per leg, its `TRADE_ID` a link back to the trade (beside the title and on F7) | `trade-leg-default` |
-| a **BI relationship** | a model in the site's `tables/<pack>/` relating every leg to its trade, many-to-one and both ways | section 5.3 of the [Reports guide](bi/MODELS_AND_DATASETS_FOR_REPORTS.md#13-relationships-and-how-a-question-joins) |
+| a **BI relationship** | a model in the site's `tables/<pack>/` relating every leg to its trade, many-to-one and both ways | section 5.3 of the [Reports guide](bi/TABLES_AND_MODELS.md#13-relationships-and-how-a-question-joins) |
 
 The parent is unchanged: it keeps the whole array in its document and its screen still shows it as a sub-table.
 
@@ -2629,7 +2632,7 @@ Worked example, run as written: 300 ENDUR trades on two business days (600 rows,
 taken from `data/testdata/` into a folder `jsonl/` (`trade.jsonl`, `counterparty.jsonl`):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack new jsonl/ --name my-bank --title "My bank" \
+python3 tools/drishti.py pack new jsonl/ --name my-bank --title "My bank" \
     --key trade=TRADE_ID,counterparty=COUNTERPARTY_ID --match trade=PRODUCT_TYPE --date BUSINESS_DATE \
     --samples 3 --fallback --out packs/my-bank --lake lake/
 ```
@@ -2833,7 +2836,7 @@ panels:
 `sutra:` is lower-case letters, digits and hyphens, starting with a letter; `version:` a plain integer; `priority: 20` puts it ahead of the `core` pack's
 `counterparty` Sutra (priority 10); `kind: kv` is a label/value grid, and each column's `bind` says where its value comes from.
 
-**In the UI.** Open **Create → New screen**, bring `CP-MERIDIAN-RE` as a stored entity (kind `counterparty`; [Start: bring data](RACHANA_REFERENCE.md#1-start-bring-data))
+**In the UI.** Open **Create → New screen**, bring `CP-MERIDIAN-RE` as a stored entity (kind `counterparty`; [Start: bring data](RACHANA_REFERENCE.md#31-start-bring-data))
 and choose *an empty Sutra*. In the **YAML** tab replace the text with the YAML above and press **Ctrl+Enter**. The **Design** tab shows a view titled
 `CP-MERIDIAN-RE` with one panel, *Identity*: `Name Meridian Reinsurance Ltd`, `LEI 549300HGCM5CFCB6ZB96`. A preview always uses the text in the editor,
 whatever its `match` says, and writes no file.
@@ -3002,82 +3005,7 @@ Preview it against another counterparty (`CP-NORTHPLAINS`): the same layout serv
 
 ## 13. Rachana-EL step by step
 
-Every `bind`, `rows`, `where` and `highlight` is a Rachana-EL expression. This section builds them up against the Murex swap `MX-20000001` (look at it
-with `curl -s -H "$AUTH" $DRISHTI/entities/trade/MX-20000001/raw | python3 -m json.tool`; its shape is in [section 6.1](#61-the-shape-of-the-document)).
-Every function is in [FUNCTIONS.md](FUNCTIONS.md) and the [reference](RACHANA_REFERENCE.md#functions).
-
-**Paths.**
-
-| You write | You get | Why |
-|---|---|---|
-| `$.QUANTITY` | `242000000` | a field of the document |
-| `$.LEGS[0].LEG_TYPE` | `FIXED` | `[0]` is the first element |
-| `$.LEGS[-1].INDEX.NAME` | `AONIA` | `[-1]` is the last; `.` walks into objects |
-| `$.LEGS[0].CASH_FLOWS[1].PAYMENT_DATE` | `2027-06-29` | array, object, array, field: as deep as the data goes |
-| `$.LEGS[1].CASH_FLOWS[0].RESETS[0].RATE` | `0.035376` | four levels down: the first fixing of the floating leg |
-| `$.COUNTERPARTY` | `CP-MERIDIAN-RE` | a reference: `link($.COUNTERPARTY, 'counterparty')` opens it |
-| `$['TRADE_ID']` | `MX-20000001` | brackets: for a field whose name has a hyphen (`$['day-count']`; `$.day-count` would subtract) |
-| `$.QUANTTY` | *(empty)* | a misspelt field is empty, never an error: check spelling in the preview |
-
-**Rows: `@` and `#index`.** Inside `rows:`, `each:` or a filter, `@` is the current element and `#index` its position (from 0): `bind: "@.RATE"` is each
-row's own rate; `highlight: "@.PAYMENT_DATE == first($.EVENTS[?@.EVENT_DATE > today()]).EVENT_DATE"` lights the next payment;
-`tabTitle: "'Leg ' + @.LEG_ID"` reads `Leg 1`, `Leg 2`.
-
-**Filters.** `[?condition]` keeps the elements for which the condition holds:
-
-| Expression | Result for `MX-20000001` |
-|---|---|
-| `size($.EVENTS)` | `42` |
-| `size($.EVENTS[?@.EVENT_TYPE == 'CASH_SETTLEMENT'])` | `35`: one per payment of either leg |
-| `size($.EVENTS[?!nonblank(@.LEG_ID)])` | `7`: the deal's own events (booked, confirmed, cleared, amended…) |
-| `size($.EVENTS[?nonblank(@.AMOUNT) && @.EVENT_DATE > today()])` | `29` on the business date 2026-10-16: the cash events still to come |
-| `first($.LEGS[?@.LEG_TYPE == 'FLOAT']).INDEX.NAME` | `AONIA`: the floating leg, wherever it sits (`$.LEGS[?…][0]` is the same) |
-| `$.LEGS[?@.LEG_ECONOMIC_TYPE == 'Pay'][0].LEG_ID` | `2`: the first leg we pay |
-| `$.LEGS[?@.LEG_TYPE == 'FLOAT'].INDEX.NAME` | *(empty)*: a filter gives a list; take an element first (`first(...)`, `[0]`) |
-| `$.LEGS[*].LEG_ID` | the list `[1, 2]`: **projection**, a field of every element (what a control's `options` read) |
-| `size(flatten($.LEGS[*].CASH_FLOWS))` | `35`: every period of every leg as one list (`size($.LEGS[1].CASH_FLOWS)` is `28`) |
-| `size(flatten($.LEGS[1].CASH_FLOWS[*].RESETS))` | `90`: every fixing of the floating leg |
-| `size(flatten($.LEGS[1].CASH_FLOWS[*].RESETS)[?!nonblank(@.RATE)])` | `75`: fixings of the floating leg not yet known |
-
-The extracts write a missing value as empty text (`"AMOUNT": ""`), so test for a value with `nonblank(...)`, which skips `""` and spaces as well as null,
-not with `coalesce`, which keeps it.
-
-**Functions.**
-
-| Before | After | Shows |
-|---|---|---|
-| `bind: $.QUANTITY, fmt: amount0` | `bind: "$.CURRENCY + ' ' + fmt(first($.LEGS).NOTIONAL, 'amount0')"` | `AUD 242,000,000` |
-| `bind: "$.LEGS[0].NOTIONAL + $.LEGS[1].NOTIONAL"` | `bind: "sum($.LEGS, 'NOTIONAL')", fmt: amount0` | `484,000,000` |
-| `bind: "coalesce($.PACKAGE_ID, 'none')"` (empty text is kept) | `bind: "nonblank($.PACKAGE_ID, 'none')"` | `none` |
-| `where: "$.TRADE_STATUS == 'amended'"` (never true: case matters) | `where: "lower($.TRADE_STATUS) == 'amended'"` | true for `AMENDED` |
-| `where: "$.PRODUCT_SUB_TYPE == 'swap'"` | `where: "contains($.PRODUCT_SUB_TYPE, 'swap')"` | `contains` and `startsWith` ignore case |
-| `bind: $.TRADER_ID` | `bind: "link($.TRADER_ID, 'trader', $.TRADER_FIRST_NAME + ' ' + $.TRADER_LAST_NAME)"` | `A. Shah`, a link to the trader |
-| a total per year the data does not carry | `rows: "group($.EVENTS[?nonblank(@.AMOUNT) && nonblank(@.LEG_ID)], 'EVENT_DATE', 'AMOUNT', 'year')"` | one row a year, `2025 −3,713,969` first |
-| days to maturity | `bind: "days(today(), $.MATURITY_DATE)"` | `2079` on 2026-10-16 |
-
-There is no list literal (`['AUD', 'NZD']` does not compile).
-
-**Formats and tones.** `fmt:` decides how a value reads; `tone:` its colour:
-
-| Value | `fmt` | `tone` | Shows |
-|---|---|---|---|
-| `242000000` | `amount0` | | `242,000,000` |
-| `242000000` | `signed0` | `sign` | `+242,000,000`, positive colour |
-| `-155245` | `signed0` | `sign` | `−155,245`, negative colour (a true minus sign) |
-| `0.040829` | `pct4` | | `4.0829%` |
-| `0.040829` | `price4` | | `0.0408` (a price per unit: no scaling) |
-| `242000000` | `compact` | | `242.0m` |
-| `2025-07-25` | `dmy` | | `25 Jul 2025` |
-| `AMENDED` / `Pending` | | `status` | `ok` colour / `warn` colour |
-
-`tone: status` reads the words: *fail*, *reject*, *dispute*, *breach* are bad; *pending*, *unmatched*, *warn* a warning; anything else fine. So it suits
-confirmation and settlement statuses, not a credit rating (`CCC` would show as fine).
-
-**Conditions** combine with `&&`, `||` and `!`, and choose with `? :` (`bind: "$.BUY_SELL_CODE == 'B' ? 'Buy' : 'Sell'"`). Three things to know:
-`<`, `>`, `<=`, `>=` compare numbers as numbers and texts as text, so ISO dates order correctly (`@.PAYMENT_DATE < today()` tells a paid flow from one to
-come), and anything against empty is false; `||` gives `true` or `false`, not a value (`$.STRATEGY || 'n/a'` shows `true`: use `nonblank`); `+` adds
-only when both sides are numbers, otherwise it joins text (`'1' + 1` is `11`), and a missing value in arithmetic gives `NaN` (wrap it,
-`nonblank($.QUANTTY, 0) * 2`).
+Every `bind`, `rows`, `where` and `highlight` is a Rachana-EL expression. The step-by-step build-up (paths, `@` and `#index`, filters and projection, functions, formats and tones, conditions) is [Rachana, Writing Sutras, 13. Rachana-EL, step by step](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#13-rachana-el-step-by-step), on a small order document. In Drishti the document to try it on is the Murex swap `MX-20000001`: look at it with `curl -s -H "$AUTH" $DRISHTI/entities/trade/MX-20000001/raw | python3 -m json.tool` (its shape is in [section 6.1](#61-the-shape-of-the-document)). Every function is in [FUNCTIONS.md](FUNCTIONS.md) and the [reference](RACHANA_REFERENCE.md#functions).
 
 ## 14. A trade view, built step by step
 
@@ -3296,19 +3224,7 @@ when it is not true the panel is left out, with no empty box. The shipped `endur
 
 ### 14.7 Placing panels: `layout:` and phones
 
-Without `layout:` panels flow (main column, `area: right` column, `span` and `height`). To place them yourself, draw the screen as named areas and put
-each panel in one (`area: trades`):
-
-```yaml
-layout: { areas: ["head head", "trades detail"], columns: [7, 5], split: { between: [trades, detail] }, tabs: [detail], phone: [head, detail, trades] }
-```
-
-Or keep the flow and group panels in folding **sections** (`layout.sections`, `section:` on a panel); `order:` sorts panels; `user-can-arrange: true` lets
-each reader drag and resize panels for themselves. `sutra lint` checks it (`DRS-2059`); every key is in
-[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections). **On a phone** a reader gets only the panels that matter there:
-give each heavy panel a phone tier (`phone: must`, `phone: { tier: glance, rows: 5, columns: [Trade, MTM], sort: -MTM }`, `phone: more`, `phone: desk`)
-and the screen a `phone: { order, default, summary }` ([section 32](#32-designing-for-phones),
-[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#phone-what-goes-to-a-phone)).
+Without `layout:` panels flow (main column, `area: right` column, `span` and `height`); to place them yourself draw the screen as named areas, or group panels in folding sections, and give each heavy panel a phone tier: [Rachana, Writing Sutras, 9. Layout: placing panels](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#9-layout-placing-panels). `sutra lint` checks it (`DRS-2059`); the Drishti side is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections) and [section 32](#32-designing-for-phones).
 
 Put the blocks of 14.2 to 14.6 under one `panels:` and you have a complete trade view. The [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated)
 is the same layout with every line commented, and `modules/banking/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses,
@@ -3371,7 +3287,7 @@ $DRISHTI/studio/settings` answers `{"save": true, "approve": true, "review": tru
 
 1. In the workbench, type a note for the reviewer (*What changed?*) and press **Submit for review** (or **Ctrl+S**). The Sutra is checked as it stands;
    with problems nothing is submitted. Otherwise the status line says `Submitted counterparty-mine v1 for review as <id>`
-   ([Saving and proposing](RACHANA_REFERENCE.md#22-saving-and-proposing)).
+   ([Saving and proposing](RACHANA_REFERENCE.md#322-saving-and-proposing)).
 2. An approver opens **Views → Approvals** (`/approvals`), sees the proposal with a diff against the live version, and approves or rejects it (a
    rejection needs a reason). Panel blocks that only changed place are listed as moves, with the remaining edits as a line diff.
 3. With security on and `drishti.governance.four-eyes` on (the default), the author cannot approve their own proposal (`DRS-2007`). If someone changed
@@ -3673,7 +3589,7 @@ panels:
 
 Previewed on `MX-20000001`, you should see four tabs, `NS-MERIDIAN-RE-FRA` to `NS-MERIDIAN-RE-TKY`, the London one with `Trades 191` and `Net MTM
 −316,071,572`; and the rates desk's grid, three books (`BOOK-RATES-1` `6.0bn`, `BOOK-RATES-2` `−1.5bn`, `BOOK-RATES-3` `−393.7m`) across `swap`,
-`linear`, `future`, `option` and `exotic`, the desk `4.1bn` in all. The runnable version is the [linked-sources example](examples/linked-sources.md).
+`linear`, `future`, `option` and `exotic`, the desk `4.1bn` in all. The runnable version is the [linked-sources example](examples/README.md#linked-sources).
 
 - `source` is an expression that gives a `link(id, kind)`. Then write `rows`, `each` and the other options as if the linked document were the page's own;
   `@` is still the row. The title line still reads this entity.
@@ -3725,54 +3641,8 @@ You rarely need to write these by hand: the **Sutra designer** ([section 25](#25
 
 ## 21. Expandable row groups: pivot `by` lists and tree tables
 
-Two opt-in features let rows hold rows; both open one level at a time with a ▸/▾ toggle, and `expand` sets how many levels show at first.
-
-**Row groups of a pivot.** `by` takes one field, or a **list** (at most six) for nested groups:
-
-```yaml
-  - id: nested
-    kind: pivot
-    title: The desk's MTM by book, family and currency
-    source: "link($.TT_GROUP, 'desk')"
-    rows: $.POSITIONS
-    by: [BOOK, FAMILY]            # two levels: the book, then its product families
-    across: CURRENCY
-    value: MTM
-    fmt: compact
-    tone: sign
-    expand: 1                     # only the books, closed; 2 opens one level; all opens every level
-```
-
-You should see one row per book with its subtotal (`BOOK-RATES-1 6.0bn`), each opening to its families (`swap 6.2bn`, `linear −161.2m`…), across `EUR`,
-`USD`, `CHF`, `GBP`, `JPY` and `CAD`. Group rows aggregate the underlying rows (an `avg` subtotal is the average of all its rows). Heat shading is not
-drawn on nested pivots. A number, an empty list or a list of non-names as `by` is `DRS-2029`.
-
-**A tree table.** When each row *carries its own children*, say which with `children`, an expression over the row:
-
-```yaml
-  - id: flows
-    kind: table
-    title: Floating leg, cash flows opening to their resets
-    rows: $.LEGS[1].CASH_FLOWS
-    children: "@.RESETS"          # the rows nested under this one, to any depth (limit 12)
-    expand: 1
-    columns:
-      - { label: Flow / reset, bind: "nonblank(@.FLOW_ID, @.RESET_ID)" }
-      - { label: Start, bind: "@.START_DATE", fmt: date }
-      - { label: Payment / reset date, bind: "nonblank(@.PAYMENT_DATE, @.RESET_DATE)", fmt: date }
-      - { label: Rate, bind: "@.RATE", fmt: pct4 }
-```
-
-You should see the 28 floating periods (`20000001008 · 2025-07-28 · 2025-09-29 · 3.5377%` first), each with a ▸ that opens its fixings (`R-1 ·
-2025-07-28 · 2025-07-28 · 3.5376%` …). Child rows are another kind of row, so a column reads whichever field is there with `nonblank`. `total: true` sums
-only the rows **without** children. A tree table is not sorted, paged or given per-column filters, and its filter keeps the ancestors of matching rows.
-`ladder` takes the same two keys. When each level is a different thing with its own columns, use **`levels`** instead (one level at a time with a
-breadcrumb: [section 9.6](#96-drill-down-leg--cash-flow--resets),
-[levels](RACHANA_REFERENCE.md#levels-drill-down-level-by-level)).
-
-A pivot **aggregates** rows by fields you name; a tree table or `levels` **shows** a hierarchy the document already has. Runnable versions:
-[pivot-row-groups](examples/pivot-row-groups.md) and [tree-table](examples/tree-table.md). Do not confuse the **`pivot` panel kind** with the **`pivot:`
-option** that gives a table a user-driven Pivot.
+Two opt-in features let rows hold rows: a **pivot** with a `by` list (nested groups with subtotals) and a **tree table** (`children`); `expand` sets how many levels open first. How to write them, with an example of each: [Rachana, Panel kinds, Row groups](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#row-groups-pivot-by-lists-and-tree-tables). In Drishti, when each level is a different thing use `levels`
+([section 9.6](#96-drill-down-leg--cash-flow--resets), [levels](RACHANA_REFERENCE.md#levels-drill-down-level-by-level)); runnable versions: [pivot-row-groups](examples/README.md#pivot-row-groups) and [tree-table](examples/README.md#tree-table). Do not confuse the **`pivot` panel kind** with the **`pivot:` option** that gives a table a user-driven Pivot.
 
 ## 22. Dates, live data, imperfect data and controls
 
@@ -3823,16 +3693,7 @@ panels:
     value: MTM
 ```
 
-1. A control is `{ id, kind, label, ... }`. `options` is a list or an expression (`"$.TRADES[*].PRODUCT"`: every trade's product, without repeats);
-   `placement: header` with `panel: trades` puts it in that panel's header (the default, `strip`, puts it under the title; `side` is a bar at the side).
-2. A panel reads the value with `where:` (a condition on each row), `limit:`, `rows:` or a `${ctl.id}` in its `title`. The server computes the rows with
-   the value. `oneOf(@.PRODUCT, ctl.product)` treats an empty multi-select as "everything"; `within(@.EVENT_DATE, ctl.when)` tests a date or number against
-   a `from..to` range.
-3. A dropdown value is text, a multi-select a list, a one-handle `slider` a **number** (empty when the slider has no scale; with `range: true` it is
-   `from..to` text), a `top-n` a whole number.
-4. Using a control you did not declare is `DRS-2036`; a default that does not fit the kind is `DRS-2039`.
-5. `on-select: { by: asset, field: ASSET, filter: [trades] }` on a `table`, `ladder` or `hbar` lets a click set a control: click the *Rates* bar and the
-   member trades show only rates.
+Declaring controls, reading `ctl.<id>` in `where`, `limit`, `rows` and `title`, the value of each kind and `on-select` (a click on a bar or row sets a control): [Rachana, Writing Sutras, 10. Controls](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#10-controls-letting-the-reader-choose). A reference to a control the Sutra does not declare is `DRS-2036`; a default that does not fit the kind is `DRS-2039`.
 
 **Try it.** Open `NSET NS-MERIDIAN-RE-NY <GO>`: the table reads *Member trades (343 of 343)* with a net of `+99,704,064`; choose *Asset class Rates* and set
 the slider to 250m, and the title gains `· Rates`. From the command line, with the values in the address:
@@ -3850,7 +3711,7 @@ button reproduces the screen; `remember: user` keeps the last choice in the brow
 a kind (`FORM trading <GO>`) is not a Sutra feature: it is the pack's `form:` section ([section 4.6](#46-form-the-search-form-of-a-kind)).
 
 **When a Sutra is not enough.** A Sutra is a fixed layout everyone sees. For a one-off question about the screen in front of you, `Alt+C` opens Calc,
-Python in the browser with the view's document and tables loaded ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)); for questions across many
+Python in the browser with the view's document and tables loaded ([USER_GUIDE.md](bi/CALC.md)); for questions across many
 entities, use BI ([NOTEBOOK_AND_PYTHON.md](bi/NOTEBOOK_AND_PYTHON.md)).
 
 ## 23. Sutra and inference together
@@ -3865,7 +3726,7 @@ A Sutra says what matters; inference fills in only what it leaves out:
 Inference never adds to columns you wrote: list one column and the panel shows exactly what you listed. *How this view was built* says
 `Sutra irs-fixfloat v1 + inference` whenever inference helped, and an *inferred* tag on a panel says why; a document no Sutra matches is laid out entirely
 by inference ([the rules and their scoring](RACHANA_REFERENCE.md#sutra-and-inference-together)). To start a Sutra from what inference made, use the
-workbench's **auto-design** ([Auto-design](RACHANA_REFERENCE.md#7-auto-design-and-its-alternatives)) or `sutra design` and `sutra gen`
+workbench's **auto-design** ([Auto-design](RACHANA_REFERENCE.md#37-auto-design-and-its-alternatives)) or `sutra design` and `sutra gen`
 ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 ![The draft inference makes of a bond trade, beside a short Sutra on the same document](img/sutras/s05-inference-vs-sutra.jpg)
@@ -3911,7 +3772,7 @@ missing field. A shipped pack also keeps `tests/help-coverage.txt`, a ratchet th
 (`--tail 2` keeps the last two lines of each step):
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack check modules/banking/packs/market-risk --tail 2
+$ python3 tools/drishti.py pack check modules/banking/packs/market-risk --tail 2
 == market-risk: sutra lint: exit 0
 ok      modules/banking/packs/market-risk/sutras/market-risk/trade-valuation.v1.sutra.yaml
 ok      modules/banking/packs/market-risk/sutras/market-risk/var.v1.sutra.yaml
@@ -3944,19 +3805,19 @@ same guarantees from `pack check` in its CI and the checklist on a scratch serve
 You can write every Sutra in this guide in a text editor. The **Build workbench** (**Create → New screen**) is the same language with the engine in the
 loop: the screen you see is the real one, every edit is an operation the server applies to the Sutra text (your comments and key order are kept), and
 the checks run as you type. Its full manual is [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench); a guided build is
-[tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench-and-on-a-live-page).
+[tutorial 19, Part B](../tutorials/19-build-a-pack-and-a-screen.md#part-b--design-a-screen-in-the-workbench).
 
 | You are doing | In the workbench | Section |
 |---|---|---|
-| starting from data, a schema, an example or an existing Sutra | **Create → New screen** | [§1](RACHANA_REFERENCE.md#1-start-bring-data) |
-| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 19 (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer) |
-| writing the YAML by hand, with completion and a check as you type | the **YAML** tab (or **Split**, with the screen beside it) | [§9](RACHANA_REFERENCE.md#9-the-yaml-tab-the-split-view-and-the-summary) |
-| seeing what is wrong, with the code and the line | the **Problems** tab | [§10](RACHANA_REFERENCE.md#10-problems) |
-| checking every panel against every sample | the **Tests** tab: ok / empty / error / no access | [§11](RACHANA_REFERENCE.md#11-tests-as-you-type) |
-| trying a layout on a document that is not a sample | **Preview with a file…** | [§12](RACHANA_REFERENCE.md#12-preview-with-a-file) |
-| reading what the Sutra applies to, its strip and panels | the **Summary** tab | [§9](RACHANA_REFERENCE.md#9-the-yaml-tab-the-split-view-and-the-summary) |
-| comparing with the live version, rebasing when it moved | **Versions** | [§21](RACHANA_REFERENCE.md#21-diff-and-versions) |
-| going live | **Submit for review**, then an approver | [§22](RACHANA_REFERENCE.md#22-saving-and-proposing) |
+| starting from data, a schema, an example or an existing Sutra | **Create → New screen** | [§1](RACHANA_REFERENCE.md#31-start-bring-data) |
+| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#331-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 19 (the Sutra designer)](../tutorials/19-build-a-pack-and-a-screen.md#on-a-live-page-the-sutra-designer) |
+| writing the YAML by hand, with completion and a check as you type | the **YAML** tab (or **Split**, with the screen beside it) | [§9](RACHANA_REFERENCE.md#39-the-yaml-tab-the-split-view-and-the-summary) |
+| seeing what is wrong, with the code and the line | the **Problems** tab | [§10](RACHANA_REFERENCE.md#310-problems) |
+| checking every panel against every sample | the **Tests** tab: ok / empty / error / no access | [§11](RACHANA_REFERENCE.md#311-tests-as-you-type) |
+| trying a layout on a document that is not a sample | **Preview with a file…** | [§12](RACHANA_REFERENCE.md#312-preview-with-a-file) |
+| reading what the Sutra applies to, its strip and panels | the **Summary** tab | [§9](RACHANA_REFERENCE.md#39-the-yaml-tab-the-split-view-and-the-summary) |
+| comparing with the live version, rebasing when it moved | **Versions** | [§21](RACHANA_REFERENCE.md#321-diff-and-versions) |
+| going live | **Submit for review**, then an approver | [§22](RACHANA_REFERENCE.md#322-saving-and-proposing) |
 
 ![The Tests tab: every panel against every sample; an empty cell is a field the sample lacks](img/sutras/s04-tests-tab.jpg)
 
@@ -3969,7 +3830,7 @@ your *samples* render, not that every real document will: keep a thin sample.
 ### 25.1 Pack fragments from the Build workbench
 
 Design a Sutra in the workbench (from JSON samples, a JSON Schema, or an existing Sutra) and **ship** it as a pack fragment: *Ship → Export as a pack
-fragment* downloads a zip you can put in `config/packs/` ([Pack fragments: export and import](RACHANA_REFERENCE.md#24-pack-fragments-export-and-import)).
+fragment* downloads a zip you can put in `config/packs/` ([Pack fragments: export and import](RACHANA_REFERENCE.md#324-pack-fragments-export-and-import)).
 An export of the help-desk ticket Sutra:
 
 ![The Ship menu of the workbench: export as a pack fragment, import a pack, read-only link](img/packs/06-workbench-export.jpg)
@@ -4101,7 +3962,7 @@ A panel's `form:` lets people change the records it shows, or start new ones, wi
 
 Saving keeps a **draft** for each person, on the server. A form whose Sutra has `save:` also **submits** the draft as a change (a correction kept beside
 the source, an owned record, or an amendment sent through a connector, after approval where the policy asks): drafts, submitting, approval, Admin →
-Edits and switching write-back on are in [APPROVALS_GUIDE.md](APPROVALS_GUIDE.md). This section is the author's side: declaring the form. The design is
+Edits and switching write-back on are in [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run). This section is the author's side: declaring the form. The design is
 [Forms and data entry](RACHANA_REFERENCE.md#10-forms-and-data-entry); every key is in [Forms](RACHANA_REFERENCE.md#forms-form-on-a-panel).
 
 ### 28.1 A form beside the table
@@ -4180,9 +4041,7 @@ The same form has four fields of the richer kinds:
 
 ### 28.3 Editing in the cells
 
-A credit limit's buckets (`/v/credit-limit/LIM-ALDERSHOT`) are edited straight in the table:
-
-![Edited cells: the changed limits tinted with "was", a value below what is used in red with the reason under the row](img/designer/form-cells.jpg)
+A credit limit's buckets (`/v/credit-limit/LIM-ALDERSHOT`) are edited straight in the table; what the user sees and the keys are [USER_GUIDE.md › Editing in the cells](USER_GUIDE.md#editing-in-the-cells). The panel declares it:
 
 ```yaml
   - id: buckets
@@ -4204,10 +4063,7 @@ A credit limit's buckets (`/v/credit-limit/LIM-ALDERSHOT`) are edited straight i
         - { rule: "limit <= used * 3", severity: warn, fields: [limit], message: "More than three times what's used: the credit committee reviews it." }
 ```
 
-A field edits the column whose `bind` names the same record field (`LIMIT` edits the column bound to `@.LIMIT`). **Enter** (or F2, or a click) opens a
-cell and **Enter** keeps the value in the draft; **Esc** undoes it; **Tab** keeps it and moves to the next editable cell (Shift+Tab back). A changed cell
-is tinted and says "was 337,000,000"; a bad one has a red border and the reason under its row. The bar above the table counts "2 changes not saved",
-with **Undo all** and **Review 2 changes** (which lists every change and saves the draft; it says "Fix 1 problem first" while one is wrong).
+A field edits the column whose `bind` names the same record field (`LIMIT` edits the column bound to `@.LIMIT`). A `readonly` field has a `reason`, a rule with `severity: warn` warns without blocking, and the draft, its tint, its review bar and its keys are the console's (USER_GUIDE, above).
 
 ### 28.4 New records in a guided drawer
 
@@ -4240,11 +4096,7 @@ masked is not offered, and a carried value that is masked makes the hint say *Hi
 
 ### 28.5 The expressions
 
-Rules and hints use a small language, the same in the browser (instantly) and on the server (the authority): the fields by id, a lookup's carried values
-(`counterparty.LIMIT`), numbers (`30_000_000` and `1e6` too), `'text'`, `true`, `false`, `null`, `today`; `+ - * /`; `== != < <= > >=` (numbers as
-numbers, anything else as text, so ISO dates compare); `and or not`; brackets; `empty(x)`, `len(x)`, `abs(x)`, `min(a, b)`, `max(a, b)`. An empty value
-makes a sum or a comparison empty, and a rule that comes out empty holds: `required` says what is missing, not every rule. A rule that reads a lookup's
-carried value is checked in the browser only; the server checks it again when it writes.
+Rules and hints use a small expression language, the same in the browser and on the server: [Rachana, Writing Sutras, 11. Forms, the rule language](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#11-forms-letting-people-edit-records). A rule that reads a lookup's carried value is checked in the browser only; the server checks it again when it writes.
 
 ### 28.6 Checking a form
 
@@ -4264,7 +4116,7 @@ is not a time zone, a `default` expression that reads a missing field. The JSON 
   trades the form above, with the lookup and the limit hint. The notional is `money`: in the trades' own currency when they carry one, else in the
   book's currency, else USD.
 
-See [The Sutra designer](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid).
+See [The Sutra designer](RACHANA_REFERENCE.md#331-the-sutra-designer-customize-describe-outline-and-grid).
 
 ## 29. Around the pack: inheritance, versions, the registry, live reload, deploy
 
@@ -4298,7 +4150,7 @@ installs only what a publisher it trusts signed. `drishti.py pack keygen|publish
 Check a registry from the command line:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack verify --registry /srv/drishti-registry --publisher acme \
+python3 tools/drishti.py pack verify --registry /srv/drishti-registry --publisher acme \
     --public-key MCowBQYDK2VwAyEAcYvYL5cL9D3XYx6w49WZ4oAnDrhjAfRT95Twju2ug+A=
 ```
 
@@ -4502,7 +4354,7 @@ curl -s $B/sutras/problems                                  # {}
 curl -s $B/admin/health | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["overrides"]); print([(p["name"], p["status"], p["version"]) for p in d["packs"] if p["name"]=="helpdesk"])'
 curl -s $B/packs/HELP/overview | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["name"], d["code"], [(k["mnemonic"], k["count"]) for k in d["kinds"]])'
 curl -s $B/sources | python3 -c 'import json,sys; [print(s["name"], s["kinds"], s["health"]) for s in json.load(sys.stdin)["sources"] if s["name"] in ("helpdesk-store", "agent-totals")]'
-drishti-console/.venv/bin/python tools/drishti.py pack check config/packs/helpdesk --tail 1
+python3 tools/drishti.py pack check config/packs/helpdesk --tail 1
 ```
 
 The output for the finished help-desk pack, with the file connector of step 16 on:
@@ -4642,7 +4494,7 @@ say (the `history:` sections, the trading pack's `ingest:`) is kept in `tools/pa
 A pack with many kinds and many consistent documents is better **generated**: you describe kinds and documents in a short Python script, and the common
 pack builder checks them and writes the manifest, Sutras, samples, guide, help card and (optionally) a Delta Lake. This walk-through generates a small
 library pack with two kinds (book titles and authors); it was run as written and printed the lines shown. You need the repository and Python 3 with
-`pyyaml` (the console's virtual environment has it). For a handful of kinds, writing the pack by hand is simpler, and for existing data `pack new` is quicker.
+`pyyaml` (the Python you run Drishti with has it). For a handful of kinds, writing the pack by hand is simpler, and for existing data `pack new` is quicker.
 
 **Step 1. The script.** Create `tools/packgen/library/make.py` (with the copyright header, or run `python3 tools/license_headers.py --fix`):
 
@@ -4786,7 +4638,7 @@ python3 tools/packgen/library/make.py --check
 DRISHTI_PACKS_OUT=/tmp/review python3 tools/packgen/library/make.py
 
 # also build ten business days of history in the Delta Lake, for the date picker
-drishti-console/.venv/bin/python tools/packgen/library/make.py --lake data/delta/demo
+python3 tools/packgen/library/make.py --lake data/delta/demo
 ```
 
 **Step 6. What you get.**
@@ -4918,8 +4770,8 @@ this table is the map. Seven packs are on by default; the others are turned on b
 | `us-equities` | `USEQS` | — | `USEQ` `IDX` `SIC` `EDGAR` `FILING` `FACT` `PXH` (off by default; prices live only and internal) | `USEQ AAPL`, `IDX SP500` | [us-equities](../../modules/capital-markets/packs/us-equities/README.md) |
 | `gleif` | `GLEIF` | — | `LEI` `LEIG` `LEIR` `LEIC` `LEIM` (off by default; with `us-equities` on, a company and its LEI link both ways) | `LEI 8I5DZWZKVSZI1NUHU748`, `LEIG ALL` | [gleif](../../config/packs/core/gleif/README.md) |
 | `funds` | `FUNDS` | — | `FUND` `HELD` `TRACK` (off by default, after `us-equities`; [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) | `FUND QQQ`, `HELD AAPL` | [funds](../../modules/capital-markets/packs/funds/README.md) |
-| `compute-demo` | `CMPD` | — | `PBOOK` `PSTRIP` `PSUM` `PSUMJ` (a sample pack for reactive connectors; [tutorial 19, Part C](../tutorials/19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)) | `PSUM …` | [compute-demo](../../config/packs/core/compute-demo/README.md) |
-| genomics showcase (genomics module) | `GENOMICS` `PROTENG` | — | `genomics-showcase` and `protein-engineering`: the showcase's synthetic cohort and protein campaign (off by default, read from the demo lake; [GENOMICS_SHOWCASE.md](../architecture/GENOMICS_SHOWCASE.md)) | `GWAS RESPONSE`, `PROTEIN HLXK7` | [genomics-showcase](../../modules/genomics/packs/genomics-showcase/README.md) |
+| `compute-demo` | `CMPD` | — | `PBOOK` `PSTRIP` `PSUM` `PSUMJ` (a sample pack for reactive connectors; [tutorial 19, Part C](../tutorials/25-computed-panels.md)) | `PSUM …` | [compute-demo](../../config/packs/core/compute-demo/README.md) |
+| genomics showcase (genomics module) | `GENOMICS` `PROTENG` | — | `genomics-showcase` and `protein-engineering`: the showcase's synthetic cohort and protein campaign (off by default, read from the demo lake; [GENOMICS_SHOWCASE.md](../../modules/genomics/docs/guide.md)) | `GWAS RESPONSE`, `PROTEIN HLXK7` | [genomics-showcase](../../modules/genomics/packs/genomics-showcase/README.md) |
 | public sector (economy module) | `WDEV` `CBNK` `STCAN` `OECDP` `ONEWS` `GDLT` | — | world development, central banks, national statistics, OECD, official news, GDELT events ([WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) | | [world-development](../../modules/economy/packs/world-development/README.md), [central-banks](../../modules/economy/packs/central-banks/README.md), [national-statistics](../../modules/economy/packs/national-statistics/README.md), [oecd](../../modules/economy/packs/oecd/README.md), [official-news](../../modules/economy/packs/official-news/README.md), [gdelt-events](../../modules/economy/packs/gdelt-events/README.md) |
 
 **Links between packs.** A `core` counterparty carries its country of risk and two link fields that open other packs when they are on: `ECONOMY`
@@ -5070,7 +4922,7 @@ The committed test data (`data/testdata/`, sixty business days of every dataset,
 (or the IDE run configuration **Drishti: build demo lakes**):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake demo
+python3 tools/drishti.py lake demo
 ```
 
 ```text
@@ -5143,12 +4995,7 @@ On a phone a page does not get every panel. Each panel has a **phone tier**, set
 
 ### 32.1 Phone tiers: must, glance, more, desk
 
-| Tier | On a phone | Loaded | Live | Typical panels |
-|---|---|---|---|---|
-| **must** | in full, at the top in the phone order | with the page | yes | the header, key figures, status and breaches, the one table the page is about |
-| **glance** | a compact form with *Show all* | with the page, the compact data only | yes, staying compact | ranked bars, a history chart as a sparkline, a long table as its first rows |
-| **more** | a row under *More on this page*, loaded in place when tapped (bound as the viewer, with the page's controls, Sutra and date) | on tap | once loaded | contributions, cash-flow ladders, provenance, checks, secondary tables, notes |
-| **desk** | named under *On desktop*, with the page's link to copy | never on a phone | no | designers, wide pivot grids, multi-chart dashboards, wide editing forms |
+The four tiers (`must`, `glance`, `more`, `desk`), the compact options and the kind defaults: [Rachana, Writing Sutras, Phone tiers](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#phone-tiers).
 
 - A page always has a **must** panel: with none configured, its first panel is must.
 - A **tablet** (640 to 1000 px) keeps the page's layout less the desk panels, which wait under *More on this page*. A **desktop** is unchanged, and *Show
@@ -5413,7 +5260,7 @@ drishti:
 ```
 
 A person with this role (and no other that opens trades) sees only SwapOne's trades in `TRD`, search and the blotter; a trade of another system is
-*not found*. Aggregates (VaR, BI totals) keep their own scope model ([ACCESS_MODEL.md section 10](../architecture/ACCESS_MODEL.md#10-row-rules)).
+*not found*. Aggregates (VaR, BI totals) keep their own scope model ([ACCESS_MODEL.md section 19.10](../architecture/KERNEL_AND_MODULES.md#1910-row-rules)).
 
 You should see, signed in as that person, only `SW1-…` ids in `TRD`, and *not found* for a trade of another system.
 
@@ -5434,4 +5281,4 @@ You should see, while it is off, no `SW1-…` trade in `TRD` and no **SWAPONE fi
 A module of content only: a connector, a field map, an inbox rule and a section of the trade page, written from your file by the Pack designer and
 deployed like any module. Another system is the same steps with its own file. The reference is
 [BUILD_GUIDE.md section 8.9](../guides/BUILD_GUIDE.md#89-a-source-for-an-existing-kind); the layouts of the shared and the own table are in the
-[trading module's guide](../guides/LIVE_RESULTS_GUIDE.md).
+[trading module's guide](USER_GUIDE.md).

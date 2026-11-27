@@ -36,7 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The access model's decisions over the YAML store (ACCESS_MODEL.md sections 1 to 4): module, licence, lens, permission. */
+/** The access model's decisions over the YAML store (KERNEL_AND_MODULES.md sections 19.1 to 19.4): module, licence, lens, permission. */
 class AccessRegistryTest {
 
     @TempDir

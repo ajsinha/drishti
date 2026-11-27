@@ -274,7 +274,7 @@ public final class BindingService {
                 Path f = p.resolve("contracts/" + k + ".contract.yaml");
                 if (Files.isRegularFile(f)) {
                     try {
-                        return YAML.readValue(f.toFile(), LinkedHashMap.class);
+                        return YAML.readValue(java.nio.file.Files.readAllBytes(f), LinkedHashMap.class);
                     } catch (IOException e) {
                         return Map.of();
                     }
@@ -474,7 +474,7 @@ public final class BindingService {
             if (!Files.isRegularFile(proposalsFile)) {
                 return List.of();
             }
-            return JSON.readValue(proposalsFile.toFile(), new TypeReference<List<Proposal>>() {});
+            return JSON.readValue(java.nio.file.Files.readAllBytes(proposalsFile), new TypeReference<List<Proposal>>() {});
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -159,7 +159,7 @@ def static_files(kind: str, tests: Path | None = None) -> list[str]:
     if kind == "console":
         files = sorted((tests or ROOT / "drishti-console" / "tests").glob("test_*.py"))
         return [os.path.relpath(p, ROOT) for p in files if STATIC_ANY.search(_text(p))]
-    skip = {".venv", "cache", "node_modules", "tests"}
+    skip = {".venv", "cache", "node_modules", "tests"}      # IGNORE patterns: a user's own virtual environment is never scanned
     files = sorted(p for p in (ROOT / "tools").rglob("test_*.py") if not skip & set(p.relative_to(ROOT / "tools").parts[:-1]))
     return [os.path.relpath(p, ROOT) for p in files if STATIC_MODULE.search(_text(p))]
 

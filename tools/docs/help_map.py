@@ -17,8 +17,8 @@
 ("**N pages in M sections**") and the table "The help centre, section by section", one row per section in Help's order naming every page
 everyone may see (a linked document, or the title of a console guide). drishti-console/tests/test_docs_help_map.py checks the result.
 
-    drishti-console/.venv/bin/python tools/docs/help_map.py           # rewrite the map
-    drishti-console/.venv/bin/python tools/docs/help_map.py --check   # fail when the map differs"""
+    python3 tools/docs/help_map.py           # rewrite the map
+    python3 tools/docs/help_map.py --check   # fail when the map differs"""
 from __future__ import annotations
 
 import re
@@ -72,7 +72,7 @@ def main() -> int:
     new = render(old)
     if "--check" in sys.argv:
         if new != old:
-            print("docs/README.md's help-centre map is stale: drishti-console/.venv/bin/python tools/docs/help_map.py")
+            print("docs/README.md's help-centre map is stale: python3 tools/docs/help_map.py")
             return 1
         print("docs/README.md's help-centre map is current")
         return 0

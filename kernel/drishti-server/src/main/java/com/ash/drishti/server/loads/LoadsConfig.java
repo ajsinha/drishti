@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.DateTimeException;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -166,7 +165,7 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
                 return Map.of();
             }
             try {
-                Map<String, Object> m = yaml.readValue(f.toFile(), new TypeReference<Map<String, Object>>() {});
+                Map<String, Object> m = yaml.readValue(java.nio.file.Files.readAllBytes(f), new TypeReference<Map<String, Object>>() {});
                 return m == null ? Map.of() : m;
             } catch (IOException e) {
                 throw new UncheckedIOException("cannot read " + f, e);
@@ -285,7 +284,7 @@ public record LoadsConfig(List<String> notifyRoles, List<String> notifyUsers, bo
                 Files.createDirectories(f.getParent());
                 Path tmp = com.ash.drishti.common.TempFiles.createFile(f.getParent(), pack + "-", ".tmp");
                 Files.writeString(tmp, HEADER + yaml.writeValueAsString(doc));
-                Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, f);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra designer (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31), behind ``ui.designer`` (off by default): one shell with modes over the SAME Sutra YAML, a
+"""The Sutra designer (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 3.31), behind ``ui.designer`` (off by default): one shell with modes over the SAME Sutra YAML, a
 user's own Design. **Customize** edits the page in place (a scratch draft Design while customising; Done keeps it as a Design and sets
 the user's flag "my version of this page" for the kind, ``/me/pages`` on the server, which then draws that page for that user only:
 ``?design=<id>``); **Describe** builds a screen from a command-style line read by a deterministic parser. Thin: the server keeps the Designs, checks the Sutra and draws every view as the viewer."""

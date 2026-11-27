@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * A server started from the Drishti Finance distribution file alone (docs/architecture/DISTRIBUTIONS.md): its brand, its packs (market
+ * A server started from the Drishti Finance distribution file alone (docs/architecture/KERNEL_AND_MODULES.md): its brand, its packs (market
  * data among them), no VaR, exposure or trading command in FUNC or the type-ahead (what the AI reads), a VaR command answering "not in
  * Drishti Finance", the VaR and exposure engines off, and Health's distribution card.
  */

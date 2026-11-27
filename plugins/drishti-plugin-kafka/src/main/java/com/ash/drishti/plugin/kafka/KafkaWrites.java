@@ -48,7 +48,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 /**
- * The Kafka plugin's {@code writes:} commands (docs/guides/APPROVALS_GUIDE.md section 10): a change approved in Drishti is written back as
+ * The Kafka plugin's {@code writes:} commands (docs/guides/ADMIN_GUIDE.md section 10): a change approved in Drishti is written back as
  * one Kafka message, sent by the lane owner's outbox, one at a time per record.
  * <pre>
  * writes:

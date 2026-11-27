@@ -45,7 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Drishti's Arrow Flight producer (docs/guides/FLIGHT_GUIDE.md). Read only (decided 3):
+ * Drishti's Arrow Flight producer (docs/guides/INTEGRATION_GUIDE.md). Read only (decided 3):
  * <ul>
  *   <li>{@code GetFlightInfo} / {@code GetSchema}: a descriptor whose command is a {@link FlightRequest}; the answer lists one endpoint per
  *       part with the real addresses of the nodes that hold it, preferred first (Q5);</li>
@@ -80,7 +80,7 @@ public final class DrishtiFlightProducer extends NoOpFlightProducer {
         this.clock = clock;
     }
 
-    /** Flight SQL on the same port (docs/guides/FLIGHT_GUIDE.md, Flight SQL): its commands and actions go to {@code sql}. */
+    /** Flight SQL on the same port (docs/guides/INTEGRATION_GUIDE.md, Flight SQL): its commands and actions go to {@code sql}. */
     public DrishtiFlightProducer sql(DrishtiSqlProducer s) {
         this.sql = s;
         return this;

@@ -17,7 +17,7 @@
 
 # Data contracts of the market-risk pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/banking/packs/market-risk/guides/market-risk.md](../../../modules/banking/packs/market-risk/guides/market-risk.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/banking/packs/market-risk/README.md](../../../modules/banking/packs/market-risk/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -58,7 +58,6 @@ A named historical or hypothetical shock set.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `risk.stress-scenario`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-risk/stress-scenario |
-| Worked example | [market-risk/stress-scenario](../samples/market-risk.md#stress-scenario) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -97,6 +96,32 @@ A named historical or hypothetical shock set.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - no unit stated for the amounts SHOCKS[].SHOCK (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-risk-stress-scenario"></a>
+**Example: `data/testdata/market-risk/stress-scenario`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SCENARIO_ID": "SCN-COVID2020",
+  "NAME": "COVID-19 March 2020",
+  "TYPE": "Historical",
+  "SEVERITY": "Severe",
+  "SHOCKS": [
+    {
+      "FACTOR": "Equities",
+      "SHOCK": -0.34
+    },
+    {
+      "FACTOR": "Credit spreads (IG)",
+      "SHOCK": 1.35
+    },
+    "… 3 more elements of the same shape"
+  ],
+  "HORIZON": "10 days"
+}
+```
+
 ## STR: Stress result (`stress-result`)
 
 P&L of a desk under a scenario, by book.
@@ -114,7 +139,6 @@ P&L of a desk under a scenario, by book.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `risk.stress-result`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-risk/stress-result |
-| Worked example | [market-risk/stress-result](../samples/market-risk.md#stress-result) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -158,6 +182,36 @@ P&L of a desk under a scenario, by book.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: SCENARIO_NAME: confirm they are closed lists.
 
+<a id="example-market-risk-stress-result"></a>
+**Example: `data/testdata/market-risk/stress-result`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "RESULT_ID": "STR-COVID2020-COMM",
+  "SCENARIO_NAME": "COVID-19 March 2020",
+  "PNL": -2792342695,
+  "LIMIT": 2853100000.0,
+  "BY_BOOK": [
+    {
+      "BOOK": "BOOK-COMM-1",
+      "PNL": -1042637979
+    },
+    {
+      "BOOK": "BOOK-COMM-2",
+      "PNL": -1156508787
+    },
+    {
+      "BOOK": "BOOK-COMM-3",
+      "PNL": -593195929
+    }
+  ],
+  "SCENARIO": "SCN-COVID2020",
+  "DESK": "DESK-COMM"
+}
+```
+
 ## FRTB: FRTB sensitivities (`frtb-sensitivity`)
 
 Delta, vega and curvature by risk class and bucket (SBM).
@@ -175,7 +229,6 @@ Delta, vega and curvature by risk class and bucket (SBM).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `risk.frtb-sensitivity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-risk/frtb-sensitivity |
-| Worked example | [market-risk/frtb-sensitivity](../samples/market-risk.md#frtb-sensitivity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -232,6 +285,44 @@ Delta, vega and curvature by risk class and bucket (SBM).
 - enum values inferred from the data, not from a glossary: SENSITIVITIES[].RISK_CLASS, SENSITIVITIES[].BUCKET, BY_CLASS[].RISK_CLASS: confirm they are closed lists.
 - SENSITIVITIES[] are per-bucket inputs: confirm they become the per-trade sensitivity table (FRTB.md) and are not kept on this record.
 
+<a id="example-market-risk-frtb-sensitivity"></a>
+**Example: `data/testdata/market-risk/frtb-sensitivity`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "RESULT_ID": "FRTB-COMM-1",
+  "BOOK": "BOOK-COMM-1",
+  "DELTA_CHARGE": 483955624,
+  "VEGA_CHARGE": 132239986,
+  "CURVATURE_CHARGE": 57461534,
+  "TOTAL": 673657144,
+  "SENSITIVITIES": [
+    {
+      "RISK_CLASS": "Commodity",
+      "BUCKET": "1",
+      "MEASURE": "Delta",
+      "VALUE": -11282673
+    },
+    {
+      "RISK_CLASS": "Commodity",
+      "BUCKET": "1",
+      "MEASURE": "Vega",
+      "VALUE": -2508590
+    },
+    "… 4 more elements of the same shape"
+  ],
+  "BY_CLASS": [
+    {
+      "RISK_CLASS": "Commodity",
+      "CHARGE": 673657144
+    }
+  ],
+  "APPROACH": "FRTB standardised (SBM)"
+}
+```
+
 ## PNL: P&L explain (`pnl-explain`)
 
 Daily P&L attributed to risk factors, new trades and residual.
@@ -249,7 +340,6 @@ Daily P&L attributed to risk factors, new trades and residual.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `risk.pnl-explain`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-risk/pnl-explain |
-| Worked example | [market-risk/pnl-explain](../samples/market-risk.md#pnl-explain) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -300,6 +390,44 @@ Daily P&L attributed to risk factors, new trades and residual.
 - enum values inferred from the data, not from a glossary: ATTRIBUTION[].FACTOR: confirm they are closed lists.
 - ACTUAL is the day-over-day MtM change: confirm it is computed from trade valuations, not delivered.
 
+<a id="example-market-risk-pnl-explain"></a>
+**Example: `data/testdata/market-risk/pnl-explain`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "RESULT_ID": "PNL-COMM-1",
+  "DATE": "2026-09-30",
+  "ACTUAL": -3815115,
+  "EXPLAINED": -3930641,
+  "UNEXPLAINED": 115526,
+  "ATTRIBUTION": [
+    {
+      "FACTOR": "Rates delta",
+      "PNL": -1650869
+    },
+    {
+      "FACTOR": "FX delta",
+      "PNL": -471677
+    },
+    "… 4 more elements of the same shape"
+  ],
+  "EXPLAIN_STEPS": [
+    {
+      "STEP": "Carry",
+      "PNL": -550290
+    },
+    {
+      "STEP": "Roll-down",
+      "PNL": -235838
+    },
+    "… 7 more elements of the same shape"
+  ],
+  "BOOK": "BOOK-COMM-1"
+}
+```
+
 ## TVAL: Trade valuation (`trade-valuation`)
 
 A trade's valuation from the risk engine, for every source system: MTM, one-day P&L and DV01, with what it values (source system, portfolio, desk, product).
@@ -318,7 +446,6 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 | Binding hint | lake table `risk.trade-valuation`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `VALUATION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `NETTING_SET`, `TRADER_ID`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`, `NOTIONAL`, `MTM`, `MTM_CURRENCY`, `PNL_1D`, `DV01`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE` |
 | Test data | data/testdata/market-risk/trade-valuation |
-| Worked example | [market-risk/trade-valuation](../samples/market-risk.md#trade-valuation) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -375,6 +502,37 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, BUY_SELL_CODE, TRADE_STATUS, CURRENCY: confirm they are closed lists.
 - number types decided by the field's name: NOTIONAL amount, MTM amount, PNL_1D amount, DV01 amount: confirm amount, rate or integer.
 - no unit stated for the amounts NOTIONAL, MTM, PNL_1D, DV01 (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+
+<a id="example-market-risk-trade-valuation"></a>
+**Example: `data/testdata/market-risk/trade-valuation`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "VALUATION_ID": "TVAL-1000001",
+  "TRADE_ID": "1000001",
+  "SOURCE_SYSTEM": "ENDUR",
+  "PRODUCT_TYPE": "ComSwap",
+  "PRODUCT_GROUP": "Commodity",
+  "PORTFOLIO": "BOOK-COMM-2",
+  "DESK": "DESK-COMM",
+  "COUNTERPARTY": "CP-HARBORPT",
+  "NETTING_SET": "NS-HARBORPT-NY",
+  "TRADER_ID": "TRDR-FROSSI",
+  "BUY_SELL_CODE": "S",
+  "TRADE_STATUS": "VALIDATED",
+  "CURRENCY": "USD",
+  "NOTIONAL": 167969743.2,
+  "MTM": 4041749,
+  "MTM_CURRENCY": "USD",
+  "PNL_1D": -277804,
+  "DV01": 0,
+  "TRADE_DATE": "2025-06-20",
+  "MATURITY_DATE": "2028-07-31",
+  "VALUATION_DATE": "2026-07-08"
+}
+```
 
 ## POS: Position (`position`)
 
@@ -557,7 +715,6 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `PV`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `REPORTING_CCY`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-vector |
-| Worked example | [market-risk/pnl-vector](../samples/market-risk.md#pnl-vector) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -644,6 +801,58 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, PRODUCT_GROUP, CURRENCY, DIRECTION: confirm they are closed lists.
 - no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-risk-pnl-vector"></a>
+**Example: `modules/banking/packs/market-risk/samples/pnl-vector.jsonl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "VALUE_TYPE": "PNL",
+  "GRAIN": "TRADE",
+  "TRADE_ID": "MX-20000274",
+  "CURRENCY": "USD",
+  "SOURCE_SYSTEM": "MUREX",
+  "VECTOR_ID": "PNL-MX-20000274-HS-509",
+  "SECURITY_ID": "SEC-WARRANT-USD-01",
+  "INSTRUMENT": "Equity warrant USD 2027-05",
+  "BUSINESS_DATE": "2026-09-30",
+  "SCENARIO_SET_ID": "HS-509",
+  "TRADE_VERSIONS": "v4",
+  "TRADE_STATUS": "AMENDED",
+  "MATURITY_DATE": "2027-05-26",
+  "LEGAL_ENTITY": "LE-LDN",
+  "DIVISION": "DIV-MARKETS",
+  "DESK": "DESK-EQD",
+  "TT_BOOK": "BOOK-EQD-2",
+  "LIMIT_LETTER": "LL-0008",
+  "PORTFOLIO": "BOOK-EQD-2",
+  "STRATEGY": "",
+  "PRODUCT_GROUP": "Equity",
+  "PRODUCT_TYPE": "WARRANT",
+  "COUNTERPARTY": "CP-SUMMIT",
+  "DIRECTION": "SHORT",
+  "QUANTITY": -179000000.0,
+  "TAGS": "",
+  "TRADE_CURRENCY": "USD",
+  "REPORTING_CCY": "USD",
+  "PV": 3143714,
+  "PNL": [
+    4169,
+    -3347,
+    -1306,
+    "… 506 more numbers (one per scenario, in the scenario set's SCENARIO_DATES order)"
+  ],
+  "STATUS": "ok",
+  "PRICER": "demo-factor-model",
+  "MODEL_VERSION": "demo-2",
+  "COMPUTED_AT": "2026-09-30T06:00:00Z",
+  "BATCH_ID": "B-2026-09-30-01",
+  "RESTATEMENT": 0,
+  "RUN_KIND": "FULL"
+}
+```
+
 ## SPV: Scenario PVs of a position or trade (one PV per scenario, its currency) (`scenario-pv`)
 
 A position's or trade's present value under each historical scenario and its base PV of the same run, in its own currency: the form of a position's or trade's scenario P&L a bank may send instead of a P&L vector (VAR_GUIDE.md section 15.9). The VaR engine turns it into the USD P&L when it loads the date: P&L(s) = PV(s) x FX(s) - PV(base) x FX(base).
@@ -663,7 +872,6 @@ A position's or trade's present value under each historical scenario and its bas
 | Columns | `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`, `SOURCE_SYSTEM`, `SECURITY_ID`, `INSTRUMENT`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `BASE_PV`, `VALUATION_DATE`, `BASE_VALUATION_DATE`, `TAGS`, `TRADE_STATUS`, `MATURITY_DATE`, `STATUS`, `SCENARIO_SET_ID`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `TRADE_IDS` |
 | Vectors | `SCENARIO_PV` |
 | Test data | data/testdata/market-risk/scenario-pv |
-| Worked example | [market-risk/scenario-pv](../samples/market-risk.md#scenario-pv) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -756,6 +964,61 @@ A position's or trade's present value under each historical scenario and its bas
 - enum values inferred from the data, not from a glossary: TRADE_STATUS, PRODUCT_TYPE, CURRENCY, DIRECTION: confirm they are closed lists.
 - no unit stated for the amounts QUANTITY (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-market-risk-scenario-pv"></a>
+**Example: `data/testdata/market-risk/scenario-pv`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "VALUE_TYPE": "PV",
+  "GRAIN": "POSITION",
+  "POSITION_ID": "POS-BOOK-SFT-1~CLY-3000272",
+  "CURRENCY": "USD",
+  "SOURCE_SYSTEM": "CALYPSO",
+  "SCENARIO_PV_ID": "SPV-POS-BOOK-SFT-1~CLY-3000272-HS-509",
+  "BUSINESS_DATE": "2026-09-30",
+  "TRADE_STATUS": "AMENDED",
+  "LEGAL_ENTITY": "LE-FRA",
+  "DIVISION": "DIV-TREASURY",
+  "DESK": "DESK-SFT",
+  "TT_BOOK": "BOOK-SFT-1",
+  "LIMIT_LETTER": "LL-0001",
+  "PORTFOLIO": "BOOK-SFT-1",
+  "STRATEGY": "",
+  "PRODUCT_GROUP": "Securities financing",
+  "PRODUCT_TYPE": "REVERSE_REPO",
+  "SCENARIO_SET_ID": "HS-509",
+  "SECURITY_ID": null,
+  "INSTRUMENT": "Reverse repo EUR 2026-10",
+  "MATURITY_DATE": "2026-10-07",
+  "COUNTERPARTY": "CP-CORAL",
+  "DIRECTION": "SHORT",
+  "QUANTITY": -221375000.0,
+  "TAGS": "",
+  "TRADE_CURRENCY": "EUR",
+  "BASE_PV": 4571816.0,
+  "VALUATION_DATE": "2026-09-30",
+  "BASE_VALUATION_DATE": "2026-09-30",
+  "SCENARIO_PV": [
+    4598788.0,
+    4535492.0,
+    4603246.0,
+    "… 506 more numbers (one per scenario, in the scenario set's SCENARIO_DATES order)"
+  ],
+  "STATUS": "ok",
+  "PRICER": "demo-factor-model",
+  "MODEL_VERSION": "demo-2",
+  "COMPUTED_AT": "2026-09-30T06:00:00Z",
+  "BATCH_ID": "B-2026-09-30-01",
+  "RESTATEMENT": 0,
+  "RUN_KIND": "FULL",
+  "TRADE_IDS": [
+    "CLY-3000272"
+  ]
+}
+```
+
 ## FXS: Scenario FX of a currency (one rate per scenario) (`fx-scenario`)
 
 A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot).
@@ -774,7 +1037,6 @@ A currency's rate against USD today and under each historical scenario, as the r
 | Binding hint | lake table `risk.fx-scenario`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `CURRENCY`, `RATE`, `SCENARIO_SET_ID` |
 | Test data | data/testdata/market-risk/fx-scenario |
-| Worked example | [market-risk/fx-scenario](../samples/market-risk.md#fx-scenario) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -810,6 +1072,30 @@ A currency's rate against USD today and under each historical scenario, as the r
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 
+<a id="example-market-risk-fx-scenario"></a>
+**Example: `data/testdata/market-risk/fx-scenario`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "FX_SCENARIO_ID": "FXS-AUD-HS-509",
+  "BUSINESS_DATE": "2026-09-30",
+  "SCENARIO_SET_ID": "HS-509",
+  "CURRENCY": "AUD",
+  "QUOTE": "USD per 1 AUD",
+  "RATE": 0.661,
+  "RATES": [
+    0.6636463229,
+    0.6635844635,
+    0.6613830351,
+    "… 506 more numbers (one per scenario, in the scenario set's SCENARIO_DATES order)"
+  ],
+  "SOURCE": "demo-factor-model",
+  "BATCH_ID": "B-2026-09-30-01"
+}
+```
+
 ## SSET: Scenario set (`scenario-set`)
 
 The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i]. A date has one normal set and may have one stress set (SET_TYPE STRESS, for stressed VaR: today's trades revalued under the moves of a 12-month stress period, VAR_GUIDE.md section 18.8), whose rows carry its own SCENARIO_SET_ID in the same tables.
@@ -827,7 +1113,6 @@ The historical scenario days of a business date, oldest first: index i of every 
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `risk.scenario-set`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/market-risk/scenario-set |
-| Worked example | [market-risk/scenario-set](../samples/market-risk.md#scenario-set) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -861,6 +1146,32 @@ The historical scenario days of a business date, oldest first: index i of every 
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 
+<a id="example-market-risk-scenario-set"></a>
+**Example: `data/testdata/market-risk/scenario-set`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SCENARIO_SET_ID": "HS-509",
+  "BUSINESS_DATE": "2026-09-30",
+  "SCENARIO_DATES": [
+    "2024-09-17",
+    "2024-09-18",
+    "2024-09-19",
+    "… 506 more dates (the scenario days, oldest first)"
+  ],
+  "SCENARIO_COUNT": 509,
+  "WINDOW_START": "2024-09-17",
+  "WINDOW_END": "2026-09-29",
+  "HORIZON_DAYS": 1,
+  "REVALUATION": "full",
+  "WEIGHTS": null,
+  "SOURCE_BATCH": "B-2026-09-30-01",
+  "DESCRIPTION": "Historical simulation, 509 business days, equal weights"
+}
+```
+
 ## VLIM: VaR limit of a hierarchy node (`var-limit`)
 
 The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD; 1-day 99% unless the row's HORIZON and CONFIDENCE say otherwise
@@ -879,7 +1190,6 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 | Binding hint | lake table `risk.var-limit`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `LIMIT_ID`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR`, `CURRENCY` |
 | Test data | data/testdata/market-risk/var-limit |
-| Worked example | [market-risk/var-limit](../samples/market-risk.md#var-limit) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -908,6 +1218,26 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 
 - JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","HORIZON":"1D","CONFIDENCE":0.99,"BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}
 
+<a id="example-market-risk-var-limit"></a>
+**Example: `data/testdata/market-risk/var-limit`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "LIMIT_ID": "VL-LL~BANK",
+  "HIERARCHY": "LL",
+  "NODE_ID": "LL~BANK",
+  "LIMIT_VAR": 150000000,
+  "CURRENCY": "USD",
+  "HORIZON": "1D",
+  "CONFIDENCE": 0.99,
+  "BUSINESS_DATE": "2026-09-30",
+  "VALID_FROM": "2026-01-02",
+  "VALID_TO": null
+}
+```
+
 ## DPNL: Desk P&L: actual and hypothetical (daily) (`desk-pnl`)
 
 The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md section 15.16): the actual P&L from finance (clean: fees, commissions, reserves, net interest income and intraday trading left out) and the hypothetical P&L from front office (yesterday's positions revalued on today's market), in USD. Never an input of the VaR engine: the backtest compares the official VaR of the day before with them. Drishti's own risk-theoretical P&L (the official record's hypoPnl) is not this kind.
@@ -926,7 +1256,6 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 | Binding hint | lake table `risk.desk-pnl`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `DESK_PNL_ID`, `DESK_ID`, `LEGAL_ENTITY`, `ACTUAL_PNL`, `HYPOTHETICAL_PNL`, `FEES_AND_COMMISSIONS`, `CURRENCY`, `SOURCE`, `AS_OF` |
 | Test data | data/testdata/market-risk/desk-pnl |
-| Worked example | [market-risk/desk-pnl](../samples/market-risk.md#desk-pnl) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -958,6 +1287,26 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 - JSON Lines, one row per line (UTF-8). Example line: {"DESK_PNL_ID":"DPNL-DESK-COMM-2026-09-30","BUSINESS_DATE":"2026-09-30","DESK_ID":"DESK-COMM","LEGAL_ENTITY":"LE-NY","ACTUAL_PNL":199665,"HYPOTHETICAL_PNL":-479876,"FEES_AND_COMMISSIONS":298323,"CURRENCY":"USD","SOURCE":"demo-finance","AS_OF":"2026-09-30T22:00:00Z"}
 - Drishti's risk-theoretical P&L (RTPL: the risk model's P&L of the scenario day before the date, the official record's hypoPnl) is computed, not sent: the backtest shows it beside these two.
 
+<a id="example-market-risk-desk-pnl"></a>
+**Example: `data/testdata/market-risk/desk-pnl`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "DESK_PNL_ID": "DPNL-DESK-COMM-2026-09-30",
+  "BUSINESS_DATE": "2026-09-30",
+  "DESK_ID": "DESK-COMM",
+  "LEGAL_ENTITY": "LE-NY",
+  "ACTUAL_PNL": 199665,
+  "HYPOTHETICAL_PNL": -479876,
+  "FEES_AND_COMMISSIONS": 298323,
+  "CURRENCY": "USD",
+  "SOURCE": "demo-finance",
+  "AS_OF": "2026-09-30T22:00:00Z"
+}
+```
+
 ## PNLH: Long-history P&L of a hierarchy node (stress window selection) (`pnl-history`)
 
 Today's portfolio at one hierarchy node revalued over every business day of a long history (2007 to the day before the business date in the demo), one P&L per day in USD; the stress window selection values every 12-month window of it as a stressed VaR (VAR_GUIDE.md section 18.9)
@@ -977,7 +1326,6 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 | Columns | `HIERARCHY`, `NODE_ID`, `LEVEL`, `CURRENCY`, `FIRST_DAY`, `LAST_DAY`, `DAY_COUNT` |
 | Vectors | `PNL` |
 | Test data | data/testdata/market-risk/pnl-history |
-| Worked example | [market-risk/pnl-history](../samples/market-risk.md#pnl-history) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1014,6 +1362,45 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 - JSON Lines, one row per line (UTF-8). Example line (two days shown; a row holds every day): {"HISTORY_ID":"PNLH-MGMT~DESK-RATES","BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"MGMT~DESK-RATES","NAME":"Rates","LEVEL":"desk","CURRENCY":"USD","FIRST_DAY":"2007-01-02","LAST_DAY":"2007-01-03","DAY_COUNT":2,"HISTORY_DATES":["2007-01-02","2007-01-03"],"PNL":[-1250000.5,840000.25],"SYNTHETIC":true}
 - A row whose PNL and HISTORY_DATES differ in length, or whose dates are not increasing, is refused for the tool in words; a node without a row says so, never zero.
 
+<a id="example-market-risk-pnl-history"></a>
+**Example: `data/testdata/market-risk/pnl-history`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "HISTORY_ID": "PNLH-LEGAL~BANK",
+  "BUSINESS_DATE": "2026-09-30",
+  "HIERARCHY": "LEGAL",
+  "NODE_ID": "LEGAL~BANK",
+  "NAME": "Drishti Bank",
+  "LEVEL": "bank",
+  "CURRENCY": "USD",
+  "FIRST_DAY": "2007-01-02",
+  "LAST_DAY": "2026-09-29",
+  "DAY_COUNT": 4938,
+  "HISTORY_DATES": [
+    "2007-01-02",
+    "2007-01-03",
+    "2007-01-04",
+    "… 4935 more dates"
+  ],
+  "PNL": [
+    34375815.28,
+    -26816987.53,
+    -31968465.89,
+    "… 4935 more numbers (one per scenario, in the scenario set's SCENARIO_DATES order)"
+  ],
+  "SYNTHETIC": true,
+  "ANCHORS": [
+    "HS-STRESS-2008",
+    "HS-509"
+  ],
+  "SOURCE_BATCH": "B-2026-09-30-HIST",
+  "DESCRIPTION": "The long-history P&L of today's portfolio at this node, one value per business day since 2007, for the stress window selection; synthetic for the demo (not market history), equal to the stress set's and the normal set's P&L on their days"
+}
+```
+
 ## SENS: Position sensitivities (`position-sensitivity`)
 
 The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank's pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube's ladders and heat maps, sensitivity limits and P&L explain. Read by the server's FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md); SENS <scope> sums it by factor or bucket.
@@ -1032,7 +1419,6 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 | Binding hint | lake table `risk.position-sensitivity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `SENSITIVITY_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `BATCH_ID`, `STATUS`, `DESK`, `TT_BOOK`, `PRODUCT_TYPE`, `CURRENCY` |
 | Test data | data/testdata/market-risk/position-sensitivity |
-| Worked example | [market-risk/position-sensitivity](../samples/market-risk.md#position-sensitivity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1115,6 +1501,70 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 
 - The due time of the full run and of intraday batches at the bank.
 
+<a id="example-market-risk-position-sensitivity"></a>
+**Example: `data/testdata/market-risk/position-sensitivity`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SENSITIVITY_ID": "SENS-1004481-B-SENS-2026-09-30-01",
+  "GRAIN": "TRADE",
+  "POSITION_ID": "POS-BOOK-COMM-2~1004481",
+  "TRADE_ID": "1004481",
+  "TRADE_IDS": [
+    "1004481"
+  ],
+  "SOURCE_SYSTEM": "ENDUR",
+  "BUSINESS_DATE": "2026-09-30",
+  "BATCH_ID": "B-SENS-2026-09-30-01",
+  "RUN_KIND": "FULL",
+  "COMPUTED_AT": "2026-09-30T06:10:00Z",
+  "RESTATEMENT": 0,
+  "STATUS": "proxied",
+  "PROXY_REASON": "volatility surface missing on the date: the underlying's index surface used",
+  "PRICER": "demo-factor-model",
+  "MODEL_VERSION": "demo-sens-1",
+  "LEGAL_ENTITY": "LE-NY",
+  "DIVISION": "DIV-MARKETS",
+  "DESK": "DESK-COMM",
+  "TT_BOOK": "BOOK-COMM-2",
+  "LIMIT_LETTER": "LL-0002",
+  "FRTB_DESK": "FD-COMM",
+  "PRODUCT_GROUP": "Commodity",
+  "PRODUCT_TYPE": "CallNot",
+  "TRADE_STATUS": "AMENDED",
+  "MATURITY_DATE": "2026-11-30",
+  "CURRENCY": "EUR",
+  "SENSITIVITIES": [
+    {
+      "RISK_FACTOR": "CM/PRICE/WTI",
+      "MEASURE": "CURVATURE_DOWN",
+      "VALUE": -2414930.93,
+      "CURRENCY": "USD",
+      "RISK_CLASS": "COMM",
+      "FRTB_BUCKET": "2",
+      "TENOR": null,
+      "SIMM_BUCKET": "2",
+      "SHOCK_SIZE": 0.35
+    },
+    {
+      "RISK_FACTOR": "CM/PRICE/WTI",
+      "MEASURE": "CURVATURE_UP",
+      "VALUE": 1217226.89,
+      "CURRENCY": "USD",
+      "RISK_CLASS": "COMM",
+      "FRTB_BUCKET": "2",
+      "TENOR": null,
+      "SIMM_BUCKET": "2",
+      "SHOCK_SIZE": 0.35
+    },
+    "… 2 more elements of the same shape"
+  ],
+  "VOL_CONVENTION": "LOGNORMAL"
+}
+```
+
 ## RFAC: Risk factor dictionary (`risk-factor`)
 
 Every risk factor the bank's sensitivities use, named by the factor naming standard, with its parts (class, qualifier, curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class, bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not here, or whose source name maps to no factor, is refused. Read by the server's FRTB-SA engine with the sensitivities (docs/guides/FRTB_SA_GUIDE.md).
@@ -1133,7 +1583,6 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 | Binding hint | lake table `risk.risk-factor`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `TENOR`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET` |
 | Test data | data/testdata/market-risk/risk-factor |
-| Worked example | [market-risk/risk-factor](../samples/market-risk.md#risk-factor) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -1192,6 +1641,42 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 **To review (1)**
 
 - Whether the bank keeps the mapping from its system names in this table (SOURCE_NAMES) or in a separate mapping file per source.
+
+<a id="example-market-risk-risk-factor"></a>
+**Example: `data/testdata/market-risk/risk-factor`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "RISK_FACTOR": "CR/SPREAD/CDX.NA.HY/CDS/10Y",
+  "FACTOR_TYPE": "SPREAD",
+  "RISK_CLASS": "CSR_NS",
+  "QUALIFIER": "CDX.NA.HY",
+  "CURVE": "CDS",
+  "UNDERLYING": "CDX.NA.HY",
+  "TENOR": "10Y",
+  "UNDERLYING_TENOR": null,
+  "FRTB_BUCKET": "18",
+  "SIMM_RISK_CLASS": "CreditQ",
+  "SIMM_BUCKET": "Residual",
+  "SIMM_LABEL1": "10y",
+  "SIMM_LABEL2": "CDS",
+  "SECTOR": "Index",
+  "CREDIT_QUALITY": "HY",
+  "LIQUIDITY_HORIZON": 40,
+  "MODELLABLE": false,
+  "MARKET_DATA_REF": "CDX-CDX.NA.HY#10Y",
+  "SOURCE_NAMES": [
+    "MX:CR:SPREAD-CDX.NA.HY-CDS-10Y",
+    "CR.SPREAD.CDX.NA.HY.CDS.10Y",
+    "10Y_CDS_CDX.NA.HY_SPREAD_CR"
+  ],
+  "VALID_FROM": "2026-01-02",
+  "BUSINESS_DATE": "2026-09-30",
+  "SOURCE": "demo-factor-master"
+}
+```
 
 ## VRES: VaR of a scope (computed) (`var-result`)
 

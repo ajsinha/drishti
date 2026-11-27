@@ -15,7 +15,7 @@
 """Makes the pictures and the captured output of docs/guides/bi/README.md and bi/README.md from the real stack (not a test: run it by hand).
 
     DRISHTI_BI_DELTA_ROOT=<a Delta lake made with tools/packgen/banking/make_data.py --lake <dir> --days 3> \\
-        drishti-console/.venv/bin/python drishti-console/tests/bi_data_shots.py <pictures dir> <captures.json>
+        python3 drishti-console/tests/bi_data_shots.py <pictures dir> <captures.json>
 
 Ports 18989 (server) and 17989 (console), a scratch directory, the shipped sample datasets. Pictures are desktop (1600 px: the top bar needs it) and one phone (390 px)."""
 import json

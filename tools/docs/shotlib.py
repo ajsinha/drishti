@@ -200,7 +200,7 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
     env = {**os.environ, "DRISHTI_PORT": str(SERVER_PORT), "DRISHTI_PACKS": PACKS, "DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true", "DRISHTI_LABS_CALC": "true",
            "DRISHTI_SUTRAS": str(work / "sutras"), "DRISHTI_PACKS_INSTALLED": str(work / "data" / "packs" / "installed"), **(extra_env or {})}
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
-    py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
+    py = Path(os.environ.get("DRISHTI_PYTHON") or sys.executable)
     py = py if py.exists() else Path(sys.executable)
     # the console reads the server's installed packs (Deploy archive, the registry) from the same folder: the server runs in `work`
     cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), DRISHTI_LABS_CALC="true",
@@ -228,7 +228,7 @@ def start_pack_servers(work: Path, packs: str, server_port: int, console_port: i
         env["DRISHTI_DATA_DIR"] = str(data_dir)
     server = subprocess.Popen(java_cmd(java, ["-Xmx2g", "-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env,
                               stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
-    py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
+    py = Path(os.environ.get("DRISHTI_PYTHON") or sys.executable)
     py = py if py.exists() else Path(sys.executable)
     cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{server_port}", DRISHTI_CONSOLE_PORT=str(console_port))
     console = subprocess.Popen([str(py), str(ROOT / "drishti-console" / "run_drishti_web.py")], cwd=ROOT, env=cenv,

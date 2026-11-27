@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -116,9 +115,8 @@ class LinearAlgebraTest {
 
     @Test
     void javaModeLoadsNothingNative() throws IOException, InterruptedException {
-        String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
-        Process p = new ProcessBuilder(java, "-Xmx64m", "-verbose:class", "-cp", System.getProperty("java.class.path"),
-                "-Ddrishti.native.blas.mode=java", BlasProbe.class.getName()).redirectErrorStream(true).start();
+        Process p = com.ash.drishti.testkit.ChildJvm.of(List.of("-Xmx64m", "-verbose:class", "-Ddrishti.native.blas.mode=java"),
+                BlasProbe.class.getName()).redirectErrorStream(true).start();
         String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         assertThat(p.waitFor(60, TimeUnit.SECONDS)).isTrue();
         assertThat(out).contains("probe: java 6.0");

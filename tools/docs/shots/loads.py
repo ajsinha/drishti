@@ -19,7 +19,7 @@ expectations it shows, through the real API, so the page is what a real ETL woul
 the pictures can be remade at any time. The expectations are relative to "today", so run it on a business day to see an on-time load:
 
     DRISHTI_SHOTS_SERVER_PORT=18970 DRISHTI_SHOTS_CONSOLE_PORT=17970 \\
-      drishti-console/.venv/bin/python tools/docs/screenshots.py --guide loads --base http://127.0.0.1:17970"""
+      python3 tools/docs/screenshots.py --guide loads --base http://127.0.0.1:17970"""
 from __future__ import annotations
 
 import json

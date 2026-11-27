@@ -107,10 +107,9 @@ class Detached:
 
 def copy_console(dst: Path) -> Path:
     """``drishti-console/`` copied into ``dst`` with what ships beside it (``SHIPPED``, as an install lays it out: ``dst/docs``, ...; its
-    tests, caches and virtual environment left out: the copy runs on this interpreter, and a checkout's ``.venv`` is often a link to
-    another's); the copy's folder."""
+    tests, caches and any virtual environment a user keeps in the tree left out: the copy runs on this interpreter); the copy's folder."""
     target = dst / "drishti-console"
-    shutil.copytree(CONSOLE, target, ignore=shutil.ignore_patterns("tests", "__pycache__", "*.pyc", "data", "run-configs", ".venv", "venv"))
+    shutil.copytree(CONSOLE, target, ignore=shutil.ignore_patterns("tests", "__pycache__", "*.pyc", "data", "run-configs", ".venv", "venv"))  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
     for name in SHIPPED:
         src = REPO / name
         if src.is_dir():

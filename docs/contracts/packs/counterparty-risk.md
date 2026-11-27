@@ -17,7 +17,7 @@
 
 # Data contracts of the counterparty-risk pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/banking/packs/counterparty-risk/guides/counterparty-risk.md](../../../modules/banking/packs/counterparty-risk/guides/counterparty-risk.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/banking/packs/counterparty-risk/README.md](../../../modules/banking/packs/counterparty-risk/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -54,7 +54,6 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `legal.agreement`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/agreement |
-| Worked example | [counterparty-risk/agreement](../samples/counterparty-risk.md#agreement) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -103,6 +102,37 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: GOVERNING_LAW: confirm they are closed lists.
 
+<a id="example-counterparty-risk-agreement"></a>
+**Example: `data/testdata/counterparty-risk/agreement`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "AGREEMENT_ID": "AGR-ALDERSHOT-ISDA",
+  "TYPE": "ISDA 2002 Master",
+  "COUNTERPARTY_NAME": "Aldershot Pension Trust",
+  "GOVERNING_LAW": "English",
+  "SIGNED": "2015-12-10",
+  "CLOSE_OUT_NETTING": "Enforceable",
+  "ELECTIONS": {
+    "AUTOMATIC_EARLY_TERMINATION": false,
+    "CROSS_DEFAULT": "3% of shareholders' equity",
+    "SET_OFF": true,
+    "TERMINATION_CURRENCY": "USD",
+    "ADDITIONAL_TERMINATION_EVENTS": "Rating downgrade below BBB-",
+    "PROTOCOLS": "ISDA 2020 IBOR Fallbacks; 2018 US Resolution Stay"
+  },
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "CSAS": [
+    "CSA-ALDERSHOT-FRA",
+    "CSA-ALDERSHOT-LDN",
+    "CSA-ALDERSHOT-NY",
+    "CSA-ALDERSHOT-TKY"
+  ]
+}
+```
+
 ## CSA: Credit support annex (`csa`)
 
 Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts.
@@ -120,7 +150,6 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `legal.csa`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/csa |
-| Worked example | [counterparty-risk/csa](../samples/counterparty-risk.md#csa) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -177,6 +206,48 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 - enum values inferred from the data, not from a glossary: MARGIN_TYPE, ELIGIBLE[].ASSET: confirm they are closed lists.
 - number types decided by the field's name: ELIGIBLE[].HAIRCUT rate: confirm amount, rate or integer.
 
+<a id="example-counterparty-risk-csa"></a>
+**Example: `data/testdata/counterparty-risk/csa`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CSA_ID": "CSA-ALDERSHOT-FRA",
+  "MARGIN_TYPE": "VM",
+  "CSA_CURRENCY": "USD",
+  "THRESHOLD_US": 10000000.0,
+  "THRESHOLD_THEM": 10000000.0,
+  "MTA": 500000,
+  "MTA_US": 500000,
+  "MTA_THEM": 500000,
+  "INDEPENDENT_AMOUNT": 0,
+  "FREQUENCY": "Daily",
+  "MARGIN_FREQUENCY_DAYS": 1,
+  "MPOR_DAYS": 10,
+  "ELIGIBLE": [
+    {
+      "ASSET": "USD, EUR, GBP cash",
+      "HAIRCUT": 0.0
+    },
+    {
+      "ASSET": "G7 government bonds < 1Y",
+      "HAIRCUT": 0.005
+    },
+    "… 2 more elements of the same shape"
+  ],
+  "AGREEMENT": "AGR-ALDERSHOT-ISDA",
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "LEGAL_ENTITY": "LE-FRA",
+  "NETTING_SETS": [
+    "NS-ALDERSHOT-FRA"
+  ],
+  "COLLATERAL_BALANCES": [
+    "COLL-ALDERSHOT-FRA"
+  ]
+}
+```
+
 ## NSET: Netting set (`netting-set`)
 
 Trades that net on close-out under one agreement and CSA, with exposure and collateral.
@@ -194,7 +265,6 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `credit.netting-set`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/netting-set |
-| Worked example | [counterparty-risk/netting-set](../samples/counterparty-risk.md#netting-set) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -279,6 +349,79 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 - TRADE_COUNT and TRADES[].MTM: confirm TRADE_COUNT is computed from the membership and TRADES[].MTM is read from the trade valuations (an input), not stored here.
 - LIMIT is copied from the credit limit: confirm it is read from LIM instead of stored.
 
+<a id="example-counterparty-risk-netting-set"></a>
+**Example: `data/testdata/counterparty-risk/netting-set`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "NETTING_SET_ID": "NS-ALDERSHOT-LDN",
+  "TRADE_COUNT": 159,
+  "NET_MTM": -135735441.598289,
+  "COLLATERAL": -111102172,
+  "LIMIT": 3568000000.0,
+  "CVA": -1565490,
+  "TRADES": [
+    {
+      "TRADE_ID": "MX-30000832",
+      "STATUS": "AMENDED",
+      "PRODUCT": "Year-on-year inflation swap",
+      "ASSET_CLASS": "Inflation",
+      "CURRENCY": "JPY",
+      "BOOK": "BOOK-INFL-3",
+      "NOTIONAL": 1038030000.0,
+      "MATURITY": "2028-04-14",
+      "MATURITY_BUCKET": "1-2Y",
+      "MTM": -36717825.965122
+    },
+    {
+      "TRADE_ID": "CLY-4002197",
+      "STATUS": "VALIDATED",
+      "PRODUCT": "FX average-rate option",
+      "ASSET_CLASS": "FX",
+      "CURRENCY": "USD",
+      "BOOK": "BOOK-FX-3",
+      "NOTIONAL": 1115070000.0,
+      "MATURITY": "2032-10-22",
+      "MATURITY_BUCKET": "5-10Y",
+      "MTM": -23985974.8869
+    },
+    "… 139 more elements of the same shape"
+  ],
+  "BY_ASSET": [
+    {
+      "ASSET": "FX",
+      "MTM": -99756212
+    },
+    {
+      "ASSET": "Inflation",
+      "MTM": -35979539
+    },
+    {
+      "ASSET": "Equity",
+      "MTM": -4883034
+    }
+  ],
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "AGREEMENT": "AGR-ALDERSHOT-ISDA",
+  "CSA": "CSA-ALDERSHOT-LDN",
+  "CREDIT_LIMIT": "LIM-ALDERSHOT",
+  "CVA_RESULT": "CVA-ALDERSHOT-LDN",
+  "SACCR": "SACCR-ALDERSHOT-LDN",
+  "SIMM": "SIMM-ALDERSHOT",
+  "COLLATERAL_BALANCE": "COLL-ALDERSHOT-LDN",
+  "LEGAL_ENTITY": "LE-LDN",
+  "NETTING_ENFORCEABLE": true,
+  "TRADE_IDS": [
+    "CLY-3000047",
+    "CLY-3000056",
+    "CLY-3000065",
+    "… 138 more strings (trade ids)"
+  ]
+}
+```
+
 ## LIM: Credit limit (`credit-limit`)
 
 PFE limit by tenor bucket for a counterparty, with utilisation.
@@ -296,7 +439,6 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `credit.credit-limit`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/credit-limit |
-| Worked example | [counterparty-risk/credit-limit](../samples/counterparty-risk.md#credit-limit) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -344,6 +486,41 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 - enum values inferred from the data, not from a glossary: STATUS, BUCKETS[].BUCKET: confirm they are closed lists.
 - STATUS (Within limit, ...) follows from UTILISATION: confirm it is computed, not set by the limits system.
 
+<a id="example-counterparty-risk-credit-limit"></a>
+**Example: `data/testdata/counterparty-risk/credit-limit`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "LIMIT_ID": "LIM-ALDERSHOT",
+  "COUNTERPARTY_NAME": "Aldershot Pension Trust",
+  "MEASURE": "PFE 95 peak",
+  "LIMIT": 7980000000.0,
+  "USED": 6001569387,
+  "UTILISATION": 0.666921,
+  "STATUS": "Within limit",
+  "BUCKETS": [
+    {
+      "BUCKET": "0-1Y",
+      "LIMIT": 7980000000,
+      "USED": 4733741826,
+      "UTILISATION": 0.567351
+    },
+    {
+      "BUCKET": "1-3Y",
+      "LIMIT": 7980000000,
+      "USED": 6428983841,
+      "UTILISATION": 0.667162
+    },
+    "… 3 more elements of the same shape"
+  ],
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "APPROVED_BY": "Credit Risk Committee",
+  "REVIEW_DUE": "2027-03-19"
+}
+```
+
 ## CVA: CVA / XVA (`cva`)
 
 Credit, debit and funding valuation adjustments with sensitivities.
@@ -361,7 +538,6 @@ Credit, debit and funding valuation adjustments with sensitivities.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `credit.cva`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/cva |
-| Worked example | [counterparty-risk/cva](../samples/counterparty-risk.md#cva) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -419,6 +595,48 @@ Credit, debit and funding valuation adjustments with sensitivities.
 - number types decided by the field's name: COMPONENTS[].AMOUNT amount: confirm amount, rate or integer.
 - no unit stated for the amounts COMPONENTS[].AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-counterparty-risk-cva"></a>
+**Example: `data/testdata/counterparty-risk/cva`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "RESULT_ID": "CVA-CASCADIA-FRA",
+  "CVA": -44037,
+  "DVA": 1363,
+  "FVA": -14293,
+  "KVA": -41215,
+  "CS01": -795,
+  "COMPONENTS": [
+    {
+      "NAME": "CVA",
+      "AMOUNT": -44139
+    },
+    {
+      "NAME": "DVA",
+      "AMOUNT": 1363
+    },
+    "… 2 more elements of the same shape"
+  ],
+  "SENSITIVITIES": [
+    {
+      "FACTOR": "Counterparty spread",
+      "BUMP": "+1 bp",
+      "DELTA": -795
+    },
+    {
+      "FACTOR": "USD rates",
+      "BUMP": "+1 bp",
+      "DELTA": 177
+    },
+    "… 3 more elements of the same shape"
+  ],
+  "NETTING_SET": "NS-CASCADIA-FRA",
+  "CREDIT_CURVE": "CDS-CASCADIA"
+}
+```
+
 ## SACCR: SA-CCR exposure (`sa-ccr`)
 
 Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
@@ -436,7 +654,6 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `credit.sa-ccr`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/sa-ccr |
-| Worked example | [counterparty-risk/sa-ccr](../samples/counterparty-risk.md#sa-ccr) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -496,6 +713,45 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 - no unit stated for the amounts ADD_ONS[].ADD_ON (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 - ALPHA (1.4) is a regulatory parameter: confirm it becomes a setting of the SA-CCR engine.
 
+<a id="example-counterparty-risk-sa-ccr"></a>
+**Example: `data/testdata/counterparty-risk/sa-ccr`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CALC_ID": "SACCR-ALDERSHOT-FRA",
+  "REPLACEMENT_COST": 0,
+  "ADD_ON": 9479416,
+  "MULTIPLIER": 0.6819,
+  "EAD": 9049620,
+  "RWA": 1809924,
+  "ADD_ONS": [
+    {
+      "ASSET_CLASS": "Interest rate",
+      "ADD_ON": 9479416
+    }
+  ],
+  "HEDGING_SETS": [
+    {
+      "ASSET_CLASS": "Interest rate",
+      "HEDGING_SET": "JPY",
+      "EFFECTIVE_NOTIONAL": -216135527,
+      "SF": 0.005
+    },
+    {
+      "ASSET_CLASS": "Interest rate",
+      "HEDGING_SET": "USD",
+      "EFFECTIVE_NOTIONAL": -667293465,
+      "SF": 0.005
+    },
+    "… 3 more elements of the same shape"
+  ],
+  "NETTING_SET": "NS-ALDERSHOT-FRA",
+  "ALPHA": 1.4
+}
+```
+
 ## COLL: Collateral balance (`collateral-balance`)
 
 Collateral held and posted under a CSA, by asset, after haircuts.
@@ -513,7 +769,6 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `collateral.collateral-balance`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/collateral-balance |
-| Worked example | [counterparty-risk/collateral-balance](../samples/counterparty-risk.md#collateral-balance) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -561,6 +816,46 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 - POSITIONS[].DIRECTION: the data holds Held, which the glossary's values (Posted, Received) do not describe: correct the data or the glossary.
 - POSITIONS[].HAIRCUT is a CSA term: confirm it is kept on the holding or read from the CSA.
 
+<a id="example-counterparty-risk-collateral-balance"></a>
+**Example: `data/testdata/counterparty-risk/collateral-balance`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "BALANCE_ID": "COLL-ALDERSHOT-FRA",
+  "HELD": 0,
+  "POSTED": 15251373,
+  "NET": -15251373,
+  "AS_OF": "2026-07-08",
+  "POSITIONS": [
+    {
+      "ASSET": "Solaris Energy Corp. 2031",
+      "DIRECTION": "Posted",
+      "MARKET_VALUE": 5109338,
+      "HAIRCUT": 0.005,
+      "VALUE": 5083791
+    },
+    {
+      "ASSET": "United States Treasury 2036",
+      "DIRECTION": "Posted",
+      "MARKET_VALUE": 5109338,
+      "HAIRCUT": 0.005,
+      "VALUE": 5083791
+    },
+    {
+      "ASSET": "Granite Building Materials plc 2031",
+      "DIRECTION": "Posted",
+      "MARKET_VALUE": 5109338,
+      "HAIRCUT": 0.005,
+      "VALUE": 5083791
+    }
+  ],
+  "CSA": "CSA-ALDERSHOT-FRA",
+  "NETTING_SET": "NS-ALDERSHOT-FRA"
+}
+```
+
 ## MC: Margin call (`margin-call`)
 
 A variation or initial margin call and its settlement status.
@@ -578,7 +873,6 @@ A variation or initial margin call and its settlement status.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `collateral.margin-call`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/margin-call |
-| Worked example | [counterparty-risk/margin-call](../samples/counterparty-risk.md#margin-call) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -634,6 +928,38 @@ A variation or initial margin call and its settlement status.
 - number types decided by the field's name: AMOUNT amount: confirm amount, rate or integer.
 - no unit stated for the amounts AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-counterparty-risk-margin-call"></a>
+**Example: `data/testdata/counterparty-risk/margin-call`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CALL_ID": "MC-ALDERSHOT-FRA-1",
+  "CALL_DATE": "2026-09-30",
+  "MARGIN_TYPE": "Variation",
+  "DIRECTION": "They call",
+  "AMOUNT": 1215000.0,
+  "STATUS": "Agreed",
+  "DISPUTE_AMOUNT": 0,
+  "EVENTS": [
+    {
+      "AT": "2026-09-30 09:05",
+      "EVENT": "Call issued",
+      "BY": "collateral-system"
+    },
+    {
+      "AT": "2026-09-30 11:40",
+      "EVENT": "Agreed",
+      "BY": "counterparty ops"
+    }
+  ],
+  "NETTING_SET": "NS-ALDERSHOT-FRA",
+  "CSA": "CSA-ALDERSHOT-FRA",
+  "CURRENCY": "USD"
+}
+```
+
 ## SIMM: ISDA SIMM initial margin (`simm`)
 
 Initial margin by risk class and product class.
@@ -651,7 +977,6 @@ Initial margin by risk class and product class.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `collateral.simm`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/counterparty-risk/simm |
-| Worked example | [counterparty-risk/simm](../samples/counterparty-risk.md#simm) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -695,6 +1020,34 @@ Initial margin by risk class and product class.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: RISK_CLASSES[].RISK_CLASS: confirm they are closed lists.
 
+<a id="example-counterparty-risk-simm"></a>
+**Example: `data/testdata/counterparty-risk/simm`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CALC_ID": "SIMM-ALDERSHOT",
+  "TOTAL": 230875368,
+  "POSTED": 223949107,
+  "RECEIVED": 235492875,
+  "VERSION": "ISDA SIMM 2.7",
+  "RISK_CLASSES": [
+    {
+      "RISK_CLASS": "Interest rate",
+      "IM": 103893916
+    },
+    {
+      "RISK_CLASS": "Credit qualifying",
+      "IM": 27705044
+    },
+    "… 3 more elements of the same shape"
+  ],
+  "NETTING_SET": "NS-ALDERSHOT-FRA",
+  "COUNTERPARTY": "CP-ALDERSHOT"
+}
+```
+
 ## XRUN: Exposure simulation run (`simulation-run`)
 
 An upstream exposure simulation of a business date: its paths, its grid of future dates (primary and look-back), its model and seed; the exposure engine reads it beside the paths (EXPOSURE_GUIDE.md section 15.2).
@@ -713,7 +1066,6 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 | Binding hint | lake table `risk.simulation-run`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `RUN_ID`, `CALIBRATION`, `PATHS`, `STATUS`, `BATCH_ID` |
 | Test data | data/testdata/counterparty-risk/simulation-run |
-| Worked example | [counterparty-risk/simulation-run](../samples/counterparty-risk.md#simulation-run) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -765,6 +1117,60 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 
+<a id="example-counterparty-risk-simulation-run"></a>
+**Example: `data/testdata/counterparty-risk/simulation-run`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "RUN_ID": "XR-2026-09-30-01",
+  "BUSINESS_DATE": "2026-09-30",
+  "MARKET_DATA_DATE": "2026-09-30",
+  "MODEL": "One correlated Brownian factor per asset class (rates, FX, credit, equity, commodity) and a walk of each trade's own; values amortise to zero at maturity (tools/packgen/ccr/paths.py)",
+  "MODEL_VERSION": "drishti-testgen-ccr-1.0",
+  "CALIBRATION": "REAL_WORLD",
+  "PATHS": 200,
+  "SEED": "ccr|XR-2026-09-30-01",
+  "ANTITHETIC": false,
+  "GRID_DATES": [
+    "2026-10-07",
+    "2026-10-14",
+    "2026-10-16",
+    "… 21 more dates (the run's grid dates, in order)"
+  ],
+  "GRID_ROLE": [
+    "PRIMARY",
+    "PRIMARY",
+    "LOOKBACK",
+    "… 21 more strings"
+  ],
+  "LOOKBACK_OF": [
+    -1,
+    -1,
+    3,
+    "… 21 more numbers"
+  ],
+  "GRID_TENORS": [
+    "1W",
+    "2W",
+    null,
+    "… 21 more strings"
+  ],
+  "LOOKBACK_DAYS": 10,
+  "VALUE_BASIS": "FUTURE",
+  "CURRENCY": "USD",
+  "PRECISION": "float64",
+  "CREDIT_PATHS": false,
+  "NETTING_SETS": 8,
+  "TRADES": 523,
+  "ROWS": 7540,
+  "BATCH_ID": "XB-2026-09-30-01",
+  "COMPUTED_AT": "2026-09-30T23:40:00Z",
+  "STATUS": "complete"
+}
+```
+
 ## XPATH: Exposure path (a trade's MtM on every path at a grid date) (`exposure-path`)
 
 One trade's mark to market on every path of a simulation run at one grid date, in USD (the vector column MTM); the grain every exposure is netted, collateralised and counted from (EXPOSURE_GUIDE.md section 15.3).
@@ -784,7 +1190,6 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 | Columns | `TRADE_ID`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `SOURCE_SYSTEM`, `MATURITY_DATE`, `NOTIONAL`, `GRID_INDEX`, `GRID_DATE`, `RUN_ID`, `BATCH_ID`, `STATUS` |
 | Vectors | `MTM` |
 | Test data | data/testdata/counterparty-risk/exposure-path |
-| Worked example | [counterparty-risk/exposure-path](../samples/counterparty-risk.md#exposure-path) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -844,6 +1249,43 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, ASSET_CLASS: confirm they are closed lists.
 - number types decided by the field's name: NOTIONAL amount: confirm amount, rate or integer.
 - no unit stated for the amounts NOTIONAL (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+
+<a id="example-counterparty-risk-exposure-path"></a>
+**Example: `data/testdata/counterparty-risk/exposure-path`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "PATH_ROW_ID": "XR-2026-09-30-01~CLY-3000280~0",
+  "BUSINESS_DATE": "2026-09-30",
+  "RUN_ID": "XR-2026-09-30-01",
+  "TRADE_ID": "CLY-3000280",
+  "SOURCE_SYSTEM": "CALYPSO",
+  "NETTING_SET": "NS-ALDERSHOT-FRA",
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "LEGAL_ENTITY": "LE-FRA",
+  "DIVISION": "DIV-TREASURY",
+  "DESK": "DESK-SFT",
+  "TT_BOOK": "BOOK-SFT-1",
+  "LIMIT_LETTER": "LL-0001",
+  "ASSET_CLASS": "Securities financing",
+  "PRODUCT": "Tri-party repo",
+  "NOTIONAL": 260700000.0,
+  "MATURITY_DATE": "2027-02-15",
+  "GRID_INDEX": 0,
+  "GRID_DATE": "2026-10-07",
+  "MTM": [
+    -523841,
+    -1015981,
+    -712385,
+    "… 197 more numbers (one per simulation path, path 0 first)"
+  ],
+  "STATUS": "ok",
+  "PRICER": "testgen-factor-walk",
+  "BATCH_ID": "XB-2026-09-30-01"
+}
+```
 
 ## EXP: Exposure profile of a scope (computed) (`exposure-result`)
 

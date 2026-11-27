@@ -1,0 +1,12 @@
+# Lane A merge log (documentation content pass, i7n): items of a merged source that are deliberately not carried over.
+# <old path> | <heading or first line of the block> | <the place that already says it>
+docs/guides/AI_GUIDE.md | AI: model providers, MCP servers, AI management and the quant service | docs/guides/ADMIN_GUIDE.md (27. AI: model providers and MCP servers)
+docs/guides/AI_GUIDE.md | Contents | docs/guides/ADMIN_GUIDE.md (the section's own headings)
+docs/guides/LIVE_RESULTS_GUIDE.md | Live results and blotters | docs/guides/USER_GUIDE.md (Live results and blotters)
+docs/guides/LIVE_RESULTS_GUIDE.md | Contents | docs/guides/USER_GUIDE.md (the section's own headings)
+docs/guides/LIVE_RESULTS_GUIDE.md | 14. Screenshots to add | a to-do list of pictures not yet captured, not a part of the design
+docs/guides/APPROVALS_GUIDE.md | Corrections and approvals | docs/guides/USER_GUIDE.md (Approvals)
+docs/guides/APPROVALS_GUIDE.md | Contents | docs/guides/USER_GUIDE.md (the section's own headings)
+docs/guides/APPROVALS_GUIDE.md | 7. For administrators: switching write-back on | docs/guides/ADMIN_GUIDE.md (28.1 Switching write-back on)
+docs/guides/AI_GUIDE.md | 3. AI management (design, not built) | docs/plans/AI_MANAGEMENT.md (the design is a plan, not a part of the administrator's guide)
+docs/guides/AI_GUIDE.md | 4. Server-side pricing: the quant service (proposed) | docs/plans/QUANT_SERVICE.md (the design is a plan; its sections keep their numbers)

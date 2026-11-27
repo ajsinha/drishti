@@ -63,10 +63,24 @@ public final class FilePreferenceStore implements PreferenceStore {
         return p;
     }
 
+    /**
+     * The user's document, read under the user's lock: on Windows a file another thread is reading cannot be replaced, so readers that
+     * never pause (a busy alert service) would hold a write off for good; one at a time per user, a write always lands.
+     */
     private ObjectNode load(String user) {
+        ReentrantLock lock = lockOf(user);
+        lock.lock();
+        try {
+            return load0(user);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private ObjectNode load0(String user) {
         Path f = file(user);
         try {
-            return Files.exists(f) ? (ObjectNode) json.readTree(f.toFile()) : json.createObjectNode();
+            return Files.exists(f) ? (ObjectNode) json.readTree(java.nio.file.Files.readAllBytes(f)) : json.createObjectNode();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -178,7 +192,7 @@ public final class FilePreferenceStore implements PreferenceStore {
             Path tmp = f.resolveSibling(f.getFileName() + ".tmp");
             json.writerWithDefaultPrettyPrinter().writeValue(tmp.toFile(), all);
             try {
-                Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, f);
             } catch (AtomicMoveNotSupportedException e) {
                 Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING);
             }

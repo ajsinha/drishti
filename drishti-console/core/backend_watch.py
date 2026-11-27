@@ -59,7 +59,7 @@ class BackendWatch:
 
     async def probe(self, url: str) -> dict:
         """The server's public about (its version); raises when it cannot be reached or does not answer 2xx."""
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        async with httpx.AsyncClient(timeout=self.timeout, trust_env=False) as client:
             r = await client.get(f"{url}/public/about")
             r.raise_for_status()
             try:

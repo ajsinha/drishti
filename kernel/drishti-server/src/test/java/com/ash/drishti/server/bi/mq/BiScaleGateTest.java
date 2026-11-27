@@ -94,14 +94,15 @@ class BiScaleGateTest {
             long allocated = bytes[RUNS / 2];
             List<String> out = new ArrayList<>();
             out.add("rows: 20000 trades (10,000 a day, 2 days), desks and limits; answer rows: " + rows.size() + "; warm runs: " + RUNS);
-            out.add(String.format("cold (source read, columns layer built, answered): %.1f ms (budget %.0f)", cold, COLD_MS));
-            out.add(String.format("warm (columns layer, no result cache): p50 %.2f ms, p95 %.2f ms (budget %.0f)", p50, p95, WARM_P95_MS));
+            out.add(String.format("cold (source read, columns layer built, answered): %.1f ms (budget %.0f)", cold, com.ash.drishti.testkit.MachineSpeed.scaled(COLD_MS)));
+            out.add(String.format("warm (columns layer, no result cache): p50 %.2f ms, p95 %.2f ms (budget %.0f)", p50, p95, com.ash.drishti.testkit.MachineSpeed.scaled(WARM_P95_MS)));
             out.add(String.format("warm Java allocation on the asking thread: median %d bytes (budget %d)", allocated, WARM_ALLOCATED_BYTES));
             Files.createDirectories(Path.of(TestRoots.module(), "target"));
             Files.writeString(Path.of(TestRoots.module(), "target", "bi-scale-gate.txt"), String.join("\n", out) + "\n");
             out.forEach(System.out::println);
-            assertThat(cold).as("cold query, ms").isLessThan(COLD_MS);
-            assertThat(p95).as("warm query p95, ms").isLessThan(WARM_P95_MS);
+            // the time budgets were measured on the reference machine: a smaller one gets them times its factor (MachineSpeed); memory is not scaled
+            assertThat(cold).as("cold query, ms").isLessThan(com.ash.drishti.testkit.MachineSpeed.scaled(COLD_MS));
+            assertThat(p95).as("warm query p95, ms").isLessThan(com.ash.drishti.testkit.MachineSpeed.scaled(WARM_P95_MS));
             assertThat(allocated).as("warm query, bytes allocated").isLessThan(WARM_ALLOCATED_BYTES);
         } finally {
             service.close();

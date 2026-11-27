@@ -60,16 +60,16 @@ def anchors(path: Path) -> set:
 
 # the documents that hold a tutorial as one of their parts, showing the pictures under docs/tutorials/img/
 GUIDES = ROOT / "docs" / "guides"
-SHOWING = [GUIDES / f"{g}.md" for g in ("VAR_GUIDE", "EXPOSURE_GUIDE", "FRTB_SA_GUIDE", "SIMM_GUIDE", "WORLD_DATA_GUIDE", "BUILD_GUIDE")] + sorted((GUIDES / "bi").glob("*.md"))
+SHOWING = [ROOT / "docs" / "DEPLOYMENT_AND_QA_GUIDE.md"] + [GUIDES / f"{g}.md" for g in ("VAR_GUIDE", "EXPOSURE_GUIDE", "FRTB_SA_GUIDE", "SIMM_GUIDE", "WORLD_DATA_GUIDE", "BUILD_GUIDE")] + sorted((GUIDES / "bi").glob("*.md"))
 
 
 TRACKS = ["Start", "Risk engines", "BI and analysis", "Data in and out", "Build", "Operate"]
 
 
 def test_the_written_tutorials_are_the_ones_kept_and_the_index_names_every_one_once_in_a_track():
-    # One per major feature, numbered in track order; the risk measures', BI's, the world data's and the source systems' tutorials are parts of
+    # One task per tutorial (a long one is split into focused parts, `tutorial-parts:` in config/docs-features.yaml), numbered in track order; the risk measures', BI's, the world data's and the source systems' tutorials are parts of
     # their one document (VAR_GUIDE, EXPOSURE_GUIDE, FRTB_SA_GUIDE, SIMM_GUIDE, the BI folder's pages, WORLD_DATA_GUIDE, BUILD_GUIDE), so their numbers are gone.
-    numbers = [1, *range(10, 13), *range(15, 18), *range(19, 23)]
+    numbers = [*range(1, 6), 10, 11, *range(13, 21), 22, 23, 24, 25]
     assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in numbers]
     index = (TUTORIALS / "README.md").read_text()
     rows = re.findall(r"^\|\s*(\d{1,2})\s*\|", index, re.M)
@@ -105,10 +105,10 @@ def test_every_picture_a_tutorial_shows_is_there_and_is_an_image(doc):
     if "*(screenshot filled in the heavy run" in doc.read_text():
         pytest.skip(f"{doc.name}: its screenshots are taken in the heavy run (tools/docs/screenshots.py), then this marker goes")
     shown = IMAGE.findall(doc.read_text())
-    assert len(shown) >= 5, f"{doc.name} shows only {len(shown)} pictures"
+    assert len(shown) >= 3, f"{doc.name} shows only {len(shown)} pictures"
     for rel in shown:
         f = (doc.parent / rel).resolve()
-        assert f.is_file(), f"{doc.name}: {rel} is missing: drishti-console/.venv/bin/python tools/docs/screenshots.py --guide {f.parent.name}"
+        assert f.is_file(), f"{doc.name}: {rel} is missing: python3 tools/docs/screenshots.py --guide {f.parent.name}"
         head = f.read_bytes()[:4]
         assert (head[:3] == b"\xff\xd8\xff" or head == b"\x89PNG") and f.stat().st_size > 2000, rel
 

@@ -22,7 +22,6 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
@@ -188,7 +187,7 @@ public final class MappedIdFile {
         Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
         Files.write(tmp, out.array());
         DOOMED.remove(file.toAbsolutePath().normalize());            // written again: a drop still waiting for readers leaves this one
-        Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        com.ash.drishti.api.FileReplace.atomically(tmp, file);
         MappedIdFile mapped = open(file);
         if (mapped == null) {
             throw new IOException("the id map just written cannot be read: " + file);

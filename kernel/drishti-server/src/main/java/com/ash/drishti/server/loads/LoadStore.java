@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -156,7 +155,7 @@ public final class LoadStore {
         return packs.computeIfAbsent(pack, p -> {
             Path f = file(p);
             try {
-                return Files.isRegularFile(f) ? json.readValue(f.toFile(), Doc.class) : new Doc(null, null);
+                return Files.isRegularFile(f) ? json.readValue(java.nio.file.Files.readAllBytes(f), Doc.class) : new Doc(null, null);
             } catch (IOException e) {
                 throw new UncheckedIOException("cannot read " + f, e);
             }
@@ -168,7 +167,7 @@ public final class LoadStore {
             Files.createDirectories(dir);
             Path tmp = com.ash.drishti.common.TempFiles.createFile(dir, pack + "-", ".tmp");
             json.writeValue(tmp.toFile(), doc(pack));
-            Files.move(tmp, file(pack), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(tmp, file(pack));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

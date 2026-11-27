@@ -51,7 +51,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 
 /**
- * The server's wiring of Arrow Flight (the plain-Java module {@code drishti-flight}; docs/guides/FLIGHT_GUIDE.md): the settings from
+ * The server's wiring of Arrow Flight (the plain-Java module {@code drishti-flight}; docs/guides/INTEGRATION_GUIDE.md): the settings from
  * {@code config/engines/flight.yaml}, the backend over the existing services, the service started when the server is ready and the engine
  * {@code flight} is on (off as shipped; turning it on needs a restart: the port opens at start), its Arrow memory joined to busy
  * protection, and Admin → Data out.
@@ -136,7 +136,7 @@ public class FlightConfiguration {
     @Bean(destroyMethod = "close")
     public FlightService flightService(FlightSettings settings, ServerFlightBackend backend, ObjectProvider<ModelCatalog> catalog,
             ObjectProvider<BiService> bi, ObjectProvider<com.ash.drishti.server.bi.sql.SqlService> sql) {
-        // Flight SQL on the same port: read-only DSQL over the BI models, answered as a model read (FLIGHT_GUIDE.md, Flight SQL)
+        // Flight SQL on the same port: read-only DSQL over the BI models, answered as a model read (INTEGRATION_GUIDE.md, Flight SQL)
         FlightSqlCatalog models = catalog.getIfAvailable() != null && bi.getIfAvailable() != null && sql.getIfAvailable() != null
                 ? new ServerFlightSqlCatalog(catalog.getObject(), bi.getObject()) : null;
         FlightService service = new FlightService(settings, backend, Clock.systemUTC(), models);

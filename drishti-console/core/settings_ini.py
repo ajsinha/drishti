@@ -28,6 +28,25 @@ class SettingsError(ValueError):
     """A settings file is relative, missing, unreadable or malformed; the message says which and where."""
 
 
+def setup_line() -> str:
+    """The setup command, pasteable on this system: ``py -3.13 tools\\drishti.py setup`` on Windows (never ``python``, the Store stub
+    there), else this Python's own path; the tool's path in full (tools/launch/procs.py command() is the same rule)."""
+    import os
+    import sys
+    tool = str(Path(__file__).resolve().parents[2] / "tools" / "drishti.py")
+
+    def q(w: str) -> str:
+        return f'"{w}"' if " " in w else w
+    if os.name == "nt":
+        return f"py -{sys.version_info[0]}.{sys.version_info[1]} {q(tool)} setup"
+    return f"{q(sys.executable)} {q(tool)} setup"
+
+
+def fail(e) -> str:
+    """The one line of a settings file that cannot be used: ``[FAIL] the settings file: <why>. Fix: <the setup line>``."""
+    return f"[FAIL] the settings file: {str(e).rstrip('.')}. Fix: {setup_line()}"
+
+
 def check(path) -> Path:
     """The file as an absolute path that exists; ``SettingsError`` otherwise."""
     p = Path(str(path))
@@ -48,7 +67,7 @@ def read(path) -> dict[str, str]:
     p = check(path)
     out: dict[str, str] = {}
     prefix = ""
-    for n, raw in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
+    for n, raw in enumerate(p.read_text(encoding="utf-8-sig").splitlines(), 1):     # utf-8-sig: a byte-order mark (Notepad) is dropped
         line = raw.strip()
         if not line or line.startswith(("#", ";")):
             continue
@@ -152,3 +171,62 @@ def server_url(entries: dict, host: str = "127.0.0.1") -> str | None:
         return url.rstrip("/")
     port = str(entries.get("server.port") or "").strip()
     return f"http://{host}:{port}" if port.isdigit() else None
+
+
+def names_home(entries: dict, home) -> bool:
+    """True when a settings file's ``drishti.home`` names ``home`` (this checkout): the ONE test of "is this file mine", for the tools'
+    default settings file, the bare console and a launcher's file (FIRST_RUN_ROBUSTNESS.md F4, R6). A file naming another folder, or none,
+    is not this checkout's: its roots are never followed."""
+    import os
+    named = (entries.get("drishti.home") or "").strip()
+    if not named:
+        return False
+    norm = lambda p: os.path.normcase(os.path.normpath(str(Path(p).expanduser().absolute()))).rstrip("\\/")
+    try:
+        if Path(named).exists() and os.path.samefile(named, home):
+            return True
+    except OSError:
+        pass
+    return norm(named) == norm(home)
+
+
+#: every DRISHTI_* variable that names a folder (an old ``setx`` naming a folder outside this checkout is never followed)
+ROOT_VARS = ("DRISHTI_HOME", "DRISHTI_DATA_DIR", "DRISHTI_MODULES_HOME", "DRISHTI_LIB_PATH", "DRISHTI_TMP_DIR")
+
+
+def inside(path, root, flavour=None) -> bool:
+    """Whether ``path`` is ``root`` or under it, compared as text in the platform's own way (``flavour``: ``ntpath`` or ``posixpath``,
+    default this machine's ``os.path``): case and separators as Windows treats them on Windows. Nothing is resolved on the disk."""
+    import os
+    f = flavour or os.path
+
+    def norm(x) -> str:
+        return f.normcase(f.normpath(f.expanduser(str(x)))).rstrip("\\/") or f.sep
+    p, r = norm(path), norm(root)
+    return p == r or p.startswith(r + f.sep)
+
+
+def foreign_vars(environ, home, flavour=None) -> list[tuple[str, str]]:
+    """The ``DRISHTI_*`` folder variables (:data:`ROOT_VARS`) whose value names a folder outside ``home`` (this checkout): (name, value),
+    in order. An old ``setx`` from an earlier copy: setup reports each as a WARNING and never uses it."""
+    out = []
+    for n in ROOT_VARS:
+        v = (environ.get(n) or "").strip()
+        if v and not inside(v, home, flavour):
+            out.append((n, v))
+    return out
+
+
+def drop_foreign_vars(environ, home, entries: dict, scratch: str | None = None) -> list[str]:
+    """The trust rule (FIRST_RUN_ROBUSTNESS.md R5), one for ``drishti.py`` and the console run directly: every ``DRISHTI_*`` folder
+    variable naming a folder outside ``home`` is removed from ``environ``, unless it lies under ``scratch`` (the system temp folder: a
+    test's run) or is the very folder the accepted settings file's ``entries`` name for it. Returns one ``[WARN]`` line per variable."""
+    said = []
+    for name, value in foreign_vars(environ, home):
+        mine = home_value(str(entries.get(name.lower().replace("_", ".")) or "").strip(), home)
+        if scratch and inside(value, scratch) or mine and inside(value, mine) and inside(mine, value):
+            continue
+        said.append(f"[WARN] {name}={value} names a folder outside this checkout: ignored (a settings file named with --settings may "
+                    "point elsewhere); you may delete the variable")
+        environ.pop(name, None)
+    return said

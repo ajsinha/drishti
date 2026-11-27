@@ -193,7 +193,7 @@ public final class PackLoader {
                     + (requiredBy == null ? "" : " (required by '" + requiredBy + "')"));
         }
         try {
-            Map<String, Object> m = yaml.readValue(manifest.toFile(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> m = yaml.readValue(java.nio.file.Files.readAllBytes(manifest), new TypeReference<Map<String, Object>>() {});
             if (!n.equals(m.get("pack"))) {
                 throw new IllegalStateException(manifest + " declares pack '" + m.get("pack") + "', expected '" + n + "'");
             }

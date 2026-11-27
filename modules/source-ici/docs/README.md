@@ -24,4 +24,4 @@ can be switched on or off on its own (`config/modules/source-ici.yaml`, `enabled
 |---|---|---|---|
 | `trade` | its own table trading.trade_ici (one table a trading system) | `TICKET_NO` | `TRADE_ID`, `TRADE_VERSION`, `TRADE_STATUS`, `PRODUCT_TYPE`, `BUY_SELL_CODE`, `QUANTITY`, `PRICE`, `CURRENCY`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `TRADE_DATE`, `START_DATE`, `MATURITY_DATE`, `SOURCE_UPDATE_TIME` |
 
-The guide: [guide.md](guide.md).
+The guide: the bank data guide (`docs/guides/BANK_DATA_GUIDE.md`, in the package `guides/BANK_DATA_GUIDE.md`; Help, this module's section).

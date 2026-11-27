@@ -15,7 +15,7 @@
 """Pictures of the FRTB-SA tutorial, FRTB-SA from the hand-built cases to a desk (docs/guides/FRTB_SA_GUIDE.md), written to
 docs/tutorials/img/t30/. Run it on its own (it builds its own lake and starts its own scratch server and console):
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t30
+    python3 tools/docs/screenshots.py --guide t30
 
 The pictures, in the tutorial's order: the hand-built cases' capital stack, their three scenarios, the playground comparing a switch, a
 recipe replayed, the rates desk's capital and its contributions by book."""

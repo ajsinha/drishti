@@ -14,8 +14,8 @@
 
 """A large trading book for scale tests: N trades over D business days, written as JSON Lines, then loaded into the Delta Lake the server reads.
 
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py      # 500,000 trades, 3 days
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades 1000000 --days 5
+    python tools/samplegen/bulk_trades.py      # 500,000 trades, 3 days
+    python tools/samplegen/bulk_trades.py --trades 1000000 --days 5
     python3 tools/samplegen/bulk_trades.py --trades 10000 --no-lake                                    # the JSONL only
 
 Generating and loading are separate steps (docs/guides/DATA_GUIDE.md). The generator writes one file per business day,
@@ -25,7 +25,7 @@ of the lake (--root, default data/delta/demo: trading/trade_murex, or with --sys
 and PRODUCT_TYPE with the columns the trading pack promotes, as tools/packgen/trades/make_trades.py --lake does, and leaves every
 other table as it is; a running server picks the new trades up within a minute. For a book of all three systems at a laptop's size,
 with the day's amendments, use make_trades.py instead. To go back to the sample trades over 10 days:
-python3 tools/packgen/banking/make_data.py --lake data/delta/demo (with uv run --with deltalake --with pyarrow --with pyyaml).
+python3 tools/packgen/banking/make_data.py --lake data/delta/demo (needs deltalake, pyarrow, pyyaml).
 
 --jsonl FILE.tar (a tar of trade/<YYYY-MM-DD>/ folders, any --days) or FILE|- (one day: --days 1; the load rules, docs/guides/DATA_LAKE_GUIDE.md)
 writes loader rows instead ({"domain", "kind", "id", "date", "doc", "columns"}: the document and the fields the trading

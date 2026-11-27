@@ -122,7 +122,7 @@ class BackendClient:
         # carried never rides on the next person's call; who calls is said by each call's own headers
         self._client = httpx.AsyncClient(
             base_url=base_url.rstrip("/"), timeout=timeout, cookies=CookieJar(policy=DefaultCookiePolicy(allowed_domains=[])),
-            limits=httpx.Limits(max_connections=pool, max_keepalive_connections=pool))
+            limits=httpx.Limits(max_connections=pool, max_keepalive_connections=pool), trust_env=False)   # Drishti to itself: never through a proxy
         self._servers = servers
 
     def _base(self) -> str:
@@ -289,7 +289,7 @@ class BackendClient:
 
     async def live_query(self, q: str, ident=None) -> dict:
         """A search as a query on a live table (``GET /api/v1/rdp/searches``): ``{table, query, live, page, search}``, the first page read
-        for the person (docs/guides/LIVE_RESULTS_GUIDE.md section 7)."""
+        for the person (docs/guides/USER_GUIDE.md, Live results and blotters: The engine: snapshot, deltas, scale, retention)."""
         return await self._get("/rdp/searches", ident, q=q)
 
     async def live_kind(self, word: str, ident=None, offset: int = 0, limit: int = 100, sort: str = "", descending: bool = False) -> dict:
@@ -366,7 +366,7 @@ class BackendClient:
 
     async def engine(self, method: str, path: str, ident, /, body=None, raw: bool = False, accept: str = "", timeout: float = 60.0,
                      **params) -> Any:
-        """A compute engine's API, as the user (docs/architecture/DOMAIN_MODULES.md section 5, C7: the core client names no engine; a
+        """A compute engine's API, as the user (docs/architecture/KERNEL_AND_MODULES.md section 21.5, C7: the core client names no engine; a
         module's typed calls are its own, over this one). ``path`` starts after /api/v1 (``/risk/var/scope``); a list value is sent as a
         repeated parameter. The first answer of a business date loads the engine's inputs into the server's memory, so this waits up to
         ``timeout`` seconds (a minute). ``raw`` returns the bytes and headers (an export); ``accept`` (with ``raw``) asks for another format
@@ -381,12 +381,12 @@ class BackendClient:
         return await self._send(method, path, ident, **kw)
 
     async def modules(self, ident) -> dict:
-        """What the person may see (docs/architecture/ACCESS_MODEL.md section 2): the modules loaded and not (with why), the lenses open to
+        """What the person may see (docs/architecture/KERNEL_AND_MODULES.md section 19.2): the modules loaded and not (with why), the lenses open to
         them and the functions they may not use (``GET /api/v1/modules``, as the person; core/modules.py reads it)."""
         return await self._send("GET", "/modules", ident, timeout=10.0)
 
     async def explain_number(self, method: str, path: str, ident, body=None, **params) -> Any:
-        """One Explain for every number (/api/v1/explain, docs/architecture/SHARED_SCREENS.md section 3), as the user. ``path`` starts after
+        """One Explain for every number (/api/v1/explain, docs/architecture/THIN_CONSOLE_DESIGN.md section 8.3), as the user. ``path`` starts after
         /api/v1/explain (``""`` or ``/kinds``). Why it moved reads two business dates: this waits up to two minutes."""
         kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 120.0}
         if body is not None:
@@ -899,7 +899,7 @@ class BackendClient:
         return await self._send("POST", "/auth/oidc", service, json={"idToken": id_token, "nonce": nonce})
 
     async def embed_sign_in(self, id_token: str, nonce: str, origin: str, refreshed: bool, service) -> dict:
-        """The renderer's sign-in window (EMBED_GUIDE.md 10.1): the server verifies the single sign-on's ID token and makes that user's
+        """The renderer's sign-in window (INTEGRATION_GUIDE.md 10.1): the server verifies the single sign-on's ID token and makes that user's
         embed token for the host application that registered ``origin`` (RFC 8693 form), audited with the origin."""
         return await self._send("POST", "/embed/sign-in-window", service, json={"idToken": id_token, "nonce": nonce, "origin": origin, "refreshed": refreshed})
 

@@ -276,7 +276,7 @@ class ServerPool:
     async def probe(self, url: str) -> float:
         """Milliseconds the server took to answer its public about; raises when it does not."""
         t0 = time.perf_counter()
-        async with httpx.AsyncClient(timeout=min(self.timeout, 3.0)) as c:
+        async with httpx.AsyncClient(timeout=min(self.timeout, 3.0), trust_env=False) as c:
             r = await c.get(f"{url}/public/about")
             r.raise_for_status()
         return (time.perf_counter() - t0) * 1000
@@ -305,7 +305,7 @@ class ServerPool:
         """The member list of the server this console uses: new members added, dead or left ones dropped (never a configured one)."""
         url = self.preferred()
         try:
-            async with httpx.AsyncClient(timeout=self.timeout) as c:
+            async with httpx.AsyncClient(timeout=self.timeout, trust_env=False) as c:
                 r = await c.get(f"{url}/api/v1/net/members", headers=headers)
                 r.raise_for_status()
                 body = r.json()

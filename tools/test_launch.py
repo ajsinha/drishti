@@ -133,14 +133,17 @@ def test_every_java_finder_is_the_one_in_javacmd():
 
 
 # ---- the one home and the one jar place --------------------------------------------------------------------------------------------------
-def test_the_home_is_the_tools_own_folder_and_another_is_refused(tmp_path):
+def test_the_home_is_the_tools_own_folder_another_explicit_is_refused_and_an_old_file_or_variable_warned(tmp_path, capsys):
+    """--home naming another folder is refused; a settings file or DRISHTI_HOME naming one (an old copy) is a WARNING and not used."""
     assert javacmd.find_home(None, env_of(), {}) == (ROOT.resolve(), "the folder holding tools/drishti.py")
     assert javacmd.find_home(None, env_of(DRISHTI_HOME=ROOT), {})[1] == "DRISHTI_HOME"
-    for named in ({"DRISHTI_HOME": tmp_path}, {}):
-        with pytest.raises(javacmd.HomeError, match="one release's tools never drive another"):
-            javacmd.find_home(None if named else tmp_path, env_of(**named), {})
-    with pytest.raises(javacmd.HomeError, match="drishti.home in the settings file"):
-        javacmd.find_home(None, env_of(), {"drishti.home": str(tmp_path)})
+    with pytest.raises(javacmd.HomeError, match="one release's tools never drive another"):
+        javacmd.find_home(tmp_path, env_of(), {})
+    home, why = javacmd.find_home(None, env_of(DRISHTI_HOME=tmp_path), {})
+    assert home == ROOT.resolve() and "DRISHTI_HOME names" in why and "ignored" in why
+    assert f"WARNING: DRISHTI_HOME={tmp_path.resolve()}" in capsys.readouterr().err
+    home, why = javacmd.find_home(None, env_of(), {"drishti.home": str(tmp_path)})
+    assert home == ROOT.resolve() and "drishti.home in the settings file names" in why
 
 
 def test_a_relative_home_is_refused_as_relative_before_any_comparison():
@@ -166,7 +169,7 @@ def test_the_server_jar_is_found_in_home_lib_only(tmp_path):
     home = tmp_path / "home"
     (home / "kernel" / "drishti-server" / "target").mkdir(parents=True)
     (home / "kernel" / "drishti-server" / "target" / "drishti-server-1-exec.jar").write_bytes(b"x")   # Maven's output: never looked at
-    with pytest.raises(javacmd.JarError, match=r"no server jar in .*lib: run  python tools/drishti.py build jar"):
+    with pytest.raises(javacmd.JarError, match=r"no server jar in .*lib .*\. Fix: .*drishti\.py build jar$"):
         javacmd.server_jar(None, home)
     (home / "lib").mkdir()
     (home / "lib" / "drishti-server-2-exec.jar").write_bytes(b"x")
@@ -187,7 +190,7 @@ def test_a_jar_of_another_version_than_the_checkout_is_refused(tmp_path):
     (home / ".mvn").mkdir()
     (home / ".mvn" / "maven.config").write_text("-Drevision=2.9.11.z9\n", encoding="utf-8")
     (home / "lib" / "drishti-server-2.9.11.g-exec.jar").write_bytes(b"x")
-    with pytest.raises(javacmd.JarError, match=r"lib/ holds drishti-server-2.9.11.g-exec.jar but this checkout is 2.9.11.z9: run  python tools/drishti.py build jar"):
+    with pytest.raises(javacmd.JarError, match=r"lib/ holds drishti-server-2.9.11.g-exec.jar but this checkout is 2.9.11.z9 .*\. Fix: .*drishti\.py build jar$"):
         javacmd.server_jar(None, home)
     (home / "lib" / "drishti-server-2.9.11.g-exec.jar").unlink()
     (home / "lib" / "drishti-server-2.9.11.z9-exec.jar").write_bytes(b"x")
@@ -261,7 +264,6 @@ def test_windows_terminate_only_forces_and_spawn_detaches(tmp_path):
         procs.spawn(["a-server", "--port=1"], tmp_path, {}, log=tmp_path / "logs" / "s.out")
         kw = popen.call_args.kwargs
         assert kw["creationflags"] == procs.CREATE_NEW_PROCESS_GROUP | procs.CREATE_NO_WINDOW and "start_new_session" not in kw
-        assert procs.venv_python(tmp_path) == tmp_path / "drishti-console" / ".venv" / "Scripts/python.exe"
     with mock.patch.object(procs.subprocess, "Popen") as popen:
         if os.name != "nt":
             procs.spawn(["a-server"], tmp_path, {}, log=tmp_path / "s.out")
@@ -293,7 +295,7 @@ def test_windows_stop_asks_over_http_first_then_forces_after_the_timeout(tmp_pat
     procs.write_pid(f, 4242, port=18999, data="d")                                  # no key (an older launcher): forced at once on Windows
     with mock.patch.object(procs, "windows", lambda: True), mock.patch.object(procs, "alive", return_value=True), \
             mock.patch.object(procs, "running", return_value=True), mock.patch.object(procs.subprocess, "run", return_value=_cp("")) as run, \
-            mock.patch.object(procs.time, "sleep"), mock.patch.object(procs.urllib.request, "urlopen") as http:
+            mock.patch.object(procs.time, "sleep"), mock.patch.object(procs, "no_proxy_opener") as http:
         procs.stop_pid_file(f, "server", procs.SERVER_MARK, 5)
     http.assert_not_called()
     assert run.call_args[0][0] == ["taskkill", "/F", "/PID", "4242"]
@@ -314,7 +316,9 @@ def test_the_stop_request_carries_the_pid_files_key_to_this_machine_only(tmp_pat
     def urlopen(req, timeout):
         seen.update(url=req.full_url, method=req.get_method(), key=req.get_header(procs.STOP_HEADER.capitalize()))
         return Answer()
-    with mock.patch.object(procs.urllib.request, "urlopen", urlopen):
+    class Opener:                                   # Drishti's own address: the no-proxy opener (G5)
+        open = staticmethod(urlopen)
+    with mock.patch.object(procs, "no_proxy_opener", lambda: Opener()):
         assert procs.ask_to_stop({"port": "18480", "stop": "k3y"})
     assert seen == {"url": "http://127.0.0.1:18480/launcher/stop", "method": "POST", "key": "k3y"}
     assert not procs.ask_to_stop({"port": "18480"}) and not procs.ask_to_stop({"stop": "k"})
@@ -354,7 +358,7 @@ def test_wrong_options_exit_2():
     assert run("start", "server", "--seed", "10.0.0.1:18480").returncode == 2
     assert run("stop", "server", "--node", "a", "--all-nodes").returncode == 2
     r = run("status", env=env_of(DRISHTI_HOME="/somewhere/else"))
-    assert r.returncode == 2 and "another release's install" in r.stderr
+    assert r.returncode != 2 and "DRISHTI_HOME=/somewhere/else names" in r.stderr, "warn, never refuse"
 
 
 def test_status_shows_the_roots_and_a_stale_pid(tmp_path):
@@ -366,18 +370,20 @@ def test_status_shows_the_roots_and_a_stale_pid(tmp_path):
 
 def test_setup_check_changes_nothing_and_setup_is_idempotent(tmp_path):
     data, envs = tmp_path / "data", tmp_path / "envs"
-    r = run("setup", "--check", "--data-dir", str(data), "--envs-dir", str(envs), "--skip-venv")
+    r = run("setup", "drishti", "--check", "--data-dir", str(data), "--envs-dir", str(envs))
     assert r.returncode == 1 and not data.exists() and not envs.exists(), r.stdout
-    r = run("setup", "--data-dir", str(data), "--envs-dir", str(envs), "--skip-venv")
+    r = run("setup", "drishti", "--data-dir", str(data), "--envs-dir", str(envs))
     assert all((data / d).is_dir() for d in ("run", "logs", "tmp", "delta")), r.stdout + r.stderr
     assert not (data / "modules").exists(), "the modules are packages in <home>/modules, not a folder of the data folder"
     assert not (data / "lib").exists(), "every jar is under the home (lib, lib/ext), never the data folder"
     ini = (envs / "dev.ini").read_text(encoding="utf-8")
     assert f"drishti.home={ROOT.resolve().as_posix()}" in ini and f"drishti.data.dir={data.resolve().as_posix()}" in ini
     assert "/path/to/drishti" not in ini
-    (envs / "dev.ini").write_text("# mine\n", encoding="utf-8")
-    r = run("setup", "--data-dir", str(data), "--envs-dir", str(envs), "--skip-venv")
-    assert (envs / "dev.ini").read_text(encoding="utf-8") == "# mine\n" and "kept as it is" in r.stdout
+    mine = ini + "# mine\n"                                        # this checkout's file with the user's own line: kept as it is
+    (envs / "dev.ini").write_text(mine, encoding="utf-8")
+    r = run("setup", "drishti", "--data-dir", str(data), "--envs-dir", str(envs))
+    assert (envs / "dev.ini").read_text(encoding="utf-8") == mine and "kept as it is" in r.stdout
+    assert not list(envs.glob("replaced-*")), "identical files and this checkout's dev.ini: nothing moved"
     assert "Environment variables seen" in r.stdout and "Next steps" in r.stdout
 
 
@@ -391,7 +397,7 @@ def test_the_shell_twins_are_gone():
     """No dual machinery, no shell (LAUNCHER_REVIEW.md D8): bin/ holds only its README; the drain is drishti.py node and the server's own
     drain on a stop. The one shell script left in tools/ is tools/drill.sh, the internal test drill."""
     tracked = subprocess.run(["git", "ls-files", "bin"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
-    assert sorted(tracked) == ["bin/README.md"]   # what git holds: a leftover __pycache__ is not a shell twin
+    assert sorted(tracked) == ["docs/guides/OPERATIONS_GUIDE.md"]   # what git holds: a leftover __pycache__ is not a shell twin
     assert not (ROOT / "tools" / "windows").exists() and not (ROOT / "tools" / "rolling-upgrade.sh").exists()
 
 

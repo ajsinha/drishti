@@ -182,14 +182,6 @@ def spec() -> PB.PackSpec:
         examples=[e for e in [("ECON ECON-IND", "India · growth path, output by sector"), ("ECON ECON-USA", "United States · the same view"), ("MACRO MACRO-BRA-GDP-GROWTH", "Brazil · one indicator with history and rank"),
                   ("FCST FCST-JPN-WEO", "Japan · IMF outlook to 2031"), ("LABR LABR-NGA", "Nigeria · labour market"), ("FISC FISC-USA", "United States · debt and balance"),
                   ("ECG ECG-SAS", "South Asia · a World Bank region"), ("REGE REGE-AU-NSW", "New South Wales · an illustrative regional sample")] if not (NO_IMF and e[0].startswith("FCST"))],
-        overview=("The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0) and the CIA World Factbook (public domain). This build has no IMF data. "
-                  "Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income "
-                  "group, labour market, fiscal position and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` "
-                  "(see docs/guides/WORLD_DATA_GUIDE.md)." if NO_IMF else
-                  "The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0), the IMF World Economic Outlook (reuse with attribution), and the CIA "
-                  "World Factbook (public domain). Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income "
-                  "group, labour market, fiscal position, IMF forecast and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` "
-                  "(see docs/guides/DATA_GUIDE.md)." " The IMF figures (the forecasts, and the debt and net lending behind each fiscal position) are for **internal demonstrations only**: the IMF requires its permission for commercial use, so raise it before any client or external use (docs/guides/DATA_GUIDE.md, licence note)."),
         roles={"economist": {"kinds": [k.kind for k in KINDS], "raw": True}},
         derived={"macro-groupings": {"kinds": ["country-group"], "settings": GROUPINGS}})
 

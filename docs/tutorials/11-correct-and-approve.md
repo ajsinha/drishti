@@ -20,8 +20,8 @@ where the policy says so, applied one at a time per record and audited. In this 
 notional on the book desk, read the review and confirm sheet, approve the change as another person, watch it applied and shown to a
 second browser, and do the same from the command line, including a change that is refused because the trade moved underneath. Each
 step shows the UI, the command line and the YAML. The reference for authors is
-[APPROVALS_GUIDE.md section 4a](../guides/APPROVALS_GUIDE.md#4-submitting-a-change); for administrators
-[APPROVALS_GUIDE.md, for administrators](../guides/APPROVALS_GUIDE.md#7-for-administrators-switching-write-back-on); the design is [APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals).
+[APPROVALS_GUIDE.md section 4a](../guides/USER_GUIDE.md#submitting-a-change); for administrators
+[APPROVALS_GUIDE.md, for administrators](../guides/ADMIN_GUIDE.md#281-switching-write-back-on); the design is [APPROVALS_GUIDE.md](../architecture/ARCHITECTURE.md#31-collaboration-write-back-and-approvals).
 
 ## Time to complete
 
@@ -64,7 +64,7 @@ Admin → Edits says where the edit log lives and why; **on the command line**:
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py edits status --user ada
+python3 tools/drishti.py edits status --user ada
 # {"enabled": true, "mode": "single", "store": "sqlite", "why": "auto: this node is alone", ...}
 ```
 
@@ -106,7 +106,7 @@ sheet says *Waiting for an approver* with the change id.
 The same submission from the command line (a change rather than a draft):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py change propose --kind trade --id MX-20000012 \
+python3 tools/drishti.py change propose --kind trade --id MX-20000012 \
   --set NOTIONAL=28001250 --from NOTIONAL=28000000 --reason "booking typo: ticket 4411" --user ash
 # chg-01M5V881D3K33Z45TWEND1RJAM  trade MX-20000012  AWAITING (1 approval needed)
 ```
@@ -122,7 +122,7 @@ The change waits in the one **Approvals** queue (Views → Approvals, kind *Corr
 presses **Approve**, or from the command line:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py approvals approve change chg-01M5V881D3K33Z45TWEND1RJAM --comment "checked against ticket 4411" --user kim
+python3 tools/drishti.py approvals approve change chg-01M5V881D3K33Z45TWEND1RJAM --comment "checked against ticket 4411" --user kim
 ```
 
 Approving your own change answers `403 DRS-9302` *you submitted this change: someone else approves it (four eyes)*.
@@ -143,7 +143,7 @@ change id). A second browser watching the book shows the new notional by itself,
 it under *Open overlays*, with the booking system's value beside it. The record's history:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py change history trade MX-20000012 --user ash
+python3 tools/drishti.py change history trade MX-20000012 --user ash
 ```
 
 ## Step 6 · A change based on an old value is conflicted
@@ -151,10 +151,10 @@ drishti-console/.venv/bin/python tools/drishti.py change history trade MX-200000
 Propose another change that still says you saw 28,000,000:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py change propose --kind trade --id MX-20000012 \
+python3 tools/drishti.py change propose --kind trade --id MX-20000012 \
   --set NOTIONAL=28000500 --from NOTIONAL=28000000 --reason "late correction" --user kim
-drishti-console/.venv/bin/python tools/drishti.py approvals approve change <its id> --user ada
-drishti-console/.venv/bin/python tools/drishti.py change show <its id> --user kim
+python3 tools/drishti.py approvals approve change <its id> --user ada
+python3 tools/drishti.py change show <its id> --user kim
 # chg-…  trade MX-20000012  CONFLICTED  (overlay, by kim)
 #   NOTIONAL: you saw 28000000, it is now 28001250, you wanted 28000500
 ```
@@ -171,8 +171,8 @@ the sheet take the whole screen, with the difference, the destination and the re
 
 ## Next steps
 
-- Make your own screen's form submit: add `save:` to its `form:` ([APPROVALS_GUIDE.md section 4a](../guides/APPROVALS_GUIDE.md#4-submitting-a-change)).
+- Make your own screen's form submit: add `save:` to its `form:` ([APPROVALS_GUIDE.md section 4a](../guides/USER_GUIDE.md#submitting-a-change)).
 - Send amendments to a booking system: a JDBC connector's `writes:` with its guard and idempotency clause, switched on in Admin → Edits
-  ([APPROVALS_GUIDE.md section 13](../guides/APPROVALS_GUIDE.md#10-writing-to-a-source-writes), [JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record)).
-- Recompute on a change: a reactive connector with a `write-back` trigger ([tutorial 19, Part C](19-build-a-pack-and-a-screen.md#part-c--computed-panels-a-reactive-connector)).
-- Run several servers: PostgreSQL for the Drishti database, or an edit primary ([APPROVALS_GUIDE.md section 11](../guides/APPROVALS_GUIDE.md#8-the-edit-log-lanes-and-the-cluster)).
+  ([APPROVALS_GUIDE.md section 13](../guides/ADMIN_GUIDE.md#284-writing-to-a-source-writes), [JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record)).
+- Recompute on a change: a reactive connector with a `write-back` trigger ([tutorial 25](25-computed-panels.md)).
+- Run several servers: PostgreSQL for the Drishti database, or an edit primary ([APPROVALS_GUIDE.md section 11](../guides/ADMIN_GUIDE.md#282-the-edit-log-lanes-and-the-cluster)).

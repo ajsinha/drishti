@@ -16,7 +16,7 @@
 # banks, regulators and governments from their own feeds, filled daily by the official-news feed (config/feeds/official-news.yaml) into
 # the newslake lake.
 pack: official-news
-domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/KERNEL_AND_MODULES.md)
 version: 1.0.0
 code: ONEWS
 title: Official news
@@ -95,4 +95,3 @@ console:
     - ["PRESS PRESS-ECB", "The European Central Bank"]
     - ["PRESS PRESS-FEDREG", "The US Federal Register's newest documents"]
     - ["PRESS PRESS-BOE", "The Bank of England (internal only: its terms allow no commercial reuse)"]
-  help: config/help.yaml

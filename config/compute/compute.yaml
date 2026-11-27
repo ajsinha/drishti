@@ -17,7 +17,7 @@
 # starts. Everything workers write goes under <data dir>/compute/ (environments, the SDK, request scratch folders); nothing in /tmp.
 compute:
   enabled: ${DRISHTI_COMPUTE_ENABLED:false}  # run compute workers; false (as shipped) starts none
-  python: ${DRISHTI_PYTHON:}         # the interpreter workers and environments use; empty: python3 (python on Windows)
+  python: ${DRISHTI_PYTHON:}         # the interpreter workers and environments use; empty: drishti.python of the settings file (setup writes it), else python3 (python on Windows)
   build: manual                      # manual (Admin -> Compute -> Build) or on-approval: when an approved environment is built
   approval:
     roles: []                        # roles whose administrators may approve requirements; empty: any administrator (never the requester)

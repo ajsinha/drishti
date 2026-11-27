@@ -16,7 +16,7 @@
 docs/tutorials/img/t27/. They need a server and console with the public-data packs on the demo lake
 (DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif) and sign-in off:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t27
+    python3 tools/docs/screenshots.py --guide t27
 
 The pictures, in the tutorial's order: an ownership group computed from its entities, every group, a country, two sectors, a company's
 computed margin and growth, a World Bank region, a factor set's correlations (Pearson over every return, then Ledoit-Wolf)."""

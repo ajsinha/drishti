@@ -1,0 +1,25 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The settings tables of the guides, written by tools/docs/guide_settings.py between <!-- settings:begin <id> --> and <!-- settings:end -->.
+blocks:
+  - id: live-sets
+    file: docs/guides/USER_GUIDE.md
+    keys: [drishti.live-sets.flush-ms, drishti.live-sets.window-capacity, drishti.live-sets.dir, drishti.live-sets.edits-off,
+           drishti.live-sets.default-max-rows, drishti.live-sets.store-timeout-seconds]
+  - id: mr-cube
+    file: docs/guides/bi/PIVOT_SCALE_AND_CUBES.md
+    keys: [drishti.engines.mr-cube.enabled, drishti.cube.mr.risk-classes, drishti.cube.mr.grids, drishti.cube.mr.ladder-limits,
+           drishti.module.banking.mr-cube.sbm-max-cells, drishti.cube.mr.stressed-max-cells, drishti.cube.mr.sparkline-dates, drishti.cube.mr.sparkline-max-cells,
+           drishti.cube.mr.what-if-rows]

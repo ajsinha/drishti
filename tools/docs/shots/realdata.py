@@ -15,7 +15,7 @@
 """The pictures of the real-data guide (docs/guides/WORLD_DATA_GUIDE.md): real countries in the world-economy pack, written to
 docs/guides/img/realdata/. They need a server and console with that pack (DRISHTI_PACKS=world-economy):
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide realdata --base http://127.0.0.1:17987
+    python3 tools/docs/screenshots.py --guide realdata --base http://127.0.0.1:17987
 """
 from __future__ import annotations
 

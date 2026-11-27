@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The bank's legal entities (docs/plans/CSV_LOADERS.md section 3.1): the canonical CSV, its columns named as the contract's fields. The
+# The bank's legal entities (docs/guides/BANK_DATA_GUIDE.md section 3.1): the canonical CSV, its columns named as the contract's fields. The
 # names behind the LEGAL tree's nodes; a full snapshot every day. A site's own column names are a mapping of its own (--mapping FILE).
 format: 1
 kind: legal-entity

@@ -16,7 +16,7 @@
 # reduced to events and tone by country and CAMEO category, filled daily by the gdelt-events feed (config/feeds/gdelt-events.yaml) into
 # the newslake lake.
 pack: gdelt-events
-domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/KERNEL_AND_MODULES.md)
 version: 1.0.0
 code: GDLT
 title: GDELT events
@@ -70,4 +70,3 @@ console:
     - ["GDELT GDELT-USA", "The United States · yesterday's events, tone, the conflict share, by category, the top stories"]
     - ["GDELT GDELT-GBR", "The United Kingdom"]
     - ["GDELT GDELT-CAN", "Canada"]
-  help: config/help.yaml

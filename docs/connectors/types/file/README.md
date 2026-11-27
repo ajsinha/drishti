@@ -241,7 +241,7 @@ DRISHTI_CONNECTORS_DIR=config/connectors.examples/files DRISHTI_PACKS=market-ris
   or kind like `../x`) is refused.
 
 The connector never writes and has no `writes:`; write-back keeps corrections as overlays in the Drishti database and the loader folds
-approved ones into the next build ([APPROVALS_GUIDE.md](../../../architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
+approved ones into the next build ([ARCHITECTURE.md › 31.6 Where a write lands: overlays, owned rows and the outbox](../../../architecture/ARCHITECTURE.md#316-where-a-write-lands-overlays-owned-rows-and-the-outbox)).
 
 ## Memory, size and measured results
 
@@ -327,6 +327,6 @@ fixing/X.csv --rows-document --out fixing.jsonl` writes the JSON Lines line that
 
 - [CONFIGURATION.md, the `file` connector](../../../admin/CONFIGURATION.md#file--json-or-csv-files-on-disk) and
   [Connector files](../../../guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors); ready-made files in `config/connectors.examples/files/`.
-- [Demo data](../../../guides/DATA_GUIDE.md#11-the-demo-data) (the rows the loaders write) and
+- [Demo data](../../../guides/BANK_DATA_GUIDE.md#9-the-demo-data) (the rows the loaders write) and
   [the data lake guide](../../../guides/DATA_LAKE_GUIDE.md) (the load rules).
 - [The connector developer's guide](../../../guides/DEVELOPER_GUIDE.md#10-connectors-choosing-combining-and-writing-one) (the README standard).

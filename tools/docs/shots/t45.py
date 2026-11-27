@@ -19,7 +19,7 @@ reference data built into it (`lake demo --only trades/,core/`), sign-in off, th
 config/ or data/:
 
     DRISHTI_SHOTS_WORK=<an empty folder> DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> \\
-        drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t45
+        python3 tools/docs/screenshots.py --guide t45
 
 It writes config/lakes/risklake.yaml and config/dataload.yaml in the copy, makes the synthetic day with
 docs/tutorials/data/risklake/make_day.py, drops it with full .ready files, loads it, points trade-endur and risk-store at risklake,
@@ -43,8 +43,8 @@ SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "false", "DRISHTI_DATALOAD_ENABLED": "
 shot = register("t45", OUT / "t45")
 WIDE, HIGH = 1440, 900
 DAY = "2026-11-06"
-PY = ROOT / "drishti-console" / ".venv" / "bin" / "python"
-PY = PY if PY.exists() else Path(sys.executable)   # a worktree has no venv of its own: the interpreter running the script
+PY = Path(os.environ.get("DRISHTI_PYTHON") or sys.executable)
+PY = PY if PY.exists() else Path(sys.executable)   # DRISHTI_PYTHON, else the interpreter running the script
 PROCS: list = []             # the scratch server and console; restart() replaces the server in place, so the driver stops the new one
 
 LAKE = """lake: risklake                    # the file's name; its folder is data/delta/risklake (no root: needed)

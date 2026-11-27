@@ -26,7 +26,7 @@ Every endpoint, with its parameters and a captured answer, and every error code 
 
 If you only want to run Drishti, read [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine); to run it from IntelliJ IDEA and PyCharm, read
 [IDE_GUIDE.md](IDE_GUIDE.md). For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md), the BI model
-architecture [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) and the [decision records](../architecture/adr/README.md).
+architecture [ARCHITECTURE.md section 28](../architecture/ARCHITECTURE.md#28-business-intelligence-on-the-table-layer) and the [decision records](../architecture/DECISIONS.md).
 
 The API references are at **Help → Developer**, generated from the code: the Javadoc of the [plugin and connector SPI](/help/reference/latest/java/drishti-api/index.html) and the [shard machinery](/help/reference/latest/java/drishti-compute/index.html) with [`ShardedMeasure`](/help/reference/latest/java/drishti-server/com/ash/drishti/server/shard/ShardedMeasure.html), and the Python references of the [compute worker SDK](/help/reference/latest/python/drishti_compute/engine.html), [BI Python items](/help/reference/latest/python/core/python_items.html), [`drishti.py`](/help/reference/latest/python/drishti.html) and [`drishti_client`](/help/reference/latest/python/drishti_client.html), the pack generator helpers ([`readme`](/help/reference/latest/python/readme.html), [`packsamples`](/help/reference/latest/python/packsamples.html), [`upper`](/help/reference/latest/python/upper.html), [`walks`](/help/reference/latest/python/walks.html)) and the test-data helpers ([`samplegen`](/help/reference/latest/python/samplegen/dates.html)). What you add to these surfaces is documented as you write it: the drill fails on a public Java member without a comment, a broken `{@link}`, or a public Python function without a docstring and type hints (`python3 tools/api_docs.py check`; [Tools](CLI_REFERENCE.md#api-references)).
 
@@ -93,7 +93,7 @@ inbox nor the in-memory lake, the disk cache sees nothing of `common`, and so on
 | `drishti-engine` | `engine`, `graph` | Sources and routing (including a **union** of connectors that serve one kind together), the view pipeline, binding, the ViewModel, commands and type-ahead, search, history, impact, business dates, live topics; entity references (which fields link to which kinds) and link badges. | `ViewPipeline`, `source.SourceRegistry`, `source.SourceRouter`, `source.ConnectorInstance`, `bind.Binder`, `view.ViewModel`, `view.PanelData`, `live.TopicHub`, `live.ViewStream`, `command.CommandParser`, `search.StructuredSearch` |
 | `drishti-identity` | `identity` | Users, passwords, roles, lockout, preferences, pack switches and the audit trail, in SQLite or PostgreSQL through JPA. | `UserService`, `JpaUserStore`, `RoleStore`, `PackStateStore`, `JpaAuditLog`, `IdentityDatabase`, `db.IdentityRepositories` |
 | `drishti-packs` | `packs` | Loads the enabled packs and turns them into the lowest-precedence property source; writes connector files from the packs' templates. | `PackLoader`, `PackLineage`, `PackEnvironmentPostProcessor` (registered in `META-INF/spring.factories`), `ConnectorBootstrap` |
-| `drishti-ai` | `ai` | The LLM provider layer and the MCP client: providers (Anthropic, OpenAI-compatible through Spring AI, a mock), model registry, call policy, prompt masking, MCP clients over streamable HTTP. Depends on `api` and `common` only (`ArchitectureRulesTest.aiLayerDependsOneWay`). **Off by default**; see [AI_GUIDE.md](AI_GUIDE.md#1-model-providers) and [AI_GUIDE.md](AI_GUIDE.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy). | `LlmGateway`, `LlmRegistry`, `LlmProvider`, `AnthropicProvider`, `SpringAiOpenAiProvider`, `McpGateway`, `McpRegistry`, `McpClient` |
+| `drishti-ai` | `ai` | The LLM provider layer and the MCP client: providers (Anthropic, OpenAI-compatible through Spring AI, a mock), model registry, call policy, prompt masking, MCP clients over streamable HTTP. Depends on `api` and `common` only (`ArchitectureRulesTest.aiLayerDependsOneWay`). **Off by default**; see [ADMIN_GUIDE.md › 27.1 Model providers](ADMIN_GUIDE.md#271-model-providers) and [ADMIN_GUIDE.md › 27.2 The MCP client: other servers' tools, behind Drishti's policy](ADMIN_GUIDE.md#272-the-mcp-client-other-servers-tools-behind-drishtis-policy). | `LlmGateway`, `LlmRegistry`, `LlmProvider`, `AnthropicProvider`, `SpringAiOpenAiProvider`, `McpGateway`, `McpRegistry`, `McpClient` |
 | `drishti-lake-host` | `lakehost` | Drishti's side of Drishti Lake (the product's jars: `lake-api`, `lake-io`, `lake-config`, `lake-delta`, `lake-iceberg`, `lake-files`, `lake-load`, `lake-memory`; its own repository, its own gate). `DrishtiLakeCatalog`: the shipped lakes (every jar's and live module's `drishti/lakes/shipped.txt`), the packs' files from the one resolution, the connectors' templates, the named lake writers and the modules' `ReadyRule` extensions. `DrishtiLake`: the one `LakeRuntime` of the process, built once from the server's settings (`lake.*`, `LAKE_*`) with the catalog and the `mem://` storage. `DrishtiLakeCli load` and `check`: the loader and `LakeCheck` with that runtime (the server's loader child process and `tools/drishti.py lake` start it). `LakeReads`: opens a connector's lake through the product's read API and maps a failed read to `UnreadableData`. | `DrishtiLakeCatalog`, `DrishtiLake`, `DrishtiLakeCli`, `LakeReads` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-module-runtime` | `module.runtime` | The module runtime ([§1.5](#15-the-module-runtime)): the `.dmod` package and its hash list, the manifest, verification V1–V8, discovery, the dependency resolver, a class loader and a child Spring context per module, the live route table, the registry of contributions and the unload sequence with its leak check; and the conformance checks C1–C14 ([§1.6](#16-the-module-sdk): `module.conformance`, run by `ModuleCli` in the server jar). Spring and Jackson only; one implementation for the kernel and, from i4, the console. | `ModuleRuntime`, `tool.ModuleTool`, `tool.ModuleConformance`, `KernelLibraries`, `DmodManifest`, `Dmod`, `ModuleVerifier`, `DependencyResolver`, `ModuleClassLoader`, `RouteTable`, `Contributions`, `LeakCheck` |
@@ -168,30 +168,30 @@ server nor Spring, and the Delta and Iceberg source plugins read the lake throug
 | `examples/packs/` | The retired packs (`finance`, `genomics`, `logistics`, `retail-banking`, `climate-risk`, `operational-risk`, `liquidity-risk`), kept as examples and as fixtures for tests written against them; loaded only with `DRISHTI_PACKS_EXTRA_DIRS=examples/packs` |
 | `config/connectors/`, `config/connectors.examples/` | The site's connector files (written by the server at its first start from the packs' templates; not committed) and ready-made examples per store ([DATA_GUIDE.md section 9](DATA_GUIDE.md#9-connector-files-and-admin--connectors)) |
 | `config/bi/` | Shipped BI files: datasets, models, reports, boards |
-| `run-configs/` | The IntelliJ IDEA run configurations, and `drishti-console/run-configs/` the PyCharm ones: [IDE_GUIDE.md](IDE_GUIDE.md) |
+| `run-configs/`, `drishti-console/run-configs/` | The IDE launchers, each project's own (IntelliJ opens `drishti`, PyCharm `drishti-console`), in the folders **IntelliJ-drishti-build/-run/-test** and **PyCharm-console-setup/-data/-run/-check**; as ordinary `*.run.xml` files, no `.idea` in the source: [IDE_GUIDE.md](IDE_GUIDE.md) |
 | `data/testdata/` | The committed test data: sixty business days of every dataset the seven packs read (5,000 trades a day per source system), `.jsonl.gz`, with `testdata.yaml` and a README ([data/testdata/README.md](../../data/testdata/README.md)) |
 | `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`, `bundle`, `verify`, `deploy`, `rollback`, `keygen`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `lake build|publish|scan|status|demo|maintain`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it. See [CLI_REFERENCE.md](CLI_REFERENCE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md) |
 | `tools/lake/` | the lake commands (`lake build|publish|scan|status|demo|maintain|undo|delete`): thin front ends that configure and start Drishti Lake's loader and upkeep (the writer is chosen by `--engine`, [CLI_REFERENCE.md section 7.6](CLI_REFERENCE.md#76-the-lake-writers---engine)) and add Drishti's parts (the data-load signal, the BI-store stamp, the lake files); the loading rules, guards, archives and maintenance are Lake's ([LOADER.md](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md)) |
 | `tools/testdata/` | `make_testdata.py` (writes `data/testdata`, deterministic, `--check`), `universe.py` (the fictitious counterparties, books and legal entities), `test_testdata.py`, `test_deterministic.py` (the same bytes on every Python) |
 | `tools/packgen/` | Pack generators: `banking/` (the five banking packs from one taxonomy, `make_data.py` for their samples and `--lake`/`--jsonl`), `trades/` (the common trade schema every source system writes, `schema.py`, and the ENDUR, CALYPSO and MUREX generators), `common/` (`packbuild.py`, `packsamples.py`, `walks.py`, `upper.py`), `world/`, `economics/`, `politics/`, and the retired packs' generators |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (a pack's sample history as JSONL loader rows), `load_rows.py` (loads such rows into Delta), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for one source system: `--trades`, `--days`, `--system`), `stream.py` (Kafka ticker), `dates.py` (business-day calendars) |
-| `tools/storeload.py` (`drishti.py data load`) | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DATA_GUIDE.md section 11](DATA_GUIDE.md#11-the-demo-data)) |
+| `tools/storeload.py` (`drishti.py data load`) | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([BANK_DATA_GUIDE.md section 9](BANK_DATA_GUIDE.md#9-the-demo-data)) |
 | `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py`; `results/` keeps each run's raw JSON lines; see [BENCHMARK.md](../admin/BENCHMARK.md) |
 | `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see [BUILD_GUIDE.md](BUILD_GUIDE.md) and [CLI_REFERENCE.md](CLI_REFERENCE.md)) |
-| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](WORLD_DATA_GUIDE.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements |
+| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/` | The real-data builds of the world-economy pack ([WORLD_DATA_GUIDE.md (world-economy)](WORLD_DATA_GUIDE.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
 | `tools/` (files) | `drill.sh` (verify and publish), `calcruntime.py` (`drishti.py calc install`: installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `storeload.py` (`drishti.py data load`: the demo data into any of the nine stores), `render_sheet.py` (regenerates the renderer's stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras to `*.sutra.yaml`) |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | The **data folder** (`DRISHTI_DATA_DIR`): everything Drishti writes at run time, all git-ignored except `testdata/`: `delta/` (the demo lakes), `bi-store/` (BI columns and rollups), `connectors/` (`generated/` and `history/`), `identity/`, `feeds/`, `packs/` (`added.yaml`, installed archives), `loads/`, `governance/`, `collab/`, `reports/`, `qa/` (the QA profile), `build/` (tool output and staging), `drill/` (the drill's logs) |
 | `docs/` | These documents, by audience: `guides/` (getting started, user, developer, API, Rachana, reports and troubleshooting guides), `tutorials/` (18 hands-on tutorials), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance; the runbooks are in OPERATIONS_GUIDE.md), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
-| `.github/workflows/fast.yml`, `windows.yml` | CI: `fast.yml` runs `./mvnw -B -q verify` and the header check on Java 21 and 25 and `pytest` for the console on Python 3.13; `windows.yml` builds on Windows, runs the native Delta engine, the Delta connector and server tests, then the Python commands (`build jar`, `setup`, `setup --check`, `start server`, `status`, `stop server`) with the server on a small lake asked for a view, a search and a past date |
+| `.github/workflows/fast.yml`, `windows.yml` | CI: `fast.yml` builds Tools, Rachana and Lake from their release tags, packages Drishti (`./mvnw -B -q package -DskipTests`; Java 21, and a compile on 25), then runs the header check, `docs generate --check` and the docs and Help tests on Python 3.13; `windows.yml` builds on Windows, runs the native Delta engine, the Delta connector and server tests, then the Python commands (`build jar`, `setup`, `setup --check`, `start server`, `status`, `stop server`) with the server on a small lake asked for a view, a search and a past date |
 
 ### 1.5 The module runtime
 
 `drishti-module-runtime` loads **modules**: separately built packages (`<id>-<version>.dmod`) installed unpacked under a module folder
 as `<folder>/<id>/<version>/` with the package beside them (the design: [KERNEL_AND_MODULES.md sections 3, 4, 9.8 and 12](../architecture/KERNEL_AND_MODULES.md#3-the-module-package-dmod)).
-It is a library; a host (the kernel, from i5 also the console) makes one `ModuleRuntime` and adds only its own kind of contribution through
+It is a library; a host (the kernel, and the console) makes one `ModuleRuntime` and adds only its own kind of contribution through
 `ModuleHost`. With no module folder, or an empty one, it does nothing.
 
 ```java
@@ -237,7 +237,7 @@ three ways:
 
 | Way | For | Commands |
 |---|---|---|
-| **Maven** | a Maven project (the archetype makes one) | `mvn verify`: the parent's executions run the server jar's `module verify --manifest-only`, `module pack`, `module verify --conformance` with the Java that runs Maven (set `DRISHTI_HOME` to your Drishti folder; no Python) |
+| **Maven** | a Maven project (the archetype makes one) | `mvn verify`: the parent's executions run the server jar's `module verify --manifest-only`, `module pack`, `module verify --conformance` with the Java that runs Maven (`mvn verify -Ddrishti.home=<Drishti folder>`; no Python) |
 | **Any build** | Gradle, Bazel, a script, or `javac` and a folder | `java -jar <Drishti folder>/lib/drishti-server-<version>-exec.jar module pack <folder> [--jar <jar>] [--out <dir>]`, then `module verify <.dmod> --conformance` and `module inspect <.dmod>` |
 | **The command line** | Linux, macOS and Windows | `python3 tools/drishti.py module pack <folder>`, `module verify <.dmod> --conformance`, `module inspect <.dmod>`: each runs the same `module` command of the server jar |
 
@@ -268,7 +268,7 @@ the install's Maven wrapper; it runs `package`, never `install`, so nothing reac
 | `settings.xml` | a Maven settings file naming `repo/` by its absolute path: `mvn -s <Drishti folder>/sdk/settings.xml ...` finds the parent and the kernel API in a project that names no path |
 | `drishti-module-parent/pom.xml` | the parent pom, for a project that names it by `relativePath` (the genomics sample does) |
 
-The parent's own `<repositories>` entry reads `${drishti.home}/sdk/repo` (`-Ddrishti.home=<Drishti folder>`, or the environment variable `DRISHTI_HOME`).
+The parent's own `<repositories>` entry reads `${drishti.home}/sdk/repo` (`-Ddrishti.home=<Drishti folder>` only: the parent never reads an environment variable, so a build never reads another install).
 The genomics sample is the proof: `tools/test_sdk_builds_genomics.py` copies it beside the SDK's parent into an empty folder and builds it there, once by
 `relativePath` and once as a partner's project does (the parent by version through `settings.xml`); the tests run, `module pack` makes the `.dmod` and the fourteen checks pass.
 
@@ -414,7 +414,7 @@ failure a sentence naming the file and the fix:
 
 `ModuleCliTest` (in `drishti-server`) runs these paths without Maven: it generates a module from the archetype's templates, compiles it, packs it with the one packer (`ModulePack`), passes the fourteen checks through `ModuleCli`, adds a visual, and a broken copy fails the checks with their words.
 
-### 1.7 A module's console part
+### 1.7a A module's console part
 
 The console hosts a module's `console/` part **declaratively** (design: [KERNEL_AND_MODULES.md sections 4.7, 9 and 14.2.1](../architecture/KERNEL_AND_MODULES.md#47-the-console-part-loaded-by-the-drishti-console)):
 it reads the files the kernel verified and runs none of them, so a module brings no Python, no Java and no route registration to the
@@ -489,7 +489,7 @@ is not listed, so its visual is gone from the gallery (and its library answers 4
 
 `modules/genomics` is a third party's module (publisher Helix Lab, a sample) made from the archetype and finished by hand: it uses
 `drishti-kernel-api` and the plugin API only (C1) and carries no finance. Drishti Genomics (`--distribution genomics`) runs the thin
-kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/DISTRIBUTIONS.md#4-drishti-genomics-sample)).
+kernel with it alone ([KERNEL_AND_MODULES.md section 20.4](../architecture/KERNEL_AND_MODULES.md#204-drishti-genomics-sample)).
 
 1. **Generated.** `mvn archetype:generate -DarchetypeArtifactId=drishti-module-archetype -DgroupId=org.helixlab -DartifactId=genomics
    -Dpackage=org.helixlab.genomics -Ddomain=genomics` (the first commit of the module is the archetype's output, unchanged).
@@ -515,7 +515,7 @@ kernel with it alone ([DISTRIBUTIONS.md section 4](../architecture/DISTRIBUTIONS
 |---|---|---|
 | JDK | 21 or newer (any vendor; Java 21 is the production target) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [CLUSTER_GUIDE.md](../architecture/ARCHITECTURE.md#14-concurrency-and-performance)). |
 | Python | 3.13 ([the minimum and why](OPERATIONS_GUIDE.md#21-prerequisites)) | The console and the tools. CI uses 3.13. |
-| uv | any recent | Creates the console's environment (`uv venv --python 3.13`), which works where the system Python has no `ensurepip` (Debian and Ubuntu without `python3.X-venv`); runs some tools with `uv run --with …` so nothing is installed globally. |
+| The offline wheel pack | the release's | you install the libraries from it with two pip commands (`requirements.txt`, then `config/compute/locks/python.lock`; [DEPLOYMENT_AND_QA_GUIDE.md 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)) into the Python you run Drishti with; `setup` only checks them (the system's, a dedicated one, or a virtual environment you made yourself). |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, Cassandra, ScyllaDB, ActiveMQ, RabbitMQ, MinIO) and `deploy/docker/compose.yaml`. |
 
 Set `JAVA_HOME` in every terminal:
@@ -532,11 +532,11 @@ You should see `Java version: 21…` in the output. Maven itself comes with the 
 [data/testdata/README.md](../../data/testdata/README.md) walk through; measured on a 24-core laptop):
 
 ```bash
-git clone https://github.com/drishti-platform/drishti.git && cd drishti
-uv venv --python 3.13 drishti-console/.venv
-uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
-./mvnw -q package -DskipTests -pl :drishti-app -am                 # 1 min 12 s with ~/.m2 filled
-drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 86 Delta tables, sixty days, under data/delta/demo
+# in the platform folder (source zip, or clone_all.py; QUICKSTART_DEVELOPERS.md sections 1 and 2): a clone of drishti alone cannot build
+python3 build_all.py --release <release> --skip-tests              # the products, then Drishti's jar AND modules (Windows: py -3.13 build_all.py ...)
+cd drishti
+# first your two pip commands and `drishti.py setup` (DEPLOYMENT_AND_QA_GUIDE.md 1.6)
+python3 tools/drishti.py lake demo           # about 15 min: the Delta tables, sixty days, under data/delta/demo
 ```
 
 then the server and the console as the run configurations start them ([OPERATIONS_GUIDE.md, Steps 6 and 7](OPERATIONS_GUIDE.md#25-start-the-server)).
@@ -609,20 +609,23 @@ Docker before you merge a schema change ([§5.6](#56-add-a-table-to-the-identity
 
 ### 2.4 The console from source
 
+First the libraries into this Python (yours: Drishti makes no environment), the two pip commands and `drishti.py setup`
+([DEPLOYMENT_AND_QA_GUIDE.md 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)), plus `-r drishti-console/requirements-test.txt` for pytest-xdist, Playwright and the test extras. Then:
+
 ```bash
-uv venv --python 3.13 drishti-console/.venv
-uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements-test.txt   # requirements.txt, plus pytest-xdist, Playwright and the test extras
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+python3 drishti-console/run_drishti_web.py
 ```
 
 You should see `Uvicorn running on http://0.0.0.0:17480` (`server.host` is every interface by default; `DRISHTI_CONSOLE_HOST=127.0.0.1`
 for this machine only). `drishti-console/requirements.txt` holds FastAPI, Uvicorn, Jinja2, httpx, PyYAML, Markdown, pytest,
 `cryptography`, numpy, pandas, pyarrow and Drishti Lake's Python package (the last two for `lake build` and `lake demo`, so the console's Python is also the
-tools' Python), boto3 for the Bedrock AI provider and, optionally, `brotli`. Without uv, `python3 -m venv drishti-console/.venv` and
-`drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt` do the same where the system Python has `ensurepip`.
+tools' Python), boto3 for the Bedrock AI provider and, optionally, `brotli`. Run with no arguments (an IDE's *Run current file*),
+`run_drishti_web.py` is the launcher **Drishti: run console**: `~/drishti-envs/dev.ini` with the demo profile and the development secrets
+of `drishti.py start all --demo` (`tools/launch/devsecrets.py`, the one place they are spelled), each said in one line; a Python
+lacking a library stops at once with the `setup` line.
 
 For Calc (Python on a view, `Alt+C`), install its runtime once: `python tools/drishti.py calc install` (about 340 MB downloaded to
-`~/.cache/drishti/`, 53 MB kept; see [USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)). Without it the console runs
+`~/.cache/drishti/`, 53 MB kept; see [USER_GUIDE.md](bi/CALC.md#12-installing-the-python-runtime)). Without it the console runs
 as usual, `GET /healthz` says `"pythonRuntime": "not installed: run python tools/drishti.py calc install"` and the Calc panel says how to install it.
 
 The console reads `drishti-console/config/application.yaml`, then `drishti-console/config/application.local.yaml` if present
@@ -630,9 +633,9 @@ The console reads `drishti-console/config/application.yaml`, then `drishti-conso
 
 ```bash
 # three ways to move the console to port 17481
-DRISHTI_CONSOLE_PORT=17481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
-DRISHTI_CONSOLE__SERVER__PORT=17481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17481
+DRISHTI_CONSOLE_PORT=17481 python3 drishti-console/run_drishti_web.py
+DRISHTI_CONSOLE__SERVER__PORT=17481 python3 drishti-console/run_drishti_web.py
+python3 drishti-console/run_drishti_web.py --server.port=17481
 ```
 
 `DRISHTI_CONSOLE__A__B` sets any key `a.b` (the prefix is `DRISHTI_CONSOLE__`, double underscores separate the levels). Named
@@ -647,7 +650,7 @@ Build the jar, then start it from the repository root (the server finds `./confi
 directory):
 
 ```bash
-./mvnw -q package -DskipTests -pl :drishti-app -am
+./mvnw -q package -DskipTests -pl :drishti-app -am     # the jar only; the server also needs the modules: `python3 tools/drishti.py build all` (Windows `py -3.13 tools\drishti.py build all`)
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
   java -jar lib/drishti-server-*-exec.jar
 ```
@@ -656,7 +659,7 @@ Server settings follow the same precedence as the console: `kernel/drishti-serve
 `./application.local.yaml` (git-ignored; imported by `spring.config.import`), then environment variables, then `--key=value`
 arguments. For example `--drishti.live.frame=100ms` or `--server.port=18481`. The settings of each way of starting it (the demo, the
 built-in samples, the QA pair on its own ports and data folder) are the committed profiles `config/profiles/*.ini`, which the run
-configurations in `run-configs/` (generated from `tools/launch/launchers.yaml`) and `drishti.py --profile` name alike;
+configurations in `run-configs/` and `drishti-console/run-configs/` (generated from `tools/launch/launchers.yaml`) and `drishti.py --profile` name alike;
 [IDE_GUIDE.md](IDE_GUIDE.md) lists them.
 
 The development loop that works best:
@@ -666,7 +669,7 @@ The development loop that works best:
 | A Sutra under `config/packs/*/sutras/` or a site Sutra directory | Nothing: `drishti.rachana.hot-reload` reloads it; an invalid edit keeps the last good version |
 | A connector file in `config/connectors/` | Nothing: the folder is watched and only that connector restarts |
 | A BI file under `config/bi/` | Nothing: the folder is watched (`drishti.bi.watch`, `BiFolder`); a changed file becomes the next version, one that does not parse keeps its last good version and is listed as a problem |
-| Java code | Rebuild the module and the server jar (`./mvnw -q -o -pl :drishti-app -am package -DskipTests`), restart the server |
+| Java code | Rebuild with `python3 tools/drishti.py build all` (`build modules` when only a module changed; `build jar` only when no module did), restart the server |
 | `pack.yaml` or anything in a pack folder | Nothing, usually: the packs folder is watched (`drishti.packs.watch`, `PackReloader`) and the running packs are reconciled with it; a change that cannot be applied live keeps the last version running, is refused with the reason in the log and on Admin → Packs, and is tried again by itself |
 | The demo lakes | `drishti.py lake demo` again: a running server is told (or notices a rebuilt Delta date by itself), so no restart |
 | A console template | Reload the page |
@@ -701,7 +704,7 @@ or is a `help.yaml`, the drill runs in docs mode by itself; otherwise it runs in
 refused, with the files that are not documentation listed.
 
 **Before anything runs**, the drill refuses to start unless the current branch is `develop` (`drill: must be on develop`; not checked
-with `--no-push`), the working tree is clean (`drill: commit your changes first`) and the console's Python environment exists.
+with `--no-push`), the working tree is clean (`drill: commit your changes first`) and the Python it runs the tests with (`DRISHTI_PYTHON`, passed in from outside, else `python3`) holds `drishti-console/requirements-test.txt` at the lock's pins (the drill makes no environment).
 
 **Stage 1, the gate** (a few minutes, all at once; the first failure stops the drill and prints the failed job's log):
 
@@ -813,7 +816,7 @@ Both kinds are listed here.
 ### 3.1 The copyright header
 
 Every file whose suffix is `.java`, `.py`, `.js`, `.css`, `.html`, `.yaml`, `.yml`, `.xml`, `.md`, `.properties` or `.sh` must contain
-`Copyright (c) 2026 Ashutosh Sinha` within its first 2000 characters. Build output, `.git`, `.venv`, `vendor`, `recorded`,
+`Copyright (c) 2026 Ashutosh Sinha` within its first 2000 characters. Build output, `.git`, a virtual environment of your own, `vendor`, `recorded`,
 `__pycache__`, `.mvn`, `.idea` and `docs/requirements` are skipped, as are `mvnw`, `mvnw.cmd` and `LICENSE`. JSON files cannot hold
 comments and are exempt. SQL files carry the header in `--` comments by convention.
 
@@ -933,7 +936,7 @@ WebAssembly (Pyodide) and it can fetch nothing but static files and the runtime 
 session).
 For Pyodide, `python tools/drishti.py calc install` downloads a pinned release, checks its SHA-256 and unpacks what Calc needs into
 `drishti-console/web/static/vendor/pyodide/` (git-ignored); the console serves it at `/pyodide/<version>/`
-([USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)).
+([USER_GUIDE.md](bi/CALC.md#12-installing-the-python-runtime)).
 
 So templates may not contain inline `<script>` blocks, `on…=` handlers or `style=` attributes, and nothing may load from another origin.
 `drishti-console/tests/test_assets_policy.py` checks all of this. Behaviour goes in a file under `web/static/js/`, wired by `data-*`
@@ -1198,7 +1201,7 @@ in §1.2 and in `README.md`.
 **Goal:** `round(x, digits?)` rounds half up: `round(2.345, 2)` is `2.35`.
 
 Adding a function changes the grammar: record it as an amendment to
-[ADR-003](../architecture/adr/003-sutra-is-yaml-with-a-closed-expression-language.md). Functions must stay pure, total (odd input gives
+[ADR-003](../architecture/DECISIONS.md). Functions must stay pure, total (odd input gives
 `null`, never an exception) and cheap. (Rachana-EL lays out views; BI measures are written in DEL, which has its own catalogue,
 `bi.expr.FunctionCatalog`, and its own guide, [RACHANA_REFERENCE.md › Rachana-EL expressions](RACHANA_REFERENCE.md#rachana-el-expressions).)
 
@@ -1257,6 +1260,21 @@ See [BUILD_GUIDE.md](BUILD_GUIDE.md): the complete walk-through (a help-desk pac
 `pack.yaml` key, generators, signing and the tests that cover packs. Users and admins: the packs that ship, turning them on and who sees which are in [BUILD_GUIDE.md](BUILD_GUIDE.md). Give the pack's documents
 UPPER_SNAKE attribute names, its samples as `samples/<kind>.jsonl`, its connectors as templates (the server writes the files), and its
 Sutras a folder layout that suits it (folders are organisation only).
+
+After you change a pack, a setting, a contract, a mapping or a registry, run `python3 tools/drishti.py docs generate`: it rewrites every
+generated document (READMEs, CONFIGURATION.md, contract pages, CSV formats, launchers, the Help map) in the right order, and
+`docs generate --check` fails naming each stale one. Details: [CLI_REFERENCE.md](CLI_REFERENCE.md#docs-generate-every-generated-document).
+
+**The product documents in Help (offline).** Our documents link the Rachana and Elements guides on GitHub at the tag this release pins, and the
+demo machine is offline, so Help carries those guides itself. The documents keep one home, the product's repository; the build never fetches
+them from the network and no Maven artifact carries them (the Elements release tree has no `docs/`). Instead `tools/docs/product_docs.py`
+(a generator in `docs generate`, its pins and file list in `tools/docs/product_docs.yaml`) copies the pinned files byte for byte with
+`git show <tag>:<path>` from the sibling clone (`../drishti-rachana`, `../drishti-elements`) into the committed `docs/products/<product>/<tag>/<repo
+path>`, and `--check` fails when a copy differs from its tag; with no clone (a source-zip build) it only verifies the committed copy is complete,
+so the zip still builds and checks. Help lists the copies under Reference, Product documents; the console (`core/guides.py`) rewrites a GitHub link
+to a bundled tag and path into the local page and keeps its anchor, leaves every other link alone, and sends a relative link inside a copy
+to a file that was not copied to GitHub at that tag. To move to a new pin, change `tag:` (and the pom's version) in the YAML, run the generator,
+and update the `doc:` paths in the console's `help.yaml`.
 
 ### 5.6 Add a table to the identity database
 
@@ -1648,8 +1666,8 @@ def test_sources_page_lists_connectors(client):
 Run the console tests:
 
 ```bash
-drishti-console/.venv/bin/python -m pytest -q -p no:cacheprovider drishti-console/tests/test_sources.py -k connectors
-drishti-console/.venv/bin/python -m pytest -q -p no:cacheprovider -n 4 --dist loadfile drishti-console/tests        # the whole suite
+python3 -m pytest -q -p no:cacheprovider drishti-console/tests/test_sources.py -k connectors
+python3 -m pytest -q -p no:cacheprovider -n 4 --dist loadfile drishti-console/tests        # the whole suite
 ```
 
 (`-p no:cacheprovider`: no `.pytest_cache` folder.) `test_assets_policy.py` will fail if the template gains an inline script, handler or
@@ -1679,7 +1697,7 @@ exist, that `/favicon.ico` answers, and that the pages and the manifest link the
 
 #### Regenerating the renderer's stylesheet
 
-`<drishti-view>` (Drishti Elements, [EMBED_GUIDE.md](EMBED_GUIDE.md)) styles its Shadow DOM with the **generated** sheet of Drishti Render,
+`<drishti-view>` (Drishti Elements, [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)) styles its Shadow DOM with the **generated** sheet of Drishti Render,
 `drishti-console/web/static/render/<version>/drishti-render.css`, and `integrity.json` records the hash of every file of that version. The
 sheet is Drishti Elements' tokens and the painter's sheets (and the console's About sheet) with `:root`, `html` and `body` rewritten to
 `:host`, no `@font-face` (the element registers the icon font with the document's `FontFace` API), and of Bootstrap Icons only the glyphs
@@ -1781,7 +1799,7 @@ the state more than once. Examples: `ReferenceCatalog`, `SearchProperties`, `Rol
 | Console | `drishti-console/tests` | pytest with `FakeBackend`; fixtures in `tests/fixtures/` are ViewModels captured from the real server | `test_terminal.py` (every panel kind with broken data), `test_assets_policy.py` (no CDN, no inline code, Python size), `test_contrast.py` (theme contrast), `test_help.py` (every catalogued guide renders) |
 | Python tools | `tools/` | `unittest` | `tools/samplegen/test_samplegen.py`, `tools/lake/test_build.py`, `tools/lake/test_demo.py`, `tools/lake/test_maintain.py`, `tools/testdata/test_testdata.py` |
 | Generated content | `tools/packgen`, pack tools | `--check` | run by the drill |
-| In the browser | your machine (`drishti-console/tests/*_browser.py`) | Playwright with Chromium; skipped when not installed | `test_live_tabs_browser.py`, `test_page_widths_browser.py` (no sideways scroll at 390, 1600 and 2560 px; images fit), `test_workspace_keys_browser.py`, `test_calc_browsers.py`. Install with `uv pip install -r drishti-console/requirements-test.txt` and `drishti-console/.venv/bin/python -m playwright install chromium`. Run **one browser test file at a time** on a laptop. They do not replace a look by hand: after a UI change, open the page in the running console in at least one dark and one light theme and on a phone width, use the keys (F-keys, `/`, `Alt+←`, table keys), watch a live view tick, and check the browser console for CSP violations. |
+| In the browser | your machine (`drishti-console/tests/*_browser.py`) | Playwright with Chromium; skipped when not installed | `test_live_tabs_browser.py`, `test_page_widths_browser.py` (no sideways scroll at 390, 1600 and 2560 px; images fit), `test_workspace_keys_browser.py`, `test_calc_browsers.py`. Install with `python3 -m pip install -r drishti-console/requirements-test.txt` (into the Python you run Drishti with) and `python3 -m playwright install chromium`. Run **one browser test file at a time** on a laptop. They do not replace a look by hand: after a UI change, open the page in the running console in at least one dark and one light theme and on a phone width, use the keys (F-keys, `/`, `Alt+←`, table keys), watch a live view tick, and check the browser console for CSP violations. |
 
 Habits that keep the suite fast and reliable:
 
@@ -1923,8 +1941,7 @@ Only names an external tool looks for by exactly that name keep the dot:
 | `.java-version` | version managers (jenv, SDKMAN) |
 | `.mvn/` | the Maven wrapper |
 | `.github/` | GitHub |
-| `.idea/` | the IDEs' settings ([IDE_GUIDE.md](IDE_GUIDE.md)) |
-| `.venv/` | the Python convention for a virtual environment (git-ignored) |
+| `.idea/` | your own IDE settings (git-ignored, never committed; the launchers are in `run-configs/`: [IDE_GUIDE.md](IDE_GUIDE.md)) |
 | `.claude/` | Claude Code |
 | `_rels/.rels` | the Excel file format (OOXML) names it so: a workbook template's package relationships (the Capacity and Playground templates) |
 
@@ -1987,7 +2004,7 @@ and this chapter links there instead of repeating them. Named connectors are **f
 #### Entities, kinds and documents
 
 Everything Drishti shows is an **entity**: a trade, a counterparty, a curve, a margin call. Each entity has a
-**kind** (`trade`, `counterparty`, [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve))) and an **id** (`MX-20000001`, `CP-ALDERSHOT`). The data behind an
+**kind** (`trade`, `counterparty`, [`ir-curve`](../contracts/packs/market-data.md#example-market-data-ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve))) and an **id** (`MX-20000001`, `CP-ALDERSHOT`). The data behind an
 entity is one **document**: a JSON object, as your system holds it. Drishti lays the document out on screen by
 itself (and with a Sutra, if a pack ships one for the kind), so you do not reshape your data for Drishti; you only
 tell Drishti where to find it.
@@ -2210,7 +2227,7 @@ endpoint) is listed under `failedToStart` and retried by itself ([DATA_GUIDE.md 
 One `DOWN` connector does not take the others with it.
 
 A connector is a file of its own, never a block of a site configuration file
-([DATA_GUIDE.md section 9, section 11](DATA_GUIDE.md#911-where-connectors-are-defined)).
+([DATA_GUIDE.md section 9, section 9.11](DATA_GUIDE.md#911-where-connectors-are-defined)).
 
 ### 10.3 Which connector should I use?
 
@@ -2278,7 +2295,7 @@ Whichever you choose, it is configured as a connector file (`config/connectors/<
 Every chapter below uses the same few commands. They are collected here once.
 
 **1. Build once** (from the repository root; see [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) for Java 21 or newer and the
-console's Python environment):
+Python you run Drishti with, its libraries from `setup`):
 
 ```bash
 ./mvnw -q package -DskipTests
@@ -2311,7 +2328,7 @@ Routes (`kind -> connector`) are the pack's `routes:`; the server's own settings
 
 ```bash
 java -jar lib/drishti-server-*-exec.jar
-drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+python3 drishti-console/run_drishti_web.py
 ```
 
 The server listens on `http://localhost:18480`, the console on `http://localhost:17480`. Configuration is read at
@@ -2326,7 +2343,7 @@ curl -s http://localhost:18480/api/v1/sources | jq '.failures'
 ```
 
 For administrators (with security on, add `-H "Authorization: Bearer $TOKEN"`; see
-[Minting a token for a script](#minting-a-token-for-a-script)):
+[Minting a token for a script](INTEGRATION_GUIDE.md#minting-a-token-for-a-script)):
 
 ```bash
 curl -s http://localhost:18480/api/v1/admin/health | jq '{status, summary, failedToStart}'
@@ -3095,547 +3112,9 @@ loading, limits) may follow Troubleshooting, before See also.
 
 ## 11. The API: calling the server from scripts, notebooks and Excel
 
-This chapter is for anyone who calls the Drishti server directly: to script a report, feed another tool, check a deployment, or
-see what the console does behind the scenes. It covers what you need before the first call, tokens and clients, authentication,
-the business date, errors and Arrow answers. Every endpoint, grouped by what it is for, with a `curl` command you can paste and an
-abbreviated copy of a real answer, is in [API_REFERENCE.md](API_REFERENCE.md). Live streaming in depth is in
-[DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates); users, roles and sign-in in
-[ADMIN_GUIDE.md](ADMIN_GUIDE.md).
-
-### 11.1 Before you start
-
-| What | Value |
-|---|---|
-| Server base URL | `http://localhost:18480` (port set by `server.port`) |
-| API prefix | `/api/v1` — every path in the [API reference](API_REFERENCE.md) is under it unless it says otherwise |
-| Format | JSON in and out (`application/json`), except Sutra text (`text/yaml`), the Rachana schema (`application/schema+json`) and live streams (`text/event-stream`) |
-| Errors | RFC 7807 `application/problem+json` with a stable `code` such as `DRS-1001` |
-| OpenAPI document | `http://localhost:18480/api/docs` |
-| Swagger UI (try calls in a browser) | `http://localhost:18480/api/docs/ui` |
-
-You need `curl`. `jq` is optional but makes the output readable; every example below pipes through it. On
-Ubuntu/Debian: `sudo apt install curl jq`.
-
-To save typing, set a variable once in your shell:
-
-```bash
-B=http://localhost:18480/api/v1
-```
-
-All examples below use `$B`. They were captured against a development server with security off and the
-banking packs installed; your ids, numbers and times will differ.
-
-### 11.2 Your first five calls
-
-Work through these in order. If all five answer, the API is working for you.
-
-**1. Is the server up and what is it running?**
-
-```bash
-curl -s $B/about | jq '{product, version, java, uptimeSeconds, securityEnabled, sutras: (.sutras | length)}'
-```
-
-You should see:
-
-```json
-{
-  "product": "Drishti",
-  "version": "2.5.0",
-  "java": "21.0.12.1 (Ubuntu)",
-  "uptimeSeconds": 6913,
-  "securityEnabled": false,
-  "sutras": 223
-}
-```
-
-If `securityEnabled` is `true`, read [Who you are](#114-who-you-are-authentication) first: every call needs a token.
-
-**2. What is "today"?**
-
-```bash
-curl -s $B/business-date | jq '{current, selected, live, previous, calendar, zone}'
-```
-
-```json
-{ "current": "2026-09-30", "selected": "2026-09-30", "live": true,
-  "previous": "2026-09-29", "calendar": "USNY", "zone": "America/New_York" }
-```
-
-**3. Find something to look at.** The type-ahead takes what you would type in the console's command line.
-`TRD ` (with a trailing space) lists trades:
-
-```bash
-curl -s "$B/command/suggest?q=TRD%20&limit=2" | jq -c '.[] | {complete, subtitle}'
-```
-
-```
-{"complete":"TRD MX-20000001","subtitle":"Trade · Interest rate swap (fixed/float) · Meridian Reinsurance Ltd · AUD 242m"}
-{"complete":"TRD MX-20000002","subtitle":"Trade · Interest rate swap (fixed/float) · Halcyon Shipping plc · EUR 110m"}
-```
-
-**4. Open it.** A view is the screen the console draws, as data:
-
-```bash
-curl -s $B/views/trade/MX-20000001 | jq -r '.strip[] | "\(.label): \(.text)"'
-```
-
-```
-Notional: AUD 242,000,000
-Direction: Receive fixed
-Trade date: 2025-07-25
-…
-MTM (USD): +1,603,277
-```
-
-**5. See the document behind it.**
-
-```bash
-curl -s $B/entities/trade/MX-20000001/raw | jq '.data | {tradeId, productType, assetClass}'
-```
-
-```json
-{ "tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", "assetClass": "Rates" }
-```
-
-### 11.3 Clients: scripts, notebooks and Excel
-
-Everything you can open in the terminal you can also read from code, as yourself, with a **personal API token**.
-A token reads what you may read (your roles and packs, at the time of each call) and, unless you gave it a **write scope**,
-**never changes anything**: any request other than `GET` with a read-only token is refused (`403 DRS-5002 API tokens only
-read`), except the `POST`s that only read (`/pivot/query`, `/pivot/decompose`, `/pivot/estimate`, `/pivot/expand`, `/pivot/compare`, `/pivot/rows`, `/pivot/export`, `/command`, the allow-list
-`drishti.security.token-read-posts`, which also lets a token ask a BI model, `POST /api/v1/bi/mq`). Tools and CI that must change things get a token with the scope for
-that job; see "Personal API tokens" in [CLI_REFERENCE.md](CLI_REFERENCE.md) and below.
-
-#### Make a token
-
-1. Open **My account → API tokens**.
-2. Give it a name that says what uses it (`Risk notebook`, `Desk P&L workbook`) and, if you like, a lifetime in days
-   (1–366; blank for no expiry). Tick a **scope** only if the token must change things (the page explains each, and the [scope table](API_REFERENCE.md#28-personal-api-tokens) lists what each opens; the
-   list is `drishti.security.token-scopes`). A token with a write scope must expire (90 days at most).
-3. Press **Create token**. You see the token once, for example `drk_7QhK2mPq9xZa_4kq…` (`drk_`, a 12-character id, `_`,
-   a 43-character secret). **Copy it now**: Drishti keeps only a hash of the secret and cannot show it again.
-4. The list shows each token's id, when it was created, when it expires, when it was last used, and **Revoke**.
-
-Send it in the `Authorization` header:
-
-```bash
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "https://drishti.bank.example:18480/api/v1/entities/trade/MX-20000001/raw" | jq .data.QUANTITY
-```
-
-You should see the trade's quantity: on the demo lakes `242000000` (the MUREX interest-rate swap's notional; the trades carry no MTM,
-that is in the market-risk pack's trade valuations, `TVAL`).
-
-Keep tokens like passwords: in an environment variable or a secrets store, never in a shared file. If one leaks,
-revoke it: it stops at once. A token also stops when its owner is disabled, and when it expires. Administrators see
-and revoke everyone's tokens in **Admin → Tokens**; every creation and revocation is in the audit log
-(`token-created`, `token-revoked`).
-
-#### Python
-
-`clients/python/drishti_client.py` is one file that uses Python's standard library only: copy it next to your
-notebook, or put its folder on `PYTHONPATH`.
-
-```python
-from drishti_client import Drishti
-
-d = Drishti("https://drishti.bank.example:18480", token="drk_…")   # or set DRISHTI_URL and DRISHTI_TOKEN
-
-d.field("trade", "MX-20000001", "QUANTITY")            # 242000000.0
-d.field("trade", "MX-20000001", "LEGS[0].NOTIONAL")    # a path into the document: 242000000.0
-doc = d.document("trade", "MX-20000001")               # the whole document (masked fields stay masked)
-
-rows = d.search("TRD PRODUCT_TYPE=REPO")            # a pick list: one dict per entity, with the pack's key columns (96 repos)
-# [{'kind': 'trade', 'id': 'CLY-3000265', 'title': 'CLY-3000265', 'Product type': 'REPO', 'Source system': 'CALYPSO', …, 'Quantity': 180000000, …}, …]
-
-d.search("TRD where QUANTITY > 1bn order by QUANTITY desc limit 20", as_of="2026-10-14")   # a past business date
-d.diff("trade", "MX-20000022", "2026-10-07", "2026-10-16")                                    # what changed between two dates
-h = d.history("trade", "1000015", days=30)          # the entity over its last 30 business days with data (rows oldest first)
-d.history("equity", "EQ-CSCA", range_="3M", fields=["PRICE"])   # 30D, 2W, 1Y, YTD, MTD, QTD; or date_from=, date_to=; diff=True
-d.history_rows("trade", "1000015")                  # one flat dict per day, newest first: {'date': '2026-10-19', 'QUANTITY': 72000.0, …, 'changed': ['PRICE']}
-df = d.to_pandas("CPTY RATING=BBB")                 # a pandas DataFrame, if pandas is installed: 3 rows, columns kind, id, title, Rating, Name, …
-```
-
-A refusal raises `DrishtiError` with the server's code: `e.code == "DRS-5002"` (not yours to open), `"DRS-1001"` (no
-source holds it), `"DRS-5010"` (the token is unknown, revoked or expired).
-
-From the shell, the same client writes CSV:
-
-```bash
-export DRISHTI_URL=https://drishti.bank.example:18480 DRISHTI_TOKEN=drk_…
-python3 clients/python/drishti_client.py search "TRD PRODUCT_TYPE=REPO" > repos.csv
-python3 clients/python/drishti_client.py field trade MX-20000001 QUANTITY          # 242000000.0
-python3 clients/python/drishti_client.py --as-of 2026-10-14 document trade MX-20000001
-```
-
-#### Excel
-
-Any search or pick list is also CSV at `GET /api/v1/search/csv?q=…`: a header row (`kind`, `id`, `title`, then the
-columns) and one row per entity, values unformatted. Text that a spreadsheet would run as a formula (starting with
-`=`, `+`, `-` or `@`) is prefixed with `'`.
-
-**Power Query** (Data → Get Data → From Other Sources → Blank Query → Advanced Editor):
-
-```
-let
-    Url    = "https://drishti.bank.example:18480/api/v1/search/csv",
-    Token  = "drk_…",
-    Source = Csv.Document(Web.Contents(Url, [Query = [q = "TRD PRODUCT_TYPE=REPO"],
-                                             Headers = [Authorization = "Bearer " & Token]]),
-                          [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
-    Table  = Table.PromoteHeaders(Source, [PromoteAllScalars = true])
-in
-    Table
-```
-
-Press **Close & Load**: the sheet fills with the 96 repos of the demo lakes and their key columns (`kind,id,title,Product type,Source
-system,Trade status,Trade date,Buy sell code,Currency,Quantity,Maturity date,Portfolio,Counterparty`); **Refresh** reads them again.
-For another query change `q`; for a past business date add `Headers = [Authorization = …, #"X-Drishti-As-Of" = "2026-10-14"]`.
-When Excel asks how to connect, choose **Anonymous**: the token in the header is the credential. Better than writing
-the token into the query: keep it in a named cell or a Power Query parameter only you can see.
-
-#### Any other language
-
-It is plain HTTP and JSON; the [API reference](API_REFERENCE.md) lists every endpoint. The ones scripts use most:
-
-| Read | `GET` |
-|---|---|
-| a document | `/api/v1/entities/{kind}/{id}/raw` |
-| a view (strip, panels, provenance) | `/api/v1/views/{kind}/{id}` |
-| a pick list or search | `/api/v1/search?q=…` (JSON) or `/api/v1/search/csv?q=…` (CSV) |
-| what changed between dates | `/api/v1/history/{kind}/{id}/diff?from=…&to=…` |
-| a pack's kinds | `/api/v1/packs/{code}/overview` |
-| the BI catalogue, an item, a dataset or report | `/api/v1/bi/catalogue`, `/api/v1/bi/items/{id}`, `/api/v1/bi/datasets/{id}`, `/api/v1/bi/reports/{id}` |
-
-A BI question is a model query, a `POST` with the fields, measures and filters in the body (`/api/v1/bi/mq`);
-it only reads, so a read-only token may call it, and the answer carries the
-owner's row rules and masks ([the model query in the API reference](API_REFERENCE.md#5-models-and-the-model-query-language-apiv1bi)):
-
-```bash
-curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' "$DRISHTI_URL/api/v1/bi/mq" \
-  -d '{"mq":1,"model":"trades-basic","define":{"N":"count(trade)"},"select":{"fields":["trade.SOURCE_SYSTEM"],"measures":["N"]},"time":{"as-of":"2026-10-16"}}'
-# "rows":[["CALYPSO",5000],["ENDUR",5000],["MUREX",5000]]
-```
-
-Add `X-Drishti-As-Of: 2026-10-14` for a past business date and `X-Drishti-Known-At: 2026-10-14T14:30:00Z` for the
-data as known at an instant (stores with time travel only; others answer `DRS-1007`). For an id with a `/` (or `\`),
-put `~` in its place and the id in the query: `/api/v1/entities/trade/~/raw?id=sl%2Fash-6`; the Python client does
-this by itself.
-
-### 11.4 Who you are: authentication
-
-Every request under `/api/v1/` passes through the server's token filter (`TokenFilter`). What it does
-depends on one setting, `drishti.security.enabled` (environment variable `DRISHTI_SECURITY_ENABLED`,
-default `false`).
-
-**Paths must be written plainly.** The token filter (and the guard on `/actuator` and `/api/docs`) decides on the
-path the server serves, after decoding. Under `/api` and `/actuator` a request line that spells a path in any other
-form is refused, security on or off, with `400 DRS-5001` problem+json before any other check: a path parameter
-(`/api/v1;x/packs`), a percent-encoded letter, digit, `- . _ ~`, `/` or `\` (`/api/%761/packs`), a malformed escape,
-or a dot or empty segment (`/api/./v1/packs`, `/api/v1/../v1/packs`, `/api//v1/packs`). Encode only what is data in
-a name or an id (a space as `%20`, `;` as `%3B`, `%` as `%25`, `(` `)`, non-ASCII letters): those are accepted, as
-`urllib.parse.quote(name, safe='')` and `encodeURIComponent` write them. The query string is not affected.
-
-```bash
-curl -s $B';x/packs'
-# {"title":"bad request","status":400,"code":"DRS-5001","detail":"path parameters (;) are not accepted"}
-```
-
-#### Security off (local development)
-
-No token is needed. The caller's name is taken from the optional `X-Drishti-User` header (default
-`anonymous`), and that caller has every role. The name only matters for per-user data: settings,
-workspaces, monitors, alerts, recent entities in the type-ahead, and chosen packs.
-
-```bash
-curl -s -H "X-Drishti-User: ash" $B/me/settings
-```
-
-Pack choices still apply with security off: a kind whose pack is not active for the named user is refused
-with `403 DRS-5002`.
-
-#### Security on (production)
-
-Every `/api/v1/` call must carry `Authorization: Bearer <token>`. The token is a compact JWT signed with
-**HS256** using the shared secret `drishti.security.secret` (environment variable `DRISHTI_TOKEN_SECRET`, at
-least 32 bytes; the server refuses to start with a shorter one). The server checks:
-
-| Check | Refusal (`detail`) |
-|---|---|
-| header present and starts with `Bearer ` | `missing bearer token` |
-| three dot-separated parts | `malformed token` |
-| header `alg` is exactly `HS256` (`none` and every other algorithm are rejected) | `unsupported token algorithm` |
-| signature matches (constant-time compare) | `bad token signature` |
-| `exp` is present and not past (plus `drishti.security.clock-skew`, default 30 s) | `token expired` |
-| `sub` is not empty | `token has no subject` |
-| anything unreadable | `unreadable token` |
-
-The claims the server reads are `sub` (the user name), `roles` (a list of role names) and `exp` (expiry,
-seconds since the epoch). A refusal is a `401` answered by the filter itself:
-
-```json
-{"title":"unauthenticated","status":401,"code":"DRS-5010","detail":"DRS-5010 missing bearer token"}
-```
-
-#### How the console does it
-
-The console never forwards the user's password or a long-lived credential. In `drishti-console/core/auth.py`:
-
-1. The user signs in on the console. The console verifies the password by calling `POST /api/v1/auth/login`
-   with its own **service** identity (user `console`, role `service`) — the only identity allowed to call
-   that endpoint (or `POST /auth/oidc` for single sign-on).
-2. The console opens a **session** on the server (`POST /api/v1/auth/sessions`, service identity) and keeps its id,
-   with the user's name, in a signed cookie (`drishti_session`, HMAC-SHA256 with `auth.session_secret`). On each
-   request it asks the server whether the session still stands and who the user is now
-   (`GET /api/v1/auth/sessions/{id}`: enabled, roles, whether a password change is due), and reuses the answer for
-   `auth.recheck_seconds` (default 10). So disabling or demoting a user takes effect within that time, and at once on
-   the console the administrator used. Signing out (`POST /logout`) ends the session on the server
-   (`DELETE /api/v1/auth/sessions/{id}`), so a copy of the cookie stops working. Disabling, deleting or resetting the
-   password of a user ends all their sessions; enabling them again does not bring an old one back.
-3. For **every** backend call it mints a fresh token with `auth.token_secret` (the same value as the server's
-   `drishti.security.secret`), lifetime `auth.token_ttl_seconds` (default 300), carrying the user's **current** roles,
-   and sends two headers:
-
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqZG9lIiwicm9sZXMiOlsidHJhZGVyIl0sImV4cCI6MTc5MDAwMDAwMH0.…
-X-Drishti-User: jdoe
-```
-
-   (With security on, the server ignores `X-Drishti-User`; the token's `sub` decides.) It also sends
-   `X-Drishti-As-Of` and, when set, `X-Drishti-Known-At` — see the next section.
-
-#### Minting a token for a script
-
-When security is on, a script can mint its own token exactly as the console does. This needs the shared
-secret, so run it only where that secret is legitimately available:
-
-```bash
-TOKEN=$(DRISHTI_TOKEN_SECRET="$DRISHTI_TOKEN_SECRET" python3 - <<'PY'
-import base64, hashlib, hmac, json, os, time
-b = lambda d: base64.urlsafe_b64encode(d).rstrip(b"=").decode()
-h = b(json.dumps({"alg": "HS256", "typ": "JWT"}, separators=(",", ":")).encode())
-c = b(json.dumps({"sub": "report-bot", "roles": ["viewer"], "exp": int(time.time()) + 300}, separators=(",", ":")).encode())
-s = b(hmac.new(os.environ["DRISHTI_TOKEN_SECRET"].encode(), f"{h}.{c}".encode(), hashlib.sha256).digest())
-print(f"{h}.{c}.{s}")
-PY
-)
-curl -s -H "Authorization: Bearer $TOKEN" $B/about | jq .version
-```
-
-You should see the version string. The roles you put in the token decide what the
-script may open (roles are defined under `drishti.security.roles`; see
-[ADMIN_GUIDE.md](ADMIN_GUIDE.md)). Keep the lifetime short.
-
-#### What roles allow
-
-| Ability | Granted by |
-|---|---|
-| open entities of a kind | a role whose `kinds` lists the kind or `*`, **and** the kind's pack active for the user |
-| every field unmasked (otherwise the fields in `drishti.security.redact` read `•••` on every endpoint: see below) | a role with `raw: true` |
-| save Sutras from Studio | a role with `author: true` (and `drishti.rachana.studio-save: true`) |
-| approve or reject Sutra proposals | a role with `approve: true`, or an admin |
-| user administration, audit log, health, caches | a role with `admin: true` |
-| `POST /auth/login`, `POST /auth/oidc`, `/auth/sessions` | the `service` role (the console) |
-| everything | the role `*` (what every caller gets with security off) |
-
-#### Field masks
-
-For a caller without `raw`, every field named in `drishti.security.redact` (at any depth, and everything under it)
-reads `•••` in every answer that shows or is computed from its value (masking is by field; see *Copies of a masked value* below for text in other fields): `/entities/…/raw`, `/search` (rows, CSV,
-compare), `/history`, `/search/columns`, the search pivot endpoints, `/views/{kind}/{id}` (strip, title, every panel,
-table totals, keys and links, values a Sutra computes from the field), `/views/{kind}/{id}/explain`, the view and
-monitor streams, `/me/monitors/{name}`, `/studio/preview`, `/impact/{kind}/{id}`, `/command/suggest` and `/phrase`;
-alert rules are evaluated on the document as their owner may see it. The server masks the documents in one place
-(`Entitlements.redactor`) before anything reads them, so nothing about a masked field can be probed: a condition on
-it is never true, ordering by it does not order, the type-ahead does not match it, Impact does not list entities
-tied to the analysed one only through it, and a total over it reads `•••`.
-A signed token whose user was deleted or disabled is refused with `401` (`drishti.security.registered-users-only`). A personal API token only reads, so `POST /views/{kind}/{id}/ask` answers `403` for it.
-
-Shares, their notes and inbox rows are masked answers too: a note's copies of a masked value read `•••` for a reader without `raw`, and a notice carries no data value, only who, what kind and which id.
-
-A `redact` entry with dots names a field by the end of its path (arrays are not a step): `lifecycle.timeline.description` masks
-every `description` under `lifecycle.timeline`, and no other `description`. Names match in any case and convention
-(`counterpartyId` masks `COUNTERPARTY_ID`, `trader_id` masks `TRADER_ID`), so a mask written in another naming convention
-keeps masking; an entry that names no field of the loaded packs' samples is logged at start-up (`DRS-6011`).
-
-**Copies of a masked value (`drishti.security.mask-copies`, default `false`).** Masking works on fields. With the setting on, after
-masking, the server also replaces every exact occurrence of a masked field's original value inside the *other* text of the same
-document with `•••`: with `trader` masked, "Captured by J. Smith" reads "Captured by •••". It runs in the same place as the masks
-(`Entitlements.redactor`), so it holds on every path above, including Calc columns and the builder's previews, checks and evidence.
-Best effort, bounded and exact: text values of at least `mask-copies-min-length` characters (3), numbers of four digits or more
-rendered as text; case, spacing and spelling variants ("j. smith", "SMITH, J.") are **not** matched; a document with more than
-`mask-copies-max-nodes` nodes (50 000) is not scanned (its masked fields are still masked) and at most `mask-copies-max-values` (64)
-distinct values are scrubbed per document. Mask the text fields that carry sensitive values, and fix the source so they do not.
-
-### 11.5 Which day: the business date
-
-Every **read** (views, raw, search, history, impact, suggestions, monitors and streams) answers for a
-business date. You choose it with a header or a query parameter:
-
-| Header | Query parameter | Value | Meaning |
-|---|---|---|---|
-| `X-Drishti-As-Of` | `asOf` | `live` or empty (default) | today's business date, streaming |
-| `X-Drishti-As-Of` | `asOf` | `2026-09-29` | that date, as a static snapshot |
-| `X-Drishti-Known-At` | `knownAt` | `2026-09-29T21:00:00Z` (ISO instant) | the data as it was known at that instant (Delta Lake and Iceberg time travel) |
-
-The header wins when both are given. (On the console's own pages the same two values are the query parameters `asOf` and
-`knownAt` of `/v/{kind}/{id}`, read for that request only and never saved: that is how a copied *Share* link pins a
-date; `gen` is the generation seen, shown as evidence in the page banner and never used to read data.) Rules:
-
-- A weekend or holiday rolls back to the previous business day of the calendar.
-- `knownAt` is answered only by stores that keep versions (Delta Lake, Iceberg). A dated store without them that may
-  hold the date answers `400 DRS-1007` naming the connector, never today's data; a search names it in `failed` and is
-  `partial`. Undated sources have one version and answer as usual.
-- A picked date is a snapshot: views say `provenance.live = false`, and a stream sends one `view` event and closes.
-- A future date, or one before the history window (`earliest`), is `400 DRS-4003`.
-- `provenance.businessDate` in a view is the date the source actually read; it is `null` for sources that are not dated.
-
-Try it — Sunday 27 September rolls back to Friday 25 September:
-
-```bash
-curl -s -H "X-Drishti-As-Of: 2026-09-27" $B/business-date | jq -c '{current, selected, live}'
-```
-
-```json
-{"current":"2026-09-30","selected":"2026-09-25","live":false}
-```
-
-With a "known at" instant, as query parameters this time:
-
-```bash
-curl -s "$B/business-date?asOf=2026-09-29&knownAt=2026-09-29T21:00:00Z" | jq -c '{selected, live, knownAt}'
-```
-
-```json
-{"selected":"2026-09-29","live":false,"knownAt":"2026-09-29T21:00:00Z"}
-```
-
-A date in the future:
-
-```bash
-curl -s -H "X-Drishti-As-Of: 2030-01-01" $B/business-date
-```
-
-```json
-{"type":"about:blank","title":"bad business date","status":400,
- "detail":"DRS-4003 business date 2030-01-01 is in the future","instance":"/api/v1/business-date","code":"DRS-4003"}
-```
-
-### 11.6 When something goes wrong: errors
-
-Every error is RFC 7807 `application/problem+json`. The fields:
-
-| Field | Meaning |
-|---|---|
-| `status` | the HTTP status, repeated in the body |
-| `title` | the error's name in words (`entity not found`, `bad search`, …) |
-| `code` | the stable Drishti code, `DRS-nnnn` — match on this in scripts, never on `detail` |
-| `detail` | a human explanation; it starts with the code |
-| `instance` | the path that was called |
-| `problems` | only for Sutra errors: the list of problems, each `{code, message, location: {file, line, column}}` |
-
-Example — an id no source knows:
-
-```bash
-curl -s -i $B/views/trade/IRS-99999 | sed -n '1p;/^{/p'
-```
-
-```
-HTTP/1.1 404
-{"type":"about:blank","title":"entity not found","status":404,"detail":"DRS-1001 no source holds trade/IRS-99999","instance":"/api/v1/views/trade/IRS-99999","code":"DRS-1001"}
-```
-
-Three catch-alls are worth knowing: a bad argument anywhere (`IllegalArgumentException`) becomes
-`400 DRS-5001`; a body that is not JSON, is empty, or is JSON of the wrong shape (a list for an object) is
-`400 DRS-5001` (`the request body is not valid JSON`, …); and a request with no caller attached becomes `401 DRS-5010`. Server errors (`5xx`) are also
-logged on the server with the stack trace. The full list is in the [error code table](API_REFERENCE.md#error-code-table).
-
-**When the server is busy.** New heavy work (a sign-in, opening a VaR or exposure date that is not open yet, an Export data download, a BI
-run, a bulk load) may be asked to wait: `503` with `Retry-After` and a code `DRS-9501` to `DRS-9505`, `DRS-9506` (an Arrow Flight read) or `DRS-9507` (a large pivot). The body adds `busy: true`, `title`
-and `because` (the same words the console and `drishti.py` show) and `retryAfterSeconds`. A script waits that many seconds and asks
-again, a few times at most; reads of what is already open are never asked to wait. Busy protection is described in
-[OPERATIONS_GUIDE.md section 12.5](OPERATIONS_GUIDE.md#147-busy-protection-refuse-politely-never-fall-over).
-
-### 11.7 Answers as Arrow: the Accept header
-
-Two answers come as an **Apache Arrow IPC stream** when the caller asks with `Accept: application/vnd.apache.arrow.stream`:
-`POST /api/v1/bi/reports/{id}/query` (a visual's answer) and `GET /api/v1/risk/var/scope/contributions` (a contribution table). The stream is
-the JSON answer, cell for cell: its table (`rows`) is the record batch, and everything else in the answer travels in the schema's
-custom metadata as JSON (`drishti.answer`), with `drishti.table` saying where the table goes back (`{"shape": "rows", "at": "rows"}` for
-a list of lists named by `columns`; `{"shape": "records", "at": "rows", "absent": [...]}` for a list of objects, `absent` naming the keys
-some objects leave out). Text that repeats (desks, books, currencies, dates) is a dictionary column; integers are 64-bit, numbers
-doubles, flags booleans. A table Arrow is not written with here (an object or a list in a cell, a column mixing text and numbers) comes
-as JSON with `200`, as does every call without that `Accept`: read the `Content-Type`. The console's `/api/var/...` and `/bi/api/...`
-pass the header on and answer the same way. Why these two and not others, with the measurements: [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays).
-
-```bash
-curl -s -H "Authorization: Bearer $T" -H "Accept: application/vnd.apache.arrow.stream" \
-  "$B/var/scope/contributions?scope=NODE:MGMT~DESK-RATES&by=trade" -o contrib.arrow
-python - <<'EOF'
-import json, pyarrow as pa
-t = pa.ipc.open_stream(open("contrib.arrow", "rb").read()).read_all()
-answer = json.loads(t.schema.metadata[b"drishti.answer"])      # var, es, sumComponent, ... (all but the rows)
-print(answer["var"], t.num_rows, t.column_names[:6])
-EOF
-```
-
-`drishti-console/core/arrow_answer.py` (`decode`) rebuilds the whole JSON answer from such a stream; in a browser page,
-`Drishti.table.fromArrow` (`/static/js/drishti_table.js`) does.
-
-### 11.8 Scripting recipes
-
-**Export a strip for a list of trades as CSV.**
-
-```bash
-for id in MX-20000001 MX-20000002 MX-20000003; do
-  curl -s $B/views/trade/$id | jq -r --arg id "$id" '[$id, (.strip[] | select(.label=="MTM (USD)") | .text)] | @csv'
-done
-```
-
-```
-"MX-20000001","+1,603,277"
-"MX-20000002","…"
-"MX-20000003","…"
-```
-
-For numbers rather than formatted text, read the raw document instead:
-`curl -s $B/entities/trade/MX-20000001/raw | jq .data.mtm`.
-
-**The ten largest exposures yesterday.**
-
-```bash
-curl -s -G -H "X-Drishti-As-Of: 2026-09-29" $B/search \
-  --data-urlencode "q=TRD where mtm > 0 order by mtm desc limit 10" | jq -r '.rows[] | "\(.ref.id)\t\(.values["$.mtm"])"'
-```
-
-**Fail a deployment check when anything is unhealthy.**
-
-```bash
-status=$(curl -s $B/admin/health | jq -r .status)
-[ "$status" = "OK" ] || { echo "Drishti is $status"; exit 1; }
-```
-
-**Handle errors by code, not by message.**
-
-```bash
-resp=$(curl -s -w '\n%{http_code}' $B/views/trade/MX-29999999)
-code=$(echo "$resp" | tail -1); body=$(echo "$resp" | head -n -1)
-if [ "$code" != 200 ]; then
-  case $(echo "$body" | jq -r .code) in
-    DRS-1001) echo "no such trade" ;;
-    DRS-1004) echo "source slow; retry later" ;;
-    *)        echo "failed: $(echo "$body" | jq -r .detail)" ;;
-  esac
-fi
-```
-
-**Watch one value change live.**
-
-```bash
-curl -s -N $B/views/trade/MX-20000001/stream | grep --line-buffered '^data:{"seq"' \
-  | sed -u 's/^data://' | jq -r --unbuffered '.patches[] | select(.op=="strip") | .cell | "\(.label) \(.text)"'
-```
-
-You should see a line such as `MTM (USD) +1,595,251` each time the value ticks.
+Calling the server from a script, a notebook or Excel (a token, the clients, authentication, the business date, errors, Arrow answers and
+scripting recipes) is part 3 of [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md#3-the-api-calling-the-server-from-scripts-notebooks-and-excel);
+every endpoint with a `curl` command is in [API_REFERENCE.md](API_REFERENCE.md).
 
 ## 12. How to create …
 
@@ -3700,7 +3179,7 @@ is in [section 1.7](#17-what-a-module-can-contribute).
 | a function | a `FunctionProvider` (`kernel.api.function`): `functions()` returns `Provided(name, minArgs, maxArgs, signature, description, fn)`; the name is usable in any Rachana expression, Sutra or measure | `GreetingFunctions` |
 | a REST API | a `@RestController` with `@ModuleApi("<prefix>")` (`kernel.api.module`); mounted under `/api/v1/<prefix>/` | `GreetingController` |
 | start and stop | the `java.entry` class, a `DrishtiModule`: `start(ModuleContext)` gives the kinds as rows (`kinds()`), a writer, its settings (`drishti.module.<id>.*`), its data folder, audit and the business date | `HelloModule` |
-| a page | `console/plugin.yaml` (`format: 2`, `routes:`, `menus:`, `home:`, `ai:`) and a template extending `kernel/page.html`: [section 1.7, the console part](#17-a-modules-console-part) | `console/pages/hello.html` |
+| a page | `console/plugin.yaml` (`format: 2`, `routes:`, `menus:`, `home:`, `ai:`) and a template extending `kernel/page.html`: [section 1.7a, the console part](#17a-a-modules-console-part) | `console/pages/hello.html` |
 | Help | `docs/README.md` with front matter (`title`, `domain`, `summary`), `docs/help.yaml` (`sections:` of `pages:` with `file:`), a guide and a tutorial (C7); shown as `/help/section/module-<id>` | `docs/` |
 
 **4. Build it, one of three ways** (one packer, one set of checks; [section 1.6](#16-the-module-sdk)). Run these from your module project's folder (the one with `module.yaml` at its top; the code is the Maven or Gradle project under `java/<id>/`); the Python line needs the path to the Drishti folder's `tools/drishti.py`.
@@ -3926,7 +3405,7 @@ with `required: false` and no manifest anywhere adds none. The console reads no 
 sends it with every module in its installation answer (`GET /api/v1/console/bootstrap`), asked again whenever `/public/about`'s
 `stamps.installation` changes, so a package installed after the start joins a running console's distribution and a removed one leaves it.
 
-**3. Start it**: `python tools/drishti.py start all --distribution freight` (Windows `py tools\drishti.py ...`), or `start server` and
+**3. Start it**: `python tools/drishti.py start all --distribution freight` (Windows `py -3.13 tools\drishti.py ...`), or `start server` and
 `start console` each with `--distribution freight`, or `DRISHTI_DISTRIBUTION=freight`, or `drishti.distribution: freight`; a path
 instead of a name loads a file elsewhere. What it leaves out does not exist in it: a word typed anyway answers *DRS-4023 … is not in
 Acme Freight*.
@@ -3967,13 +3446,13 @@ the kernel's compute pools. What is supported:
 
 - An engine is a class of the SDK: `class LaneCost(Engine)` with `kinds = ("lane-cost",)` and `compute(self, req, inputs, progress)`
   returning `Result(rows=…)` (or raising `ComputeError("…")`, shown in those words); inputs arrive as Arrow tables
-  (`inputs.table("shipments")`). The contract and the protocol: [drishti-compute's README](../../compute/drishti-compute/README.md).
+  (`inputs.table("shipments")`). The contract and the protocol: [drishti-compute's README](#drishti-compute-compute-workers).
 - It runs in a **pool** of `config/compute/compute.yaml` (`compute.enabled: true`): the pool's `engines:` lists `module:Class`, and its
   `python-path:` adds the folder your package lives in; workers, memory, timeouts and the sandbox:
   [OPERATIONS_GUIDE.md section 15](OPERATIONS_GUIDE.md#15-compute-workers).
 - It is reached through a **reactive connector** file (`plugin: reactive`, `engine: { type: python, entry: <module:Class>, pool: <pool> }`,
   the kinds it computes, the inputs it reads, triggers): [the reactive connector](../connectors/types/reactive/README.md); a whole worked
-  run is [tutorial 19, step 23](../tutorials/19-build-a-pack-and-a-screen.md#step-23--switch-on-the-compute-workers-and-the-sample-pack).
+  run is [tutorial 19, step 23](../tutorials/25-computed-panels.md#step-1--switch-on-the-compute-workers-and-the-sample-pack).
   The kinds it computes are then read like any other, and a module reads them through its needs.
 - **A module carries its Python.** The manifest's `python:` section ships the engine inside the `.dmod`, with everything it needs; the
   kernel installs it when the module loads and withdraws it when the module unloads, so a site configures no pool for it:
@@ -4044,7 +3523,7 @@ while the module is on. The rules (no canvas, svg or colour of its own; tones fr
 
 ### 12.6a How to create a blotter (a live table)
 
-A blotter is a declaration, not code: one live table of Rachana's engine ([Live results and blotters](LIVE_RESULTS_GUIDE.md#11-make-a-new-blotter), with a complete inventory example and the declaration format in [section 6](LIVE_RESULTS_GUIDE.md#6-the-declaration)).
+A blotter is a declaration, not code: one live table of Rachana's engine ([Live results and blotters](USER_GUIDE.md#make-a-new-blotter), with a complete inventory example and the declaration format in [section 6](USER_GUIDE.md#the-declaration)).
 
 1. In your module, add `blotters/<name>.live.yaml`: `rachana: 1`, `live-table`, the `kind`, `snapshot` and `stream` (the kind), an optional
    `where` (Rachana-EL over the row), `key`, `version`, `columns`, `links`, `retention` and, for edits, `edit:` (a Rachana form with
@@ -4052,7 +3531,7 @@ A blotter is a declaration, not code: one live table of Rachana's engine ([Live 
    is the worked example.
 2. List it in `module.yaml` (`blotters: {folder: blotters, list: [<name>]}`) and the kind in `data/needs.yaml`.
 3. The site binds the kind (`config/bindings.yaml`: `read:` the store, `live:` the messaging connector) and, for edits, gives the connector a
-   `writes:` command ([APPROVALS_GUIDE.md section 10](APPROVALS_GUIDE.md#10-writing-to-a-source-writes)).
+   `writes:` command ([ADMIN_GUIDE.md › 28.4 Writing to a source: writes:](ADMIN_GUIDE.md#284-writing-to-a-source-writes)).
 4. Check it: `GET /api/v1/rdp/tables` lists it (a declaration set aside is listed in Admin, with why); `POST /api/v1/rdp/tables/<name>/query`
    answers its rows.
 
@@ -4216,3 +3695,104 @@ Admin → White label shows *Acme Freight* beside the shipped distributions.
 site's data is) → `bindings.yaml` (which connector serves each kind) → `placement.yaml` (where each part runs) → the deploy (the package
 on the placed nodes) → `drishti.freight.yaml` (the product people open). Every file of the chain, with who writes it and when it is
 read: [HOW_IT_FITS.md section 8](../../HOW_IT_FITS.md#8-the-files-and-how-they-relate).
+
+## drishti-compute: compute workers
+
+The supervisor of out-of-process Python workers for computed connectors, with the worker SDK they run, the locked environments they run
+in and the approval that gates them. The workers are generic: nothing in them knows about VaR or pricing. Design:
+[README.md](bi/README.md); operating it: [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#15-compute-workers). Built in 2.8.0
+(steps C1 to C3). Beside them, the compute that stays in the server's JVM next to the data: the in-memory **vector store** and the
+**VaR maths** (packages `vector` and `var`, the VaR engine's waves V0 to V3, [VAR_GUIDE.md section 24](VAR_GUIDE.md#24-where-the-engine-lives)):
+base VaR is additions and sorts over stored vectors, so it needs no worker; what-if pricing will send trades to the workers.
+
+### What is in it
+
+| Package | Does |
+|---|---|
+| `com.ash.drishti.compute` | `ComputeService` (the supervisor: pools, submit, fan-out, cancel, Admin's overview), `ComputeSettings` and `PoolSettings` (`config/compute/compute.yaml`), `ComputeRequest` (correlation id, pool, engine, kind, params, Arrow inputs, viewer, class, budget, seed), `ComputeResult`, `ComputeHandle`, `ComputeException` (off, refused, busy, timeout, cancelled, crashed, limit, engine, failed, invalid, unavailable), `ProgressSink`; `Pool` (one pool's workers and fair queue) |
+| `…compute.worker` | `WorkerProcess` (one process, JSON-lines control, wall-time and cancel from outside), `Scratch` (a request's folder: inputs in `in/`, results in `out/`, removed at the end), `Sdk` (extracts the Python SDK from this jar), `ReadOnly` |
+| `…compute.sched` | `FairQueue` (classes in order, users in turn, per-user in-flight limit, batch share, bounded queues), `Latencies` |
+| `…compute.cluster` | `FanOut` (split, spread by load over this node and peers, gather in order), `PeerTransport` (the server implements it over Drishti*net) |
+| `…compute.arrow` | `ArrowTable` (int64, float64, bool, utf8, fixed-size vectors of float64), `ArrowIpc` (the IPC stream format from `arrow-format` alone) |
+| `…compute.env` | `Requires` (`requires:` of a connector), `LockFile` (pins and hashes), `Environments` (the pin check of the configured interpreter against the lock: Drishti installs no Python package; a missing library is an error naming it and the operator's pip command), `Manifest`, `JavaLibraries` (sha256, native-code scan, staging) |
+| `…compute.vector` | `VectorStore` (vectors of one width by ordinal, row-major `double[]` chunks under a memory budget, range and row sums, a permutation into hierarchy order), `OrdinalSet` (exact union, difference and intersection of row ordinals), `ParallelSums` (sums on a bounded pool, slices added in a fixed order) |
+| `…compute.var` | `VarBook` (one business date: trade vectors in hierarchy order, positions and books as runs, columnar attributes, node aggregates, a planner), `ScopeExpr` and `ScopeResolver` (the scope grammar to ordinals), `PositionRule` (rules over positions' columns), `VarMath` and `VarCalc` (VaR, ES, components, incremental and marginal VaR, histograms), `Backtest` (exceptions, Basel light, Kupiec, Christoffersen), `Columns`; `VarScaleBenchmark` in the tests (opt-in) |
+| `…compute.approval` | `Approvals` (request, approve, reject, revoke; four eyes; audit), `ApprovalStore` (memory, or the Drishti database's `drishti_compute_request` and `drishti_compute_approval`) |
+| `…compute.reactive` | the built-in connector plugin `reactive` (R1 to R4, [REACTIVE_CONNECTOR.md](../connectors/types/reactive/README.md)): `ReactiveSourcePlugin`, `ReactiveConnector` (authorise, parameters, pin, key with the view signature, cache, single flight, admission, inputs read as the viewer, engine, validate, stamp, audit), `ReactiveSpec` and `ParamSpec` (the connector file's computation), `PythonRunner` (a pool, with fan-out and `Reduce`) and `JavaRunner` (a `ComputeEngine` in the server), `Triggers`, `Coalescer`, `SeenEvents`, `Watermark`, `ResultCache`, `Sandboxes`, `RequestEvents` (a request's events to its owner only), `ReactiveHub` and `ReactiveHost` (what the server provides); `samples.VectorSumEngine` (the Java twin of the sample `sum-vectors`) |
+| `src/main/python/drishti_compute` | the worker SDK, pure Python (standard library only): `engine` (the contract: `Engine`, `Request`, `Inputs`, `Progress`, `Result`, `ComputeError`, `register_cache`), `arrow` (the Arrow stream format in pure Python, zero-copy reads), `guard` (the audit-hook sandbox and limits, and the strict sandbox: a network namespace for the worker and a Landlock rule per request), `worker` (the loop the supervisor starts), `items` (the pool `python`'s engine: code people write, Python items, Python-driven tables, Notebook cells, in the strict sandbox: [bi/NOTEBOOK_AND_PYTHON.md section 19](../architecture/ARCHITECTURE.md#291-one-python-runtime)), `samples.vectors` (echo, sum, sum of vectors), `samples.paths` (`PathSumEngine`: the sample reactive connector's sum of P&L paths, the shape of its Java twin) |
+
+### The worker protocol
+
+The supervisor starts `python -s -B -m drishti_compute.worker --engines <module:Class,...> --mode fork|warm --memory <bytes>
+--cpu-seconds <n> --worker <id> --isolate standard|strict` with an empty environment (no credentials) and the SDK on `PYTHONPATH`. With
+`--isolate strict` (a pool's `isolation: strict`; Linux, fork mode) the worker leaves the network at start and each request's child is held by
+Landlock to its scratch folder and the Python installation; where that cannot be had, the worker says why and does not start. One JSON object per line:
+
+| Direction | Message |
+|---|---|
+| worker → server | `ready` (pid, mode, Python, SDK version, its isolation, each engine's kinds), once |
+| server → worker | `run` (`id`, `engine`, `kind`, `params`, `user`, `roles`, `viewSignature`, `cls`, `seed`, `scratch`, `inputs`: name → `in/<name>.arrows`, or `in/<name>` for a file handed over as it is, `chunk`, `cpuSeconds`) |
+| worker → server | `started` (the pid running it: the fork child, which the supervisor kills alone at a timeout or cancel) |
+| worker → server | `progress` (`data`: the engine's partial result), any number |
+| worker → server | `result` (`rows`, `tables`: name → `out/<name>.arrows`, `files`: name → `out/<name>` handed back as it is, `meta`) or `error` (`code`: `engine`, `limit` or `failed`; `message`) |
+| worker → server | `done` (the worker is free again; in fork mode with the child's exit code or signal) |
+| server → worker | `shutdown` |
+
+### An engine
+
+```python
+from drishti_compute import ComputeError, Engine, Result
+
+class SumEngine(Engine):
+    kinds = ("sum",)
+
+    def compute(self, req, inputs, progress):
+        t = inputs.table("values")              # the SDK's table; inputs.arrow("values") gives a pyarrow.Table when pyarrow is installed
+        if t.rows == 0:
+            raise ComputeError("nothing to sum")    # shown to the person in these words
+        x = t.column("X").data                  # a zero-copy memoryview of float64
+        progress.fraction(1, 1)
+        return Result(rows=[{"sum": sum(x)}])
+```
+
+### Tests
+
+Run these from the Drishti folder (the repository root, or the install folder of a release).
+
+```bash
+./mvnw clean test -pl :drishti-compute -am -Ddrishti.compute.test.python=<python 3.10+>   # Java: pools, warm mode, fan-out, environments, approvals
+<python> -m pytest compute/drishti-compute/src/test/python                                       # the SDK: codec (and pyarrow agreement), sample engine, worker protocol
+./mvnw test -pl :drishti-compute -Dcompute.excluded.groups=none -Dgroups=load -Dtest=ComputeLoadTest -Ddrishti.compute.load.workers=32
+```
+
+Tests that need a worker look for Python in `-Ddrishti.compute.test.python`, `DRISHTI_PYTHON`, then `python3` on the PATH;
+without one they skip. `EnvironmentTest` also needs `pip` in that interpreter. Fork-mode tests skip on Windows.
+
+### Static asset names and the one namespace
+
+The console's static files, scripts and styles share pages with other libraries (vendored ones) and, embedded, with a host's own. So that
+nothing of ours collides with theirs:
+
+* **Files.** Every file we write under `drishti-console/web/static/` (`js/`, `js/build/`, `css/`, `img/`, `img/guide/`, `img/icons/`, `calc/`
+  and the web manifest) is named `drishti_<name>.<ext>`: the rest of the name says what it is (`drishti_bi-runs-tab.js`,
+  `drishti_tokens.css`, `drishti_logo.png`). The Calc module `calc/drishti.py` is already ours by name. Vendored libraries
+  (`static/vendor/`, listed in VENDOR.md) keep their own names, and a published renderer version (`static/render/<version>/`) is never
+  changed.
+* **One global.** Our scripts put one name on `window`: `Drishti`. A script that exports something starts with
+  `(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);` and sets
+  `window.Drishti.<name>` (`Drishti.workbench`, `Drishti.Busy`, `Drishti.pivotEngine`, `Drishti.drsMessage`). Three older names stay on
+  `window` because the published renderer and Elements versions read them: `drishtiModules` (the root-scoped behaviours), `drishtiBi` (the
+  report code) and `drishtiGeo` (the map).
+* **Events, storage, elements.** A custom event is named `drishti:<what>` (`drishti:bi-reload`, `drishti:var-painted`); a browser storage
+  key starts `drishti.` or `drishti-`; a custom element is `drishti-<name>`.
+* **Classes and data- attributes.** A new CSS class is `drishti-<name>`, never a generic word. The generic classes the sheets already
+  define (`on`, `ok`, `mono`, `pill`...) and the data- attributes other libraries also read (`data-theme`, `data-state`, `data-target`,
+  `data-action`, `data-toggle`...) are shared with the published renderer and Elements versions, so they keep their names while those
+  versions are served.
+* **Addresses.** The embed routes keep their public names (`/embed/v1/js/<name>.js`, `/embed/v2/js/<name>.js`, `/embed/v2/css/<name>.css`
+  serve `drishti_<name>`), and `/static/js/<name>.js` or `/static/css/<name>.css` for a name without the prefix answers with the
+  `drishti_` file: what a page pinned to an older renderer version asks for.
+
+`drishti-console/tests/test_asset_names.py` refuses a new file, global, event, storage key or custom element without the prefix, and a new
+generic class or third-party data- attribute. `tools/dev/asset_prefix.py` makes the change on any checkout (`scan`, `apply`, `check`), from
+the mapping in `tools/dev/asset_prefix_map.yaml`; a second run changes nothing.

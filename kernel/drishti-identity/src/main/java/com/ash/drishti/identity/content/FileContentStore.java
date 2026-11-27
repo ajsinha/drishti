@@ -256,7 +256,7 @@ public final class FileContentStore implements ContentStore {
         for (int attempt = 0; ; attempt++) {
             try {
                 try {
-                    Files.move(from, to, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                    com.ash.drishti.api.FileReplace.atomically(from, to);
                 } catch (AtomicMoveNotSupportedException e) {
                     Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
                 }

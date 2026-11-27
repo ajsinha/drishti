@@ -43,7 +43,7 @@ _BOX = {"tip": "tip", "warning": "warn", "danger": "warn", "note": "concept", "i
 _TAG = re.compile(r"<[^>]+>")
 # Rendered pages by file, shared by every library (each pack set has its own library, the same core guides): rendering all of them takes
 # seconds, and the global search reads every page's text, so warm() fills it once in a worker thread when the console starts.
-_RENDERED: dict[Path, tuple[float, dict]] = {}
+_RENDERED: dict[tuple[Path, str], tuple[float, dict]] = {}
 _MARKUP = re.compile(r"</?(?:code|em|strong|b|i|a|span|kbd|del|sub|sup)\b[^>]*>")   # inline markup only: "<kind>" in a heading is text
 # A screenshot in a guide: fitted to its column by drishti_help.css and wrapped in a link that opens it full size (UX-03).
 _RELATIVE_SRC = re.compile(r'(<img\b[^>]*?\b)src="((?![a-z][a-z0-9+.-]*:|/|#|data:)[^"]+)"', re.I)
@@ -51,6 +51,9 @@ _IMG = re.compile(r'(<a\b[^>]*>\s*)?(<img\b[^>]*?\bsrc="([^"]+)"[^>]*>)')
 # A link written in a guide: relative links are resolved against the guide's file (DOC-18).
 _LINK = re.compile(r'<a href="([^"]*)"([^>]*)>(.*?)</a>', re.S)
 _EXTERNAL = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|/|#)", re.I)
+# A link to a product document of the pinned release on GitHub: product repository, tag, path, anchor. The console shows the copy that ships
+# in docs/products/<product>/<tag>/<path> (tools/docs/product_docs.py) when it has that exact tag and path, so Help works offline.
+_PRODUCT_LINK = re.compile(r"^https://github\.com/drishti-platform/(drishti-(?:rachana|elements))/blob/([^/#?]+)/([^#?]+\.md)(#.*)?$")
 _FRONT = re.compile(r"\A(?:\s*<!--.*?-->)*\s*(---\n.*?\n---\n)", re.S)
 
 
@@ -99,6 +102,27 @@ class GithubSlugger:
         return slug
 
 
+_HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
+
+
+def _section(text: str, words: str) -> str:
+    """The section of a document whose heading says ``words`` (outside code fences), up to the next heading of its level or higher; its
+    heading becomes the page's one ``#`` heading."""
+    out, level, fence = [], 0, False
+    for line in text.splitlines():
+        if line.lstrip().startswith("```"):
+            fence = not fence
+        m = None if fence else _HEADING.match(line)
+        if m and not level and m.group(2).strip() == words:
+            level = len(m.group(1))
+            out.append("# " + words)
+        elif m and level and len(m.group(1)) <= level:
+            break
+        elif level:
+            out.append(line)
+    return "\n".join(out) + "\n"
+
+
 @dataclass(frozen=True)
 class Guide:
     slug: str
@@ -117,6 +141,7 @@ class Guide:
     domain: str = ""                  # help.yaml domain: the domain module the page belongs to (banking, capitalmarkets, economy); core when not said
     parent: str = ""                  # a subpage of a guide folder: the slug of the folder's index page (help.yaml children:); it has no row of its own
     children: tuple = ()              # a guide folder's index page: its subpages in order (help.yaml children:); the folder counts as one page
+    section: str = ""                 # help.yaml section: the page is that one section (a heading's words) of its doc:, not the whole document
 
     def permits(self, ident) -> bool:
         """Whether this person may see the guide: an unrestricted guide anyone; a guide with ``roles:`` (an internal page such as the
@@ -165,7 +190,8 @@ class Library:
                     guide = Guide(g["slug"], g["title"], g.get("summary", "").replace("{tutorials}", tutorial_count_word(docs_dir)), g.get("icon", "journal-text"),
                                   g.get("kind", "reference" if src else "guide"), sec["id"], path, packs=tuple(g.get("packs") or ()),
                                   roles=tuple(str(r) for r in (g.get("roles") or ())), engine=str(g.get("engine") or ""),
-                                  pair=str(g.get("pair") or ""), group=str(grp.get("title") or ""), domain=str(g.get("domain") or ""), children=tuple(kids))
+                                  pair=str(g.get("pair") or ""), group=str(grp.get("title") or ""), domain=str(g.get("domain") or ""), children=tuple(kids),
+                                  section=str(g.get("section") or ""))
                     if path.exists():
                         self.guides[guide.slug] = guide
                         for kid in kids:
@@ -177,6 +203,7 @@ class Library:
                                     "guides": [g for grp in groups for g in grp["guides"]]})
         cats = {c["id"]: c for c in self.categories}
         self.contextual = dict(data.get("contextual", {}))
+        self.moved = {str(k): str(v) for k, v in (data.get("moved") or {}).items()}   # a merged page's old slug -> its new address (help.yaml moved:)
         self.most_used = [dict(m) for m in data.get("most-used") or [] if isinstance(m, dict) and m.get("slug")]
         pack_group = str(data.get("pack-group") or "From the packs")
         for pack in packs or []:
@@ -194,7 +221,7 @@ class Library:
                 grp["guides"].insert(0 if g["slug"] == "getting-started" else len(grp["guides"]), guide)
                 cat["guides"] = [x for gr in cat["groups"] for x in gr["guides"]]
             self.contextual.update({k: v for k, v in pack.get("contextual", {}).items() if v in self.guides})
-        self.by_file = {g.path.resolve(): g.slug for g in self.guides.values()}
+        self.by_file = {g.path.resolve(): g.slug for g in self.guides.values() if not g.section}   # a section page does not own its document
         self.listed = sum(1 for g in self.guides.values() if g.listed and not g.roles and not g.parent)      # a guide folder's subpages are part of its one page
         self._documents(cats)
 
@@ -227,15 +254,16 @@ class Library:
     def render(self, slug: str) -> dict:
         g = self.guides[slug]
         mtime = g.path.stat().st_mtime
-        hit = _RENDERED.get(g.path)
+        key = (g.path, g.section)
+        hit = _RENDERED.get(key)
         if hit and hit[0] == mtime:
             return hit[1]
-        body, md = self._html(g.path)
+        body, md = self._html(g.path, section=g.section)
         toc = [{"id": t["id"], "name": t["name"], "children": [{"id": c["id"], "name": c["name"]} for c in t.get("children", [])]}
                for t in md.toc_tokens]
         text = html.unescape(_TAG.sub(" ", body))
         out = {"html": body, "toc": toc, "text": re.sub(r"\s+", " ", text)}
-        _RENDERED[g.path] = (mtime, out)
+        _RENDERED[key] = (mtime, out)
         return out
 
     def warm(self) -> int:
@@ -249,11 +277,13 @@ class Library:
                 pass
         return n
 
-    def _html(self, path: Path) -> tuple[str, markdown.Markdown]:
-        """A markdown file as help HTML: examples, boxes, tables, screenshots and links to other documents."""
+    def _html(self, path: Path, text: str | None = None, section: str = "") -> tuple[str, markdown.Markdown]:
+        """A markdown file (or ``text`` of it, or one ``section`` of it) as help HTML: examples, boxes, tables, screenshots and links to other documents."""
         md = markdown.Markdown(extensions=["tables", "fenced_code", "sane_lists", "admonition", "attr_list", "toc"],
                                extension_configs={"toc": {"toc_depth": "2-3", "slugify": GithubSlugger()}})
-        text = path.read_text(encoding="utf-8")
+        text = path.read_text(encoding="utf-8") if text is None else text
+        if section:
+            text = _section(text, section)
         front = _FRONT.match(text)                                                   # a README's YAML front matter (the README standard) is data, not text
         body = md.convert(text[:front.start(1)] + text[front.end():] if front else text)
         body = _CODE.sub(_figure, body)
@@ -291,9 +321,32 @@ class Library:
                 return shipped
         return path
 
-    def fragment(self, path: Path) -> str:
-        """One markdown note (an example's) as help HTML, its links resolved like any guide's."""
-        return self._html(path)[0]
+    def fragment(self, path: Path, text: str | None = None) -> str:
+        """One markdown note (an example's, as ``text`` of ``path``) as help HTML, its links resolved like any guide's."""
+        return self._html(path, text)[0]
+
+    def product_link(self, href: str) -> str | None:
+        """``/help/<slug>#anchor`` for a GitHub link to a bundled product document (that exact tag and path), else None: the link stays as it is."""
+        m = _PRODUCT_LINK.match(href)
+        if not m:
+            return None
+        copy = (self.docs_dir / "products" / m.group(1).removeprefix("drishti-") / m.group(2) / m.group(3)).resolve()
+        slug = self.by_file.get(copy)
+        return f"/help/{slug}{m.group(4) or ''}" if slug else None
+
+    def _product_copy_target(self, source: Path, target: str) -> str | None:
+        """A relative link inside a copied product document to a file that was not copied: the same file of that tag on GitHub."""
+        base = (self.docs_dir / "products").resolve()
+        try:
+            product, tag, *_ = source.resolve().relative_to(base).parts
+        except ValueError:
+            return None
+        root = base / product / tag
+        try:
+            rel = (source.parent / target).resolve().relative_to(root)
+        except ValueError:
+            return None
+        return f"https://github.com/drishti-platform/drishti-{product}/blob/{tag}/{rel.as_posix()}"
 
     def _link(self, source: Path, m: re.Match) -> str:
         """A link between documents opens inside the help centre (an example's note opens on the Examples page); a
@@ -302,6 +355,9 @@ class Library:
         A link that resolves to nothing at all keeps ``data-unavailable`` so the help-centre crawl test fails on it.
         """
         href = html.unescape(m.group(1))
+        local = self.product_link(href)
+        if local:
+            return f'<a href="{html.escape(local)}"{m.group(2)}>{m.group(3)}</a>'
         if not href or _EXTERNAL.match(href):
             return m.group(0)
         target, _, anchor = href.partition("#")
@@ -317,6 +373,9 @@ class Library:
         ex = self.guides.get("examples")
         if ex and path.parent == ex.path.parent.resolve() and path.suffix == ".md" and path.exists():
             return f'<a href="/help/examples#{html.escape(path.stem)}"{m.group(2)}>{m.group(3)}</a>'
+        gh = None if slug else self._product_copy_target(source, target)
+        if gh:
+            return f'<a href="{html.escape(gh + anchor)}"{m.group(2)}>{m.group(3)}</a>'
         if not path.exists():
             if "/" not in target and "." not in target:
                 return m.group(0)                    # a console guide's link to another guide by slug: /help/<slug>

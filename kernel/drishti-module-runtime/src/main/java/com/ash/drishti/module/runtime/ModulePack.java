@@ -132,7 +132,7 @@ public final class ModulePack {
     @SuppressWarnings("unchecked")
     private static Map<String, Object> yamlMap(Path f) {
         try {
-            Object o = YAML.readValue(f.toFile(), Object.class);
+            Object o = YAML.readValue(java.nio.file.Files.readAllBytes(f), Object.class);
             return o instanceof Map<?, ?> m ? (Map<String, Object>) m : null;
         } catch (IOException e) {
             throw new PackException(f + ": " + firstLine(e.getMessage()));
@@ -559,7 +559,7 @@ public final class ModulePack {
                 c.data().forEach((n, b) -> z.put(n, b, !n.equals(MANIFEST)));
                 z.put(Dmod.HASHES, c.hashes().getBytes(StandardCharsets.UTF_8), true);
             }
-            Files.move(part, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(part, target);
             String sum;
             try (InputStream in = Files.newInputStream(target)) {
                 sum = Dmod.sha256(in);
@@ -839,7 +839,7 @@ public final class ModulePack {
         }
         Path part = modules.resolve(file + ".part");
         Files.copy(dmod, part, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
-        Files.move(part, modules.resolve(file), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        com.ash.drishti.api.FileReplace.atomically(part, modules.resolve(file));
     }
 
     /**
@@ -867,7 +867,7 @@ public final class ModulePack {
                 }
                 Path part = lib.resolve(name(jar) + ".part");
                 Files.copy(jar, part, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
-                Files.move(part, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(part, target);
             }
             ideJar(target);
             return target;
@@ -888,7 +888,7 @@ public final class ModulePack {
         } catch (UnsupportedOperationException | IOException noLink) {
             Path part = installed.resolveSibling(IDE_JAR + ".part");
             Files.copy(installed, part, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.COPY_ATTRIBUTES);
-            Files.move(part, alias, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(part, alias);
         }
     }
 

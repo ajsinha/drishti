@@ -111,3 +111,26 @@ def test_the_version_people_see_is_the_server_s_and_the_console_s_build_is_only_
         assert h["serverBuild"] == "9.9.9-server" and h["consoleBuild"] == ASSET_VERSION and h["buildsDiffer"]
     finally:
         facts._held.pop("default", None)
+
+
+def test_a_refused_secret_is_logged_once_and_asked_again_only_after_a_growing_wait(caplog, monkeypatch):
+    """i7g: a console whose secret the server rejects logs ONE clear line and backs off, never a 401 every second."""
+    import logging
+    import core.server_facts as sf
+    now = [1000.0]
+    monkeypatch.setattr(sf.time, "time", lambda: now[0])
+    f = Facts([(401, None), (401, None), (200, DOC)])
+    with caplog.at_level(logging.INFO, logger=sf.LOG.name):
+        follow(f)
+        for _ in range(20):
+            follow(f)                                    # every second of the watch: no ask while the wait runs
+        assert len(f.asks) == 1
+        now[0] += f.BACKOFF[0] + 1
+        follow(f)
+        follow(f)
+        assert len(f.asks) == 2, "the second refusal waits longer"
+        now[0] += f.BACKOFF[1] + 1
+        assert follow(f) is True and len(f.asks) == 3 and f.answer("default").digest == "d1"
+    lines = [r.getMessage() for r in caplog.records if "rejects this console's secret" in r.getMessage()]
+    assert lines == [sf.REFUSED] and "drishti.py start all --demo" in sf.REFUSED and "Drishti: run console" in sf.REFUSED
+    assert any("accepts this console's secret again" in r.getMessage() for r in caplog.records)

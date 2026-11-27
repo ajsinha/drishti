@@ -15,7 +15,7 @@
 
 """Lake maintenance keeps a lake bounded: old business dates go, small files merge, the data kept is intact.
 
-    uv run --with deltalake --with pyarrow --with pyyaml python -m unittest tools/lake/test_maintain.py
+    python -m unittest tools/lake/test_maintain.py
 """
 import json
 import sys

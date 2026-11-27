@@ -259,7 +259,7 @@ public final class BindingResolver {
 
     /**
      * The kinds the site offers: those its loaded packs define and those it binds. A need on a kind the site offers in no way (its pack is
-     * not loaded, nothing binds it) is outside the site's content (the pack switch decides those functions, ACCESS_MODEL.md), so it
+     * not loaded, nothing binds it) is outside the site's content (the pack switch decides those functions, KERNEL_AND_MODULES.md), so it
      * switches nothing off; it still resolves UNBOUND in Health.
      */
     static Set<String> offered(Bindings site, Facts facts) {

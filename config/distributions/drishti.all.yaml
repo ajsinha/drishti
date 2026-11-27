@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Drishti All (docs/architecture/DISTRIBUTIONS.md section 6): every module, every lens, every engine, the neutral Drishti brand. The
+# Drishti All (docs/architecture/KERNEL_AND_MODULES.md section 20.6): every module, every lens, every engine, the neutral Drishti brand. The
 # default when no distribution is named, so an install without --distribution behaves exactly as before distributions existed; the
 # developer and QA distribution (the drill, the page walk and the tutorials run on it). Genomics stays out (a sample).
 format: 1

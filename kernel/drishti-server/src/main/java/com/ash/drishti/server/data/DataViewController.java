@@ -202,7 +202,7 @@ public class DataViewController {
         }
     }
 
-    // ---- Arrow Flight (docs/guides/FLIGHT_GUIDE.md): the same checks as a download, the rows to the caller's sink ---------------------
+    // ---- Arrow Flight (docs/guides/INTEGRATION_GUIDE.md): the same checks as a download, the rows to the caller's sink ---------------------
 
     /** What a Flight read of a kind will send: the dataset, the day, the selection and the columns chosen for this person. */
     public record FlightSelection(DataViewService.Dataset dataset, LocalDate day, DataSelection selection, List<String> columns) {}

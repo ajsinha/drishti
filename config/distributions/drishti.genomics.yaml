@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Drishti Genomics (docs/architecture/DISTRIBUTIONS.md section 4): the sample that proves the kernel carries no finance. The kernel and
+# Drishti Genomics (docs/architecture/KERNEL_AND_MODULES.md section 20.4): the sample that proves the kernel carries no finance. The kernel and
 # the genomics module (modules/genomics: a VCF reader; kinds variant, sample, gene, cohort; VARIANT, GENE, COHORT), nothing else: none of
 # the kernel's packs (no counterparty, book or desk), the Research lens.
 format: 1

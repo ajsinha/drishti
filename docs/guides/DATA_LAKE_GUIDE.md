@@ -90,7 +90,7 @@ and your data cannot mix (section 6).
 | `_load_id`, `_source_file` | which load wrote the row, and from which file: every load can be traced and undone |
 
 **Delta or Iceberg.** A lake is Delta unless its file says `format: iceberg`; one table may differ. On the same rows both give the same
-answers, VaR equal to the cent ([tutorial 16, Part E](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg)). An Iceberg table of this layout is partitioned by
+answers, VaR equal to the cent ([tutorial 16, Part E](../tutorials/23-the-risk-lake-on-iceberg.md)). An Iceberg table of this layout is partitioned by
 business date alone.
 
 **In memory.** A lake whose root is `mem://<store>` lives in the server's memory under a hard cap, for feeds that may never be written
@@ -586,7 +586,7 @@ rows: 164
 ```
 
 **A tar of several tables and dates**, all or nothing: `<folder>/<YYYY-MM-DD>/part-0001.jsonl.gz` inside. A folder is a **table**
-(`trade_endur`, `trade_calypso`: the tables of the kind `trade`, one per source system) or a **kind** with one table (`var-limit`: [contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit), [example](../contracts/samples/market-risk.md#var-limit),
+(`trade_endur`, `trade_calypso`: the tables of the kind `trade`, one per source system) or a **kind** with one table (`var-limit`: [contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit), [example](../contracts/packs/market-risk.md#example-market-risk-var-limit),
 written `var_limit` too), so one archive may mix the trades of several systems with the limits:
 
 ```bash
@@ -1079,7 +1079,7 @@ The Inbox screen shows it as *held*; delete the `hold:` line (or set it to `fals
 
 A tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<folder>/<YYYY-MM-DD>/<files>.jsonl[.gz]`, nothing else (operating-system litter
 such as `__MACOSX/` and `.DS_Store` is ignored). **Each top folder is a table or a kind**: a table name (`trade_endur`, `trade_calypso`,
-`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv` ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv), [example](../contracts/samples/market-risk.md#scenario-pv)), `var-limit`)
+`trade_murex`, the tables of the kind `trade`, one per source system) writes that table; a kind name (`scenario-pv` ([contract](../contracts/packs/market-risk.md#spv-scenario-pvs-of-a-position-or-trade-one-pv-per-scenario-its-currency-scenario-pv), [example](../contracts/packs/market-risk.md#example-market-risk-scenario-pv)), `var-limit`)
 writes the kind's one table. Names compare without case and with `_` and `-` alike (`var_limit` is the kind `var-limit`):
 
 ```text
@@ -1157,7 +1157,7 @@ file has no entry for the table (a kind's, or one of a kind's several tables: `t
 first (said in the log), with the kind's key as its `id:` when the entry names none (the `.ready` file's `key:`, else the pack's ingest
 key, else the single `key:` field of the kind's data contract); when the lake has no file at all, `config/lakes/<lake>.yaml` is created. From then on the lake file is the truth: edit it there.
 
-A file of *lake rows* or *loader rows* (the row forms of [DATA_GUIDE.md section 2.2](DATA_GUIDE.md#2-the-row-forms)) is refused with the
+A file of *lake rows* or *loader rows* (the row forms of [DATA_GUIDE.md section 2.2](DATA_GUIDE.md#22-the-row-forms)) is refused with the
 tool that loads it (`tools/samplegen/load_rows.py`, or the store's own loader): the loader reads documents.
 
 ### 5.2 The business date of a file
@@ -1492,7 +1492,7 @@ away. Admin → Data loads → Routing rules shows each rule's origin (`site` or
 
 **Refusals.** A `where` that is not a predicate, a map file that is missing, unreadable, maps two fields to one, or names an unknown cast,
 refuses the connector at load with `DRS-5034`, shown on Admin → Connectors with the reason; the rest of the server runs. A connector's `where`
-may not name `$user`: person attributes belong in a role's row rule ([ACCESS_MODEL.md section 10](../architecture/ACCESS_MODEL.md#10-row-rules)).
+may not name `$user`: person attributes belong in a role's row rule ([KERNEL_AND_MODULES.md section 19.10](../architecture/KERNEL_AND_MODULES.md#1910-row-rules)).
 
 **A source module switched off** (Admin → Modules, at runtime, no restart): its connectors leave every binding without an error (Admin says
 *source ENDUR off*), its rows leave lists, blotters, search and BI (also from a shared table read by a connector without `where`), its live
@@ -1662,7 +1662,7 @@ words. Every setting: [DELTA_CONNECTOR.md section 14](../../plugins/drishti-plug
 
 ### 10.2 Planned (not built)
 
-> **Under construction.** On the owner's roadmap (2026-11-07) for the platform release 2.9.11.f; none of this works today.
+> **Under construction.** On the roadmap; none of this works today.
 
 | Planned | What it will do | Today |
 |---|---|---|
@@ -1710,7 +1710,7 @@ storage from the publishers' settings (`drishti.var.official.*`, `drishti.ccr.ex
 results are published.
 
 **An Iceberg copy of a demo store**: `tools/build_demo_lakes.py --store risk=iceberg` copies the tables into Iceberg with a lake file
-`demo-iceberg.yaml` and connectors naming it ([tutorial 16, Part E](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-e--the-risk-lake-and-the-official-results-on-iceberg)).
+`demo-iceberg.yaml` and connectors naming it ([tutorial 16, Part E](../tutorials/23-the-risk-lake-on-iceberg.md)).
 
 **The local cluster** (`deploy/stack`): the stack's synthetic lakes are written through the demo lake's file with another root
 (`lake build --lake demo --lake-root data/stack/lakes/<name>`); every node reads the same description.
@@ -1728,7 +1728,7 @@ and Parquet files) whose files live in the server's memory, off the Java heap, u
 fills each table from its feed; every page, search, BI dataset and Export data read it exactly as they read a lake on a disk; a guard
 refuses every way the data could reach a disk. Only a user's download leaves the server. How it is built:
 [DATA_ARCHITECTURE.md section 9](../architecture/DATA_ARCHITECTURE.md#9-the-in-memory-lake-delta-tables-that-never-touch-a-disk); a
-worked example: [tutorial 16, Part D](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-d--news-held-in-memory-only).
+worked example: [tutorial 16, Part D](../tutorials/18-news-held-in-memory.md).
 
 ### 13.1 How it works
 
@@ -1972,7 +1972,7 @@ Drishti reads what they write, or refuses a table by name; it never reads one wr
 
 ## 16. Runbooks: production data into the lake
 
-The kinds these runbooks (sections 16 and 17) load, each with its sample record and its data contract: `agreement` ([sample](../contracts/samples/counterparty-risk.md#agreement), [contract](../contracts/packs/counterparty-risk.md#agr-master-agreement-agreement)), `clearing-account` ([sample](../contracts/samples/core.md#clearing-account), [contract](../contracts/packs/core.md#clr-clearing-account-clearing-account)), `collateral-balance` ([sample](../contracts/samples/counterparty-risk.md#collateral-balance), [contract](../contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance)), `counterparty-group` ([sample](../contracts/samples/core.md#counterparty-group), [contract](../contracts/packs/core.md#grp-counterparty-group-counterparty-group)), `credit-limit` ([sample](../contracts/samples/counterparty-risk.md#credit-limit), [contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)), `csa` ([sample](../contracts/samples/counterparty-risk.md#csa), [contract](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa)), `desk-pnl` ([sample](../contracts/samples/market-risk.md#desk-pnl), [contract](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)), `exposure-path` ([sample](../contracts/samples/counterparty-risk.md#exposure-path), [contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path)), `fx-scenario` ([sample](../contracts/samples/market-risk.md#fx-scenario), [contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)), `fx-spot` ([sample](../contracts/samples/market-data.md#fx-spot), [contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)), `legal-entity` ([sample](../contracts/samples/core.md#legal-entity), [contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)), `netting-set` ([sample](../contracts/samples/counterparty-risk.md#netting-set), [contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), `pnl-history` ([sample](../contracts/samples/market-risk.md#pnl-history), [contract](../contracts/packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history)), `sa-ccr` ([sample](../contracts/samples/counterparty-risk.md#sa-ccr), [contract](../contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr)), `scenario-set` ([sample](../contracts/samples/market-risk.md#scenario-set), [contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)).
+The kinds these runbooks (sections 16 and 17) load, each with its sample record and its data contract: `agreement` ([sample](../contracts/packs/counterparty-risk.md#example-counterparty-risk-agreement), [contract](../contracts/packs/counterparty-risk.md#agr-master-agreement-agreement)), `clearing-account` ([sample](../contracts/packs/core.md#example-core-clearing-account), [contract](../contracts/packs/core.md#clr-clearing-account-clearing-account)), `collateral-balance` ([sample](../contracts/packs/counterparty-risk.md#example-counterparty-risk-collateral-balance), [contract](../contracts/packs/counterparty-risk.md#coll-collateral-balance-collateral-balance)), `counterparty-group` ([sample](../contracts/packs/core.md#example-core-counterparty-group), [contract](../contracts/packs/core.md#grp-counterparty-group-counterparty-group)), `credit-limit` ([sample](../contracts/packs/counterparty-risk.md#example-counterparty-risk-credit-limit), [contract](../contracts/packs/counterparty-risk.md#lim-credit-limit-credit-limit)), `csa` ([sample](../contracts/packs/counterparty-risk.md#example-counterparty-risk-csa), [contract](../contracts/packs/counterparty-risk.md#csa-credit-support-annex-csa)), `desk-pnl` ([sample](../contracts/packs/market-risk.md#example-market-risk-desk-pnl), [contract](../contracts/packs/market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl)), `exposure-path` ([sample](../contracts/packs/counterparty-risk.md#example-counterparty-risk-exposure-path), [contract](../contracts/packs/counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path)), `fx-scenario` ([sample](../contracts/packs/market-risk.md#example-market-risk-fx-scenario), [contract](../contracts/packs/market-risk.md#fxs-scenario-fx-of-a-currency-one-rate-per-scenario-fx-scenario)), `fx-spot` ([sample](../contracts/packs/market-data.md#example-market-data-fx-spot), [contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)), `legal-entity` ([sample](../contracts/packs/core.md#example-core-legal-entity), [contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity)), `netting-set` ([sample](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set), [contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)), `pnl-history` ([sample](../contracts/packs/market-risk.md#example-market-risk-pnl-history), [contract](../contracts/packs/market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history)), `sa-ccr` ([sample](../contracts/packs/counterparty-risk.md#example-counterparty-risk-sa-ccr), [contract](../contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr)), `scenario-set` ([sample](../contracts/packs/market-risk.md#example-market-risk-scenario-set), [contract](../contracts/packs/market-risk.md#sset-scenario-set-scenario-set)).
 
 One runbook per kind of production feed, each tested end to end on a synthetic batch shaped like production. Each follows one shape:
 prerequisites, the fields, the steps, the files and their names, chunking, two dates, the layout, verification, troubleshooting, a do-not list and a
@@ -2006,7 +2006,7 @@ forms and grains are [VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-f
 | Check | Value | Where |
 |---|---|---|
 | Java | 21 or newer | `java -version` |
-| Server heap | **8 to 10 GB** for 1.3M positions and two to three open dates | `python tools/drishti.py start server --heap 10g` (Windows: `py tools\drishti.py start server --heap 10g`). The measured book is about 0.77 GB of heap at 1M positions ([VAR_GUIDE.md 27.1](VAR_GUIDE.md#271-bytes-per-date)), so about 1 GB at 1.3M, and a date kept open about 1.5 GB of `-Xmx`; `-Xmx6g` served 1M positions with two dates |
+| Server heap | **8 to 10 GB** for 1.3M positions and two to three open dates | `python tools/drishti.py start server --heap 10g` (Windows: `py -3.13 tools\drishti.py start server --heap 10g`). The measured book is about 0.77 GB of heap at 1M positions ([VAR_GUIDE.md 27.1](VAR_GUIDE.md#271-bytes-per-date)), so about 1 GB at 1.3M, and a date kept open about 1.5 GB of `-Xmx`; `-Xmx6g` served 1M positions with two dates |
 | Loader heap | `16g` | `DRISHTI_DATALOAD_LOADER_HEAP=16g` for the inbox (default `4g`; the loader's budget is half of it): a separate process, memory bounded, the rest spilled to disk; for the CLI, `DRISHTI_LAKE_LOADER_HEAP` |
 | Reporting currencies | `DRISHTI_VAR_CURRENCIES=USD` **for the first load** | the default builds EUR, CAD, JPY and GBP books ahead, each about 77% of the USD book's disk; add them when you need them |
 | Open dates | `DRISHTI_VAR_HOT_DATES=3` | the default 10 keeps up to ten dates open |
@@ -2023,7 +2023,7 @@ DRISHTI_VAR_CURRENCIES=USD
 DRISHTI_VAR_HOT_DATES=3
 DRISHTI_DATALOAD_LOADER_HEAP=16g
 EOF
-python tools/drishti.py start server --env-file server.env --heap 10g --background      # Windows: py tools\drishti.py ...
+python tools/drishti.py start server --env-file server.env --heap 10g --background      # Windows: py -3.13 tools\drishti.py ...
 ```
 
 **Disk**, 1.3M positions, 250 values a vector, two dates, **estimated** from the measured 20,000-position run (below; 509 values roughly doubles the lake and

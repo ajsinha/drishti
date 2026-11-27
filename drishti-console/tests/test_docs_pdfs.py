@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The PDF copies of the guides (tools/docs/md_to_pdf.py: the Deployment and QA guide, the developer quickstart, the cluster guide) are
+"""The PDF copies of the guides (tools/docs/md_to_pdf.py: the Deployment and QA guide, the developer quickstart, How it fits) are
 current: each PDF's title carries the fingerprint of its Markdown and pictures, so a guide changed without its PDF regenerated fails here,
 with the command that fixes it. No browser is started."""
 import importlib.util
@@ -34,7 +34,7 @@ spec.loader.exec_module(md_to_pdf)
 def test_every_pdf_is_current(source):
     assert source.is_file(), source
     why = md_to_pdf.stale(source)
-    assert not why, why + ": drishti-console/.venv/bin/python tools/docs/md_to_pdf.py"
+    assert not why, why + ": python3 tools/docs/md_to_pdf.py"
 
 
 @pytest.mark.parametrize("source", md_to_pdf.PDFS, ids=lambda p: p.name)

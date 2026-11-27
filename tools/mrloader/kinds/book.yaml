@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The bank's books (docs/plans/CSV_LOADERS.md sections 3.1 and 4.1): the canonical CSV. What a bank calls a booking portfolio is the
+# The bank's books (docs/guides/BANK_DATA_GUIDE.md sections 3.1 and 4.1): the canonical CSV. What a bank calls a booking portfolio is the
 # book: the names behind the book nodes; a full snapshot every day. The PVF source's own portfolio file: book.pvf.yaml.
 format: 1
 kind: book

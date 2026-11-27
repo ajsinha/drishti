@@ -43,7 +43,7 @@ public record ContentStoreSettings(String backend, Path fsRoot, String jdbcUrl, 
             return from(Map.of(), dataDir, resolve, "default");
         }
         try {
-            Map<String, Object> m = YAML.readValue(file.toFile(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> m = YAML.readValue(java.nio.file.Files.readAllBytes(file), new TypeReference<Map<String, Object>>() {});
             return from(m == null ? Map.of() : m, dataDir, resolve, file.toString());
         } catch (IOException e) {
             throw new UncheckedIOException("cannot read the content store settings " + file + ": " + e.getMessage(), e);

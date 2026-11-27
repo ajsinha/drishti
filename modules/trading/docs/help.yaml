@@ -17,5 +17,5 @@ sections:
 - id: trading
   title: Trading
   pages:
-  - title: 'Live results and blotters'
-    file: guide.md
+  - title: Live results and blotters
+    file: ../guides/BANK_DATA_GUIDE.md

@@ -14,7 +14,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The generic CSV loader: ONE kind's CSV (and its child files) to checked records, written as the data inbox and `lake build` take them.
-It converts and loads nothing itself; --inbox or --load hand the files on (docs/plans/CSV_LOADERS.md, tools/mrloader/docs/<kind>.md).
+It converts and loads nothing itself; --inbox or --load hand the files on (docs/guides/BANK_DATA_GUIDE.md, docs/contracts/CSV_FORMATS.md).
 
 examples (from the repository root):
   python3 tools/mrloader/csv_load.py --kind var-limit --csv data/mr/var_limits_20261029.csv --date 2026-10-29
