@@ -1175,6 +1175,60 @@ public class VarEnginePath {
                 settings);
     }
 
+    /** A node's parts' matrix through the engine: the parts' keys and labels in the in-tree order, {covariance, correlation}, the algebra. */
+    record PMatrix(List<String> keys, List<String> labels, double[][][] cm, boolean truncated, String engine) {}
+
+    /**
+     * The parametric matrix of a node's child nodes (the contributions' {@code matrix=true}): the first {@code max} parts in the hierarchy's
+     * order, each the child's rows in the scope, from the engine's {@code scope-pmatrix}.
+     */
+    PMatrix pMatrix(Principal p, String scope, LocalDate date, String ccy, int max) {
+        VarService svc = service.getIfAvailable();
+        String currency = VarCurrencies.normalise(ccy);
+        EngineScopeBook book = index(p, date, currency);
+        ScopeResolver.Resolution res = resolve(p, book, scope, date);
+        List<String> kids = res.node() == null ? List.of() : book.children.getOrDefault(res.node(), List.of());
+        if (kids.size() < 2) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "matrix=true needs a scope with parts (" + res.canonical() + " has " + kids.size() + ")");
+        }
+        boolean truncated = kids.size() > max;
+        List<String> shown = truncated ? kids.subList(0, max) : kids;
+        com.ash.drishti.banking.compute.var.Cells.Names names = svc.loader().names(com.ash.drishti.api.AsOf.of(date), svc.hierarchies());
+        List<Integer> all = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        for (String c : shown) {
+            all.addAll(ordinals(book.members(c).and(res.set())));
+            all.add(-1);
+            labels.add(nodeName(book, names, c));
+        }
+        Map<String, Object> params = params(dateWindow(), currency);
+        params.put("parts", all);
+        params.put("part-nodes", String.join(",", shown));
+        Map<String, Object> a = ask(p, List.of("scope-pmatrix"), params, Map.of("date", date.toString()));
+        int k = shown.size();
+        double[][][] cm = new double[2][k][k];
+        String engine = null;
+        int n = 0;
+        for (Map<String, Object> r : rows(a, "scope-pmatrix")) {
+            int i = ((Number) r.get("I")).intValue();
+            int j = ((Number) r.get("J")).intValue();
+            cm[0][i][j] = num(r.get("COVARIANCE"));
+            cm[1][i][j] = num(r.get("CORRELATION"));
+            engine = String.valueOf(r.get("ENGINE"));
+            n++;
+        }
+        if (n != k * k) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine " + ENGINE + " answered " + n + " cells of the " + k + " x " + k
+                    + " matrix of " + res.canonical() + missing(a));
+        }
+        List<String> keys = new ArrayList<>(kids);
+        List<String> allLabels = new ArrayList<>(labels);
+        for (String c : kids.subList(shown.size(), kids.size())) {
+            allLabels.add(nodeName(book, names, c));
+        }
+        return new PMatrix(keys, allLabels, cm, truncated, engine);
+    }
+
     /** The window a headline's figures are on: the asked one cut to the date's, or the date's (0: the whole set). */
     int window(String window) {
         int dateWindow = dateWindow();

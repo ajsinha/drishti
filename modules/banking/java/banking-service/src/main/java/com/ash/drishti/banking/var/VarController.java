@@ -387,20 +387,23 @@ public class VarController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal p,
             @org.springframework.web.bind.annotation.RequestHeader(value = org.springframework.http.HttpHeaders.ACCEPT, required = false) String accept) {
         if (enginePath.engine(route)) {                                // R2: the market-risk engine's scope-contributions
-            if (confidence != null || horizon != null || method != null || esq != null || set != null || matrix
+            if (confidence != null || horizon != null || method != null || esq != null || set != null
                     || scenario != null && !scenario.isBlank() || by != null && !by.isBlank() && !by.equals("child") && !by.equals("node")) {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers a node's child nodes on the offered lens for now; "
-                        + "a lens, a scenario, the matrix or other parts (by) are answered in-tree (path=in-tree)");
+                        + "a lens, a scenario or other parts (by) are answered in-tree (path=in-tree)");
             }
-            String node = !Boolean.FALSE.equals(parametric) && pOn() ? enginePath.node(p, scope(scope), date(asOf), ccy) : null;
+            if (matrix && Boolean.FALSE.equals(parametric)) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "matrix=true is parametric: it cannot be asked with parametric=false");
+            }
+            String node = (matrix || !Boolean.FALSE.equals(parametric)) && pOn() ? enginePath.node(p, scope(scope), date(asOf), ccy) : null;
             if (node == null) {
-                parametricOff(parametric, "the contributions of a scope that is not a node");
+                parametricOff(matrix ? Boolean.TRUE : parametric, "the contributions of a scope that is not a node");
             }
             Map<String, Object> answer = enginePath.contributions(p, scope(scope), date(asOf), ccy);
             if (node != null) {
-                answer = parametricParts(p, answer, node, date(asOf), accept != null && accept.contains("arrow"));
+                answer = parametricParts(p, answer, node, date(asOf), accept != null && accept.contains("arrow"), matrix ? scope(scope) : null, ccy);
             }
-            answer = parametric(answer, parametric);
+            answer = parametric(answer, matrix ? Boolean.TRUE : parametric);
             if (!exact) {
                 answer.remove("varExact");
                 answer.remove("esExact");
@@ -432,7 +435,8 @@ public class VarController {
      * after the rows; Arrow leaves the tooltips' lines to JSON).
      */
     @SuppressWarnings("unchecked")
-    private Map<String, Object> parametricParts(Principal p, Map<String, Object> answer, String node, java.time.LocalDate date, boolean arrow) {
+    private Map<String, Object> parametricParts(Principal p, Map<String, Object> answer, String node, java.time.LocalDate date, boolean arrow,
+            String matrixOf, String ccy) {
         String currency = (String) answer.get("currency");
         VarEnginePath.Parametric x = enginePath.parametric(p, date, currency, enginePath.window(null), svc.props().defaultLens().confidence(),
                 svc.props().defaultLens().esConfidence(), views.parametric().props().settings()).get(node);
@@ -466,6 +470,14 @@ public class VarController {
             a.put(k, k.equals("rows") ? out : v);
         });
         Map<String, Object> totals = views.parametric().totals(x.figures(), pComp, pAlone, true);
+        if (matrixOf != null) {                                        // the parts' matrix from scope-pmatrix (decision 6.6 (4))
+            if (rows.size() < 2) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "matrix=true needs a scope with parts (" + label + " has " + rows.size() + ")");
+            }
+            VarEnginePath.PMatrix pm = enginePath.pMatrix(p, matrixOf, date, ccy, views.parametric().matrixMaxParts());
+            totals.put("matrix", views.parametric().matrix(pm.keys(), pm.labels(), pm.cm(), pm.truncated(), x.figures().fit().sigma(),
+                    pm.engine()));
+        }
         Map<String, Object> b = new LinkedHashMap<>();
         a.forEach((k, v) -> {
             b.put(k, v);

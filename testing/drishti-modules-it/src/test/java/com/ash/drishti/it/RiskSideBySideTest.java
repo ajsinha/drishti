@@ -145,6 +145,7 @@ class RiskSideBySideTest {
         }
         int curves = 0;                                                 // the P&L path's block and normal curve of every node with child nodes
         int parts = 0;                                                  // the contributions' parametric columns of their children
+        int matrices = 0;                                               // and the matrix of their children
         for (String date : List.of("2026-09-28", "2026-09-29", "2026-09-30")) {
             for (String ccy : List.of("USD", "EUR")) {
                 Iterator<String> ids = golden.get(date + "/509/" + ccy).get("nodes").fieldNames();
@@ -189,18 +190,25 @@ class RiskSideBySideTest {
                     }
                     parametricSame(sbs, numbers, date + "/" + ccy + " contributions NODE:" + id + " parametric", ci.path("parametric"),
                             ce.path("parametric"));
+                    if (ci.path("rows").size() >= 2) {                  // the parts' covariance and correlation matrix (scope-pmatrix)
+                        JsonNode mi = server.get(c + "&matrix=true&path=in-tree").path("parametric").path("matrix");
+                        JsonNode me = server.get(c + "&matrix=true&path=engine").path("parametric").path("matrix");
+                        parametricSame(sbs, numbers, date + "/" + ccy + " matrix NODE:" + id, mi, me);
+                        matrices++;
+                    }
                 }
             }
         }
         System.out.println("side by side, parametric (tier " + System.getProperty("sbs.tier", "mapped") + "): " + blocks + " blocks (headline "
                 + "and tree cells), " + curves + " P&L path blocks with their curves and as many contributions' totals, " + parts
-                + " contributions' rows on both paths; " + numbers[0] + " numbers compared, " + numbers[1] + " within relative 1e-12; differences "
+                + " contributions' rows, " + matrices + " matrices on both paths; " + numbers[0] + " numbers compared, " + numbers[1] + " within relative 1e-12; differences "
                 + sbs.differences.size() + " (USD " + sbs.differences.stream().filter(x -> x.contains("/USD")).count() + "); first: "
                 + sbs.differences.stream().limit(8).map(x -> x.substring(0, Math.min(300, x.length()))).toList() + "; fields: "
                 + sbs.differences.stream().map(x -> x.replaceAll("^.* parametric\\.?([a-zA-Z]*).*$", "$1")).distinct().toList());
         assertThat(blocks).as("parametric blocks compared").isGreaterThan(2000);
         assertThat(curves).as("P&L path parametric blocks compared").isGreaterThan(100);
         assertThat(parts).as("contributions' parametric rows compared").isGreaterThan(300);
+        assertThat(matrices).as("parametric matrices compared").isGreaterThan(100);
         assertThat(asserted(sbs.differences)).as("parametric figures that differ beyond relative 1e-12 or in words").isEmpty();
     }
 
