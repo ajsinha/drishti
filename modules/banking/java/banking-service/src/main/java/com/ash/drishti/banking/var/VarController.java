@@ -170,9 +170,9 @@ public class VarController {
     private Map<String, Object> headlineAnswer(String scope, String ccy, String window, Double confidence, Double esConfidence, String horizon,
             String method, Double esq, String set, AsOf asOf, Boolean parametric, boolean matured, String path, Principal p) {
         if (enginePath.engine(path)) {                                 // R2: the market-risk engine through the host (VarEnginePath)
-            if (confidence != null || esConfidence != null || esq != null || parametric != null || matured) {
+            if (confidence != null || esConfidence != null || esq != null || matured) {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the headline at the configured confidences for "
-                        + "now; another confidence, parametric or matured items are answered in-tree (path=in-tree)");
+                        + "now; another confidence or matured items are answered in-tree (path=in-tree)");
             }
             com.ash.drishti.banking.compute.var.VarLens l = lens(horizon, method, null, null, set);
             if (l != null && !l.equals(svc.props().defaultLens())) {         // a horizon or the stress set (VAR_GUIDE 18.6, 18.8)
@@ -184,9 +184,28 @@ public class VarController {
                     throw new DrishtiException(ErrorCode.BAD_REQUEST, "window recomputes the normal set's 1-day VaR; a horizon or the stress "
                             + "set takes the offered window");
                 }
+                if (Boolean.TRUE.equals(parametric)) {
+                    throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the parametric block on the offered lens for "
+                            + "now; through a horizon or the stress set ask it in-tree (path=in-tree)");
+                }
                 return enginePath.headline(p, scope(scope), date(asOf), l.stressed() ? "USD" : ccy, l);
             }
-            return enginePath.headline(p, scope(scope), date(asOf), ccy, window);
+            Map<String, Object> h = enginePath.headline(p, scope(scope), date(asOf), ccy, window);
+            if (!Boolean.FALSE.equals(parametric) && h.get("node") instanceof String node && pOn()) {   // a node's block from node-pvar
+                // as in-tree: the block is the date's (its configured window, whatever window the headline recomputes on), beside the
+                // date's historical VaR and ES
+                Map<String, Object> official = window == null ? h : enginePath.headline(p, scope(scope), date(asOf), ccy, (String) null);
+                VarEnginePath.Parametric x = enginePath.parametric(p, date(asOf), (String) h.get("currency"), enginePath.window(null),
+                        svc.props().defaultLens().confidence(), svc.props().defaultLens().esConfidence(), views.parametric().props().settings())
+                        .get(node);
+                if (x != null) {
+                    h = new LinkedHashMap<>(h);
+                    h.put("parametric", views.parametric().headline(x.figures(), svc.props().defaultLens(),
+                            enginePath.nodeName(p, date(asOf), (String) h.get("currency"), node), x.set(), x.lastDay(),
+                            (Double) official.get("varExact"), (Double) official.get("esExact"), x.k()));
+                }
+            }
+            return parametric(h, parametric);
         }
         Map<String, Object> h = headline(scope, ccy, window, confidence, esConfidence, horizon, method, esq, set, asOf, p);
         if (matured) {                                                  // the matured-items switch (VAR_GUIDE.md, "Matured items"): this answer only
@@ -260,6 +279,11 @@ public class VarController {
         return out;
     }
 
+    /** True when parametric VaR is on here (drishti.var.parametric.enabled): the engine path adds its block from node-pvar. */
+    private boolean pOn() {
+        return views.parametric() != null && views.parametric().enabled();
+    }
+
     /** The engine path answers without the parametric columns for now: refused in words unless they are off or not asked for. */
     private void parametricOff(Boolean parametric, String what) {
         if (!Boolean.FALSE.equals(parametric) && views.parametric() != null && views.parametric().enabled()) {
@@ -302,7 +326,15 @@ public class VarController {
     public Map<String, Object> history(@RequestParam String scope, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(name = "path", required = false) String route, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(route)) {                                // R2: the market-risk engine's scope-backtest (VarEnginePath.history)
+            if (confidence != null || horizon != null || method != null || esq != null || set != null) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the history on the offered lens for now; a lens "
+                        + "is answered in-tree (path=in-tree)");
+            }
+            com.ash.drishti.banking.compute.var.VarLens l = svc.props().defaultLens();
+            return enginePath.history(p, scope(scope), date(asOf), ccy, n -> views.lensNote(l, n, null));
+        }
         return views.history(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq, set));
     }
 
@@ -420,8 +452,22 @@ public class VarController {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the tree on the offered lens for now; a lens, "
                         + "matured items or a basket's own tree (within) are answered in-tree (path=in-tree)");
             }
-            parametricOff(parametric, "the tree");
             Map<String, Object> answer = enginePath.tree(p, hierarchy, date(asOf), ccy);
+            if (!Boolean.FALSE.equals(parametric) && pOn() && answer.get("nodes") instanceof List<?> rows) {   // each node's cell from node-pvar
+                Map<String, VarEnginePath.Parametric> pv = enginePath.parametric(p, date(asOf), (String) answer.get("currency"),
+                        enginePath.window(null), svc.props().defaultLens().confidence(), svc.props().defaultLens().esConfidence(),
+                        views.parametric().props().settings());
+                for (Object o : rows) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> n = (Map<String, Object>) o;
+                    VarEnginePath.Parametric x = pv.get(String.valueOf(n.get("id")));
+                    if (x != null) {
+                        n.put("parametric", views.parametric().treeCell(x.figures(), svc.props().defaultLens(), String.valueOf(n.get("name")),
+                                (Double) n.get("varExact"), (Double) n.get("esExact")));
+                    }
+                }
+            }
+            answer = parametric(answer, parametric);
             if (!exact && answer.get("nodes") instanceof List<?> nodes) {
                 for (Object n : nodes) {
                     ((Map<?, ?>) n).remove("varExact");

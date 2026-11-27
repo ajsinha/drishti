@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -89,6 +90,168 @@ class RiskSideBySideTest {
     static void stop() {
         if (server != null) {
             server.close();
+        }
+    }
+
+    /**
+     * Parametric VaR (R2_CUT_PLAN 6.6 (4), owner decision 2026-11-27): the headline's block of every golden node (3 dates x 509/250 x
+     * USD/EUR) and the tree's cell of every node (3 dates x USD/EUR x 3 hierarchies), in-tree against the engine's {@code node-pvar}:
+     * every number within relative 1e-12 (the normal quantile's last bits; the whole-unit figures equal), every word equal. Historical
+     * VaR and ES stay the bit-exact proof of the other tests.
+     */
+    @Test
+    void theParametricFiguresOfEveryGoldenNodeAreWithinRelative1e12OnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        int[] numbers = new int[2];                                     // [compared, within 1e-12]
+        int blocks = 0;
+        Iterator<String> cases = golden.fieldNames();
+        while (cases.hasNext()) {
+            String c = cases.next();
+            String[] k = c.split("/");
+            Iterator<String> ids = golden.get(c).get("nodes").fieldNames();
+            while (ids.hasNext()) {
+                String id = ids.next();
+                String what = c + " NODE:" + id;
+                JsonNode[] both = sbs.both(server, what, "/api/v1/risk/var/scope?scope=" + URLEncoder.encode("NODE:" + id, StandardCharsets.UTF_8)
+                        + "&asOf=" + k[0] + "&ccy=" + k[2] + "&window=" + k[1]);
+                parametricSame(sbs, numbers, what + " parametric", both[0].path("parametric"), both[1].path("parametric"));
+                blocks++;
+            }
+        }
+        for (String date : List.of("2026-09-28", "2026-09-29", "2026-09-30")) {
+            for (String ccy : List.of("USD", "EUR")) {
+                for (String h : List.of("LEGAL", "LL", "MGMT")) {
+                    JsonNode[] both = sbs.both(server, date + "/" + ccy + " tree " + h, "/api/v1/risk/var/tree?hierarchy=" + h + "&asOf=" + date
+                            + "&ccy=" + ccy);
+                    Map<String, JsonNode> engine = new java.util.HashMap<>();
+                    both[1].path("nodes").forEach(n -> engine.put(n.path("id").asText(), n));
+                    for (JsonNode n : both[0].path("nodes")) {
+                        if (n.has("parametric")) {
+                            JsonNode e = engine.get(n.path("id").asText());
+                            parametricSame(sbs, numbers, date + "/" + ccy + " tree " + n.path("id").asText() + " parametric", n.path("parametric"),
+                                    e == null ? PackagedServer.JSON.missingNode() : e.path("parametric"));
+                            blocks++;
+                        }
+                    }
+                }
+            }
+        }
+        System.out.println("side by side, parametric (tier " + System.getProperty("sbs.tier", "mapped") + "): " + blocks + " blocks (headline "
+                + "and tree cells) on both paths; " + numbers[0] + " numbers compared, " + numbers[1] + " within relative 1e-12; differences "
+                + sbs.differences.size() + " (USD " + sbs.differences.stream().filter(x -> x.contains("/USD")).count() + "); first: "
+                + sbs.differences.stream().limit(8).map(x -> x.substring(0, Math.min(300, x.length()))).toList() + "; fields: "
+                + sbs.differences.stream().map(x -> x.replaceAll("^.* parametric\\.?([a-zA-Z]*).*$", "$1")).distinct().toList());
+        assertThat(blocks).as("parametric blocks compared").isGreaterThan(2000);
+        assertThat(asserted(sbs.differences)).as("parametric figures that differ beyond relative 1e-12 or in words").isEmpty();
+    }
+
+    /**
+     * The history of a scope without official records ({@code GET /scope/history}, the replay): every golden node and every scope kind of
+     * {@link #everyScopeKindIsTheSameOnBothPaths}, 3 dates x USD/EUR, in-tree against the engine's {@code scope-backtest}: every row
+     * (date, VaR, ES, P&amp;L, exception), the backtest (days, exceptions, zone; the likelihood ratios and p-values within relative 1e-12)
+     * and the words. A node with official records (two days or more) is answered in-tree only: counted.
+     */
+    @Test
+    void theReplayedHistoryOfEveryGoldenNodeAndScopeKindIsTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        int[] numbers = new int[2];
+        int official = 0;
+        int refused = 0;
+        int answers = 0;
+        for (String c : List.of("2026-09-28/509/USD", "2026-09-28/509/EUR", "2026-09-29/509/USD", "2026-09-29/509/EUR", "2026-09-30/509/USD",
+                "2026-09-30/509/EUR")) {
+            String[] k = c.split("/");
+            List<String> scopes = new ArrayList<>();
+            golden.get(c).get("nodes").fieldNames().forEachRemaining(id -> scopes.add("NODE:" + id));
+            scopes.addAll(List.of("BANK - DESK:RATES", "DIV:MARKETS - BOOK:COMM-1", "LE:NY - DESK:RATES", "PORT:PF-USD-RATES", "PORT:PF-EUR-ALL",
+                    "PORT:PF-LISTED", "PORT:PF-ASHA-UNWIND", "PORT:PF-EUR-ALL - DESK:FX"));
+            scopes.addAll(adHoc(k[0]));
+            for (String scope : scopes) {
+                String what = c + " " + scope;
+                String q = "/api/v1/risk/var/scope/history?scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8) + "&asOf=" + k[0] + "&ccy=" + k[2];
+                JsonNode inTree;
+                try {
+                    inTree = server.get(q + "&path=in-tree");
+                } catch (IllegalStateException e) {                    // refused in-tree: the engine path must refuse it too
+                    try {
+                        server.get(q + "&path=engine");
+                        sbs.differences.add(what + ": in-tree refused (" + e.getMessage() + "), the engine answered");
+                    } catch (IllegalStateException fine) {
+                        refused++;
+                    }
+                    continue;
+                }
+                JsonNode engine;
+                try {
+                    engine = server.get(q + "&path=engine");
+                } catch (IllegalStateException e) {
+                    if (e.getMessage() != null && e.getMessage().contains("official records")) {
+                        official++;
+                        continue;
+                    }
+                    throw e;
+                }
+                answers++;
+                com.fasterxml.jackson.databind.node.ObjectNode e2 = engine.deepCopy();
+                e2.remove("path");
+                parametricSame(sbs, numbers, what + " history", inTree, e2);
+            }
+        }
+        System.out.println("side by side, history (replay, tier " + System.getProperty("sbs.tier", "mapped") + "): " + answers + " answers on both "
+                + "paths (" + official + " nodes with official records: in-tree only; " + refused + " refused on both); " + numbers[0] + " numbers compared, " + numbers[1]
+                + " within relative 1e-12; differences " + sbs.differences.size() + " (USD " + sbs.differences.stream().filter(x -> x.contains("/USD"))
+                .count() + "); first: " + sbs.differences.stream().limit(8).map(x -> x.substring(0, Math.min(300, x.length()))).toList());
+        assertThat(answers).as("history answers compared").isGreaterThan(500);
+        // the mapped tier: a node's figures are its stored aggregate (USD asserted); other scopes sum float32 rows (MC-12): counted
+        assertThat(asserted(sbs.differences).stream().filter(x -> HEAP || x.contains(" NODE:")).toList())
+                .as("history answers that differ between in-tree and engine").isEmpty();
+    }
+
+    /** One parametric block on both paths: numbers within relative 1e-12, whole-unit figures and words equal. */
+    private static void parametricSame(SideBySide sbs, int[] numbers, String what, JsonNode inTree, JsonNode engine) {
+        if (inTree.isMissingNode() || engine.isMissingNode() || inTree.isNull() != engine.isNull()) {
+            if (inTree.isMissingNode() != engine.isMissingNode()) {
+                sbs.differences.add(what + ": in-tree " + (inTree.isMissingNode() ? "none" : "a block") + ", engine "
+                        + (engine.isMissingNode() ? "none" : "a block"));
+            }
+            return;
+        }
+        if (inTree.isObject()) {
+            List<String> names = new ArrayList<>();
+            inTree.fieldNames().forEachRemaining(names::add);
+            List<String> theirs = new ArrayList<>();
+            engine.fieldNames().forEachRemaining(theirs::add);
+            if (!names.equals(theirs)) {
+                sbs.differences.add(what + " fields: in-tree " + names + ", engine " + theirs);
+            }
+            for (String f : names) {
+                parametricSame(sbs, numbers, what + "." + f, inTree.get(f), engine.path(f));
+            }
+        } else if (inTree.isArray()) {
+            if (inTree.size() != engine.size()) {
+                sbs.differences.add(what + " size: in-tree " + inTree.size() + ", engine " + engine.size());
+                return;
+            }
+            for (int i = 0; i < inTree.size(); i++) {
+                parametricSame(sbs, numbers, what + "[" + i + "]", inTree.get(i), engine.get(i));
+            }
+        } else if (inTree.isFloatingPointNumber() && engine.isNumber()) {
+            numbers[0]++;
+            double a = inTree.asDouble();
+            double b = engine.asDouble();
+            if (a == b || Math.abs(a - b) <= 1e-12 * Math.max(Math.abs(a), Math.abs(b))) {
+                numbers[1]++;
+            } else {
+                sbs.differences.add(what + ": in-tree " + a + ", engine " + b + " (relative " + Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b)) + ")");
+            }
+        } else if (!inTree.equals(engine)) {
+            if (inTree.isNumber()) {
+                numbers[0]++;
+            }
+            sbs.differences.add(what + ": in-tree " + inTree + ", engine " + engine);
+        } else if (inTree.isNumber()) {
+            numbers[0]++;
+            numbers[1]++;
         }
     }
 

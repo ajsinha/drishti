@@ -148,6 +148,15 @@ final class VarViews {
      */
     Map<String, Object> lensNote(VarService.Scoped s) {
         VarLens l = lens(s);
+        Map<String, Object> m = lensNote(l, s.oneDay().length, l.method() == VarLens.Method.SUM ? s.vector().length : null);
+        if (l.stressed()) {
+            m.put("stressSet", stressSetNote(s.date()));
+        }
+        return m;
+    }
+
+    /** The same of a lens over {@code scenarios} 1-day scenarios ({@code windows}: the 10-day sums' count, or null); no stress set note. */
+    Map<String, Object> lensNote(VarLens l, int scenarios, Integer windows) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("horizon", l.horizon());
         m.put("method", l.methodName());
@@ -155,13 +164,10 @@ final class VarViews {
         m.put("confidence", l.confidence());
         m.put("esConfidence", l.esConfidence());
         m.put("default", l.equals(svc.props().defaultLens()));
-        m.put("scenarios", s.oneDay().length);
-        m.put("windows", l.method() == VarLens.Method.SUM ? s.vector().length : null);
-        m.put("describe", l.describe(s.oneDay().length));
+        m.put("scenarios", scenarios);
+        m.put("windows", windows);
+        m.put("describe", l.describe(scenarios));
         m.put("set", l.set());                                         // NORMAL or STRESSED (VAR_GUIDE.md section 18.8)
-        if (l.stressed()) {
-            m.put("stressSet", stressSetNote(s.date()));
-        }
         return m;
     }
 
@@ -1370,7 +1376,7 @@ final class VarViews {
         return m;
     }
 
-    private static Map<String, Object> historyRow(LocalDate d, double var, double es, double pnl, boolean exception) {
+    static Map<String, Object> historyRow(LocalDate d, double var, double es, double pnl, boolean exception) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("date", d.toString());
         m.put("var", round(var));

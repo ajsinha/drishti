@@ -574,6 +574,91 @@ public class VarEnginePath {
     }
 
     /** A node's name as the in-tree book names it: the reference entity's name of its value (VAR_GUIDE 15.14), else the engine's name. */
+    /**
+     * A scope's history through the engine ({@code GET /scope/history}, offered lens), the replay a scope without official records gets
+     * in-tree: the engine's {@code scope-backtest} (the newest {@code history-days} scenario P&amp;Ls of the scope's rows against its VaR
+     * of the date, each day tested against the VaR before it; in-sample) and {@code scope-scenarios} (the days' dates), shaped as the
+     * in-tree route shapes them: {@code currency}, {@code lens}, {@code mode: replay}, {@code note}, {@code backtest}, {@code rows}. A node
+     * with official records (two days or more) is answered from them in-tree for now, said in one sentence.
+     */
+    public Map<String, Object> history(Principal p, String scope, LocalDate date, String ccy,
+            java.util.function.IntFunction<Map<String, Object>> lens) {
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path needs the business date: give asOf");
+        }
+        VarService svc = service.getIfAvailable();
+        if (svc == null) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the VaR service is not configured here: the history is answered nowhere");
+        }
+        String currency = VarCurrencies.normalise(ccy);
+        int window = dateWindow();
+        EngineScopeBook book = index(p, date, currency);
+        ScopeResolver.Resolution res = resolve(p, book, scope, date);
+        if (res.node() != null) {
+            VarOfficialStore.NodeHistory h = svc.official().history(res.node(), date, svc.props().historyDays(), currency);
+            if (h != null && h.dates().length > 1) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the replayed history for now; " + res.canonical()
+                        + " has official records (" + h.dates().length + " days): ask it in-tree (path=in-tree)");
+            }
+        }
+        Map<String, Object> params = params(window, currency);
+        params.put("rows", ordinals(res.set()));
+        params.put("node", res.node() == null ? "" : res.node());
+        params.put("days", svc.props().historyDays());
+        Map<String, Object> a = ask(p, List.of("scope-backtest"), params, Map.of("date", date.toString()));
+        List<Map<String, Object>> r = rows(a, "scope-backtest");
+        if (r.isEmpty()) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " answered no history for " + res.canonical() + " on "
+                    + date + missing(a));
+        }
+        Map<String, Object> x = r.get(0);
+        double[] pnl = doubles(x.get("PNL"));
+        double[] flags = doubles(x.get("FLAGS"));
+        int first = ((Number) x.get("FIRST")).intValue();
+        List<String> dates = new ArrayList<>();
+        for (Map<String, Object> d : rows(ask(p, List.of("scope-scenarios"), Map.of("window", window), Map.of("date", date.toString())),
+                "scope-scenarios")) {
+            dates.add(String.valueOf(d.get("DATE")));
+        }
+        if (first + pnl.length != dates.size()) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine " + ENGINE + " replayed " + pnl.length + " days from scenario "
+                    + first + " over " + dates.size() + " scenario dates for " + res.canonical());
+        }
+        double var = num(x.get("VAR"));
+        double es = num(x.get("ES"));
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (int i = 0; i < pnl.length; i++) {
+            rows.add(VarViews.historyRow(LocalDate.parse(dates.get(first + i)), var, es, pnl[i], flags[i] != 0));
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("currency", currency);
+        out.put("lens", lens.apply(dates.size()));                 // the lens over the date's scenarios, as in-tree
+        out.put("mode", "replay");
+        int hidden = res.set().size() - ((Number) x.get("MEMBERS")).intValue();
+        out.put("note", "today's members over the last " + pnl.length + " scenario days against today's VaR: in-sample, not a regulatory "
+                + "backtest" + (res.node() != null && hidden > 0 ? " (the official history covers trades outside your entitlement)" : ""));
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("days", ((Number) x.get("DAYS")).intValue());
+        m.put("exceptions", ((Number) x.get("EXCEPTIONS")).intValue());
+        m.put("light", x.get("ZONE"));
+        m.put("kupiecLr", num(x.get("KUPIEC_LR")));
+        m.put("kupiecPValue", num(x.get("KUPIEC_P")));
+        m.put("christoffersenLr", num(x.get("CHRISTOFFERSEN_LR")));
+        m.put("christoffersenPValue", num(x.get("CHRISTOFFERSEN_P")));
+        out.put("backtest", m);
+        out.put("rows", rows);
+        out.put("path", "engine");
+        return out;
+    }
+
+    /** A node's name as the tree and the headline's label show it (the reference entity's name when the level has one). */
+    String nodeName(Principal p, LocalDate date, String currency, String node) {
+        VarService svc = service.getIfAvailable();
+        EngineScopeBook book = index(p, date, currency);
+        return svc == null ? book.names.getOrDefault(node, node)
+                : nodeName(book, svc.loader().names(com.ash.drishti.api.AsOf.of(date), svc.hierarchies()), node);
+    }
+
     static String nodeName(EngineScopeBook book, com.ash.drishti.banking.compute.var.Cells.Names names, String c) {
         String value = c.substring(Math.max(c.lastIndexOf('/'), c.lastIndexOf('~')) + 1);
         String named = book.levels.get(c) == null ? null : names.of(book.levels.get(c), value);
@@ -839,6 +924,41 @@ public class VarEnginePath {
             out[i] = (int) d[i];
         }
         return out;
+    }
+
+    /**
+     * A node's parametric figures from the engine's {@code node-pvar} (R2_CUT_PLAN 6.6 (4): within relative 1e-12 of in-tree, the normal
+     * quantile's last bits; historical VaR and ES stay bit-exact): the figures as Drishti's {@code ParametricVar.Figures} (the block and
+     * the tooltip are shaped by {@link VarParametric} as in-tree), the historical rank {@code k}, the scenario set and its newest day.
+     */
+    record Parametric(com.ash.drishti.banking.compute.var.ParametricVar.Figures figures, int k, String set, String lastDay) {}
+
+    /**
+     * Every node's parametric figures on a window in a currency ({@code node-pvar}, one ask), keyed by node id; the fit's weights are
+     * not carried (no block reads them). {@code confidence} and {@code esConfidence} are the lens's (the engine's configured ones).
+     */
+    Map<String, Parametric> parametric(Principal p, LocalDate date, String currency, int window, double confidence, double esConfidence,
+            com.ash.drishti.banking.compute.var.ParametricVar.Settings settings) {
+        Map<String, Object> a = ask(p, List.of("node-pvar"), params(window, currency), Map.of("date", date.toString()));
+        Map<String, Parametric> out = new LinkedHashMap<>();
+        for (Map<String, Object> r : rows(a, "node-pvar")) {
+            double sigma = num(r.get("SIGMA"));
+            double z = num(r.get("Z"));
+            var fit = new com.ash.drishti.banking.compute.var.ParametricVar.Fit(((Number) r.get("SCENARIOS")).intValue(), num(r.get("MU")),
+                    sigma, num(r.get("SKEW")), num(r.get("EXCESS_KURTOSIS")), new double[0], settings);
+            var f = new com.ash.drishti.banking.compute.var.ParametricVar.Figures(fit, confidence, esConfidence, z, num(r.get("Z_ES")),
+                    num(r.get("ES_FACTOR")), num(r.get("PVAR")), num(r.get("PES")), z * sigma, ((Number) r.get("BEYOND")).intValue());
+            out.put(String.valueOf(r.get("NODE_ID")), new Parametric(f, ((Number) r.get("K")).intValue(), String.valueOf(r.get("SCENARIO_SET")),
+                    r.get("LAST_DAY") == null ? null : String.valueOf(r.get("LAST_DAY"))));
+        }
+        return out;
+    }
+
+    /** The window a headline's figures are on: the asked one cut to the date's, or the date's (0: the whole set). */
+    int window(String window) {
+        int dateWindow = dateWindow();
+        int asked = window == null || window.isBlank() || window.equalsIgnoreCase("all") ? 0 : Integer.parseInt(window.trim());
+        return dateWindow == 0 ? asked : asked == 0 || asked > dateWindow ? dateWindow : asked;
     }
 
     /** One scope's figures on one window: VaR, ES, the rows counted and the limit (NaN when none) in the answer's currency. */

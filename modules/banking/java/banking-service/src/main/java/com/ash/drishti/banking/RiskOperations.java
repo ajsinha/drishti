@@ -87,7 +87,7 @@ public class RiskOperations {
 
     @Operation(value = "var.history", rest = "GET /api/v1/risk/var/scope/history")
     public Figures varHistory(Person p, Scope r) {
-        return new Figures(var.history(r.scope(), r.ccy(), null, null, null, null, null, asOf(p), principal(p)));
+        return new Figures(var.history(r.scope(), r.ccy(), null, null, null, null, null, asOf(p), null, principal(p)));
     }
 
     @Operation(value = "var.whatif", rest = "POST /api/v1/risk/var/what-if")
