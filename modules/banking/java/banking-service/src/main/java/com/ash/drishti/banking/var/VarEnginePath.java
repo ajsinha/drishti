@@ -189,15 +189,15 @@ public class VarEnginePath {
             f = nodeFigures(p, node, date, currency, w);
             official = w == dateWindow ? f : nodeFigures(p, node, date, currency, dateWindow);
         } else {
-            EngineScopeBook book = index(p, date);
+            EngineScopeBook book = index(p, date, currency);
             ScopeResolver.Resolution res = resolve(p, book, s, date);
             if (res.node() != null) {
                 resolvedNode = res.node();
                 f = nodeFigures(p, res.node(), date, currency, w);
                 official = w == dateWindow ? f : nodeFigures(p, res.node(), date, currency, dateWindow);
             } else {
-                double limit = res.canonical().startsWith("PORT:") ? book.basketLimits.getOrDefault(res.canonical().substring(5), Double.NaN)
-                        : Double.NaN;
+                double limit = res.canonical().startsWith("PORT:")              // the index's limits are in the answer's currency
+                        ? book.basketLimits.getOrDefault(res.canonical().substring(5), Double.NaN) : Double.NaN;
                 f = rowFigures(p, res, date, currency, w, limit);
                 official = w == dateWindow ? f : rowFigures(p, res, date, currency, dateWindow, limit);
             }
@@ -242,7 +242,7 @@ public class VarEnginePath {
         }
         String currency = ccy == null || ccy.isBlank() ? "USD" : ccy.trim().toUpperCase(Locale.ROOT);
         int window = dateWindow();
-        EngineScopeBook book = index(p, date);
+        EngineScopeBook book = index(p, date, currency);
         ScopeResolver.Resolution res = resolve(p, book, scope, date);
         List<String> kids = res.node() == null ? List.of() : book.children.getOrDefault(res.node(), List.of());
         if (res.node() != null && kids.isEmpty() || res.node() == null && res.trade() < 0) {
@@ -382,7 +382,7 @@ public class VarEnginePath {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a what-if has 1 to 50 items: [{\"copyOf\": <a booked trade>, \"factor\": 1}]");
         }
         int window = dateWindow();
-        EngineScopeBook book = index(p, date);
+        EngineScopeBook book = index(p, date, currency);
         ScopeResolver.Resolution res = resolve(p, book, scope, date);
         if (res.node() == null) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers a what-if on a node for now; " + res.canonical()
@@ -601,15 +601,16 @@ public class VarEnginePath {
     /** The engine's index of a date, kept while its inputs' stamp is the same (one date's index is a few rows per position). */
     private final Map<String, Object[]> indexes = new java.util.concurrent.ConcurrentHashMap<>();
 
-    EngineScopeBook index(Principal p, LocalDate date) {
+    EngineScopeBook index(Principal p, LocalDate date, String currency) {
         Map<String, Object> words = ask(p, List.of("scope-words"), Map.of(), Map.of("date", date.toString()));
         Object stamp = stamp(words);
-        Object[] have = indexes.get(date.toString());
+        String key = date + "|" + currency;                            // a rule's amounts are in the reporting currency
+        Object[] have = indexes.get(key);
         if (have != null && java.util.Objects.equals(have[0], stamp)) {
             return (EngineScopeBook) have[1];
         }
         Map<String, Object> a = ask(p, List.of("scope-index", "scope-positions", "scope-position-values", "scope-nodes", "scope-words",
-                "scope-limits"), Map.of("window", dateWindow()), Map.of("date", date.toString()));
+                "scope-limits"), params(dateWindow(), currency), Map.of("date", date.toString()));
         if (rows(a, "scope-index").isEmpty() && !missing(a).isEmpty()) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no rows on " + date + missing(a));
         }
@@ -617,7 +618,7 @@ public class VarEnginePath {
         if (indexes.size() > 4) {
             indexes.clear();                                            // a few dates kept, as the engine keeps one hot
         }
-        indexes.put(date.toString(), new Object[] {stamp, b});
+        indexes.put(key, new Object[] {stamp, b});
         return b;
     }
 

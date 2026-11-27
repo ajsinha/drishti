@@ -57,7 +57,8 @@ class RiskSideBySideTest {
         Path work = FOLDER.resolve("server");
         deleteTree(work);
         SideBySide.dropJars(Path.of(jars), work);
-        server = PackagedServer.start(work, lake, "2026-09-30");
+        String tier = System.getProperty("sbs.tier", "");               // -Dsbs.tier=heap: the in-tree rows as float64 (the default mapped tier keeps them float32)
+        server = tier.isBlank() ? PackagedServer.start(work, lake, "2026-09-30") : PackagedServer.start(work, lake, "2026-09-30", java.util.Map.of("DRISHTI_VAR_TIER", tier, "DRISHTI_VAR_MEMORY_MB", "900"));
         long end = System.currentTimeMillis() + 180_000;               // the engine answers once its day is read: wait for it, once
         while (true) {
             try {

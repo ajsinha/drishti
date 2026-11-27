@@ -254,6 +254,10 @@ final class PackagedServer implements AutoCloseable {
     JsonNode get(String pathAndQuery) throws IOException, InterruptedException {
         HttpResponse<String> r = http.send(HttpRequest.newBuilder(URI.create(base + pathAndQuery)).timeout(Duration.ofMinutes(5)).build(),
                 HttpResponse.BodyHandlers.ofString());
+        for (int i = 0; i < 6 && r.statusCode() == 503 && r.body().contains("DRS-9502"); i++) {   // a date that cannot be opened just yet: as asked, again
+            Thread.sleep(15_000);
+            r = http.send(HttpRequest.newBuilder(URI.create(base + pathAndQuery)).timeout(Duration.ofMinutes(5)).build(), HttpResponse.BodyHandlers.ofString());
+        }
         if (r.statusCode() != 200) {
             throw new IllegalStateException(r.statusCode() + " for " + pathAndQuery + ": " + r.body().substring(0, Math.min(300, r.body().length())));
         }

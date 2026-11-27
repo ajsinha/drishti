@@ -128,7 +128,7 @@ final class EngineScopeBook implements ScopeResolver.Book {
             words.put(String.valueOf(r.get("WORD")), String.valueOf(r.get("HIERARCHY")));
         }
         for (Map<String, Object> r : VarEnginePath.rows(answer, "scope-limits")) {
-            basketLimits.put(String.valueOf(r.get("BASKET_ID")), ((Number) r.get("LIMIT")).doubleValue());
+            basketLimits.put(String.valueOf(r.get("BASKET_ID")), r.get("LIMIT") instanceof Number l ? l.doubleValue() : Double.NaN);
         }
     }
 
