@@ -19,7 +19,7 @@ kinds:
     title: Fund or ETF
     about: ${$.NAME} (${$.TICKER}) is a ${$.TYPE} with ${fmt($.NET_ASSETS, 'compact')} USD of net assets and ${fmt($.HOLDING_COUNT, 'amount0')}
       holdings on ${$.REPORT_DATE}, as filed on Form N-PORT.
-    guide: world-data-guide
+    guide: funds
     glossary:
       TICKER:
         term: Ticker
@@ -817,7 +817,7 @@ kinds:
   fund-holder:
     title: Funds holding a company
     about: ${$.FUNDS} of the pack's funds hold ${$.NAME}, ${fmt($.TOTAL_VALUE, 'compact')} USD together.
-    guide: world-data-guide
+    guide: funds
     glossary:
       TICKER:
         term: Ticker
@@ -927,7 +927,7 @@ kinds:
   index-funds:
     title: Funds tracking an index
     about: ${$.FUNDS} of the pack's funds track the ${$.NAME}, ${fmt($.TOTAL_NET_ASSETS, 'compact')} USD of net assets together.
-    guide: world-data-guide
+    guide: funds
     glossary:
       INDEX:
         term: Index
