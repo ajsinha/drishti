@@ -18,7 +18,7 @@ The setup is its own: the scratch site of drishti-console/tests/artifact_stack.p
 extends another, a connector the pack reads, one nothing uses, and three BI files), on the scratch ports of DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT.
 
     DRISHTI_SHOTS_SERVER_PORT=18936 DRISHTI_SHOTS_CONSOLE_PORT=17936 \\
-        drishti-console/.venv/bin/python tools/docs/screenshots.py --guide artifacts
+        python3 tools/docs/screenshots.py --guide artifacts
 """
 from __future__ import annotations
 

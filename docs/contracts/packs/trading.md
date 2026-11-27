@@ -17,7 +17,7 @@
 
 # Data contracts of the trading pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/banking/packs/trading/guides/trading.md](../../../modules/banking/packs/trading/guides/trading.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/banking/packs/trading/README.md](../../../modules/banking/packs/trading/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -46,7 +46,6 @@ A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI)
 | Columns | `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `TRADE_STATUS`, `TRADE_VERSION`, `BUY_SELL_CODE`, `CURRENCY`, `QUANTITY`, `TRADE_DATE`, `MATURITY_DATE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `NOTIONAL`, `INDEX_NAME` |
 | Partitioned by | `PRODUCT_TYPE` |
 | Test data | data/testdata/trades/endur, data/testdata/trades/calypso, data/testdata/trades/murex |
-| Worked example | [trades/endur](../samples/trades.md#endur) · [trades/calypso](../samples/trades.md#calypso) · [trades/murex](../samples/trades.md#murex) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -236,6 +235,656 @@ A booked trade as its source system (ENDUR, CALYPSO, MUREX, WSS, SWAPONE or ICI)
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, TRADE_ACTION, TRADE_VERSION, BUY_SELL_CODE, OPTION_TYPE, INTERNAL_EXTERNAL_CODE, TRANSIT, CURRENCY, DELIVERY_VERSUS_PAYMENT, VAULT_LOCATION_ALLOCATION, LEASE_PERPETUITY_FLAG, LEGS[].LEG_TYPE, LEGS[].LEG_ECONOMIC_TYPE, LEGS[].CURRENCY, LEGS[].RESET_FIXING_SHIFT, LEGS[].RESET_HOLIDAY_SCHEDULE, LEGS[].RESET_CONVENTION, LEGS[].SETTLEMENT_TYPE, EVENTS[].CURRENCY: confirm they are closed lists.
 - number types decided by the field's name: PRICE amount, STRIKE_PRICE rate, LEGS[].NOTIONAL amount, LEGS[].CASH_FLOWS[].NOTIONAL amount, LEGS[].CASH_FLOWS[].STRIKE_PRICE rate, EVENTS[].AMOUNT amount: confirm amount, rate or integer.
 - no unit stated for the amounts QUANTITY, PRICE, LEGS[].NOTIONAL, LEGS[].CASH_FLOWS[].NOTIONAL, LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL, EVENTS[].AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+
+<a id="example-trades-endur"></a>
+**Example: `data/testdata/trades/endur`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SOURCE_SYSTEM": "ENDUR",
+  "SOURCE_UPDATE_TIME": "",
+  "TRADE_DATE": "2024-10-30",
+  "INPUT_DATE": "",
+  "TRADE_ID": "1003353",
+  "TRADE_STATUS": "MATURED",
+  "TRADE_ACTION": "",
+  "TRADE_VERSION": "2",
+  "TRANSACTION_ID": "700043370",
+  "PACKAGE_ID": "",
+  "QUANTITY": 200.0,
+  "PRICE": 2639.1925,
+  "BUY_SELL_CODE": "B",
+  "PRODUCT_TYPE": "ComSwap",
+  "PRODUCT_SUB_TYPE": "ENGY-SWAP",
+  "PRODUCT_GROUP": "",
+  "PRODUCT_SUB_GROUP": "",
+  "OPTION_TYPE": null,
+  "STRIKE_PRICE": null,
+  "COUNTERPARTY": "CP-LUMEN",
+  "COUNTERPARTY_UEN": "UEN0100333",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "CH",
+  "ORIGINAL_COUNTERPARTY": "CP-CORAL",
+  "ORIGINAL_COUNTERPARTY_UEN": "UEN0100185",
+  "INTERNAL_EXTERNAL_CODE": "External",
+  "TRANSIT": "00107",
+  "LEGAL_ENTITY": "LE-NY",
+  "PORTFOLIO": "BOOK-COMM-1",
+  "TRADER_ID": "TRDR-TBRENNAN",
+  "TRADER_FIRST_NAME": "T.",
+  "TRADER_LAST_NAME": "Brennan",
+  "START_DATE": "2025-01-01",
+  "MATURITY_DATE": "2025-01-31",
+  "REGISTRY_DELIVERY_DATE": "",
+  "CURRENCY": "USD",
+  "DELIVERY_VERSUS_PAYMENT": "NO",
+  "STRATEGY": null,
+  "INTERNAL_TRADING_STRATEGY": "",
+  "NY_CURVE_FLAG": "",
+  "VAULT_LOCATION_ALLOCATION": "",
+  "PRECIOUS_METAL_FLAG": "Y",
+  "TT_GROUP": "",
+  "TT_BOOK": "",
+  "LEASE_PERPETUITY_FLAG": "",
+  "SETTLEMENT_DATE": "",
+  "LEGS": [
+    {
+      "LEG_ID": "1",
+      "LEG_TYPE": "FIXED",
+      "LEG_ECONOMIC_TYPE": "Fixed price",
+      "CURRENCY": "USD",
+      "LEASE_CURRENCY": "USD",
+      "FLOAT_SPREAD": "",
+      "PRICE_UNIT": "OZ",
+      "NOTIONAL": 527838.5,
+      "DISCOUNT_INDEX": "DISC-USD",
+      "SPOT_CONVERSION_FACTOR": "1",
+      "PHYSICAL_LOCATION_NAME": "",
+      "INDEX_LOCATION_NAME": "",
+      "RESET_FIXING_SHIFT": "",
+      "RESET_HOLIDAY_SCHEDULE": null,
+      "RESET_CONVENTION": "",
+      "EMISSIONS_VINTAGE_MIN": "",
+      "EMISSIONS_VINTAGE_MAX": "",
+      "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+      "SETTLEMENT_TYPE": "Cash Settlement",
+      "NY_CURVE_FLAG": "",
+      "NUM_RRDC_REC": "",
+      "NUM_PROFILE_REC": "",
+      "DAILY_VOLUME": "9",
+      "INDEX": {
+        "NAME": "",
+        "GROUP": "",
+        "SUB_GROUP": ""
+      },
+      "CASH_FLOWS": [
+        {
+          "FLOW_ID": "5087573",
+          "FLOW_TYPE": "Fixed price",
+          "NOTIONAL": 527838.5,
+          "RATE": "2639.1925",
+          "FLOAT_SPREAD": "",
+          "START_DATE": "2025-01-01",
+          "END_DATE": "2025-01-31",
+          "PAYMENT_DATE": "2025-02-10",
+          "RATE_DETERMINATION_DATE": "2025-01-31",
+          "FIRST_RESET_DATE": "2025-01-01",
+          "LAST_RESET_DATE": "2025-01-31",
+          "STRIKE_PRICE": 2639.1925,
+          "RESETS": []
+        }
+      ]
+    },
+    {
+      "LEG_ID": "2",
+      "LEG_TYPE": "FLOAT",
+      "LEG_ECONOMIC_TYPE": "Floating price",
+      "CURRENCY": "USD",
+      "LEASE_CURRENCY": "USD",
+      "FLOAT_SPREAD": "8.3432",
+      "PRICE_UNIT": "OZ",
+      "NOTIONAL": 535021.46,
+      "DISCOUNT_INDEX": "DISC-USD",
+      "SPOT_CONVERSION_FACTOR": "1",
+      "PHYSICAL_LOCATION_NAME": "Henry Hub",
+      "INDEX_LOCATION_NAME": "Henry Hub",
+      "RESET_FIXING_SHIFT": "0",
+      "RESET_HOLIDAY_SCHEDULE": null,
+      "RESET_CONVENTION": "Daily average",
+      "EMISSIONS_VINTAGE_MIN": "",
+      "EMISSIONS_VINTAGE_MAX": "",
+      "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+      "SETTLEMENT_TYPE": "Cash Settlement",
+      "NY_CURVE_FLAG": "",
+      "NUM_RRDC_REC": "",
+      "NUM_PROFILE_REC": "",
+      "DAILY_VOLUME": "9",
+      "INDEX": {
+        "NAME": "IDX-GOLD-PM",
+        "GROUP": "Metals",
+        "SUB_GROUP": "Precious"
+      },
+      "CASH_FLOWS": [
+        {
+          "FLOW_ID": "5087574",
+          "FLOW_TYPE": "Floating average",
+          "NOTIONAL": 535021.46,
+          "RATE": "",
+          "FLOAT_SPREAD": "8.3432",
+          "START_DATE": "2025-01-01",
+          "END_DATE": "2025-01-31",
+          "PAYMENT_DATE": "2025-02-10",
+          "RATE_DETERMINATION_DATE": "2025-01-31",
+          "FIRST_RESET_DATE": "2025-01-01",
+          "LAST_RESET_DATE": "2025-01-31",
+          "STRIKE_PRICE": 0.0,
+          "RESETS": [
+            {
+              "RESET_ID": "1",
+              "ACCRUAL": 0.043478,
+              "START_DATE": "2025-01-01",
+              "END_DATE": "2025-01-01",
+              "RESET_DATE": "2025-01-01",
+              "ACCRUAL_START_DATE": "2025-01-01",
+              "ACCRUAL_END_DATE": "2025-01-01",
+              "RATE": "2700.8174"
+            },
+            {
+              "RESET_ID": "2",
+              "ACCRUAL": 0.043478,
+              "START_DATE": "2025-01-02",
+              "END_DATE": "2025-01-02",
+              "RESET_DATE": "2025-01-02",
+              "ACCRUAL_START_DATE": "2025-01-02",
+              "ACCRUAL_END_DATE": "2025-01-02",
+              "RATE": "2655.9519"
+            },
+            "… 21 more elements of the same shape"
+          ]
+        }
+      ]
+    }
+  ],
+  "EVENTS": [
+    {
+      "LEG_ID": "1",
+      "EVENT_ID": "9024728",
+      "EVENT_NUMBER": 1,
+      "EVENT_TYPE": "CASH_SETTLEMENT",
+      "PAYMENT_TYPE": "Commodity payment",
+      "EVENT_DATE": "2025-02-10",
+      "AMOUNT": -527838.5,
+      "CURRENCY": "USD",
+      "SEQUENCE_NUMBER": 1,
+      "VAULT_LOCATION_ALLOCATION": "",
+      "NY_CURVE_FLAG": ""
+    },
+    {
+      "LEG_ID": "2",
+      "EVENT_ID": "9024729",
+      "EVENT_NUMBER": 2,
+      "EVENT_TYPE": "CASH_SETTLEMENT",
+      "PAYMENT_TYPE": "Commodity payment",
+      "EVENT_DATE": "2025-02-10",
+      "AMOUNT": 535021.46,
+      "CURRENCY": "USD",
+      "SEQUENCE_NUMBER": 2,
+      "VAULT_LOCATION_ALLOCATION": "",
+      "NY_CURVE_FLAG": ""
+    }
+  ]
+}
+```
+
+<a id="example-trades-calypso"></a>
+**Example: `data/testdata/trades/calypso`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SOURCE_SYSTEM": "CALYPSO",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2026-02-13",
+  "INPUT_DATE": "2026-02-13",
+  "TRADE_ID": "CLY-3000045",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "3000045001",
+  "PACKAGE_ID": "",
+  "QUANTITY": 237000000.0,
+  "PRICE": 318144.0,
+  "BUY_SELL_CODE": "B",
+  "PRODUCT_TYPE": "FX_DOUBLE_BARRIER",
+  "PRODUCT_SUB_TYPE": "FX double-barrier option",
+  "PRODUCT_GROUP": "FX",
+  "PRODUCT_SUB_GROUP": "exotic",
+  "OPTION_TYPE": "Put",
+  "STRIKE_PRICE": 116.73995,
+  "COUNTERPARTY": "CP-BRAMBLE",
+  "COUNTERPARTY_UEN": "UEN0100111",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+  "ORIGINAL_COUNTERPARTY": "",
+  "ORIGINAL_COUNTERPARTY_UEN": "",
+  "INTERNAL_EXTERNAL_CODE": "External",
+  "TRANSIT": "00214",
+  "LEGAL_ENTITY": "LE-LDN",
+  "PORTFOLIO": "BOOK-FX-1",
+  "TRADER_ID": "TRDR-LMOREAU",
+  "TRADER_FIRST_NAME": "L.",
+  "TRADER_LAST_NAME": "Moreau",
+  "START_DATE": "2026-02-17",
+  "MATURITY_DATE": "2029-07-11",
+  "REGISTRY_DELIVERY_DATE": "",
+  "CURRENCY": "USD",
+  "DELIVERY_VERSUS_PAYMENT": "NO",
+  "STRATEGY": null,
+  "INTERNAL_TRADING_STRATEGY": "",
+  "NY_CURVE_FLAG": "",
+  "VAULT_LOCATION_ALLOCATION": "",
+  "PRECIOUS_METAL_FLAG": "",
+  "TT_GROUP": "DESK-FX",
+  "TT_BOOK": "BOOK-FX-1",
+  "LEASE_PERPETUITY_FLAG": "",
+  "SETTLEMENT_DATE": "2026-02-17",
+  "LEGS": [
+    {
+      "LEG_ID": "1",
+      "LEG_TYPE": "OPTION",
+      "LEG_ECONOMIC_TYPE": "Pay",
+      "CURRENCY": "USD",
+      "LEASE_CURRENCY": "",
+      "FLOAT_SPREAD": "",
+      "PRICE_UNIT": "",
+      "NOTIONAL": 237000000.0,
+      "DISCOUNT_INDEX": "",
+      "SPOT_CONVERSION_FACTOR": "",
+      "PHYSICAL_LOCATION_NAME": "",
+      "INDEX_LOCATION_NAME": "",
+      "RESET_FIXING_SHIFT": "",
+      "RESET_HOLIDAY_SCHEDULE": null,
+      "RESET_CONVENTION": "",
+      "EMISSIONS_VINTAGE_MIN": "",
+      "EMISSIONS_VINTAGE_MAX": "",
+      "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+      "SETTLEMENT_TYPE": "Cash Settlement",
+      "NY_CURVE_FLAG": "",
+      "NUM_RRDC_REC": "",
+      "NUM_PROFILE_REC": "24",
+      "DAILY_VOLUME": "",
+      "INDEX": {
+        "NAME": "",
+        "GROUP": "",
+        "SUB_GROUP": ""
+      },
+      "CASH_FLOWS": [
+        {
+          "FLOW_ID": "3000045001",
+          "FLOW_TYPE": "Coupon paid",
+          "NOTIONAL": 237000000.0,
+          "RATE": 99.4,
+          "FLOAT_SPREAD": "",
+          "START_DATE": "2026-02-17",
+          "END_DATE": "2026-05-17",
+          "PAYMENT_DATE": "2026-05-17",
+          "RATE_DETERMINATION_DATE": "2026-05-17",
+          "FIRST_RESET_DATE": "2026-05-17",
+          "LAST_RESET_DATE": "2026-05-17",
+          "STRIKE_PRICE": 0.0,
+          "RESETS": [
+            {
+              "RESET_ID": "R-1",
+              "ACCRUAL": "",
+              "START_DATE": "2026-05-17",
+              "END_DATE": "2026-05-17",
+              "RESET_DATE": "2026-05-17",
+              "ACCRUAL_START_DATE": "",
+              "ACCRUAL_END_DATE": "",
+              "RATE": 99.4
+            }
+          ]
+        },
+        {
+          "FLOW_ID": "3000045002",
+          "FLOW_TYPE": "Coupon paid",
+          "NOTIONAL": 237000000.0,
+          "RATE": 86.22,
+          "FLOAT_SPREAD": "",
+          "START_DATE": "2026-05-17",
+          "END_DATE": "2026-08-17",
+          "PAYMENT_DATE": "2026-08-17",
+          "RATE_DETERMINATION_DATE": "2026-08-17",
+          "FIRST_RESET_DATE": "2026-08-17",
+          "LAST_RESET_DATE": "2026-08-17",
+          "STRIKE_PRICE": 0.0,
+          "RESETS": [
+            {
+              "RESET_ID": "R-2",
+              "ACCRUAL": "",
+              "START_DATE": "2026-08-17",
+              "END_DATE": "2026-08-17",
+              "RESET_DATE": "2026-08-17",
+              "ACCRUAL_START_DATE": "",
+              "ACCRUAL_END_DATE": "",
+              "RATE": 86.22
+            }
+          ]
+        },
+        "… 22 more elements of the same shape"
+      ]
+    }
+  ],
+  "EVENTS": [
+    {
+      "LEG_ID": "",
+      "EVENT_ID": "3000045001",
+      "EVENT_NUMBER": 1,
+      "EVENT_TYPE": "BOOKED",
+      "PAYMENT_TYPE": "",
+      "EVENT_DATE": "2026-02-13",
+      "AMOUNT": "",
+      "CURRENCY": "USD",
+      "SEQUENCE_NUMBER": 1,
+      "VAULT_LOCATION_ALLOCATION": "",
+      "NY_CURVE_FLAG": ""
+    },
+    {
+      "LEG_ID": "",
+      "EVENT_ID": "3000045002",
+      "EVENT_NUMBER": 2,
+      "EVENT_TYPE": "CONFIRMED",
+      "PAYMENT_TYPE": "",
+      "EVENT_DATE": "2026-02-13",
+      "AMOUNT": "",
+      "CURRENCY": "USD",
+      "SEQUENCE_NUMBER": 2,
+      "VAULT_LOCATION_ALLOCATION": "",
+      "NY_CURVE_FLAG": ""
+    },
+    "… 3 more elements of the same shape"
+  ]
+}
+```
+
+<a id="example-trades-murex"></a>
+**Example: `data/testdata/trades/murex`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "SOURCE_SYSTEM": "MUREX",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2024-11-12",
+  "INPUT_DATE": "2024-11-12",
+  "TRADE_ID": "MX-20000013",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000013001",
+  "PACKAGE_ID": "",
+  "QUANTITY": 7000000.0,
+  "PRICE": 15.1,
+  "BUY_SELL_CODE": "B",
+  "PRODUCT_TYPE": "BASIS_SWAP",
+  "PRODUCT_SUB_TYPE": "Basis swap (float/float)",
+  "PRODUCT_GROUP": "Rates",
+  "PRODUCT_SUB_GROUP": "swap",
+  "OPTION_TYPE": null,
+  "STRIKE_PRICE": null,
+  "COUNTERPARTY": "CP-VERDANT",
+  "COUNTERPARTY_UEN": "UEN0100666",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "BR",
+  "ORIGINAL_COUNTERPARTY": "",
+  "ORIGINAL_COUNTERPARTY_UEN": "",
+  "INTERNAL_EXTERNAL_CODE": "External",
+  "TRANSIT": "00107",
+  "LEGAL_ENTITY": "LE-NY",
+  "PORTFOLIO": "BOOK-RATES-3",
+  "TRADER_ID": "TRDR-MOKAFOR",
+  "TRADER_FIRST_NAME": "M.",
+  "TRADER_LAST_NAME": "Okafor",
+  "START_DATE": "2024-11-14",
+  "MATURITY_DATE": "2032-05-12",
+  "REGISTRY_DELIVERY_DATE": "",
+  "CURRENCY": "EUR",
+  "DELIVERY_VERSUS_PAYMENT": "NO",
+  "STRATEGY": null,
+  "INTERNAL_TRADING_STRATEGY": "",
+  "NY_CURVE_FLAG": "",
+  "VAULT_LOCATION_ALLOCATION": "",
+  "PRECIOUS_METAL_FLAG": "",
+  "TT_GROUP": "DESK-RATES",
+  "TT_BOOK": "BOOK-RATES-3",
+  "LEASE_PERPETUITY_FLAG": "",
+  "SETTLEMENT_DATE": "2024-11-14",
+  "LEGS": [
+    {
+      "LEG_ID": "1",
+      "LEG_TYPE": "FLOAT",
+      "LEG_ECONOMIC_TYPE": "Pay",
+      "CURRENCY": "EUR",
+      "LEASE_CURRENCY": "",
+      "FLOAT_SPREAD": "",
+      "PRICE_UNIT": "",
+      "NOTIONAL": 7000000.0,
+      "DISCOUNT_INDEX": "CRV-EUR-OIS",
+      "SPOT_CONVERSION_FACTOR": "",
+      "PHYSICAL_LOCATION_NAME": "",
+      "INDEX_LOCATION_NAME": "",
+      "RESET_FIXING_SHIFT": "-2",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
+      "RESET_CONVENTION": "Monthly",
+      "EMISSIONS_VINTAGE_MIN": "",
+      "EMISSIONS_VINTAGE_MAX": "",
+      "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+      "SETTLEMENT_TYPE": "Cash Settlement",
+      "NY_CURVE_FLAG": "",
+      "NUM_RRDC_REC": "",
+      "NUM_PROFILE_REC": "15",
+      "DAILY_VOLUME": "",
+      "INDEX": {
+        "NAME": "ESTR",
+        "GROUP": "Rates",
+        "SUB_GROUP": "Monthly"
+      },
+      "CASH_FLOWS": [
+        {
+          "FLOW_ID": "20000013001",
+          "FLOW_TYPE": "Interest",
+          "NOTIONAL": 7000000.0,
+          "RATE": 0.019391,
+          "FLOAT_SPREAD": "",
+          "START_DATE": "2024-11-14",
+          "END_DATE": "2025-05-12",
+          "PAYMENT_DATE": "2025-05-14",
+          "RATE_DETERMINATION_DATE": "2024-11-12",
+          "FIRST_RESET_DATE": "2024-11-12",
+          "LAST_RESET_DATE": "2025-04-10",
+          "STRIKE_PRICE": 0.0,
+          "RESETS": [
+            {
+              "RESET_ID": "R-1",
+              "ACCRUAL": "",
+              "START_DATE": "2024-11-12",
+              "END_DATE": "2025-05-12",
+              "RESET_DATE": "2024-11-12",
+              "ACCRUAL_START_DATE": "2024-11-14",
+              "ACCRUAL_END_DATE": "2025-05-12",
+              "RATE": 0.019835
+            },
+            {
+              "RESET_ID": "R-2",
+              "ACCRUAL": "",
+              "START_DATE": "2024-12-12",
+              "END_DATE": "2025-05-12",
+              "RESET_DATE": "2024-12-12",
+              "ACCRUAL_START_DATE": "2024-11-14",
+              "ACCRUAL_END_DATE": "2025-05-12",
+              "RATE": 0.01889
+            },
+            "… 4 more elements of the same shape"
+          ]
+        },
+        {
+          "FLOW_ID": "20000013002",
+          "FLOW_TYPE": "Interest",
+          "NOTIONAL": 7000000.0,
+          "RATE": 0.01928,
+          "FLOAT_SPREAD": "",
+          "START_DATE": "2025-05-12",
+          "END_DATE": "2025-11-12",
+          "PAYMENT_DATE": "2025-11-14",
+          "RATE_DETERMINATION_DATE": "2025-05-08",
+          "FIRST_RESET_DATE": "2025-05-08",
+          "LAST_RESET_DATE": "2025-10-09",
+          "STRIKE_PRICE": 0.0,
+          "RESETS": [
+            {
+              "RESET_ID": "R-7",
+              "ACCRUAL": "",
+              "START_DATE": "2025-05-08",
+              "END_DATE": "2025-11-12",
+              "RESET_DATE": "2025-05-08",
+              "ACCRUAL_START_DATE": "2025-05-12",
+              "ACCRUAL_END_DATE": "2025-11-12",
+              "RATE": 0.018862
+            },
+            {
+              "RESET_ID": "R-8",
+              "ACCRUAL": "",
+              "START_DATE": "2025-06-10",
+              "END_DATE": "2025-11-12",
+              "RESET_DATE": "2025-06-10",
+              "ACCRUAL_START_DATE": "2025-05-12",
+              "ACCRUAL_END_DATE": "2025-11-12",
+              "RATE": 0.019827
+            },
+            "… 4 more elements of the same shape"
+          ]
+        },
+        "… 13 more elements of the same shape"
+      ]
+    },
+    {
+      "LEG_ID": "2",
+      "LEG_TYPE": "FLOAT",
+      "LEG_ECONOMIC_TYPE": "Receive",
+      "CURRENCY": "EUR",
+      "LEASE_CURRENCY": "",
+      "FLOAT_SPREAD": 0.00151,
+      "PRICE_UNIT": "",
+      "NOTIONAL": 7000000.0,
+      "DISCOUNT_INDEX": "CRV-EUR-OIS",
+      "SPOT_CONVERSION_FACTOR": "",
+      "PHYSICAL_LOCATION_NAME": "",
+      "INDEX_LOCATION_NAME": "",
+      "RESET_FIXING_SHIFT": "-2",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
+      "RESET_CONVENTION": "Semi-annual",
+      "EMISSIONS_VINTAGE_MIN": "",
+      "EMISSIONS_VINTAGE_MAX": "",
+      "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+      "SETTLEMENT_TYPE": "Cash Settlement",
+      "NY_CURVE_FLAG": "",
+      "NUM_RRDC_REC": "",
+      "NUM_PROFILE_REC": "15",
+      "DAILY_VOLUME": "",
+      "INDEX": {
+        "NAME": "TERM-ESTR-6M",
+        "GROUP": "Rates",
+        "SUB_GROUP": "Semi-annual"
+      },
+      "CASH_FLOWS": [
+        {
+          "FLOW_ID": "20000013016",
+          "FLOW_TYPE": "Interest",
+          "NOTIONAL": 7000000.0,
+          "RATE": 0.020635,
+          "FLOAT_SPREAD": 0.00151,
+          "START_DATE": "2024-11-14",
+          "END_DATE": "2025-05-12",
+          "PAYMENT_DATE": "2025-05-14",
+          "RATE_DETERMINATION_DATE": "2024-11-12",
+          "FIRST_RESET_DATE": "2024-11-12",
+          "LAST_RESET_DATE": "2024-11-12",
+          "STRIKE_PRICE": 0.0,
+          "RESETS": [
+            {
+              "RESET_ID": "R-94",
+              "ACCRUAL": "",
+              "START_DATE": "2024-11-12",
+              "END_DATE": "2025-05-12",
+              "RESET_DATE": "2024-11-12",
+              "ACCRUAL_START_DATE": "2024-11-14",
+              "ACCRUAL_END_DATE": "2025-05-12",
+              "RATE": 0.020635
+            }
+          ]
+        },
+        {
+          "FLOW_ID": "20000013017",
+          "FLOW_TYPE": "Interest",
+          "NOTIONAL": 7000000.0,
+          "RATE": 0.019662,
+          "FLOAT_SPREAD": 0.00151,
+          "START_DATE": "2025-05-12",
+          "END_DATE": "2025-11-12",
+          "PAYMENT_DATE": "2025-11-14",
+          "RATE_DETERMINATION_DATE": "2025-05-08",
+          "FIRST_RESET_DATE": "2025-05-08",
+          "LAST_RESET_DATE": "2025-05-08",
+          "STRIKE_PRICE": 0.0,
+          "RESETS": [
+            {
+              "RESET_ID": "R-95",
+              "ACCRUAL": "",
+              "START_DATE": "2025-05-08",
+              "END_DATE": "2025-11-12",
+              "RESET_DATE": "2025-05-08",
+              "ACCRUAL_START_DATE": "2025-05-12",
+              "ACCRUAL_END_DATE": "2025-11-12",
+              "RATE": 0.019662
+            }
+          ]
+        },
+        "… 13 more elements of the same shape"
+      ]
+    }
+  ],
+  "EVENTS": [
+    {
+      "LEG_ID": "",
+      "EVENT_ID": "20000013001",
+      "EVENT_NUMBER": 1,
+      "EVENT_TYPE": "BOOKED",
+      "PAYMENT_TYPE": "",
+      "EVENT_DATE": "2024-11-12",
+      "AMOUNT": "",
+      "CURRENCY": "EUR",
+      "SEQUENCE_NUMBER": 1,
+      "VAULT_LOCATION_ALLOCATION": "",
+      "NY_CURVE_FLAG": ""
+    },
+    {
+      "LEG_ID": "",
+      "EVENT_ID": "20000013002",
+      "EVENT_NUMBER": 2,
+      "EVENT_TYPE": "CONFIRMED",
+      "PAYMENT_TYPE": "",
+      "EVENT_DATE": "2024-11-12",
+      "AMOUNT": "",
+      "CURRENCY": "EUR",
+      "SEQUENCE_NUMBER": 2,
+      "VAULT_LOCATION_ALLOCATION": "",
+      "NY_CURVE_FLAG": ""
+    },
+    "… 33 more elements of the same shape"
+  ]
+}
+```
 
 ## CTRD: Counterparty trades (derived from trades) (`counterparty-trades`)
 

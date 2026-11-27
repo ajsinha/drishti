@@ -113,7 +113,7 @@ public final class Catalogue {
 
     /**
      * As {@link #load(Path, ItemStore)}, reading a domain's folder only while {@code domainOn} says its domain is on (a module that is off
-     * brings no table or model: docs/architecture/DOMAIN_MODULES.md section 8).
+     * brings no table or model: docs/architecture/KERNEL_AND_MODULES.md section 8).
      */
     public static Catalogue load(Path root, ItemStore store, java.util.function.Predicate<String> domainOn) throws IOException {
         Catalogue c = new Catalogue();

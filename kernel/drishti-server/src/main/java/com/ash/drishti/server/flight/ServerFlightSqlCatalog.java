@@ -34,7 +34,7 @@ import org.apache.arrow.vector.types.pojo.FieldType;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 /**
- * Flight SQL's catalog from the BI model catalogue, as the person may see it (docs/guides/FLIGHT_GUIDE.md, "Flight SQL"): a schema per
+ * Flight SQL's catalog from the BI model catalogue, as the person may see it (docs/guides/INTEGRATION_GUIDE.md, "Flight SQL"): a schema per
  * model they may read ({@link ModelCatalog#list}), a table per alias of the model with the columns its description gives them (hidden
  * fields left out, as {@link ModelCatalog#describe} does). Only with the BI power and the {@code data:read} scope opening {@code bi}; any
  * refusal lists nothing rather than failing a tool's browse.

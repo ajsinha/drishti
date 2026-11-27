@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * The data feeds as the server sees them (docs/guides/WORLD_DATA_GUIDE.md section 6): the feed files of {@code config/feeds/} and the run
+ * The data feeds as the server sees them (docs/guides/WORLD_DATA_GUIDE.md section 19.6): the feed files of {@code config/feeds/} and the run
  * ledger {@code <data>/datafeeds/ledger.jsonl} that every run appends to, whoever started it (cron, systemd, Task Scheduler, the command line or
  * Run now). The feeds themselves run in Python ({@code tools/drishti.py feed run}); the server only reads what they wrote, starts a run on
  * an administrator's Run now, and keeps the gauge {@code drishti.datafeed.failed} (tag {@code feed}: 1 when the feed's last run failed or
@@ -66,7 +66,7 @@ public final class DataFeeds {
      * @param config the feed files' folder ({@code config/feeds})
      * @param data the data folder ({@code drishti.data.dir}): the ledger is {@code <data>/datafeeds/ledger.jsonl}
      * @param root the installation's folder, where {@code tools/drishti.py} is (Run now)
-     * @param python the Python Run now starts (blank: the console's {@code drishti-console/.venv}, else python3)
+     * @param python the Python Run now starts (blank: python3, python on Windows)
      */
     public DataFeeds(Path config, Path data, Path root, String python, MeterRegistry registry) {
         this.config = config;
@@ -302,15 +302,8 @@ public final class DataFeeds {
     }
 
     String pythonCommand() {
-        if (!python.isEmpty()) {
-            return python;
-        }
-        boolean win = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).contains("win");
-        Path venv = root.resolve("drishti-console").resolve(".venv").resolve(win ? "Scripts" : "bin").resolve(win ? "python.exe" : "python");
-        if (Files.isRegularFile(venv)) {
-            return venv.toString();
-        }
-        return win ? "python" : "python3";
+        // no DRISHTI_PYTHON, drishti.feeds.python or drishti.python: the PATH's Python (Drishti makes and uses no venv)
+        return com.ash.drishti.api.PythonSetting.orDefault(python);
     }
 
     private static String str(Object o) {

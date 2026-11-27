@@ -100,7 +100,7 @@
     <!-- empty: every package is installed; a,b: only the packages of those module ids -->
     <drishti.modules.ids></drishti.modules.ids>
     <!-- the pinned Drishti Elements (an external component, vendored: drishti-console/web/static/vendor/drishti-elements/<version>/,
-         docs/architecture/ELEMENTS_IN_DRISHTI.md); drishti-rachana reads its two tables from there; a guard holds it to the folder's name -->
+         docs/architecture/THIN_CONSOLE_DESIGN.md); drishti-rachana reads its two tables from there; a guard holds it to the folder's name -->
     <drishti.elements.version>3.3.2</drishti.elements.version>
     <!-- G4 rehearsal: the pinned Rachana release (SPLIT_PLAN step 11). A tag. -->
     <drishti.rachana.version>1.0.1</drishti.rachana.version>
@@ -291,6 +291,21 @@
       </resource>
     </resources>
     <plugins>
+      <plugin>
+        <!-- the test JVMs' temp folder (target/tmp, see surefire below) exists before the first test class runs: surefire creates it only
+             with its first working file, and on Windows the first class (a @TempDir test) can come before that -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>3.1.0</version>
+        <executions>
+          <execution>
+            <id>test-tmp-dir</id>
+            <phase>process-test-classes</phase>
+            <goals><goal>run</goal></goals>
+            <configuration><target><mkdir dir="${project.build.directory}/tmp"/></target></configuration>
+          </execution>
+        </executions>
+      </plugin>
       <!-- ${revision} (the one version, .mvn/maven.config) becomes the real number in the pom that is installed or deployed -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -410,6 +425,7 @@
         <artifactId>spotless-maven-plugin</artifactId>
         <version>${spotless.version}</version>
         <configuration>
+          <lineEndings>UNIX</lineEndings>
           <java>
             <includes><include>src/**/*.java</include></includes>
             <removeUnusedImports/>

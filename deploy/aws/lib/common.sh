@@ -104,12 +104,9 @@ work() {
   trap 'rm -rf "$WORK"' EXIT
 }
 
-# python: the venv of the repository (or the loader image's), for the thin wrappers over tools/drishti.py
+# python: the one Python (DRISHTI_PYTHON, the loader image sets it), else python3, for the thin wrappers over tools/drishti.py
 python_bin() {
-  if [[ -n "${DRISHTI_PYTHON:-}" ]]; then echo "$DRISHTI_PYTHON"
-  elif [[ -x "$REPO_DIR/drishti-console/.venv/bin/python" ]]; then echo "$REPO_DIR/drishti-console/.venv/bin/python"
-  else echo python3
-  fi
+  echo "${DRISHTI_PYTHON:-python3}"
 }
 
 lake_uri() { echo "s3://$LAKE_BUCKET/$LAKE_PREFIX/$1"; }

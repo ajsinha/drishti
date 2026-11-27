@@ -480,7 +480,7 @@ points by default, normal declared per source (3); the screens: the netting-set 
 | 3 | The CRIF definition of each volatility row's `Amount` for the installed version, and the rule that turns it into `VEGA` per volatility point | section 3.2 |
 | 4 | Equity repo under SIMM, per the installed version's CRIF rule | section 3.2 |
 | 5 | SIMM-only vertices (`2w`, `1m`): delivered as their own factors (no FRTB vertex) or not at all | [FRTB.md section 16](FRTB.md#16-open-questions-and-decisions) |
-| 6 | Schedule IM for the netting sets that use it: here, or with the margin call ([MC.md](MC.md)) | section 3.5 |
+| 6 | Schedule IM for the netting sets that use it: here, or with the margin call ([MC.md](../plans/contracts/MC.md)) | section 3.5 |
 | 7 | The comparison sources (`crif-external`): which counterparties, custodians or vendors, in which format | section 3.4 |
 
 ## 17. JSON examples

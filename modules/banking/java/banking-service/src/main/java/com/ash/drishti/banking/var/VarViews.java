@@ -244,6 +244,8 @@ final class VarViews {
         Map<String, Object> out = new LinkedHashMap<>(h);
         out.put("var", round(m.var()));
         out.put("es", round(m.es()));
+        out.put("varExact", m.var());                                   // the unrounded figures (the controller serves them on exact=true)
+        out.put("esExact", m.es());
         out.put("k", m.k());
         out.put("esCount", m.esCount());
         out.put("scenarios", v.length);

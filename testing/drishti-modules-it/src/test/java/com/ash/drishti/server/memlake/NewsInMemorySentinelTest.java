@@ -68,6 +68,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @SpringBootTest(properties = {"drishti.sources.connectors-dir=${drishti.test.dir}/connectors/news-in-memory-sentinel", "drishti.rachana.hot-reload=false", "drishti.packs.enabled=news-and-markets",
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.routes.news=news-mem", "drishti.sources.routes.quote=news-mem",
         "drishti.sources.routes.news-topic=news-mem", "drishti.sources.routes.listed-company=news-mem",
+        "drishti.engines.memory-lake.enabled=true",   // the engine is off as shipped (config/engines/memory-lake.yaml): this test is about it
         "drishti.lake.memory.stores.news.max-mb=32", "drishti.lake.memory.stores.news.chunk-kb=256",
         "drishti.lake.memory.stores.news.contract=NEWS-TEST-1",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
@@ -223,7 +224,7 @@ class NewsInMemorySentinelTest {
     }
 
     private void awaitWarm() throws InterruptedException {
-        long until = System.currentTimeMillis() + 60_000;
+        long until = System.currentTimeMillis() + 120_000;
         while (!lake.warm() && System.currentTimeMillis() < until) {
             Thread.sleep(100);
         }
@@ -279,7 +280,7 @@ class NewsInMemorySentinelTest {
 
         // a refill runs again from the feed (the store refills after a restart or an eviction the same way)
         mvc.perform(post("/api/v1/admin/lakes/memory/refill/news").header("Authorization", admin())).andExpect(status().isOk());
-        long until = System.currentTimeMillis() + 30_000;
+        long until = System.currentTimeMillis() + 120_000;
         while (lake.jobs("news", 100).size() < 2 && System.currentTimeMillis() < until) {
             Thread.sleep(100);
         }

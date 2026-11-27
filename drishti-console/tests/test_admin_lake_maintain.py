@@ -16,7 +16,7 @@
 run and a run on a tiny lake made by lake build (progress, history, the data-load signal as the admin), settings saved to the shared YAML,
 the CLI line, schedules created, paused and deleted, and the scheduler starting a due schedule (with the catch-up after a stop).
 
-    drishti-console/.venv/bin/python -m pytest drishti-console/tests/test_admin_lake_maintain.py -q
+    python3 -m pytest drishti-console/tests/test_admin_lake_maintain.py -q
 """
 import importlib.util
 import io

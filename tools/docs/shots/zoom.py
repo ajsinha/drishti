@@ -15,7 +15,7 @@
 """The pictures of "Zoom a panel" (docs/guides/USER_GUIDE.md), written to docs/guides/img/zoom/: the button in a panel's heading, a chart and a
 table zoomed on a desktop screen, and a zoomed chart on a phone (390 px, touch). A view of the QUICKSTART packs, the real console and scripts:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide zoom
+    python3 tools/docs/screenshots.py --guide zoom
 """
 from __future__ import annotations
 

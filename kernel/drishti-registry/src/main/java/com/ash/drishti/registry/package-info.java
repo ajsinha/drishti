@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * The access registry (docs/architecture/ACCESS_MODEL.md): licence → module → lens → permission, decided in one place.
+ * The access registry (docs/architecture/KERNEL_AND_MODULES.md): licence → module → lens → permission, decided in one place.
  *
  * <p><b>Why a module of its own.</b> Every layer asks it (the server at start, every API call, data, the console through the server,
  * assets, Help, the AI tools, exports, embeds, tokens), and later it runs as a service of its own. So it depends on nothing of Drishti and

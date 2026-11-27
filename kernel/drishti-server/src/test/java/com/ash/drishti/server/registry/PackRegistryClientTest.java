@@ -154,6 +154,9 @@ public class PackRegistryClientTest {
                 .hasMessageContaining("plain http");
     }
 
+    /** The Python the server would start (DRISHTI_PYTHON, else the PATH's by its name on this operating system). */
+    private static final String PYTHON = com.ash.drishti.api.PythonSetting.orDefault(com.ash.drishti.api.PythonSetting.resolve(null, null, System::getenv));
+
     @Test
     void installsWhatThePublishingToolSigned() throws Exception {
         boolean tools = new ProcessBuilder("openssl", "version").start().waitFor() == 0;
@@ -164,8 +167,8 @@ public class PackRegistryClientTest {
             Files.writeString(packDir.resolve(f.getKey()), f.getValue());
         }
         Path tool = Path.of(TestRoots.repo(), "tools", "packreg", "packreg.py").toAbsolutePath().normalize();
-        run("python3", tool.toString(), "keygen", "--out", tmp.resolve("keys/acme").toString());
-        run("python3", tool.toString(), "publish", packDir.toString(), "--registry", registry.toString(), "--key", tmp.resolve("keys/acme.pem").toString(),
+        run(PYTHON, tool.toString(), "keygen", "--out", tmp.resolve("keys/acme").toString());
+        run(PYTHON, tool.toString(), "publish", packDir.toString(), "--registry", registry.toString(), "--key", tmp.resolve("keys/acme.pem").toString(),
                 "--publisher", "acme");
         String pub = run("openssl", "pkey", "-in", tmp.resolve("keys/acme.pem").toString(), "-pubout", "-outform", "DER", "-out",
                 tmp.resolve("pub.der").toString()).isEmpty() ? Base64.getEncoder().encodeToString(Files.readAllBytes(tmp.resolve("pub.der"))) : "";

@@ -23,12 +23,11 @@
 ARG BASE_IMAGE=eclipse-temurin:21-jre
 FROM ${BASE_IMAGE}
 ARG AWSCLI_VERSION=2.17.0
-RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-venv curl unzip ca-certificates \
+RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-pip curl unzip ca-certificates \
  && rm -rf /var/lib/apt/lists/* \
  && curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o /tmp/awscli.zip \
  && unzip -q /tmp/awscli.zip -d /tmp && /tmp/aws/install && rm -rf /tmp/aws /tmp/awscli.zip \
- && python3 -m venv /opt/drishti/venv \
- && /opt/drishti/venv/bin/pip install --no-cache-dir "deltalake==1.6.6" "pyarrow==26.0.0" "pyyaml>=6,<7" \
+ && python3 -m pip install --no-cache-dir --break-system-packages "deltalake==1.6.6" "pyarrow==26.0.0" "pyyaml>=6,<7" \
  && useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
 COPY kernel/drishti-server/target/drishti-server-*-exec.jar lib/
@@ -38,15 +37,14 @@ COPY modules/*.dmod modules/first-party.yaml modules/
 COPY deploy/aws/ deploy/aws/
 COPY deploy/docker/ecs/loader-entrypoint.sh /opt/drishti/bin/entrypoint.sh
 # compiled once here, so the read-only root never needs __pycache__ written at run time
-RUN /opt/drishti/venv/bin/python -m compileall -q tools \
+RUN python3 -m compileall -q tools \
  && chmod 0555 /opt/drishti/bin/entrypoint.sh && find deploy/aws -name '*.sh' -exec chmod 0555 {} + \
  && mkdir -p /opt/drishti/data && chown drishti:drishti /opt/drishti/data
 USER drishti
-ENV PATH=/opt/drishti/venv/bin:$PATH \
-    DRISHTI_HOME=/opt/drishti \
+ENV DRISHTI_HOME=/opt/drishti \
     DRISHTI_DATA_DIR=/opt/drishti/data \
     DRISHTI_MODULES_HOME=/opt/drishti/modules \
-    DRISHTI_PYTHON=/opt/drishti/venv/bin/python \
+    DRISHTI_PYTHON=/usr/bin/python3 \
     DRISHTI_REPO=/opt/drishti \
     TMPDIR=/opt/drishti/data/tmp/loader \
     HOME=/opt/drishti/data/home/loader \

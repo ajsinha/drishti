@@ -16,8 +16,7 @@
 
 A pack with a generator gets its README from that generator (tools/packgen/banking/make_docs.py, tools/packgen/world/make.py,
 tools/packgen/us_equities/make.py); this script writes the README of a pack without one, and checks any pack. Both render the same
-text: pack.yaml, the samples, the Sutras and config/about.yaml, plus the hand-written intro
-(tools/packgen/<generator>/readme/<pack>.intro.md or tools/packgen/intros/<pack>.intro.md).
+text: pack.yaml, the samples, the Sutras and config/about.yaml (its glossary and its hand-written `intro:`).
 
     python3 tools/packgen/readme.py news-and-markets          write modules/economy/packs/news-and-markets/README.md
     python3 tools/packgen/readme.py --all --check             fail when a pack's README is missing, stale or breaks the standard
@@ -42,8 +41,9 @@ def check(pack_dir: Path) -> list[str]:
     """What is wrong with one pack's README: missing, breaking the standard, or not what its generator writes."""
     kinds = list((yaml.safe_load((pack_dir / "pack.yaml").read_text(encoding="utf-8")) or {}).get("kinds") or [])
     probs = R.problems_pack(pack_dir / "README.md", kinds)
-    if R.find_intro(pack_dir.name) is None:
-        probs.append(f"no intro: write tools/packgen/<generator>/readme/{pack_dir.name}.intro.md (or tools/packgen/intros/)")
+    about = pack_dir / "config" / "about.yaml"
+    if not ((yaml.safe_load(about.read_text(encoding="utf-8")) or {}).get("intro") if about.is_file() else None):
+        probs.append(f"no intro: write `intro:` in {pack_dir.name}/config/about.yaml (or in its generator's about source)")
     elif (pack_dir / "README.md").is_file() and (pack_dir / "README.md").read_text(encoding="utf-8") != R.render_pack(pack_dir):
         probs.append("README.md is stale: run its generator (or tools/packgen/readme.py)")
     return probs

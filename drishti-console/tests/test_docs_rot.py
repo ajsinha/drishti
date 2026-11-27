@@ -54,15 +54,12 @@ from core.guides import GithubSlugger  # noqa: E402
 # Markdown that is not documentation a reader opens: vendored libraries' notes, test resources, the generator's
 # README fragments (they are pasted into the packs' READMEs, which are checked) and the parallel gleif build.
 NOT_DOCS = ("drishti-console/web/static/vendor/", "plugins/drishti-connectors/src/test/",
-            "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/")
+            "tools/packgen/", "tools/elements-demo/", "data/", "config/packs/core/gleif/",
+            "docs/products/")
 # History: names that were true when written. Links in these must still resolve; the names in them need not exist.
 HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md",
            # the configuration-resolution working paper: an inventory of the code at one commit (its paths and line numbers are of then)
-           "docs/architecture/pack-resolution-inventory.md",
-           # the Elements separation runbook, carried out in i6: its paths are of the source tree before the split
-           "docs/plans/ELEMENTS_SPLIT_RUNBOOK.md",
-           # the i7a plan and its impact analysis name files the release builds (deleted with it at the release)
-           "docs/plans/I7A_BUILD_PLAN.md", "docs/plans/I7A_IMPACT.md")
+           "docs/architecture/pack-resolution-inventory.md")
 
 
 @functools.lru_cache(maxsize=None)
@@ -242,7 +239,7 @@ def pack_roots_all() -> tuple[str, ...]:
 
 def ignored(paths: list[str]) -> set[str]:
     """The paths git ignores: files a person or the running system makes (config/connectors/*.yaml, config/net/,
-    application.local.yaml, .venv), which a document names on purpose although the repository has none."""
+    application.local.yaml), which a document names on purpose although the repository has none."""
     if not paths:
         return set()
     r = subprocess.run(["git", "check-ignore", "--no-index", "--stdin"], cwd=ROOT, input="\n".join(p for path in paths for p in (path, path + "/")), capture_output=True, text=True)
@@ -717,7 +714,7 @@ def test_obsolete_designs_are_deleted_not_archived():
 
 def test_the_corpus_is_the_whole_documentation():
     docs = documents()
-    assert "README.md" in docs and "deploy/stack/README.md" in docs
+    assert "README.md" in docs and "docs/guides/CLUSTER_GUIDE.md" in docs
     assert any("/packs/" in d and d.endswith("/README.md") for d in docs)
     assert any(d.startswith("plugins/") for d in docs) and any(d.startswith("docs/tutorials/") for d in docs)
     assert len(docs) > 200

@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The one place every layer asks (ACCESS_MODEL.md section 2): licence → module → lens → permission. The server at start (which modules to
+ * The one place every layer asks (KERNEL_AND_MODULES.md section 19.2): licence → module → lens → permission. The server at start (which modules to
  * load), every API call, data (packs, connectors), the console through the server, assets, Help, AI tools, exports, embeds and tokens.
  * Nothing else reads the access model (an architecture test). Embedded in the server now ({@link EmbeddedAccessRegistry}); a remote
  * registry later behind the same interface. Every answer is cheap: decisions are cached and recomputed when the model changes.

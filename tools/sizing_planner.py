@@ -867,6 +867,11 @@ VECTOR_SHAPES = {
 }
 
 
+# Excel requires the root relationships part to be named _rels/.rels (a hidden name); the committed source keeps it visible, the server writes
+# it into the .xlsx under the required name (template.json "files": part name in the workbook -> file under capacity/template/).
+SOURCE_NAMES = {"_rels/.rels": "_rels/root.rels.xml"}
+
+
 def template_parts() -> dict:
     """{file under capacity/template/: text}."""
     parts = build(PLACEHOLDERS)
@@ -879,11 +884,12 @@ def template_parts() -> dict:
                 rows[name] = num
     inputs = {name: {"row": rows[name], "kind": kind} for _s, name, _l, _d, _u, kind, _h in INPUTS}
     meta = {"comment": "Written by tools/sizing_planner.py: do not edit; edit capacity/planner.yaml and run the tool.",
-            "parts": sorted(parts), "inputsSheet": "xl/worksheets/sheet1.xml", "valueColumn": "B", "extraColumn": "F", "headerRow": 3,
+            "parts": sorted(parts), "files": SOURCE_NAMES, "inputsSheet": "xl/worksheets/sheet1.xml", "valueColumn": "B", "extraColumn": "F", "headerRow": 3,
             "styles": {k: styles[k] for k in ("head", "text", "note", "input.num", "input.dec", "input.text", "num0")}, "inputs": inputs}
     import license_headers                                                   # each .xml part carries the copyright notice (the server drops comments)
     note = license_headers.block("xml")
     out = {n: (x.split("\n", 1)[0] + "\n" + note + x.split("\n", 1)[1] if x.startswith("<?xml") else note + x) for n, x in parts.items()}
+    out = {SOURCE_NAMES.get(n, n): x for n, x in out.items()}
     out["template.json"] = json.dumps(meta, indent=1, ensure_ascii=False) + "\n"
     return out
 

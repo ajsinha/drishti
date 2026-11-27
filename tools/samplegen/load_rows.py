@@ -15,7 +15,7 @@
 """Loads loader rows (JSON Lines) into the Delta Lake the server's Delta connectors read: the loading half of the sample history that
 tools/samplegen/lake.py, tools/packgen/banking/make_data.py --lake and the pack generators' --lake write.
 
-    uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/load_rows.py \\
+    python tools/samplegen/load_rows.py \\
         --rows data/build/lake-rows/banking-history.tar --restated data/build/lake-rows/banking-restated.tar --root data/delta/demo
 
 A row (one JSON object a line, UTF-8):

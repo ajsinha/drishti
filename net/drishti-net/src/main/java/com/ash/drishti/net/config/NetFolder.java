@@ -26,7 +26,6 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -268,7 +267,7 @@ public final class NetFolder {
             Path tmp = com.ash.drishti.common.TempFiles.createFile(f.getParent(), "net-", ".tmp");
             try {
                 Files.writeString(tmp, text, StandardCharsets.UTF_8);
-                Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, f);
             } finally {
                 Files.deleteIfExists(tmp);
             }

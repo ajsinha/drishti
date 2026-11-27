@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31; static/js/drishti_designer.js, templates/designer/): Customize's yellow bar, dashed panels with
+/* The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 3.31; static/js/drishti_designer.js, templates/designer/): Customize's yellow bar, dashed panels with
    their handle and tools, the side panel (When I click, Add to this page, Hidden), the drop zone; Describe's command line, its "Understood
    as" tokens and the live result. Theme tokens only (drishti_tokens.css), so every theme draws it; below 700 px the side panel goes under the page. */
 .dz-bar { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-9_6); padding: var(--d-sp-8_8) var(--d-sp-14_4);

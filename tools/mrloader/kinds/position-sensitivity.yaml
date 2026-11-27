@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The sensitivities of each position (or trade) to its risk factors (docs/plans/CSV_LOADERS.md section 8.3): two files, the parents (one
+# The sensitivities of each position (or trade) to its risk factors (docs/guides/BANK_DATA_GUIDE.md section 8.3): two files, the parents (one
 # row a position: where it sits) and the sensitivities (one row a position, factor and measure), grouped into each record's list. Read by
 # the FRTB SA and SIMM engines. A large kind: bad rows are listed and the rest loads, up to max-rejects.
 format: 1

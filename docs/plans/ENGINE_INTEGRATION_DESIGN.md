@@ -15,18 +15,18 @@
 -->
 # Engine integration: engines by contract, run by configuration
 
-**Status: design for the owner, written 2026-11-21, refreshed 2026-11-22 around the owner's acceptance test (section 0) and
+**Status: design for the owner (the engine API and seam are built, the rest is not built), written 2026-11-21, refreshed 2026-11-22 around the owner's acceptance test (section 0) and
 extended the same day to every computation in Drishti (section 2). Nothing built, nothing run. EN-1 to EN-44 are accepted;
 EN-45 to EN-55 are accepted as recommended (owner, 2026-11-22; section 16). Zero copy (section 17, EN-56 to EN-65) and
 declared engine functions (18.8, EN-66) are accepted (owner, 2026-11-22); the computation contract (section 18, EN-67 to
 EN-74) is accepted (owner, 2026-11-22).**
-For the refresh also read: `kernel/drishti-common/.../SharedLib`, `kernel/drishti-module-runtime` (`ModuleClassLoader`,
+For the refresh also read: SharedLib (kernel/drishti-common), `kernel/drishti-module-runtime` (`ModuleClassLoader`,
 `ModuleVerifier`, `FirstParty`, `KernelLibraries`), `lib/README.md`. Read from git only: Drishti
-`main` at `9ce7c3170` (`kernel/drishti-api/.../api/compute`, `kernel/drishti-kernel-api/.../kernel/api/engines`,
+`main` at `9ce7c3170` (the api/compute and kernel/api/engines packages,
 `kernel/drishti-server/.../server/engines`, `compute/drishti-compute/.../compute/reactive`, `config/engines/*.yaml`, the banking
 and genomics module manifests, `META-INF/drishti/engines.yaml`); [DRISHTI_RISK_DESIGN](DRISHTI_RISK_DESIGN.md);
-[DRISHTI_TOOLS_DESIGN](DRISHTI_TOOLS_DESIGN.md); `drishti-lake` `main` (`docs/design/READ_API.md`, the L11 contracts commit);
-`drishti-rachana` `develop` (`spec/1/SPEC.md`, `spec/1/data-protocol/PROTOCOL.md`, `docs/design/{LIBRARIES,LIVE_TABLES}.md`,
+the Tools design (branch wip/i7b-products); `drishti-lake` `main` (its READ_API design, the L11 contracts commit);
+`drishti-rachana` `develop` (`spec/1/SPEC.md`, `spec/1/data-protocol/PROTOCOL.md`, the LIBRARIES and LIVE_TABLES designs,
 `conformance/1/`). The normative text an engine author implements is [spec/1/SPEC.md in drishti-engine](https://github.com/drishti-platform/drishti-engine/blob/develop/spec/1/SPEC.md); this
 document is the reasoning, the Drishti side and the plan. Where the two differ, the specification wins.
 
@@ -54,7 +54,7 @@ order in which today's code moves. It reads the code at `origin/wip/g4-rehearsal
 4. [Packs and engines](#4-packs-and-engines) · 5. [Drishti's configuration surface](#5-drishtis-configuration-surface) ·
 6. [The engine kit (TCK)](#6-the-engine-kit-tck) · 7. [The generation ladder](#7-the-generation-ladder) ·
 8. [In process or a separate process](#8-in-process-or-a-separate-process) · 9. [Drishti Risk as engine #1](#9-drishti-risk-as-engine-1) ·
-10. [Two paper tests](#10-two-paper-tests) · 11. [What stays in Drishti](#11-what-stays-in-drishti) ·
+10. [Two paper tests](#10-two-paper-tests) · 11. [What stays in Drishti](#11-what-stays-in-the-kernel-the-minimal-host) ·
 12. [Migration of today's engines](#12-migration-of-todays-engines) · 13. [Repository and coordinates](#13-repository-and-coordinates) ·
 14. [Estimate and the combined i8 plan](#14-estimate-and-the-combined-i8-plan) · 15. [Risks](#15-risks) ·
 16. [Decisions EN-1 to EN-74](#16-decisions-en-1-to-en-74) ·
@@ -63,7 +63,7 @@ order in which today's code moves. It reads the code at `origin/wip/g4-rehearsal
 
 ## 0. The acceptance test, and the answer in one page
 
-**The owner's acceptance test (2026-11-22, [I8_CARRY_IN](I8_CARRY_IN.md)).** Every line must hold. A design choice that breaks
+**The owner's acceptance test (2026-11-22, the i8 carry-in list).** Every line must hold. A design choice that breaks
 one of them is wrong, whatever else it buys.
 
 | # | The test | How the design meets it | What proves it |
@@ -131,7 +131,7 @@ pass by the access rules, so the specification forbids it (8.4) and the kit runs
 |---|---|---|
 | JAR and engine file, the checks pass, `enabled: true` | `running` | |
 | the same, `enabled: false` | `off` | who, when, why (as today) |
-| JAR, no engine file | `not configured` | "market-risk 1.0.0 is installed but has no config/engines/market-risk.yaml. `python tools/drishti.py engine template market-risk` prints one from its descriptor." |
+| JAR, no engine file | `not configured` | "market-risk 1.0.0 is installed but has no config/engines/market-risk.yaml. the Engines page (Admin) prints one from its descriptor." |
 | engine file, no JAR that registers the id | `not installed` | "config/engines/market-risk.yaml names an engine that no JAR in /opt/drishti/lib/engines provides." |
 | JAR that fails a check | `blocked` | the sentence of 0.6 |
 
@@ -377,7 +377,7 @@ on purpose: forcing these in would be the over-abstraction, and each has one own
 | The host's figures about itself: scan and run estimates, cache and heap meters, the data map's counts | T2, T3 (measured, timed) | operations; never shown as business figures |
 | Calc: Python in the person's own browser | T3; not the server's | the person's scratch pad. Its results carry no stamp and are labelled as not Drishti's figures (EN-45) |
 | LLM calls (Ask, the BI copilot) | T2, T3 | the AI gateway. A model proposes a question or words; any figure it shows is an engine's answer, asked as the user |
-| Libraries: linear algebra (`compute/linalg`), vector stores (`compute/vector`), Arrow helpers | not a unit of asking | an engine's private dependencies, or drishti-tools |
+| Libraries: linear algebra (`compute/linalg`), vector stores (the vector stores of compute), Arrow helpers | not a unit of asking | an engine's private dependencies, or drishti-tools |
 
 ### 2.2 Inventory: every place Drishti computes today
 
@@ -386,7 +386,7 @@ above, for the whole home named (not only its arithmetic).
 
 | # | What it computes | Inputs | Outputs | Interaction today | Home today | Kind | Becomes |
 |---|---|---|---|---|---|---|---|
-| 1 | VaR, ES, lenses (1-day, 10-day), contributions, by currency, hierarchies, baskets | positions, scenario P&L or PV vectors, scenario FX, limits | scope figures, contributions, the P&L path | on demand over a date held open; nightly official capture; sharded over the cluster | `banking-compute/var` (25 classes: `VarBook`, `VarCalc`, `VarMath`, `VarLens`, `ScopeResolver`, `ShardAssembly`), `banking-service/var` (103 classes), `compute/vector` | R + partition | `market-risk` (Risk JAR) |
+| 1 | VaR, ES, lenses (1-day, 10-day), contributions, by currency, hierarchies, baskets | positions, scenario P&L or PV vectors, scenario FX, limits | scope figures, contributions, the P&L path | on demand over a date held open; nightly official capture; sharded over the cluster | `banking-compute/var` (25 classes: `VarBook`, `VarCalc`, `VarMath`, `VarLens`, `ScopeResolver`, `ShardAssembly`), `banking-service/var` (103 classes), the vector stores of compute | R + partition | `market-risk` (Risk JAR) |
 | 2 | Parametric VaR | the same vectors | figure and its parts | on demand | `ParametricVar`, `VarParametric` | R | `market-risk` |
 | 3 | Stress windows, stressed VaR | vectors over history, the approved window | figures per window, proposals | on demand; proposals approved by people | `StressWindows`, `VarStressWindow` | R | `market-risk`; the approval stays host workflow |
 | 4 | Backtesting | VaR history, actual desk P&L | exceptions, period statistics | on demand | `Backtest`, `VarBacktesting` | R | `market-risk` |
@@ -1468,6 +1468,12 @@ EN-35), EN-18 (the certificate is evidence, EN-39) and EN-19 (in process means t
 | EN-72 | What is not the engine's | **Captures and history are host sinks of answers (EN-12); compare is the same ask on two versions; the MR cube is the `query` engine grouping the risk engine's measures** (18.5) | capture, compare and cube routes inside each engine |
 | EN-73 | Query and OLAP | **The same contract**: cells are group ids, aggregate states merge by their function, measures are functions of states; sums of doubles follow the canonical order or carry their exactness class when pushed to a source (18.6) | a second aggregation model for the query engine |
 | EN-74 | Proof | **Kit laws from every case: scope-kind blindness, grouping, merge order, split anywhere, incremental at unit grain** (18.7); the R2 coverage table (cut plan 4b) is filled by declaring measures, not by new outputs | parity by goldens per output |
+
+### EN-75: one OpenBLAS per JVM: ACCEPTED by the owner 2026-11-22
+
+| # | Decision | Decided | The alternative |
+|---|---|---|---|
+| EN-75 | Native linear algebra shared by engines | **bytedeco `openblas` and `javacpp` are a fifth shared platform library**, provided parent-first by the server (`NativeLibraries` binds it once per JVM, as it does today); an engine JAR declares them `provided`, never shades them, and names the version it was built against in its descriptor's `platform:`; the host refuses, in words naming both versions, an engine whose platform version does not match. One copy on disk (the server's `lib`), one native binding per JVM, every engine native | each engine JAR carries its own OpenBLAS (51 MB each in R2's two per-line JARs; a JVM binds a native library in one class loader only, so the second engine falls back to Java) |
 
 ## 17. Zero-copy data access (EN-56 to EN-65)
 

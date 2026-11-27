@@ -55,6 +55,21 @@ SUTRA_EXAMPLES = ("examples:\n  drishti.py sutra lint modules/banking/packs/mark
                   "Unknown options are passed to the Java tool. Exit codes as the Java tool: 0 ok, 1 problems, 2 usage.")
 
 
+def build_setup_parser(h) -> argparse.ArgumentParser:
+    """Only the launch groups (``setup``, ``build``, ``start``, ``stop``, ``status``): built from the standard library alone, so
+    ``drishti.py setup`` runs on a Python that has not got PyYAML yet (the full parser loads tools that import it)."""
+    ap = argparse.ArgumentParser(prog="drishti.py", formatter_class=argparse.RawDescriptionHelpFormatter)
+    groups = ap.add_subparsers(dest="group", metavar="GROUP", required=True)
+
+    def add(sub, name, func, help_, parents=(), epilog=None):
+        p = sub.add_parser(name, help=help_, description=help_, parents=list(parents), epilog=epilog, formatter_class=argparse.RawDescriptionHelpFormatter)
+        p.set_defaults(func=func)
+        return p
+
+    h.load_module("launchcli", "launch/launchcli.py").register(groups, add)
+    return ap
+
+
 def build_parser(h) -> argparse.ArgumentParser:
     """The whole command line: every group, command and option (``drishti.py --help``); ``h`` is drishti.py's module (its commands,
     its Api, its errors and helpers)."""
@@ -234,7 +249,7 @@ def build_parser(h) -> argparse.ArgumentParser:
                     "  drishti.py data load --store postgres jdbc:postgresql://localhost:5433/drishti --trades 10000 --user u --password p\n"
                     "  drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1\n"
                     "Each store's own options (--keep-days, --ttl-days, --create, ...) are listed in tools/storeload.py and docs/guides/CLI_REFERENCE.md; "
-                    "the loader's heap is DRISHTI_LOADER_HEAP (default 4g). Keep local runs small (10,000 trades); see docs/guides/DATA_GUIDE.md section 11.")
+                    "the loader's heap is DRISHTI_LOADER_HEAP (default 4g). Keep local runs small (10,000 trades); see docs/guides/BANK_DATA_GUIDE.md section 9.")
     dl.add_argument("--store", required=True, choices=LOADERS)
     dl.add_argument("target", nargs="*", help="the store's root, URL or database (its default when omitted; mongodb takes a URI and a database, "
                                                 "aerospike hosts and a namespace, cassandra contact points and a datacenter)")
@@ -359,6 +374,11 @@ def build_parser(h) -> argparse.ArgumentParser:
     ss.add_argument("--guide", help="one guide only")
     ss.add_argument("--only", help="comma list of picture-name fragments")
     ss.add_argument("--list", action="store_true", help="list the pictures")
+    gn = add(dc, "generate", h.cmd_docs_generate, "docs generate [--check]: run EVERY documentation generator in order (settings, contracts, CSV formats, feeds, glossaries, pack/module/connector READMEs, launchers, guide data, Help map, corpus); --check writes nothing and fails naming each stale reference with its fix",
+             epilog="examples:\n  drishti.py docs generate            # after changing a pack, setting, contract, mapping or registry\n  drishti.py docs generate --check    # what CI and the drill run\n"
+                    "Needs the built server jar (build jar). Guide: docs/guides/CLI_REFERENCE.md")
+    gn.add_argument("--check", action="store_true", help="write nothing; exit 1 naming every stale reference")
+    gn.add_argument("--only", action="append", help="only the generators whose name contains this text (repeatable)")
     # smoke, doctor, view, completion ----------------------------------------------------------------------
     sm = add(sv, "smoke", h.cmd_server_smoke, "server smoke: health, packs loaded and enabled, no Sutra problems, then open sample views of every kind on the latest and an earlier date (exit 1 on any failure)", [srv],
              "examples:\n  drishti.py server smoke --server http://localhost:18480 --pack market-risk --ids 2 --dates 2\n  drishti.py server smoke --json > smoke.json\n"
@@ -371,6 +391,12 @@ def build_parser(h) -> argparse.ArgumentParser:
                            description="Green/yellow/red lines with a fix for each; exit 1 on any red. Nothing is changed or stopped.",
                            parents=[srv], formatter_class=argparse.RawDescriptionHelpFormatter, epilog="examples:\n  drishti.py doctor\n  drishti.py doctor --server http://localhost:18480 --token-file ~/.drishti-token")
     dr.add_argument("--java", help="the java binary to check (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")
+    dr.add_argument("--acceptance", action="store_true", help="the end-to-end check: sign in to the console as the development administrator, ask "
+                    "VAR BANK through it and compare both figures with the release's (exit 0 only when they agree)")
+    dr.add_argument("--console", metavar="URL", help="--acceptance: the console (default http://127.0.0.1:<console.server.port of the settings files, else 17480>)")
+    dr.add_argument("--wait", type=int, default=0, metavar="SECONDS", help="--acceptance: wait up to this long for the console to answer")
+    dr.add_argument("--expect-var", type=int, default=None, metavar="N", help="--acceptance: the VaR to find (default the release's demo figure)")
+    dr.add_argument("--expect-es", type=int, default=None, metavar="N", help="--acceptance: the ES to find (default the release's demo figure)")
     dr.set_defaults(func=h.cmd_doctor, cmd=None)
     # bi (Rupaka phase 1) ------------------------------------------------------------------------------------
     bi = group("bi", "Business intelligence (Rupaka) over REST: workspaces and the catalogue, as the token's user sees them (a write needs the bi:write scope)")

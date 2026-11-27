@@ -31,7 +31,7 @@ What ``apply`` does, in order (the scanner, ``asset_prefix_scan.py``, says what 
    ``globalThis.Drishti = globalThis.Drishti || {};``;
 4. renames custom events, the generic CSS classes and the third-party data- attributes the mapping marks ``rename``;
 5. applies the mapping's ``patches`` (names built at run time, which a file-name rewrite cannot see) and the docs fragments in
-   ``tools/dev/asset_prefix_docs.md``.
+   ``docs/guides/DEVELOPER_GUIDE.md``.
 
 Every step is idempotent: a second run finds nothing to do. Frozen code (a renderer version under ``static/render/<version>/``, the
 Elements in ``web/embed/``) is never touched, and every name it uses is kept: those versions are published and pinned by host pages.

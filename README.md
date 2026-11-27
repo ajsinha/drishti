@@ -12,25 +12,48 @@
 
 *Your data is a treasury;* **Drishti is its sentinel.**
 
-**Release i7b: Drishti is one of five.** Each module is a verified `.dmod` package in `<home>/modules`, beside one server jar; the language, the lake, the screens' libraries and the shared utilities are products of their own, built once and used here as jars and bundles ([The platform](#the-platform)).
+## What Drishti is
 
-Drishti looks at data, analyses it and explains it. It is built from **three blocks**: a domain-free **kernel** (connectors and lakes,
-screens written as short YAML **Sutras** in one grammar, **Rachana**, the pivot and BI engines, the cluster), a **console** in front of
-one or many kernels, and **modules**, signed `.dmod` packages that bring an industry: banking brings a bank's risk, capital markets
-brings listed companies and funds, the economy module brings economies, governments, central banks, official statistics and news. One
-build makes several products, the **distributions**: Drishti Risk, Drishti Finance, Drishti Genomics (a sample) and Drishti All.
+**Live, explainable analytics on the data you already have.** Drishti connects to data where it lives (Delta and Iceberg lakes,
+files, databases, streams) and keeps it in one lake. It aggregates on demand for any scope, from everything down to a hand-picked
+handful of rows, and explains every figure: where it came from, how it was calculated and why it moved. Screens, reports and
+dashboards are described, not coded, in one grammar, and served to many users at once with roles, masks, four eyes and an audit trail,
+on one machine or a cluster. Drishti never invents a number: it shows what its sources supply and says exactly what is missing.
 
-**For a bank, Drishti aggregates risk over the engines the bank already runs, explainably and under control.** Pricing and simulation
-systems deliver trade-grain inputs (scenario P&L vectors, exposure paths, sensitivities); Drishti computes **VaR, ES, counterparty
-exposure, the pre-deal check, FRTB-SA and SIMM on demand, for any scope** from the whole bank to an ad-hoc set of trades. Every figure
-says where it came from, how it was calculated and why it moved; every figure obeys roles, masks, four eyes and an audit trail; and
-nothing that is not built is shown as built.
+**Visual analytics and GenUI from the same parts.** Screens are written in **Rachana**'s Sutra language and painted by **Elements**,
+plain JavaScript libraries for a grid with a pivot, charts, maps, forms and live tables. Together they give BI-style dashboards and
+reports, and they make GenUI safe: an AI assistant writes a Sutra through MCP tools, Rachana checks and compiles it, Elements draws it,
+with no generated code to trust. The same parts work outside Drishti: Rachana and Elements in your own Flask or FastAPI application
+([IN_YOUR_APP](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/IN_YOUR_APP.md#rachana-and-elements-in-your-own-flask-or-fastapi-application); the GenUI kit ships with Rachana 1.1, planned for the platform),
+Lake as a Delta and Iceberg library in Java or Python, Tools as shared Java utilities.
 
-The motto is **lean & streamlined**: one implementation of each job, one grammar for every expression, one set of JavaScript libraries
-for every screen, one way to package a module.
+Everything specific to a field comes as a **module**: its data shapes, measures, screens and rules. Banking risk, capital markets,
+economic data and genomics are modules today; a new field is a new module, not a new product.
 
-**New to Drishti?** [HOW_IT_FITS.md](HOW_IT_FITS.md) ([PDF](HOW_IT_FITS.pdf)) shows how the pieces fit together, one picture per idea: the
-three blocks, a request's journey, modules, data bindings, placement, a module's life, distributions and every configuration file.
+## Sample uses
+
+**Banking risk.** Trades and positions arrive from the trading systems a bank already runs (Endur, Calypso, Murex and others, each
+through its own source module) into one lake. Drishti computes VaR and expected shortfall by historical simulation for any scope, from
+the whole bank down to an ad-hoc set of trades, plus exposure and a pre-deal check of a trade against its limits. Every figure opens to
+its contributors, its scenarios and how it was calculated, and a playground lets a user rebuild it step by step in a spreadsheet.
+Pricing and simulation engines deliver the trade-grain inputs; Drishti never prices.
+
+**Genomics.** A sample module built with the Module SDK alone and run with no finance at all, which shows the platform carries no
+domain of its own. It reads VCF files into variants, samples, genes and cohorts, and its screens include a GWAS Manhattan plot, gene
+lollipops, an oncoprint across a cohort and a protein-engineering workbench, all written as Sutras on Elements. Its data is synthetic.
+
+Other modules work the same way: capital markets, and economic and public-sector data from sources such as the World Bank and FRED.
+
+It is built from three blocks:
+
+| Block | What it is |
+|---|---|
+| **Kernel** | the server (Java 21, Spring Boot), domain-free: connectors and lakes, Rachana (screens written as short YAML Sutras in one grammar), the pivot and BI engines, Explain, the cluster, audit |
+| **Console** | the web tier (Python, FastAPI) in front of one kernel or a cluster; it draws what the server decides |
+| **Modules** | signed `.dmod` packages that bring an industry (banking, capital markets, the economy, genomics, source-system adapters); a module declares the data it needs and never brings connectors or credentials |
+
+One build makes several products, the **distributions**: Drishti Risk, Drishti Finance, Drishti Genomics (a sample) and Drishti All.
+How the pieces fit, one picture per idea: [HOW_IT_FITS.md](HOW_IT_FITS.md) ([PDF](HOW_IT_FITS.pdf)).
 
 ```
 VAR BANK <GO>                                  →  VaR and ES of the bank, down the hierarchy to a trade, contributions that add up
@@ -40,432 +63,85 @@ FRSA BANK <GO>                                 →  FRTB-SA capital: SBM, DRC an
 SIMM <GO>                                      →  initial margin per netting set, to collect and to post
 PIVOT <GO>                                     →  any table or measure as a pivot, every total computed from its own members
 WDI WDI-CAN <GO>                               →  a country's development indicators, with the world map by GDP per head
-GENE TP53 <GO>                                 →  (Drishti Genomics) a gene's variants, drawn by the sample module's own visual
-GWAS RESPONSE <GO>                             →  (Drishti Genomics) the showcase: association plot, cohort matrix, samples, lollipop, one selection
 ```
 
-## Contents
+## What is in this repository
 
-[The platform](#the-platform) · [The three building blocks](#the-three-building-blocks) · [Modules](#modules) · [Build a module](#build-a-module) ·
-[Install and place modules](#install-and-place-modules) · [Distributions](#distributions) · [Build and run in the IDE](#build-and-run-in-the-ide) · [Risk](#risk) · [Analyse](#analyse) ·
-[Build](#build) · [Data in](#data-in) · [Data out](#data-out) · [Operate](#operate) · [Run it](#run-it) ·
-[Measured performance](#measured-performance) · [Documentation](#documentation) · [Project facts](#project-facts) ·
-[By the numbers](#by-the-numbers)
-
-## The platform
-
-Drishti is built on four products, each in its own repository under [github.com/drishti-platform](https://github.com/drishti-platform) with its own
-version, gate and documentation:
-
-| Repository | What it owns |
+| Folder | What it holds |
 |---|---|
-| [drishti-rachana](https://github.com/drishti-platform/drishti-rachana) | the Rachana language: Sutras, the expression language, the compiler, the live tables and the data protocol, with Java, JavaScript and Python SDKs |
-| [drishti-elements](https://github.com/drishti-platform/drishti-elements) | Drishti Elements: the JavaScript libraries every screen is drawn with (grid and pivot, charts and maps, inputs, tree, graph, designer kit) |
-| [drishti-lake](https://github.com/drishti-platform/drishti-lake) | Drishti Lake: Delta, Iceberg and plain-file lakes as one lake; the loader (Java and Python), the inbox, upkeep, the read API, the in-memory lake |
-| [drishti-tools](https://github.com/drishti-platform/drishti-tools) | shared Java utilities: settings, TLS and the outbound proxy, single flight, the load guard, the one `.xlsx` writer |
-| [drishti](https://github.com/drishti-platform/drishti) | this repository: the kernel, the console, the modules and their data |
+| `kernel/` | the server, its API, identity, registry, packs runtime and the module runtime (10 Maven modules) |
+| `compute/` | the compute engines: Rachana, tables, BI compute, inference |
+| `modules/` | the 12 `.dmod` modules (banking, capital-markets, economy, genomics, market-data, trading and six source-system adapters: Calypso, Endur, ICI, Murex, SwapOne, WSS) with their 19 packs |
+| `plugins/` | the 13 connector plugins, `plugins/drishti-plugin-*/` (activemq, aerospike, cassandra, delta, duckdb, iceberg, iceberg-external, jdbc, kafka, mongodb, rabbitmq, redis, s3), each with its README; their jars are packed into the server jar |
+| `drishti-console/` | the web console (Python), its launchers and its tests ([README](drishti-console/README.md)) |
+| `tools/` | the one command line, `tools/drishti.py`, the launcher table and the checks |
+| `config/` | settings, profiles, distributions, packs, lakes, feeds, lenses and the Python lock file |
+| `lake/`, `net/`, `drishti-sdk/`, `packaging/`, `testing/`, `examples/` | the lake layer, Drishti\*net (the cluster), the Module SDK, packaging, test kits and sample clients |
+| `docs/` | guides, tutorials, architecture ([index](docs/README.md)) |
+| `deploy/` | the stack and AWS deployment |
+| `lib/` | the server jar and the pinned Lake wheel |
+| `run-configs/` | the IntelliJ launchers (the PyCharm ones are in `drishti-console/run-configs/`) |
+| `data/` | committed test data |
 
-The versions that go together are stated once, in the index repository's
-[COMPATIBILITY.md](https://github.com/drishti-platform/drishti-platform/blob/main/COMPATIBILITY.md); the index repository also holds `clone_all.py`,
-`build_all.py` and `make_bundle.py`, and a source bundle on its release. The products install in the order tools, Rachana, Lake, then Drishti, from
-release tags only ([QUICKSTART_DEVELOPERS.md](docs/QUICKSTART_DEVELOPERS.md#1-get-the-code-and-set-up-the-machine)).
+Counts from the file system are in [By the numbers](#by-the-numbers). Drishti is built on products that live in their own repositories
+under [github.com/drishti-platform](https://github.com/drishti-platform): drishti-tools, drishti-rachana (the language), drishti-lake and
+drishti-elements (the JavaScript libraries). The versions that go together are stated in the index repository's COMPATIBILITY.md.
 
-## The three building blocks
+## Requirements
 
-![The three building blocks: people use a console; the console calls one or many kernel nodes as the person; modules plug a console part into the console and a server part into the kernel; the kernel reads the site's lakes and sources through bindings and connectors](docs/how-it-fits/building-blocks.svg)
+- **JDK 21.**
+- **Python 3.13** that you prepare: a dedicated one, a virtual environment you made yourself, or the system's (not Debian/Ubuntu's own, which is externally managed). Drishti never makes an
+  environment and never installs a package; `setup` only checks.
+- 20 GB of free disk.
+- Windows: `py -3.13 tools\drishti.py ...`. Linux and macOS: `python3.13 tools/drishti.py ...`. The examples below use Linux.
 
-How they fit, step by step: [HOW_IT_FITS.md](HOW_IT_FITS.md). The design, with diagrams: [KERNEL_AND_MODULES.md](docs/architecture/KERNEL_AND_MODULES.md) ([PDF](docs/architecture/KERNEL_AND_MODULES.pdf)).
+## Quick path
 
-| Block | What it is | What it owns |
+1. **Get the code.** Unzip the platform source zip and the wheel pack (into `~/drishti-wheels`), or run the platform's `clone_all.py`.
+   A new user follows the platform's `START_HERE_<OS>.pdf`.
+2. **Build.** Platform: `python3.13 build_all.py --skip-tests` (IntelliJ: **IntelliJ-platform-build**, then **platform-clean-install**).
+   Drishti alone, with the products already installed: `./mvnw -B clean package -DskipTests`, which builds the server jar into `lib/`
+   **and** the modules into `modules/`.
+3. **Install the libraries** with two pip commands from `drishti-console`, offline from the unzipped wheel pack, then check the machine with
+   `tools/drishti.py setup` (it ends with "Drishti is ready."): [Deployment and QA guide, 1.2](docs/DEPLOYMENT_AND_QA_GUIDE.md#12-what-to-install-per-operating-system) and [1.6](docs/DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup).
+4. **Run:**
+
+   ```bash
+   python3.13 tools/drishti.py lake demo --engine java     # the demo lake, about 15 minutes
+   python3.13 tools/drishti.py start all --demo            # server :18480, console :17480
+   python3.13 tools/drishti.py doctor --acceptance         # signs in, asks VAR BANK: VaR 167,372,692, ES 210,131,972
+   python3.13 tools/drishti.py stop all
+   ```
+
+Open <http://127.0.0.1:17480> while it runs. Every step with the output you should see:
+[DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md).
+
+## IDE launchers
+
+Each IDE opens its own project and sees its own launchers, generated from one table (`tools/launch/launchers.yaml`):
+
+| IDE and project | Folder | Groups |
 |---|---|---|
-| **The kernel** | the server: Spring Boot on Java 21, domain-free | connectors and their bindings, lakes, data loads and `.ready` files, Rachana, the pivot, BI and aggregation engines, Explain, the access registry, the cluster (Drishti\*net) and placement, audit; it hosts the **server part** of each module (Java, Python compute, packs, REST) |
-| **The console** | the web tier (Python, FastAPI), in front of one kernel or a cluster; it draws what the server decides and reads no pack, module, lens or distribution file | the shell (header, lenses, themes, keys, Home, Help, search), Drishti Elements and the Sutra renderer, the BI and pivot screens, Admin; it hosts the **console part** of each module (declared pages, templates, static files, a domain Elements library) under `/m/<id>/` |
-| **Modules** | `.dmod` packages, built apart from both | packs, Java and Python compute, functions, lenses, Home cards, Help, pages and visuals; a module **declares the data it needs and never brings connectors or credentials** |
+| IntelliJ IDEA, open `drishti` | `run-configs/` | IntelliJ-drishti-build, IntelliJ-drishti-run, IntelliJ-drishti-test |
+| PyCharm, open `drishti/drishti-console` | `drishti-console/run-configs/` | PyCharm-console-setup, PyCharm-console-data, PyCharm-console-run, PyCharm-console-check |
+| VS Code, open `drishti.code-workspace` | the same launchers as tasks | |
 
-The glue: one module runtime (`drishti-module-runtime`: reads and verifies a `.dmod`, one class loader per module, the live route table,
-unloading) used by the kernel and the console alike; the **distribution file** (which modules, brand, theme, lenses, Home and Help); the
-**Module SDK**; and **placement** (which nodes run which part of a module).
+`python3.13 tools/drishti.py launchers --list` prints every launcher and the command it runs; `launchers --run "<name>"` runs it.
+Details: [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md).
 
-One server jar comes out of the build (`drishti-server-*-exec.jar`): the kernel alone. The first-party modules are `.dmod` packages in the
-modules folder beside it (`python tools/drishti.py build all` makes both; `build jar` alone says which modules are missing or stale, and a server refuses to start on a package older than its module's source, naming the command that fixes it), and the server makes its module host from them at every start. Maven modules depend in one direction: the kernel imports no domain and no module reaches another's code; a test
-fails the build otherwise.
+## Where to read next
 
-## Modules
+| You want to | Read |
+|---|---|
+| install and verify, Windows, Linux, macOS | [DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md); the platform's `START_HERE_<OS>.pdf` |
+| change the code | [QUICKSTART_DEVELOPERS.md](docs/QUICKSTART_DEVELOPERS.md), [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md), [DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md) |
+| run on Linux in production | [OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md#production-deployment-linux) |
+| find every command and option | [CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md) |
+| use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [tutorials](docs/tutorials/README.md) |
+| build a pack, a screen or a module | [BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md) |
+| everything else | [docs/README.md](docs/README.md) |
 
-**A `.dmod`** is a documented zip anyone can produce: `module.yaml` (the manifest: id, version, publisher, the kernel API it needs, its
-parts, functions, lenses, data needs, API prefix) first, then the module's folders (`java/`, `console/`, `data/`, `packs/`, `docs/` …) and
-`META-INF/DMOD.MF`, the SHA-256 of every file ([KERNEL_AND_MODULES.md section 3](docs/architecture/KERNEL_AND_MODULES.md#3-the-module-package-dmod)).
-Before it loads, the kernel verifies the hash list and the manifest and runs the **fourteen conformance checks (C1–C14)**: no kernel
-internals, declared jars only, contracts for its kinds, no leaked state after unload and the rest. A refused module is absent, never half
-loaded.
-
-- **First-party origin.** A module that says `origin: first-party` is checked against the `first-party.yaml` the build ships (its id and
-  its hash list's hash). Only such a module may carry a `kernel-internals:` **allowance** (the kernel classes it may still reach, a list
-  that only shrinks, honoured by C1 and its class loader), and a module with one loads only on the **exact kernel build** stamped into it
-  ("built for kernel X, this is Y: install the matching module"). `module inspect`, `drishti.py module list` and Health show the origin.
-- **On or off.** A module is on when it is installed, licensed and enabled. Switched off, it loads no engine, job, pack or API, and its
-  screens, menus, commands, Help pages and Build items are gone for everyone
-  ([ADMIN_GUIDE.md section 22](docs/guides/ADMIN_GUIDE.md#22-modules-on-or-off)).
-- **Functions and lenses.** A function is a command word (`VAR`, `TRD`, `WDI` …), the finest unit of access, each switchable on its own
-  ([ADMIN_GUIDE.md section 20](docs/guides/ADMIN_GUIDE.md#20-functions-func-every-command-and-turning-one-on-or-off)); a lens is what a
-  person works in: its modules, functions, Home cards and chips ([ADMIN_GUIDE.md section 12](docs/guides/ADMIN_GUIDE.md#12-what-a-lens-is)).
-  Who may do what is decided in one place, the access registry: licence → module → lens → function → permission
-  ([ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md)).
-- **Gated functions explain themselves.** A function that is on but whose required data nothing serves opens the needs-data page
-  (*Exposure needs data: exposure-path is not bound*, with links to Admin → Data bindings and Help); its API answers `409 DRS-1035` with
-  the need and the command line says the same words.
-
-**The modules that ship**: first-party modules installed by default, each packed into a `.dmod` by the normal build (`packaging/dist`) and passing C1–C14:
-
-| Module | Folder | Brings | Lenses |
-|---|---|---|---|
-| **banking** (the one with an allowance) | `modules/banking/` | VaR and ES (historical and parametric, backtests, the market-risk cube), counterparty exposure and the pre-deal check, sensitivities, FRTB-SA, SIMM, official results; the trading, market-risk and counterparty-risk packs; the drishti-risk library; requires market-data | Risk, Trading, CRO, the two risk cubes |
-| **market-data** | `modules/market-data/` | prices, curves, volatilities and FX, and their functions; on whenever banking or capital markets is | Market |
-| **capital-markets** | `modules/capital-markets/` | US equities (SEC EDGAR filings and facts, indices), funds and ETFs | Markets |
-| **trading** | `modules/trading/` | the live trade blotter: trades ticking from the bank's messaging, edits written back through the bindings with a version per trade, four eyes where the site asks, full audit; not an order or execution system | Trading |
-| **source-endur, source-calypso, source-murex, source-wss, source-swapone, source-ici** | `modules/source-<system>/` | one module per trading system, each feeding the one canonical `trade` kind (its connector templates, field map and inbox routing); each switches on or off on its own | Trading |
-| **economy** | `modules/economy/` | economies, forecasts, governments and news; the public sector: World Bank indicators, central banks, Statistics Canada, the OECD, official press releases, GDELT world events; the World page | World, Public sector |
-| **genomics** (a sample third party's module, not installed by default) | `modules/genomics/` | a VCF reader inside the module, the kinds `variant`, `sample`, `gene`, `cohort`, the functions `VARIANT`, `GENE`, `COHORT`, synthetic cohorts; the showcase (`GWAS`, `PROTEIN`, `DESIGNS`): a linked cohort board and a protein-engineering workbench over its two seeded packs `genomics-showcase` and `protein-engineering`; its own visuals | Research |
-
-The kernel keeps what every domain uses: connectors and lakes, Sutras, search, the Pivot and BI, reports, tables and models, the Notebook,
-approvals, alerts, Explain, Admin and Help, GLEIF's legal entities as reference data, and the CIO and Oversight lenses.
-
-## Build a module
-
-A module is built against the kernel API, apart from the kernel ([DEVELOPER_GUIDE.md section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk),
-[KERNEL_AND_MODULES.md section 8](docs/architecture/KERNEL_AND_MODULES.md#8-the-module-sdk-and-the-developer-path)). **The Module SDK**
-is the kernel API jar (and, with `python tools/drishti.py build sdk`, **an SDK folder** `<home>/sdk`: a Maven file repository with the kernel API, the parent and the archetype, so a partner builds, tests, packs and verifies a module without Drishti's source), the archetype `drishti-module-archetype` (a project that builds green on its first `mvn verify`: a function with its
-route and page, a kind with its contract and data needs, a REST API, a Rachana function, a menu entry, a Home card, an AI tool, Help, a
-guide, a tutorial and a test), the parent `drishti-module-parent`, the Maven plugin and the conformance suite. The packer and the checks are
-one implementation, reached **three ways**:
-
-| Way | For | Commands |
-|---|---|---|
-| **Maven** | a project from the archetype | `mvn verify`: the parent's executions run `module verify --manifest-only`, `module pack` (`target/dmod/<id>-<version>.dmod`) and `module verify --conformance` |
-| **Any build** | Gradle, Bazel, a script, or `javac` and a folder | `python3 tools/drishti.py module pack <folder> [--jar <jar>]`, then `module verify <.dmod> --conformance` and `module inspect <.dmod>` |
-| **The command line** | Linux, macOS and Windows, with Java and Python only | `python3 tools/drishti.py module pack <folder>`, `module verify`, `module inspect` |
-
-- **What a module can contribute** while it is loaded, withdrawn when it unloads: kind providers, Rachana functions, compute engines,
-  approval sources, explainers, pivot sources, Health figures, official results, AI tools, `@ModuleApi` REST controllers (mounted under
-  `/api/v1/<prefix>/`), and a console part declared in `console/plugin.yaml`: pages over the kernel's page and the Elements macros, menus,
-  words, Home cards and Help ([DEVELOPER_GUIDE.md section 1.7](docs/guides/DEVELOPER_GUIDE.md#17-what-a-module-can-contribute)).
-- **The custom-visual SDK.** A module that needs a chart Drishti does not have ships it as a kind of drishti-chart's registry in its own
-  Elements library, built from drishti-chart's primitives, so it gets the theme, tooltips, Explain on a mark, export and the keyboard
-  like every chart; `python3 tools/drishti.py module visual <folder> --id <module> --name <name>` is the template, and the Elements gallery shows it while the module is loaded
-  ([DEVELOPER_GUIDE.md section 1.8](docs/guides/DEVELOPER_GUIDE.md#18-a-modules-own-visual-the-custom-visual-sdk)).
-- **The genomics sample**, step by step: a third party's module made from the archetype on the kernel API and the plugin API only,
-  with a VCF connector inside it and its own lollipop visual ([DEVELOPER_GUIDE.md section 1.9](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step)).
-
-## Install and place modules
-
-- **Two folders, as in Tomcat** ([ADMIN_GUIDE.md section 22.1](docs/guides/ADMIN_GUIDE.md#221-module-packages-and-the-shared-lib-folder)):
-  `modules/` (`drishti.modules.home`) takes `.dmod` packages, each verified, unpacked once and loaded at the next start (a module is a file
-  and a restart; taking the file out removes the module); `lib/ext/` (`drishti.lib.path`) takes jars every
-  connector and module may use (JDBC drivers, connector plugins, a company's libraries), read once at start into one class loader under the
-  kernel's and listed with their SHA-256 in Health. **Kernel libraries always win**: a module's own copy of a library the kernel ships is ignored and named in a warning (module verify, the log, Health). **Development mode** (`drishti.modules.dev`) loads a module's exploded build folder
-  unverified; it is refused in a cluster and under the production profile, which loads only verified packages.
-- **Data bindings.** A module names the kinds it needs; the site decides which connector or lake table serves each one, in
-  `config/bindings.yaml`. **Admin → Data bindings** shows every kind with its state (`BOUND`, `AUTO`, `DEMO`, `STALE`, `MISMATCH`,
-  `UNBOUND`, `COMPUTED`), the modules and functions that need it; a change takes two administrators and applies without a restart
-  ([ADMIN_GUIDE.md section 23](docs/guides/ADMIN_GUIDE.md#23-data-bindings), [KERNEL_AND_MODULES.md section 5](docs/architecture/KERNEL_AND_MODULES.md#5-data-needs-and-connector-binding)).
-- **Placement** (`config/placement.yaml`) says which nodes run each part of a module, by resource class and `max-nodes`; heavy work is
-  never spread to every node by accident; first-party modules default to every node. **Admin → Cluster → Modules** shows each part on each
-  node; a placement is planned by one administrator and applied by another, at once and without a restart
-  ([CLUSTER_GUIDE.md section 1.9](docs/guides/CLUSTER_GUIDE.md#19-module-placement)).
-- **Install**: a module is a **file** (`<id>-<version>.dmod`) in the modules folder beside the server's jar, and a restart. The boot verifies each
-  file, unpacks it once and loads it; a cluster restarts node by node while the others serve. A switched-off or missing module answers `404`, and
-  saved Sutras, reports, dashboards, baskets, searches and alert rules that use it are kept and marked ***needs module X***. **Admin → Modules**
-  shows every module and, in a cluster, a nodes × modules matrix of the content each node booted, with a warning when nodes disagree and the commands to install or upgrade
-  ([CLUSTER_GUIDE.md section 1.10](docs/guides/CLUSTER_GUIDE.md#110-installing-a-module-on-a-cluster), [ADMIN_GUIDE.md section 25](docs/guides/ADMIN_GUIDE.md#25-modules)).
-
-## Distributions
-
-A distribution is one file, `config/distributions/drishti.<name>.yaml`: the product's brand, theme, modules, lenses, menus, Home and Help.
-One kernel build and one console build make every one of them, and what a distribution leaves out does not exist in it: its commands,
-words, menus, Home cards, Help pages and the catalogue the AI reads (*DRS-4023 VRES is not in Drishti Finance*)
-([DISTRIBUTIONS.md](docs/architecture/DISTRIBUTIONS.md) ([PDF](docs/architecture/DISTRIBUTIONS.pdf)), [ADMIN_GUIDE.md section 24](docs/guides/ADMIN_GUIDE.md#24-white-label-distributions)).
-
-| Distribution | For | Modules | Lenses | Start |
-|---|---|---|---|---|
-| **Drishti Risk** | traders, risk analysts and managers, middle office, model validation | banking, market-data | Risk (default), Trading, Market | `python tools/drishti.py start all --distribution risk` |
-| **Drishti Finance** | investment and research analysts, economists, fund analysts; no VaR or any risk number | capital-markets, economy, market-data | Markets (default), World | `python tools/drishti.py start all --distribution finance` |
-| **Drishti Genomics** | the sample that proves the kernel carries no finance | genomics (dropped into `modules/`) | Research | `python tools/drishti.py start all --distribution genomics` |
-| **Drishti All** | developers, QA, demos; the default when none is named | every module | every lens | `python tools/drishti.py start all` |
-
-- **Any start**: `--distribution <name|path>` on `tools/drishti.py start all`, `start server` and `start console`, or
-  `DRISHTI_DISTRIBUTION`, or `drishti.distribution`; a path loads a site's own file (its own brand), beside the shipped ones.
-- **Two consoles over one cluster**: a console started with its own distribution keeps it whatever the servers run, so a stack file's
-  `consoles:` list (`{ name: risk, port: 17480, distribution: risk }`, `{ name: finance, port: 17481, distribution: finance }`) gives
-  Drishti Risk and Drishti Finance side by side; `tools/drishti.py status` shows each process's distribution.
-- **The IDEs**: [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md).
-- **Admin → White label** shows every distribution side by side; Health shows the running one and which of its modules loaded.
-  Step by step for each, on Linux, macOS and Windows:
-  [DEPLOYMENT_AND_QA_GUIDE.md section 7.7](docs/DEPLOYMENT_AND_QA_GUIDE.md#77-starting-a-white-labelled-instance).
-
-## Build and run in the IDE
-
-Open the repository root as the one project in IntelliJ IDEA or PyCharm: the launchers are in `run-configs/` (one folder, named
-`Drishti: <verb> <what>`: `build all`, `test`, `run server (demo)`, `run console`, `build demo lakes`, `check environment`) and VS Code opens
-`drishti.code-workspace`, whose tasks and launches carry the same names. All of them are generated from `tools/launch/launchers.yaml` by
-`python tools/drishti.py launchers`; every one is named, with what it is and when to use it, in
-[IDE_GUIDE.md](docs/guides/IDE_GUIDE.md).
-
-## Risk
-
-The banking module's engines run on the server, in Java, for any scope; the console only draws their answers.
-
-- **VaR and ES** for the bank, a desk, a book, a counterparty, a portfolio, a basket or an expression (`BANK - DESK:CREDIT`): drill from
-  the bank to a trade with contributions that add up, hierarchies from rows or from the trades' own columns, limits with one rule
-  (within, near, breach), any reporting currency, the 509- or 250-scenario window, stressed and 10-day VaR, intraday updates, the official
-  end-of-day record and backtests ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [the VaR tutorial](docs/guides/VAR_GUIDE.md));
-  regulatory reporting to the cell in [REGULATORY_VAR_REPORTING.md](docs/guides/REGULATORY_VAR_REPORTING.md).
-- **The VaR page** (the VaR explorer): a scope tree that shows **only the chosen scope** (the whole bank, a node and below with a
-  breadcrumb up, or a basket's own positions by the hierarchy you pick) with VaR, ES, contribution and use of limit per node; the switch
-  that includes matured positions (the matured share beside each node); **Explain ›** on every row and wherever VaR or ES shows;
-  **Why it moved** between the date on screen and a **compare date you pick** (previous day, 1 week, month end, any date), the
-  waterfall first and its biggest contributors beside it (`VAR <scope> EXPLAIN vs <date>`); and the playground of the chosen scope.
-- **Parametric VaR** (`PVAR`) beside historical, as a cross-check and never the official figure
-  ([VAR_GUIDE.md section 3.12](docs/guides/VAR_GUIDE.md#312-parametric-var-beside-historical-pvar)).
-- **The market-risk cube** (`MCUBE`): VaR by desk and risk class as a Pivot preset, each cell the VaR engine's answer for its scope
-  ([PIVOT_SCALE_AND_CUBES.md section 29](docs/guides/bi/PIVOT_SCALE_AND_CUBES.md#7-the-mr-cube-preset)).
-- **Counterparty exposure** (EE, PFE, EPE, EEPE) from the simulator's paths with netting and collateral, and **the pre-deal check**
-  (`PREDEAL`): a new trade added to its netting set path by path and answered approve, refer or decline against the credit limit and each
-  tenor bucket, audited ([EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [section 18.9](docs/guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check),
-  [the exposure tutorial](docs/guides/EXPOSURE_GUIDE.md)).
-- **FRTB-SA** for any VaR scope ([FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), [the FRTB-SA tutorial](docs/guides/FRTB_SA_GUIDE.md)) and **SIMM**
-  per netting set; ISDA's calibration is licensed, so the parameter file ships empty
-  ([SIMM_GUIDE.md section 4](docs/guides/SIMM_GUIDE.md#4-the-licensed-parameter-file), [the SIMM tutorial](docs/guides/SIMM_GUIDE.md)).
-- **Groupings and analytics** computed on request: ownership groups, sectors, correlations, an equity's beta
-  ([README.md](docs/guides/bi/README.md), [the groupings tutorial](docs/guides/bi/GROUPINGS_AND_ANALYTICS.md)).
-
-**Explained**: every computed number has one Explain (the formula, the inputs and lineage, why it moved between two dates in steps
-that add up, a workbook with live formulas), and VaR, FRTB-SA and SIMM each have a playground (`PLAY VAR`, `PLAY FRTB`, `PLAY SIMM`).
-**Controlled**: roles, row rules and field masks apply to every screen, pivot, report and Flight read; corrections, designs, settings and
-report sign-offs go through one Approvals queue with four eyes. Anything that depends on unbuilt work is registered in
-`config/under-construction.yaml` and shown with an *Under construction* chip or hidden ([UNDER_CONSTRUCTION.md](docs/admin/UNDER_CONSTRUCTION.md)).
-
-## Analyse
-
-- **The terminal**: type-ahead over every source, linked views of any entity, impact (F8), the raw document (F9), any past business
-  day, history and compare, live views, one keymap and one search (Alt+K) ([USER_GUIDE.md](docs/guides/USER_GUIDE.md),
-  [tutorial 1](docs/tutorials/01-first-15-minutes.md)).
-- **Search** by value (`TRD where QUANTITY > 200m order by QUANTITY desc`), in plain words without any AI service, or with a form;
-  monitors and alerts on one alert engine.
-- **The Pivot** (`PIVOT`): any kind, table or measure, every total computed from its own members, custom functions, why a figure moved,
-  what-if, Excel with formulas; **Pivot → Report** turns a view into a report ([PIVOT.md](docs/guides/bi/PIVOT.md),
-  [the pivot tutorial](docs/guides/bi/PIVOT.md)).
-- **BI depth** on the models of the table layer: many-to-many relationships through a bridge, filtering both ways, Rachana measures with
-  filter context, a converter from DAX measures, the decomposition tree, linked brushing between visuals, sunburst, icicle and the
-  calendar heatmap ([README.md](docs/guides/bi/README.md), [TABLES_AND_MODELS.md section 12](docs/guides/bi/TABLES_AND_MODELS.md#12-measures-in-a-model-filter-context-and-what-is-refused)).
-- **Reports and dashboards** on the table layer: reports and boards, statements, schedules, subscriptions, publishing and governance
-  ([README.md](docs/guides/bi/README.md), [the reports tutorial](docs/guides/bi/README.md)).
-- **The Notebook**: SQL on the server and Python on its one sandboxed Python runtime ([NOTEBOOK_AND_PYTHON.md](docs/guides/bi/NOTEBOOK_AND_PYTHON.md),
-  [the Notebook tutorial](docs/guides/bi/NOTEBOOK_AND_PYTHON.md)).
-- **AI** is not in this release: the console shows no AI page and the server's AI layer is off (one switch, `drishti.ai.enabled`;
-  [AI_GUIDE.md](docs/guides/AI_GUIDE.md) describes the layer kept for a later release).
-- **Corrections and approvals**: correct a record in a form, approve it in the one queue, the edit log and the audit trail
-  ([APPROVALS_GUIDE.md](docs/guides/APPROVALS_GUIDE.md), [tutorial 11](docs/tutorials/11-correct-and-approve.md)).
-- **One grammar**: Rachana paths and expressions in Sutras, search, the Pivot, reports and custom functions; every function in one
-  catalogue ([FUNCTIONS.md](docs/guides/FUNCTIONS.md), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md)).
-
-## Build
-
-- **Tables and models** written once over any kind, lake table or query, with keys, rules and masks, edited in Build › Tables & models
-  with the YAML live beside the form ([TABLES_AND_MODELS.md](docs/guides/bi/TABLES_AND_MODELS.md), [the tables tutorial](docs/guides/bi/TABLES_AND_MODELS.md)).
-- **Packs and screens**: a pack from your JSON Schema or JSON Lines; a screen as a Sutra, designed in the Build workbench or on a live page;
-  where there is no Sutra the inference engine lays the screen out from the data; forms and phones
-  ([BUILD_GUIDE.md](docs/guides/BUILD_GUIDE.md), [tutorial 19](docs/tutorials/19-build-a-pack-and-a-screen.md)). The Build home (`/build`)
-  lists everything people build, what it uses and what uses it.
-- **Drishti Elements**: the JavaScript libraries the console draws with (core, inputs, grid and its pivot, chart with maps, data, tree,
-  graph, the designer kit) are [Drishti Elements](https://github.com/drishti-platform/drishti-elements), a separate project by the same owner
-  with its own repository and [docs](https://ajsinha.github.io/drishti-elements/), which Drishti uses as an external, vendored component
-  at a pinned version (`drishti-console/web/static/vendor/drishti-elements/3.3.2/`, see
-  [VENDOR.md](drishti-console/web/static/vendor/VENDOR.md) and [ELEMENTS_IN_DRISHTI.md](docs/architecture/ELEMENTS_IN_DRISHTI.md)).
-  Drishti keeps three libraries of its own on top (insight, renderer, and the banking module's risk). Every screen and every designer is
-  drawn with them, guard tests fail the build when a page draws its own controls, and the gallery (`/elements`) shows each component live,
-  offline; a module adds its own domain library and visuals.
-- **Embed** live views, panels and reports in your own web pages; they ship as files with SRI hashes, never from a CDN (the libraries
-  in your own application: Drishti Elements' release tree) ([EMBED_GUIDE.md](docs/guides/EMBED_GUIDE.md),
-  [tutorial 20](docs/tutorials/20-embed-drishti.md)).
-- **Extend**: a connector, a plugin or a module ([Build a module](#build-a-module)), and the REST API ([DEVELOPER_GUIDE.md](docs/guides/DEVELOPER_GUIDE.md),
-  [API_REFERENCE.md](docs/guides/API_REFERENCE.md)).
-
-## Data in
-
-- **Connectors**: Delta Lake and Apache Iceberg (through Drishti Lake, local disk or S3, no Hadoop), JDBC databases, DuckDB, MongoDB,
-  Redis, Aerospike, Cassandra, Kafka, ActiveMQ, RabbitMQ, files, S3, REST and public feeds: the light ones built in (`plugins/drishti-connectors`: `demo`, `file`, `rest`, `feed`, `news`, `yfinance`),
-  each with a driver or native library a plugin in `plugins/drishti-plugin-*/`: `jdbc`, `delta`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`;
-  each with its README ([DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#8-connectors), [tutorial 15](docs/tutorials/15-connect-your-data.md)).
-- **Lakes, each in its own folder** and described by one lake file (`config/lakes/<lake>.yaml`):
-
-  | Lake | Holds |
-  |---|---|
-  | `demo` | the demo data, 103 tables, built from the committed test data (`drishti.py lake demo`); demo and real data never mix |
-  | `risklake` | a bank's own risk data (shipped empty) |
-  | `capitalmarket` | prices, curves, volatilities, US equities and funds |
-  | `worldlake` | the World Bank, the IMF, the OECD, central banks' and national statistics' series |
-  | `newslake` | official press releases, GDELT world events, market headlines |
-  | `referencelake` | GLEIF's legal entities |
-  | `regulators` | regulators' publications (shipped empty) |
-
-  The banking module adds the official VaR and exposure records; which table serves each kind a module needs is a
-  [data binding](#install-and-place-modules). In-memory lakes (`mem://`) hold data that never touches disk.
-- **Loading** is [Drishti Lake's](https://github.com/drishti-platform/drishti-lake/blob/main/docs/guides/LOADER.md): one loader in Java and one in
-  Python, JSON Lines as the standard (plain, gzip, zstd, zip, tar), a business date for every file, guards against future dates, the wrong zone and
-  an accidental mass drop, all-or-nothing archives, undo by load id (`drishti.py lake undo <load-id>`), and a data inbox that loads what your ETL
-  drops with a `.ready` file. Drishti routes a file to its table through the packs and signals the server after a commit
-  ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md), [tutorial 16](docs/tutorials/16-load-your-own-data-into-a-new-lake.md)).
-- **A day of bank data**: what a bank sends each day and the daily cycle ([tutorial 12](docs/tutorials/12-a-day-of-bank-data.md),
-  [the data contracts](docs/contracts/README.md), one per command word).
-- **drishti-feeds** pulls public data every day, one feed file per source, with incremental pulls, a run ledger and an alert when a run
-  fails: the World Bank, central banks, Statistics Canada, the OECD, official news, GDELT, GLEIF, US equities, funds and market data
-  ([WORLD_DATA_GUIDE.md](docs/guides/WORLD_DATA_GUIDE.md), [WORLD_DATA_GUIDE.md](docs/guides/WORLD_DATA_GUIDE.md),
-  [WORLD_DATA_GUIDE.md](docs/guides/WORLD_DATA_GUIDE.md), [the world data tutorial](docs/guides/WORLD_DATA_GUIDE.md),
-  [the public sector tutorial](docs/guides/WORLD_DATA_GUIDE.md)).
-
-## Data out
-
-- **Arrow Flight and Flight SQL** (off as shipped): data, models, pivot views and VaR's scenario P&L vectors to Python, Java, JDBC and
-  ODBC clients, read only, with the reader's entitlements and masks ([FLIGHT_GUIDE.md](docs/guides/FLIGHT_GUIDE.md),
-  [FLIGHT_GUIDE.md](docs/guides/FLIGHT_GUIDE.md), [tutorial 17](docs/tutorials/17-data-out-with-arrow-flight.md); client
-  examples in [examples/clients/](examples/clients/README.md)).
-- **Export data** (`EXPORT`): any dataset, a simple selection, a day as `.jsonl.gz`, streamed and audited.
-- **The REST API** under `/api/v1` with API tokens ([API_REFERENCE.md](docs/guides/API_REFERENCE.md)).
-
-## Operate
-
-- **Install, configure, deploy, monitor, troubleshoot**: by hand, with systemd, Docker Compose or AWS ECS, and on Windows with Java and
-  Python only; promotion and roll back by copying; the runbooks; Prometheus metrics ([OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md),
-  [tutorial 21](docs/tutorials/21-run-it-in-production.md)).
-- **People and access**: passwords or OpenID Connect, roles per kind, field masks, API tokens, an access log and an audit trail; off by
-  default for a developer machine, on for any shared one ([ADMIN_GUIDE.md](docs/guides/ADMIN_GUIDE.md)).
-- **Settings files and paths**: a site's settings live in `.ini` files named by absolute path (`-Ddrishti.settings.file=/etc/drishti/prod.ini,/etc/drishti/secrets.ini`)
-  with named lakes, databases and brokers (`[lake.<name>]`, `[db.<name>]`, `[broker.<name>]`, `[connector.<name>]`) and `${...}` placeholders;
-  every folder and file is an absolute path or anchored to a named root, and Admin → Configuration → Resolved paths shows each one with where
-  it came from ([CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
-- **Brokers are optional**: a Kafka, ActiveMQ or RabbitMQ connector whose broker is not there says *waiting for broker*, keeps the server
-  healthy and serves the lake snapshot until the broker appears; every TLS and SASL form is a setting of its broker section.
-- **Read-only connectors**: the server only reads a connector's template, a site's override and its secrets, merged in memory; it never
-  writes or retires a connector file.
-- **Configuration**: every setting in three tiers with its value in effect and where it came from; a change is a proposal a second
-  administrator approves ([CONFIGURATION.md](docs/admin/CONFIGURATION.md)).
-- **Clusters** (Drishti\*net, off as shipped): servers join by gossip on a port of their own, any member answers any request, and VaR
-  shards across members; modules are placed on chosen nodes, installed by copying the file to each; sizing and tuning ([CLUSTER_GUIDE.md](docs/guides/CLUSTER_GUIDE.md), [tutorial 22](docs/tutorials/22-a-cluster-of-three.md)).
-- **Engines and native maths**: each compute engine on or off per node; OpenBLAS bundled for Linux and Windows x86-64, off as shipped
-  ([ADMIN_GUIDE.md section 21](docs/guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off),
-  [OPERATIONS_GUIDE.md section 14.9](docs/guides/OPERATIONS_GUIDE.md#149-native-libraries-blas)).
-
-## Run it
-
-With a 64-bit Java 21 (JDK) and [uv](https://docs.astral.sh/uv/) for the console's Python (Maven ships with the repository), from the
-repository root ([OPERATIONS_GUIDE.md section 2](docs/guides/OPERATIONS_GUIDE.md#2-install-and-run-on-one-machine) has every step):
-
-Get the code first: unpack the platform's source bundle, or clone `drishti-platform/drishti-platform` and run its `clone_all.py`, then `build_all.py`
-(tools, Rachana, Lake from their tags, then Drishti; [QUICKSTART_DEVELOPERS.md](docs/QUICKSTART_DEVELOPERS.md#2-build)). The checkout is
-`~/IdeaProjects/drishti-platform/drishti` (Windows `C:\Users\<you>\IdeaProjects\drishti-platform\drishti`). Run the commands below from the Drishti
-folder (that checkout, or the install folder of a release).
-
-```bash
-# 1. Prepare the machine: checks Python 3.11+ and Java 21+, makes the data folder, ~/drishti-envs/dev.ini (with the IDE launchers' JVM options) and drishti-console/.venv
-python tools/drishti.py setup
-
-# 2. Build the runnable server and its modules: the kernel's jar goes to ./lib, each first-party module is a .dmod package in ./modules (the jar holds none)
-python tools/drishti.py build all          # one Maven command; with no Python: ./mvnw clean package -DskipTests -pl :drishti-app,:drishti-modules -am
-# (optional) the Module SDK folder for module builders: <home>/sdk
-python tools/drishti.py build sdk
-
-# 3. The demo lake, from the committed test data in data/testdata
-python tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java
-
-# 4. The server on :18480 and the console on :17480, in the background, with the demo profile (config/profiles/demo.ini, the file the IDE's demo launcher names)
-python tools/drishti.py --settings ~/drishti-envs/dev.ini start all --demo    # add --distribution risk|finance|genomics for one product
-python tools/drishti.py status                                                # both UP, with the addresses to open
-python tools/drishti.py stop all                                              # when you are done
-```
-
-On Windows the same commands run as `py tools\drishti.py ...` with backslash paths. From IntelliJ IDEA and PyCharm the same steps are the
-launchers **Drishti: build all**, **Drishti: build demo lakes**, **Drishti: run server (demo)** and **Drishti: run console**
-([IDE_GUIDE.md](docs/guides/IDE_GUIDE.md); VS Code: [IDE_GUIDE.md section 10](docs/guides/IDE_GUIDE.md#10-visual-studio-code)); they read the same profile, so the IDE and the terminal start the same server.
-
-Open the console's address that `start all` prints, sign in as `drishti-dev-admin` (password `drishti-dev-admin123`: the demo's
-development account, never for a shared machine) and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK`, `PREDEAL` and `PIVOT`
-([DEPLOYMENT_AND_QA_GUIDE.md](docs/DEPLOYMENT_AND_QA_GUIDE.md) walks it on Windows, Linux and macOS, with what you should see).
-
-- **Install folder and jars**: the install root is `--home`, else `DRISHTI_HOME`, else the folder the tools are in; the server jar is in `<home>/lib`,
-  the site's jars in `<home>/lib/ext`, the modules' `.dmod` files in `<home>/modules`; one Java lookup (`--java`, `DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH; 21 or newer). The shell scripts of
-  earlier releases are gone.
-
-- **Starting and stopping**: `tools/drishti.py start`, `stop` and `status` ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md#setup-build-jar-start-stop-and-status-install-build-run-and-stop-drishti)),
-  the same on Linux, macOS and Windows; every option, a cluster node by node with `--node`, the console pointed at a cluster's entry node with `--server`, a distribution with
-  `--distribution` and a second console in one data folder with `--name`:
-  [DEPLOYMENT_AND_QA_GUIDE.md section 7](docs/DEPLOYMENT_AND_QA_GUIDE.md#7-start-the-server-and-the-console).
-
-- **The command line** is `tools/drishti.py`, run with the console's Python: lakes and loads, feeds, approvals, VaR, exposure
-  and more ([CLI_REFERENCE.md](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)).
-- **A local cluster of three** with its consoles, from one file: `tools/drishti.py start cluster` with [deploy/stack/stack.yaml](deploy/stack/README.md)
-  (its `consoles:` list may start a Drishti Risk and a Drishti Finance console over the same cluster).
-- **Other ways**: [Windows](docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows) (Java and Python only),
-  [Docker Compose](docs/guides/OPERATIONS_GUIDE.md#54-docker-compose) and the
-  [IDEs](docs/guides/IDE_GUIDE.md) and [VS Code](docs/guides/IDE_GUIDE.md#10-visual-studio-code).
-
-## Measured performance
-
-Measured on one developer workstation; the method, the commands to run each again and the limits of each figure are in
-[BENCHMARK.md](docs/admin/BENCHMARK.md).
-
-| Run | Result | Where |
-|---|---|---|
-| VaR, 200,000 positions, one server (`-Xmx8g`) | first open of a date 4.5 s; 50 users 270 requests/s, 0 errors; heap with two dates open 881 MB | [§4.2](docs/admin/BENCHMARK.md#42-one-server-and-the-three-node-cluster), [§4.3](docs/admin/BENCHMARK.md#43-users-50-100-and-200) |
-| VaR, 200,000 positions, three-node cluster | the bank's VaR bit-equal to one server | [§4.2](docs/admin/BENCHMARK.md#42-one-server-and-the-three-node-cluster) |
-| VaR, 1,000,000 positions, one server (`-Xmx6g`) | first open of a date 20.9 s; 50 users 183 requests/s, 0 errors; heap with two dates open 2.2 GB | [§4.2](docs/admin/BENCHMARK.md#42-one-server-and-the-three-node-cluster), [§4.3](docs/admin/BENCHMARK.md#43-users-50-100-and-200) |
-| Many VaR scopes at once, 1,000,000 positions | 100 overlapping sets 3.1x faster summed together on OpenBLAS; 100 desks 3.3x on Java; results identical or within 4.5e-16 | [§17](docs/admin/BENCHMARK.md#17-many-var-scopes-at-once-blas) |
-| 1,000,000 trades a day on Delta | search over every trade 134 ms (2,017 matches); open a trade 48 ms cached | [§8.1](docs/admin/BENCHMARK.md#81-a-million-trades-a-day-on-delta) |
-| 35.7 million trades over 30 dates, 50 users | 179 requests/s, 0 failures; a day of 400,000 trades restated in 2 min 54 s while 30 users read | [§8.3](docs/admin/BENCHMARK.md#83-thirty-days-and-a-day-restated-while-serving) |
-| The parallel Java loader, 10,000 positions × 510 scenarios | 0.19 to 0.29 s warm, 34,000 to 52,000 rows/s | [§7.2](docs/admin/BENCHMARK.md#72-the-java-parallel-loader-per-stage) |
-
-## Documentation
-
-Each major feature has **one guide and one tutorial**; every tutorial step shows the screen, the command line and the YAML, on the
-shipped demo data. The console's Help centre holds the same pages, grouped by domain and lens, and shows each person only the pages of
-the modules they may use. The map of every document is [docs/README.md](docs/README.md).
-
-| You want to… | Guides | Tutorials |
-|---|---|---|
-| find anything, pivot, report, analyse | [USER_GUIDE](docs/guides/USER_GUIDE.md), [PIVOT_GUIDE](docs/guides/bi/PIVOT.md), [REPORTS_GUIDE](docs/guides/bi/PIVOT.md), [NOTEBOOK_GUIDE](docs/guides/bi/NOTEBOOK_AND_PYTHON.md), [APPROVALS_GUIDE](docs/guides/APPROVALS_GUIDE.md) | [1](docs/tutorials/01-first-15-minutes.md), [7](docs/guides/bi/README.md), [8](docs/guides/bi/README.md), [9](docs/guides/bi/README.md), [11](docs/tutorials/11-correct-and-approve.md) |
-| measure risk | [VAR_GUIDE](docs/guides/VAR_GUIDE.md), [REGULATORY_VAR_REPORTING](docs/guides/REGULATORY_VAR_REPORTING.md), [EXPOSURE_GUIDE](docs/guides/EXPOSURE_GUIDE.md), [FRTB_SA_GUIDE](docs/guides/FRTB_SA_GUIDE.md), [SIMM_GUIDE](docs/guides/SIMM_GUIDE.md), [GROUPINGS_ANALYTICS_GUIDE](docs/guides/bi/GROUPINGS_AND_ANALYTICS.md) | [2](docs/guides/VAR_GUIDE.md), [3](docs/guides/EXPOSURE_GUIDE.md), [4](docs/guides/FRTB_SA_GUIDE.md), [5](docs/guides/SIMM_GUIDE.md), [6](docs/guides/bi/README.md) |
-| work with bank, world and public data | [FUNDS_GUIDE](docs/guides/WORLD_DATA_GUIDE.md), [PUBLIC_SECTOR_GUIDE](docs/guides/WORLD_DATA_GUIDE.md), [EXTERNAL_DATA](docs/guides/WORLD_DATA_GUIDE.md) | [12](docs/tutorials/12-a-day-of-bank-data.md), [13](docs/guides/WORLD_DATA_GUIDE.md), [14](docs/guides/WORLD_DATA_GUIDE.md) |
-| bring data in and take it out | [DATA_GUIDE](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE](docs/guides/DATA_LAKE_GUIDE.md), [FLIGHT_GUIDE](docs/guides/FLIGHT_GUIDE.md) | [15](docs/tutorials/15-connect-your-data.md), [16](docs/tutorials/16-load-your-own-data-into-a-new-lake.md), [17](docs/tutorials/17-data-out-with-arrow-flight.md) |
-| understand the kernel, modules and distributions | [HOW_IT_FITS](HOW_IT_FITS.md) ([PDF](HOW_IT_FITS.pdf)), [KERNEL_AND_MODULES](docs/architecture/KERNEL_AND_MODULES.md) ([PDF](docs/architecture/KERNEL_AND_MODULES.pdf)), [DISTRIBUTIONS](docs/architecture/DISTRIBUTIONS.md) ([PDF](docs/architecture/DISTRIBUTIONS.pdf)), [DEVELOPER_GUIDE section 1.6](docs/guides/DEVELOPER_GUIDE.md#16-the-module-sdk) | [the genomics sample, step by step](docs/guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step) |
-| build tables, packs, screens and modules; embed; extend | [QUICKSTART_DEVELOPERS](docs/QUICKSTART_DEVELOPERS.md) ([PDF](docs/QUICKSTART_DEVELOPERS.pdf)), [TABLES_GUIDE](docs/guides/bi/TABLES_AND_MODELS.md), [BUILD_GUIDE](docs/guides/BUILD_GUIDE.md), [EMBED_GUIDE](docs/guides/EMBED_GUIDE.md), [DEVELOPER_GUIDE](docs/guides/DEVELOPER_GUIDE.md) | [18](docs/guides/bi/README.md), [19](docs/tutorials/19-build-a-pack-and-a-screen.md), [20](docs/tutorials/20-embed-drishti.md) |
-| install, operate, scale, administer | [DEPLOYMENT_AND_QA_GUIDE](docs/DEPLOYMENT_AND_QA_GUIDE.md) ([PDF](docs/DEPLOYMENT_AND_QA_GUIDE.pdf)), [OPERATIONS_GUIDE](docs/guides/OPERATIONS_GUIDE.md), [CLUSTER_GUIDE](docs/guides/CLUSTER_GUIDE.md) ([PDF](docs/guides/CLUSTER_GUIDE.pdf)), [ADMIN_GUIDE](docs/guides/ADMIN_GUIDE.md) | [21](docs/tutorials/21-run-it-in-production.md), [22](docs/tutorials/22-a-cluster-of-three.md) |
-
-**References**, one home each: [CONFIGURATION](docs/admin/CONFIGURATION.md), [API_REFERENCE](docs/guides/API_REFERENCE.md),
-[CLI_REFERENCE](docs/guides/CLI_REFERENCE.md), [COMMAND_CATALOG](docs/guides/COMMAND_CATALOG.md), [FUNCTIONS](docs/guides/FUNCTIONS.md),
-[RACHANA_REFERENCE](docs/guides/RACHANA_REFERENCE.md), [Drishti Elements' API](https://github.com/drishti-platform/drishti-elements/blob/main/docs/API.md), [FLIGHT_REFERENCE](docs/guides/FLIGHT_GUIDE.md),
-[VIEWMODEL](docs/architecture/VIEWMODEL.md), [BENCHMARK](docs/admin/BENCHMARK.md), [the data contracts](docs/contracts/README.md) and
-[the Knowledge primers](docs/knowledge/README.md). The design is [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) and
-[DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md); what changed and when, [RELEASE_NOTES.md](RELEASE_NOTES.md) and
-[CHANGELOG.md](CHANGELOG.md).
-
-## Project facts
-
-- **Kernel**: Java 21 (64-bit), Spring Boot on virtual threads; modules loaded from `.dmod` packages, one class loader each; identity and user content in SQLite by default or PostgreSQL, one complete
-  schema file per database and no migrations.
-- **Console**: Python, FastAPI and Jinja2; a module's console part is declared in its own `console/` folder and hosted under `/m/<id>/`;
-  every front-end asset
-  vendored or one of the Elements libraries, under a strict content security policy; it works on phones.
-- **The source tree**: the Maven modules sit in subject folders, `kernel/`, `compute/`, `lake/`, `net/`, `plugins/`, `modules/`,
-  `packaging/`, `testing/` and `drishti-sdk/` ([DEVELOPER_GUIDE.md section 1.1](docs/guides/DEVELOPER_GUIDE.md#11-java-modules)); a module's
-  folder is its artifact id.
-- **Contributing**: work on `develop`; `./mvnw -q verify` and the console tests
-  (`drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`) must pass; no source file over 2,000 lines; every file carries
-  the copyright header (`python3 tools/license_headers.py --fix`); every change updates the documents it affects and the changelog in
-  the same push; the documentation gates (`drishti-console/tests/test_docs_gates.py`, `config/docs-features.yaml`) keep one guide and one
-  tutorial per feature.
-- **The drill** (`tools/drill.sh`): the build, every test suite, the page walk of every page with its layout checks and **visual
-  snapshots** of about thirty key pages (1366 and 1920 px, dark and light) compared with committed golden images, each change listed
-  with a diff image; goldens are refreshed only by hand ([DEVELOPER_GUIDE.md section 2.6](docs/guides/DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh),
-  [TEST_HARNESS.md section 3.20](docs/architecture/TEST_HARNESS.md#320-the-visual-snapshots)).
+The main documents also come as PDFs: [Deploy and verify](docs/DEPLOYMENT_AND_QA_GUIDE.pdf), [developer quickstart](docs/QUICKSTART_DEVELOPERS.pdf) and [how it fits](HOW_IT_FITS.pdf): the documents handed to someone who has no running Drishti yet. Every other guide is read in Help, and `python3 tools/docs/md_to_pdf.py docs/X.md out.pdf` makes a PDF of any one.
 
 ## By the numbers
 

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The host's settings for Drishti Elements (an external component, vendored under static/vendor/drishti-elements/<version>/;
-   docs/architecture/ELEMENTS_IN_DRISHTI.md), loaded by base.html straight after drishti-core's bundle: the one place the console's
+   docs/architecture/THIN_CONSOLE_DESIGN.md), loaded by base.html straight after drishti-core's bundle: the one place the console's
    routes are told to Elements. The live-set client, the grid's pivot link and the data client read these endpoints (with none they
    say the feature is off); the loader learns Drishti's own libraries (drishti-insight, drishti-risk), which live
    under static/elements/, so a page may load them by name. */

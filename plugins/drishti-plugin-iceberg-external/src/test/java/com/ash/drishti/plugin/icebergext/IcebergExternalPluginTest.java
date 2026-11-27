@@ -46,6 +46,8 @@ import org.apache.iceberg.parquet.Parquet;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 /**
  * The external-table connector over the shapes other engines write (plugins/drishti-plugin-iceberg-external/README.md section 12), from the
@@ -55,6 +57,7 @@ import org.junit.jupiter.api.Test;
  * and evolved. For each: one entity, a search on a column, type-ahead, a reverse link, time travel, and the document's
  * JSON compared with pyiceberg's rows.
  */
+@DisabledOnOs(value = OS.WINDOWS, disabledReason = "the fixture writes its delete files through Hadoop's local file system, which needs winutils.exe: none on Windows (the plugin itself reads through Iceberg's own IO)")
 class IcebergExternalPluginTest {
 
     static final com.ash.drishti.common.JsonCodec CODEC = new com.ash.drishti.common.JsonCodec();

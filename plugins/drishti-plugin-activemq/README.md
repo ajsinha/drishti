@@ -60,6 +60,10 @@ local disk, with views that tick on every message.
 | state that should start empty each day (`state.reset-at`) | reverse lookups (*Linked entities*, impact with F8): not supported |
 | a desk that cannot run Kafka but has a broker | searches over promoted fields of millions of entities a day (it has no columns) |
 
+## Build and use
+
+A connector file in `config/connectors/` with `plugin: activemq` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
+
 ## What it reads
 
 `destinations` lists queues and topics (`queue:<name>`, `topic:<name>`, or a bare name, a queue). One session in `CLIENT_ACKNOWLEDGE`
@@ -210,7 +214,7 @@ DRISHTI_LIMITS_MQ=true java -jar lib/drishti-server-*-exec.jar
 ```
 
 ```python
-# uv run --with stomp.py python send_limit.py
+# python3 send_limit.py   # needs stomp.py in the Python you run Drishti with
 import json, stomp
 c = stomp.Connection([("localhost", 61613)]); c.connect("admin", "admin", wait=True)
 c.send("/queue/limits", json.dumps({"LIMIT_ID": "LIM-ALDERSHOT", "LIMIT": 338000000.0, "USED": 241900000,

@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The access model as a store holds it (ACCESS_MODEL.md section 3), before any decision: the module manifests, the administrator's
+ * The access model as a store holds it (KERNEL_AND_MODULES.md section 19.3), before any decision: the module manifests, the administrator's
  * switches, the licence, the lenses, the roles and the assignments.
  *
  * @param modules     every module known here (installed or not), the core excluded

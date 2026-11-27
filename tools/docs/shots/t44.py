@@ -15,7 +15,7 @@
 """Pictures of the tables tutorial, virtual tables and models (docs/guides/bi/README.md), written to docs/tutorials/img/t44/,
 in the light theme. Runs on its own on the scratch stack (the demo source on, sign-in off):
 
-    DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t44
+    DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> python3 tools/docs/screenshots.py --guide t44
 
 The pictures, in the tutorial's order: the trades' legs in the Pivot (one row per leg, the grain the table declares), the model
 trading-risk's Security tab (its row rules per role and masked columns: what tables migrate carries into tables), the legs by book and

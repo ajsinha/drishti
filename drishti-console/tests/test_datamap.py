@@ -47,7 +47,7 @@ def test_the_model_links_each_kind_to_its_command_contract_guide_and_what(client
     assert trade["open"] == "/go?q=TRD%20T-1"
     labels = {l["label"]: l["href"] for l in trade["links"]}
     assert labels["Data contract"].startswith("/help/docs-contracts-packs-trading#trd-trade"), labels
-    assert any(h == "/help/trading" for h in labels.values()), "the pack's guide"
+    assert any(h.startswith("/help/bank-data-guide") for h in labels.values()), "the pack's guide (merged into the bank data guide; help.yaml moved: names it)"
     assert any(l.get("what") for l in trade["links"]), "a WHAT link: the glossary knows trade"
     cp = next(j for j in m["joins"] if j["field"] == "COUNTERPARTY")
     assert cp["text"] == "15,000 of 15,000 ids match (100%)" and not cp["low"] and cp["cross"]
@@ -136,5 +136,5 @@ def test_datamap_in_the_type_ahead_the_views_menu_and_help(client, shipped):
     assert s[0]["mnemonic"] == "DATAMAP" and s[0]["href"] == "/datamap?q=coun" and s[0]["complete"] == "DATAMAP coun"
     page = client.get("/t").text
     assert 'href="/datamap"' in page and "Every kind of data, how it joins and how much there is · also DATAMAP &lt;GO&gt;" in page
-    guide = client.get("/help/user-guide").text
-    assert 'id="the-data-map"' in guide
+    guide = client.get("/help/cli-guide").text
+    assert 'id="205-the-data-map"' in guide

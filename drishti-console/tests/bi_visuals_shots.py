@@ -14,7 +14,7 @@
 
 """Makes the pictures and the captured output of the wave 3 BI chapter (docs/guides/bi/README.md chapter 23, bi/README.md, bi/README.md) from the real stack (not a test: run it by hand).
 
-    drishti-console/.venv/bin/python drishti-console/tests/bi_visuals_shots.py <pictures dir> <captures.json>
+    python3 drishti-console/tests/bi_visuals_shots.py <pictures dir> <captures.json>
 
 Ports 18954 (server) and 17954 (console) and the stack and the demo report of tests/test_bi_new_visuals_browser.py: a map, a funnel, a histogram, a box plot and a bubble
 over two days of 60 trades, a matrix and a table with true totals, a dataset with a daily refresh."""

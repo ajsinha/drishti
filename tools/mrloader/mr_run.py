@@ -15,8 +15,8 @@
 
 """The daily driver: ONE day of the CSV loaders' inputs, every kind of the day's folder converted in dependency order, the kinds checked
 against each other, then (optionally) handed to the data inbox or loaded, in that order. Nothing is delivered until every kind has been
-converted and checked: a day that fails leaves the lake as it was (docs/plans/CSV_LOADERS.md section 12; the runbook:
-tools/mrloader/docs/DAILY_RUNBOOK.md).
+converted and checked: a day that fails leaves the lake as it was (docs/guides/BANK_DATA_GUIDE.md section 12; the runbook:
+docs/guides/BANK_DATA_GUIDE.md).
 
 examples (from the repository root):
   python3 tools/mrloader/mr_run.py --date 2026-11-18 --from tools/mrloader/samples --day tools/mrloader/days/sample.yaml --dry-run

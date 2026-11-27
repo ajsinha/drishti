@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The stack the embed browser tests run on (docs/guides/EMBED_GUIDE.md): a HOST application on another origin (tools/elements-demo), a real console and a real
+"""The stack the embed browser tests run on (docs/guides/INTEGRATION_GUIDE.md): a HOST application on another origin (tools/elements-demo), a real console and a real
 scratch server, with the fixtures (``stack``, ``browser``, ``host``) and the page helper the embed acceptance tests share (test_embed_elements2_browser.py,
 test_embed_controls_browser.py, test_embed_frameworks_browser.py).
 

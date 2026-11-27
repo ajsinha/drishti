@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * The Arrow Flight service's settings: {@code drishti.engines.flight.*} in {@code config/engines/flight.yaml} (docs/guides/FLIGHT_GUIDE.md,
+ * The Arrow Flight service's settings: {@code drishti.engines.flight.*} in {@code config/engines/flight.yaml} (docs/guides/INTEGRATION_GUIDE.md,
  * "Turning it on"). TLS is always on: the certificate chain and its private key are PEM files (the server's certificate); a client CA turns
  * mutual TLS on. {@code advertiseHost} is the address clients are given in {@code GetFlightInfo}: the node's real address, never a loopback
  * or wildcard address (empty: the node's Drishti*net address).

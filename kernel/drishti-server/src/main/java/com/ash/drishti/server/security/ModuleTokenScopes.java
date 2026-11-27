@@ -32,7 +32,7 @@ import java.util.function.Predicate;
 import org.springframework.core.env.Environment;
 
 /**
- * What a module adds to the personal API tokens' declarations (docs/architecture/DOMAIN_MODULES.md section 8): each module's jar may ship
+ * What a module adds to the personal API tokens' declarations (docs/architecture/KERNEL_AND_MODULES.md section 19.8): each module's jar may ship
  * {@code META-INF/drishti/token-scopes.yaml} ({@code module:}, {@code read-posts:} and {@code scopes:}, the same shapes as
  * {@code drishti.security.token-read-posts} and {@code token-scopes}). While the module is on, its read-only POSTs join the core's and its
  * scopes are offered (a scope the core also names gets the module's patterns added); while it is off, none of them exists. Spring cannot

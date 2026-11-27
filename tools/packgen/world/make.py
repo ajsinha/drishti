@@ -76,9 +76,7 @@ def spec() -> PB.PackSpec:
         # the columns the shipped BI models read (config/bi/datasets/world-economics-economies, region-economics-regions): promoted, so a
         # report reads them as columns instead of opening every document
         layouts={"economy": ["NAME", "ISO3", "REGION_NAME", "INCOME_NAME", "GDP_USD_BN", "GDP_PER_CAPITA", "GROWTH", "INFLATION", "UNEMPLOYMENT", "POPULATION_M"],
-                 "region-economy": ["ISO3", "COUNTRY_NAME", "REGION_CODE", "NAME", "POPULATION", "GDP_USD_BN", "GDP_PER_CAPITA", "YEAR", "SOURCE"]},
-        overview=e.overview + "\n\n" + p.overview + "\n\nA counterparty of the core pack names its country of risk (`COUNTRY_OF_RISK`) and "
-                 "links to that country's economy (`ECONOMY`), so `CPTY CP-NORTHBRIDGE` opens the United States economy in one click.")
+                 "region-economy": ["ISO3", "COUNTRY_NAME", "REGION_CODE", "NAME", "POPULATION", "GDP_USD_BN", "GDP_PER_CAPITA", "YEAR", "SOURCE"]})
 
 
 if __name__ == "__main__":

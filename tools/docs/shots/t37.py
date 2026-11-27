@@ -16,7 +16,7 @@
 to docs/tutorials/img/t37/, in the light theme. Run it on its own: it builds the VaR pictures' scratch lake with the trades of the three
 source systems (as the pivot tutorial, Part A's pictures do) and starts its own scratch server and console:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t37
+    python3 tools/docs/screenshots.py --guide t37
 
 The pictures, in the tutorial's order: the trades by product type with the large-notional share, the playground after Check, the
 function's column in a view, the waterfall of two product types split by counterparty, and the what-if beside the original."""

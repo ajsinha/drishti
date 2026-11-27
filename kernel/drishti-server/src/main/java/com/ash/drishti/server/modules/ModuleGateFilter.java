@@ -36,7 +36,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * The API of a module that is not loaded here answers {@code 404 DRS-1025} in words, and the API of a function that is off (its module off,
  * or switched off by an administrator) {@code 404 DRS-1026}; a function the person may not use answers {@code 403 DRS-1027} (everyone may,
  * until per-person grants in 2.9.11.i). A function that is off only because a data need is unserved answers {@code 409 DRS-1035} with the
- * need (it is here and explains itself; binding the data turns it on). The API of a module (docs/architecture/ACCESS_MODEL.md section 2: "404
+ * need (it is here and explains itself; binding the data turns it on). The API of a module (docs/architecture/KERNEL_AND_MODULES.md section 19.2: "404
  * module not licensed" for a module that is off), never a bare 404 and never 403: nothing is forbidden, the module is not here. The
  * module's prefixes come from its manifest; whether it was loaded is decided at start.
  */

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The banking module's token declarations (docs/architecture/DOMAIN_MODULES.md section 8): read by the core's ModuleTokenScopes while the
+# The banking module's token declarations (docs/architecture/KERNEL_AND_MODULES.md section 19.8): read by the core's ModuleTokenScopes while the
 # module is on, beside drishti.security.token-read-posts and token-scopes (the same shapes). Off, none of them exists: no risk:write
 # among a token's choices, and the read POSTs are the module's API, which answers 404 DRS-1025 anyway.
 module: banking

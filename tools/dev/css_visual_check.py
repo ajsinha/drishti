@@ -20,7 +20,7 @@ theme of drishti_tokens.css, taken from a "before" checkout and an "after" check
 same data, and compared pixel by pixel with a tiny tolerance for anti-aliasing.
 
     # both checkouts, one server, then the comparison (exit 1 when a picture differs)
-    drishti-console/.venv/bin/python tools/dev/css_visual_check.py run --before <base checkout> --after . --out data/tmp/cssvis/out
+    python3 tools/dev/css_visual_check.py run --before <base checkout> --after . --out data/tmp/cssvis/out
 
     # the parts on their own
     ... css_visual_check.py serve                                  # the scratch server alone (Ctrl+C stops it)
@@ -55,8 +55,8 @@ sys.path.insert(0, str(ROOT / "tools" / "lake"))
 import lakeconfig  # noqa: E402  (the demo lake root's variable)
 
 WORK = ROOT / "data" / "tmp" / "cssvis"
-MAIN = Path("/home/ashutosh/IdeaProjects/drishti")
-VENV_PY = Path(os.environ.get("CSSVIS_PYTHON", str(MAIN / "drishti-console" / ".venv" / "bin" / "python")))
+MAIN = Path(os.environ.get("CSSVIS_MAIN", str(ROOT)))   # the checkout whose jar it uses: this one, or CSSVIS_MAIN
+VENV_PY = Path(os.environ.get("CSSVIS_PYTHON", os.environ.get("DRISHTI_PYTHON") or sys.executable))
 _JARS = sorted((MAIN / "lib").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime)
 JAR = Path(os.environ.get("CSSVIS_JAR", str(_JARS[-1] if _JARS else MAIN / "lib" / "drishti-server-exec.jar")))   # the main checkout's <home>/lib
 JAVA = Path(os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64")) / "bin" / "java"
@@ -294,7 +294,7 @@ def compare(before: Path, after: Path, out: Path, delta: int = 2, fraction: floa
     try:
         import numpy as np
         from PIL import Image
-    except ImportError:          # the console's venv has no Pillow: the system Python does the comparison
+    except ImportError:          # this Python has no Pillow: the system Python does the comparison
         if os.environ.get("CSSVIS_NESTED"):
             sys.exit("the comparison needs numpy and Pillow (set CSSVIS_COMPARE_PYTHON to a Python that has both)")
         py = os.environ.get("CSSVIS_COMPARE_PYTHON", "/usr/bin/python3")

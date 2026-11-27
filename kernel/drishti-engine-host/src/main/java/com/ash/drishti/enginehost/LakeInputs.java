@@ -220,7 +220,8 @@ final class LakeInputs implements Inputs {
                 }
                 paths.addAll(rule.fields());
                 paths.addAll(where.fields());
-                Optional<ColumnSet> set = data.columns(kind, paths, date);
+                Optional<ColumnSet> set = bound.onOrBefore() || bound.field() != null
+                        ? data.columns(kind, paths, date, bound.onOrBefore(), bound.field()) : data.columns(kind, paths, date);
                 stamp.append(stamp.length() == 0 ? "" : ";").append(kind).append('=').append(data.stamp(kind, date).orElse(set.isPresent() ? "?" : "absent"));
                 if (set.isPresent()) {
                     sets.add(set.get());

@@ -1,0 +1,164 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The documentation consolidation's intended changes to files that are not Markdown (i7k; the plan DOCS_CONSOLIDATION.md, its decisions
+# D1-D6 and sections 3-4). `python3 tools/docs/moved.py --verify --base <step 0>` accepts a changed line that is a comment, sits in a
+# test, or differs from its removed twin only in the documents it names (the D1 sweep); every other changed line must be in a file
+# listed here, and the report counts the lines per decision. A changed line in no listed file fails the check.
+intended:
+  - decision: D3
+    why: "a pack README is generated whole; its intro moves from tools/packgen/**/*.intro.md into the pack's about.yaml (intro:)"
+    paths: ["config/packs/core/*/config/about.yaml", "modules/*/packs/*/config/about.yaml", "tools/packgen/banking/about/*.yaml",
+            "tools/packgen/world/about.yaml", "tools/packgen/world/intro.yaml", "tools/packgen/funds/intro.yaml", "tools/packgen/funds/fundsglossary.py",
+            "tools/packgen/genomics_showcase/intros.yaml", "tools/realdata/about.py", "tools/packgen/pack_from_jsonl.py",
+            "tools/packgen/common/readme.py", "tools/packgen/readme.py"]
+  - decision: READMES
+    why: "plan section 4.1: the module READMEs and the connector template READMEs are generated whole from their own YAML"
+    paths: ["modules/*/docs/about.yaml", "tools/packgen/module_readme.py", "tools/connector_readmes.py", "tools/connector_readmes/*.yaml"]
+  - decision: D4
+    why: "the example packs keep their YAML but carry no guide (their Help entry goes); set-up makes the data folders the placeholders kept"
+    paths: ["examples/packs/*/config/help.yaml", "tools/launch/envsetup.py", "examples/packs/*/config/about.yaml", "tools/packgen/climate/about.yaml",
+            "tools/packgen/genomics/about.yaml", "tools/packgen/liquidity/about.yaml", "tools/packgen/oprisk/about.yaml", "tools/packgen/retail/about.yaml"]
+  - decision: D5
+    why: "the gallery reads its sections of the examples README; Help > Developer reads a section of API_REFERENCE.md; Help redirects a merged page (help.yaml moved:)"
+    paths: ["drishti-console/core/examples.py", "drishti-console/core/guides.py", "drishti-console/routes/help_routes.py",
+            "drishti-console/web/templates/help/_developer.html", "drishti-console/config/help.yaml", "tools/settings_schemas.yaml",
+            "drishti-console/plugins/banking/templates/home/market_landing.html"]
+  - decision: HELP
+    why: "plan section 3.4: a module's Help, its docs.guides and the content its package copies name the feature guides that absorbed its pack and module guides"
+    paths: ["modules/*/docs/help.yaml", "modules/*/module.yaml", "modules/*/content.yaml"]
+  - decision: PACK_GUIDES
+    why: "plan section 2, rows 9, 65-72: a pack has no guide; its facts are its README (with the generated Data contracts and Data retrieval) and contracts, its story a feature guide's section; the generators stop writing guides, Ask reads the README"
+    paths: ["tools/packgen/banking/make_docs.py", "tools/packgen/gleif/make.py", "tools/packgen/us_equities/make.py", "tools/packgen/funds/make.py",
+            "tools/packgen/genomics_showcase/files.py", "tools/packgen/genomics_showcase/make.py", "tools/packgen/common/guide_data.py",
+            "tools/packgen/common/packbuild.py", "tools/packgen/publicsector/make.py", "tools/testdata/publicsnap.py",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/explain/PackGuides.java"]
+  - decision: GENERATED
+    why: "plan section 4: one example per kind on the contract pages (docs/contracts/samples deleted), one CSV_FORMATS page for the loader pages, the guides' data sections, the three kept PDFs"
+    paths: ["tools/contracts.py", "tools/testdata/sample_docs.py", "tools/mrloader/kind_docs.py", "tools/docs/guide_data.py", "tools/docs/md_to_pdf.py"]
+  - decision: POSITIONING
+    why: "owner 2026-11-24: Drishti is a platform for any domain, banking one module; the About page says so"
+    paths: ["drishti-console/web/templates/help/about.html"]
+  - decision: GATE_FIXES
+    why: "the Fable gate's fixes: the about parser accepts intro: (the pack README's text); a generated Help address for each merged pack guide (tools/docs/generate.py runs it)"
+    paths: ["compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/about/AboutParser.java", "tools/docs/generate.py"]
+  - decision: PACK_HELP
+    why: "a shipped pack has no help.yaml since i7k: console.help goes from its pack.yaml (the generators write it only for an example pack) and the unused PackSpec.overview field goes"
+    paths: ["config/packs/*/*/pack.yaml", "modules/*/packs/*/pack.yaml", "tools/packgen/*/make.py", "tools/packgen/banking/make_packs.py",
+            "tools/packgen/genomics_showcase/files.py"]
+  - decision: I7M
+    why: "i7m: the Help slugs of the five planned contracts that moved to docs/plans/contracts (under-construction registry)"
+    paths: ["config/under-construction.yaml"]
+  - decision: I7N_B
+    why: "i7n lane B: the anchor and renumbering tool (renumber.py), the contract link of the command catalogue follows docs/plans/contracts, and the Help address of the Flight and embed guides is the integration guide (config, the Data out page link, the engine catalogue)"
+    paths: ["tools/docs/renumber.py", "tools/command_catalog.py", "config/docs-features.yaml", "drishti-console/web/templates/admin/data_out.html",
+            "kernel/drishti-server/src/main/resources/engines/catalogue.yaml"]
+  - decision: I7N
+    why: "i7n lane A: the new documentation tools (the BI navigation strip, the Markdown link repair after a merge); a citation of a guide's numbered section names the merged section by its title"
+    paths: ["tools/docs/bi_nav.py", "tools/settings_catalogue.py", "drishti-console/web/templates/admin/feeds.html", "tools/docs/relink_md.py", "tools/docs/guide_settings.py", "tools/docs/guide_settings.yaml", "tools/knowledge.py", "tools/docs/generate.py", "drishti-console/core/backend.py", "drishti-console/core/live_results.py",
+            "drishti-console/web/templates/terminal/_live_attrs.html", "kernel/drishti-server/src/main/resources/application.yaml"]
+  - decision: I7N_GATE
+    why: "i7n Fable gate: the write-back citation in a message and a setting's meaning names ADMIN_GUIDE section 28.4 (Writing to a source), where the merged approvals text now lives"
+    paths: ["kernel/drishti-packs/src/main/java/com/ash/drishti/packs/ConnectorFiles.java", "tools/settings_schemas.yaml",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/connectors/ConnectorManager.java"]
+  - decision: I7N_DATAMAP
+    why: "i7n: the data map's link to a pack's guide follows help.yaml moved: when the pack guide merged into a feature guide (the pack guides went in i7k; the link had gone quiet)"
+    paths: ["drishti-console/core/datamap.py"]
+  - decision: I7N_L
+    why: "i7n leftovers: the Help addresses of the data map and Export data follow the command line to CLI_REFERENCE (section 20), and a command's module docstring names ADMIN_GUIDE section 28 and the User guide's Submitting a change"
+    paths: ["drishti-console/web/templates/terminal/data.html", "drishti-console/web/templates/terminal/datamap.html", "tools/changecli.py", "drishti-console/routes/embed_v2_routes.py"]
+  - decision: I8
+    why: "i8 (paused, caught up with main at i7n): the engine API, host and seam, the lifecycle, the role Homes and the R2 cut code; its Sutras carry the Home links and the doc fields"
+    paths: ["compute/drishti-rachana/*",
+            "compute/drishti-rachana/src/main/java/com/ash/drishti/rachana/*",
+            "config/engines/*",
+            "config/homes/banking/*",
+            "config/homes/economy/*",
+            "config/packs/core/compute-demo/sutras/*",
+            "config/packs/core/core/sutras/collateral-and-margin/*",
+            "config/packs/core/core/sutras/counterparty-and-legal/*",
+            "config/packs/core/core/sutras/market-data/*",
+            "config/packs/core/core/sutras/organisation/*",
+            "config/packs/core/gleif/sutras/*",
+            "drishti-console/core/*",
+            "drishti-console/routes/*",
+            "drishti-console/web/static/js/*",
+            "drishti-console/web/static/js/build/*",
+            "drishti-console/web/templates/*",
+            "drishti-console/web/templates/admin/*",
+            "engines/changes/*",
+            "engines/changes/src/main/java/com/ash/drishti/engines/changes/*",
+            "engines/changes/src/main/resources/META-INF/drishti-engine/*",
+            "engines/changes/tck/cases/changes/*",
+            "examples/packs/finance/sutras/books/*",
+            "examples/packs/finance/sutras/commodities/*",
+            "examples/packs/finance/sutras/credit/*",
+            "examples/packs/finance/sutras/fx/*",
+            "examples/packs/finance/sutras/rates/*",
+            "examples/packs/genomics/sutras/genomics-and-biology/*",
+            "examples/packs/logistics/sutras/*",
+            "examples/packs/retail-banking/sutras/retail-banking/*",
+            "kernel/drishti-api/src/main/java/com/ash/drishti/api/*",
+            "kernel/drishti-api/src/main/java/com/ash/drishti/api/error/*",
+            "kernel/drishti-api/src/main/java/com/ash/drishti/api/lifecycle/*",
+            "kernel/drishti-common/src/main/java/com/ash/drishti/common/*",
+            "kernel/drishti-engine-host/*",
+            "kernel/drishti-engine-host/src/main/java/com/ash/drishti/enginehost/*",
+            "kernel/drishti-engine-host/src/main/resources/*",
+            "kernel/drishti-engine/src/main/java/com/ash/drishti/engine/source/*",
+            "kernel/drishti-kernel-api/src/main/java/com/ash/drishti/kernel/api/home/*",
+            "kernel/drishti-kernel-api/src/main/java/com/ash/drishti/kernel/api/services/*",
+            "kernel/drishti-module-runtime/src/main/java/com/ash/drishti/module/runtime/*",
+            "kernel/drishti-packs/src/main/java/com/ash/drishti/packs/*",
+            "kernel/drishti-server/*",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/*",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/api/*",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/compute/*",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/enginehost/*",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/engines/*",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/home/*",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/kernelapi/*",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/lifecycle/*",
+            "kernel/drishti-server/src/main/java/com/ash/drishti/server/security/*",
+            "modules/banking/java/banking-compute/src/main/java/com/ash/drishti/banking/compute/var/*",
+            "modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/*",
+            "modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/exposure/*",
+            "modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/var/*",
+            "modules/banking/java/banking-service/src/main/resources/engines/*",
+            "modules/banking/packs/trading/sutras/calypso/*",
+            "modules/banking/packs/trading/sutras/endur/*",
+            "modules/banking/packs/trading/sutras/murex/*",
+            "modules/banking/packs/trading/sutras/pages/*",
+            "modules/capital-markets/packs/funds/sutras/*",
+            "modules/capital-markets/packs/us-equities/sutras/*",
+            "modules/economy/packs/central-banks/sutras/*",
+            "modules/economy/packs/gdelt-events/sutras/*",
+            "modules/economy/packs/national-statistics/sutras/*",
+            "modules/economy/packs/news-and-markets/sutras/*",
+            "modules/economy/packs/oecd/sutras/*",
+            "modules/economy/packs/official-news/sutras/*",
+            "modules/economy/packs/world-development/sutras/*",
+            "modules/economy/packs/world-economy/sutras/economics/*",
+            "modules/economy/packs/world-economy/sutras/politics-and-society/*",
+            "modules/genomics/packs/genomics-showcase/sutras/*",
+            "modules/genomics/packs/protein-engineering/sutras/*",
+            "modules/market-data/packs/market-data/sutras/market-data/*",
+            "plugins/drishti-plugin-kafka/src/main/java/com/ash/drishti/plugin/kafka/*",
+            "pom.xml",
+            "testing/drishti-modules-it/*",
+            "tools/*",
+            "tools/drillkit/*",
+            "tools/drillkit/dropin/*",
+            "tools/packgen/banking/*",
+            "tools/packgen/common/*"]

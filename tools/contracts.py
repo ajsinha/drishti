@@ -37,9 +37,21 @@ import sys
 from collections import Counter, OrderedDict
 from pathlib import Path
 
-import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _rel_to_contracts(path: str) -> str:
+    """A replaced-by path as the README index (in docs/contracts) names it."""
+    return path.removeprefix("docs/contracts/").replace("docs/plans/contracts/", "../plans/contracts/")
+
+
+def contract_path(name: str) -> str:
+    """The repository path a name in tools/contracts.policy.yaml (relative to docs/contracts) points at: a built contract stays in
+    docs/contracts, one not built yet lives in docs/plans/contracts (NSET.md, TVAL.md ...); a name found in neither is read as built."""
+    if not (ROOT / "docs" / "contracts" / name).is_file() and (ROOT / "docs" / "plans" / "contracts" / name).is_file():
+        return "docs/plans/contracts/" + name
+    return "docs/contracts/" + name
 PACKS = ROOT / "config" / "packs"
 TESTDATA = ROOT / "data" / "testdata"
 POLICY = ROOT / "tools" / "contracts.policy.yaml"
@@ -73,12 +85,20 @@ NUMBER = {"integer", "amount", "rate"}
 
 # -- the packs ----------------------------------------------------------------------------------------------------------------
 
-_LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+def _yaml_mod():
+    """PyYAML, imported when a contract is read or written (``drishti.py setup`` runs on a Python that has not got it yet)."""
+    import yaml
+    return yaml
+
+
+def _loader():
+    y = _yaml_mod()
+    return getattr(y, "CSafeLoader", y.SafeLoader)
 
 
 @functools.lru_cache(maxsize=256)
 def _parsed(path: str, mtime: int):
-    return yaml.load(Path(path).read_text(encoding="utf-8"), Loader=_LOADER)
+    return _yaml_mod().load(Path(path).read_text(encoding="utf-8"), Loader=_loader())
 
 
 def _yaml(path: Path):
@@ -502,8 +522,7 @@ class Draft:
             if d.get("source"):
                 return f"public data: {d['source']}"
         metas = Counter(str((d.get("_meta") or {}).get("source")) for d in self.samples + self.tdocs if (d.get("_meta") or {}).get("source"))
-        intro = R.find_intro(self.pack)
-        isrc = ((R.split(intro.read_text(encoding="utf-8"))[0] or {}).get("sources") or []) if intro else []
+        isrc = R.split_intro(self.about)[0].get("sources") or []
         public = bool(isrc) and all("proprietary" not in str(s.get("licence", "")).lower() for s in isrc)
         named = [s for s in isrc if re.search(rf"(^|[\s,]){re.escape(self.kind)}([\s,]|$)", str(s.get("used-for", "")))]
         if metas:
@@ -765,7 +784,7 @@ class Draft:
                          ("class", klass), ("status", "retiring" if self.retiring else "active")])
         if self.retiring:
             c["retiring-in"] = str(self.retiring["release"])
-            c["replaced-by"] = "docs/contracts/" + self.retiring["contract"]
+            c["replaced-by"] = contract_path(self.retiring["contract"])
         c["title"] = title
         c["description"] = description
         c["source"] = source
@@ -792,11 +811,11 @@ class Draft:
         c["validation"] = self.rules(top, nested, key, dated)
         notes = list(self.notes) + list((self.pol.get("notes") or {}).get(self.kind) or [])
         if self.split:
-            notes.append(f"Terms kept, figures computed from {self.split['release']} ({'docs/contracts/' + self.split['contract']}): the "
+            notes.append(f"Terms kept, figures computed from {self.split['release']} ({contract_path(self.split['contract'])}): the "
                          f"fields marked derived are computed by {self.split['measure']} and leave the stored record then.")
         if self.retiring:
             notes.append(f"Retiring in {self.retiring['release']}: the stored kind is removed and computed instead by "
-                         f"{self.retiring['measure']} (docs/contracts/{self.retiring['contract']}); old ids and links open the computed page.")
+                         f"{self.retiring['measure']} ({contract_path(self.retiring['contract'])}); old ids and links open the computed page.")
         c["notes"] = notes
         c["review"] = self.review_points()
         return c
@@ -852,17 +871,19 @@ def header() -> str:
     return "".join(f"# {line}".rstrip() + "\n" for line in text) + "\n"
 
 
-class _Dumper(yaml.SafeDumper):
-    pass
+@functools.lru_cache(maxsize=1)
+def _dumper():
+    class _Dumper(_yaml_mod().SafeDumper):
+        pass
 
-
-_Dumper.add_representer(OrderedDict, lambda d, data: d.represent_dict(data.items()))
-_Dumper.ignore_aliases = lambda self, data: True          # a list used twice (the key) is written twice, not as an anchor
+    _Dumper.add_representer(OrderedDict, lambda d, data: d.represent_dict(data.items()))
+    _Dumper.ignore_aliases = lambda self, data: True      # a list used twice (the key) is written twice, not as an anchor
+    return _Dumper
 
 
 def dump(contract: dict) -> str:
     """A contract as its YAML file: the licence, a line on what the file is, the contract."""
-    body = yaml.dump(contract, Dumper=_Dumper, sort_keys=False, allow_unicode=True, width=140, default_flow_style=False)
+    body = _yaml_mod().dump(contract, Dumper=_dumper(), sort_keys=False, allow_unicode=True, width=140, default_flow_style=False)
     return (header() + f"# Data contract of the {contract['kind']} kind (command {contract['mnemonic']}): docs/contracts/README.md section 16.\n"
             f"# Drafted by `drishti.py contract bootstrap {contract['kind']}`; owned by people from then on: confirm the review points, then remove them.\n"
             + body)
@@ -966,8 +987,8 @@ def check(packs_dir: Path = PACKS, testdata: Path = TESTDATA, data: bool = True)
                 probs.append(f"{k} is '{c.get(k)}', the pack says '{want}'")
         ret = (pol.get("retiring") or {}).get(cmd["kind"])
         if ret and (c.get("status") != "retiring" or c.get("retiring-in") != str(ret["release"])
-                    or c.get("replaced-by") != "docs/contracts/" + ret["contract"]):
-            probs.append(f"retiring in {ret['release']} (tools/contracts.policy.yaml) replaced by docs/contracts/{ret['contract']}: "
+                    or c.get("replaced-by") != contract_path(ret["contract"])):
+            probs.append(f"retiring in {ret['release']} (tools/contracts.policy.yaml) replaced by {contract_path(ret['contract'])}: "
                          f"status, retiring-in or replaced-by differ")
         if not ret and c.get("status") == "retiring":
             probs.append("status retiring, but tools/contracts.policy.yaml retires nothing of this kind")
@@ -1034,9 +1055,24 @@ def _v(x) -> str:
     return str(x)
 
 
+def example_anchor(name: str) -> str:
+    """The anchor of a data type's example on its pack's page: example-<folder with / as ->, for a link from a guide."""
+    return "example-" + name.replace("/", "-")
+
+
+@functools.lru_cache(maxsize=1)
+def EXAMPLES() -> dict:
+    """data type name -> {pack, kind, record, source} (tools/testdata/sample_docs.py examples())."""
+    spec = importlib.util.spec_from_file_location("drishti_sample_examples", ROOT / "tools" / "testdata" / "sample_docs.py")
+    m = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = m
+    spec.loader.exec_module(m)
+    return m.examples()
+
+
 def sample_pages(c: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) -> list[str]:
-    """The data-sample pages of a contract's kind (sections of docs/contracts/samples/<domain>.md, written by tools/testdata/sample_docs.py): one per
-    test-data folder of the kind, else one from the pack's samples for a kind a bank or a public source produces."""
+    """The data types of a contract's kind (an example each on its pack's page): one per test-data folder of the kind, else one from the
+    pack's samples for a kind a bank or a public source produces."""
     folders = [d["folder"] for d in testdata_sets(c["pack"], c["kind"], testdata) if d.get("folder")]
     if folders:
         return folders
@@ -1081,10 +1117,6 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
         rows.append(["Partitioned by", _v(st["partition"])])
     if st.get("test-data"):
         rows.append(["Test data", ", ".join(st["test-data"])])
-    worked = sample_pages(c)
-    if worked:
-        rows.append(["Worked example", " · ".join(f"[{name}](../samples/{name.split('/', 1)[0]}.md#{name.split('/', 1)[1]})" for name in worked)
-                     + " (a real record, every field explained, for the production query; tools/testdata/sample_docs.py)"])
     out += R._table(["", ""], rows)
 
     def ftable(fs: list[dict]) -> list[str]:
@@ -1110,6 +1142,13 @@ def _contract_md(c: dict, f: Path, pack_dir_rel: str) -> list[str]:
         out += ["**Notes**", ""] + [f"- {n}" for n in c["notes"]] + [""]
     if c.get("review"):
         out += [f"**To review ({len(c['review'])})**", ""] + [f"- {n}" for n in c["review"]] + [""]
+    for name in sample_pages(c):
+        e = EXAMPLES().get(name)
+        if e:
+            out += [f'<a id="{example_anchor(name)}"></a>', f"**Example: `{e['source']}`**", "",
+                    "A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string "
+                    "such as `\"… 506 more numbers\"` inside an array marks a fold: it stands for the elements left out and is not part of the data.",
+                    "", "```json", json.dumps(e["record"], indent=2, ensure_ascii=False), "```", ""]
     return out
 
 
@@ -1124,9 +1163,9 @@ def render_pack(pack: str, items: list[tuple[dict, Path, dict | None]], plans: l
     out = _md_header() + [f"# Data contracts of the {pack} pack", "",
                           f"One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still "
                           f"has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every "
-                          f"command is [packs/README.md](README.md). The pack's guide, "
-                          f"[{where}/guides/{pack}.md](../../../{where}/guides/{pack}.md), links each kind here and to "
-                          f"its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes "
+                          f"command is [packs/README.md](README.md). The pack's README, "
+                          f"[{where}/README.md](../../../{where}/README.md), links each kind here and to "
+                          f"its example (tools/packgen/common/guide_data.py) next to where each kind's data comes "
                           f"from (*Data retrieval*).", ""]
     out += R._table(["Command", "Kind", "Class", "Status", "Fields", "To review"], [[
         f"[{c['mnemonic']}](#{_anchor(c)})", f"`{c['kind']}`", c["class"], _status(c), str(len(c.get('fields') or [])), str(len(c.get('review') or []))]
@@ -1167,7 +1206,7 @@ def render_index(all_items: list[tuple[dict, Path, dict | None]], plans: list[tu
             rows.append([f"`{cmd['code']}`", f"`{cmd['kind']}`", cmd["pack"], "—", "no contract", "", ""])
             continue
         rows.append([f"`{c['mnemonic']}`", f"`{c['kind']}`", f"[{c['pack']}]({c['pack']}.md#{_anchor(c)})", c["class"], _status(c),
-                     c.get("replaced-by", "").replace("docs/contracts/", "") or "", str(len(c.get("review") or []))])
+                     _rel_to_contracts(c.get("replaced-by", "")), str(len(c.get("review") or []))])
     for f, c in plans:
         rows.append([f"`{c['mnemonic']}` (proposed)", f"`{c['kind']}`", f"[{c['pack']}]({c['pack']}.md#{_anchor(c)})", c["class"],
                      _status(c), "", str(len(c.get("review") or []))])

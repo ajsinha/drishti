@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Chart any table, the source adapters (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 8.4): what each kind of table hands the chart
+/* Chart any table, the source adapters (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 5.8.4): what each kind of table hands the chart
    dialog (drishti_table-chart.js), which never looks at a table's DOM itself. Every adapter answers the same small interface:
    {identity, title, context, filters, shown, total, approximate, rows() -> Promise<{fields, rows}>, all(settings) -> Promise|null}.
    - records: a Sutra table whose panel offers Pivot: the shown cells, and every row of the panel aggregated by the pivot engine

@@ -100,4 +100,4 @@ Set `DRISHTI_DUCKDB_PATH` when the file is elsewhere. `trading-store.yaml` is a 
 ## See also
 
 - The [duckdb connector README](../../../plugins/drishti-plugin-duckdb/README.md).
-- [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (copying examples, the trade union note) and [Demo data](../../../docs/guides/DATA_GUIDE.md#11-the-demo-data).
+- [Connector files](../../../docs/guides/DATA_GUIDE.md#9-connector-files-and-admin--connectors) (copying examples, the trade union note) and [Demo data](../../../docs/guides/BANK_DATA_GUIDE.md#9-the-demo-data).

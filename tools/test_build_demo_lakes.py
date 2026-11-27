@@ -195,7 +195,7 @@ def test_a_python_without_deltalake_is_told_which_python_to_use(tmp_path):
     (stub / "deltalake.py").write_text("raise ImportError('no deltalake here', name='deltalake')\n")
     env = {**os.environ, "PYTHONPATH": str(stub)}
     r = subprocess.run([sys.executable, str(SCRIPT), "--dry-run"], capture_output=True, text=True, env=env)
-    assert r.returncode != 0 and "lacks deltalake" in r.stderr and ".venv" in r.stderr
+    assert r.returncode != 0 and "lacks deltalake" in r.stderr and "tools/drishti.py setup" in r.stderr
 
 
 def test_store_puts_a_system_in_iceberg_and_says_where_each_system_is(tmp_path):

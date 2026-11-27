@@ -26,7 +26,7 @@
   </parent>
   <artifactId>drishti-banking</artifactId>
   <name>drishti-banking</name>
-  <description>The banking domain's services (docs/architecture/DOMAIN_MODULES.md): VaR and ES with regulatory VaR, exposure and CCR, FRTB-SA,
+  <description>The banking domain's services (docs/architecture/KERNEL_AND_MODULES.md): VaR and ES with regulatory VaR, exposure and CCR, FRTB-SA,
     ISDA SIMM, sensitivities, the MR cube and the official risk results; their storage, engine switches and Spring wiring, and their API under
     /api/v1/risk (the old paths answered for one release). A module: its manifest (META-INF/drishti/module.yaml) declares what it brings, and
     its auto-configuration loads only while the access registry says it is on (installed, licensed, enabled)</description>

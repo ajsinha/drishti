@@ -22,6 +22,8 @@ trim:
   - tests
   - tools
 copy:
+- from: ../../docs/guides/BANK_DATA_GUIDE.md
+  to: guides/BANK_DATA_GUIDE.md
 - from: ../../config/lenses/banking/market.yaml
   to: lenses/market.yaml
 - from: ../../docs/guides/bi/GROUPINGS_AND_ANALYTICS.md

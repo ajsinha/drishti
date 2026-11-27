@@ -16,7 +16,7 @@
 docs/tutorials/img/t43/. Run it on its own: it builds the VaR pictures' scratch lake from the committed test data (2026-09-30, the
 tutorial's date) and starts its own scratch server and console (tools/docs/shots/_var.py):
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t43
+    python3 tools/docs/screenshots.py --guide t43
 
 The pictures, in the tutorial's order: VAR BANK with Parametric on, the rates desk's ? on the Parametric VaR tile, its P&L histogram with
 the fitted normal, the MR cube with var() and pvar() by desk, and the VaR Playground's Parametric tab."""

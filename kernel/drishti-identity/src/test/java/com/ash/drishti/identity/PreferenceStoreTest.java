@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.ash.drishti.api.error.DrishtiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -47,5 +48,41 @@ class PreferenceStoreTest {
         assertThat(new FilePreferenceStore(dir, 200, 2).keys("ash", "workspaces")).containsExactly("Credit desk");
         s.forget("tina");
         assertThat(s.keys("tina", "workspaces")).isEmpty();
+    }
+
+    /**
+     * A write replaces the user's file while others read it: never refused. On Windows a file opened by java.io (Jackson's read of a
+     * File) shares no delete, so the replace was refused (AccessDeniedException) while a reader had it open; reads go through NIO now.
+     */
+    @Test
+    void aWriteReplacesTheFileWhileOthersReadIt() throws Exception {
+        PreferenceStore s = new FilePreferenceStore(dir, 100_000, 100);
+        s.put("ash", "alerts", "a", json.readTree("{\"n\":0}"));
+        java.util.concurrent.atomic.AtomicBoolean stop = new java.util.concurrent.atomic.AtomicBoolean();
+        java.util.concurrent.atomic.AtomicReference<Throwable> failed = new java.util.concurrent.atomic.AtomicReference<>();
+        List<Thread> readers = new java.util.ArrayList<>();
+        for (int r = 0; r < 4; r++) {
+            readers.add(Thread.ofPlatform().start(() -> {
+                while (!stop.get()) {
+                    try {
+                        s.get("ash", "alerts", "a");
+                    } catch (Throwable t) {
+                        failed.compareAndSet(null, t);
+                    }
+                }
+            }));
+        }
+        try {
+            for (int i = 1; i <= 300; i++) {
+                s.put("ash", "alerts", "a", json.readTree("{\"n\":" + i + "}"));
+            }
+        } finally {
+            stop.set(true);
+            for (Thread t : readers) {
+                t.join();
+            }
+        }
+        assertThat(failed.get()).isNull();
+        assertThat(s.get("ash", "alerts", "a").orElseThrow().path("n").asInt()).isEqualTo(300);
     }
 }

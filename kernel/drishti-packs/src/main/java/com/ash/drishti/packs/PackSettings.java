@@ -24,7 +24,6 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -89,7 +88,7 @@ public final class PackSettings {
             return Map.of();
         }
         try {
-            Map<String, Object> m = yaml.readValue(f.toFile(), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> m = yaml.readValue(java.nio.file.Files.readAllBytes(f), new TypeReference<Map<String, Object>>() {});
             return m == null ? Map.of() : m;
         } catch (IOException e) {
             throw new UncheckedIOException("cannot read " + f, e);
@@ -127,7 +126,7 @@ public final class PackSettings {
             Files.createDirectories(dir);
             Path tmp = com.ash.drishti.common.TempFiles.createFile(dir, pack + "-", ".tmp");
             Files.writeString(tmp, text, StandardCharsets.UTF_8);
-            Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(tmp, f);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

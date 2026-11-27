@@ -111,7 +111,7 @@ async def go(request: Request, q: str = ""):
     ed = getattr(request.state, "edition", None) or request.app.state.editions.instance
     head = typed.split(None, 1)[0].upper() if typed else ""
     if (gone := _modules.typed_refusal(typed)) is not None:        # a function whose module is off, switched off or not the person's
-        return RedirectResponse(f"/t?error={quote(gone)}", status_code=303)   # (ACCESS_MODEL.md): "VRES is not available to you: ..."
+        return RedirectResponse(f"/t?error={quote(gone)}", status_code=303)   # (KERNEL_AND_MODULES.md): "VRES is not available to you: ..."
     if (hosted := request.app.state.module_parts.word(head)) is not None and hosted[1].page and _modules.module_on(hosted[0].id):
         part, route = hosted                                       # a hosted module's composed page (KERNEL_AND_MODULES.md 9.10): its route
         names = re.findall(r"{(\w+)}", route.path)
@@ -407,7 +407,7 @@ async def my_arrangement(request: Request, sutra: str):
 async def about(request: Request, kind: str, id_: str, generation: int = 0, format: str = ""):  # noqa: A002 - the query parameter's name
     """The body of the About this page drawer (an HTML fragment), asked for when the drawer first opens, never with the view.
     ``?format=json``: the explanation itself, ``{explain, index}`` (or ``{error: {code, detail}}``), for the pages the client-side renderer
-    draws: it draws the body from it (EMBED_GUIDE.md section 12)."""
+    draws: it draws the body from it (INTEGRATION_GUIDE.md section 1.6.3)."""
     me = ident(request)
     extra = {}                                       # the language of the pack's text: ?locale=, else the user's setting, else the browser's
     loc = request.query_params.get("locale") or (await request.app.state.user_settings.get(request.app.state.backend, me)).get("locale")
@@ -446,7 +446,7 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     shown = layout["panels"]
     env = request.app.state.templates.env
     parts = env.get_template("_macros/view.html").module
-    # each panel as HTML (the macros, the page's) and as its JSON (what an embed's renderer draws: EMBED_GUIDE.md)
+    # each panel as HTML (the macros, the page's) and as its JSON (what an embed's renderer draws: INTEGRATION_GUIDE.md)
     out = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": api_routes._panel_html(request, p, ref={"kind": kind, "id": id_}), "panel": p,
             **({"provenance": p["provenance"]} if p.get("provenance") else {})} for p in shown]   # a panel's own source: its freshness (RACHANA_REFERENCE.md 9)
     prov = vm.get("provenance") or {}

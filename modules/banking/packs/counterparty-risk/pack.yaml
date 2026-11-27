@@ -654,7 +654,6 @@ console:
     - Exposure profile of a netting set · EE, PFE 95 and 99, EPE, EEPE computed from the paths
   - - EXP CPTY:CP-ALDERSHOT
     - A counterparty's exposure · its four netting sets summed path by path (PFE is not a sum of PFEs)
-  help: config/help.yaml
 python:
   enabled: true
 roles:

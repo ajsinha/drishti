@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The counterparty groups (ultimate parents) (docs/plans/CSV_LOADERS.md section 3.2): the canonical CSV. A group's members are the
+# The counterparty groups (ultimate parents) (docs/guides/BANK_DATA_GUIDE.md section 3.2): the canonical CSV. A group's members are the
 # counterparties that name it (their GROUP); its use of the limit is computed by the exposure engine.
 format: 1
 kind: counterparty-group

@@ -187,7 +187,6 @@ console:
     - 'One patient: the clinical tracks, the response and the cluster'
   - - VCALL CALL-000001
     - 'One call: sample, variant, genotype, allele fraction and depth'
-  help: config/help.yaml
 columns:
   study-gene:
   - GENE

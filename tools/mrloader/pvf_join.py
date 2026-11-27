@@ -22,7 +22,7 @@ examples (from the repository root):
   python3 tools/mrloader/pvf_join.py ... --limit-positions 2000          a quick trial on the first 2,000 positions
   python3 tools/mrloader/pvf_join.py ... --dry-run                       check the inputs and say what would be written; write nothing
 
-the rules (tools/mrloader/README.md, "The join rules"):
+the rules (docs/guides/BANK_DATA_GUIDE.md, "The join rules"):
   * the per-path file is read lazily (Polars scan_csv, streaming engine): only POSITION_ID, PATH_NUM, VAL and the filter columns, rows
     of the business date (VALID_DT), --risk-metric, --dataset and --shock-group only; it is never held whole in memory;
   * BASE_PV is the value of path -1; PATH_PV holds paths 0..--max-path (251 values by default). A missing path is filled by

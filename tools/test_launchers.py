@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The launcher guards of docs/plans/LAUNCHER_REVIEW.md section 5: the committed launchers are what tools/launch/launchers.yaml generates
+"""The launcher guards of docs/guides/IDE_GUIDE.md section 5: the committed launchers are what tools/launch/launchers.yaml generates
 (G1), carry only what has no config home (G2), start the server the terminal starts (G6), and name their paths so that a moved data
 folder and a user folder with a space work (G7). Quick file checks: the drill's gate runs them; G6 starts nothing."""
 from __future__ import annotations
@@ -38,7 +38,7 @@ import procs  # noqa: E402
 import serverstart  # noqa: E402
 import settingsfile  # noqa: E402
 
-LAUNCHERS = sorted((ROOT / "run-configs").glob("*.run.xml"))
+LAUNCHERS = sorted((ROOT / launchers.FOLDERS["intellij"]).glob("*.run.xml")) + sorted((ROOT / launchers.FOLDERS["pycharm"]).glob("*.run.xml"))
 
 
 def conf(f: Path) -> ET.Element:
@@ -46,9 +46,19 @@ def conf(f: Path) -> ET.Element:
 
 
 def test_g1_the_committed_launchers_are_what_the_table_generates():
-    """Any hand edit of a .run.xml or of IDE_GUIDE section 4 fails here: change tools/launch/launchers.yaml, then
+    """Any hand edit of a launcher file or of IDE_GUIDE section 4 fails here: change tools/launch/launchers.yaml, then
     python tools/drishti.py launchers."""
     assert launchers.check(ROOT) == []
+
+
+def test_every_folder_of_the_owner_holds_a_launcher_and_the_tests_are_in_3_test():
+    """i7g gate F4: the owner's folders IntelliJ-drishti-build/-run/-test and PyCharm-console-setup/-data/-run/-check each hold a launcher; Drishti: test
+    is in IntelliJ-drishti-test."""
+    doc = launchers.table(ROOT)
+    for ide, groups in launchers.GROUPS.items():
+        used = {row["group"] for row in doc[ide]}
+        assert used == set(groups), f"{ide}: empty folders {set(groups) - used}"
+    assert {row["name"]: row["group"] for row in doc["intellij"]}["Drishti: test"] == "IntelliJ-drishti-test"
 
 
 # G2: what a launcher may carry. Everything else with a config home lives in a profile (config/profiles/*.ini).
@@ -109,6 +119,8 @@ def test_g6_start_server_demo_and_the_demo_launcher_start_the_same_server(tmp_pa
     monkeypatch.setattr(serverstart, "find_jar", lambda given, home: ROOT / "lib" / "drishti-server-exec.jar")
     monkeypatch.setattr(serverstart, "check_modules", lambda a, m, j: "modules: test")
     monkeypatch.setattr(procs, "port_in_use", lambda p: False)
+    (data / "run").mkdir(parents=True)                                   # setup made the data folder (start makes no root)
+    monkeypatch.setattr(serverstart, "demo_lake_ready", lambda *a, **k: None)
     monkeypatch.setattr(procs, "spawn", lambda cmd, cwd, env, **k: seen.update(cmd=cmd, env=env) or Proc())
     monkeypatch.setattr(procs, "write_pid", lambda *a, **k: None)
     monkeypatch.setattr(procs, "run_foreground", lambda proc, pid_file, up: 0)
@@ -142,8 +154,10 @@ def test_g7_paths_follow_the_data_folder_and_are_quoted():
         o = {x.get("name"): x.get("value") or "" for x in c.findall("option")}
         text = ET.tostring(c, encoding="unicode")
         if c.get("type") == "PythonConfigurationType":
-            assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$", f.name           # the one project: the repository root
-            assert "$PROJECT_DIR$/.." not in text, f"{f.name}: $PROJECT_DIR$ is the repository root"
+            assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$/..", f.name        # PyCharm's project is drishti-console: the root is its parent
+            assert f.parent == ROOT / "drishti-console" / "run-configs", f"{f.name}: a Python launcher is PyCharm's (drishti-console/run-configs)"
+        else:
+            assert f.parent == ROOT / "run-configs", f"{f.name}: a Java launcher is IntelliJ's (run-configs)"
         if c.get("type") == "JarApplication":
             assert o.get("WORKING_DIRECTORY") == "$PROJECT_DIR$", f.name
         for value in (o.get("VM_PARAMETERS", ""), o.get("PARAMETERS", "")):
@@ -153,8 +167,8 @@ def test_g7_paths_follow_the_data_folder_and_are_quoted():
 
 
 def test_the_argv_helper_turns_a_python_launcher_into_its_command_line(tmp_path):
-    cmd, env = launchers.argv(ROOT / "run-configs" / "Drishti run console (QA, port 17580).run.xml", ROOT, tmp_path)
-    assert cmd[1] == f"{ROOT.as_posix()}/drishti-console/run_drishti_web.py"
+    cmd, env = launchers.argv(ROOT / "drishti-console" / "run-configs" / "Drishti run console (QA, port 17580).run.xml", ROOT, tmp_path)
+    assert Path(cmd[1]).resolve() == (ROOT / "drishti-console" / "run_drishti_web.py").resolve()
     assert cmd[2:] == ["--settings", f"{tmp_path.as_posix()}/drishti-envs/dev.ini", "--profile", "qa"]
     assert env["PYTHONUNBUFFERED"] == "1"
 
@@ -202,10 +216,13 @@ def test_g3_every_pycharm_launcher_parses_with_the_real_command_line():
     spec.loader.exec_module(cli)
     import yaml
     console_keys = yaml.safe_load((ROOT / "drishti-console" / "config" / "application.yaml").read_text(encoding="utf-8"))
-    for f in sorted(p for p in (ROOT / "run-configs").glob("*.run.xml") if "PythonConfigurationType" in p.read_text(encoding="utf-8")):
+    for f in sorted(p for p in LAUNCHERS if "PythonConfigurationType" in p.read_text(encoding="utf-8")):
         words = shlex.split(_params(f))
-        assert words[:2] == ["--settings", "$USER_HOME$/drishti-envs/dev.ini"], f.name
-        words = words[2:]
+        if words[:1] == ["setup"]:      # setup makes dev.ini: it names none (--settings would refuse a file that is not there yet)
+            assert "--settings" not in words, f.name
+        else:
+            assert words[:2] == ["--settings", "$USER_HOME$/drishti-envs/dev.ini"], f.name
+            words = words[2:]
         if words[:1] == ["--profile"]:
             assert (ROOT / "config" / "profiles" / f"{words[1]}.ini").is_file(), f.name
             words = words[2:]
@@ -231,7 +248,7 @@ def test_g4_every_setting_a_launcher_profile_or_cluster_file_names_is_documented
              *sorted((ROOT / "deploy" / "stack").glob("*.ini")), ROOT / "deploy" / "systemd" / "drishti-server.service"]
     for f in files:
         code = "\n".join(line for line in f.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith("#"))
-        if f.suffix == ".xml":
+        if f.name.endswith(".run.xml"):
             code = ET.tostring(conf(f), encoding="unicode")
         for name in sorted(n for n in set(NAME.findall(code)) if not n.endswith((".env", ".ini", ".yaml", ".service", ".args"))):
             if name in ("drishti.home", "drishti.settings.file"):
@@ -277,7 +294,7 @@ def test_g8_the_docs_name_launchers_that_exist_and_no_retired_script():
             assert r not in text, f"{f.relative_to(ROOT)}: names the retired {r}"
 
 
-def test_g9_a_file_a_launcher_names_exists_unless_it_is_a_template():
+def test_g9_a_file_a_launcher_names_exists_unless_it_asks_for_it():
     import yaml
     doc = yaml.safe_load((ROOT / "tools" / "launch" / "launchers.yaml").read_text(encoding="utf-8"))
     for row in doc["pycharm"]:
@@ -285,9 +302,9 @@ def test_g9_a_file_a_launcher_names_exists_unless_it_is_a_template():
         for i, w in enumerate(words):
             if w == "--from":
                 path = words[i + 1]
-                if row.get("template"):
+                if row.get("prompt"):
                     continue
-                assert (ROOT / path).exists() and path.startswith("data/testdata/"), f"{row['name']}: {path} (a sample under data/testdata/, or template: true)"
+                assert (ROOT / path).exists() and path.startswith("data/testdata/"), f"{row['name']}: {path} (a sample under data/testdata/, or prompt: true)"
 
 
 def test_g10_no_shipped_launcher_or_config_holds_an_os_specific_path():
@@ -299,3 +316,31 @@ def test_g10_no_shipped_launcher_or_config_holds_an_os_specific_path():
         code = "\n".join(line for line in f.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith(("#", "<!--")))
         assert not bad.search(code), f"{f.relative_to(ROOT)}: an OS-specific absolute path"
     assert "java" not in (yaml.safe_load((ROOT / "deploy" / "stack" / "stack.yaml").read_text(encoding="utf-8")) or {}), "stack.yaml: no java: (the one JDK lookup)"
+
+
+def test_workspace_setup_tasks_name_no_settings_file():
+    """The VS Code tasks honour `settings: false` as the run configurations do: setup makes dev.ini, so --settings would refuse it."""
+    import json
+    text = (ROOT / "drishti.code-workspace").read_text(encoding="utf-8")
+    body = json.loads("".join(l for l in text.splitlines(True) if not l.lstrip().startswith("//")))
+    tasks = {t["label"]: t for t in body["tasks"]["tasks"]}
+    setups = [t for t in tasks.values() if t["command"].split()[2:3] == ["setup"] or " setup" in t["command"]]
+    assert len(setups) >= 2
+    for t in setups:
+        assert "--settings" not in t["command"] and "--settings" not in t["windows"]["command"], t["label"]
+    assert any("--settings" in t["command"] for n, t in tasks.items() if t not in setups and t["command"].startswith("python3 tools/drishti.py"))
+
+
+def test_workspace_is_portable():
+    """VS Code: ${userHome} (never $USER_HOME$ or ~), py -3.13 on Windows with a per-OS override, no Linux-only interpreter or JDK path."""
+    import json
+    text = (ROOT / "drishti.code-workspace").read_text(encoding="utf-8")
+    body = json.loads("".join(l for l in text.splitlines(True) if not l.lstrip().startswith("//")))
+    raw = json.dumps(body)
+    assert "$USER_HOME$" not in raw and "~/" not in raw and "/usr/lib/jvm" not in raw and "java.configuration.runtimes" not in raw
+    assert "python.defaultInterpreterPath" not in raw
+    for t in body["tasks"]["tasks"]:
+        if t["command"].startswith("python3"):
+            assert t["windows"]["command"].startswith("py -3.13 tools/") or t["windows"]["command"].startswith("py -3.13 drishti-console/"), t["label"]
+            assert "linux" in t and "osx" in t, t["label"]
+

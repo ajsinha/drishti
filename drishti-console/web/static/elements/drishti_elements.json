@@ -1,5 +1,5 @@
 {
-  "about": "Drishti's own Elements libraries (drishti-insight, drishti-risk), built against the vendored Drishti Elements (static/vendor/drishti-elements/<version>/, its version the pin: docs/architecture/ELEMENTS_IN_DRISHTI.md) by its tools/elements/build.py --root drishti-console/web/static --manifest this file. css paths are relative to the console's static root; module: the module a library belongs to.",
+  "about": "Drishti's own Elements libraries (drishti-insight, drishti-risk), built against the vendored Drishti Elements (static/vendor/drishti-elements/<version>/, its version the pin: docs/architecture/THIN_CONSOLE_DESIGN.md) by its tools/elements/build.py --root drishti-console/web/static --manifest this file. css paths are relative to the console's static root; module: the module a library belongs to.",
   "libraries": {
     "drishti-insight": {
       "title": "Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export",

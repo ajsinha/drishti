@@ -102,7 +102,7 @@ public class VarConfiguration {
             if (p.manifest().get("system-baskets") instanceof Map<?, ?> m && m.get("seed") != null) {
                 Path file = p.resolve(String.valueOf(m.get("seed")));
                 try {
-                    Object doc = VarSystemBasketEdit.YAML.readValue(file.toFile(), Object.class);
+                    Object doc = VarSystemBasketEdit.YAML.readValue(java.nio.file.Files.readAllBytes(file), Object.class);
                     String actor = "system (seed)";
                     int n = svc.saved().system().seed(doc, actor, (action, b) -> svc.audit(actor, "var-system-basket-" + action, b.id(),
                             "seeded from " + p.name() + "/" + m.get("seed") + " version=" + b.version() + " type=" + b.type()));
@@ -121,7 +121,7 @@ public class VarConfiguration {
         return 0;
     }
 
-    /** The VaR engine's figures on Admin -> Capacity (DOMAIN_MODULES.md J3). */
+    /** The VaR engine's figures on Admin -> Capacity (KERNEL_AND_MODULES.md J3). */
     /** The VaR intake's rules, for the checks of a file before it is pushed (DATA_LAKE_GUIDE.md section 3.5). */
     @Bean
     com.ash.lake.inbox.ReadyRule varReadyRule(VarProperties props, ObjectProvider<PackRegistry> packs) {
@@ -134,7 +134,7 @@ public class VarConfiguration {
     }
 
     /**
-     * {@code /api/v1/health}'s {@code hierarchyWarnings} (DOMAIN_MODULES.md J4): a level column the VaR or exposure engine's source does not
+     * {@code /api/v1/health}'s {@code hierarchyWarnings} (KERNEL_AND_MODULES.md J4): a level column the VaR or exposure engine's source does not
      * promote (its rows sit under (Blank) at that level), "var LL LIMIT_LETTER scenario-pv" to the words and the fix (DRS-5211, a warning).
      */
     @Bean
@@ -228,7 +228,7 @@ public class VarConfiguration {
         return new VarExplain(svc, props);
     }
 
-    /** Explain a VaR figure (kind var, the one Explain of SHARED_SCREENS.md section 3): formula, inputs and lineage, why it moved, workbook. */
+    /** Explain a VaR figure (kind var, the one Explain of THIN_CONSOLE_DESIGN.md section 8.3): formula, inputs and lineage, why it moved, workbook. */
     @Bean
     com.ash.drishti.kernel.api.explain.Explainer varNumberExplainer(VarService svc, VarViews views, VarExplain explain) {
         return new VarNumberExplainer(svc, views, explain);
@@ -241,7 +241,7 @@ public class VarConfiguration {
         return v;
     }
 
-    /** VaR's vectors for Arrow Flight ({@code form: measure}, docs/guides/FLIGHT_GUIDE.md): the engine's figures, read as the person. */
+    /** VaR's vectors for Arrow Flight ({@code form: measure}, docs/guides/INTEGRATION_GUIDE.md): the engine's figures, read as the person. */
     @Bean
     com.ash.drishti.server.flight.FlightForm varFlightForm(VarService svc, VarViews views) {
         return new VarFlightForm(svc, views);

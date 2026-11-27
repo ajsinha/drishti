@@ -1,0 +1,36 @@
+# Lane T merge log (tutorials, i7n): headings and blocks of the tutorials that were split, absorbed or trimmed, and where each now is.
+# <old path> | <heading or first line of the block> | <the place that already says it>
+docs/tutorials/01-first-15-minutes.md | Part B · Look up anything | docs/tutorials/02-look-up-anything.md (Tutorial 2 · Look up anything: the part became a tutorial; moved.yaml anchor row)
+docs/tutorials/01-first-15-minutes.md | Part C · Query by form | docs/tutorials/03-query-by-form.md (Tutorial 3 · Query by form: the part became a tutorial; moved.yaml anchor row)
+docs/tutorials/01-first-15-minutes.md | Part D · Share and collaborate | docs/tutorials/04-share-and-collaborate.md (Tutorial 4 · Share and collaborate: the part became a tutorial; moved.yaml anchor row)
+docs/tutorials/01-first-15-minutes.md | Part E · An entity over time | docs/tutorials/05-an-entity-over-time.md (Tutorial 5 · An entity over time: the part became a tutorial; moved.yaml anchor row)
+docs/tutorials/01-first-15-minutes.md | $ python3 tools/drishti.py doctor | docs/tutorials/01-first-15-minutes.md (step 1 says: no red line and "doctor: all clear"; the command and its meaning are in docs/guides/CLI_REFERENCE.md)
+docs/tutorials/01-first-15-minutes.md | $ python3 tools/drishti.py view get trade/MX-20000001 | docs/tutorials/01-first-15-minutes.md (kept as the first lines of the same output; the rest is the view as the screenshot above shows it)
+docs/tutorials/01-first-15-minutes.md | $ python3 tools/drishti.py bi catalogue list | docs/tutorials/01-first-15-minutes.md (the command stays in step 8; its output is the catalogue the BI home shows)
+docs/tutorials/01-first-15-minutes.md | $ python3 tools/drishti.py server health | docs/tutorials/01-first-15-minutes.md (step 9 names the command and what it lists; docs/guides/OPERATIONS_GUIDE.md section 13 shows the output)
+docs/tutorials/01-first-15-minutes.md | $ python3 tools/drishti.py doctor --server http://localhost:18480 | docs/tutorials/01-first-15-minutes.md (step 9 keeps the command with two lines of its output)
+docs/tutorials/16-load-your-own-data-into-a-new-lake.md | Part B · One file per lake | docs/tutorials/13-one-file-per-lake.md (Tutorial 13): the part became a tutorial of its own (no guide holds its steps yet); moved.yaml anchor row
+docs/tutorials/16-load-your-own-data-into-a-new-lake.md | Part C · Load files automatically with the data inbox | docs/tutorials/14-load-files-with-the-data-inbox.md (Tutorial 14): the part became a tutorial of its own (no guide holds its steps yet); moved.yaml anchor row
+docs/tutorials/16-load-your-own-data-into-a-new-lake.md | Part D · News held in memory only | docs/tutorials/18-news-held-in-memory.md (Tutorial 18): the part became a tutorial of its own (no guide holds its steps yet); moved.yaml anchor row
+docs/tutorials/16-load-your-own-data-into-a-new-lake.md | Part E · The risk lake and the official results on Iceberg | docs/tutorials/23-the-risk-lake-on-iceberg.md (Tutorial 23): the part became a tutorial of its own (no guide holds its steps yet); moved.yaml anchor row
+docs/tutorials/19-build-a-pack-and-a-screen.md | Part B · Design a screen: in the workbench and on a live page | docs/tutorials/19-build-a-pack-and-a-screen.md (Part B · Design a screen in the workbench) and docs/tutorials/24-customize-a-live-page.md (the live page); moved.yaml anchor row
+docs/tutorials/19-build-a-pack-and-a-screen.md | The Build workbench: a screen from your own documents | docs/tutorials/19-build-a-pack-and-a-screen.md (Part B · Design a screen in the workbench); moved.yaml anchor row
+docs/tutorials/19-build-a-pack-and-a-screen.md | Part C · Computed panels: a reactive connector | docs/tutorials/25-computed-panels.md (Tutorial 25); moved.yaml anchor row
+docs/tutorials/12-a-day-of-bank-data.md | Tutorial 12 · A day of bank data: load it daily | docs/tutorials/16-load-your-own-data-into-a-new-lake.md (Part B · Load it every day); renumbered, text and blocks unchanged
+docs/tutorials/12-a-day-of-bank-data.md | Step 1 · Say when you expect data | docs/tutorials/16-load-your-own-data-into-a-new-lake.md (Step 8 · Say when you expect data); renumbered, text and blocks unchanged
+docs/tutorials/12-a-day-of-bank-data.md | Step 2 · Announce a load from the command line | docs/tutorials/16-load-your-own-data-into-a-new-lake.md (Step 9); renumbered, text and blocks unchanged
+docs/tutorials/12-a-day-of-bank-data.md | Step 3 · A failed batch | docs/tutorials/16-load-your-own-data-into-a-new-lake.md (Step 10); renumbered, text and blocks unchanged
+docs/tutorials/12-a-day-of-bank-data.md | Step 4 · The same through the API | docs/tutorials/16-load-your-own-data-into-a-new-lake.md (Step 11); renumbered, text and blocks unchanged
+docs/tutorials/12-a-day-of-bank-data.md | Step 5 · Read the history and what is due | docs/tutorials/16-load-your-own-data-into-a-new-lake.md (Step 12); renumbered, text and blocks unchanged
+docs/tutorials/12-a-day-of-bank-data.md | Step 6 · An alert for a missing day | docs/tutorials/16-load-your-own-data-into-a-new-lake.md (Step 13); renumbered, text and blocks unchanged
+docs/tutorials/12-a-day-of-bank-data.md | Step 7 · Take a day back out | docs/tutorials/16-load-your-own-data-into-a-new-lake.md (Step 14); renumbered, text and blocks unchanged
+docs/tutorials/21-run-it-in-production.md | Tutorial 21 · Run it in production | docs/DEPLOYMENT_AND_QA_GUIDE.md (14. A production checklist, step by step)
+docs/tutorials/21-run-it-in-production.md | Step 1 · Security on, and proof that it is | docs/DEPLOYMENT_AND_QA_GUIDE.md (14.1, the same heading as a numbered section; text and blocks unchanged)
+docs/tutorials/21-run-it-in-production.md | Step 2 · Your own administrator, and the development one gone | docs/DEPLOYMENT_AND_QA_GUIDE.md (14.2, the same heading as a numbered section; text and blocks unchanged)
+docs/tutorials/21-run-it-in-production.md | Step 3 · Roles, BI powers, masks | docs/DEPLOYMENT_AND_QA_GUIDE.md (14.3, the same heading as a numbered section; text and blocks unchanged)
+docs/tutorials/21-run-it-in-production.md | Step 4 · Tokens, and the secret that signs them | docs/DEPLOYMENT_AND_QA_GUIDE.md (14.4, the same heading as a numbered section; text and blocks unchanged)
+docs/tutorials/21-run-it-in-production.md | Step 5 · Back it up, and look inside | docs/DEPLOYMENT_AND_QA_GUIDE.md (14.5, the same heading as a numbered section; text and blocks unchanged)
+docs/tutorials/21-run-it-in-production.md | Step 6 · The heap, the caches and the pools | docs/DEPLOYMENT_AND_QA_GUIDE.md (14.6, the same heading as a numbered section; text and blocks unchanged)
+docs/tutorials/21-run-it-in-production.md | Step 7 · Health: what to watch | docs/DEPLOYMENT_AND_QA_GUIDE.md (14.7, the same heading as a numbered section; text and blocks unchanged)
+docs/tutorials/21-run-it-in-production.md | Step 8 · Upgrade, and roll back | docs/DEPLOYMENT_AND_QA_GUIDE.md (14.8, the same heading as a numbered section; text and blocks unchanged)
+docs/tutorials/21-run-it-in-production.md | Step 9 · Take something out, safely | docs/DEPLOYMENT_AND_QA_GUIDE.md (14.9, the same heading as a numbered section; text and blocks unchanged)

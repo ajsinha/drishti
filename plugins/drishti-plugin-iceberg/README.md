@@ -83,7 +83,7 @@ settings:
 - proxy.*
 auth: Local files need none; S3 takes s3.access-key and s3.secret-key (${ENV} or file:), the AWS chain or credentials a REST catalog vends; a REST catalog takes credential (OAuth2 id:secret) or a token, or SigV4 through catalog.rest.*; a private CA through tls.*; an outbound proxy through proxy.*.
 licence: Reads through Drishti Lake (its own Iceberg reader over iceberg-core and Apache Parquet, and the AWS SDK for Java v2; all Apache-2.0), bundled. No Hadoop.
-windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader `python tools/drishti.py data load --store iceberg` (any system); `python tools/drishti.py start server --iceberg` copies the example files in.
+windows: Works on Windows (local folders with drive letters, and S3), so it is not for the Windows QA machine. Loader `python3.13 tools/drishti.py data load --store iceberg` (any system); `python3.13 tools/drishti.py start server --iceberg` copies the example files in.
 doc: plugins/drishti-plugin-iceberg/README.md
 ---
 # The iceberg connector
@@ -92,13 +92,17 @@ Plugin `iceberg` (`plugins/drishti-plugin-iceberg`): the Delta connector's desig
 Snowflake's Iceberg tables, AWS Glue, Dremio, Trino and Apache Polaris. Built for a million trades a day kept for seven years. For
 tables someone else designed, use `iceberg-external`.
 
+## Build and use
+
+A connector file in `config/connectors/` with `plugin: iceberg` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
+
 ## What it reads
 
 A data domain is a folder (`<root>/<domain>/<kind>`, `catalog: hadoop`, the default) or a REST catalog's namespace (`catalog: rest`
 with `uri`, `warehouse`, `credential`), and each kind is one Iceberg table (or `table.<kind>` when its name differs). A table can also
 be named by its metadata file (`metadata-location.<kind>`), and a table copied elsewhere is read with `relocate`. The reader is Drishti
 Lake's (no Hadoop; one reader, no choice of engine). It
-reads position and equality deletes and answers *known at* from older snapshots. It never writes; `python tools/drishti.py data load --store iceberg` does.
+reads position and equality deletes and answers *known at* from older snapshots. It never writes; `python3.13 tools/drishti.py data load --store iceberg` does.
 
 ## Settings
 
@@ -294,7 +298,7 @@ is the table `pnl_vector`, and a name that still breaks the rule is refused, nam
 (`drishti.py lake build --format iceberg --iceberg-set catalog=s3tables --iceberg-set table-bucket-arn=<ARN>`, or `target.iceberg` of the
 parallel loader); `iceberg-external` reads S3 Tables written by Athena, EMR or Firehose with the same two settings. Files:
 `config/connectors.examples/s3tables/` ([README](../../config/connectors.examples/s3tables/README.md)); the AWS side:
-`deploy/aws/s3-tables/s3-tables.sh create|check` ([README](../../deploy/aws/s3-tables/README.md),
+`deploy/aws/s3-tables/s3-tables.sh create|check` ([README](../../docs/guides/CLUSTER_GUIDE.md),
 [CLI_REFERENCE.md section 4.14](../../docs/guides/CLI_REFERENCE.md#714-the-aws-connectors-tool-scripts-s3-tables-and-delta-lake-on-s3)). Tests check the
 ARN's settings, names and request signatures against recorded botocore ones, and a stand-in REST server that refuses unsigned
 requests; the live run is `deploy/aws/iceberg/check-glue.sh --s3-tables <ARN>`.
@@ -302,13 +306,13 @@ requests; the live run is `deploy/aws/iceberg/check-glue.sh --s3-tables <ARN>`.
 ## Loading
 
 Iceberg tables are written by Drishti Lake's one loader (the same loader, rules and layout as Delta; `source.format: loader-rows` for rows
-already wrapped with their table). `python tools/drishti.py lake build --format iceberg` loads a pack's tables into a table
-`<lake>/<domain>/<table>` (`--iceberg-set key=value` for a REST catalog or object store), `python tools/drishti.py lake demo --store
+already wrapped with their table). `python3.13 tools/drishti.py lake build --format iceberg` loads a pack's tables into a table
+`<lake>/<domain>/<table>` (`--iceberg-set key=value` for a REST catalog or object store), `python3.13 tools/drishti.py lake demo --store
 calypso=iceberg` moves a source system's tables, and `ingest_jsonl.py --store iceberg` loads JSON lines:
 
 ```bash
-python tools/drishti.py lake build --format iceberg --lake ./data/iceberg trading/trade-*.jsonl.gz        # a pack's table
-python tools/drishti.py lake build --format iceberg --lake s3://risk-lake/iceberg --iceberg-set s3.region=us-east-1 ...
+python3.13 tools/drishti.py lake build --format iceberg --lake ./data/iceberg trading/trade-*.jsonl.gz        # a pack's table
+python3.13 tools/drishti.py lake build --format iceberg --lake s3://risk-lake/iceberg --iceberg-set s3.region=us-east-1 ...
 ```
 
 - **Input**: JSON lines of documents, or loader rows `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}` (the lines
@@ -408,7 +412,7 @@ partitioned by `business_date` alone and refuses one another engine re-partition
 **Caches.** The reader reads each Parquet footer once and keeps it (`-Dlake.parquet.footer-cache-mb`, 64, shared with Delta), plus parsed
 manifests and delete files (`lake.iceberg.delete-cache-rows`). A purge of the connector empties every cache.
 
-**Windows**: `py tools\drishti.py start server --iceberg` starts the server with the Iceberg connector files
+**Windows**: `py -3.13 tools\drishti.py start server --iceberg` starts the server with the Iceberg connector files
 ([OPERATIONS_GUIDE.md](../../docs/guides/OPERATIONS_GUIDE.md#4-drishti-on-windows)).
 
 ## Parity with Delta: vectors and disk caches

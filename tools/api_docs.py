@@ -196,9 +196,7 @@ def _pdoc_command() -> list[str]:
         import pdoc  # noqa: F401
         return [sys.executable, "-m", "pdoc"]
     except ImportError:
-        if not shutil.which("uv"):
-            raise SystemExit("api_docs: pdoc is not installed and uv is not on the PATH (pip install pdoc, or install uv)")
-        return ["uv", "run", "-q", "--no-project", "--with", f"pdoc=={config()['pdoc']}", "--with", "pyyaml", "python", "-m", "pdoc"]
+        raise SystemExit(f"[FAIL] api_docs: pdoc is not installed in {sys.executable}. Fix: {sys.executable} -m pip install pdoc=={config()['pdoc']} pyyaml")
 
 
 def build_python(cfg: dict, dest: Path) -> None:

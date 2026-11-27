@@ -50,7 +50,7 @@ def shown(edition, guide) -> bool:
     if not guide.listed and edition.refuse_unlisted:
         return False
     domains = edition.help_domains() if hasattr(edition, "help_domains") else None
-    if domains is not None and not guide.packs:                  # a distribution: its modules' guides and the kernel's (DISTRIBUTIONS.md)
+    if domains is not None and not guide.packs:                  # a distribution: its modules' guides and the kernel's (KERNEL_AND_MODULES.md)
         module = _guide_module(guide)
         if module and module != "core" and module not in domains:
             return False
@@ -74,7 +74,7 @@ def visible(request, guide) -> bool:
 
 
 def _module_on(guide) -> bool:
-    """A guide of a domain module that is off for the person is not shown (ACCESS_MODEL.md: Help too): its module is its engine's
+    """A guide of a domain module that is off for the person is not shown (KERNEL_AND_MODULES.md: Help too): its module is its engine's
     (help.yaml ``engine:``, the module's plugin.yaml ``engines:``), else its own (help.yaml ``domain:``), else its Help section's
     (sitemap.yaml ``help-sections[].domain``, a module's section: the module)."""
     from core import modules
@@ -264,7 +264,7 @@ async def help_examples(request: Request):
     if g is None:
         return await help_guide(request, "examples")
     items = [{"name": e.name, "title": e.title, "yaml": e.yaml, "json": e.json,
-              "note": lib.fragment(request.app.state.examples.directory / f"{e.name}.md")} for e in request.app.state.examples.all()]
+              "note": lib.fragment(request.app.state.examples.directory / "README.md", e.readme)} for e in request.app.state.examples.all()]
     body = request.app.state.templates.get_template("help/_examples.html").render(examples=items)
     page = {"html": body, "toc": [{"id": e["name"], "name": e["title"], "children": []} for e in items]}
     category = _siblings(request, lib, g)
@@ -288,7 +288,7 @@ async def help_file(request: Request, path: str):
 @router.get("/help/developer")
 async def help_developer(request: Request):
     """Help -> Developer (IMPLEMENTATION_PLAN row 2g): the REST API (OpenAPI), the renderer's API, and the Java and Python API references
-    built by tools/api_docs.py (core/api_reference.py), each version the folder holds; the guide web/guides/developer.md below them."""
+    built by tools/api_docs.py (core/api_reference.py), each version the folder holds; the section "Developer: API references" of docs/guides/API_REFERENCE.md below them."""
     from core import api_reference
     from core import render_dist
 
@@ -323,6 +323,8 @@ async def help_api_file(request: Request, path: str):
 async def help_guide(request: Request, slug: str):
     lib = await library(request)
     uc = under_construction.of(request)                              # docs/admin/UNDER_CONSTRUCTION.md: a hidden page is not reached either
+    if slug in lib.moved and slug not in lib.guides:                 # a page merged into another: its old address leads there
+        return RedirectResponse(f"/help/{lib.moved[slug]}", status_code=301)
     if slug not in lib.guides or not visible(request, lib.guides[slug]) or uc.help_hidden(slug):   # a guide the edition or the person's roles hide is not reached by its address either
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),
                       hits=await help_pages(request, slug.replace("-", " ")), missing=slug, screen="help")
@@ -360,5 +362,7 @@ async def about(request: Request):
     except BackendError as e:
         info = {"error": drs_message(e.code, e.detail, " ")}
     lib = await library(request)
+    from core import modules
+    names = [(modules.plugin(m).title if modules.plugin(m) else m) for m in modules.modules_for_page()]   # the installed, enabled modules: the distribution's own list
     return render(request, "help/about.html", info=info, notices=lib.guides.get("third-party-notices"), screen="about",
-                  competitive=_competitive(request, lib))
+                  competitive=_competitive(request, lib), module_names=names)

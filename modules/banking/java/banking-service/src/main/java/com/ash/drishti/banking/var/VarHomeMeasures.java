@@ -61,7 +61,7 @@ final class VarHomeMeasures implements MeasureSource {
 
     @Override
     public boolean on() {
-        return engine.consumers() ? engine.running() : svc.running();     // R2: the family switch var.consumers.path
+        return engine.consumers() ? engine.running() : svc.running();     // R2: the family switch var.consumers.route
     }
 
     /** The firm's scope word; a KPI's {@code scope} arg names another ({@code own-desk} and {@code own-books} are the person's rows: the firm scope as they see it). */

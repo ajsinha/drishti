@@ -19,9 +19,9 @@ The Markdown is rendered by Python-Markdown with the help centre's extensions (t
 are inlined as data: URLs, and Chromium (Playwright's, which the browser tests already install) prints it with page.pdf(). The PDF's title
 carries a fingerprint of the source (the Markdown and every picture it shows), so a check needs no browser:
 
-    drishti-console/.venv/bin/python tools/docs/md_to_pdf.py                    # every guide of PDFS, rewritten
-    drishti-console/.venv/bin/python tools/docs/md_to_pdf.py --check            # exit 1 when a PDF is older than its Markdown or pictures
-    drishti-console/.venv/bin/python tools/docs/md_to_pdf.py docs/X.md out.pdf  # any one file
+    python3 tools/docs/md_to_pdf.py                    # every guide of PDFS, rewritten
+    python3 tools/docs/md_to_pdf.py --check            # exit 1 when a PDF is older than its Markdown or pictures
+    python3 tools/docs/md_to_pdf.py docs/X.md out.pdf  # any one file
 
 The product name and the copyright line come from the console's settings (ui.product, ui.copyright), never from this file.
 """
@@ -44,9 +44,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "drishti-console"))
 from core.guides import GithubSlugger  # noqa: E402  (the help centre's heading anchors, so a link inside the PDF lands where Help's does)
 
-PDFS = [ROOT / "docs" / "DEPLOYMENT_AND_QA_GUIDE.md", ROOT / "docs" / "QUICKSTART_DEVELOPERS.md", ROOT / "docs" / "guides" / "CLUSTER_GUIDE.md",
-        ROOT / "docs" / "architecture" / "KERNEL_AND_MODULES.md", ROOT / "docs" / "architecture" / "DISTRIBUTIONS.md",
-        ROOT / "HOW_IT_FITS.md"]   # generated and checked together (a PDF beside a Markdown file is one of these: --check keeps it current)
+PDFS = [ROOT / "docs" / "DEPLOYMENT_AND_QA_GUIDE.md", ROOT / "docs" / "QUICKSTART_DEVELOPERS.md", ROOT / "HOW_IT_FITS.md"]
+# a PDF exists only for a document handed to someone who has no running Drishti yet; --check keeps these current; any other file: md_to_pdf.py docs/X.md out.pdf
 PICTURE = re.compile(r"!\[[^\]]*\]\(([^)\s]+)\)")
 MARK = "source "                                                    # the PDF's title ends with "source <fingerprint>"
 COMMENT = re.compile(r"<!--.*?-->", re.S)
@@ -214,7 +213,7 @@ def main() -> int:
     if a.check:
         bad = [why for s in sources if (why := stale(s))]
         for why in bad:
-            print("stale:", why, "->", "drishti-console/.venv/bin/python tools/docs/md_to_pdf.py")
+            print("stale:", why, "->", "python3 tools/docs/md_to_pdf.py")
         return 1 if bad else 0
     for s in sources:
         render(s, Path(a.target).resolve() if a.target else s.with_suffix(".pdf"))

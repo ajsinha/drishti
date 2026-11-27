@@ -106,7 +106,7 @@ class Servers:
                 return s.id, {"up": True, **r.json()}
             except (httpx.HTTPError, ValueError) as e:
                 return s.id, {"up": False, "error": type(e).__name__}
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        async with httpx.AsyncClient(timeout=timeout, trust_env=False) as client:
             return dict(await asyncio.gather(*(one(client, s) for s in self.all())))
 
 

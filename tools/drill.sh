@@ -131,11 +131,11 @@ elif [[ "$MODE" == docs && -n "$non_docs" ]]; then
 fi
 echo "drill: mode = $MODE$([[ $GATE_ONLY == 1 ]] && echo ' (gate only)')$([[ $PUSH == 0 ]] && echo ' (no push)')$([[ $KEEP_GOING == 1 ]] && echo ' (keep going)')"
 
-PY=drishti-console/.venv/bin/python
-# a new worktree has no console environment of its own: stop at once with the remedy, not after the gate
-if [[ ! -x "$PY" ]]; then
-  echo "drill: $PY not found: create the console environment (python3 -m venv drishti-console/.venv, then pip install -r" >&2
-  echo "       drishti-console/requirements.txt), or in a worktree link the main checkout's: ln -s <main>/drishti-console/.venv drishti-console/.venv" >&2
+# the Python of the tests: DRISHTI_PYTHON (passed in from outside: any interpreter with drishti-console/requirements-test.txt), else
+# python3 on the PATH; the drill makes no environment and names none
+PY="${DRISHTI_PYTHON:-python3}"
+if ! command -v "$PY" >/dev/null; then
+  echo "drill: no Python at $PY: set DRISHTI_PYTHON to a Python with drishti-console/requirements-test.txt installed" >&2
   exit 1
 fi
 # the test servers run the compute pool `python` in this interpreter: a library at another version than the lock refuses every Python run
@@ -157,8 +157,8 @@ print("; ".join(off))
 PYEOF
 )
 if [[ -n "$pins_off" ]]; then
-  echo "drill: the console environment differs from config/compute/locks/python.in: $pins_off" >&2
-  echo "       install the pins: drishti-console/.venv/bin/pip install -r drishti-console/requirements-test.txt" >&2
+  echo "drill: the Python $PY (DRISHTI_PYTHON) differs from config/compute/locks/python.in: $pins_off" >&2
+  echo "       install the pins into it: $PY -m pip install -r drishti-console/requirements-test.txt (or set DRISHTI_PYTHON to a Python that has them)" >&2
   exit 1
 fi
 DATA="${DRISHTI_DATA_DIR:-data}"; mkdir -p "$DATA/drill"; LOGS=$(cd "$DATA/drill" && pwd -P)
@@ -422,6 +422,7 @@ gate_java() {
 # benchmarks) with three long command tests (schema to pack, the sample pages, the generators). The gate built the exec jar: the tests that start the Java loader run.
 tool_test_files() {   # lane (a or b): its test files and folders
   local f all=()
+  # .venv here is an IGNORE pattern only: a user's own virtual environment inside the tree is never scanned
   mapfile -t all < <(find tools \( -name .venv -o -name cache -o -name node_modules \) -prune -o -name 'test_*.py' -print | grep -v '/tests/' | sort)
   local gate; gate=" $(python3 "$PLAN" static --kind tools | tr '\n' ' ') "   # the quick file checks: the gate ran them
   for f in "${all[@]}"; do
@@ -432,6 +433,7 @@ tool_test_files() {   # lane (a or b): its test files and folders
       *) [[ $1 == b ]] && echo "$f" ;;
     esac
   done
+  # .venv below: an IGNORE pattern only (a user's own virtual environment is never scanned)
   if [[ $1 == b ]]; then find tools \( -name .venv -o -name cache \) -prune -o -type d -name tests -print | sort; fi
 }
 run_tool_tests() {   # files and folders: each in its own pytest process; returns 1 when any failed

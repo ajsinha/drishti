@@ -21,14 +21,14 @@ an earlier build's data is listed in LEGACY, by file.
 import pathlib
 import re
 import subprocess
+import sys
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 # Names an external tool requires; also listed in docs/guides/BUILD_GUIDE.md ("Why these few names start with a dot").
-ALLOWED = {".gitignore", ".dockerignore", ".editorconfig", ".java-version", ".mvn", ".github", ".idea", ".venv", ".claude",
-           ".git", ".pytest_cache", "__pycache__", ".DS_Store", ".well-known", ".gitattributes", ".vscode", ".gitmodules",
-           ".rels"}                                        # an OOXML part name the Excel format requires (_rels/.rels in a workbook template)
+ALLOWED = {".gitignore", ".dockerignore", ".editorconfig", ".java-version", ".mvn", ".github", ".venv", ".claude",  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
+           ".git", ".pytest_cache", "__pycache__", ".DS_Store", ".well-known", ".gitattributes", ".vscode", ".gitmodules"}
 
 # Hidden names only READ so an earlier build's data is migrated once to the visible name (never written).
 LEGACY = {".history", ".generated", ".migrated", ".previous", ".uploads", ".drishti-tmp", ".drishti-console-tmp", ".drishti-lake",
@@ -96,8 +96,10 @@ class NoLitterInTheRepoRoot(unittest.TestCase):
             data = pathlib.Path(t) / "data"
             src = pathlib.Path(t) / "trades.jsonl"
             src.write_text("".join(json.dumps({"tradeId": f"T{i}", "type": ["IRS", "FRA"][i % 2], "notional": i}) + "\n" for i in range(6)))
-            r = subprocess.run(["python3", str(ROOT / "tools" / "drishti.py"), "pack", "make", str(src), "--kind", "trade", "--match", "type",
-                                "--name", "tidy"], cwd=ROOT, capture_output=True, text=True, env={**os.environ, "DRISHTI_DATA_DIR": str(data)})
+            ini = pathlib.Path(t) / "named.ini"        # the data folder by a settings file named on purpose (the trust rule, R5)
+            ini.write_text(f"drishti.home={ROOT.as_posix()}\ndrishti.data.dir={data.as_posix()}\n", encoding="utf-8")
+            r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "--settings", str(ini), "pack", "make", str(src), "--kind",
+                                "trade", "--match", "type", "--name", "tidy"], cwd=ROOT, capture_output=True, text=True, env=dict(os.environ))
             self.assertEqual(r.returncode, 0, r.stderr + r.stdout)
             self.assertTrue((data / "build" / "tidy-1.0.0" / "pack" / "tidy" / "pack.yaml").is_file())
             self.assertTrue((data / "build" / "tidy-1.0.0" / "pack" / "tidy" / "generated").is_dir())       # the baseline is visible
@@ -124,3 +126,13 @@ class NoSecretTracked(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NoIdeaInTheSource(unittest.TestCase):
+    """No .idea folder is committed anywhere (the owner's rule, i7i): the launchers are visible run-configs/*.run.xml files."""
+
+    def test_no_idea_file_is_tracked(self):
+        files = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
+        self.assertEqual([f for f in files if "/.idea/" in "/" + f], [])
+        self.assertTrue(any(f.startswith("run-configs/") and f.endswith(".run.xml") for f in files))
+        self.assertTrue(any(f.startswith("drishti-console/run-configs/") and f.endswith(".run.xml") for f in files))

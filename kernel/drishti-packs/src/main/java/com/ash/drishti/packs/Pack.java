@@ -115,7 +115,7 @@ public record Pack(String name, String version, String title, String description
 
     /**
      * The domain the pack serves ({@code domain:} in {@code pack.yaml}: {@code core}, {@code banking}, {@code economy}); {@code core} when
-     * not given. A pack of a domain whose modules are all off is not loaded (docs/architecture/ACCESS_MODEL.md).
+     * not given. A pack of a domain whose modules are all off is not loaded (docs/architecture/KERNEL_AND_MODULES.md).
      */
     public String domain() {
         Object d = manifest.get("domain");

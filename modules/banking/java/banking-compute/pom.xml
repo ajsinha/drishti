@@ -26,7 +26,7 @@
   </parent>
   <artifactId>drishti-compute-banking</artifactId>
   <name>drishti-compute-banking</name>
-  <description>The banking domain's compute (docs/architecture/DOMAIN_MODULES.md): pure maths, no Spring, testable alone. VaR and ES (historical,
+  <description>The banking domain's compute (docs/architecture/KERNEL_AND_MODULES.md): pure maths, no Spring, testable alone. VaR and ES (historical,
     parametric, components, backtesting, the scope algebra, the scenario book), exposure (EE, PFE, EPE, EEPE), FRTB-SA, ISDA SIMM and the
     equity analytics (beta, correlation), over the generic compute of drishti-compute (the vector store, parallel sums, sharding)</description>
   <dependencies>

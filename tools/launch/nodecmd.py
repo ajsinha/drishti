@@ -70,7 +70,7 @@ def http(url: str, method: str, path: str, body: dict | None = None, tok: str = 
     if body is not None:
         data, headers["Content-Type"] = json.dumps(body).encode(), "application/json"
     try:
-        with urllib.request.urlopen(urllib.request.Request(url + path, data=data, method=method, headers=headers), timeout=10) as r:
+        with urllib.request.build_opener(urllib.request.ProxyHandler({})).open(urllib.request.Request(url + path, data=data, method=method, headers=headers), timeout=10) as r:
             return r.status, r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         return e.code, e.read().decode("utf-8", "replace")

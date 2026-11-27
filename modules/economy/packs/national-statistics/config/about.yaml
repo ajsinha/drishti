@@ -27,7 +27,7 @@ kinds:
   statistics-series:
     title: National statistic
     about: ${$.TITLE} was ${fmt($.LATEST, 'amount2')} (${$.UNIT}) in ${$.LATEST_PERIOD}, released ${$.RELEASED}.
-    guide: national-statistics
+    guide: world-data-guide
     glossary:
       SERIES_ID: { term: Series id, means: "NSTAT-V and the Statistics Canada vector number." }
       NAME: { term: Name, means: "The series' title in the feed's YAML, as NAME for search." }
@@ -60,3 +60,16 @@ kinds:
       PROVENANCE.ATTRIBUTION: { use: attribution }
       PROVENANCE.URL: { use: url }
       PROVENANCE.INTERNAL_ONLY: { use: internal }
+intro:
+  generator: tools/packgen/publicsector/make.py
+  refresh: python3 tools/drishti.py feed run national-statistics
+  sources:
+  - name: Statistics Canada Web Data Service (WDS)
+    licence: Statistics Canada Open Licence
+    internal-only: false
+    used-for: statistics-series
+  sections:
+    What it is: |-
+      Statistics Canada's headline statistics by vector from its Web Data Service (Statistics Canada Open Licence): the consumer price index, unemployment, monthly GDP, population, housing starts and the overnight money market rate. Each series shows its latest value, the change on the period and on the year, and its history. Filled daily by the national-statistics feed into the worldlake lake; more vectors are a line each in the feed's YAML.
+    Refreshing the data: |-
+      The **national-statistics** feed (`config/feeds/national-statistics.yaml`: its sources and their licences in `options.sources`, its schedule, weekdays at 09:00 local time, and its selection in `options`) pulls what is new into `<data>/datafeeds/national-statistics/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run national-statistics` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). With the Python you run Drishti with: `python3 tools/drishti.py feed run national-statistics` on Linux and macOS, `py -3.13 tools\drishti.py feed run national-statistics` on Windows; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.

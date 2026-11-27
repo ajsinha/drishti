@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """Drishti Elements is an external component (github.com/drishti-platform/drishti-elements), vendored as its release tree under
-static/vendor/drishti-elements/<version>/ (docs/architecture/ELEMENTS_IN_DRISHTI.md). The pin has one home, the folder's name: exactly one
+static/vendor/drishti-elements/<version>/ (docs/architecture/THIN_CONSOLE_DESIGN.md). The pin has one home, the folder's name: exactly one
 folder, its manifest says the same version, the Maven property that reads its two tables says it too; nobody edits the copy (every file
 matches the SHA-384 of its manifest, nothing added); Drishti keeps no second copy of what moved; the host script registers Drishti's own
 libraries as their manifest says."""

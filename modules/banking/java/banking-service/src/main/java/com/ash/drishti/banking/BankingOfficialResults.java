@@ -19,7 +19,7 @@ import com.ash.drishti.kernel.api.official.OfficialResults;
 import java.util.Map;
 
 /**
- * The banking module's official results (DOMAIN_MODULES.md J6): the lakes of the official VaR and exposure results
+ * The banking module's official results (KERNEL_AND_MODULES.md J6): the lakes of the official VaR and exposure results
  * ({@code config/lakes/banking/var-official.yaml}, {@code ccr-official.yaml}) and the official kinds, each to its publisher's settings prefix, so a
  * pack's reader of them follows the publisher's format. Found with the {@link java.util.ServiceLoader} before any bean exists.
  */

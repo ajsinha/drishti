@@ -2,6 +2,7 @@
 target/
 *.class
 *.log
+# the user's own IDE files; the launchers are visible run-configs/*.run.xml files (generated: tools/launch/launchers.py)
 .idea/
 *.iml
 .vscode/
@@ -17,49 +18,6 @@ hs_err_pid*
 # data/testdata (tools/testdata/make_testdata.py writes it, `drishti.py lake demo` builds the demo lakes from it)
 /data/*
 !/data/testdata/
-# the lakes' folders are kept in git (each with only its README.md); what a build or a load writes there is never committed
-!/data/delta/
-/data/delta/*
-!/data/delta/demo/
-/data/delta/demo/*
-!/data/delta/demo/README.md
-!/data/delta/risklake/
-/data/delta/risklake/*
-!/data/delta/risklake/README.md
-!/data/delta/newslake/
-/data/delta/newslake/*
-!/data/delta/newslake/README.md
-!/data/delta/worldlake/
-/data/delta/worldlake/*
-!/data/delta/worldlake/README.md
-!/data/delta/regulators/
-/data/delta/regulators/*
-!/data/delta/regulators/README.md
-!/data/delta/capitalmarket/
-/data/delta/capitalmarket/*
-!/data/delta/capitalmarket/README.md
-!/data/delta/referencelake/
-/data/delta/referencelake/*
-!/data/delta/referencelake/README.md
-# the data inbox's folders are kept in git (each with only its README.md); files dropped or moved there, the ledger and inbox.lock are never committed
-!/data/dataload/
-/data/dataload/*
-!/data/dataload/README.md
-!/data/dataload/inbox/
-/data/dataload/inbox/*
-!/data/dataload/inbox/README.md
-!/data/dataload/inprocess/
-/data/dataload/inprocess/*
-!/data/dataload/inprocess/README.md
-!/data/dataload/outbox/
-/data/dataload/outbox/*
-!/data/dataload/outbox/README.md
-!/data/dataload/failed/
-/data/dataload/failed/*
-!/data/dataload/failed/README.md
-!/data/dataload/ledger/
-/data/dataload/ledger/*
-!/data/dataload/ledger/README.md
 .claude/
 # the Python runtime of Calc: installed by python tools/drishti.py calc install (pinned and verified), never committed
 drishti-console/web/static/vendor/pyodide/
@@ -83,8 +41,6 @@ external_lib/java/*
 external_lib/python/*
 !external_lib/python/README.md
 
-# the QA run configurations (run-configs/): the QA profile own data folder, lake and packs
-
 # runtime data a module's tests or tools might make beside the module (the data folder is the repository root's data/ only)
 /drishti-*/data/
 /*/drishti-*/data/
@@ -96,9 +52,8 @@ external_lib/python/*
 /lib/wheels/*.whl
 # the site's jars: <home>/lib/ext (drishti.lib.path), kept on an upgrade; never committed (lib/ext/README.md is)
 /lib/ext/*
-# the engine JARs: <home>/lib/engines (drishti.engine-lib.path), kept on an upgrade; never committed (lib/engines/README.md is)
+# the engine JARs: <home>/lib/engines (drishti.engine-lib.path), kept on an upgrade; never committed
 /lib/engines/*
-!/lib/engines/README.md
 !/lib/ext/README.md
 
 # deploy/stack/ (the local Drishti*net cluster, deploy/stack/README.md): the repository is public, so its secrets (the token, session and

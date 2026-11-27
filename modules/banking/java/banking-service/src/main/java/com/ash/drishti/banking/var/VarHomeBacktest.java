@@ -48,7 +48,7 @@ final class VarHomeBacktest implements HomeTable {
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> rows(Context c) {
         List<Map<String, Object>> out = new ArrayList<>();
-        boolean viaEngine = engine.consumers();                  // R2: the family switch var.consumers.path
+        boolean viaEngine = engine.consumers();                  // R2: the family switch var.consumers.route
         if (viaEngine ? !engine.running() : !svc.running()) {
             return out;
         }

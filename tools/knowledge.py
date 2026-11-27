@@ -112,15 +112,15 @@ def domain_section(data: dict, domain: str) -> str:
 
 
 def home_section(data: dict) -> str:
-    """The home page's index: every term A to Z with the page that explains it."""
+    """The home page's index: every term A to Z with the page that explains it (the meaning is said once, in that page's glossary)."""
     domains = data["domains"]
     rows = sorted(data["terms"], key=lambda e: e["term"].lower())
     out = [START, "", f"{len(rows)} terms in {len(domains)} pages. `WHAT <term>` opens any of them.", "",
-           "| Term | Meaning | Page |", "|---|---|---|"]
+           "| Term | Page |", "|---|---|"]
     for e in rows:
         d = domains[e["domain"]]
         out.append(f"| [{_cell(e['term'])}]({d['page']}#{anchor(e['term'])})" + (f" ({_cell(e['name'])})" if e.get("name") else "")
-                   + f" | {_cell(e['meaning'])} | [{d['title']}]({d['page']}) |")
+                   + f" | [{d['title']}]({d['page']}) |")
     return "\n".join(out + ["", END])
 
 

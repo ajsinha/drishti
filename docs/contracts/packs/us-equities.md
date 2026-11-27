@@ -17,7 +17,7 @@
 
 # Data contracts of the us-equities pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [modules/capital-markets/packs/us-equities/guides/us-equities.md](../../../modules/capital-markets/packs/us-equities/guides/us-equities.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/capital-markets/packs/us-equities/README.md](../../../modules/capital-markets/packs/us-equities/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -47,7 +47,6 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | Binding hint | lake table `us-equities.us-company`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `TICKER`, `NAME`, `LEI_LEGAL_NAME`, `CIK`, `LEI`, `EXCHANGE`, `INDEX_TEXT`, `SECTOR`, `SIC`, `SIC_DESCRIPTION`, `STATE_OF_INCORPORATION`, `REVENUE` |
 | Test data | data/testdata/us-equities/us-company |
-| Worked example | [us-equities/us-company](../samples/us-equities.md#us-company) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -179,6 +178,139 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 - enum values inferred from the data, not from a glossary: LEI_STATUS, LEI_SOURCE, CURRENCY, INDEXES[].INDEX, INDEXES[].NAME, FACTS[].LABEL: confirm they are closed lists.
 - no unit stated for the amounts REVENUE, NET_INCOME, EPS_DILUTED, FINANCIALS[].REVENUE, FINANCIALS[].NET_INCOME, FINANCIALS[].EPS_DILUTED (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-us-equities-us-company"></a>
+**Example: `data/testdata/us-equities/us-company`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "TICKER": "WRB",
+  "NAME": "W. R. Berkley",
+  "SEC_NAME": "BERKLEY W R CORP",
+  "CIK": "0000011544",
+  "OTHER_TICKERS": "WRB-PE, WRB-PF, WRB-PG, WRB-PH",
+  "EXCHANGE": "NYSE, NYSE, NYSE, NYSE, NYSE",
+  "LISTING": "New York Stock Exchange",
+  "SIC": "6331",
+  "SIC_DESCRIPTION": "Fire, Marine & Casualty Insurance",
+  "DIVISION": "H",
+  "SECTOR": "Finance, Insurance and Real Estate",
+  "STATE_OF_INCORPORATION": "DE",
+  "FISCAL_YEAR_END": "12-31",
+  "FILER_CATEGORY": "Large accelerated filer",
+  "HEADQUARTERS": "Greenwich",
+  "BUSINESS_ADDRESS": "GREENWICH, CT",
+  "FOUNDED": "1967-01-01",
+  "WEBSITE": "http://www.wrberkley.com/",
+  "PHONE": "2036293000",
+  "LEI": "SQOAGCLKBDWNVYV1OV80",
+  "LEI_LEGAL_NAME": "W. R. BERKLEY CORPORATION",
+  "LEI_STATUS": "ISSUED",
+  "LEI_SOURCE": "GLEIF, LEI from Wikidata",
+  "INDEXES": [
+    {
+      "INDEX": "SP500",
+      "NAME": "S&P 500",
+      "SINCE": "2019-12-05"
+    }
+  ],
+  "INDEX_TEXT": "S&P 500",
+  "CURRENCY": "USD",
+  "FISCAL_YEAR": 2025,
+  "REVENUE": 14707856000,
+  "NET_INCOME": 1779403000,
+  "ASSETS": 44071071000,
+  "LIABILITIES": 34359177000,
+  "EQUITY": 9700818000,
+  "EPS_DILUTED": 4.45,
+  "SHARES_OUTSTANDING": 374490856,
+  "FINANCIALS": [
+    {
+      "YEAR": 2016,
+      "PERIOD_END": "2016-12-31",
+      "REVENUE": 7654184000,
+      "NET_INCOME": 601916000,
+      "ASSETS": 23364844000,
+      "LIABILITIES": 18283710000,
+      "EQUITY": 5047208000,
+      "EPS_DILUTED": 4.68
+    },
+    {
+      "YEAR": 2017,
+      "PERIOD_END": "2017-12-31",
+      "REVENUE": 7684764000,
+      "NET_INCOME": 549094000,
+      "ASSETS": 24299917000,
+      "LIABILITIES": 18848754000,
+      "EQUITY": 5411344000,
+      "EPS_DILUTED": 2.84
+    },
+    "… 8 more elements of the same shape"
+  ],
+  "FACTS": [
+    {
+      "FACT": "WRB-REVENUE",
+      "LABEL": "Revenue"
+    },
+    {
+      "FACT": "WRB-NET-INCOME",
+      "LABEL": "Net income"
+    },
+    "… 5 more elements of the same shape"
+  ],
+  "FILINGS": [
+    {
+      "ACCESSION": "0000011544-26-000046",
+      "FORM": "8-K",
+      "FILED": "2026-10-19",
+      "REPORT_DATE": "2026-10-19",
+      "DESCRIPTION": "Current report"
+    },
+    {
+      "ACCESSION": "0001628280-26-060471",
+      "FORM": "SCHEDULE 13G/A",
+      "FILED": "2026-09-03",
+      "REPORT_DATE": "",
+      "DESCRIPTION": "SCHEDULE 13G/A"
+    },
+    "… 18 more elements of the same shape"
+  ],
+  "INDEX_IDS": [
+    "SP500"
+  ],
+  "FACT_IDS": [
+    "WRB-REVENUE",
+    "WRB-NET-INCOME",
+    "WRB-ASSETS",
+    "… 4 more strings"
+  ],
+  "FILING_IDS": [
+    "0000011544-26-000046",
+    "0001628280-26-060471",
+    "0000899140-26-000967",
+    "… 17 more strings"
+  ],
+  "LATEST_FILING": "2026-10-19",
+  "SIC_SECTOR": "6331",
+  "PRICE_HISTORY": "PX-WRB",
+  "PROVENANCE": {
+    "SOURCE": "U.S. Securities and Exchange Commission, EDGAR (submissions, XBRL company facts); Wikidata; GLEIF; Nasdaq Trader symbol directory",
+    "RETRIEVED_AT": "2026-10-24",
+    "LICENCE": "Public domain (SEC EDGAR); CC0 1.0 (Wikidata, GLEIF)",
+    "URL": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000011544"
+  },
+  "_meta": {
+    "source": "sec-edgar",
+    "dataset": "submissions, companyfacts, Wikidata, GLEIF",
+    "retrievedAt": "2026-10-24",
+    "licence": "public domain; CC0",
+    "generation": 1
+  },
+  "ECONOMY": "ECON-USA"
+}
+```
+
 ## IDX: Index members (`index-membership`)
 
 An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF reports holding them; a click opens the member's summary beside.
@@ -197,7 +329,6 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 | Binding hint | lake table `us-equities.index-membership`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `INDEX`, `NAME`, `MEMBERS` |
 | Test data | data/testdata/us-equities/index-membership |
-| Worked example | [us-equities/index-membership](../samples/us-equities.md#index-membership) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -251,6 +382,61 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 - required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/index-membership/index-membership.2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: ROWS[].SECTOR: confirm they are closed lists.
+
+<a id="example-us-equities-index-membership"></a>
+**Example: `data/testdata/us-equities/index-membership`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "INDEX": "SP500",
+  "NAME": "S&P 500",
+  "MEMBERS": 495,
+  "ROWS": [
+    {
+      "TICKER": "A",
+      "NAME": "Agilent Technologies",
+      "SECTOR": "Manufacturing",
+      "SIC": "3826",
+      "SIC_DESCRIPTION": "Laboratory Analytical Instruments",
+      "EXCHANGE": "NYSE",
+      "REVENUE": 6948000000,
+      "NET_INCOME": 1303000000,
+      "CURRENCY": "USD",
+      "FISCAL_YEAR": 2025,
+      "SINCE": "2000-06-05"
+    },
+    {
+      "TICKER": "AAPL",
+      "NAME": "Apple Inc.",
+      "SECTOR": "Manufacturing",
+      "SIC": "3571",
+      "SIC_DESCRIPTION": "Electronic Computers",
+      "EXCHANGE": "Nasdaq",
+      "REVENUE": 416161000000,
+      "NET_INCOME": 112010000000,
+      "CURRENCY": "USD",
+      "FISCAL_YEAR": 2025,
+      "SINCE": ""
+    },
+    "… 493 more elements of the same shape"
+  ],
+  "PROVENANCE": {
+    "SOURCE": "SEC Form N-PORT of SPY (State Street(R) SPDR(R) S&P 500(R) ETF Trust), the stocks it reported holding on 2026-06-30 (filed 2026-08-28, accession 0001410368-26-089410); SEC EDGAR (company data); Wikidata (the date a member joined)",
+    "LICENCE": "Public domain (SEC EDGAR); CC0 1.0 (Wikidata)",
+    "NOTE": "Membership as the tracking fund holds it on its report date. Index weights and levels are proprietary to their index providers and are not included. Held then, no longer listed by the SEC: AvalonBay Communities Inc, Electronic Arts Inc, Equity Residential, Paramount Skydance Corp, Warner Bros Discovery Inc.",
+    "RETRIEVED_AT": "2026-10-24"
+  },
+  "_meta": {
+    "source": "sec-nport",
+    "dataset": "holdings of SPY (Form N-PORT)",
+    "licence": "public domain",
+    "retrievedAt": "2026-10-24",
+    "generation": 1
+  }
+}
+```
 
 ## SIC: SIC sector (`sic-sector`)
 
@@ -335,7 +521,6 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 | Binding hint | lake table `us-equities.filing-feed`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `FEED`, `NAME`, `FILINGS` |
 | Test data | data/testdata/us-equities/filing-feed |
-| Worked example | [us-equities/filing-feed](../samples/us-equities.md#filing-feed) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -395,6 +580,66 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 - number types decided by the field's name: BY[].VALUE amount: confirm amount, rate or integer.
 - no unit stated for the amounts BY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-us-equities-filing-feed"></a>
+**Example: `data/testdata/us-equities/filing-feed`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "FEED": "10-K",
+  "NAME": "Annual reports",
+  "FORM": "10-K",
+  "FILINGS": 13,
+  "COMPANIES": 13,
+  "LATEST": "2026-10-23",
+  "EARLIEST": "2026-08-05",
+  "ROWS": [
+    {
+      "ACCESSION": "0001628280-26-067038",
+      "FILED": "2026-10-23",
+      "COMPANY": "JBL",
+      "COMPANY_NAME": "Jabil",
+      "FORM": "10-K",
+      "DESCRIPTION": "Annual report"
+    },
+    {
+      "ACCESSION": "0001628280-26-066391",
+      "FILED": "2026-10-20",
+      "COMPANY": "FDS",
+      "COMPANY_NAME": "Factset Research Systems Inc",
+      "FORM": "10-K",
+      "DESCRIPTION": "Annual report"
+    },
+    "… 11 more elements of the same shape"
+  ],
+  "BY": [
+    {
+      "LABEL": "ACN",
+      "VALUE": 1
+    },
+    {
+      "LABEL": "COST",
+      "VALUE": 1
+    },
+    "… 11 more elements of the same shape"
+  ],
+  "BY_TITLE": "Filings by company",
+  "PROVENANCE": {
+    "SOURCE": "U.S. Securities and Exchange Commission, EDGAR (submissions: the latest filings of each company covered)",
+    "RETRIEVED_AT": "2026-10-24",
+    "LICENCE": "Public domain (U.S. Government work); SEC EDGAR fair access policy (descriptive User-Agent, at most 10 requests a second)"
+  },
+  "_meta": {
+    "source": "sec-edgar",
+    "dataset": "submissions (recent filings)",
+    "retrievedAt": "2026-10-24",
+    "licence": "public domain",
+    "generation": 1
+  }
+}
+```
+
 ## FILING: SEC filing (`filing`)
 
 One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (metadata only; the document stays on sec.gov).
@@ -413,7 +658,6 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 | Binding hint | lake table `us-equities.filing`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `ACCESSION`, `COMPANY`, `COMPANY_NAME`, `FORM`, `FILED`, `REPORT_DATE` |
 | Test data | data/testdata/us-equities/filing |
-| Worked example | [us-equities/filing](../samples/us-equities.md#filing) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -458,6 +702,44 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 - required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/filing/filing.2026-10-24.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.
 
+<a id="example-us-equities-filing"></a>
+**Example: `data/testdata/us-equities/filing`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "ACCESSION": "0001104659-26-117587",
+  "COMPANY": "ABT",
+  "COMPANY_NAME": "Abbott Laboratories",
+  "FORM": "8-K",
+  "FORM_NAME": "Current report",
+  "FILED": "2026-10-21",
+  "REPORT_DATE": "2026-10-21",
+  "PRIMARY_DOCUMENT": "tm2627971d1_8k.htm",
+  "DOCUMENT_DESCRIPTION": "FORM 8-K",
+  "SIZE_KB": 278,
+  "ITEMS": [
+    {
+      "ITEM": "8.01",
+      "DESCRIPTION": "Other events"
+    },
+    {
+      "ITEM": "9.01",
+      "DESCRIPTION": "Financial statements and exhibits"
+    }
+  ],
+  "ITEMS_TEXT": "8.01, 9.01",
+  "PATH": "1800/000110465926117587",
+  "_meta": {
+    "source": "sec-edgar",
+    "dataset": "submissions (recent filings)",
+    "retrievedAt": "2026-10-24",
+    "generation": 1
+  }
+}
+```
+
 ## FACT: Financial fact (`financial-fact`)
 
 One financial concept of one company (revenue, net income, assets...) over up to ten fiscal years, from its 10-K XBRL filings.
@@ -476,7 +758,6 @@ One financial concept of one company (revenue, net income, assets...) over up to
 | Binding hint | lake table `us-equities.financial-fact`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `FACT_ID`, `COMPANY`, `COMPANY_NAME`, `CONCEPT`, `LABEL`, `LATEST`, `LATEST_YEAR` |
 | Test data | data/testdata/us-equities/financial-fact |
-| Worked example | [us-equities/financial-fact](../samples/us-equities.md#financial-fact) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -525,6 +806,50 @@ One financial concept of one company (revenue, net income, assets...) over up to
 - a snapshot refreshed when the us-equities data feed runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: CONCEPT, LABEL: confirm they are closed lists.
 - no unit stated for the amounts LATEST, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+
+<a id="example-us-equities-financial-fact"></a>
+**Example: `data/testdata/us-equities/financial-fact`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "FACT_ID": "ABT-REVENUE",
+  "COMPANY": "ABT",
+  "COMPANY_NAME": "Abbott Laboratories",
+  "CIK": "0000001800",
+  "CONCEPT": "REVENUE",
+  "LABEL": "Revenue",
+  "UNIT": "USD",
+  "XBRL_TAG": "RevenueFromContractWithCustomerExcludingAssessedTax",
+  "LATEST": 44328000000,
+  "LATEST_YEAR": 2025,
+  "YEARS": 10,
+  "HISTORY": [
+    {
+      "YEAR": 2016,
+      "PERIOD_END": "2016-12-31",
+      "VALUE": 20853000000,
+      "FILED": "2019-02-22",
+      "ACCESSION": "0001047469-19-000624"
+    },
+    {
+      "YEAR": 2017,
+      "PERIOD_END": "2017-12-31",
+      "VALUE": 27390000000,
+      "FILED": "2020-02-21",
+      "ACCESSION": "0001104659-20-023904"
+    },
+    "… 8 more elements of the same shape"
+  ],
+  "_meta": {
+    "source": "sec-edgar",
+    "dataset": "XBRL companyfacts (10-K)",
+    "retrievedAt": "2026-10-24",
+    "generation": 1
+  }
+}
+```
 
 ## PXH: Price history (live, internal use only) (`price-history`)
 

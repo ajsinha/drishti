@@ -84,8 +84,7 @@ public final class ProcessPythonClient implements PythonFunctionClient, AutoClos
     private record Frame(Map<String, Object> header, byte[] body) {}
 
     public ProcessPythonClient(String interpreter, Path sdk, int workers, int timeoutSeconds, int memoryMb) {
-        String py = interpreter == null || interpreter.isBlank()
-                ? (System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).startsWith("windows") ? "python" : "python3") : interpreter;
+        String py = com.ash.drishti.api.PythonSetting.orDefault(interpreter);
         this.sdk = sdk;
         this.command = List.of(py, "-I", "-c", "import sys; sys.path.insert(0, " + pyString(sdk.toString()) + "); "
                 + "from drishti_compute import pivot_fn; sys.exit(pivot_fn.main(['--memory', '" + ((long) memoryMb << 20) + "']))");

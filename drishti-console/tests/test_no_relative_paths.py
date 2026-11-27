@@ -89,7 +89,7 @@ YAML_RELATIVE_VALUE = re.compile(r"^\s*[A-Za-z0-9_.\-]+:\s*(?:\./|\.\./|config/|
 
 
 #: folders never read: build output, environments, the drill's and the tests' scratch
-SKIP = {".git", "target", "node_modules", ".venv", "data", "__pycache__", ".claude"}
+SKIP = {".git", "target", "node_modules", ".venv", "data", "__pycache__", ".claude"}  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
 
 
 def _walk(base: Path, suffixes: tuple) -> list[str]:

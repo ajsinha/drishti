@@ -203,7 +203,7 @@ public final class PeerSource implements SourcePlugin {
 
     /**
      * Every change of a kind this peer holds ({@code GET /api/v1/net/changes/{kind}}, its own records only, masked there for {@code p}): a
-     * live table that spans the members follows each member so (docs/guides/LIVE_RESULTS_GUIDE.md, Drishti*net). Reopened as
+     * live table that spans the members follows each member so (docs/guides/USER_GUIDE.md, Drishti*net). Reopened as
      * {@link #subscribe} is.
      */
     public com.ash.drishti.api.Subscription subscribeKind(String kind, Principal p, java.util.function.Consumer<EntityDocument> listener) {

@@ -32,7 +32,7 @@ pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it
 
 TESTS = Path(__file__).resolve().parent
 ROOT = TESTS.parents[1]
-SKIP = {".venv", "venv", "node_modules", "__pycache__", "vendor", "vendor-js", "static", "fixtures"}
+SKIP = {".venv", "venv", "node_modules", "__pycache__", "vendor", "vendor-js", "static", "fixtures"}  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
 SCRIPT_LINE = re.compile(r'^\s*(exec\s+|&\s+|env\s+.*?)?("?\$\{?[A-Za-z_0-9]*(JAVA|java|JDK[0-9]*)[A-Za-z_0-9]*\}?(/bin/java)?"?)\s+.*-(jar|cp)\b')
 
 

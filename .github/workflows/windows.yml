@@ -18,7 +18,7 @@ name: windows
 # start server, status, stop server) with the server on a generated lake asked for a view, a search and a past business
 # date. Testcontainers tests skip themselves (no Docker on Windows runners).
 on:
-  push: { branches: [develop, main] }
+  push: { branches: [develop, main, 'release/**', 'i7k/**', 'i7l/**'] }
   pull_request:
   workflow_dispatch:
 jobs:
@@ -27,6 +27,9 @@ jobs:
     timeout-minutes: 60
     env:
       DRISHTI_PORT: '18480'
+      TOOLS_TAG: v1.1.0-ide2          # the products are built from their release tags, never fetched from Maven Central (see fast.yml)
+      RACHANA_TAG: v1.0.1-ide2
+      LAKE_TAG: v0.9.1-ide2
     defaults:
       run: { shell: pwsh }
     steps:
@@ -37,10 +40,25 @@ jobs:
         with: { distribution: temurin, java-version: '25', cache: maven }
       - uses: actions/setup-python@v5
         with: { python-version: '3.13' }
+      - name: Build Drishti Tools, Rachana and Lake from their release tags
+        run: |
+          foreach ($spec in @("drishti-tools:$env:TOOLS_TAG", "drishti-rachana:$env:RACHANA_TAG", "drishti-lake:$env:LAKE_TAG")) {
+            $repo, $tag = $spec -split ':'
+            git clone -q --depth 1 --branch $tag "https://github.com/drishti-platform/$repo.git" "$env:RUNNER_TEMP/$repo"
+            if ($LASTEXITCODE -ne 0) { throw "clone of $repo $tag failed" }
+            Push-Location "$env:RUNNER_TEMP/$repo/java"
+            ./mvnw.cmd -B -q install -DskipTests
+            if ($LASTEXITCODE -ne 0) { throw "build of $repo $tag failed" }
+            Pop-Location
+          }
       - name: Build (no tests)
         run: ./mvnw.cmd -B -q install -DskipTests
       - name: Tests of the lake host, the Delta and Iceberg connectors and the server
-        run: ./mvnw.cmd -B verify -pl :drishti-lake-host,plugins/drishti-plugin-delta,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external,:drishti-server
+        run: ./mvnw.cmd -B -fae verify -pl :drishti-lake-host,plugins/drishti-plugin-delta,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external,:drishti-server
+      # its own step (everything is installed above): a failure here never hides the server suite's result, nor the other way round
+      - name: Tests of the identity stores (users, preferences, designs)
+        if: ${{ !cancelled() }}
+        run: ./mvnw.cmd -B verify -pl :drishti-identity
       - name: A small lake (the banking packs' samples, ten business days)
         run: |
           python -m pip install --quiet deltalake pyarrow pyyaml
@@ -53,8 +71,8 @@ jobs:
         run: python tools/drishti.py build jar --offline
       - name: Prepare and check this machine (setup, then setup --check)
         run: |
-          python tools/drishti.py setup --skip-venv
-          python tools/drishti.py setup --check --skip-venv
+          python tools/drishti.py setup drishti
+          python tools/drishti.py setup drishti --check
           if ($LASTEXITCODE -ne 0) { throw 'setup --check found something to do' }
       - name: The server on the lake (start server), asked for a view, a search and a past date; status; stop server
         env:

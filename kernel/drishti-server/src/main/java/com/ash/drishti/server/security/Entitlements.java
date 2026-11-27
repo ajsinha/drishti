@@ -101,7 +101,7 @@ public final class Entitlements {
     }
 
     /**
-     * The write-back {@code edit} power (APPROVALS_GUIDE.md › The design and its reasons, section 12): without it every page reads as today. Like {@code compliance}, the
+     * The write-back {@code edit} power (ADMIN_GUIDE.md › The design and its reasons, section 12): without it every page reads as today. Like {@code compliance}, the
      * all-roles grant {@code *} does not imply it; with sign-in off it is held, as every power is.
      */
     public boolean mayEdit(Principal p) {
@@ -182,7 +182,7 @@ public final class Entitlements {
     public static final String SERVICE = "service";
 
     /**
-     * The person's row rule on a kind (ACCESS_MODEL.md section 10): the rules their configured roles declare for it ({@code rows:}), any of
+     * The person's row rule on a kind (KERNEL_AND_MODULES.md section 19.10): the rules their configured roles declare for it ({@code rows:}), any of
      * them passing, with {@code $user.<attribute>} read from the person; empty when they see every record they may open (an administrator,
      * sign-in off, or one of their roles that opens the kind declares no rule for it). Row rules restrict record views (lists, blotters,
      * search, FORM, Raw JSON); aggregates (VaR, BI totals) keep their own scope model.
@@ -259,7 +259,7 @@ public final class Entitlements {
     }
 
     /**
-     * A module permission ({@code var:system-baskets}, docs/architecture/ACCESS_MODEL.md section 8): held by a role that lists it in
+     * A module permission ({@code var:system-baskets}, docs/architecture/KERNEL_AND_MODULES.md section 19.8): held by a role that lists it in
      * {@code permissions}, and by every administrator; with sign-in off, by everyone (as every power is).
      */
     public boolean holds(Principal p, String permission) {

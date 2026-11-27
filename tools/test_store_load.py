@@ -18,7 +18,7 @@ get the samples and the trade book as ONE input (each business day written once)
 input lives under the data folder and is removed after the load; QA3B-12: a failed load ends with the loader's line and one of ours.
 The generator (make_data.py) keeps its own checks here too.
 
-    drishti-console/.venv/bin/python -m pytest -q tools/test_store_load.py
+    python3 -m pytest -q tools/test_store_load.py
 """
 from __future__ import annotations
 

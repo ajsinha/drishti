@@ -18,8 +18,8 @@ The worked example is the help-desk pack, docs/guides/examples/pack/helpdesk. Th
 QUICKSTART packs but NOT helpdesk, and that trust a registry holding a signed helpdesk-0.1.0.zip, so that the install picture is a real
 install (the shared scratch server of tools/docs/screenshots.py has no registry). This module prepares and stops that setup itself:
 
-    drishti-console/.venv/bin/python tools/docs/shots/packs.py            # starts it on :18996/:17996, runs the pictures, stops it
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide packs --base http://127.0.0.1:17996   # against a setup you prepared
+    python3 tools/docs/shots/packs.py            # starts it on :18996/:17996, runs the pictures, stops it
+    python3 tools/docs/screenshots.py --guide packs --base http://127.0.0.1:17996   # against a setup you prepared
 
 It never touches :18480 / :17480. Installing changes the server, so run the pictures on a fresh setup (the first run does)."""
 from __future__ import annotations
@@ -150,7 +150,7 @@ def serve(work: Path) -> list:
         (packs / name).symlink_to(pack_dir(name))
     reg = work / "reg"
     reg.mkdir()
-    py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
+    py = Path(os.environ.get("DRISHTI_PYTHON") or sys.executable)
     py = py if py.exists() else Path(sys.executable)
     key = work / "acme"
     out = subprocess.run([sys.executable, str(ROOT / "tools" / "packreg" / "packreg.py"), "keygen", "--out", str(key)],

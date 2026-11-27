@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The lenses the core server ships (docs/architecture/ACCESS_MODEL.md, docs/lenses/): the core's own and the economy module's. Each names
+# The lenses the core server ships (docs/architecture/KERNEL_AND_MODULES.md, docs/lenses/): the core's own and the economy module's. Each names
 # the modules it needs (offered only while they are all on) and the functions it bundles. A domain module ships its own lenses in its jar.
 lenses:
   - id: world

@@ -15,10 +15,10 @@
 -->
 # Role Home Sutras: how a Home is built, chosen, arranged and kept current
 
-**Status: written 2026-11-22 for milestone H1 (the owner chose the hybrid: "Exceptions first" and "Since yesterday 17:00" on top of the
-KPI strip and mnemonic bar; "arrange my Home" is an option). Nothing is built or run.** The mock-ups are
-`docs/lenses/mockups/role-homes/H-risk-manager.html` and `H-trader.html` (branch `wip/i7b-products`). The model of a Home (a named file
-that roles point to) is `docs/plans/I7B_PLAN.md` 3.2; this document fills in the screens and the new server feature.
+**Status: built (milestone H1). Written 2026-11-22 (the owner chose the hybrid: "Exceptions first" and "Since yesterday 17:00" on top of the
+KPI strip and mnemonic bar; "arrange my Home" is an option).**
+The mock-ups are role-homes/H-risk-manager.html and H-trader.html (branch wip/i7b-products, lenses mock-ups). The model of a Home (a named file
+that roles point to) is the i7b plan (branch wip/i7b-products) 3.2; this document fills in the screens and the new server feature.
 
 ## 1. One Home Sutra per role, and how a role's Home is chosen
 
@@ -144,7 +144,7 @@ the numbers come from (no second implementation of VaR). For a followed measure 
 3. The engine turns rows into WHY: up to three drivers by size with their shares ("RF-USD-10Y 71%"), plus "unexplained n%" if the rows do not add up (a
    measure whose engine cannot take a group has only the groups it can).
 4. Finer drivers (a risk factor, a trade) come from the measure engine's own explain on the cell; the command `WHY <key>` opens that explanation
-   (`WHY DESK-A <GO>`), so the Home carries a sentence and one click reaches the full steps.
+   (the why-it-moved view of the desk), so the Home carries a sentence and one click reaches the full steps.
 
 Cost control: attribution runs after each load or recompute for the **followed measures above their thresholds only**, once for the firm (stored
 subject-keyed in `change_driver`), never per person.

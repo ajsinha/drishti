@@ -113,6 +113,14 @@ public final class NetNodes implements AutoCloseable {
         }
     }
 
+    /**
+     * A path as a YAML scalar: single-quoted, so a Windows path's backslashes are kept as they are (in double quotes YAML reads
+     * {@code \a} of {@code D:\a\...} as an escape and the connector points nowhere).
+     */
+    public static String yaml(Object path) {
+        return "'" + String.valueOf(path).replace("'", "''") + "'";
+    }
+
     /** Switches a template's connector off on a node: its override file says {@code enabled: false}. */
     public void off(String node, String name) {
         connector(node, name, "enabled: false");

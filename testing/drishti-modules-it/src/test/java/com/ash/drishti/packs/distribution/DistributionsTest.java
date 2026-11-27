@@ -32,7 +32,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
 
-/** The distribution files (docs/architecture/DISTRIBUTIONS.md): each boots from its file alone, and each shows only its modules. */
+/** The distribution files (docs/architecture/KERNEL_AND_MODULES.md): each boots from its file alone, and each shows only its modules. */
 class DistributionsTest {
 
     static final Path DIR = Path.of(TestRoots.repo(), "config", "distributions");
@@ -188,14 +188,14 @@ class DistributionsTest {
     }
 
     @Test
-    void theOldKeysAreNotReadAndHealthNamesThem() {
-        StandardEnvironment env = boot("drishti.edition", "risk", "drishti.branding.tagline", "Our own line");
-        assertThat(Editions.of(env)).isSameAs(Edition.NONE);              // the old edition is not read: only a distribution filters
-        assertThat(env.getProperty("drishti.branding.tagline")).as("the distribution file says it").isEqualTo("Any data. Any domain. One grammar.");
-        String notes = env.getProperty(EditionEnvironmentPostProcessor.INFO + ".deprecated");
-        assertThat(notes).contains("drishti.edition is no longer read").contains("drishti.branding.tagline is no longer read");
-        StandardEnvironment both = boot("drishti.edition", "risk", "drishti.distribution", "finance");
-        assertThat(Editions.of(both).name()).isEqualTo("drishti.finance");
+    void theOldKeysStopTheStartAndNameTheNewOnes() {
+        assertThatThrownBy(() -> boot("drishti.edition", "risk", "drishti.branding.tagline", "Our own line"))   // RetiredNames: nothing is read from an old name
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("drishti.edition (set in site) is retired: use a distribution file")
+                .hasMessageContaining("drishti.branding.tagline (set in site) is retired: use brand: in the distribution file");
+        assertThatThrownBy(() -> boot("drishti.edition", "risk", "drishti.distribution", "finance"))             // a distribution beside it does not excuse it
+                .isInstanceOf(IllegalStateException.class).hasMessageContaining("drishti.edition (set in site) is retired");
+        assertThat(boot("drishti.distribution", "finance").getProperty("drishti.branding.tagline")).as("the distribution file says it").isNotBlank();
     }
 
     @Test
@@ -204,7 +204,7 @@ class DistributionsTest {
         Map<String, List<String>> server = EditionEnvironmentPostProcessor.featureMapping(DIR, "server");
         assertThat(server).containsEntry("calc", List.of("drishti.calc.enabled")).containsEntry("var", List.of("drishti.engines.var.enabled"));
         assertThat(EditionEnvironmentPostProcessor.featureMapping(DIR, "console")).containsEntry("build", List.of("features.build"));
-        Path dir = java.nio.file.Files.createTempDirectory(Path.of(TestRoots.module(), "target"), "dist");
+        Path dir = java.nio.file.Files.createTempDirectory(java.nio.file.Files.createDirectories(Path.of(TestRoots.module(), "target")), "dist");
         java.nio.file.Files.copy(DIR.resolve(Distributions.KERNEL), dir.resolve(Distributions.KERNEL));
         java.nio.file.Files.writeString(dir.resolve("drishti.mine.yaml"), String.join("\n", "format: 1", "distribution: drishti.mine",
                 "brand: { product: Mine }", "modules: [{ id: banking }]", "features: { calc: off, var: on, exposure: off }", ""));

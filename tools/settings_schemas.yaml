@@ -113,7 +113,7 @@ schemas:
     file: drishti-console/config/help.yaml
     applies: console
     change: live
-    maps: [contextual, knowledge, documents]
+    maps: [contextual, knowledge, documents, moved]
     keys:
       - { key: most-used, type: list, default: shipped, meaning: "The most used pages, under the search box of the help centre's front door: {slug, label} each (a page the person cannot see is left out)" }
       - { key: "most-used[].slug", type: string, meaning: "The page" }
@@ -137,6 +137,7 @@ schemas:
       - { key: "sections[].groups[].guides[].roles", type: list, default: "[]", meaning: "Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it)" }
       - { key: "sections[].groups[].guides[].engine", type: string, default: none, meaning: "The compute engine it is about: left out while it runs on no server (an administrator sees it greyed); open to anyone who can open Help otherwise" }
       - { key: "sections[].groups[].guides[].pair", type: string, default: none, meaning: "The tutorial drawn beside this guide on its row (a page of the same group)" }
+      - { key: "sections[].groups[].guides[].section", type: string, default: none, meaning: "With doc: the page is only this section of the document (the words of its heading), not the whole document: the Developer page is one section of the API reference" }
       - { key: "sections[].groups[].guides[].children", type: list, default: "[]", meaning: "Pages that sit under this one in the Help list: each a page of its own with a slug, doc, title, icon and summary (the Business intelligence section)" }
       - { key: "sections[].groups[].guides[].children[].title", type: string, meaning: "Its title" }
       - { key: "sections[].groups[].guides[].children[].slug", type: string, meaning: "The child page's address, /help/<slug>" }
@@ -148,7 +149,9 @@ schemas:
       - { key: knowledge, type: map, default: shipped, meaning: "\"What does this mean?\" beside a data page: screen or kind -> the Knowledge page or glossary entry that explains it" }
       - { key: "knowledge.<name>", type: string, meaning: "One screen or kind and its Knowledge target" }
       - { key: contextual, type: map, default: shipped, meaning: "F1: screen -> the guide it opens" }
+      - { key: moved, type: map, default: shipped, meaning: "A page merged into another: its old address (slug) -> the address it leads to now (a slug, with an optional #anchor)" }
       - { key: "contextual.<name>", type: string, meaning: "One screen and its guide's slug" }
+      - { key: "moved.<name>", type: string, meaning: "One old page address and where it leads now" }
   workspaces:
     area: console-files
     title: "`workspaces.yaml`: the starter workspaces"
@@ -280,14 +283,14 @@ schemas:
       - { key: kinds, type: list, default: "what the plugin reports", meaning: "The kinds it serves" }
       - { key: settings, type: map, default: "{}", meaning: "The plugin's settings, as the tables above (every plugin, the shared tls.* and proxy.*, the plugin's own)" }
       - { key: "settings.*", type: map, meaning: "One setting of the plugin" }
-      - { key: writes, type: map, default: "{}", meaning: "Named commands that write an approved change back to the source (APPROVALS_GUIDE.md section 5.4): JDBC or Kafka; off until an administrator switches the connector's writes on" }
+      - { key: writes, type: map, default: "{}", meaning: "Named commands that write an approved change back to the source (ADMIN_GUIDE.md section 28.4): JDBC or Kafka; off until an administrator switches the connector's writes on" }
       - { key: "writes.*", type: map, meaning: "One command: kind, params, confirm (reply, ack-topic, next-load), timeout, and the plugin's block (jdbc or kafka)" }
       - { key: "writes.*.confirm", type: string, default: reply, meaning: "How the write is confirmed: reply, ack-topic or next-load" }
-      - { key: "writes.*.kafka", type: map, meaning: "The Kafka block (docs/guides/LIVE_RESULTS_GUIDE.md section 8): topic, shape, version-field, changed-by, changed-at, change-id-field" }
+      - { key: "writes.*.kafka", type: map, meaning: "The Kafka block (docs/guides/USER_GUIDE.md, Live results and blotters: Writing back to the record's own source): topic, shape, version-field, changed-by, changed-at, change-id-field" }
       - { key: "writes.*.kafka.*", type: string, meaning: "One key of the Kafka block" }
   module-file:
     area: modules
-    title: "A module's switch: `config/modules/<module>.yaml` (docs/architecture/ACCESS_MODEL.md)"
+    title: "A module's switch: `config/modules/<module>.yaml` (docs/architecture/KERNEL_AND_MODULES.md)"
     file: "config/modules/*.yaml"
     files: ["config/modules/*.yaml"]
     applies: the module, on this server
@@ -333,7 +336,7 @@ schemas:
       - { key: pack, type: string, meaning: "Required: the pack's name, equal to its folder's name (else the pack is refused)" }
       - { key: version, type: string, default: "0", meaning: "X.Y.Z, shown in About, Admin -> Health and Admin -> Packs and checked by deploys and the registry" }
       - { key: code, type: string, default: none, meaning: "The pack's short code: typed alone it opens the pack's overview (/p/<pack>); must not equal a mnemonic" }
-      - { key: domain, type: string, default: core, meaning: "The domain it serves (core, banking, economy, capitalmarkets): a pack of a domain loads only while a module of that domain is on (docs/architecture/ACCESS_MODEL.md)" }
+      - { key: domain, type: string, default: core, meaning: "The domain it serves (core, banking, economy, capitalmarkets): a pack of a domain loads only while a module of that domain is on (docs/architecture/KERNEL_AND_MODULES.md)" }
       - { key: title, type: string, default: "the pack's name", meaning: "Its name in menus, help and admin pages" }
       - { key: description, type: string, default: "", meaning: "One paragraph for About and the help centre" }
       - { key: sample, type: boolean, default: "false", meaning: "A demonstration pack: drishti.packs.samples can hide it from business users" }
@@ -471,9 +474,14 @@ schemas:
 # Environment variables no settings file above names: read by the packs' manifests, the example connector files, the code or the tools.
 # by: server, console, packs, tools.
 env:
+  - { name: DRISHTI_ENGINE_JAR, by: tools, default: "(none)", sets: "the sample engine's JAR the drop-in drill uses", meaning: "A built sample engine JAR for the drop-in drill (tools/drillkit/dropin.py); unset: drishti-engine is cloned at the pinned ref and built" }
+  - { name: DRISHTI_ENGINE_REPO, by: tools, default: "the pinned engine repository", sets: "where the drop-in drill reads drishti-engine", meaning: "A local clone of drishti-engine the drop-in drill reads instead of GitHub (tools/drillkit/dropin.py)" }
+  - { name: DRISHTI_DRILL_TMP, by: tools, default: "<home>/data/tmp", sets: "the drop-in drill's temporary folder", meaning: "The folder the drop-in drill works in (tools/drillkit/dropin.py); removed when the drill ends" }
   - { name: DRISHTI_KERNEL_JAR, by: tools, default: "lib/drishti-server-*-exec.jar", sets: "the server jar `module run` starts", meaning: "The server jar `drishti.py module run` starts, before the one in <home>/lib (tools/modulecli.py)" }
-  - { name: DRISHTI_HOME, by: tools, default: "the folder holding tools/drishti.py", sets: "the install folder (drishti.home)", meaning: "THE install root of drishti.py setup, build, start, stop and status (read only; Drishti's own jars in <home>/lib): --home, else DRISHTI_HOME, else drishti.home of --settings, else the tools' own folder; a value that is not the folder the tools come from is refused (tools/javacmd.py find_home)" }
+  - { name: DRISHTI_HOME, by: tools, default: "the folder holding tools/drishti.py", sets: "the install folder (drishti.home)", meaning: "THE install root of drishti.py setup, build, start, stop and status (read only; Drishti's own jars in <home>/lib): --home, else drishti.home of --settings, else DRISHTI_HOME, else the tools' own folder (the Java order: the settings file beats the environment); --home naming another folder is refused, a settings file or DRISHTI_HOME naming one is a WARNING and not used (tools/javacmd.py find_home)" }
   - { name: DRISHTI_MODULES_HOME, by: tools, default: "<the install folder>/modules", sets: "the modules folder (drishti.modules.home)", meaning: "The server's modules folder: the .dmod files it boots at start. drishti.py module list and pack new --deploy read it; the server takes drishti.modules.home" }
+  - { name: DRISHTI_WHEELS, by: tools, default: "(none)", sets: "setup's offline wheels", meaning: "A folder of wheels (a wheel-pack .zip is never unzipped: unzip it into ~/drishti-wheels): drishti.py setup and setup libs check the libraries of the Python running setup and name this folder in the offline pip commands they print (setup installs nothing; you run them) (the same as --wheels; --wheels wins; unset: ~/drishti-wheels when it holds wheels)" }
+  - { name: DRISHTI_DEBUG, by: tools, default: "(none)", sets: "the tools' tracebacks", meaning: "1: tools/drishti.py shows an unexpected error's traceback on the screen instead of one [FAIL] line naming a log file with it (for a developer)" }
   - { name: DRISHTI_JAVA_HOME, by: tools, default: "(none)", sets: "the JDK every tool runs", meaning: "The JDK folder every Drishti tool and launcher runs Java from, before JAVA_HOME and the PATH (--java, --java-home and the settings key drishti.java.home come first: drishti.java.home is the JDK the Python tools run Java from (lake demo, lake build --engine java, start); the server in the IDE uses the project's JDK); older than 21 is refused (tools/javacmd.py find_java)" }
   - { name: DRISHTI_SERVER_URL, by: tools, default: "this machine's LAN address :18480", sets: "the console's servers", meaning: "The server, or a cluster's entry nodes comma-separated, drishti.py start console points the console at when --server is not given" }
   - { name: DRISHTI_HAMMER_TOKEN, by: tools, default: "(none)", sets: "the Explain hammer's bearer token", meaning: "The token tools/drillkit/explain_hammer.py sends to a server with sign-in on (else its --token)" }

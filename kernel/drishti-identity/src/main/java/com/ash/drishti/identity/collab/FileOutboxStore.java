@@ -76,7 +76,7 @@ public final class FileOutboxStore implements OutboxStore {
                 if (Files.isDirectory(d)) {
                     try (Stream<Path> files = Files.list(d)) {
                         for (Path p : files.filter(x -> x.toString().endsWith(".json")).toList()) {
-                            OutboxItem i = json.readValue(p.toFile(), OutboxItem.class);
+                            OutboxItem i = json.readValue(java.nio.file.Files.readAllBytes(p), OutboxItem.class);
                             items.put(i.seq(), i);
                             seq = Math.max(seq, i.seq());
                         }

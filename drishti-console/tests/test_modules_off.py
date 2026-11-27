@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The guarantee, console part (docs/architecture/ACCESS_MODEL.md section 6): a module that is off is gone from every door the console
+"""The guarantee, console part (docs/architecture/KERNEL_AND_MODULES.md section 19.6): a module that is off is gone from every door the console
 draws, and so is a function the person may not use. The console asks the server (the public about answer's ``modules``; the person's
 ``GET /api/v1/modules``) and nothing else: pages and routes answer 404, menus, the Admin strip, search, the command line
 and its type-ahead, Help and the Build home leave them out, a word typed anyway says "<WORD> is not available to you: ask your
@@ -89,7 +89,7 @@ def test_banking_off_is_gone_from_every_door(backend, monkeypatch):
     assert c.get("/help/docs-guides-var-guide").status_code == 404                                    # Help: its guides and tutorials
     assert c.get("/help/docs-tutorials-02-var-from-the-bank-to-a-trade").status_code == 404
     assert "Risk measures" not in c.get("/help").text                                                 # and its Help section
-    for slug in ("knowledge-risk", "docs-tutorials-12-a-day-of-bank-data"):                           # and its pages in core sections (domain:)
+    for slug in ("knowledge-risk", "bank-data-guide"):                                              # and its pages in core sections (domain:)
         assert c.get(f"/help/{slug}").status_code == 404, slug
     assert c.get("/help/knowledge-data").status_code == 200
     assert 'data-kind="var-baskets"' not in c.get("/build").text                                      # the Build home: its types
@@ -206,7 +206,7 @@ def test_a_lens_never_hides_a_modules_assets(backend, monkeypatch):
 
 
 def test_the_registrations_are_the_modules_and_the_core_names_none():
-    """C1 to C6 (DOMAIN_MODULES.md section 5): the banking module's console code fills the core's hooks; plugin.yaml lists its routers."""
+    """C1 to C6 (KERNEL_AND_MODULES.md section 21.5): the banking module's console code fills the core's hooks; plugin.yaml lists its routers."""
     plugins.load()
     banking = modules.plugin("banking")
     assert banking is not None and "plugins.banking.routes.var_routes" in banking.routers

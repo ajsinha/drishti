@@ -133,12 +133,6 @@ def spec() -> PB.PackSpec:
         examples=[("JUR JUR-IND", "India · government, legislature, governance indicators"), ("JUR JUR-USA", "United States · the same view"), ("ELEC ELEC-BRA-LOW", "Brazil · lower-chamber result"),
                   ("OFFC OFFC-JPN-HOG", "Japan · head of government"), ("PARTY PARTY-IND-01", "India · largest party in the lower chamber"), ("REGN REGN-SSF", "Sub-Saharan Africa · a World Bank region"),
                   ("SOCI SOCI-NGA-WGI-LAW", "Nigeria · rule of law")],
-        overview="The data is published data, not samples: the CIA World Factbook (public domain) for governments, office holders, elections and parties, the World Bank World Development "
-                 "Indicators and Worldwide Governance Indicators (CC BY 4.0), and the UNDP Human Development Index (CC BY 3.0 IGO). Texts are shown as the sources publish them; every "
-                 "document names its source, dataset, retrieval date and licence in its Data source panel. Opinion polls and bills have no open global dataset, so this pack has no such "
-                 "kinds. A jurisdiction's page opens with a map: the country is highlighted on the world and a click on any other country opens that country's page (a country the pack holds "
-                 "no jurisdiction for is not clickable and says so on hover); the shapes ship with the console, nothing is fetched from the internet. Refresh with "
-                 "`tools/realdata/realdata.py` (see docs/guides/WORLD_DATA_GUIDE.md).",
         roles={"analyst": {"kinds": [k.kind for k in KINDS], "raw": True}})
 
 

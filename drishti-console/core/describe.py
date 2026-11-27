@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Sutra designer's Describe mode (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): a screen typed the way a command is typed, read by a DETERMINISTIC parser (no AI).
+"""The Sutra designer's Describe mode (RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 3.31): a screen typed the way a command is typed, read by a DETERMINISTIC parser (no AI).
 
     TRD BOOK-RATES-2 · click a trade → cash flows + CPTY limits · refresh 30s
 

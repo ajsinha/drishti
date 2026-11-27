@@ -16,7 +16,7 @@
 pack's guide picture (modules/capital-markets/packs/funds/guides/images/funds-fund.jpg). They need a server and console with the public-data packs and
 the funds pack on the demo lake (`drishti.py lake demo` builds it; DRISHTI_SHOTS_DELTA_ROOT names another) and sign-in off:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t28
+    python3 tools/docs/screenshots.py --guide t28
 
 The pictures, in the tutorial's order: the pack's overview, a fund's fact sheet, its look-through tab, its index tab, a search of the
 funds, the funds holding a company, the company's Held by funds tab, the funds tracking an index, and the fact sheet on a phone."""

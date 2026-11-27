@@ -48,12 +48,25 @@ public class ReactiveConfiguration {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReactiveConfiguration.class);
 
-    @Bean(destroyMethod = "shutdownNow")
-    public ScheduledExecutorService reactiveSweeper(SourceRouter router, Entitlements entitlements, BusinessDates dates, ComputeService compute,
+    /** The server's host, installed in the process's one {@link ReactiveHub} at start ({@link #install}). */
+    @Bean
+    public ReactiveHostImpl reactiveHost(SourceRouter router, Entitlements entitlements, BusinessDates dates, ComputeService compute,
             ObjectProvider<AuditLog> audit, Environment env) {
+        return new ReactiveHostImpl(router, entitlements, dates, compute, audit.getIfAvailable(), inProcessJava(ComputeConfiguration.file(env)));
+    }
+
+    /**
+     * Installs {@code host} in the process's one hub, with sandboxes under {@code <data dir>/compute/sandboxes}. The hub is shared by every
+     * application context of the process; a server has one, a test run of several contexts calls this again to take the hub back.
+     */
+    public static void install(ReactiveHostImpl host, Environment env) {
+        ReactiveHub.get().install(host, Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data())));
+    }
+
+    @Bean(destroyMethod = "shutdownNow")
+    public ScheduledExecutorService reactiveSweeper(ReactiveHostImpl host, Environment env) {
         boolean inProcess = inProcessJava(ComputeConfiguration.file(env));
-        ReactiveHub.get().install(new ReactiveHostImpl(router, entitlements, dates, compute, audit.getIfAvailable(), inProcess),
-                Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data())));
+        install(host, env);
         ScheduledExecutorService s = Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().name("reactive-sweep").factory());
         s.scheduleWithFixedDelay(() -> {
             try {
@@ -74,7 +87,7 @@ public class ReactiveConfiguration {
             if (!Files.isRegularFile(file)) {
                 return false;
             }
-            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(file.toFile(), Map.class);
+            Map<String, Object> doc = new ObjectMapper(new YAMLFactory()).readValue(java.nio.file.Files.readAllBytes(file), Map.class);
             Object c = doc == null ? null : doc.get("compute");
             return c instanceof Map<?, ?> m && "true".equalsIgnoreCase(String.valueOf(((Map<String, Object>) m).get("in-process-java")).trim());
         } catch (java.io.IOException | RuntimeException e) {

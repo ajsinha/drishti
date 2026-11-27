@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The one CSV reader of the loaders, and the typed reading of one cell (docs/plans/CSV_LOADERS.md section 9). The rule behind every line:
+"""The one CSV reader of the loaders, and the typed reading of one cell (docs/guides/BANK_DATA_GUIDE.md section 9). The rule behind every line:
 **the file's format is declared, never guessed cell by cell.** A value that does not fit the declared format raises a Problem with its
 reason code; nothing is silently reinterpreted.
 

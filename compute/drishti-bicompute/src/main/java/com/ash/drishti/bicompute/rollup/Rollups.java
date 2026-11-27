@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -305,7 +304,7 @@ public final class Rollups {
             Files.createDirectories(f.getParent());
             Path tmp = f.resolveSibling(f.getFileName() + ".part");
             Files.write(tmp, r.encode());
-            Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(tmp, f);
         } catch (IOException e) {
             LOG.warn("pivot rollup {} not saved: {}", r.def.id(), e.getMessage());
         }

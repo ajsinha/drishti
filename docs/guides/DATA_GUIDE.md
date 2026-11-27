@@ -15,13 +15,16 @@
 -->
 # Data guide: getting data into Drishti
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 Getting data into Drishti and keeping it current, for the people who connect it: **telling Drishti a batch has landed** (section 1:
 one call from your ETL, the Data loads page, expectations and late data), **the data formats** (section 2: JSON Lines is the standard;
 Arrow to the browser where it pays), **external data** (section 4: every public source of every pack, its licence and its refresh
 script), **a pack from a schema** (section 5), taking data out, **Export data** (section 6), and connecting the stores themselves:
 **connectors** (section 8: which plugin for which store, unions, combining history and live), **connector files and Admin → Connectors**
-(section 9: the files, live reload, the page, the API, the CLI, health), **TLS and the outbound proxy** (section 10) and **the demo data**
-(section 11: the test data, the demo lakes, every other store, your bank's names). **Lakes and loading** (the lake file,
+(section 9: the files, live reload, the page, the API, the CLI, health), **TLS and the outbound proxy** (section 10). **The demo data** (the test data, the demo lakes, every other store, your bank's names) is
+[BANK_DATA_GUIDE.md section 9](BANK_DATA_GUIDE.md#9-the-demo-data). **Lakes and loading** (the lake file,
 the data inbox, the `.ready` file, `lake build`, the parallel loader, business dates, modes, undo, sizing, and reading a Databricks or
 Iceberg lakehouse) have their own guide: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md); sections 2.7, 2.8, 3 and 7 below point there.
 
@@ -47,25 +50,25 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [12. Troubleshooting](#12-troubleshooting)
     - [13. FAQ](#13-faq)
 2. [Data formats: JSON Lines is the standard](#2-data-formats-json-lines-is-the-standard)
-    - [1. The rule](#1-the-rule)
-    - [2. The row forms](#2-the-row-forms)
-    - [3. Reading: JSONL first, JSON still, CSV deprecated](#3-reading-jsonl-first-json-still-csv-deprecated)
-    - [4. Going out: JSON Lines beside every export](#4-going-out-json-lines-beside-every-export)
-    - [5. What stays as it is, and the guard](#5-what-stays-as-it-is-and-the-guard)
-    - [6. Arrow to the browser, where it pays](#6-arrow-to-the-browser-where-it-pays)
-    - [7. Archives: zip and tarballs](#7-archives-zip-and-tarballs)
-    - [8. Feeds: the table and business date of a file](#8-feeds-the-table-and-business-date-of-a-file)
+    - [2.1 The rule](#21-the-rule)
+    - [2.2 The row forms](#22-the-row-forms)
+    - [2.3 Reading: JSONL first, JSON still, CSV deprecated](#23-reading-jsonl-first-json-still-csv-deprecated)
+    - [2.4 Going out: JSON Lines beside every export](#24-going-out-json-lines-beside-every-export)
+    - [2.5 What stays as it is, and the guard](#25-what-stays-as-it-is-and-the-guard)
+    - [2.6 Arrow to the browser, where it pays](#26-arrow-to-the-browser-where-it-pays)
+    - [2.7 Archives: zip and tarballs](#27-archives-zip-and-tarballs)
+    - [2.8 Feeds: the table and business date of a file](#28-feeds-the-table-and-business-date-of-a-file)
 3. [Using Drishti with Databricks Delta Lake or Apache Iceberg](#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg): in [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)
 4. [External data: where it comes from and how to refresh it](#4-external-data-where-it-comes-from-and-how-to-refresh-it): its own guide, [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)
 5. [Schema to pack: generate a pack from JSON Schema](#5-schema-to-pack-generate-a-pack-from-json-schema)
 6. [Export data: download a dataset](#6-export-data-download-a-dataset)
-    - [1. What a dataset is](#1-what-a-dataset-is)
-    - [2. The selection](#2-the-selection)
-    - [3. How the rows are read: pushdown and streaming](#3-how-the-rows-are-read-pushdown-and-streaming)
-    - [4. Entitlements, masks, internal-only data and the audit](#4-entitlements-masks-internal-only-data-and-the-audit)
-    - [5. The API](#5-the-api)
-    - [6. The command line](#6-the-command-line)
-    - [7. Settings](#7-settings)
+    - [6.1 What a dataset is](#61-what-a-dataset-is)
+    - [6.2 The selection](#62-the-selection)
+    - [6.3 How the rows are read: pushdown and streaming](#63-how-the-rows-are-read-pushdown-and-streaming)
+    - [6.4 Entitlements, masks, internal-only data and the audit](#64-entitlements-masks-internal-only-data-and-the-audit)
+    - [6.5 The API](#65-the-api)
+    - [6.6 The command line](#66-the-command-line)
+    - [6.7 Settings](#67-settings)
 7. [The data inbox: drop files and they load](#7-the-data-inbox-drop-files-and-they-load): in [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md)
 8. [Connectors](#8-connectors)
     - [8.1 One file per connector](#81-one-file-per-connector)
@@ -103,24 +106,6 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [10.10 Rotation](#1010-rotation)
     - [10.11 Troubleshooting](#1011-troubleshooting)
     - [Outbound HTTP proxy for connectors, AI providers and MCP servers](#outbound-http-proxy-for-connectors-ai-providers-and-mcp-servers)
-11. [The demo data](#11-the-demo-data)
-    - [11.1 The test data and the demo lakes (the default)](#111-the-test-data-and-the-demo-lakes-the-default)
-    - [11.2 Mixed Delta and Iceberg storage](#112-mixed-delta-and-iceberg-storage)
-    - [11.3 The sizes](#113-the-sizes)
-    - [11.4 Delta Lake](#114-delta-lake)
-    - [11.5 PostgreSQL](#115-postgresql)
-    - [11.6 Apache Iceberg](#116-apache-iceberg)
-    - [11.7 DuckDB](#117-duckdb)
-    - [11.8 MongoDB](#118-mongodb)
-    - [11.9 Redis](#119-redis)
-    - [11.10 Aerospike](#1110-aerospike)
-    - [11.11 Apache Cassandra](#1111-apache-cassandra)
-    - [11.12 JSON-lines files (no store at all)](#1112-json-lines-files-no-store-at-all)
-    - [11.13 Your own JSONL](#1113-your-own-jsonl)
-    - [11.14 Your bank's names](#1114-your-banks-names)
-    - [11.15 The samples](#1115-the-samples)
-    - [11.16 JSON lines: one format for every loader](#1116-json-lines-one-format-for-every-loader)
-    - [11.17 The scripts](#1117-the-scripts)
 
 ## 1. Telling Drishti new data has landed
 
@@ -152,7 +137,7 @@ With the signal, the same four things happen every time, in order, and each leav
 
 **What this is not.** Drishti will not copy, parse, transform or schedule your data. `drishti.py data ingest`, `data ingest --watch` and
 `pack make` exist to stage data for a demo, a small team or a proof of concept; they are not a production ETL (see
-[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) and [DATA_GUIDE.md section 11](../guides/DATA_GUIDE.md#11-the-demo-data)). In production your ETL loads the store and, as its
+[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md#8-deploy-promote-and-roll-back-by-copying) and [BANK_DATA_GUIDE.md section 9](BANK_DATA_GUIDE.md#9-the-demo-data)). In production your ETL loads the store and, as its
 last step, makes the one call this guide describes.
 
 ### 2. Concepts
@@ -204,13 +189,13 @@ look-back window). It is flagged once: a notice to the people the pack names, an
 
 ### 3. Your first load in five minutes
 
-The walk-through, with real output and pictures, is [tutorial 12 · Load data daily](../tutorials/12-a-day-of-bank-data.md): say when you expect data (step 1), announce a load from the command line (step 2), a failed
+The walk-through, with real output and pictures, is [tutorial 12 · Load data daily](../tutorials/16-load-your-own-data-into-a-new-lake.md): say when you expect data (step 1), announce a load from the command line (step 2), a failed
 batch (step 3), the same through the API (step 4), the history and what is due (step 5) and an alert for a missing day (step 6). In short: **announce** a batch when your ETL has written it,
 
 Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py data landed --pack market-risk --kind stress-scenario --date 2026-10-16 --rows 8 --batch eod-20261016-1
+$ python3 tools/drishti.py data landed --pack market-risk --kind stress-scenario --date 2026-10-16 --rows 8 --batch eod-20261016-1
 stress-scenario for 2026-10-16 loaded: 8 rows; 0 alerts fired
   load mvczs759-1  status ready  verified verified  attempt 1
   record  ok      recorded
@@ -539,7 +524,7 @@ curl -X POST $S/api/v1/me/tokens -H "Authorization: Bearer $RISK_ETL_SESSION" -H
 # -> {"secret":"drk_...", ...}   shown once: put it in your scheduler's secret store, as DRISHTI_TOKEN
 ```
 
-The same token announces [`stress-scenario`](../contracts/samples/market-risk.md#stress-scenario) ([contract](../contracts/packs/market-risk.md#scn-stress-scenario-stress-scenario)) and [`stress-result`](../contracts/samples/market-risk.md#stress-result) ([contract](../contracts/packs/market-risk.md#str-stress-result-stress-result)) and nothing else: a call for another kind is `403`, for a pack it cannot reach `404 DRS-5011`,
+The same token announces [`stress-scenario`](../contracts/packs/market-risk.md#example-market-risk-stress-scenario) ([contract](../contracts/packs/market-risk.md#scn-stress-scenario-stress-scenario)) and [`stress-result`](../contracts/packs/market-risk.md#example-market-risk-stress-result) ([contract](../contracts/packs/market-risk.md#str-stress-result-stress-result)) and nothing else: a call for another kind is `403`, for a pack it cannot reach `404 DRS-5011`,
 and it cannot change expectations, users, tokens or packs.
 
 ### 11. Recipes
@@ -739,7 +724,7 @@ there, Drishti simply has not been told. Until it is, expectations will (rightly
 the repository gzips large files). Every generator writes it, every loader reads it, and every export and download offers it. This
 page says what that means for data coming in, data going out, and the files Drishti keeps.
 
-### 1. The rule
+### 2.1 The rule
 
 - **One JSON object per line.** No array around the lines, no commas between them, no blank lines needed (a blank line is skipped).
   A document may be as deep as it likes, as long as it stays on its line.
@@ -748,7 +733,7 @@ page says what that means for data coming in, data going out, and the files Dris
   is the model: it writes `trade_<system>.<date>.jsonl.gz` (the load rules' name), then `lake build` loads them, each under its name's date. Running a loader never rewrites a pack's samples,
   its Sutra tests or the sample feed.
 
-### 2. The row forms
+### 2.2 The row forms
 
 | Form | One line is | Written by | Read by |
 |---|---|---|---|
@@ -773,12 +758,12 @@ Where the generators put their output:
 | `tools/realdata/normalise.py` | `tools/realdata/dataset/*.jsonl` (a country, group, series or Factbook profile a line) and the `meta.json` manifest |
 | the sample feed | `<data>/feeds/fixing.jsonl` (one fixing series a line: `FIX SOFR-HISTORY`) |
 
-### 3. Reading: JSONL first, JSON still, CSV deprecated
+### 2.3 Reading: JSONL first, JSON still, CSV deprecated
 
 The readers keep what they accept: the file connector reads `<kind>.jsonl` (dated `<yyyy-MM-dd>/<kind>.jsonl`) and one file per
 entity (`<kind>/<id>.json`); `lake build`, `build_demo_lakes.py`, `data ingest` and the Java loaders read JSON Lines and JSON arrays
 (gzipped or not), and `lake build`, `build_demo_lakes.py`, `load_rows.py`, `convert` and the parallel lake loader read them inside a
-`.zip`, `.tar.gz`, `.tgz` or `.tar` archive too ([section 7](#7-archives-zip-and-tarballs)); the demo connector reads
+`.zip`, `.tar.gz`, `.tgz` or `.tar` archive too ([section 2.7](#27-archives-zip-and-tarballs)); the demo connector reads
 `samples/<kind>.jsonl` and the older `samples/<kind>/<id>.json`.
 
 **CSV input is deprecated** and will be removed in a later release. Today only the file connector reads CSV (a feed file
@@ -789,12 +774,12 @@ entity (`<kind>/<id>.json`); `lake build`, `build_demo_lakes.py`, `data ingest` 
 JSON Lines ([CLI_REFERENCE.md](CLI_REFERENCE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)):
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py convert trades.csv                    # trades.jsonl, a line per row
-drishti-console/.venv/bin/python tools/drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data/feeds/fixing.jsonl
-drishti-console/.venv/bin/python tools/drishti.py convert data/feeds/settlement          # settlement.jsonl, the file name as "id"
+python3 tools/drishti.py convert trades.csv                    # trades.jsonl, a line per row
+python3 tools/drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data/feeds/fixing.jsonl
+python3 tools/drishti.py convert data/feeds/settlement          # settlement.jsonl, the file name as "id"
 ```
 
-### 4. Going out: JSON Lines beside every export
+### 2.4 Going out: JSON Lines beside every export
 
 Every export and download offers JSON Lines beside the formats it already has: **CSV, Excel, PDF and PNG all stay**, and CSV downloads
 are a normal option (the deprecation is for data coming in). A JSONL download is **one row a line, keyed by the same column names
@@ -816,7 +801,7 @@ file). The setting is `drishti.var.official.jsonl` and `drishti.ccr.exposure.off
 and `exposure/official/<date>-trades-v<n>.jsonl` (a header line, then a row a line). Records written as `.json` keep their `.json`
 and are read as they are: the store is append-only, nothing is rewritten. A single record or capture stays one JSON document.
 
-### 5. What stays as it is, and the guard
+### 2.5 What stays as it is, and the guard
 
 Not data, so not JSONL, and they stay as they are: manifests (`testdata.yaml`, `MANIFEST.json`, `meta.json`), application state files,
 map GeoJSON, run reports, and storage internals (Delta and Iceberg Parquet, the BI store, the hot files, Arrow between the server
@@ -829,7 +814,7 @@ data file they write is JSON Lines, and reads the source of every generator for 
 `cache-index.json`, `trackers.json`, `expect.yaml` …) and the loaders. `tools/test_exports_offer_jsonl.py` checks that every export
 entry point (server, console route, UI menu, command line) offers JSON Lines.
 
-### 6. Arrow to the browser, where it pays
+### 2.6 Arrow to the browser, where it pays
 
 JSON Lines is the data standard (above); **Apache Arrow** is the in-memory and wire format where it pays:
 it reaches the browser too, for the answers it was measured to win on, and nowhere else.
@@ -842,7 +827,7 @@ it reaches the browser too, for the answers it was measured to win on, and nowhe
 | BI answers to the console's Python, Explore and Perspective-era clients | `?format=arrow` on `POST /bi/reports/{id}/query` and `POST /bi/mq`: the raw rows | 2.1 |
 | **Any JSON answer of the two endpoints below, to any client that asks** | `Accept: application/vnd.apache.arrow.stream`: the JSON answer itself, its table as the record batch, the rest in the schema's metadata | built |
 | **The VaR explorer's contribution tables by position and by trade, in the browser** | read with Arrow JS (vendored) into typed columns | built |
-| **Any program: Python, Java, JDBC tools, any Arrow Flight client** | Arrow Flight on its own port: kinds, models, pivot views, VaR vectors, the in-memory lake, streams ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)) | built |
+| **Any program: Python, Java, JDBC tools, any Arrow Flight client** | Arrow Flight on its own port: kinds, models, pivot views, VaR vectors, the in-memory lake, streams ([INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)) | built |
 
 **Where it deliberately is not.** The **VaR hot files** stay Drishti's own layout (float32 position rows in hierarchy order, memory-mapped,
 float64 node totals): summing vectors runs near the machine's memory bandwidth, which Arrow's framing would not improve. **The lake** stays
@@ -864,7 +849,7 @@ search page**.
 
 The console passes the server's Arrow through unchanged and writes no Arrow of its own: when the server answers JSON (an answer given in
 time by a BI run, a table Arrow is not written with) the browser gets that JSON, which `Drishti.fetchTable` reads as well. A Python
-program reads Drishti's data through Arrow Flight ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)). In the browser, **`Drishti.fetchTable(url, opts)`** (`/static/js/drishti_table.js`) asks with
+program reads Drishti's data through Arrow Flight ([INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)). In the browser, **`Drishti.fetchTable(url, opts)`** (`/static/js/drishti_table.js`) asks with
 `Accept: application/vnd.apache.arrow.stream, application/json;q=0.9` when the page loaded Arrow JS and `application/json` otherwise,
 and returns one column-oriented table whichever format came back: `names`, `length`, `column(name)` (a `Float64Array` for numbers, NaN
 for a null; an array for text), `value(name, i)` (the cell as JSON has it), `answer()` (the whole JSON answer, equal cell for cell). Types:
@@ -916,11 +901,11 @@ Equality is tested in `drishti-server` `ArrowAnswersTest`, `tests/test_arrow_ans
 fallback) and `tests/test_arrow_browser.py` (the explorer drawn the same from Arrow and from JSON, without Arrow JS, on a phone, no other
 host asked).
 
-### 7. Archives: zip and tarballs
+### 2.7 Archives: zip and tarballs
 
 Archives (`.zip`, `.tar`, `.tar.gz`, `.tgz`), what each loader makes of them and the guards: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [section 11](DATA_LAKE_GUIDE.md#11-archives-zip-and-tar).
 
-### 8. Feeds: the table and business date of a file
+### 2.8 Feeds: the table and business date of a file
 
 The table, business date and mode of every file, for every loader: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [section 5](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
@@ -943,11 +928,11 @@ A pack made from JSON Schema files, a folder of JSON Lines, or both (Create → 
 
 Taking data **out** of Drishti, a dataset and a day at a time: `EXPORT <GO>` (Views → Export data, `/data`; `DATA` works too), the API under `/api/v1/data` and
 `drishti.py data get`. It is download only: rows are never shown in a grid. The screen itself, panel by panel, is in
-[USER_GUIDE.md (Export data)](USER_GUIDE.md#export-data).
+[CLI_REFERENCE.md › 20.6 Export data](CLI_REFERENCE.md#206-export-data).
 
-### 1. What a dataset is
+### 6.1 What a dataset is
 
-A dataset is a **stored kind** of a loaded pack that a connector serves ([`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)), `trade`, [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set))); computed kinds (VaR, EE
+A dataset is a **stored kind** of a loaded pack that a connector serves ([`trade-valuation`](../contracts/packs/market-risk.md#example-market-risk-trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)), `trade`, [`netting-set`](../contracts/packs/counterparty-risk.md#example-counterparty-risk-netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set))); computed kinds (VaR, EE
 and PFE, the what-ifs) hold no rows and are not listed. For each the view shows:
 
 | Fact | Where it comes from |
@@ -958,7 +943,7 @@ and PFE, the what-ifs) hold no rows and are not listed. For each the view shows:
 | columns | the data contract's fields; a kind without a contract: the source's columns, else the fields of a few of its entities |
 | internal only | the kind is in `drishti.data-view.internal-only` (the IMF, Yahoo and news-headline kinds, [WORLD_DATA_GUIDE.md](WORLD_DATA_GUIDE.md)) |
 
-### 2. The selection
+### 6.2 The selection
 
 A selection is the **columns** (all by default) and any number of **filter lines**, every line joined by AND. It is deliberately not SQL:
 no joins, no grouping, no expressions. A line is written the same way on the screen's address, in the API and in the CLI:
@@ -989,7 +974,7 @@ FROM trade-valuation  -- 2026-09-30
 WHERE DESK = 'DESK-COMM' AND PRODUCT_TYPE IN ('ComSwap', 'ComFut') AND MTM > 1000000
 ```
 
-### 3. How the rows are read: pushdown and streaming
+### 6.3 How the rows are read: pushdown and streaming
 
 The rows are **streamed** from the connector to the file, never held whole in memory, on the server or in the console:
 
@@ -1006,7 +991,7 @@ Either way every row is checked against every line, so the answer is the same. T
 pushdown, to give both numbers (*412 of 12,076 on the date*); it stops at `drishti.data-view.count-budget` (60 s) and then says *at least*.
 The size is estimated by compressing the selected rows as the download will (the first 4 MB, the ratio applied to the rest).
 
-### 4. Entitlements, masks, internal-only data and the audit
+### 6.4 Entitlements, masks, internal-only data and the audit
 
 - **Entitlements.** Only datasets the person may open are listed or read: their role opens the kind, the pack is on for them, and the
   command is on (Admin → Functions); an edition or lens that hides the kind's command hides the dataset. The same rules as every other screen.
@@ -1019,7 +1004,7 @@ The size is estimated by compressing the selected rows as the download will (the
 - **Audit.** Every download writes one audit record when it ends: actor, action `data.download`, the dataset, and `date=...; columns=...;
   where=...; rows=N; complete` (or `incomplete` when the stream broke off). Admin → Audit lists them.
 
-### 5. The API
+### 6.5 The API
 
 All under `/api/v1`, for any signed-in person (a personal token too); the edition's `DATA` word and `drishti.data-view.enabled` switch it off
 (`404 DRS-4023`, `403 DRS-5002`).
@@ -1042,7 +1027,7 @@ zcat trade-valuation_2026-09-30.jsonl.gz | head -2
 {"TRADE_ID":"1000431","DESK":"DESK-COMM","MTM":2004112}
 ```
 
-### 6. The command line
+### 6.6 The command line
 
 `drishti.py data get` does the same from a terminal ([CLI_REFERENCE.md](CLI_REFERENCE.md#data-get-a-dataset-as-jsonlgz-export-data)):
 
@@ -1054,17 +1039,17 @@ python3 tools/drishti.py data get trade-valuation --date 2026-09-30 \
     --columns TRADE_ID,PRODUCT_TYPE,DESK,MTM --where "DESK = DESK-COMM" --where "MTM > 1000000" -o tval.jsonl.gz
 ```
 
-### 7. Settings
+### 6.7 Settings
 
 | Setting | Default | What it does |
 |---|---|---|
-| `drishti.data-view.enabled` | `true` | the API on or off (the edition feature `data` presets it) |
-| `drishti.data-view.internal-only` | the IMF, Yahoo and news-headline kinds | the datasets marked internal only |
-| `drishti.data-view.internal-only-download` | `true` | `false` refuses them (the edition feature `internal-only-data: off` presets it) |
-| `drishti.data-view.count-budget` | `PT60S` | the longest a row count reads before answering *at least* |
-| `drishti.data-view.batch-rows` | `8192` | rows a column read hands over at a time |
-| `drishti.data-view.list-limit` | `200000` | most entities read from a source that cannot read a day in one pass |
-| `drishti.data-view.read-budget` | `PT30S` | one listing, or one chunk of 500 entities, from such a source |
+| [`drishti.data-view.enabled`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `true` | the API on or off (the edition feature `data` presets it) |
+| [`drishti.data-view.internal-only`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | the IMF, Yahoo and news-headline kinds | the datasets marked internal only |
+| [`drishti.data-view.internal-only-download`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `true` | `false` refuses them (the edition feature `internal-only-data: off` presets it) |
+| [`drishti.data-view.count-budget`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `PT60S` | the longest a row count reads before answering *at least* |
+| [`drishti.data-view.batch-rows`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `8192` | rows a column read hands over at a time |
+| [`drishti.data-view.list-limit`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `200000` | most entities read from a source that cannot read a day in one pass |
+| [`drishti.data-view.read-budget`](../admin/CONFIGURATION.md#drishtidata-view--export-data) | `PT30S` | one listing, or one chunk of 500 entities, from such a source |
 | console `features.data` | `true` | the page, the menu item and the word in the console |
 | console `data_view.*` | 30, 90, 300 s | how long the console waits for the list, a count, and between two parts of a download |
 
@@ -1072,7 +1057,7 @@ Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 ## 7. The data inbox: drop files and they load
 
-Drop files with a `.ready` marker in a folder and the server loads them into a lake by itself: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [section 3.1](DATA_LAKE_GUIDE.md#31-the-data-inbox) (the folders, the cycle, the settings, the Inbox screen), section 4 (the `.ready` file) and section 5 (routing rules, dates, modes, undo); the walk-through is [tutorial 16, Part C](../tutorials/16-load-your-own-data-into-a-new-lake.md#part-c--load-files-automatically-with-the-data-inbox).
+Drop files with a `.ready` marker in a folder and the server loads them into a lake by itself: [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md), [section 3.1](DATA_LAKE_GUIDE.md#31-the-data-inbox) (the folders, the cycle, the settings, the Inbox screen), section 4 (the `.ready` file) and section 5 (routing rules, dates, modes, undo); the walk-through is [tutorial 16, Part C](../tutorials/14-load-files-with-the-data-inbox.md).
 
 ## 8. Connectors
 
@@ -1537,8 +1522,8 @@ variable, as everywhere in the file.
 #### Writes: saving to the source
 
 A connector may declare `writes:`: named commands that change a record in its source, used by write-back's `source` target
-([APPROVALS_GUIDE.md › The design and its reasons, section 5.4](APPROVALS_GUIDE.md#10-writing-to-a-source-writes); the administrator's guide
-[APPROVALS_GUIDE.md section 13](APPROVALS_GUIDE.md#10-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
+([ADMIN_GUIDE.md section 28.4](ADMIN_GUIDE.md#284-writing-to-a-source-writes); the administrator's guide
+[ADMIN_GUIDE.md › 28.4 Writing to a source: writes:](ADMIN_GUIDE.md#284-writing-to-a-source-writes)). Each command has the `kind` it amends, the extra `params:` a Sutra
 may supply, its plugin's block (`jdbc:` with `sql`, the guard `expect-rows` and the idempotency clause `already-applied`), `confirm:`
 (`reply` or `next-load`) and `timeout:`. Only the JDBC plugin writes ([JDBC_QUERIES.md section 16](../../plugins/drishti-plugin-jdbc/README.md#writes-commands-that-change-a-record));
 the File, Delta and Iceberg connectors never do (a lake is not written per edit) and every other plugin is refused (*plugin … cannot
@@ -1721,7 +1706,7 @@ the plugin defaults.
 
 A literal value, a value as the default inside the reference (`${X:fallback}`) and a password inside a URL (`jdbc:…//user:pw@host`, `?password=…`)
 are **refused** by Admin → Connectors, the API and the CLI with the reason and the name to use (real output in
-[section 10](#910-the-cli)). A hand-edited file that breaks this still loads (so a running site is not stopped by an edit), and the page
+[section 9.10](#910-the-cli)). A hand-edited file that breaks this still loads (so a running site is not stopped by an edit), and the page
 shows a note on the connector.
 
 **TLS.** Plugins that talk to a server over the network read one shared set of `tls.*` settings, and the form shows them as a **TLS**
@@ -2504,6 +2489,20 @@ literal credential is refused and **Test connection** says it did not try. **His
 page's zone and hides Test and Save (restoring is its own button). A file connector made from a generated template says in its
 description to set `root` (or the `DRISHTI_FILES_ROOT` environment variable); its page repeats it with the root now in effect.
 
+### 9.15 Rules every connector README shares
+
+Each plugin's README (`plugins/drishti-plugin-<x>/README.md`) holds that store's own facts; these rules are the same for all of them.
+
+- **Packing.** A plugin is a module of the platform build (`drishti-plugin-<x>`), packed into the server jar with nothing to copy; a
+  driver of your own goes into `lib/ext/`. A connector file in `config/connectors/` with `plugin: <x>` turns it on (ready-made files:
+  `config/connectors.examples/`). Build, enabling and commands are in this section.
+- **Commands.** In the READMEs, `drishti.py` stands for `python3.13 tools/drishti.py` (Windows `py -3.13 tools\drishti.py`), run from the
+  Drishti folder (the repository root, or the install folder of a release).
+- **Loader input.** Loader rows are one JSON line per entity per day, in the same files and folders as for every loader
+  ([Table mode: loading](../../plugins/drishti-plugin-jdbc/README.md#table-mode-loading)).
+- **Business dates come from outside the row**, by the same rules for every loader: [the load rules](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)
+  and [the PostgreSQL loader's list](../../plugins/drishti-plugin-jdbc/README.md#table-mode-loading).
+
 ## 10. TLS and the outbound proxy
 
 Every connector that talks to a server over the network reads its TLS configuration from the same keys, under the
@@ -2537,7 +2536,7 @@ Every connector with a network client reads these settings. This is what each do
 | [S3](../../plugins/drishti-plugin-s3/README.md#tls-for-the-s3-connector) | `https://` `endpoint` | yes | checked, not narrowed | **refused** (the AWS client always checks) | yes | an HTTPS stand-in S3 in the test process |
 | [MongoDB](../../plugins/drishti-plugin-mongodb/README.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` or `tls=true` in the `uri` | yes (also the log-in, `auth-mechanism: x509`) | checked, not narrowed | yes | yes | MongoDB 7 in Docker, `requireTLS`, x.509 user |
 | [PostgreSQL](../../plugins/drishti-plugin-jdbc/README.md#security-tls-and-credentials) (`jdbc:postgresql:`) | `tls.enabled` | yes (also the log-in, `cert` in `pg_hba.conf`) | yes | yes (`sslmode=require`) | yes | PostgreSQL 18 in Docker, `ssl=on` |
-| [AI providers](AI_GUIDE.md#119-tls-the-same-block-as-the-connectors) (every `type:` in `config/ai`, the console's AI and MCP clients) | `https://` `base-url` | yes | yes (the console: `TLSv1.2` / `TLSv1.3`, OpenSSL cipher names; Bedrock: no) | yes (Bedrock: **refused**) | yes (Admin → AI) | fake HTTPS servers with a test CA, mutual TLS and a CONNECT proxy tunnel, in Java and Python; the console reads PEM and PKCS12, not JKS |
+| [AI providers](ADMIN_GUIDE.md#271119-tls-the-same-block-as-the-connectors) (every `type:` in `config/ai`, the console's AI and MCP clients) | `https://` `base-url` | yes | yes (the console: `TLSv1.2` / `TLSv1.3`, OpenSSL cipher names; Bedrock: no) | yes (Bedrock: **refused**) | yes (Admin → AI) | fake HTTPS servers with a test CA, mutual TLS and a CONNECT proxy tunnel, in Java and Python; the console reads PEM and PKCS12, not JKS |
 | other JDBC drivers | not mapped: the driver's own options in the URL | | | | | documented only |
 | [Aerospike](../../plugins/drishti-plugin-aerospike/README.md#security) | `tls.enabled` | yes (also the log-in, `auth-mode: pki`) | yes | yes (no TLS name is given) | yes | unit tests of the wiring; the live check is a manual procedure (the server's TLS is Enterprise Edition) |
 | [Cassandra](../../plugins/drishti-plugin-cassandra/README.md#security) (also ScyllaDB; Astra: its bundle) | `tls.enabled` | yes | yes | yes | yes | Cassandra 5 in Docker, `client_encryption_options` with `require_client_auth: true` |
@@ -2628,7 +2627,7 @@ The key may be written as any of these (the first line of the file says which):
 | `-----BEGIN EC PRIVATE KEY-----` | SEC1 EC, with its curve | `openssl ecparam -genkey` |
 
 An old OpenSSL-encrypted traditional key (it has a `Proc-Type: 4,ENCRYPTED` header) is not supported; the error shows the
-command that converts it ([section 7](#107-making-and-converting-certificates-and-keys)).
+command that converts it ([section 10.7](#107-making-and-converting-certificates-and-keys)).
 
 **A keystore** (the usual form on a Java estate):
 
@@ -2862,7 +2861,7 @@ local issuer certificate)` means the CA you gave is not the issuer (or the chain
 | `Received fatal alert: certificate_required` / `peer not authenticated` | the server demands a client certificate and none was sent | set `tls.cert-file` and `tls.key-file`, or `tls.keystore` |
 | `certificate has expired` / `NotAfter` | a certificate in the chain is past its date | rotate ([10.10](#1010-rotation)); the start-up warning named it |
 | `Connection reset` right after connecting | the server expects TLS and the client sent plain text, or the reverse | check the address scheme and port (Kafka SSL listener, ActiveMQ `ssl://`, RabbitMQ 5671) |
-| the start-up messages of [section 8](#108-start-up-checks-and-their-messages) | a file or a password | fix the named setting |
+| the start-up messages of [section 10.8](#108-start-up-checks-and-their-messages) | a file or a password | fix the named setting |
 
 The JVM can log the whole handshake: start the server with `-Djavax.net.debug=ssl:handshake` for one run (it is verbose; do
 not leave it on).
@@ -3017,8 +3016,8 @@ private CA.
 | [Delta](../../plugins/drishti-plugin-delta/README.md#outbound-proxy) over S3 | yes | the SDK's proxy configuration |
 | [Iceberg](../../plugins/drishti-plugin-iceberg/README.md#outbound-proxy) over S3 / REST catalog | yes | the REST catalog's own client (`rest.client.proxy.*`), the S3 file IO (SDK proxy configuration), Hadoop `fs.s3a.proxy.*` for path tables |
 | [Kafka](../../plugins/drishti-plugin-kafka/README.md#outbound-proxy) | the **schema registry** only (HTTP) | `HttpURLConnection` with the proxy and a per-connection authenticator. Brokers speak the Kafka protocol, not HTTP, and are not proxied |
-| AI providers: OpenAI-compatible, Anthropic ([AI_GUIDE.md](AI_GUIDE.md#outbound-proxy)) | yes | the JDK HTTP client (server), `httpx` (console) |
-| MCP Streamable HTTP clients ([AI_GUIDE.md](AI_GUIDE.md#outbound-proxy-1)) | yes | same |
+| AI providers: OpenAI-compatible, Anthropic ([ADMIN_GUIDE.md › 27.1.2.1 Outbound proxy](ADMIN_GUIDE.md#27121-outbound-proxy)) | yes | the JDK HTTP client (server), `httpx` (console) |
+| MCP Streamable HTTP clients ([ADMIN_GUIDE.md › 27.2.2.1 Outbound proxy](ADMIN_GUIDE.md#27221-outbound-proxy)) | yes | same |
 | JDBC, Redis, MongoDB, Aerospike, Cassandra, ActiveMQ, RabbitMQ, files, DuckDB | no | not HTTP: they speak their own protocols (use a TCP-level route if the site needs one) |
 
 When a connector's target is on the no-proxy list its health says so instead of claiming the proxy:
@@ -3111,417 +3110,3 @@ counts both, can demand Basic `Proxy-Authorization` (answering 407 otherwise) an
 requests go through it with the right credentials, that an https target keeps its own TLS through the tunnel (and an untrusted one still fails), that
 the no-proxy list bypasses it, that the site default is inherited and `proxy: none` overrides it, and that a literal password is refused. The server
 tests check the masked Admin summary and the connection test; a Chromium test checks the connector page and the editor.
-
-## 11. The demo data
-
-> **For staging, small setups and proofs of concept.** The loaders here, `drishti.py lake demo`, `lake build`, `data ingest` (and
-> `--watch`) and `pack make` are not a production ETL; Drishti does not ingest your data. Production data is loaded by your own ETL,
-> which ends by telling Drishti the batch landed: [DATA_GUIDE.md](#1-telling-drishti-new-data-has-landed).
-
-Drishti's demo data comes in three forms, all production-shaped (UPPER_SNAKE attributes, as the source systems name them), all
-fictitious, all deterministic:
-
-| Form | Where | What it is | Built by |
-|---|---|---|---|
-| **The test data** | `data/testdata/` (committed, about 138 MB of `.jsonl.gz`, 2,863 files, measured 2026-10-28) | sixty business days of every dataset the seven packs read: up to 5,000 trades a day per source system (ENDUR, CALYPSO, MUREX), counterparties, market data, agreements, netting sets, risk results; a first-day snapshot and each later day's changes | `tools/testdata/make_testdata.py` (`--check` says whether the files are current) |
-| **The demo lakes** | `data/delta/demo/` (generated, never committed) | the test data as Delta tables, one per dataset, sixty daily snapshots each: what the packs' connectors read | `drishti.py lake demo` (one command, about 15 minutes) |
-| **The samples** | `modules/<module>/packs/<pack>/samples/<kind>.jsonl` (committed) | a few hundred documents a pack, the same shape, that the `demo` source serves live and ticking, with no store at all | `tools/packgen/banking/make_data.py` and each pack's generator |
-
-The other stores (PostgreSQL, DuckDB, Iceberg, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files) are loaded with the samples (ten business
-days) and, for scale tests, a generated trade book: the scripts in [the other stores](#115-postgresql).
-
-### 11.1 The test data and the demo lakes (the default)
-
-```bash
-drishti-console/.venv/bin/python tools/drishti.py lake demo
-```
-
-(the IDE run configuration **Drishti: build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 103 tables, about 3.4 GB**, sixty business days
-ending on today's business date (the test data's 2026-07-08 to 2026-09-30, moved; `--as-of data` keeps them). The trades go to one
-table per source system, `data/delta/demo/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and
-`PRODUCT_TYPE`, each read by its own connector (`trade-endur`, `trade-calypso`, `trade-murex`) and served together as one kind,
-`trade`; every other dataset goes to `data/delta/demo/<domain>/<kind>/`, partitioned by business date. Datasets of static reference data
-(world-economy, news-and-markets) are built from those packs' samples, the same on every day. The real output, the options
-(`--lake`, `--only`, `--with-real`, `--server`, `--no-signal`) and what a running server is told are in
-[OPERATIONS_GUIDE.md, Step 5](OPERATIONS_GUIDE.md#24-build-the-demo-lakes); the datasets, one row each (key, connector,
-table, partitions, documents on day 1, changes a day, size), are in [data/testdata/README.md](../../data/testdata/README.md). One record of
-every data type, every field explained for the query that must produce it, is in the **[data samples](../contracts/samples/README.md)**.
-
-| What | Value |
-|---|---|
-| Business days | 60 (USNY calendar; the test data's 2026-07-08 to 2026-09-30) |
-| Trades | 5,000 per source system on the last day, 15,000 in all (4,407 ENDUR, 3,471 CALYPSO, 4,198 MUREX on the first); about 3–7% amended each day (`TRADE_VERSION` moves) |
-| Source systems | `ENDUR` (ids `1000001` …), `CALYPSO` (`CLY-3000001` …), `MUREX` (`MX-20000001` …): ids unique across them |
-| Tables | 85 (measured 2026-10-28): 3 trade tables, the test-data datasets of the banking packs (with [`var-limit`](../contracts/samples/market-risk.md#var-limit) ([contract](../contracts/packs/market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit))), the reference tables of world-economy and news-and-markets, the public-data snapshots of us-equities, gleif and funds |
-| Disk | about 3.4 GB (measured 2026-10-28, `du` of the 89 tables; the committed test data: about 181 MB, the VaR data on three business dates) |
-| Counterparties | fictitious look-alikes (`CP-NORTHPLAINS`, `CP-VAULTGUARD`, …), with UEN, country of risk, legal entity, agreements and netting sets holding their trades |
-
-Re-running `lake demo` rebuilds every table it writes (the folder is removed first) and is safe while a server runs: the server gets
-the data-load signal for each table and date, or, when none is reachable, finds `data/bi-store/lake-rebuilt.json` at its next start
-and clears its stored BI columns and rollups; a running server also sees each rebuilt Delta date by itself. The test data itself is
-regenerated with `python3 tools/testdata/make_testdata.py` (deterministic, the same bytes on every Python version: `tools/testdata/test_testdata.py` and `test_deterministic.py` guard it).
-
-**The test data's files are a generator's format, not feed files.** Each sixty-day dataset is one file a business date named by the
-load rules (`trade_endur.2026-07-09.jsonl.gz`, [DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) section 5.2), but only the first
-day's holds the whole table (the snapshot, `kind: snapshot` in `testdata.yaml`); each later day's holds only the documents new or
-changed that day. `lake demo` replays them, the snapshot with every change up to the day applied by key, and loads each day's whole
-table under its dated name. Loaded on its own (`lake build --from` one of them, or a folder of them), a later day's file is only that
-day's changes, not the day's table: build the demo tables with `lake demo` (`--only <folder>` for one dataset). The VaR, exposure and
-public-data folders are whole tables, a date each, and load as they are.
-
-### 11.2 Mixed Delta and Iceberg storage
-
-(decided by the product owner on 2026-10-20) each source system's trades can be stored in **Delta Lake or Apache Iceberg**,
-chosen per system when the demo lakes are built, so one installation proves that the connectors, history, search, the grouped pages and
-BI answer the same whatever the storage. Every other dataset stays in Delta.
-
-| Command (`drishti-console/.venv/bin/python tools/build_demo_lakes.py …`; Windows `drishti-console\.venv\Scripts\python.exe tools\build_demo_lakes.py …`) | Result |
-|---|---|
-| (no `--store`) | everything in Delta |
-| `--store calypso=iceberg` | CALYPSO in Iceberg, ENDUR and MUREX in Delta (the mixed case) |
-| `--store endur=delta --store calypso=iceberg --store murex=iceberg` | any mix, one `--store` per system |
-| `--store all=iceberg` | every system in Iceberg (`all=` first, then each system over it: `--store all=iceberg --store endur=delta`) |
-| `--store all=delta` | every system back in Delta |
-| `--only trades/calypso --store calypso=iceberg --as-of <date>` | one system rebuilt and moved; the others kept as they are |
-| `--source-dir <folder> --system calypso --files-only --store calypso=iceberg` | your own CALYPSO files into Iceberg |
-| any of these with `--dry-run` | every step said, nothing changed |
-
-- **Where:** an Iceberg system's table is `<data>/iceberg/trading/trade_<system>`, beside the Delta lake (`data/iceberg` for the default
-  `data/delta`; `--lake /srv/data/delta/demo` gives `/srv/data/iceberg`; `DRISHTI_ICEBERG_ROOT` moves it). Its Delta table is removed: each
-  system is in one store.
-- **How it is written:** the system is built as Delta first (by `lake demo`, or by `lake build` of your files into a staging folder,
-  `<data>/build/iceberg-stage`, removed after), so its documents and promoted columns are exactly those of a Delta build; then
-  `tools/lake/stores.py` writes the rows with Drishti Lake's loader (`DrishtiLakeCli load`, loader rows: no Hadoop, so it works on
-  Windows), started from the server's exec jar (`lib/drishti-server-*-exec.jar`: `python tools/drishti.py build jar` makes it;
-  heap `DRISHTI_LAKE_LOADER_HEAP`, default 4g). The usual 30-second heartbeat shows while it copies.
-- **Connector files:** the build writes `trade-<system>.yaml` (in `config/connectors`, or `--connectors-dir`) from the trading pack's
-  template with `plugin: iceberg` and `table: {trade: trade_<system>}` (the Iceberg connector's `table.<kind>` setting,
-  as the Delta connector's), or back with `plugin: delta` when the system returns to Delta; the text it replaces is kept in
-  `<data>/connectors/history/`. One connector serves each system, never two; the trading pack's union of the three systems is unchanged.
-  A running server restarts a switched connector by itself (live reload); `lake demo` leaves an Iceberg file as it is.
-- **What a run keeps:** a full build without `--store` puts every system in Delta. A partial build (`--only`, `--files-only`) keeps each
-  system it does not name in the store it has; `--only` with a `--store` that moves another system rebuilds that system too (it says so);
-  `--files-only` cannot move a system whose trades it does not load, and says to run `--only trades/<system> --store …` first.
-- **The closing lines** list every system's store and table, and what was done to each connector file:
-
-  ```text
-    Stores (each source system's trades):
-      ENDUR    delta    …/data/delta/demo/trading/trade_endur
-      CALYPSO  iceberg  …/data/iceberg/trading/trade_calypso
-      MUREX    delta    …/data/delta/demo/trading/trade_murex
-    Connector files:
-      trade-endur: reads delta already (…/config/connectors/trade-endur.yaml)
-      trade-calypso: now reads iceberg, was delta (…/config/connectors/trade-calypso.yaml; a running server restarts this connector by itself)
-      trade-murex: reads delta already (…/config/connectors/trade-murex.yaml)
-  ```
-
-- **With a server:** `--server URL` tells it once at the end (pack trading, kind `trade`, the newest date), as for your files.
-- **Proof:** `tools/lake/stores_equality.py --work <an empty folder> --port <a free port>` builds the same five synthetic business days
-  (1,000 trades a system a day from the committed test data) all-Delta and mixed (ENDUR Delta, CALYPSO and MUREX Iceberg) and asks a server
-  over each, one after the other: six trade pages, `TRD <id> 10` for each, two counterparty-trades pages, three searches and a BI model query
-  (sum of `QUANTITY` by source system, currency and product type). Measured on 2026-10-21: **18 answers, the same** (only timings, the
-  data-version stamps and the table generation in the provenance panel differ, as they name the storage).
-- **Maintenance:** `lake maintain` for the Delta and the Iceberg tables (`--format iceberg`; today and N business days; a Glue/REST-catalog lake is refused with a clear message, Lake 0.9.2 adds it), see
-  [ICEBERG_CONNECTOR.md, section 9](../../plugins/drishti-plugin-iceberg/README.md#retention-and-maintenance).
-- **Default:** an option; the demo default is Delta.
-
-### 11.3 The sizes
-
-| Size | Command | What you get | When to use it |
-|---|---|---|---|
-| **samples** | none: the `demo` source serves them | the packs' samples (765 trades, 2,571 documents in the five banking packs), today only, ticking | a first look with no store, writing a pack |
-| **the demo lakes** | `drishti.py lake demo` | 15,000 trades a day and every other dataset, sixty business days | demos, QA, the tutorials |
-| **a store of your choice, small** | `drishti.py data load --store <store>` | the samples as ten business days ending 2026-09-30 | trying PostgreSQL, DuckDB, … with the same data |
-| **large** | `drishti.py data load --store <store> … --trades 1000000 --days 3`, or `tools/samplegen/bulk_trades.py` | a million trades a day for 3 days | scale tests, performance measurements |
-
-`--trades N` (`drishti.py data load`) adds a book of N trades a day for `--days D` business days (default 3). The book's first trades
-are the samples; the rest are clones of them, numbered from a higher range of each system's ids (`MX-30000000` …, `CLY-4000000` …),
-keeping their template's product, portfolio, counterparty and legal entity (so every link opens) and scaling the amounts
-(`NOTIONAL`, `QUANTITY`, `AMOUNT` at every level) by a factor between 0.2 and 5. Every size is reproducible: the same command writes
-the same data. On a laptop keep books to about 10,000 trades; a million trades a day is for a server.
-
-### 11.4 Delta Lake
-
-The demo lakes above are the normal way. The older script writes the samples as ten days of history, with an optional book:
-
-```bash
-python tools/drishti.py data load --store delta                              # the samples as 10 business days: data/delta/demo
-python tools/drishti.py data load --store delta --trades 10000               # and 10,000 trades a day for 3 days
-python tools/drishti.py data load --store delta /tmp/lake --trades 20000     # somewhere else
-```
-
-It generates, then loads, in separate steps ([DATA_GUIDE.md](#2-data-formats-json-lines-is-the-standard)): `make_data.py --lake --no-load` writes the
-history as JSON Lines rows (`<data>/build/lake-rows/banking-history.tar` and `banking-restated.tar`), `tools/samplegen/load_rows.py`
-loads them (rewriting the whole lake the packs read, in the layout each declares; the restatement as a second commit); then
-`tools/samplegen/bulk_trades.py` writes the book as one JSONL file a day (`<data>/build/bulk/murex/trade_murex.<date>.jsonl.gz`, the load rules' name) and loads each
-with `lake build`, replacing **one source system's** trade table (`trade_murex`, or `--system CALYPSO`) and leaving every other table as
-it is (`--no-lake` stops after the JSONL). Neither step rewrites the packs' samples, the Sutra tests or the feed. The server reads the demo lake, `data/delta/demo` (or `DRISHTI_DELTA_ROOT`), and
-picks a new load up within a minute; no restart is needed. The layout: [DELTA_CONNECTOR.md](../../plugins/drishti-plugin-delta/README.md).
-
-For your own export (a large JSON array or JSON Lines of real trades), `drishti.py lake build` streams it into a Delta table with flat
-memory, partitions and promoted columns ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
-
-### 11.5 PostgreSQL
-
-```bash
-docker compose -f deploy/docker/compose.data.yaml up -d postgres                                       # or your own server
-python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti                                 # the samples, 10 days
-python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --trades 10000                  # and a book
-DRISHTI_CONNECTORS_DIR=config/connectors.examples/postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
-```
-
-The connectors are the files in `config/connectors.examples/postgres/` (the server reads them from there with `DRISHTI_CONNECTORS_DIR`,
-or copy them to `config/connectors/`; see [section 9.4](#94-examples-one-per-store)). Measured in an earlier release: the samples in 2 s, a
-million trades × 3 days in about 3 minutes and 11 GB. User and password come from `--user`/`--password`, else
-`DRISHTI_PG_USER`/`DRISHTI_PG_PASSWORD`, else `drishti`. The samples' load recreates each domain's table; a running server sees a new
-load within a minute. Layout and design: [POSTGRES_CONNECTOR.md](../../plugins/drishti-plugin-jdbc/README.md).
-
-### 11.6 Apache Iceberg
-
-```bash
-python tools/drishti.py data load --store iceberg ./data/iceberg                       # the samples
-python tools/drishti.py data load --store iceberg ./data/iceberg --trades 10000        # and a book, for a laptop
-DRISHTI_CONNECTORS_DIR=config/connectors.examples/iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
-```
-
-Design: [ICEBERG_CONNECTOR.md](../../plugins/drishti-plugin-iceberg/README.md). (The loader is the server jar's; or put the demo lakes' trades in Iceberg with `build_demo_lakes.py --store`: [above](#112-mixed-delta-and-iceberg-storage).)
-
-### 11.7 DuckDB
-
-```bash
-python tools/drishti.py data load --store duckdb data/duckdb/drishti.duckdb                              # the samples
-python tools/drishti.py data load --store duckdb data/duckdb/drishti.duckdb --trades 10000 --days 3      # and a book, for a laptop
-DRISHTI_CONNECTORS_DIR=config/connectors.examples/duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
-```
-
-No server to run: one file holds every data domain, and the server reads it in-process. Each load writes a new file and renames it
-over the old one, so it can run while the server answers; the server picks it up within 10 s. The database defaults to
-`DRISHTI_DUCKDB_PATH`, else `data/duckdb/drishti.duckdb`. Design: [DUCKDB_CONNECTOR.md](../../plugins/drishti-plugin-duckdb/README.md).
-
-### 11.8 MongoDB
-
-```bash
-docker run -d --name drishti-mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti                       # the samples
-python tools/drishti.py data load --store mongodb mongodb://localhost:27017 drishti --trades 10000        # and a book, for a laptop
-DRISHTI_CONNECTORS_DIR=config/connectors.examples/mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
-```
-
-Design: [MONGODB_CONNECTOR.md](../../plugins/drishti-plugin-mongodb/README.md).
-
-### 11.9 Redis
-
-```bash
-docker run -d --name drishti-redis -m 2g -p 6380:6379 redis:8 --maxmemory 1gb
-python tools/drishti.py data load --store redis redis://localhost:6380                       # the samples
-python tools/drishti.py data load --store redis redis://localhost:6380 --trades 10000        # and a book, for a laptop
-DRISHTI_REDIS_URI=redis://localhost:6380 DRISHTI_CONNECTORS_DIR=config/connectors.examples/redis DRISHTI_PACKS=market-risk,counterparty-risk \
-  java -jar lib/drishti-server-*-exec.jar
-```
-
-(Port 6380 on the host leaves a Redis you already run on 6379 alone.) Redis holds everything in memory: about 1 GB per million trades
-a day, so keep large books for a server. Each load replaces the business days it carries (`--merge` adds to them instead). Design:
-[REDIS_CONNECTOR.md](../../plugins/drishti-plugin-redis/README.md).
-
-### 11.10 Aerospike
-
-```bash
-docker compose -f deploy/docker/compose.data.yaml up -d aerospike
-python tools/drishti.py data load --store aerospike localhost:3000 test                                  # the samples
-python tools/drishti.py data load --store aerospike localhost:3000 test --trades 10000                   # and a book
-DRISHTI_CONNECTORS_DIR=config/connectors.examples/aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
-```
-
-`--ttl-days N` lets Aerospike expire each day after N days. The default namespace of the Docker image keeps data in memory and is too
-small for a million-trade book; see [AEROSPIKE_CONNECTOR.md](../../plugins/drishti-plugin-aerospike/README.md#loading).
-
-### 11.11 Apache Cassandra
-
-Cassandra (or ScyllaDB) is yours to run; a single development node is enough for the samples. Then:
-
-```bash
-python tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1                   # the samples, a keyspace per domain
-python tools/drishti.py data load --store cassandra localhost:9042 datacenter1 --create --create-keyspace 1 --trades 10000   # and a book of 10,000 trades a day
-cp config/connectors.examples/cassandra/*.yaml config/connectors/                                  # read the domains from Cassandra
-```
-
-Each business day is written under a new generation and switched to at the end, so a reload never shows half a day. `--ttl-days N`
-expires cells after N days; `--keep-days N` drops the older days. See [CASSANDRA_CONNECTOR.md](../../plugins/drishti-plugin-cassandra/README.md#loading).
-
-### 11.12 JSON-lines files (no store at all)
-
-```bash
-python tools/drishti.py data load --store files                              # the samples: data/files
-python tools/drishti.py data load --store files --trades 10000               # and 10,000 trades a day for 3 days
-DRISHTI_CONNECTORS_DIR=config/connectors.examples/files DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
-```
-
-One file per kind per business day, `data/files/<domain>/<date>/<kind>.jsonl`: see [FILE_CONNECTOR.md](../../docs/connectors/types/file/README.md).
-
-### 11.13 Your own JSONL
-
-`drishti.py data ingest` (the module `tools/ingest_jsonl.py`) loads any JSON Lines (plain documents or loader envelopes; a folder or
-single files) into a Delta lake or a files store, using the layout the connectors read. A pack made by `drishti.py pack make` (or
-`tools/packgen/pack_from_jsonl.py`) carries the id and date fields it needs. For a large single export use `drishti.py lake build`
-instead (streamed, flat memory).
-
-```bash
-# Delta lake (default): <root>/<domain>/<kind>/business_date=...; serve with DRISHTI_DELTA_ROOT
-drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/trade.jsonl --pack config/packs/my-bank --lake /tmp/lake
-DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar lib/drishti-server-*-exec.jar
-# JSON-lines files (stdlib + PyYAML only): <root>/<domain>/<date>/<kind>.jsonl; serve with DRISHTI_FILES_ROOT
-drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder/ --domain my-bank --key trade=TRADE_ID \
-    --store files --root /tmp/files --dry-run
-```
-
-`--mode overwrite-dates` (default) replaces only the business dates present, so a re-run is idempotent; `append`; `replace`. Without
-`--pack`, give `--domain` and `--key` per kind. Each file goes under the date in its name (`trade.2026-11-03.jsonl`), or `--as-of`, else
-the business today ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)); `--date FIELD` only names a field whose differing rows are
-counted. See
-[Generating a pack from JSON Lines](BUILD_GUIDE.md#10-a-pack-from-json-lines-pack-new) and
-[CLI_REFERENCE.md](CLI_REFERENCE.md).
-
-### 11.14 Your bank's names
-
-The demo bank is *Drishti Bank*, and its legal entities are *Drishti Bank plc* (`LE-LDN`), *Drishti Bank Securities Inc.* (`LE-NY`),
-*Drishti Bank Europe AG* (`LE-FRA`) and *Drishti Securities Japan K.K.* (`LE-TKY`), with branch forms such as *Drishti Bank plc,
-Singapore Branch*. To demonstrate with other names, edit `config/demo/names.yaml`:
-
-```yaml
-bank: Example Bank                       # the bank as a whole (the top of the risk hierarchy)
-short-name: EXAMPLE
-legal-entities:
-  LE-NY: Example Securities Inc.
-  LE-LDN: Example Bank plc
-  LE-FRA: Example Bank Europe AG
-  LE-TKY: Example Securities Japan K.K.
-# branches:                              # optional: a branch's own full name
-#   "Drishti Bank plc, Singapore Branch": Example Bank plc, Singapore Branch
-```
-
-The defaults are the names above, so the file changes nothing until you edit it. The names are applied **as the demo lakes are
-built**: `drishti.py lake demo` and `tools/build_demo_lakes.py` (both take `--names FILE`, default `config/demo/names.yaml`; with
-`--dry-run` they print the mapping and build nothing) rename, in every kind as it is loaded, each value that **is** an old name, and
-each value that **starts with** an old name followed by a comma (a branch keeps its suffix). The committed test data
-(`data/testdata`) is never rewritten. **LEIs and BICs stay as they are**: they are identifiers. In the committed data the names are in:
-
-| Where | Field | Names |
-|---|---|---|
-| `core/legal-entity` (test data, lake `reference/legal-entity`) | `NAME` | the four legal entities |
-| `market-risk/pnl-history` (test data, lake `risk/pnl-history`) | `NAME` | the bank, at the top of both trees' histories |
-| `config/packs/core/core/samples` | `legal-entity.jsonl` `NAME`, `catalog.jsonl` subtitles | the four legal entities |
-| the retired example packs (`examples/packs/climate-risk`, `liquidity-risk`, `operational-risk`; `finance`) | `legalEntityName`, `legalEntity.name` | the legal entities |
-
-So after an edit rebuild those two datasets (`--only core/legal-entity,market-risk/pnl-history`, or a full `lake demo`); the VaR trees
-show each legal entity by its `legal-entity` record's `NAME` ([contract](../contracts/packs/core.md#le-bank-legal-entity-legal-entity), [example](../contracts/samples/core.md#legal-entity)), so they follow at once. The
-packs' samples, served without a lake, follow the file when their generators are run again: `python3 tools/packgen/banking/make_data.py`
-(the core samples; the catalogue's subtitles too) and an example pack's `make.py`. The VaR tree's top node is named by a server setting
-of its own, the VaR root name (listed in [CONFIGURATION.md](../admin/CONFIGURATION.md) under the VaR
-engine): the VaR tree's top name is set there.
-
-### 11.15 The samples
-
-The packs' samples in `modules/<module>/packs/<pack>/samples/` are what the `demo` source serves live: one JSON Lines file per kind
-(`<kind>.jsonl`, one document a line, split into `<kind>.part-001.jsonl` … only above about 50 MB) and a `catalog.jsonl` listing every
-sample's kind, id, title and subtitle (the type-ahead's text). The five banking packs' samples are written by
-
-```bash
-drishti-console/.venv/bin/python tools/packgen/banking/make_data.py          # add --check to verify instead of write
-```
-
-which prints (real output on a fresh clone):
-
-```text
-wrote 2571 documents into 5 packs' samples; 271 trading test files
-feeds: …/data/feeds/fixing.jsonl
-```
-
-(world-economy and news-and-markets have their own generators under `tools/packgen/`.) The plain run also writes the sample feed file
-`data/feeds/fixing.jsonl` (one fixing series a line, `FIX SOFR-HISTORY`; `lake demo` writes it too). Every `data load` runs
-`make_data.py --jsonl` or `--lake`, which write rows only: they never rewrite the samples, the Sutra tests or an existing feed. The samples per pack:
-
-| Pack | Samples | Kinds | Live | On disk |
-|---|---|---|---|---|
-| `core` | 129 | 10 | 30 (books) | 247 KB |
-| `market-data` | 220 | 20 | 119 (curves, FX, equities, indices, commodities, bonds, credit curves) | 409 KB |
-| `trading` | 765 | 1 | 0 (trades do not tick; their valuations do) | 8.0 MB |
-| `counterparty-risk` | 534 | 10 | 66 (netting sets) | 643 KB |
-| `market-risk` | 923 | 6 | 765 (one trade valuation per trade) | 736 KB |
-| `world-economy` | 9,582 | 13 | 0 | 19.0 MB |
-| `news-and-markets` | 35 | 2 | 0 | 16 KB |
-
-#### Live walks by kind
-
-A live sample ticks while someone watches it (the `demo` source, [DEMO_CONNECTOR.md](../../docs/connectors/types/demo/README.md#coherent-walks-a-group-that-moves-together)).
-Its `_meta.walk` (the `_meta` block keeps its lower-case keys; the paths inside the walk are the document's UPPER_SNAKE names) moves a headline **and everything that must agree with it**, so a table, a chart and a headline never
-disagree. The specs are built by `tools/packgen/common/walks.py` from the finished sample; `DemoPackWalksTest` ticks every sample of
-every kind below 40 times and checks the identities in the second column. The kinds of the seven packs that walk:
-
-| Kind (pack) | Moves together, and the identity that holds after any tick | Stays still, and why |
-|---|---|---|
-| [`ir-curve`](../contracts/samples/market-data.md#ir-curve) ([contract](../contracts/packs/market-data.md#crv-interest-rate-curve-ir-curve)) (market-data) | one shift for the curve (a small tilt and per-tenor blur): every `ZERO_RATE` (%), every `QUOTE`, every `FORWARDS[].RATE` (%); each `DF = exp(-ZERO_RATE/100 × tenor)`; `TEN_Y` is the 10Y zero rate; `SLOPE_2S_10S` is 10Y less 2Y in bp | `MATURITY`, instruments, conventions |
-| [`fx-spot`](../contracts/samples/market-data.md#fx-spot) ([contract](../contracts/packs/market-data.md#fx-fx-spot-rate-fx-spot)) | `MID` with `BID` and `ASK` by the same amount (the spread is constant); `CHANGE_1D = MID / previous close - 1`; today's `HISTORY` point is `MID` | the earlier history |
-| `equity` | `PRICE`; `MARKET_CAP`; `CHANGE_1D`; today's history point and today's bar (`OHLC`: close is the price, high and low stretch, volume builds) | the bars before today, identifiers, beta |
-| [`equity-index`](../contracts/samples/market-data.md#equity-index) ([contract](../contracts/packs/market-data.md#eqx-equity-index-equity-index)) | `LEVEL`; `CHANGE_1D`; today's history point | constituents and weights (a rebalance, not a tick) |
-| `commodity` | `FRONT`; today's bar (close, high, low, volume) | contract specification |
-| [`commodity-curve`](../contracts/samples/market-data.md#commodity-curve) ([contract](../contracts/packs/market-data.md#cmdc-commodity-forward-curve-commodity-curve)) | `FRONT` with every month (parallel, a little blur); `FRONT` is the first month; `ROLL`; `SHAPE` flips between backwardation and contango when the first two months swap | open interest (end of day) |
-| [`credit-curve`](../contracts/samples/market-data.md#credit-curve) ([contract](../contracts/packs/market-data.md#cds-credit-curve-credit-curve)) | `SPREAD_5Y` with every tenor's spread; `HAZARD = SPREAD / 1e4 / (1 - recovery)`; `SURVIVAL = exp(-HAZARD × tenor)`; `PD_1Y = 1 - SURVIVAL(1Y)` | recovery, clause (terms) |
-| `bond` | `PRICE`; `YIELD` from the price and modified duration; `Z_SPREAD` moves against the price; today's history point | the coupon schedule, the terms |
-| [`trade-valuation`](../contracts/samples/market-risk.md#trade-valuation) ([contract](../contracts/packs/market-risk.md#tval-trade-valuation-trade-valuation)) (market-risk) | `MTM`; `PNL_1D = MTM - opening MTM` | the trade's terms (in the `trade` kind, which does not tick) |
-| [`netting-set`](../contracts/samples/counterparty-risk.md#netting-set) ([contract](../contracts/packs/counterparty-risk.md#nset-netting-set-netting-set)) (counterparty-risk) | each listed trade's `MTM` walks; each asset class's total (`BY_ASSET`) is its trades (plus the unlisted ones, fixed) and `NET_MTM` is the sum; `UTILISATION` moves with it (exposure itself, EE and PFE, is not stored on the netting set: the exposure engine computes it) | collateral (moves on margin calls), the agreement |
-| `book` (core) | each of the ten largest trades' `MTM` (`TOP_TRADES`) walks; `MTM` is those plus the rest (fixed) | trade count and DV01 (end of day) |
-
-The retired example packs in `examples/packs/` keep their own walks (key risk indicators, card and deposit accounts, LCR, intraday
-liquidity, containers, vessels) in their older camelCase shape. Samples that are not `live` keep the same walk, so switching one to live
-needs no other change. To see it, open `/v/ir-curve/CRV-USD-BASIS` with the demo source on (`DRISHTI_DEMO_ENABLED=true`): the 10Y cell,
-the other zero rates, the discount factors, the forwards and the curve in the chart all change at each tick.
-
-### 11.16 JSON lines: one format for every loader
-
-Every loader except Delta Lake's reads the same JSON lines, one per entity per business day. A real line written by
-`make_data.py --jsonl` (the document shortened):
-
-```json
-{"domain": "trading", "kind": "trade", "id": "MX-20000001", "date": "2026-09-17",
- "doc": "{\"SOURCE_SYSTEM\": \"MUREX\", \"TRADE_ID\": \"MX-20000001\", \"TRADE_STATUS\": \"AMENDED\", …}",
- "columns": {"TRADE_ID": "MX-20000001", …}}
-```
-
-`columns` carries the fields the pack promotes (the trading pack's `layout.trade.columns`), taken from the same document. The trade's own fields are its [contract](../contracts/packs/trading.md#trd-trade-trade) and a whole record, every field explained, is its [example](../contracts/samples/trades.md#murex). Two
-generators write it, by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): rows of several kinds or days go
-in a tar of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders, each row in its own date's folder, and the loaders file each row under its
-folder's date (never the row's `date`, which stays in the row as data):
-
-```bash
-drishti-console/.venv/bin/python tools/packgen/banking/make_data.py --jsonl data/build/loader-rows/banking.tar   # the samples, 10 days
-drishti-console/.venv/bin/python tools/samplegen/bulk_trades.py --trades 10000 --days 3 --jsonl data/build/loader-rows/bulk-trades.tar
-```
-
-(`make_data.py --jsonl` took 9 s and wrote 25,430 rows over the ten days 2026-09-17 to 2026-09-30, 7,650 of them trades: 450 folders,
-45 kinds a day.) A plain file, or standard input (`-`), is one kind on one date: `--as-of`, else its `.ready` file's, else its
-name's (`trade.2026-09-30.jsonl`), else the business today; `bulk_trades.py --jsonl -` writes one only with `--days 1`. So any store
-a new connector adds can be loaded with the same demo data.
-
-### 11.17 The scripts
-
-| Command | What it does |
-|---|---|
-| `tools/drishti.py lake demo [--lake DIR] [--as-of today\|data\|DATE] [--only …] [--with-real FILE] [--server URL] [--no-signal]` | the demo lakes from `data/testdata` (`tools/lake/demo.py`) |
-| `tools/drishti.py lake build --from FILE --pack DIR --kind K …` | one Delta table from a large JSON export, streamed (`tools/lake/build.py`) |
-| `tools/testdata/make_testdata.py [--check]` | writes `data/testdata` |
-| `python tools/drishti.py data load --store files [root] [--trades N] [--days D]` | `make_data.py --jsonl` (a tar), then `JsonlLoader` into `<root>/<domain>/<date>/<kind>.jsonl` |
-| `python tools/drishti.py data load --store delta [root] [--trades N] [--days D]` | `make_data.py --lake --no-load` (JSONL rows), `samplegen/load_rows.py` (into Delta), then `bulk_trades.py` (JSONL, then `lake build`) |
-| `python tools/drishti.py data load --store postgres [jdbc-url] [--trades N] [--days D] [--keep-months N] [--user U] [--password P] [--writers N]` | `make_data.py --jsonl` (a tar), then `PostgresLoader` (samples with `--recreate`), then the bulk book's tar |
-| `python tools/drishti.py data load --store iceberg [root] [--trades N] [--days D] [--catalog rest --uri U --warehouse W --credential C --token T --set K=V]` | the samples (and the book) into Iceberg through Drishti Lake's one loader (`samplegen/load_rows.py --format iceberg`), one load a table, each business day replaced |
-| `python tools/drishti.py data load --store duckdb [database] [--trades N] [--days D] [--keep-days N] [--memory-limit M] [--parsers N] [--threads N]` | `make_data.py --jsonl` (a tar), then `DuckDbLoader` (samples with `--recreate`), then the bulk book's tar; each load builds `<database>.loading` and renames it over the database |
-| `python tools/drishti.py data load --store mongodb [uri] [db] [--trades N] [--days D] [--keep-days N \| --ttl-days N] [--doc-format string\|bson]` | `make_data.py --jsonl` (a tar), then `MongoLoader`, then the bulk book's tar |
-| `python tools/drishti.py data load --store redis [uri] [--trades N] [--days D] [--ttl-days N] [--merge] [--publish] [--cluster]` | `make_data.py --jsonl` (a tar), then `RedisLoader`, then the bulk book's tar |
-| `python tools/drishti.py data load --store aerospike [hosts] [namespace] [--trades N] [--days D] [--ttl-days N]` | `make_data.py --jsonl` (a tar), then `AerospikeLoader`, then the bulk book's tar |
-| `python tools/drishti.py data load --store cassandra [contact-points] [datacenter] [--create] [--create-keyspace RF] [--trades N] [--days D] [--ttl-days N] [--keep-days N]` | `make_data.py --jsonl` and the bulk book (two tars), then `CassandraLoader` on their folder in one load |
-| `tools/packgen/banking/make_data.py` | the samples, `--lake` (JSONL rows, then loaded; `--no-load`), `--jsonl FILE.tar` (loader rows), `--check` |
-| `tools/samplegen/load_rows.py --rows F --restated F --root R` | loads dated loader rows (JSONL) into the lake |
-| `tools/samplegen/bulk_trades.py` | a large trade book for one source system: JSONL a day, then `lake build` (`--no-lake`), or loader rows (`--jsonl FILE.tar`, a tar of `trade/<YYYY-MM-DD>/` folders) |
-
-`lake demo` and `lake build` need only the console's Python (`drishti-console/.venv`, with PyYAML, deltalake and pyarrow). The
-`data load` needs the same Python and, for every store but Delta, Java 21 or newer (found as by every tool: `drishti.java.home`,
-`DRISHTI_JAVA_HOME`, `JAVA_HOME`, the PATH) and the server jar in `<home>/lib` (`python tools/drishti.py build jar`), whose loaders it runs.

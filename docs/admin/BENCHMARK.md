@@ -15,6 +15,9 @@
 -->
 # Benchmark
 
+
+> Commands: Linux and macOS `python3 tools/drishti.py X`; Windows `py -3.13 tools\drishti.py X` (same arguments).
+
 This is the one home of every benchmark of Drishti: what is measured and why, the harness and the exact commands to run each
 measurement again, the machine and the data, the results by area (VaR on one server and on a cluster, exposure, the loaders, trades at
 scale, the stores, memory and heap), the scaling fits with their extrapolations to 2.3 million and 10 million positions, and how to read
@@ -77,7 +80,7 @@ run on a server.
 
 ### 2.1 The tools
 
-Everything is in `tools/bench/` (Python 3.11 or later, standard library, bash, `curl`; Docker for the stores that need a container), plus
+Everything is in `tools/bench/` (Python 3.13, standard library, bash, `curl`; Docker for the stores that need a container), plus
 three opt-in Java benchmarks that are never part of the default test run. Each is listed in [CLI_REFERENCE.md](../guides/CLI_REFERENCE.md).
 
 | Tool | What it measures |
@@ -157,13 +160,13 @@ day, on a machine sized for it, see [9.8](#98-running-it-at-a-million-trades-a-d
 
 ```bash
 # a lake of synthetic trades of the real shapes: N a day per system for D business days, with counterparties and netting sets
-drishti-console/.venv/bin/python tools/bench/trades.py --lake <data dir>/delta --tmp <data dir>/tmp/bench \
+python3 tools/bench/trades.py --lake <data dir>/delta --tmp <data dir>/tmp/bench \
     --days 7 --min 300000 --max 500000 --systems endur,calypso,murex --counterparties 10000
 # start the server and console on that data folder, then: simultaneous users against the server's API, or through the console
-drishti-console/.venv/bin/python tools/bench/users.py --server http://127.0.0.1:18480 --token-file token.txt --users 50 --seconds 60
-drishti-console/.venv/bin/python tools/bench/users.py --console http://127.0.0.1:17480 --password … --users 50 --seconds 60
+python3 tools/bench/users.py --server http://127.0.0.1:18480 --token-file token.txt --users 50 --seconds 60
+python3 tools/bench/users.py --console http://127.0.0.1:17480 --password … --users 50 --seconds 60
 # 30 days, the tables of a day loaded side by side, the days in a shuffled order
-drishti-console/.venv/bin/python tools/bench/trades.py --lake <data dir>/delta --tmp <data dir>/tmp/bench --days 30 \
+python3 tools/bench/trades.py --lake <data dir>/delta --tmp <data dir>/tmp/bench --days 30 \
     --counterparties 25000 --parallel --order random
 ```
 
@@ -618,7 +621,7 @@ designed away (node members as runs, parts summed by runs: 4.8), and RoaringBitm
 for ordinal sets and part totals kept per scope (both in pure Java, on both Java versions); fastutil in the intake and the run lists;
 DuckDB as an optional reader of the first open; the Vector API for `VarMath` behind a setting. BLAS and a native kernel do not pay on
 today's bandwidth-bound sums. The roadmap for native libraries and Java 25 features is a separate document
-([HIGH_PERFORMANCE_NATIVE.md](../architecture/HIGH_PERFORMANCE_NATIVE.md), the roadmap).
+([HIGH_PERFORMANCE_NATIVE.md](../plans/HIGH_PERFORMANCE_NATIVE.md), the roadmap).
 
 ## 5. VaR: the store, a date's first open and the cost per request
 
@@ -1538,11 +1541,11 @@ lake (`--single`).
 # what would run, and the disk it needs (nothing written)
 python3 tools/bench/pivot_bench.py plan --nodes 3
 # everything: 5, 25 and 75 GB, every configuration, the report; the data deleted at the end (--keep keeps it)
-drishti-console/.venv/bin/python tools/bench/pivot_bench.py all --data-dir /data/drishti-bench/pivot --nodes 3 \
+python3 tools/bench/pivot_bench.py all --data-dir /data/drishti-bench/pivot --nodes 3 \
     --servers http://<node-1>:18480,http://<node-2>:18480,http://<node-3>:18480 --single http://<node-1>:18490 \
     --token-file token.txt --cold-cmd "<restart the servers and drop the page cache>" --out tools/bench/results/pivot-2.9.11c.jsonl
 # or step by step
-drishti-console/.venv/bin/python tools/bench/pivot_bench.py generate --data-dir /data/drishti-bench/pivot --gb 5
+python3 tools/bench/pivot_bench.py generate --data-dir /data/drishti-bench/pivot --gb 5
 python3 tools/bench/pivot_bench.py run --servers http://<node-1>:18480 --token-file token.txt --gb 5 --nodes 1 --cache warm --rollups with
 python3 tools/bench/pivot_bench.py report tools/bench/results/pivot-2.9.11c.jsonl > pivot-report.md
 python3 tools/bench/pivot_bench.py clean --data-dir /data/drishti-bench/pivot

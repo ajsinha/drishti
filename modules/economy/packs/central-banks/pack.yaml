@@ -15,7 +15,7 @@
 # Central banks · the economy module's public-sector policy-rate pack (docs/guides/WORLD_DATA_GUIDE.md): policy rates and market series from
 # FRED and the Bank of Canada's Valet API, filled daily by the central-banks feed (config/feeds/central-banks.yaml) into worldlake.
 pack: central-banks
-domain: economy   # the economy module's (its Public sector lens; docs/architecture/ACCESS_MODEL.md)
+domain: economy   # the economy module's (its Public sector lens; docs/architecture/KERNEL_AND_MODULES.md)
 version: 1.0.0
 code: CBNK
 title: Central banks
@@ -96,4 +96,3 @@ console:
     - ["CBANK CBANK-BOC", "The Bank of Canada · the target rate, CORRA, Canada's yields and USD/CAD"]
     - ["CBSER CBSER-FRED-DGS10", "The US 10-year Treasury yield · two years of daily history"]
     - ["CBSER CBSER-BOC-V39079", "The Bank of Canada's target for the overnight rate"]
-  help: config/help.yaml

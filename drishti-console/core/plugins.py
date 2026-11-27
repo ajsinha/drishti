@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The core's hooks a module's console code fills (docs/architecture/DOMAIN_MODULES.md section 5, the cycles C1 to C6): the core names
+"""The core's hooks a module's console code fills (docs/architecture/KERNEL_AND_MODULES.md section 21.5, the cycles C1 to C6): the core names
 no module's code; a module registers what the core asks of it, and the core asks the registry.
 
 * **routers** (C1): :func:`include` includes every module's routers, as its ``plugins/<module>/plugin.yaml`` lists them, and imports the

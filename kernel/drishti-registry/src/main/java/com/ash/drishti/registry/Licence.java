@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The customer's licence (ACCESS_MODEL.md section 3): which modules this installation may run, within which limits, from when to when.
+ * The customer's licence (KERNEL_AND_MODULES.md section 19.3): which modules this installation may run, within which limits, from when to when.
  * Unsigned for now: without {@code config/access/licence.yaml} the installation runs the <em>development licence</em> (every module, no
  * limits, no end), so nothing changes for an existing installation. The signed licence (offline verification, expiry and grace) comes in
  * 2.9.11.i; the registry is the one place that will verify it.

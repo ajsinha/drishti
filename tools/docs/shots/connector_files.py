@@ -19,7 +19,7 @@ pack, whose connector templates are written out as files in a scratch connector 
 JSON Lines files, one pointed at a port nothing listens on, and a small pack, desk-demo, that names a connector nobody has created yet.
 
     DRISHTI_SHOTS_SERVER_PORT=18988 DRISHTI_SHOTS_CONSOLE_PORT=17988 \\
-        drishti-console/.venv/bin/python tools/docs/screenshots.py --guide connector_files
+        python3 tools/docs/screenshots.py --guide connector_files
 """
 from __future__ import annotations
 
@@ -91,8 +91,8 @@ def start_servers(work: Path) -> list:
                DRISHTI_DEMO_ENABLED="false", DRISHTI_LAKE_ENABLED="true", **{DEMO_ROOT_ENV: str(work / "delta")}, LEDGER_DB_PASSWORD="not-a-real-password",
                LEDGER_TRUSTSTORE_PASSWORD="changeit")
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jar)], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
-    py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
-    py = py if py.exists() else (ROOT / ".venv" / "bin" / "python")
+    py = Path(os.environ.get("DRISHTI_PYTHON") or sys.executable)
+    py = py if py.exists() else Path(sys.executable)
     py = py if py.exists() else Path(sys.executable)
     cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), DRISHTI_PACKS_DIR=str(packs))
     console = subprocess.Popen([str(py), str(ROOT / "drishti-console" / "run_drishti_web.py")], cwd=ROOT / "drishti-console", env=cenv,

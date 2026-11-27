@@ -289,7 +289,7 @@ public final class DatasetRefresher implements AutoCloseable {
         if (!st.running.compareAndSet(false, true)) {
             return;
         }
-        Thread.ofVirtual().name("drishti-bi-refresh-" + j.key()).start(() -> run(j, st, trigger, date));
+        startRun("drishti-bi-refresh-" + j.key(), () -> run(j, st, trigger, date));
     }
 
     /** Runs the job now on this thread. A failure is recorded (and a retry planned) rather than thrown. */
@@ -377,7 +377,7 @@ public final class DatasetRefresher implements AutoCloseable {
                 java.nio.file.Files.createDirectories(stateFile.getParent());
                 java.nio.file.Path tmp = stateFile.resolveSibling(stateFile.getFileName() + ".tmp");
                 java.nio.file.Files.writeString(tmp, JSON.writeValueAsString(Map.of("saved", clock.instant().toString(), "jobs", jobs)), java.nio.charset.StandardCharsets.UTF_8);
-                java.nio.file.Files.move(tmp, stateFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, stateFile);
             } catch (java.io.IOException | RuntimeException e) {
                 LOG.warn("BI refresh state could not be saved to {}: {}", stateFile, e.toString());
             }
@@ -446,7 +446,7 @@ public final class DatasetRefresher implements AutoCloseable {
                 if (st.running.compareAndSet(false, true)) {
                     st.status = "running";
                     st.trigger = "manual (" + actor + ")";
-                    Thread.ofVirtual().name("drishti-bi-refresh-" + t.key()).start(() -> run(t, st, "manual (" + actor + ")", sources()));
+                    startRun("drishti-bi-refresh-" + t.key(), () -> run(t, st, "manual (" + actor + ")", sources()));
                 }
                 first = first == null ? st.toMap() : first;
             }
@@ -457,7 +457,7 @@ public final class DatasetRefresher implements AutoCloseable {
         if (st.running.compareAndSet(false, true)) {
             st.status = "running";
             st.trigger = "manual (" + actor + ")";
-            Thread.ofVirtual().name("drishti-bi-refresh-" + j.key()).start(() -> run(j, st, "manual (" + actor + ")", sources()));
+            startRun("drishti-bi-refresh-" + j.key(), () -> run(j, st, "manual (" + actor + ")", sources()));
         }
         return st.toMap();
     }
@@ -472,7 +472,7 @@ public final class DatasetRefresher implements AutoCloseable {
         if (st.running.compareAndSet(false, true)) {
             st.status = "running";
             st.trigger = "manual (" + actor + ")";
-            Thread.ofVirtual().name("drishti-bi-refresh-" + j.key()).start(() -> run(j, st, "manual (" + actor + ")", sources()));
+            startRun("drishti-bi-refresh-" + j.key(), () -> run(j, st, "manual (" + actor + ")", sources()));
         }
         return st.toMap();
     }
@@ -559,7 +559,7 @@ public final class DatasetRefresher implements AutoCloseable {
             for (Map.Entry<LocalDate, Set<String>> d; (d = st.loaded.pollLastEntry()) != null; ) {
                 dates.add(d);                                  // the newest first, with the kinds signalled for it
             }
-            Thread.ofVirtual().name("drishti-bi-refresh-" + j.key()).start(() -> {
+            startRun("drishti-bi-refresh-" + j.key(), () -> {
                 try {
                     for (Map.Entry<LocalDate, Set<String>> d : dates) {
                         if (j.readers() == null && queries.fresh(j.ds(), j.tables(), d.getKey(), d.getValue())) {
@@ -606,8 +606,42 @@ public final class DatasetRefresher implements AutoCloseable {
         return m;
     }
 
+    /** The refresh runs in progress: a stop waits for them, so the state file holds how each ended. */
+    private final Set<Thread> runs = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    private void startRun(String name, Runnable run) {
+        Thread t = Thread.ofVirtual().name(name).unstarted(() -> {
+            try {
+                run.run();
+            } finally {
+                runs.remove(Thread.currentThread());
+            }
+        });
+        runs.add(t);
+        t.start();
+    }
+
+    /**
+     * Stops the scheduler and waits (up to 10 s) for the runs in progress, then saves: a run that ended as the server stopped is
+     * on disk as it ended, never lost to a stop that came between its end and its save. A run still going after that is shown as
+     * interrupted at the next start.
+     */
     @Override
     public void close() {
         ticker.shutdownNow();
+        long until = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(10);
+        for (Thread t : List.copyOf(runs)) {
+            long left = until - System.nanoTime();
+            if (left <= 0) {
+                break;
+            }
+            try {
+                t.join(java.time.Duration.ofNanos(left));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        save();
     }
 }

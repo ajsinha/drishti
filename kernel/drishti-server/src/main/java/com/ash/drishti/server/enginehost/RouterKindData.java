@@ -101,16 +101,82 @@ final class RouterKindData implements KindData {
         if (docs.isEmpty() || over[0]) {
             return Optional.empty();
         }
-        docs.sort(java.util.Comparator.comparing(d -> d.ref().id()));
+        return toColumns(rows(docs, null), paths, date);
+    }
+
+    /**
+     * The engine file's read of a reference kind (ENGINE SPEC {@code inputs.<name>.as-of}, {@code .field}): with {@code onOrBefore} each
+     * record's latest version on or before the date, as the in-tree loaders read documents as of a date (the kind's own documents of the
+     * date, else every record listed across dates and fetched as of it); with {@code field} the items of each record's list-of-records
+     * field are the rows, each with its record's fields beside its own (a credit limit's {@code BUCKETS} under its {@code LIMIT_ID}).
+     */
+    @Override
+    public Optional<ColumnSet> columns(String kind, Collection<String> paths, LocalDate date, boolean onOrBefore, String field) {
+        if (!onOrBefore && field == null) {
+            return columns(kind, paths, date);
+        }
+        java.util.Map<String, com.ash.drishti.api.EntityDocument> docs = new java.util.LinkedHashMap<>();
+        try {
+            if (onOrBefore) {
+                boolean whole = router.documents(kind, asOf(date), d -> docs.put(d.ref().id(), d));
+                if (!whole) {                                       // as the in-tree loaders: the listing only when the kind cannot be read whole
+                    docs.clear();
+                    var listing = router.listAcross(kind, DOCUMENT_ROWS, budget, asOf(date), new com.ash.drishti.engine.source.SourceFailures());
+                    var refs = listing.hits().stream().map(h -> h.ref()).toList();
+                    router.fetchAll(refs, budget, asOf(date)).forEach((ref, d) -> docs.put(ref.id(), d));
+                }
+            } else {
+                router.documents(kind, asOf(date), d -> docs.put(d.ref().id(), d));
+            }
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+        java.util.List<com.ash.drishti.api.EntityDocument> live = docs.values().stream().filter(d -> !d.deleted()).toList();
+        if (live.isEmpty() || live.size() > DOCUMENT_ROWS) {
+            return Optional.empty();
+        }
+        return toColumns(rows(live, field), paths, date);
+    }
+
+    /** A row read from documents: its id and its fields (an item's own, then its record's). */
+    private record DocRow(String id, java.util.function.Function<String, com.ash.drishti.api.DataNode> get) {}
+
+    private static java.util.List<DocRow> rows(java.util.List<com.ash.drishti.api.EntityDocument> docs, String field) {
+        java.util.List<com.ash.drishti.api.EntityDocument> sorted = new java.util.ArrayList<>(docs);
+        sorted.sort(java.util.Comparator.comparing(d -> d.ref().id()));
+        java.util.List<DocRow> out = new java.util.ArrayList<>();
+        for (com.ash.drishti.api.EntityDocument d : sorted) {
+            com.ash.drishti.api.DataNode data = d.data();
+            if (field == null) {
+                out.add(new DocRow(d.ref().id(), data::get));
+                continue;
+            }
+            com.ash.drishti.api.DataNode items = data.get(field);
+            for (int j = 0; items instanceof com.ash.drishti.api.DataNode.Arr && j < items.size(); j++) {
+                com.ash.drishti.api.DataNode item = items.get(j);
+                out.add(new DocRow(d.ref().id() + "#" + j, p -> {
+                    com.ash.drishti.api.DataNode v = item.get(p);
+                    return v.isMissing() ? data.get(p) : v;
+                }));
+            }
+        }
+        return out;
+    }
+
+    /** Rows into columns: a number field as numbers, a list as its items joined by commas, anything else as text. */
+    private static Optional<ColumnSet> toColumns(java.util.List<DocRow> docs, Collection<String> paths, LocalDate date) {
         int n = docs.size();
+        if (n == 0) {
+            return Optional.empty();
+        }
         String[] ids = new String[n];
         java.util.Map<String, double[]> numbers = new java.util.LinkedHashMap<>();
         java.util.Map<String, String[]> texts = new java.util.LinkedHashMap<>();
         for (String p : paths) {
             boolean numeric = true;
             boolean any = false;
-            for (com.ash.drishti.api.EntityDocument d : docs) {
-                com.ash.drishti.api.DataNode v = d.data().get(p);
+            for (DocRow d : docs) {
+                com.ash.drishti.api.DataNode v = d.get().apply(p);
                 if (!v.isMissing() && !v.isNull()) {
                     any = true;
                     numeric &= v.unwrap() instanceof Number;
@@ -122,7 +188,7 @@ final class RouterKindData implements KindData {
             double[] num = numeric ? new double[n] : null;
             String[] txt = numeric ? null : new String[n];
             for (int i = 0; i < n; i++) {
-                com.ash.drishti.api.DataNode v = docs.get(i).data().get(p);
+                com.ash.drishti.api.DataNode v = docs.get(i).get().apply(p);
                 if (numeric) {
                     num[i] = v.isMissing() || v.isNull() ? Double.NaN : v.asDouble();
                 } else if (v.isMissing() || v.isNull()) {
@@ -144,7 +210,7 @@ final class RouterKindData implements KindData {
             }
         }
         for (int i = 0; i < n; i++) {
-            ids[i] = docs.get(i).ref().id();
+            ids[i] = docs.get(i).id();
         }
         return Optional.of(new ColumnSet(ids, numbers, texts, date));
     }

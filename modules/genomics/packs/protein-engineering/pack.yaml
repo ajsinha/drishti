@@ -165,7 +165,6 @@ console:
     - 'The active site''s centre: fold, burial, coordinates and mean effects'
   - - DROUND HLXK7-R8
     - 'The round of the lead design: method, best and median activity'
-  help: config/help.yaml
 columns:
   protein:
   - PROTEIN

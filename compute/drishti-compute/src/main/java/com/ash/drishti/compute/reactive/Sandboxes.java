@@ -23,7 +23,6 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Instant;
@@ -234,7 +233,7 @@ public final class Sandboxes {
             Files.createDirectories(f.getParent());
             Path tmp = f.resolveSibling(s.id() + ".json.part");
             Files.writeString(tmp, JSON.writeValueAsString(m), StandardCharsets.UTF_8);
-            Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            com.ash.drishti.api.FileReplace.atomically(tmp, f);
         } catch (IOException e) {
             throw new UncheckedIOException("could not keep sandbox " + s.id(), e);
         }

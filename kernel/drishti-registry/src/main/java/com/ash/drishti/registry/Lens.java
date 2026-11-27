@@ -18,7 +18,7 @@ package com.ash.drishti.registry;
 import java.util.List;
 
 /**
- * A lens (ACCESS_MODEL.md section 3): an experience a person works in, a curated composition of modules. It is offered only when every
+ * A lens (KERNEL_AND_MODULES.md section 19.3): an experience a person works in, a curated composition of modules. It is offered only when every
  * module it needs is on; a lens whose modules are off does not exist (no menu, no home, no link).
  *
  * @param id      its id ({@code risk})

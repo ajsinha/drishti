@@ -33,8 +33,8 @@ items:
       - kind: sa-ccr
         binds: [$.REPLACEMENT_COST, $.ADD_ON, $.MULTIPLIER, $.EAD, $.RWA]
         panels: [addons, hedging, checks]
-    help: [docs-contracts-saccr]
-    contracts: [docs/contracts/SACCR.md]
+    help: [docs-plans-contracts-saccr]
+    contracts: [docs/plans/contracts/SACCR.md]
 
   - id: cva-figures
     what: field
@@ -47,8 +47,8 @@ items:
         panels: [components, sens]
       - kind: netting-set
         binds: [$.CVA]
-    help: [docs-contracts-cva]
-    contracts: [docs/contracts/CVA.md]
+    help: [docs-plans-contracts-cva]
+    contracts: [docs/plans/contracts/CVA.md]
 
   - id: credit-limit-usage
     what: field
@@ -75,7 +75,7 @@ items:
     about: "The pre-deal decision against every limit a candidate trade touches: SA-CCR's incremental EAD and EAD limits, soft and hard limits, warnings and the maximum size (the decision against the counterparty's credit limit on its exposure measure and tenor buckets is built: PREDEAL, POST /api/v1/exposure/predeal)"
     release: 2.9.11.k
     treatment: under-construction
-    contracts: ["docs/contracts/LIM.md#64-pre-deal-check"]
+    contracts: ["docs/plans/contracts/LIM.md#64-pre-deal-check"]
 
   - id: pnl-explain-waterfall
     what: panel
@@ -85,38 +85,38 @@ items:
     sutras:
       - kind: pnl-explain
         panels: [explain]
-    contracts: ["docs/contracts/PNL.md#1-summary"]
+    contracts: ["docs/plans/contracts/PNL.md#1-summary"]
 
   - id: wwr-contract
     what: contract
     about: "Wrong-way risk: the contract of its inputs and results, planned"
     release: "the wrong-way risk engine (planned)"
     treatment: under-construction
-    help: [docs-contracts-wwr]
-    contracts: [docs/contracts/WWR.md]
+    help: [docs-plans-contracts-wwr]
+    contracts: [docs/plans/contracts/WWR.md]
 
   - id: collateral-contract
     what: contract
     about: "Collateral: the planned contract of the computed collateral figures"
     release: "the collateral engine (planned)"
     treatment: under-construction
-    help: [docs-contracts-coll]
-    contracts: [docs/contracts/COLL.md]
+    help: [docs-plans-contracts-coll]
+    contracts: [docs/plans/contracts/COLL.md]
 
   - id: margin-call-contract
     what: contract
     about: "Margin calls: the planned contract of the computed margin call"
     release: "the collateral engine (planned)"
     treatment: under-construction
-    help: [docs-contracts-mc]
-    contracts: [docs/contracts/MC.md]
+    help: [docs-plans-contracts-mc]
+    contracts: [docs/plans/contracts/MC.md]
 
   - id: flight-cluster-end-to-end
     what: test
     about: "Arrow Flight on a three-node cluster, end to end (endpoints on every node, a node stopped mid-read, a VaR stream through an intraday batch): not measured yet; the single-node reads, the stream, Stop and resume are run (tutorial 17)"
     release: "a later heavy run (needs a three-node scratch cluster)"
     treatment: under-construction
-    contracts: ["docs/guides/FLIGHT_GUIDE.md#13-testing"]
+    contracts: ["docs/guides/INTEGRATION_GUIDE.md#213-testing"]
 
   - id: ccr-cube-preset
     what: menu item
@@ -132,7 +132,7 @@ items:
     about: "The Approvals queue's access kinds: users and roles, API keys, captures, pack changes and admin configuration as four-eyes items (today each takes effect at once, by an administrator, audited); the queue and its API take a new kind as one more ApprovalSource"
     release: 2.9.11.j
     treatment: under-construction
-    contracts: ["docs/guides/USER_GUIDE.md#approvals", "docs/architecture/SHARED_SCREENS.md#2-one-approvals-queue"]
+    contracts: ["docs/guides/USER_GUIDE.md#approvals", "docs/architecture/THIN_CONSOLE_DESIGN.md#82-one-approvals-queue"]
 
   - id: approvals-effect-on-risk
     what: decision
@@ -152,42 +152,42 @@ items:
     about: "Explain › Why it moved for ES, parametric VaR, parametric ES and the fat-tail gap: the exact attribution steps are VaR's only (the drawer says so; VaR's own Why it moved is built)"
     release: "2.9.11.k (risk engines II)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["docs/architecture/THIN_CONSOLE_DESIGN.md#83-one-explain-for-every-number"]
 
   - id: explain-official-check
     what: panel
     about: "Explain's check 'equal to the official capture' (VaR and exposure): the captures are on each page's Captured results tab; the drawer does not compare yet"
     release: "2.9.11.k (risk engines II)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["docs/architecture/THIN_CONSOLE_DESIGN.md#83-one-explain-for-every-number"]
 
   - id: explain-exposure-why
     what: panel
     about: "Explain › Why it moved for an exposure figure (peak PFE, EPE, EEPE, EE, CE, EAD): the attribution between two dates is not built; the formula, inputs, lineage and checks are"
     release: "2.9.11.k (risk engines II)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["docs/architecture/THIN_CONSOLE_DESIGN.md#83-one-explain-for-every-number"]
 
   - id: explain-exposure-workbook
     what: panel
     about: "Explain › Workbook for an exposure figure: no exposure playground with a live-formula workbook yet"
     release: "2.9.11.k (risk engines II)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["docs/architecture/THIN_CONSOLE_DESIGN.md#83-one-explain-for-every-number"]
 
   - id: explain-pivot-workbook
     what: panel
     about: "Explain › Workbook for a pivot cell's move: the steps are on the screen and in the API; no live-formula workbook yet"
     release: "a later release (the pivot playground)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["docs/architecture/THIN_CONSOLE_DESIGN.md#83-one-explain-for-every-number"]
 
   - id: explain-more-kinds
     what: panel
     about: "Explain for a BI measure, a Sutra metric, an FRTB-SA or a SIMM figure: no explainer of these kinds is registered yet (GET /api/v1/explain/kinds lists the ones that are: var, exposure, pivot); FRTB-SA and SIMM keep their own step-by-step explanation on their pages"
     release: "2.9.11.g (the Build home's rest)"
     treatment: under-construction
-    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+    contracts: ["docs/architecture/THIN_CONSOLE_DESIGN.md#83-one-explain-for-every-number"]
 
   - id: build-home-model-lineage
     what: field

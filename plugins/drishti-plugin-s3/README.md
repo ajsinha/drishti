@@ -55,6 +55,10 @@ Plugin `s3` (`plugins/drishti-plugin-s3`): the `file` connector's file-per-entit
 already writes to object storage (stress results, reports, model outputs), a few thousand to a few tens of thousands of objects. For
 a book of millions a day in object storage use `delta` or `iceberg` on S3 instead.
 
+## Build and use
+
+A connector file in `config/connectors/` with `plugin: s3` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
+
 ## What it reads
 
 Every `.json` object under `bucket`/`prefix`, listed at start and every `rescan-seconds`: the listing gives the date folders, kinds and

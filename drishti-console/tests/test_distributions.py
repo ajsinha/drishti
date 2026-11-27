@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Distributions on the console (docs/architecture/DISTRIBUTIONS.md): the server compiles each distribution and the console draws its
+"""Distributions on the console (docs/architecture/KERNEL_AND_MODULES.md): the server compiles each distribution and the console draws its
 installation answer (THIN_CONSOLE_DESIGN.md 3.2, step S2; the answers recorded by the server's own code in tests/answers): Finance has no
 VaR command, menu, Help page or AI tool; Risk has no economy command; market data is in both; All matches today; the old keys still work;
 two consoles over one server show two distributions. The compile itself is the server's (DistributionsTest, ConsoleAnswersServerTest)."""

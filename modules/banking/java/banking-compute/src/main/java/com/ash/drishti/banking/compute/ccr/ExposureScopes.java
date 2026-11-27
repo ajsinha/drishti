@@ -35,7 +35,7 @@ import java.util.Optional;
  */
 public final class ExposureScopes {
 
-    /** The connected groups (GRP.md): a group's member counterparties. */
+    /** The connected groups (EXPOSURE_GUIDE.md section 4): a group's member counterparties. */
     @FunctionalInterface
     public interface Groups {
         Optional<List<String>> members(String group);

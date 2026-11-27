@@ -1,0 +1,33 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this module's docs/README.md: its text. tools/packgen/module_readme.py writes the README from this and module.yaml; edit here, not there.
+readme: 1
+front: |
+  summary: The live trade blotter and the Trading landings' figures, worked out on the server as the person
+  kinds: [trade]
+body: |
+  # Trading
+
+  The live trade blotter: a live table (`blotters/trade.live.yaml`) of Rachana's engine, served at `/api/v1/rdp/tables/trade`. The trades from the
+  durable store, ticking from the `trade` kind's `live:` binding, editable where the site's configuration and the person's rights allow it,
+  each change written back through the binding's write path (a version per trade, the outbox, four eyes where the site asks, audit).
+
+  ## Data structures
+
+  | Kind | Bound as | Fields the blotter uses |
+  |---|---|---|
+  | `trade` | `read:` the durable store; `live:` a messaging connector (Kafka, RabbitMQ, ActiveMQ) | `TRADE_ID` (key), `TRADE_VERSION` (version), `TRADE_STATUS`, `PORTFOLIO`, `TRADER_ID`, `COUNTERPARTY`, `PRODUCT_TYPE`, `BUY_SELL_CODE`, `QUANTITY`, `PRICE`, `CURRENCY`, `TRADE_DATE`, `MATURITY_DATE`, `SOURCE_UPDATE_TIME` |
+
+  The guide and tutorial: the bank data guide (`docs/guides/BANK_DATA_GUIDE.md`, in the package `guides/BANK_DATA_GUIDE.md`; Help, this module's section).

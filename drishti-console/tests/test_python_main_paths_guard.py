@@ -33,7 +33,7 @@ SETTING_DEFAULT = re.compile(r"""\$\{[A-Z_a-z.]+:\.{1,2}(?:/[^}]*)?\}|["']\./[^"
 ARG_DEFAULT = re.compile(r"""default=(?:Path|pathlib\.Path)?\(?\s*f?["']([^"']*)["']""")
 ENV_DEFAULT = re.compile(r"""(?:environ\.get|getenv)\([^)]*,\s*["'](?:\.{1,2}(?:/[^"']*)?|data|config|modules|tools)["']""")
 
-SKIP_DIRS = {".git", "target", "node_modules", ".venv", "data", "__pycache__", ".claude", "venv", "site-packages"}
+SKIP_DIRS = {".git", "target", "node_modules", ".venv", "data", "__pycache__", ".claude", "venv", "site-packages"}  # IGNORE pattern: a user's own virtual environment in the tree is never scanned
 
 # Allowed, each with its reason: (file suffix, text on the line, reason).
 ALLOWED: list[tuple[str, str, str]] = [
@@ -48,6 +48,9 @@ ALLOWED: list[tuple[str, str, str]] = [
     ("tools/storeload.py", "cwd = Path.cwd()", "a path the operator typed on drishti.py data load resolves from where it was typed"),
     ("tools/api_docs.py", 'APIDOCS = Path("target")', "a suffix joined onto each Maven module's folder, never opened from the working folder"),
     ("tools/drillkit/affected.py", './/m:module', "an XPath, not a path"),
+    ("tools/launch/procs.py", "here = Path.cwd() if cwd is None else cwd", "where the person stands, only to print a command relative to it; never opened"),
+    ("tools/launch/pylibs.py", 'LOCK = Path("config")', "a suffix joined onto the install folder (home / LOCK), never opened from the working folder"),
+    ("tools/launch/pylibs.py", 'REQ_FILE = Path("drishti-console")', "a suffix joined onto the install folder, never opened from the working folder"),
     ("tools/docs/shots/t05.py", "text.replace(\"./docs/tutorials", "the old text in a stored connector file, replaced by the absolute folder"),
     ("tools/drillkit/affected.py", '"./mvnw"', "run with cwd=ROOT (the drill's own subprocess call)"),
     ("drishti_compute/worker.py", "os.getcwd()", "remembers the worker's folder to return to after a request chdirs into its scratch folder"),

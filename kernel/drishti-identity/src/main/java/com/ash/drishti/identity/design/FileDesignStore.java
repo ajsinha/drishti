@@ -86,7 +86,7 @@ public final class FileDesignStore implements DesignStore {
             return Optional.empty();
         }
         try {
-            return Optional.of(json.readValue(f.toFile(), StoredDesign.class));
+            return Optional.of(json.readValue(java.nio.file.Files.readAllBytes(f), StoredDesign.class));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -188,17 +188,30 @@ public final class FileDesignStore implements DesignStore {
         return HexFormat.of().formatHex(Hashes.of(Hashes.SHA_256, name), 0, 16) + ".json";
     }
 
-    /** Letters, digits, {@code -} and a non-leading {@code .} stay; every other character is {@code _} plus its hex. */
+    /** The names Windows keeps for devices, in any case and with any extension ({@code con}, {@code NUL.txt}): never a folder name. */
+    private static final Pattern RESERVED = Pattern.compile("(?i)(con|prn|aux|nul|com[0-9]|lpt[0-9])(\\..*)?");
+
+    /**
+     * A user name as one folder name that is the same on every operating system: ASCII letters, digits, {@code -} and a {@code .} that is
+     * neither first nor last stay; every other character ({@code /}, {@code \\}, {@code :}, a space, a non-ASCII letter...) is {@code _}
+     * plus its hex. A last {@code .} is escaped because Windows drops it ({@code a.} and {@code a} would share one folder), and a name
+     * Windows keeps for a device ({@code CON}, {@code nul}, {@code com1}) has its first letter escaped.
+     */
     static String escape(String user) {
+        byte[] bytes = user.getBytes(StandardCharsets.UTF_8);
         StringBuilder b = new StringBuilder();
-        for (byte c : user.getBytes(StandardCharsets.UTF_8)) {
-            char ch = (char) (c & 0xff);
-            boolean plain = ch < 128 && (Character.isLetterOrDigit(ch) || ch == '-' || (ch == '.' && b.length() > 0));
+        for (int i = 0; i < bytes.length; i++) {
+            char ch = (char) (bytes[i] & 0xff);
+            boolean dot = ch == '.' && b.length() > 0 && i < bytes.length - 1;
+            boolean plain = ch < 128 && (Character.isLetterOrDigit(ch) || ch == '-' || dot);
             if (plain) {
                 b.append(ch);
             } else {
-                b.append('_').append(String.format("%02x", c & 0xff));
+                b.append('_').append(String.format("%02x", bytes[i] & 0xff));
             }
+        }
+        if (RESERVED.matcher(b).matches()) {
+            b.replace(0, 1, "_" + String.format("%02x", (int) b.charAt(0)));
         }
         return b.length() == 0 ? "_" : b.toString();
     }
@@ -232,10 +245,11 @@ public final class FileDesignStore implements DesignStore {
                 Files.createFile(tmp, PosixFilePermissions.asFileAttribute(FILE_MODE));
             } catch (UnsupportedOperationException e) {
                 Files.createFile(tmp);
+                ownerOnly(tmp);
             }
             Files.write(tmp, bytes);
             try {
-                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+                com.ash.drishti.api.FileReplace.atomically(tmp, file);
             } catch (AtomicMoveNotSupportedException e) {
                 Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING);
             }
@@ -244,12 +258,32 @@ public final class FileDesignStore implements DesignStore {
         }
     }
 
-    private static void makeDirs(Path dir) throws IOException {
+    private void makeDirs(Path dir) throws IOException {
         try {
             Files.createDirectories(dir, dirAttr());
         } catch (UnsupportedOperationException e) {
-            Files.createDirectories(dir);
+            Files.createDirectories(dir);                      // Windows: no POSIX modes; each folder from the store's root down is owner-only by ACL
+            for (Path p = dir; p != null && p.startsWith(root); p = p.getParent()) {
+                ownerOnly(p);
+            }
         }
+    }
+
+    /**
+     * Where the file system has ACLs and no POSIX modes (Windows): {@code p}'s access list is its owner alone, with full control (a folder's
+     * entry is inherited by what is made in it). The same promise as {@code rwx------}: the server's account reads the designs, nobody else.
+     */
+    static void ownerOnly(Path p) throws IOException {
+        java.nio.file.attribute.AclFileAttributeView acl = Files.getFileAttributeView(p, java.nio.file.attribute.AclFileAttributeView.class);
+        if (acl == null) {
+            return;
+        }
+        var entry = java.nio.file.attribute.AclEntry.newBuilder().setType(java.nio.file.attribute.AclEntryType.ALLOW).setPrincipal(Files.getOwner(p))
+                .setPermissions(java.util.EnumSet.allOf(java.nio.file.attribute.AclEntryPermission.class));
+        if (Files.isDirectory(p)) {
+            entry.setFlags(java.nio.file.attribute.AclEntryFlag.FILE_INHERIT, java.nio.file.attribute.AclEntryFlag.DIRECTORY_INHERIT);
+        }
+        acl.setAcl(List.of(entry.build()));
     }
 
     private static void deleteTree(Path dir) {

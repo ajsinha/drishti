@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""S3 simulators for the tools' tests: moto's server (pure Python, run by the venv's own python, so it runs on the Windows QA
+"""S3 simulators for the tools' tests: moto's server (pure Python, run by the tools' own Python, so it runs on the Windows QA
 machine) and the MinIO server binary (Linux only), each on a free port in 18750-18759, plus the conditional-write probe and its
 report line, the same as the Java side's com.ash.drishti.testkit.s3.
 
@@ -148,7 +148,7 @@ class Moto:
             import moto
             import moto.server  # noqa: F401
         except ImportError as e:
-            raise Skip(f'moto is not installed ({e}): pip install "moto[server]==5.2.3" into the console venv') from e
+            raise Skip(f'moto is not installed ({e}): pip install "moto[server]==5.2.3" into the Python you run the tests with') from e
         port = free_port()
         log_dir.mkdir(parents=True, exist_ok=True)
         self.log = open(log_dir / "moto.log", "wb")

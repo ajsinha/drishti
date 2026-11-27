@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The credit support annexes (docs/plans/CSV_LOADERS.md section 3.2): thresholds, minimum transfer amounts, independent amount, margin
+# The credit support annexes (docs/guides/BANK_DATA_GUIDE.md section 3.2): thresholds, minimum transfer amounts, independent amount, margin
 # frequency and margin period of risk; the eligible collateral from an optional child file.
 format: 1
 kind: csa

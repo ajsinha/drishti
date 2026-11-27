@@ -2,7 +2,8 @@
 //
 // Drishti in VS Code: File, Open Workspace from File. The tasks and launch configurations carry the SAME names as the JetBrains run
 // configurations in run-configs/ (the launcher standard: docs/plans/LAUNCHER_STANDARD.md). Generated from tools/launch/launchers.yaml by
-// python tools/drishti.py launchers: never edit this file, edit the table. JDK 21: change the Java path below.
+// python tools/drishti.py launchers: never edit this file, edit the table. Paths use ${userHome}; Python is py -3.13 on Windows and
+// python3 elsewhere; Java is the JDK 21 of JAVA_HOME (no machine path here).
 // Build and run in the IDE: README.md#build-and-run-in-the-ide.
 {
   "folders": [
@@ -20,14 +21,6 @@
     ]
   },
   "settings": {
-    "python.defaultInterpreterPath": "python3",
-    "java.configuration.runtimes": [
-      {
-        "name": "JavaSE-21",
-        "path": "/usr/lib/jvm/java-21-openjdk-amd64",
-        "default": true
-      }
-    ],
     "files.exclude": {
       "**/__pycache__": true
     }
@@ -79,7 +72,13 @@
         "type": "shell",
         "command": "python3 tools/drishti.py start server --profile demo",
         "windows": {
-          "command": "python tools/drishti.py start server --profile demo"
+          "command": "py -3.13 tools/drishti.py start server --profile demo"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py start server --profile demo"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py start server --profile demo"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -91,7 +90,13 @@
         "type": "shell",
         "command": "python3 tools/drishti.py start server --profile samples",
         "windows": {
-          "command": "python tools/drishti.py start server --profile samples"
+          "command": "py -3.13 tools/drishti.py start server --profile samples"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py start server --profile samples"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py start server --profile samples"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -103,7 +108,13 @@
         "type": "shell",
         "command": "python3 tools/drishti.py start server --profile qa",
         "windows": {
-          "command": "python tools/drishti.py start server --profile qa"
+          "command": "py -3.13 tools/drishti.py start server --profile qa"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py start server --profile qa"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py start server --profile qa"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -113,9 +124,15 @@
       {
         "label": "Drishti: run console",
         "type": "shell",
-        "command": "python3 drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo",
+        "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo",
         "windows": {
-          "command": "python drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo"
+          "command": "py -3.13 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo"
+        },
+        "linux": {
+          "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo"
+        },
+        "osx": {
+          "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -125,9 +142,15 @@
       {
         "label": "Drishti: run console (QA, port 17580)",
         "type": "shell",
-        "command": "python3 drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile qa",
+        "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile qa",
         "windows": {
-          "command": "python drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile qa"
+          "command": "py -3.13 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile qa"
+        },
+        "linux": {
+          "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile qa"
+        },
+        "osx": {
+          "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile qa"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -137,9 +160,15 @@
       {
         "label": "Drishti: run console (Risk)",
         "type": "shell",
-        "command": "python3 drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo --distribution=risk",
+        "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo --distribution=risk",
         "windows": {
-          "command": "python drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo --distribution=risk"
+          "command": "py -3.13 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo --distribution=risk"
+        },
+        "linux": {
+          "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo --distribution=risk"
+        },
+        "osx": {
+          "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo --distribution=risk"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -149,9 +178,51 @@
       {
         "label": "Drishti: run console (Finance)",
         "type": "shell",
-        "command": "python3 drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo --distribution=finance --server.port=17481",
+        "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo --distribution=finance --server.port=17481",
         "windows": {
-          "command": "python drishti-console/run_drishti_web.py --settings ~/drishti-envs/dev.ini --profile demo --distribution=finance --server.port=17481"
+          "command": "py -3.13 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo --distribution=finance --server.port=17481"
+        },
+        "linux": {
+          "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo --distribution=finance --server.port=17481"
+        },
+        "osx": {
+          "command": "python3 drishti-console/run_drishti_web.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo --distribution=finance --server.port=17481"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: setup",
+        "type": "shell",
+        "command": "python3 tools/drishti.py setup",
+        "windows": {
+          "command": "py -3.13 tools/drishti.py setup"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py setup"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py setup"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: check setup",
+        "type": "shell",
+        "command": "python3 tools/drishti.py setup --check",
+        "windows": {
+          "command": "py -3.13 tools/drishti.py setup --check"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py setup --check"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py setup --check"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -161,9 +232,15 @@
       {
         "label": "Drishti: build demo lakes",
         "type": "shell",
-        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java",
+        "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" lake demo --engine java",
         "windows": {
-          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini lake demo --engine java"
+          "command": "py -3.13 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" lake demo --engine java"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" lake demo --engine java"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" lake demo --engine java"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -173,9 +250,33 @@
       {
         "label": "Drishti: run loader (file into the lake)",
         "type": "shell",
-        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini lake build --from $USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl --kind trade --mode overwrite-dates --lake demo",
+        "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" lake build --from \"${input:file}\" --kind trade --mode overwrite-dates --lake demo",
         "windows": {
-          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini lake build --from $USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl --kind trade --mode overwrite-dates --lake demo"
+          "command": "py -3.13 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" lake build --from \"${input:file}\" --kind trade --mode overwrite-dates --lake demo"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" lake build --from \"${input:file}\" --kind trade --mode overwrite-dates --lake demo"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" lake build --from \"${input:file}\" --kind trade --mode overwrite-dates --lake demo"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Drishti: check acceptance",
+        "type": "shell",
+        "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor --acceptance",
+        "windows": {
+          "command": "py -3.13 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor --acceptance"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor --acceptance"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor --acceptance"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -185,9 +286,15 @@
       {
         "label": "Drishti: check environment",
         "type": "shell",
-        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini --profile demo doctor",
+        "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor",
         "windows": {
-          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile demo doctor"
+          "command": "py -3.13 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile demo doctor"
         },
         "options": {
           "cwd": "${workspaceFolder}"
@@ -197,14 +304,27 @@
       {
         "label": "Drishti: check environment (QA)",
         "type": "shell",
-        "command": "python3 tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa doctor",
+        "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile qa doctor",
         "windows": {
-          "command": "python tools/drishti.py --settings ~/drishti-envs/dev.ini --profile qa doctor"
+          "command": "py -3.13 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile qa doctor"
+        },
+        "linux": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile qa doctor"
+        },
+        "osx": {
+          "command": "python3 tools/drishti.py --settings \"${userHome}/drishti-envs/dev.ini\" --profile qa doctor"
         },
         "options": {
           "cwd": "${workspaceFolder}"
         },
         "problemMatcher": []
+      }
+    ],
+    "inputs": [
+      {
+        "id": "file",
+        "type": "promptString",
+        "description": "The file of yours to load into the demo lake"
       }
     ]
   },
@@ -220,7 +340,7 @@
         "program": "${workspaceFolder}/drishti-console/run_drishti_web.py",
         "args": [
           "--settings",
-          "~/drishti-envs/dev.ini",
+          "${userHome}/drishti-envs/dev.ini",
           "--profile",
           "demo"
         ]
@@ -234,7 +354,7 @@
         "program": "${workspaceFolder}/drishti-console/run_drishti_web.py",
         "args": [
           "--settings",
-          "~/drishti-envs/dev.ini",
+          "${userHome}/drishti-envs/dev.ini",
           "--profile",
           "qa"
         ]
@@ -248,7 +368,7 @@
         "program": "${workspaceFolder}/drishti-console/run_drishti_web.py",
         "args": [
           "--settings",
-          "~/drishti-envs/dev.ini",
+          "${userHome}/drishti-envs/dev.ini",
           "--profile",
           "demo",
           "--distribution=risk"
@@ -263,11 +383,34 @@
         "program": "${workspaceFolder}/drishti-console/run_drishti_web.py",
         "args": [
           "--settings",
-          "~/drishti-envs/dev.ini",
+          "${userHome}/drishti-envs/dev.ini",
           "--profile",
           "demo",
           "--distribution=finance",
           "--server.port=17481"
+        ]
+      },
+      {
+        "name": "Drishti: setup",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "setup"
+        ]
+      },
+      {
+        "name": "Drishti: check setup",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "setup",
+          "--check"
         ]
       },
       {
@@ -279,7 +422,7 @@
         "program": "${workspaceFolder}/tools/drishti.py",
         "args": [
           "--settings",
-          "~/drishti-envs/dev.ini",
+          "${userHome}/drishti-envs/dev.ini",
           "lake",
           "demo",
           "--engine",
@@ -295,17 +438,33 @@
         "program": "${workspaceFolder}/tools/drishti.py",
         "args": [
           "--settings",
-          "~/drishti-envs/dev.ini",
+          "${userHome}/drishti-envs/dev.ini",
           "lake",
           "build",
           "--from",
-          "$USER_HOME$/drishti-private/endur/trade_endur.2026-10-16.jsonl",
+          "${input:file}",
           "--kind",
           "trade",
           "--mode",
           "overwrite-dates",
           "--lake",
           "demo"
+        ]
+      },
+      {
+        "name": "Drishti: check acceptance",
+        "type": "debugpy",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "program": "${workspaceFolder}/tools/drishti.py",
+        "args": [
+          "--settings",
+          "${userHome}/drishti-envs/dev.ini",
+          "--profile",
+          "demo",
+          "doctor",
+          "--acceptance"
         ]
       },
       {
@@ -317,7 +476,7 @@
         "program": "${workspaceFolder}/tools/drishti.py",
         "args": [
           "--settings",
-          "~/drishti-envs/dev.ini",
+          "${userHome}/drishti-envs/dev.ini",
           "--profile",
           "demo",
           "doctor"
@@ -332,11 +491,18 @@
         "program": "${workspaceFolder}/tools/drishti.py",
         "args": [
           "--settings",
-          "~/drishti-envs/dev.ini",
+          "${userHome}/drishti-envs/dev.ini",
           "--profile",
           "qa",
           "doctor"
         ]
+      }
+    ],
+    "inputs": [
+      {
+        "id": "file",
+        "type": "promptString",
+        "description": "The file of yours to load into the demo lake"
       }
     ]
   }

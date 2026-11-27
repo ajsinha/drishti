@@ -15,7 +15,7 @@
 """Makes the pictures of the pivot screen (bi/PIVOT.md section 2, tutorial 7, Part A) from the stand-in server's synthetic trades (not a
 test: run it by hand).
 
-    drishti-console/.venv/bin/python drishti-console/tests/pivot_shots.py [pictures dir]
+    python3 drishti-console/tests/pivot_shots.py [pictures dir]
 
 Default folder: docs/guides/img/pivot. The screen as it opens (the View picker in front of the compact line) in the Terminal theme, the
 Rows picker, a value's functions, the View picker and the panes behind Customize."""

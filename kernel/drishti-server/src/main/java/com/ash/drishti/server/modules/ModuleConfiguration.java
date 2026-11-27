@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * The access registry in the server (docs/architecture/ACCESS_MODEL.md): the one {@link AccessRegistry} (the environment's, the same the
+ * The access registry in the server (docs/architecture/KERNEL_AND_MODULES.md): the one {@link AccessRegistry} (the environment's, the same the
  * packs' start and the modules' conditions asked), watched for changes; which modules were loaded at this start; and the gate that answers a module's API with {@code 404 DRS-1025} when it is off.
  */
 @Configuration

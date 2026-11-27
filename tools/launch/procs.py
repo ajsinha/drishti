@@ -141,7 +141,7 @@ def advertise_host(given: str = "") -> str:
 
 def http_ok(url: str, timeout: float = 3) -> bool:
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as r:
+        with no_proxy_opener().open(url, timeout=timeout) as r:       # Drishti's own address: never through a proxy
             return 200 <= r.status < 300
     except Exception:  # noqa: BLE001 - any failure is "not answering"
         return False
@@ -199,7 +199,7 @@ def ask_to_stop(fields: dict) -> bool:
         return False
     req = urllib.request.Request(f"http://127.0.0.1:{int(port)}{STOP_PATH}", data=b"", method="POST", headers={STOP_HEADER: key})
     try:
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with no_proxy_opener().open(req, timeout=10) as r:
             return r.status == 202
     except Exception:  # noqa: BLE001 - refused, not answering, gone: not asked
         return False
@@ -444,16 +444,62 @@ def run_foreground(proc: subprocess.Popen, pid_file: Path, on_up=None) -> int:
 
 
 # ---- Python ------------------------------------------------------------------------------------------------------------------------------
-def venv_python(root: Path = ROOT) -> Path:
-    """drishti-console/.venv's Python (``Scripts\\python.exe`` on Windows)."""
-    venv = Path(root) / "drishti-console" / ".venv"
-    return venv / ("Scripts/python.exe" if windows() else "bin/python")
-
-
-def tools_python(env=None) -> str:
-    """The Python to run repository tools with: DRISHTI_PYTHON, else the console's environment, else this one."""
+def tools_python(env=None, keys: dict | None = None) -> tuple[str, str]:
+    """The one Python Drishti runs its Python work with, and where it came from: DRISHTI_PYTHON, else ``drishti.python`` of the settings
+    files (``keys``; default those given to this process), else this Python. Drishti never makes a virtual environment and names none: a
+    user who wants one makes it and runs Drishti with it, or names it in drishti.python."""
     env = os.environ if env is None else env
     if (env.get("DRISHTI_PYTHON") or "").strip():
-        return env["DRISHTI_PYTHON"].strip()
-    v = venv_python()
-    return str(v) if v.exists() else sys.executable
+        return env["DRISHTI_PYTHON"].strip(), "DRISHTI_PYTHON"
+    if keys is None:
+        import javacmd
+        keys = javacmd.settings()[1]
+    if (keys.get("drishti.python") or "").strip():
+        return keys["drishti.python"].strip(), "drishti.python of your settings file"
+    return sys.executable, "the Python running drishti.py"
+
+
+# ---- the one way a command is printed for a person to paste (E2 of docs/plans/FIRST_RUN_ROBUSTNESS.md) -----------------------------
+def _q(word: str, win: bool) -> str:
+    """One word quoted when it holds a space or a shell character (C:\\Users\\First Last stays whole)."""
+    if word and not any(c in word for c in " &()<>|^;\"'"):
+        return word
+    return '"' + word.replace('"', '\\"') + '"' if win else "'" + word.replace("'", "'\\''") + "'"
+
+
+def interpreter(win: bool | None = None) -> str:
+    """How a person starts THIS Python on this system: ``py -3.13`` on Windows (never ``python``, the Store stub there), else this
+    interpreter's own path."""
+    win = windows() if win is None else win
+    if win:
+        return f"py -{sys.version_info[0]}.{sys.version_info[1]}"
+    return _q(sys.executable, False)
+
+
+def command(*args: str, settings: str | None = None, win: bool | None = None, cwd: Path | None = None) -> str:
+    """``tools/drishti.py`` with ``args``, as a pasteable line for this system: the running interpreter, the system's separators,
+    quotes around a word with a space; the tool's path relative when the person is in the install folder, else absolute."""
+    win = windows() if win is None else win
+    here = Path.cwd() if cwd is None else cwd
+    try:
+        same = here.resolve() == ROOT.resolve()
+    except OSError:
+        same = False
+    tool = ("tools\\drishti.py" if win else "tools/drishti.py") if same else str(ROOT / "tools" / "drishti.py")
+    words = [interpreter(win), _q(tool, win)] + ([f"--settings", _q(settings, win)] if settings else []) + [_q(a, win) for a in args]
+    return " ".join(words)
+
+
+def setup_line(settings: str | None = None) -> str:
+    """The one line that prepares this machine (the Python running it gets the libraries from the offline wheel pack)."""
+    return command("setup", settings=settings)
+
+
+def fail(what: str, why: str, fix: str) -> str:
+    """The one shape of a failure a person reads: ``[FAIL] <what>: <why>. Fix: <command>``."""
+    return f"[FAIL] {what}: {why.rstrip('.')}. Fix: {fix}"
+
+
+def no_proxy_opener():
+    """urllib for Drishti's own addresses: never through a proxy (the environment's or, on Windows, the registry's)."""
+    return urllib.request.build_opener(urllib.request.ProxyHandler({}))

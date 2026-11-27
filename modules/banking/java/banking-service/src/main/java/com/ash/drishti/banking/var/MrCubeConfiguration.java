@@ -43,7 +43,7 @@ public class MrCubeConfiguration {
     }
 
     /**
-     * The VaR source of the pivot engine, with the MR cube's lens (DOMAIN_MODULES.md J1: the pivot engine asks every
+     * The VaR source of the pivot engine, with the MR cube's lens (KERNEL_AND_MODULES.md J1: the pivot engine asks every
      * {@link com.ash.drishti.kernel.api.pivot.PivotSourceProvider}; it names no module's source).
      */
     /** The VaR source, made once when first asked (the pivot engine asks at its start, or the module host when banking loads as a module). */

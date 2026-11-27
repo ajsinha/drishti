@@ -17,7 +17,7 @@ their controls (legs, paid between) in the panel header, the same screen filtere
 "Net MTM by asset class" filters the member trades, the same screen on a phone (390 px, touch), and the workbench's Controls tab. A view of the
 QUICKSTART packs, the real console:
 
-    DRISHTI_SHOTS_SERVER_PORT=18982 DRISHTI_SHOTS_CONSOLE_PORT=17982 drishti-console/.venv/bin/python tools/docs/screenshots.py --guide controls
+    DRISHTI_SHOTS_SERVER_PORT=18982 DRISHTI_SHOTS_CONSOLE_PORT=17982 python3 tools/docs/screenshots.py --guide controls
 """
 from __future__ import annotations
 

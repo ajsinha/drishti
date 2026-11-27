@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The Sutra designer's Customize mode (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): the real page, with real data as the viewer, edited in place.
+/* The Sutra designer's Customize mode (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 3.31): the real page, with real data as the viewer, edited in place.
    Customize makes a draft of this page's Sutra; each change is one step the console applies to the draft, and only the panels it
    changed are drawn again (the page is fetched, panels the step did not touch stay as they are: no reload, no flicker, the scroll kept). Panels get a handle (drag, or the arrows), Hide and, for tables, Columns; the side panel holds "When I click", "Add to this
    page" and what is hidden. A part added from the kit opens its settings at once and can be removed again, with Undo

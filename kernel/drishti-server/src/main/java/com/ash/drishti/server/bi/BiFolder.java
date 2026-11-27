@@ -93,7 +93,7 @@ public final class BiFolder implements AutoCloseable {
     private volatile java.util.function.Predicate<String> domainOn = d -> true;
 
     /**
-     * Reads a domain folder ({@code reports/banking/}, {@code tables/banking/}: docs/architecture/DOMAIN_MODULES.md section 8) only while
+     * Reads a domain folder ({@code reports/banking/}, {@code tables/banking/}: docs/architecture/KERNEL_AND_MODULES.md section 8) only while
      * {@code on} says its domain is on: a module that is off brings no BI file.
      */
     public BiFolder withDomains(java.util.function.Predicate<String> on) {

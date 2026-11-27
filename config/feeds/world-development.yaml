@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The world-development feed (docs/guides/WORLD_DATA_GUIDE.md section 5): World Bank World Development Indicators by country and
+# The world-development feed (docs/guides/WORLD_DATA_GUIDE.md section 20.5): World Bank World Development Indicators by country and
 # year into worldlake, for the world-development pack. Class: tools/feeds/sources/world_development.py. Daily; incremental (the WDI
 # source's last-updated date: unchanged, nothing is written). Edit the selection below to choose the countries, years and indicators.
 # It is the one fetcher of the World Bank's WDI: the world-economy feed (06:45, after this one) reads this feed's output.

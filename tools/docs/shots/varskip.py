@@ -18,7 +18,7 @@ the scratch folder with the column taken out of its layouts), read by a server w
 loads, MGMT and LEGAL answer, and every row sits under LL's (Blank) letter: the tree shows *(Blank)* muted, in italics, with its ?, and
 Admin -> Health says *Hierarchy warning* with the fix. Run it on its own:
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide varskip"""
+    python3 tools/docs/screenshots.py --guide varskip"""
 from __future__ import annotations
 
 import shutil

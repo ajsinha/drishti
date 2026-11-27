@@ -30,7 +30,7 @@
 <div class="adm dmap" data-datamap data-view="{{ view }}" data-kind="{{ sel }}" data-domain="{{ dom }}" data-chip="{{ chip }}" data-layout="{{ layout }}"
      data-model="{{ m | tojson | forceescape }}">
   <h1 class="ws-h">Data map <span class="func-word mono" title="Type DATAMAP, or DATAMAP and a domain or kind, then &lt;GO&gt;">DATAMAP</span>
-    <a class="emb-help" href="{{ BASE }}/help/user-guide#the-data-map" aria-label="Help: the data map" title="Help: the data map">?</a></h1>
+    <a class="emb-help" href="{{ BASE }}/help/cli-guide#205-the-data-map" aria-label="Help: the data map" title="Help: the data map">?</a></h1>
   <p class="text-muted-d dmap-lede">{{ m.packs }} pack{{ '' if m.packs == 1 else 's' }}, {{ m.kinds | length }} kinds, {{ m.joins | length }} joins{% if m.businessDate and m.businessDate != 'latest' %} on {{ m.businessDate }}{% endif %}.
     Click any kind to see what it holds, what it joins to and the command that opens it. Drawn from the packs' data contracts; counts and joins
     are checked against the data.</p>

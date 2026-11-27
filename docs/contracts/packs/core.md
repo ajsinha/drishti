@@ -17,7 +17,7 @@
 
 # Data contracts of the core pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's guide, [config/packs/core/core/guides/core.md](../../../config/packs/core/core/guides/core.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to how to use the pack and where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [config/packs/core/core/README.md](../../../config/packs/core/core/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -49,7 +49,6 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.counterparty`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/counterparty |
-| Worked example | [core/counterparty](../samples/core.md#counterparty) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -149,6 +148,82 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 - no unit stated for the amounts NET_MTM, NETTING_SETS[].NET_MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 - NET_MTM and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed when NSET's figures are computed.
 
+<a id="example-core-counterparty"></a>
+**Example: `data/testdata/core/counterparty`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "COUNTERPARTY_ID": "CP-CASCADIA",
+  "NAME": "Cascadia Airlines Inc.",
+  "LEI": "5493005CUB4V16ZSQX54",
+  "RATING": "BB",
+  "SECTOR": "Airlines",
+  "COUNTRY": "CA",
+  "TYPE": "Corporate",
+  "COUNTRY_OF_RISK": "CA",
+  "UEN": "UEN0100148",
+  "ECONOMY": "ECON-CAN",
+  "NEWS_ID": "NEWS-Cascadia_Airlines_Inc.",
+  "NET_MTM": 400541282.366474,
+  "NETTING_SETS": [
+    {
+      "ID": "NS-CASCADIA-FRA",
+      "AGREEMENT": "AGR-CASCADIA-ISDA",
+      "TRADES": 29,
+      "NET_MTM": 12205330.366592
+    },
+    {
+      "ID": "NS-CASCADIA-LDN",
+      "AGREEMENT": "AGR-CASCADIA-ISDA",
+      "TRADES": 134,
+      "NET_MTM": -140383398.643051
+    },
+    "… 2 more elements of the same shape"
+  ],
+  "KYC": {
+    "STATUS": "Approved",
+    "RISK_RATING": "Enhanced",
+    "LAST_REVIEW": "2026-02-11",
+    "EMIR_CLASSIFICATION": "NFC-",
+    "PD_1Y": 0.0068
+  },
+  "GROUP": "GRP-CASCADIA",
+  "CREDIT_LIMIT": "LIM-CASCADIA",
+  "HIERARCHY": {
+    "NODES": [
+      {
+        "ID": "GRP-CASCADIA",
+        "LABEL": "Cascadia Airlines Inc.",
+        "TYPE": "Group (ultimate parent)"
+      },
+      {
+        "ID": "CP-CASCADIA",
+        "LABEL": "Cascadia Airlines Inc.",
+        "TYPE": "Counterparty"
+      },
+      "… 9 more elements of the same shape"
+    ],
+    "EDGES": [
+      {
+        "FROM": "GRP-CASCADIA",
+        "TO": "CP-CASCADIA",
+        "LABEL": "parent of"
+      },
+      {
+        "FROM": "CP-CASCADIA",
+        "TO": "AGR-CASCADIA-ISDA",
+        "LABEL": "signed"
+      },
+      "… 12 more elements of the same shape"
+    ]
+  },
+  "CREDIT_CURVE": "CDS-CASCADIA",
+  "LEGAL_ENTITY": "LE-NY"
+}
+```
+
 ## GRP: Counterparty group (`counterparty-group`)
 
 Economic group of related counterparties (obligor group).
@@ -166,7 +241,6 @@ Economic group of related counterparties (obligor group).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.counterparty-group`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/counterparty-group |
-| Worked example | [core/counterparty-group](../samples/core.md#counterparty-group) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -205,6 +279,27 @@ Economic group of related counterparties (obligor group).
 - number types decided by the field's name: LIMIT amount, UTILISATION rate: confirm amount, rate or integer.
 - no unit stated for the amounts LIMIT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-core-counterparty-group"></a>
+**Example: `data/testdata/core/counterparty-group`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "GROUP_ID": "GRP-ALDERSHOT",
+  "NAME": "Aldershot Pension Trust",
+  "LIMIT": 7980000000.0,
+  "UTILISATION": 0.666659,
+  "MEMBERS": [
+    {
+      "ID": "CP-ALDERSHOT",
+      "NAME": "Aldershot Pension Trust",
+      "RATING": "AA-"
+    }
+  ]
+}
+```
+
 ## ISS: Issuer (`issuer`)
 
 Issuer of bonds and reference entity for CDS.
@@ -222,7 +317,6 @@ Issuer of bonds and reference entity for CDS.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.issuer`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/issuer |
-| Worked example | [core/issuer](../samples/core.md#issuer) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -267,6 +361,36 @@ Issuer of bonds and reference entity for CDS.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - number types decided by the field's name: BONDS[].COUPON rate: confirm amount, rate or integer.
 
+<a id="example-core-issuer"></a>
+**Example: `data/testdata/core/issuer`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "ISSUER_ID": "ISS-CASCADIA",
+  "NAME": "Cascadia Airlines Inc.",
+  "RATING": "BB",
+  "SECTOR": "Airlines",
+  "COUNTRY": "CA",
+  "BONDS": [
+    {
+      "ISIN": "CACASC059511",
+      "COUPON": 0.0552,
+      "MATURITY": "2031-02-15"
+    },
+    {
+      "ISIN": "CACASC169344",
+      "COUPON": 0.0602,
+      "MATURITY": "2036-01-15"
+    }
+  ],
+  "CREDIT_CURVE": "CDS-CASCADIA",
+  "LEI": "5493005CUB4V16ZSQX54",
+  "EQUITY": "EQ-CSCA"
+}
+```
+
 ## CCP: Central counterparty (`ccp`)
 
 A clearing house with its default fund and margin model.
@@ -284,7 +408,6 @@ A clearing house with its default fund and margin model.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.ccp`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/ccp |
-| Worked example | [core/ccp](../samples/core.md#ccp) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -322,6 +445,27 @@ A clearing house with its default fund and margin model.
 - number types decided by the field's name: IM_POSTED amount, ACCOUNTS[].IM amount: confirm amount, rate or integer.
 - no unit stated for the amounts DEFAULT_FUND, IM_POSTED, ACCOUNTS[].IM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-core-ccp"></a>
+**Example: `data/testdata/core/ccp`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CCP_ID": "CCP-CME",
+  "NAME": "CME Clearing",
+  "DEFAULT_FUND": 720000000.0,
+  "IM_POSTED": 43200000,
+  "MARGIN_MODEL": "SPAN 2",
+  "ACCOUNTS": [
+    {
+      "ID": "CLR-CME-1",
+      "IM": 43200000
+    }
+  ]
+}
+```
+
 ## LE: Bank legal entity (`legal-entity`)
 
 The bank's own booking entity.
@@ -339,7 +483,6 @@ The bank's own booking entity.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.legal-entity`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/legal-entity |
-| Worked example | [core/legal-entity](../samples/core.md#legal-entity) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -395,6 +538,50 @@ The bank's own booking entity.
 - number types decided by the field's name: BOOKS[].PNL amount, BOOKS[].MTM amount: confirm amount, rate or integer.
 - no unit stated for the amounts BOOKS[].PNL, BOOKS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-core-legal-entity"></a>
+**Example: `data/testdata/core/legal-entity`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "ENTITY_ID": "LE-FRA",
+  "NAME": "Drishti Bank Europe AG",
+  "LEI": "549300Z9DXU4T18OK744",
+  "JURISDICTION": "DE",
+  "REGULATOR": "ECB / BaFin",
+  "DESKS": [
+    {
+      "ID": "DESK-SFT",
+      "NAME": "Repo and securities lending"
+    }
+  ],
+  "BOOKS": [
+    {
+      "BOOK": "BOOK-SFT-1",
+      "DESK": "Repo and securities lending",
+      "PNL": -11770547,
+      "MTM": 337967490,
+      "TRADES": 243
+    },
+    {
+      "BOOK": "BOOK-SFT-2",
+      "DESK": "Repo and securities lending",
+      "PNL": 2468694,
+      "MTM": -301676943,
+      "TRADES": 206
+    },
+    {
+      "BOOK": "BOOK-SFT-3",
+      "DESK": "Repo and securities lending",
+      "PNL": -3629859,
+      "MTM": -41266285,
+      "TRADES": 162
+    }
+  ]
+}
+```
+
 ## BOOK: Book (`book`)
 
 A trading book: owner desk, trades and risk.
@@ -412,7 +599,6 @@ A trading book: owner desk, trades and risk.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.book`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/book |
-| Worked example | [core/book](../samples/core.md#book) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -470,6 +656,53 @@ A trading book: owner desk, trades and risk.
 - number types decided by the field's name: MTM amount, DV01 amount, TOP_TRADES[].NOTIONAL amount, TOP_TRADES[].MTM amount: confirm amount, rate or integer.
 - no unit stated for the amounts MTM, DV01, TOP_TRADES[].NOTIONAL, TOP_TRADES[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-core-book"></a>
+**Example: `data/testdata/core/book`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "BOOK_ID": "BOOK-COMM-1",
+  "NAME": "Commodities · book 1",
+  "DESK_NAME": "Commodities",
+  "TRADE_COUNT": 1000,
+  "MTM": -148106150,
+  "DV01": 0,
+  "TOP_TRADES": [
+    {
+      "TRADE_ID": "1003930",
+      "STATUS": "AMENDED",
+      "PRODUCT": "ENGY-SWAP",
+      "ASSET_CLASS": "Commodity",
+      "CURRENCY": "USD",
+      "BOOK": "BOOK-COMM-1",
+      "NOTIONAL": 10199198808.0,
+      "MATURITY": "2028-03-31",
+      "MATURITY_BUCKET": "1-2Y",
+      "MTM": -120455169
+    },
+    {
+      "TRADE_ID": "1000098",
+      "STATUS": "AMENDED",
+      "PRODUCT": "ENGY-SWAP",
+      "ASSET_CLASS": "Commodity",
+      "CURRENCY": "USD",
+      "BOOK": "BOOK-COMM-1",
+      "NOTIONAL": 5640972613.63,
+      "MATURITY": "2029-05-31",
+      "MATURITY_BUCKET": "2-5Y",
+      "MTM": -120728296
+    },
+    "… 8 more elements of the same shape"
+  ],
+  "DESK": "DESK-COMM",
+  "ACCOUNTING_TREATMENT": "Fair value (FVTPL)",
+  "REGULATORY_BOOK": "Trading book",
+  "VOLCKER": "Market making"
+}
+```
+
 ## DESK: Desk (`desk`)
 
 A trading desk: books, limits and risk results.
@@ -487,7 +720,6 @@ A trading desk: books, limits and risk results.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.desk`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/desk |
-| Worked example | [core/desk](../samples/core.md#desk) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -545,6 +777,58 @@ A trading desk: books, limits and risk results.
 - number types decided by the field's name: MTM amount, BOOKS[].MTM amount, POSITIONS[].MTM amount: confirm amount, rate or integer.
 - no unit stated for the amounts MTM, BOOKS[].MTM, POSITIONS[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
+<a id="example-core-desk"></a>
+**Example: `data/testdata/core/desk`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "DESK_ID": "DESK-COMM",
+  "NAME": "Commodities",
+  "HEAD": "T. Brennan",
+  "BOOKS": [
+    {
+      "ID": "BOOK-COMM-1",
+      "TRADES": 1000,
+      "MTM": -141181988
+    },
+    {
+      "ID": "BOOK-COMM-2",
+      "TRADES": 980,
+      "MTM": 124230133
+    },
+    {
+      "ID": "BOOK-COMM-3",
+      "TRADES": 988,
+      "MTM": -299667424
+    }
+  ],
+  "MTM": -360908138,
+  "LEGAL_ENTITY": "LE-NY",
+  "ASSET_CLASSES": [
+    "Commodity"
+  ],
+  "POSITIONS": [
+    {
+      "TRADE_ID": "1000003",
+      "BOOK": "BOOK-COMM-1",
+      "CURRENCY": "USD",
+      "FAMILY": "swap",
+      "MTM": -4808984
+    },
+    {
+      "TRADE_ID": "1000019",
+      "BOOK": "BOOK-COMM-1",
+      "CURRENCY": "USD",
+      "FAMILY": "linear",
+      "MTM": -50931
+    },
+    "… 2966 more elements of the same shape"
+  ]
+}
+```
+
 ## TRDR: Trader (`trader`)
 
 A trader and their books.
@@ -562,7 +846,6 @@ A trader and their books.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.trader`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/trader |
-| Worked example | [core/trader](../samples/core.md#trader) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -602,6 +885,32 @@ A trader and their books.
 - source 'org-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 
+<a id="example-core-trader"></a>
+**Example: `data/testdata/core/trader`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "TRADER_ID": "TRDR-ASHAH",
+  "NAME": "A. Shah",
+  "DESK_NAME": "Rates · Swaps and options",
+  "TRADE_COUNT": 732,
+  "BOOKS": [
+    {
+      "ID": "BOOK-RATES-1"
+    },
+    {
+      "ID": "BOOK-RATES-2"
+    },
+    {
+      "ID": "BOOK-RATES-3"
+    }
+  ],
+  "DESK": "DESK-RATES"
+}
+```
+
 ## CAL: Holiday calendar (`calendar`)
 
 Business-day calendar (USNY, TARGET, GBLO, JPTO…).
@@ -619,7 +928,6 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.calendar`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/calendar |
-| Worked example | [core/calendar](../samples/core.md#calendar) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -662,6 +970,43 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: HOLIDAYS[].WEEKDAY: confirm they are closed lists.
 
+<a id="example-core-calendar"></a>
+**Example: `data/testdata/core/calendar`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "CALENDAR_ID": "CAL-GBLO",
+  "NAME": "London",
+  "HOLIDAYS": [
+    {
+      "DATE": "2026-01-01",
+      "NAME": "New Year's Day",
+      "WEEKDAY": "Thursday",
+      "YEAR": 2026,
+      "OBSERVED": ""
+    },
+    {
+      "DATE": "2026-04-03",
+      "NAME": "Good Friday",
+      "WEEKDAY": "Friday",
+      "YEAR": 2026,
+      "OBSERVED": ""
+    },
+    "… 14 more elements of the same shape"
+  ],
+  "HOLIDAYS_2026": 8,
+  "HOLIDAYS_2027": 8,
+  "NEXT_HOLIDAY": "Christmas Day",
+  "NEXT_HOLIDAY_DATE": "2026-12-25",
+  "WEEKEND": [
+    "Saturday",
+    "Sunday"
+  ]
+}
+```
+
 ## CLR: Clearing account (`clearing-account`)
 
 An account at a CCP holding cleared trades and margin.
@@ -679,7 +1024,6 @@ An account at a CCP holding cleared trades and margin.
 | Cadence | daily (due: to be confirmed) |
 | Binding hint | lake table `reference.clearing-account`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Test data | data/testdata/core/clearing-account |
-| Worked example | [core/clearing-account](../samples/core.md#clearing-account) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
 
 **Fields**
 
@@ -735,3 +1079,46 @@ An account at a CCP holding cleared trades and margin.
 - enum values inferred from the data, not from a glossary: CCP_NAME, TRADES[].ASSET_CLASS, TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: confirm they are closed lists.
 - number types decided by the field's name: IM amount, TRADES[].NOTIONAL amount, TRADES[].MTM amount: confirm amount, rate or integer.
 - no unit stated for the amounts IM, TRADES[].NOTIONAL, TRADES[].MTM (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
+
+<a id="example-core-clearing-account"></a>
+**Example: `data/testdata/core/clearing-account`**
+
+A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
+
+```json
+{
+  "ACCOUNT_ID": "CLR-CME-1",
+  "CCP_NAME": "CME Clearing",
+  "IM": 43200000,
+  "VM_TODAY": -15597445,
+  "EXCESS": 8640000,
+  "TRADES": [
+    {
+      "TRADE_ID": "MX-20000067",
+      "STATUS": "VALIDATED",
+      "PRODUCT": "Short-term interest rate future",
+      "ASSET_CLASS": "Rates",
+      "CURRENCY": "GBP",
+      "BOOK": "BOOK-RATES-2",
+      "NOTIONAL": 221100000.0,
+      "MATURITY": "2027-05-21",
+      "MATURITY_BUCKET": "0-1Y",
+      "MTM": 250883
+    },
+    {
+      "TRADE_ID": "MX-20000068",
+      "STATUS": "VALIDATED",
+      "PRODUCT": "Short-term interest rate future",
+      "ASSET_CLASS": "Rates",
+      "CURRENCY": "USD",
+      "BOOK": "BOOK-RATES-3",
+      "NOTIONAL": 15000000.0,
+      "MATURITY": "2027-01-14",
+      "MATURITY_BUCKET": "0-1Y",
+      "MTM": -109626
+    },
+    "… 28 more elements of the same shape"
+  ],
+  "CCP": "CCP-CME"
+}
+```

@@ -31,8 +31,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
     <drishti.sdk.version>${revision}</drishti.sdk.version>
-    <!-- the Drishti install the module is packed and verified with (its lib/ server jar); the module's folder is two up -->
-    <drishti.home>${env.DRISHTI_HOME}</drishti.home>
+    <!-- drishti.home, the Drishti install the module is packed and verified with (its lib/ server jar), comes ONLY from -Ddrishti.home=<folder>
+         on the command line (the SDK build passes it): never from an environment variable, so a build never reads another install. -->
     <!-- the java that runs the server jar's module tool: the one running Maven (Java 21+); its server jar: the install's, of this SDK's version -->
     <drishti.java>${java.home}/bin/java</drishti.java>
     <drishti.server.jar>${drishti.home}/lib/drishti-server-${drishti.sdk.version}-exec.jar</drishti.server.jar>

@@ -17,7 +17,7 @@ the light theme. The pictures follow the tutorial's steps, which this module run
 lake with sign-in off and its own copy of config/ (the rules are written to that copy): start the stack, then
 
     DRISHTI_T36_WORK=<the server's working folder> DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> \\
-        drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t36
+        python3 tools/docs/screenshots.py --guide t36
 
 Every command's output is printed (the tutorial quotes it). Every rule writes to the scratch lake ./data/tutorial-36/delta under the
 working folder, never to the demo lake. Run the pictures all together and once: each step moves files on."""

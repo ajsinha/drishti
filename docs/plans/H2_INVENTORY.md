@@ -16,7 +16,7 @@
 
 # H2 inventory: the non-risk screens on library fragments
 
-Status: write-only pass (nothing built or run on a server). Branch `i8/h2`, from `wip/g4-rehearsal-rx`.
+Status: proposed, a write-only pass (nothing built or run on a server). Branch `i8/h2`, from `wip/g4-rehearsal-rx`.
 
 ## What the inventory found
 
@@ -47,10 +47,10 @@ Status: write-only pass (nothing built or run on a server). Branch `i8/h2`, from
 | `economy` (central-banks, gdelt, national-statistics, news-and-markets, oecd, official-news, world-development) | 14 | 59 | 39 | 20 | table 9, kv 7, hbar 2, line 1 |
 | `genomics/genomics-showcase` (generated) | 7 | 7 | 0 | 7 | kv 7 |
 | `genomics/protein-engineering` (generated) | 7 | 7 | 0 | 7 | kv 7 |
-| `examples/retail-banking` (generated) | 8 | 31 | 24 | 7 | table 4, ladder 3 |
+| examples/packs/retail-banking (generated) | 8 | 31 | 24 | 7 | table 4, ladder 3 |
 | `examples/genomics` (generated) | 8 | 30 | 22 | 8 | table 8 |
-| `examples/finance` (hand-written tutorials) | 5 | 29 | 0 | 29 | links, kv, table, provenance, line, hbar, tabs, ladder, area, status |
-| `examples/logistics` (hand-written tutorial) | 1 | 6 | 0 | 6 | table, ladder, kv, provenance, line, links |
+| the finance example (hand-written tutorials) | 5 | 29 | 0 | 29 | links, kv, table, provenance, line, hbar, tabs, ladder, area, status |
+| the logistics example (hand-written tutorial) | 1 | 6 | 0 | 6 | table, ladder, kv, provenance, line, links |
 | **Total** | **248** | **1538** | **1325** | **213** | table 75, kv 57, hbar 23, ladder 11, metric 10, line 7, links 6, provenance 5, surface 5 |
 
 Out of scope (move with R2): `market-risk` 10, `counterparty-risk` 10, and the risk example packs `climate-risk` 6, `liquidity-risk` 7,

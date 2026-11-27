@@ -15,7 +15,7 @@
 """The pack-declared Delta layout: promoted columns, id-sorted files of file-rows, row groups, statistics; the lake
 and the bulk trading book written in it.
 
-    uv run --with deltalake --with pyarrow --with pyyaml python -m unittest tools/samplegen/test_layout.py
+    python -m unittest tools/samplegen/test_layout.py
 """
 import contextlib
 import io

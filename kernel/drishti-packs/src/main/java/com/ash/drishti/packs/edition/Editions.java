@@ -91,7 +91,7 @@ public final class Editions {
     /** A YAML file read as a tree. */
     public static JsonNode read(Path file) {
         try {
-            JsonNode n = YAML.readTree(file.toFile());
+            JsonNode n = YAML.readTree(java.nio.file.Files.readAllBytes(file));
             if (n == null || !n.isObject()) {
                 throw new IllegalStateException("file " + file + " is not a YAML mapping");
             }

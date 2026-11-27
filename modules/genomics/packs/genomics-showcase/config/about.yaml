@@ -20,7 +20,7 @@ kinds:
   study-gene:
     title: Study gene
     about: '${$.GENE} on chromosome ${$.CHROM} (${$.ROLE}): ${$.ALTERED_SAMPLES} of the cohort''s 1,500 samples carry a damaging change in it.'
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       GENE:
         term: Gene
@@ -64,7 +64,7 @@ kinds:
   study-sample:
     title: Study sample
     about: 'Sample ${$.SAMPLE_ID}: ${$.TUMOUR_TYPE}, stage ${$.STAGE}, ${$.RESPONSE}, in cluster ${$.CLUSTER}.'
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       SAMPLE_ID:
         term: Sample id
@@ -106,7 +106,7 @@ kinds:
   study-variant:
     title: Study variant
     about: '${$.VARIANT_ID} in ${$.GENE}: ${$.CONSEQUENCE}, ${$.IMPACT} impact, carried by ${$.CARRIERS} samples.'
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       VARIANT_ID:
         term: Variant id
@@ -150,7 +150,7 @@ kinds:
   variant-call:
     title: Variant call
     about: Sample ${$.SAMPLE_ID} carries ${$.VARIANT_ID} (${$.GENE}) with ${$.GENOTYPE} at an allele fraction of ${$.VAF}.
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       CALL_ID:
         term: Call id
@@ -178,7 +178,7 @@ kinds:
   association:
     title: Association of a variant with a trait
     about: '${$.VARIANT_ID} in ${$.GENE} against ${$.TRAIT}: minus log10 p ${$.NEG_LOG10_P}, effect ${$.BETA}.'
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       ASSOC_ID:
         term: Assoc id
@@ -218,7 +218,7 @@ kinds:
   cnv-segment:
     title: Copy-number segment
     about: 'Sample ${$.SAMPLE_ID}: ${$.CALL} on chromosome ${$.CHROM} (${$.COPY_NUMBER} copies).'
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       SEGMENT_ID:
         term: Segment id
@@ -250,7 +250,7 @@ kinds:
   pathway-gene:
     title: Pathway membership
     about: ${$.GENE} is ${$.ROLE_IN_PATHWAY} in ${$.PATHWAY}.
-    guide: genomics-showcase
+    guide: module-genomics-1
     glossary:
       PATHWAY_GENE_ID:
         term: Pathway gene id
@@ -264,3 +264,33 @@ kinds:
       ROLE_IN_PATHWAY:
         term: Role in pathway
         means: The part the gene plays in the pathway.
+intro:
+  generator: tools/packgen/genomics_showcase/make.py
+  refresh: python3 tools/packgen/genomics_showcase/make.py
+  sources:
+  - name: Synthetic and seeded (tools/packgen/genomics_showcase/make.py, seed 20261116)
+    licence: Proprietary (part of Drishti)
+    internal-only: false
+    used-for: every kind (nothing in it is real)
+  sections:
+    What it is: 'A synthetic cohort of 1,500 patients read against one invented gene, `HLXK7`, in the genomics module: 2,000 genes (24 of them
+      planted
+
+      drivers), 12,000 variant sites, 45,000 variant calls, 3,000 copy-number segments, 500 pathway memberships and 36,000 association tests
+
+      of three traits. The tests are computed from the generated calls and traits, so the peaks, the figures and the records behind them
+
+      agree. It is the genomics half of the showcase; the protein-engineering pack is the other. Every
+
+      gene, patient and number is invented; nothing is real.'
+    Screens and commands: '`ASSOC` opens one association test; `SGENE`, `SSAMPLE`, `SVARIANT`, `VCALL`, `CNV` and `PATHWAY` open the other kinds.
+      Each is a plain record
+
+      page; linked fields (a variant''s gene, a call''s sample) open their kinds. The showcase''s screens (association plot, cohort matrix, map
+      of
+
+      samples, variant lollipop) are drawn from these kinds.'
+    Refreshing the data: 'Nothing is pulled: `python3 tools/packgen/genomics_showcase/make.py` writes the committed data (`data/testdata/genomics-showcase/`)
+      from
+
+      a seed, the same bytes every time; `drishti.py lake demo --only genomics-showcase` builds it into the demo lake.'

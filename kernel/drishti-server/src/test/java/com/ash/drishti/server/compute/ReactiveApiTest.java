@@ -50,9 +50,13 @@ class ReactiveApiTest {
     @Autowired MockMvc mvc;
     @Autowired ConnectorManager manager;
     @Autowired ConnectorFiles files;
+    @Autowired ReactiveHostImpl host;
+    @Autowired org.springframework.core.env.Environment env;
 
     @BeforeEach
     void connector() {
+        // the hub (host, sandboxes, connectors by name) is one per JVM and every context of the run installs its own at start: take it back for this one
+        ReactiveConfiguration.install(host, env);
         files.write("reactive-echo", """
                 plugin: reactive
                 mode: reactive
@@ -140,6 +144,7 @@ class ReactiveApiTest {
         mvc.perform(post("/api/v1/compute/sandboxes/no-such-box/copy").header(USER, "asha").contentType(MediaType.APPLICATION_JSON).content("{\"to\": \"cleo\"}"))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-9206"));
         mvc.perform(delete("/api/v1/compute/sandboxes/" + sid).header(USER, "asha")).andExpect(status().isOk());
+        mvc.perform(delete("/api/v1/compute/sandboxes/" + given.get("id").asText()).header(USER, "cleo")).andExpect(status().isOk());   // the copy is cleo's: leave none behind
     }
 
     @Test

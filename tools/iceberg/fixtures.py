@@ -15,7 +15,7 @@
 """Writes the small, synthetic Iceberg tables drishti-iceberg's interop tests read, with pyiceberg (pure Python, independent
 of the Java library), and what pyiceberg reads back from each of their snapshots (expected.json).
 
-    uv run --no-project --with pyiceberg --with pyiceberg-core --with pyarrow --with sqlalchemy python tools/iceberg/fixtures.py OUT
+    python tools/iceberg/fixtures.py OUT
 
 OUT is reached through the link /tmp/drishti-iceberg-fixtures (so the paths inside the tables name no one's home folder);
 the tests read the tables with relocate: file:///tmp/drishti-iceberg-fixtures -> <the test resources>. The tables are

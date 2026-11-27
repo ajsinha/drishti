@@ -17,9 +17,7 @@ sections:
 - id: market-data
   title: Market data
   pages:
-  - title: 'Market data: market data catalogue'
-    file: ../packs/market-data/guides/market-data-catalogue.md
-  - title: 'Market data: market data'
-    file: ../packs/market-data/guides/market-data.md
+  - title: Market data
+    file: ../guides/BANK_DATA_GUIDE.md
   - title: 'Tutorial: groupings and analytics'
     file: ../guides/GROUPINGS_AND_ANALYTICS.md

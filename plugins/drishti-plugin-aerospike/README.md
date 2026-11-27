@@ -52,14 +52,18 @@ settings:
 - tls.*
 auth: Internal log-in (user + password as ${ENV} or file:), external (LDAP), or pki (the client certificate is the log-in); TLS through tls.* and tls-name (TLS needs Aerospike Enterprise Edition).
 licence: Aerospike Java client for JDK 21 (Apache-2.0), bundled; no native library.
-windows: Works the same on Windows (pure Java client); the server is yours to run, and python tools/drishti.py data load --store aerospike loads it from any system.
+windows: Works the same on Windows (pure Java client); the server is yours to run, and python3.13 tools/drishti.py data load --store aerospike loads it from any system.
 doc: plugins/drishti-plugin-aerospike/README.md
 ---
 # The aerospike connector
 
 Plugin `aerospike` (`plugins/drishti-plugin-aerospike`): single-entity reads in a few milliseconds, type-ahead from memory and searches
-over a day's promoted bins with a server-side filter, from a namespace that `python tools/drishti.py data load --store aerospike` (or any writer keeping the same
+over a day's promoted bins with a server-side filter, from a namespace that `python3.13 tools/drishti.py data load --store aerospike` (or any writer keeping the same
 layout) fills.
+
+## Build and use
+
+A connector file in `config/connectors/` with `plugin: aerospike` turns it on (ready-made: `config/connectors.examples/`). The rules every connector shares (packing, drivers, the `drishti.py` spelling, loader input and business dates) are in [DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares).
 
 ## What it reads
 
@@ -163,12 +167,11 @@ replaces the pack's template wholesale, so it names the kinds and the promoted b
 
 **Walk-through:**
 
-Run these from the Drishti folder (the repository root, or the install folder of a release).
 
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d aerospike
-python tools/drishti.py data load --store aerospike localhost:3000 test                                 # the samples x 10 business days
-python tools/drishti.py data load --store aerospike localhost:3000 test --trades 1000000 --days 3 --ttl-days 30   # and a book, with retention
+python3.13 tools/drishti.py data load --store aerospike localhost:3000 test                                 # the samples x 10 business days
+python3.13 tools/drishti.py data load --store aerospike localhost:3000 test --trades 1000000 --days 3 --ttl-days 30   # and a book, with retention
 cp config/connectors.examples/aerospike/*.yaml config/connectors/          # picked up without a restart
 ```
 
@@ -233,17 +236,11 @@ later ones read memory. A loader line looks like:
 
 ## Loading
 
-`python tools/drishti.py data load --store aerospike` loads the packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated book,
+`python3.13 tools/drishti.py data load --store aerospike` loads the packs' sample data (`tools/packgen/banking/make_data.py`), and optionally a large generated book,
 through `AerospikeLoader` (in the plugin). It prints `aerospike: <n> rows (<s> s)` every 100,000 rows and ends with
 `aerospike: loaded 3,000,000 rows into namespace test in 147 s`.
 
-- **Input:** loader rows, one JSON line per entity per day (`{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`):
-  `make_data.py --jsonl FILE.tar` writes the samples and `bulk_trades.py --jsonl FILE.tar` a generated book, each a tar of
-  `<kind>/<YYYY-MM-DD>/rows.jsonl` folders. A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it.
-- **Business dates come from outside the row**, by the load rules every loader shares
-  ([DATA_LAKE_GUIDE.md, section 5](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): a tar's
-  folder date; for a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input), `--as-of`, else its `.ready` file, else
-  the date in its name, else the business today. A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar.
+- **Input and business dates:** as for every loader ([DATA_GUIDE.md, section 9.15](../../docs/guides/DATA_GUIDE.md#915-rules-every-connector-readme-shares)).
 - **Each line becomes two writes:** the day's record (a put of all its bins) and the entity's index record (an operation that sets
   `kind` and `id` and appends the date to `dates`, sorted and unique). Each kind's dates record is written once at the end. Writes are
   idempotent: loading a day again replaces its records.

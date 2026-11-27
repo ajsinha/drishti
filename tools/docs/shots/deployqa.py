@@ -18,7 +18,7 @@ They are taken from a server and console started exactly as the guide says (sign
 lenses offered, the data inbox on and owned by this node), on the scratch ports, and for the cluster pictures from three such servers
 joined as one Drishti*net cluster at this machine's real address. The guide's own steps start them; then:
 
-    DRISHTI_SHOTS_CONSOLE_PORT=<console port> drishti-console/.venv/bin/python tools/docs/screenshots.py --guide deployqa \\
+    DRISHTI_SHOTS_CONSOLE_PORT=<console port> python3 tools/docs/screenshots.py --guide deployqa \\
         --base http://<this machine's address>:<console port> [--only 0,1]        # the single-node pictures (01..18)
     ... --only 2                                                                    # the cluster pictures (20..24), with the cluster up
     ... --only 15                                                                   # with the banking module off (a restart)

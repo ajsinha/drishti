@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Where the access model is kept (ACCESS_MODEL.md section 4): read, change, watch. YAML files now ({@link YamlAccessStore}); the same model
+ * Where the access model is kept (KERNEL_AND_MODULES.md section 19.4): read, change, watch. YAML files now ({@link YamlAccessStore}); the same model
  * in the one database later (a {@code DatabaseAccessStore}, 2.9.11.i) behind this interface, answering the same.
  */
 public interface AccessStore {

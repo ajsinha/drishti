@@ -1,4 +1,4 @@
-# The tests that run banking on the FLAT test class path (S6 of docs/plans/I7A_IMPACT.md): BankingTestHarness imports
+# The tests that run banking on the FLAT test class path (S6 of docs/architecture/KERNEL_AND_MODULES.md): BankingTestHarness imports
 # BankingAutoConfiguration into one Spring context, with no ModuleClassLoader, no bean-name prefix and every META-INF/services of the
 # class path visible. They stay green whatever the module loader or the one-context host does, so they prove nothing about the module path.
 # G14 (PackagedVarGoldenTest, lands in I7) is their counterpart: the same golden matrix through a server started on packages.

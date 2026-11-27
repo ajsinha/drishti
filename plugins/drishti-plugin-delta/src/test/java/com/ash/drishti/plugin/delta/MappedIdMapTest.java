@@ -50,8 +50,10 @@ class MappedIdMapTest {
         assertThat(java.util.Set.of(mapped.ids())).isEqualTo(java.util.Set.of(ids));
         assertThat(MappedIdMap.open(file).file("Zürich-7")).isEqualTo(heap.file("Zürich-7"));       // read again, as after a restart
 
-        Files.write(file, new byte[] {1, 2, 3});                                                // damaged: not used, written again
-        assertThat(MappedIdMap.open(file)).isNull();
+        if (!System.getProperty("os.name").startsWith("Windows")) {          // Windows refuses to overwrite a file that is still mapped (until the GC unmaps it)
+            Files.write(file, new byte[] {1, 2, 3});                                            // damaged: not used, written again
+            assertThat(MappedIdMap.open(file)).isNull();
+        }
         assertThat(MappedIdMap.open(tmp.resolve("none.idmap"))).isNull();
     }
 

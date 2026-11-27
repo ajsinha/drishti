@@ -28,7 +28,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * R2 consumers, the role Homes (VarHomeMeasures, VarHomeBacktest): the Homes' tables read with {@code var.consumers.path} in-tree and
+ * R2 consumers, the role Homes (VarHomeMeasures, VarHomeBacktest): the Homes' tables read with {@code var.consumers.route} in-tree and
  * again with it on the engine (two servers over one lake, the family switch the only difference); the rows must be equal. Skipped when
  * no folder of Risk JARs is given (-Ddrishti.risk.jars).
  */
@@ -72,7 +72,7 @@ class HomesSideBySideTest {
         Path work = FOLDER.resolve("server-" + path);
         RiskSideBySideTest.deleteTree(work);
         SideBySide.dropJars(Path.of(jars), work);
-        PackagedServer server = PackagedServer.start(work, lake, "2026-09-30", Map.of("DRISHTI_VAR_CONSUMERS_PATH", path, "DRISHTI_HOMES_ROLES_*", String.join(",", HOMES)));
+        PackagedServer server = PackagedServer.start(work, lake, "2026-09-30", Map.of("DRISHTI_VAR_CONSUMERS_ROUTE", path, "DRISHTI_HOMES_ROLES_*", String.join(",", HOMES)));
         if (path.equals("engine")) {                              // the engine starts with the server but answers when its day is read: wait for it
             long end = System.currentTimeMillis() + 180_000;
             while (true) {

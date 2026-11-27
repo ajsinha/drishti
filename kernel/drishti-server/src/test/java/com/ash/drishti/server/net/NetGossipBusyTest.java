@@ -211,8 +211,10 @@ class NetGossipBusyTest {
             })).as("C is dead everywhere").isTrue();
             long deadAt = System.currentTimeMillis() - t0;
             System.out.println("net-busy: C suspected everywhere after " + suspectAt.get() + " ms, dead after " + deadAt + " ms");
-            assertThat(suspectAt.get()).as("suspected within suspect-after (3 s) plus two rounds and a probe").isLessThanOrEqualTo(7_000);
-            assertThat(deadAt).as("dead within suspect-after + dead-after (7 s) plus two rounds and a probe").isLessThanOrEqualTo(11_000);
+            // the protocol's times are exact; the slack (two rounds and a probe, 4 s) grows on a smaller machine (MachineSpeed)
+            long slack = com.ash.drishti.testkit.MachineSpeed.scaled(4_000L);
+            assertThat(suspectAt.get()).as("suspected within suspect-after (3 s) plus two rounds and a probe").isLessThanOrEqualTo(3_000 + slack);
+            assertThat(deadAt).as("dead within suspect-after + dead-after (7 s) plus two rounds and a probe").isLessThanOrEqualTo(7_000 + slack);
         }
     }
 

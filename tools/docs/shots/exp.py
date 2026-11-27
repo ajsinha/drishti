@@ -16,7 +16,7 @@
 docs/guides/img/exp/, over the demo lake's exposure run (see _exp.py). Run it on its own (it builds its own lake and starts its own
 scratch server and console):
 
-    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide exp
+    python3 tools/docs/screenshots.py --guide exp
 
 The pictures, in the guide's order: the bank with the counterparty board, a netting set's profile with the path fan, its collateral,
 a trade in its netting set, the pre-deal what-if, a capture compared with now, the provenance, and the explorer on a phone."""

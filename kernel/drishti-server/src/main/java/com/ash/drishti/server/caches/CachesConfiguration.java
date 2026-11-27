@@ -49,7 +49,7 @@ public class CachesConfiguration {
     public void joinEngines(org.springframework.boot.context.event.ApplicationReadyEvent e) {
         var ctx = e.getApplicationContext();
         MemoryBudget b = ctx.getBean(MemoryBudget.class);
-        ctx.getBeanProvider(CacheGroup.class).orderedStream().forEach(g -> g.join(b));     // the modules' engines' caches (DOMAIN_MODULES.md J2)
+        ctx.getBeanProvider(CacheGroup.class).orderedStream().forEach(g -> g.join(b));     // the modules' engines' caches (KERNEL_AND_MODULES.md J2)
         ctx.getBeanProvider(com.ash.drishti.server.pivot.PivotConfiguration.States.class).ifAvailable(s -> b.join("engine.answers",
                 MemoryBudget.of(com.ash.drishti.server.pivot.PivotConfiguration.CACHE, s.caffeine(),
                         (long) ctx.getBean(com.ash.drishti.server.pivot.PivotProperties.class).cacheMb() << 20)));

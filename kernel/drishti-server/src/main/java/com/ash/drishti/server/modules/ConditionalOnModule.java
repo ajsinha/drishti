@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Conditional;
 
 /**
  * A configuration (and everything it scans or imports) that loads only while the module is on here: installed, licensed and enabled
- * (docs/architecture/ACCESS_MODEL.md). A module's auto-configuration carries it, so a module that is off brings no bean, engine, job or
+ * (docs/architecture/KERNEL_AND_MODULES.md). A module's auto-configuration carries it, so a module that is off brings no bean, engine, job or
  * API at all. Decided at start by the access registry; a change takes effect at the next start.
  */
 @Retention(RetentionPolicy.RUNTIME)
