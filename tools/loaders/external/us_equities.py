@@ -524,7 +524,7 @@ def _refresh(a, run, selected, companies_on, prices_on, scope, widened, out, com
             rc = M.main(["--cache", str(run.work)] + pack_args)
             if not rc and not a.no_check:
                 rc = M.main(["--check", "--cache", str(run.work)] + pack_args)
-        written += sorted((run.pack_dir / "samples").glob("*")) + [run.pack_dir / "guides" / "us-equities.md"]
+        written += sorted((run.pack_dir / "samples").glob("*")) + [run.pack_dir / "README.md"]
         log(f"pack: {run.pack_dir}" if not rc else "the pack generator failed")
     if prices_on:
         written += SOURCES[-1].write(run)

@@ -105,7 +105,7 @@ def test_offline_build_from_the_recorded_cache(tmp_path, cache, data_dir):
     cos = {d["TICKER"]: d for d in snap(pack, "us-company")}
     assert set(cos) == {"AAPL", "MSFT"}
     assert cos["AAPL"]["LEI"] and cos["AAPL"]["LISTING"] == "Nasdaq Global Select Market"
-    assert (pack / "pack.yaml").is_file() and (pack / "guides" / "us-equities.md").is_file()
+    assert (pack / "pack.yaml").is_file() and (pack / "README.md").is_file()
     first = built(pack)
     assert UE.refresh(ns(cache, offline=True, out=str(out)), log=lambda *_: None) == 0
     assert first == built(pack)          # deterministic

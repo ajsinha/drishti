@@ -435,7 +435,7 @@ def _refresh(a, run, selected, committed, pack_dir, log) -> int:
     rc = M.main(["--cache", str(run.work)] + pack_args, run.extra, run.cap)
     if not rc and not a.no_check:
         rc = M.main(["--check", "--cache", str(run.work)] + pack_args, run.extra, run.cap)
-    written = sorted((pack_dir / "samples").glob("*")) + [pack_dir / "guides" / "gleif.md"]
+    written = sorted((pack_dir / "samples").glob("*")) + [pack_dir / "README.md"]
     log(f"pack: {pack_dir}" if not rc else "the pack generator failed")
     failed = run.http_g.failed
     man.finish(pack_dir if committed else pack_dir.parent.parent, written, sys.argv[1:], rc == 0 and not failed)

@@ -92,7 +92,7 @@ def test_offline_build_from_the_recorded_cache_is_complete_and_deterministic(tmp
     maps = {d["IDENTIFIER"]: d for d in snap(pack, "lei-mapping")}
     assert maps["APLEUS66XXX"]["ENTITY_LEI"] == APPLE and maps["APLEUS66XXX"]["TYPE"] == "BIC"
     assert "US" in {d["LEI_COUNTRY"] for d in ents.values()}
-    assert (pack / "pack.yaml").is_file() and (pack / "guides" / "gleif.md").is_file()
+    assert (pack / "pack.yaml").is_file() and (pack / "README.md").is_file()
     first = built(pack)
     assert GL.refresh(ns(cache, offline=True, out=str(out)), log=lambda *_: None) == 0
     assert first == built(pack)           # the same cache, the same bytes
