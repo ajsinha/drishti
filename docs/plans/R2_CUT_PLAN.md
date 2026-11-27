@@ -345,14 +345,27 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
    on the capture). `GET /compare?b=now&path=engine` reads now from the engine. A lens other than the offered one and a scope whose
    parts are positions or terms are refused in words on the engine path (captured in-tree).
 
-### Status, lane G (2026-11-27 11:4x, branch `r2/var-routes`; drishti-risk `r2/var-routes`)
+### Status, lane G (2026-11-27 13:0x, branch `r2/var-routes`; drishti-risk `r2/var-routes`)
 
-- **Green at this stop** (default mapped tier unless said): `PackagedVarGoldenTest` (USD 167,372,692 / 210,131,972, every USD case as
-  recorded); VaR headline 1,572 answers, **3,918 of 3,918** golden raw bits; `MarketRecordedIT`; `RiskSideBySideTest` (13 tests, the
-  new backtest and captures tests included) and `RiskSideBySideCadTest`; backtest, captures and statistics also on the heap tier; the
-  banking `Var*`, `*Official*`, `*Backtest*` tests (270; `VarOfficialBiTest` green with the BI table unchanged, see 6.6 (5)). No test
-  tolerance loosened (parametric within relative 1e-12 is decision 6.6 (4)). The captures test leaves out of its equality only each
-  capture's id, time, owner and its provenance's run facts (`computedAt`, `computeMs`, `cache`: when, how fast, from which cache).
+- **Green at this stop** (default mapped tier unless said): as at the part 5 stop (`PackagedVarGoldenTest` USD 167,372,692 /
+  210,131,972, headline 3,918 of 3,918 raw bits, `MarketRecordedIT`, `RiskSideBySideCadTest`), and the banking `Var*`, `*Official*`,
+  `*Backtest*` tests (270, `VarOfficialBiTest` now with `BACKTEST_*`). Part 6 side by side on the heap tier: contributions (1,572) and
+  other confidences (1,572) green; P&L path and captures: see "Part 6 open". Test tolerances: none loosened; the mapped tier's
+  position-part figures are tagged `[positions]` and counted, not asserted (the in-tree hot file keeps whole positions as float32 rows,
+  MC-12, as EUR/CAD); the heap tier asserts them to the bit. The heap tier's server gets `DRISHTI_VAR_OPEN_HEAP_MB=700` (the in-tree side
+  now also keeps the leaf nodes' position vectors: DRS-9502 on the third date at the automatic net).
+- **Added in part 6 (behind `var.route` / `path=engine`, defaults unchanged; Appendix A rows)**: (1) the BI table
+  `banking.market_risk_var_official` lists `BACKTEST_CONFIDENCE`/`BACKTEST_VAR`: the cause of the first date's bank VaR reading 0 was the
+  lake `var-official` not promoting the two columns (the table fell back to reading documents one by one); the lake (both copies), the
+  pack layout and packgen promote them. (2) A leaf node's positions on the engine path: contributions, the headline's parts block, the P&L
+  path's part that lost most, the contributions' parametric columns (new engine output `scope-pcomponents`) and so its captures; the
+  host supplies labels, sizes, attributes, order and masking (`VarEnginePath.hostPositions`). (3) The headline at another offered
+  confidence (`node-var-horizon`/`node-pvar` with the new `lens-confidence`, `lens-es-confidence`).
+- **Part 6 open**: the P&L path and captures side by side on the heap tier with the leaf nodes (running at the stop); more positions than
+  `max-parts` and the parts of a scope that is not a node (terms, ad-hoc positions) still refused in words; the headline of a leaf node
+  asks `scope-contributions` for every position (incremental VaR included: heavier than in-tree's cached standalone sums at scale);
+  not started: matured items (the intake's matured trades are the host's: they need a vector supply to the engine), `within` trees,
+  captures through a lens; the test dataset with backtesting exceptions.
 - **Added in part 5 (behind `var.route` / `path=engine`, defaults unchanged; Appendix A rows)**: (1) `GET /backtesting` from the
   engine's `backtest` and `backtest-days` (6.6 (5): the published record carries `BACKTEST_CONFIDENCE`/`BACKTEST_VAR`, contract 1.6):
   402 answers, 14,187 numbers, every field and bit equal; 320 days tested at 0.99 and 320 at 0.975; the side by side's lake now holds
@@ -372,9 +385,5 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
   still fails on drishti-risk for reasons outside lane G (the working JAR is copied by hand after `MarketRecordedIT` passes); (c) an
   engine session opened before an official capture keeps the records it read until it closes (`market-risk` has no `data-version`
   trigger): the engine path refuses in words (records differ from the store; the backtest names the node, date and both figures);
-  (d) the BI table `banking.market_risk_var_official` does not list `BACKTEST_*` yet (adding the two columns broke `VarOfficialBiTest`:
-  the first date's bank VaR read 0).
-- **Remaining VaR routes** (in-tree only, refused on the engine path in words), next in order: (5) leaf-node and expression paths and
-  contributions (parts are positions, trades or terms: the host supplies labels, sizes, the max-parts cut with the totals over all parts,
-  and masking; `scope-contributions` takes the row sets), and with them their captures and a parametric block of a scope that is not a
-  node; other confidences; matured items; `within` trees; captures through a lens; the Homes' engine tables (lane E).
+  (d) closed in part 6 (the BI table lists `BACKTEST_*`).
+- **Remaining VaR routes** (in-tree only, refused on the engine path in words), next in order: expression and ad-hoc scopes' parts (terms, positions) and a leaf node over `max-parts` (the host's cut with the totals over all parts), and a parametric block of a scope that is not a node; matured items; `within` trees; captures through a lens; the Homes' engine tables (lane E).
