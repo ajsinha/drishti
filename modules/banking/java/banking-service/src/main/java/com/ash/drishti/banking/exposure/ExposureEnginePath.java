@@ -47,10 +47,12 @@ public class ExposureEnginePath {
 
     private final ObjectProvider<Engines> engines;
     private final Environment env;
+    private final ObjectProvider<ExposureService> svc;
 
-    ExposureEnginePath(ObjectProvider<Engines> engines, Environment env) {
+    ExposureEnginePath(ObjectProvider<Engines> engines, Environment env, ObjectProvider<ExposureService> svc) {
         this.engines = engines;
         this.env = env;
+        this.svc = svc;
     }
 
     /** True when this request is answered by the engine: its own {@code path}, else the family's switch. */
@@ -61,6 +63,12 @@ public class ExposureEnginePath {
             case "in-tree" -> false;
             default -> throw new DrishtiException(ErrorCode.BAD_REQUEST, "path is engine or in-tree, not " + p);
         };
+    }
+
+    /** True when the engine {@code ccr} runs here (its JAR in lib/engines and config/engines/ccr.yaml on). */
+    public boolean running() {
+        Engines e = engines.getIfAvailable();
+        return e != null && e.running(ENGINE);
     }
 
     /** Refuses, in words, the parameters the engine path does not take yet (each is answered in-tree). */
@@ -141,11 +149,14 @@ public class ExposureEnginePath {
     /**
      * Every counterparty's figures through the engine ({@code counterparty-summary}), in counterparty order, for the Exposure Home and
      * the tree: {@code id}, {@code scope} ({@code CPTY:<id>}), {@code nettingSets}, {@code trades}, {@code ce}, {@code epe}, {@code eepe},
-     * {@code peakEe}, {@code peakPfe} (whole units), {@code peakPfeDate}, and each figure's exact double. The credit limit is the host's
-     * reference data: the caller joins it.
+     * {@code peakEe}, {@code peakPfe} (whole units), {@code peakPfeDate}, each figure's exact double, and the stored credit limit
+     * ({@code limitId}, {@code limit} in whole units as the in-tree tree's {@code limit.limit}; null without one).
      */
     public List<Map<String, Object>> counterparties(Principal p, LocalDate date, Measures m) {
-        Map<String, Object> a = ask(p, null, date, m, List.of("counterparty-summary"));
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the engine path needs the business date: give asOf");
+        }
+        Map<String, Object> a = call(p, List.of("counterparty-summary"), m.params(), date);   // every counterparty: no scope
         List<Map<String, Object>> rows = rows(a, "counterparty-summary");
         if (rows == null) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no counterparty exposure on " + date + missing(a));
@@ -163,6 +174,8 @@ public class ExposureEnginePath {
                 c.put(f[1] + "Exact", x);
             }
             c.put("peakPfeDate", r.get("PEAK_PFE_DATE") == null ? null : r.get("PEAK_PFE_DATE").toString());
+            c.put("limitId", r.get("LIMIT_ID"));
+            c.put("limit", r.get("LIMIT") instanceof Number l ? Math.round(l.doubleValue()) : null);
             out.add(c);
         }
         return out;
@@ -216,13 +229,14 @@ public class ExposureEnginePath {
             lim.put("id", r.get("LIMIT_ID"));
             lim.put("measure", r.get("MEASURE"));
             lim.put("limit", Math.round(amount.doubleValue()));
-            double before = ((Number) r.get("BEFORE")).doubleValue();
-            double after = ((Number) r.get("AFTER")).doubleValue();
-            lim.put("before", Math.round(before));
-            lim.put("after", Math.round(after));
-            lim.put("increment", Math.round(after - before));
-            lim.put("useBefore", r.get("USE_BEFORE"));
-            lim.put("useAfter", r.get("USE_AFTER"));
+            // the in-tree check reads the what-if's figures in whole units: the use is the whole-unit figure over the limit
+            long before = Math.round(((Number) r.get("BEFORE")).doubleValue());
+            long after = Math.round(((Number) r.get("AFTER")).doubleValue());
+            lim.put("before", before);
+            lim.put("after", after);
+            lim.put("increment", after - before);
+            lim.put("useBefore", before / amount.doubleValue());
+            lim.put("useAfter", after / amount.doubleValue());
             List<Map<String, Object>> buckets = new ArrayList<>();
             List<Map<String, Object>> bs = rows(a, "pre-deal-buckets");
             for (Map<String, Object> b : bs == null ? List.<Map<String, Object>>of() : bs) {
@@ -231,20 +245,153 @@ public class ExposureEnginePath {
                 x.put("limit", Math.round(((Number) b.get("LIMIT")).doubleValue()));
                 x.put("before", b.get("BEFORE") instanceof Number n ? Math.round(n.doubleValue()) : null);
                 x.put("after", b.get("AFTER") instanceof Number n ? Math.round(n.doubleValue()) : null);
-                x.put("useAfter", b.get("USE_AFTER"));
+                x.put("useAfter", b.get("AFTER") instanceof Number n ? Math.round(n.doubleValue()) / ((Number) b.get("LIMIT")).doubleValue() : null);
                 x.put("status", b.get("STATUS"));
                 buckets.add(x);
             }
+            // the engine's rows come by key (the bucket's name: 10Y+ before 3-5Y); the in-tree check lists them by tenor, the limit's own order
+            buckets.sort(java.util.Comparator.comparingDouble(x -> {
+                ExposureDate.Bucket b = ExposureDate.Bucket.of(String.valueOf(x.get("bucket")), 1);
+                return b == null ? Double.MAX_VALUE : b.from();
+            }));
             lim.put("buckets", buckets);
             lim.put("status", r.get("STATUS"));
         }
         out.put("limit", lim);
         Map<String, Object> exp = new LinkedHashMap<>();
-        exp.put("base", Map.of("ead", Math.round(((Number) r.get("EAD_BEFORE")).doubleValue())));
-        exp.put("with", Map.of("ead", Math.round(((Number) r.get("EAD_AFTER")).doubleValue())));
+        // EAD = alpha x EEPE, the EEPE in whole units as the in-tree what-if gives it (the engine's EAD over alpha is that EEPE)
+        ExposureService es = svc.getIfAvailable();
+        double alpha = es == null ? 1.4 : es.props().alpha();
+        exp.put("base", Map.of("ead", Math.round(alpha * Math.round(((Number) r.get("EAD_BEFORE")).doubleValue() / alpha))));
+        exp.put("with", Map.of("ead", Math.round(alpha * Math.round(((Number) r.get("EAD_AFTER")).doubleValue() / alpha))));
         out.put("exposure", exp);
         out.put("path", "engine");
         return out;
+    }
+
+    /**
+     * A scope's contributions through the engine ({@code scope-resolution}, {@code exposure-summary}, {@code exposure-profile},
+     * {@code exposure-contributions}), as the in-tree {@code /scope/contributions} answers them: {@code scope}, {@code canonical},
+     * {@code businessDate}, {@code by} (child: the scope kind's child, as in-tree), {@code figure}, {@code date}, {@code total}, {@code rows}
+     * (key, scope, label, kind, value, pct, incremental; the first {@code max-parts}), {@code parts}, {@code truncated}, {@code path: engine}.
+     * Refused in words, answered in-tree: parts by counterparty (their names are the host's reference data) or by trade (the trade
+     * columns), {@code alone}, {@code profile}, and a viewer whose role has exposure access levels (EXPOSURE_GUIDE.md section 9).
+     */
+    public Map<String, Object> contributions(Principal p, String scope, LocalDate date, Measures m, String by, String figure, String at, boolean alone,
+            boolean profile) {
+        if (alone || profile) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the engine path answers contributions without alone and profile for now; "
+                    + "they are answered in-tree (path=in-tree)");
+        }
+        ExposureService es = svc.getIfAvailable();
+        if (es != null && p != null && !es.access().levels(p).isEmpty()) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "your role's exposure access levels are applied in-tree; contributions are "
+                    + "answered there (path=in-tree)");
+        }
+        Map<String, Object> a = ask(p, scope, date, m, List.of("scope-resolution", "exposure-summary", "exposure-profile"));
+        List<Map<String, Object>> res = rows(a, "scope-resolution");
+        List<Map<String, Object>> summary = rows(a, "exposure-summary");
+        if (res == null || res.isEmpty() || summary == null || summary.isEmpty()) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no exposure of " + scope + " on " + date + missing(a));
+        }
+        String kind = String.valueOf(res.get(0).get("KIND"));
+        String mode = by == null || by.isBlank() || by.equalsIgnoreCase("child") ? ExposureViews.childOf(kind) : by.trim().toLowerCase(Locale.ROOT);
+        String fig = figure == null || figure.isBlank() ? "PFE" : figure.trim().toUpperCase(Locale.ROOT);
+        if (!List.of("EE", "EPE", "PFE").contains(fig)) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "figure is EE, EPE or PFE, not " + figure);
+        }
+        if (!List.of("netting-set", "counterparty", "legal-entity", "trade", "asset", "none").contains(mode)) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "by is child, netting-set, counterparty, legal-entity, trade or asset, not " + by);
+        }
+        if (mode.equals("counterparty") || mode.equals("trade")) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the engine path does not give parts by " + mode + " yet (" + (mode.equals("trade")
+                    ? "the trade columns" : "the counterparties' names") + " are the host's); they are answered in-tree (path=in-tree)");
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("scope", scope);
+        out.put("canonical", res.get(0).get("CANONICAL"));
+        out.put("businessDate", date.toString());
+        out.put("by", mode);
+        out.put("figure", fig);
+        List<Map<String, Object>> rows = new ArrayList<>();
+        if (mode.equals("none")) {
+            out.put("rows", rows);
+            out.put("note", "a trade alone has no parts");
+            out.put("path", "engine");
+            return out;
+        }
+        List<Map<String, Object>> points = rows(a, "exposure-profile");
+        int i = primary(points, at);
+        Map<String, Object> prm = new LinkedHashMap<>();
+        prm.put("scope", scope.isBlank() ? "BANK" : scope);
+        prm.put("standalone", false);
+        prm.putAll(m.params());
+        prm.put("by", mode);
+        prm.put("figure", fig);
+        prm.put("at", i);
+        Map<String, Object> c = call(p, List.of("exposure-contributions"), prm, date);
+        List<Map<String, Object>> cs = rows(c, "exposure-contributions");
+        if (cs == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no contributions of " + scope + " on " + date + missing(c));
+        }
+        cs.sort(java.util.Comparator.comparingLong(r -> ((Number) r.get("RANK")).longValue()));
+        int max = es == null ? Integer.MAX_VALUE : es.props().maxParts();
+        for (Map<String, Object> r : cs.subList(0, Math.min(cs.size(), max))) {
+            Map<String, Object> x = new LinkedHashMap<>();
+            x.put("key", r.get("KEY"));
+            x.put("scope", r.get("SCOPE"));
+            x.put("label", r.get("LABEL"));
+            x.put("kind", r.get("KIND"));
+            x.put("value", Math.round(((Number) r.get("VALUE")).doubleValue()));
+            x.put("pct", r.get("PCT"));
+            x.put("incremental", r.get("INCREMENTAL") instanceof Number n ? Math.round(n.doubleValue()) : null);
+            rows.add(x);
+        }
+        Map<String, Object> s = summary.get(0);
+        double[] ee = points.stream().mapToDouble(r -> ((Number) r.get("EE")).doubleValue()).toArray();
+        Object peakDate = s.get("PEAK_PFE_DATE");
+        String when = switch (fig) {
+            case "EPE" -> null;
+            case "PFE" -> i >= 0 ? String.valueOf(points.get(i).get("DATE")) : peakDate != null ? peakDate.toString() : String.valueOf(points.get(0).get("DATE"));
+            default -> String.valueOf(points.get(i >= 0 ? i : argmax(ee)).get("DATE"));
+        };
+        out.put("date", when);
+        double total = switch (fig) {
+            case "EE" -> i >= 0 ? ee[i] : ((Number) s.get("PEAK_EE")).doubleValue();
+            case "EPE" -> ((Number) s.get("EPE")).doubleValue();
+            default -> ((Number) s.get("PEAK_PFE")).doubleValue();
+        };
+        out.put("total", Math.round(total));
+        out.put("rows", rows);
+        out.put("parts", cs.size());
+        out.put("truncated", cs.size() > max);
+        out.put("path", "engine");
+        return out;
+    }
+
+    /** The primary point of a date or tenor among the profile's rows (as the in-tree route reads it); -1 when none is given. */
+    private static int primary(List<Map<String, Object>> points, String date) {
+        if (date == null || date.isBlank()) {
+            return -1;
+        }
+        String d = date.trim();
+        for (int i = 0; i < points.size(); i++) {
+            if (String.valueOf(points.get(i).get("DATE")).equals(d) || d.equalsIgnoreCase(String.valueOf(points.get(i).get("TENOR")))) {
+                return i;
+            }
+        }
+        throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "date " + date + " is not a primary grid date of the run (" + points.get(0).get("DATE")
+                + " .. " + points.get(points.size() - 1).get("DATE") + ", or a tenor such as 1Y)");
+    }
+
+    private static int argmax(double[] a) {
+        int best = 0;
+        for (int i = 1; i < a.length; i++) {
+            if (a[i] > a[best]) {
+                best = i;
+            }
+        }
+        return best;
     }
 
     /** The netting set a scope is ({@code NSET:<id>}, one set), else null. */

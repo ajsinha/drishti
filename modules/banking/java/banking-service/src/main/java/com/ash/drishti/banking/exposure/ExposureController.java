@@ -151,7 +151,11 @@ public class ExposureController {
     public Map<String, Object> contributions(@RequestParam String scope, @RequestParam(required = false) String by,
             @RequestParam(required = false) String figure, @RequestParam(required = false) String date, @RequestParam(required = false) String q,
             @RequestParam(required = false) String collateral, @RequestParam(defaultValue = "false") boolean alone,
-            @RequestParam(defaultValue = "false") boolean profile, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(defaultValue = "false") boolean profile, AsOf asOf, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the ccr engine's contributions through the host
+            return enginePath.contributions(p, scope(scope), date(asOf), new ExposureEnginePath.Measures(q, collateral), by, figure, date, alone, profile);
+        }
         return views.contributions(p, scope(scope), date(asOf), ask(q, collateral, null, null), by, figure, date, alone, profile);
     }
 

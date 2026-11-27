@@ -60,6 +60,8 @@ class ExposureSideBySideTest {
     static final String[][] PROFILE_BITS = {{"EE", "eeExact"}, {"ENE", "eneExact"}, {"EEE", "eeeExact"}, {"PFE", "pfeExact"}, {"EE_UNCOLL", "eeUncollExact"}};
     static final String[] COLLATERAL = {"csa", "margined", "thresholdThem", "thresholdUs", "mtaThem", "independentAmount", "mporDays", "heldToday",
         "imHeld", "netMtm", "trades"};
+    /** The tier both paths keep the netting-set matrices in: mapped (the default) unless {@code -Dsbs.tier=heap}. */
+    static final boolean MAPPED = !"heap".equals(System.getProperty("sbs.tier", ""));
     static PackagedServer server;
     static List<Map<String, Object>> recorded;
 
@@ -78,9 +80,10 @@ class ExposureSideBySideTest {
         Path work = FOLDER.resolve("server");
         deleteTree(work);
         SideBySide.dropJars(Path.of(jars), work);
-        // the in-tree reference is the heap tier (float64 netting-set matrices) for now: the default mapped tier holds them as float32 and
-        // the engine reads float64 rows; the final reference is the default tier, once the engine reads the host's stored bytes (appendix A)
-        server = PackagedServer.start(work, lake, DATE, Map.of("DRISHTI_EXPOSURE_TIER", "heap"));
+        // both tiers (R2 MC-12): the default mapped tier keeps the netting-set matrices float32 in the hot file and the engine follows it
+        // (config/engines/ccr.yaml vector-tier from drishti.ccr.exposure.tier); -Dsbs.tier=heap: float64 on both paths
+        String tier = System.getProperty("sbs.tier", "");
+        server = tier.isBlank() ? PackagedServer.start(work, lake, DATE) : PackagedServer.start(work, lake, DATE, Map.of("DRISHTI_EXPOSURE_TIER", tier));
     }
 
     @AfterAll
@@ -230,6 +233,37 @@ class ExposureSideBySideTest {
         assertThat(sbs.differences).as("pre-deal answers that differ between in-tree and engine").isEmpty();
     }
 
+    /**
+     * The contributions route ({@code /scope/contributions}) on both paths for every scope: by netting set, legal entity and asset (each
+     * trade's share, read from its paths) and by the scope's child where it is a netting set (the bank, a counterparty), each figure (PFE,
+     * EE, EPE) and the EE at a tenor: every field and every row equal (key, scope, label, kind, value, share, incremental), the total,
+     * the date and the parts.
+     */
+    @Test
+    void theContributionsOfEveryScopeAreTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        String[] fields = {"canonical", "by", "figure", "date", "total", "rows", "parts", "truncated"};
+        int rows = 0;
+        for (String scope : scopes()) {
+            List<String> asks = new ArrayList<>(List.of("by=netting-set&figure=PFE", "by=netting-set&figure=EE", "by=netting-set&figure=EPE",
+                    "by=legal-entity&figure=PFE", "by=asset&figure=PFE", "by=netting-set&figure=EE&date=1Y", "by=asset&figure=EE&date=5Y"));
+            if (scope.equals("BANK") || scope.startsWith("CPTY:")) {
+                asks.add("figure=PFE");
+                asks.add("by=child&figure=EPE&collateral=none");
+            }
+            for (String a : asks) {
+                String what = scope + " " + a;
+                JsonNode[] both = sbs.both(server, what, "/api/v1/risk/exposure/scope/contributions?scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8)
+                        + "&asOf=" + DATE + "&" + a, fields);
+                rows += both[0].path("rows").size();
+            }
+        }
+        System.out.println("side by side, contributions (tier " + (MAPPED ? "mapped" : "heap") + "): " + sbs.compared + " answers, " + rows
+                + " rows on both paths; first differences: " + sbs.differences.stream().limit(Integer.getInteger("sbs.show", 10)).toList());
+        assertThat(rows).as("contribution rows compared").isGreaterThan(500);
+        assertThat(sbs.differences).as("contributions that differ between in-tree and engine").isEmpty();
+    }
+
     private static JsonNode post(String path, Object body) throws IOException, InterruptedException {
         java.net.http.HttpResponse<String> r = java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(
                 java.net.URI.create(server.base + path)).timeout(java.time.Duration.ofMinutes(5)).header("Content-Type", "application/json")
@@ -250,9 +284,18 @@ class ExposureSideBySideTest {
         }
         Map<String, JsonNode> engine = compare(sbs, scopes, "");
         int recordedScopes = 0;
+        int skipped = 0;
         for (Map<String, Object> c : recorded) {
             String scope = String.valueOf(c.get("id"));
             JsonNode en = engine.get(scope);
+            // the recorder's raw bits are float64 netting-set matrices (the heap tier's); its BANK is the bank of its own eight netting sets,
+            // not of this lake: the BANK case and, on the mapped tier, every case are compared as route answers only (above); the float32 rows
+            // the mapped tier sums are proven equal to the hot file's bit for bit in drishti-risk (ExposureParityTest)
+            if (MAPPED || "BANK".equals(scope)) {
+                skipped++;
+                recordedScopes++;
+                continue;
+            }
             Map<String, Object> tables = table(c);
             List<Object> srow = rows(tables, "exposure-summary").get(0);
             List<String> scols = columns(tables, "exposure-summary");
@@ -268,13 +311,17 @@ class ExposureSideBySideTest {
             }
             recordedScopes++;
         }
-        System.out.println("side by side, exposure scope: " + sbs.compared + " answers on both paths (" + recordedScopes + " recorded); " + sbs.sameBits
+        System.out.println("side by side, exposure scope (tier " + (MAPPED ? "mapped" : "heap") + "): " + sbs.compared + " answers on both paths ("
+                + recordedScopes + " recorded, " + skipped + " of them not bit-compared); " + sbs.sameBits
                 + " engine figures equal to the recorder's raw bits; first differences: " + sbs.differences.stream().limit(Integer.getInteger("sbs.show", 10)).toList()
                 + "; first raw-bit differences: " + sbs.bitDifferences.stream().limit(Integer.getInteger("sbs.show", 10)).toList());
         assertThat(recordedScopes).as("recorded scopes compared").isEqualTo(recorded.size());
         assertThat(sbs.compared).as("answers compared").isGreaterThan(recorded.size());
         assertThat(sbs.differences).as("route answers that differ between in-tree and engine").isEmpty();
         assertThat(sbs.bitDifferences).as("engine figures whose raw bits differ from the recorder's").isEmpty();
+        if (!MAPPED) {
+            assertThat(sbs.sameBits).as("engine figures equal to the recorder's raw bits").isGreaterThanOrEqualTo(8 * 60);
+        }
     }
 
     /** Every scope's scope route and profile route on both paths with {@code extra} appended; the engine's scope answers by scope. */

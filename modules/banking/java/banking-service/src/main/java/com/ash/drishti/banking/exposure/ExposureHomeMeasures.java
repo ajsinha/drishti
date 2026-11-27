@@ -28,18 +28,27 @@ import org.springframework.stereotype.Component;
 /**
  * What the exposure engine gives a role Home: {@code PFE} (the scope's {@code peakPfe}) as a KPI, and {@code EXPOSURE} by counterparty
  * (the explorer tree's counterparty nodes: {@code peakPfe} and the credit {@code limit}), read as the person, so the views' own rules
- * decide which counterparties and details they see. TODO(R2): {@link #drivers} needs the engine's what-if overlays; hosted engines
- * replace these view calls.
+ * decide which counterparties and details they see. R2: behind the exposure family switch ({@code exposure.route}) the same figures come
+ * from Drishti Risk's {@code ccr} engine through the host ({@link ExposureEnginePath}: the scope's {@code peakPfe}; {@code counterparty-summary}
+ * with each counterparty's stored credit limit), the routes proven equal in {@code ExposureSideBySideTest}. TODO(R2): {@link #drivers}
+ * needs the engine's what-if overlays.
  */
 @Component
 final class ExposureHomeMeasures implements MeasureSource {
 
     private final ExposureService svc;
     private final ExposureViews views;
+    private final ExposureEnginePath engine;
 
-    ExposureHomeMeasures(ExposureService svc, ExposureViews views) {
+    ExposureHomeMeasures(ExposureService svc, ExposureViews views, ExposureEnginePath engine) {
         this.svc = svc;
         this.views = views;
+        this.engine = engine;
+    }
+
+    /** True when the exposure family's switch sends what reads exposure inside Drishti to the engine. */
+    private boolean onEngine() {
+        return engine.engine(null);
     }
 
     @Override
@@ -49,7 +58,7 @@ final class ExposureHomeMeasures implements MeasureSource {
 
     @Override
     public boolean on() {
-        return svc.running();
+        return onEngine() ? engine.running() : svc.running();
     }
 
     private ExposureService.Ask ask(Map<String, Object> args) {
@@ -65,6 +74,11 @@ final class ExposureHomeMeasures implements MeasureSource {
         try {
             Object s = args.get("scope");
             String scope = s == null || "firm".equals(s) ? "BANK" : String.valueOf(s);
+            if (onEngine()) {
+                Object q = args.get("quantile");
+                return engine.scope(p, scope, date, new ExposureEnginePath.Measures(q == null ? null : String.valueOf(q), null)).get("peakPfe") instanceof Number n
+                        ? OptionalDouble.of(n.doubleValue()) : OptionalDouble.empty();
+            }
             return views.scope(p, scope, date, ask(args)).get("peakPfe") instanceof Number n ? OptionalDouble.of(n.doubleValue()) : OptionalDouble.empty();
         } catch (RuntimeException e) {
             return OptionalDouble.empty();
@@ -98,6 +112,18 @@ final class ExposureHomeMeasures implements MeasureSource {
     @SuppressWarnings("unchecked")
     private List<Counterparty> counterparties(Principal p, LocalDate date) {
         List<Counterparty> out = new ArrayList<>();
+        if (onEngine()) {
+            try {
+                for (Map<String, Object> c : engine.counterparties(p, date, new ExposureEnginePath.Measures(null, null))) {
+                    out.add(new Counterparty(String.valueOf(c.get("id")), ((Number) c.get("peakPfe")).doubleValue(),
+                            c.get("limit") instanceof Number n ? n.doubleValue() : null));
+                }
+            } catch (RuntimeException e) {
+                org.slf4j.LoggerFactory.getLogger(ExposureHomeMeasures.class).warn("role Home exposure from the ccr engine: {}", e.toString());
+                return List.of();
+            }
+            return out;
+        }
         try {
             Map<String, Object> tree = views.tree(p, date, ask(Map.of()));
             for (Object g : tree.get("groups") instanceof List<?> gs ? gs : List.of()) {
