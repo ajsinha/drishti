@@ -121,7 +121,7 @@ Fields, from 3 sample documents:
 | `DIVISION` | string | `D` | SIC division letter |
 | `SECTOR` | string | `Manufacturing` | SIC division name |
 | `STATE_OF_INCORPORATION` | string | `CA` | State of incorporation |
-| `FISCAL_YEAR_END` | string | `09-26` | Fiscal year end (MM-DD) |
+| `FISCAL_YEAR_END` | string | `09-25` | Fiscal year end (MM-DD) |
 | `FILER_CATEGORY` | string | `Large accelerated filer` | SEC filer category |
 | `HEADQUARTERS` | string | `Cupertino` | Headquarters city (Wikidata) |
 | `BUSINESS_ADDRESS` | string | `CUPERTINO, CA` | Business address city and state (SEC) |
@@ -135,21 +135,21 @@ Fields, from 3 sample documents:
 | `INDEXES` | list of objects |  | Index memberships (index, name, since) |
 | `INDEX_TEXT` | string | `Dow Jones Industrial Average, Nasdaq-100…` | The indexes, as text for searching |
 | `CURRENCY` | string | `USD` | The currency its figures are reported in (USD; CAD or GBP for a Canadian or UK bank) |
-| `FISCAL_YEAR` | integer | `2025` | Fiscal year |
-| `REVENUE` | integer | `416161000000` | Revenue |
-| `NET_INCOME` | integer | `112010000000` | Net income |
-| `ASSETS` | integer | `359241000000` | Total assets, latest fiscal year (USD) |
-| `LIABILITIES` | integer | `285508000000` | Total liabilities, latest fiscal year (USD) |
-| `EQUITY` | integer | `73733000000` | Stockholders' equity, latest fiscal year (USD) |
-| `EPS_DILUTED` | number | `7.46` | Diluted EPS |
-| `SHARES_OUTSTANDING` | integer | `14776353000` | Shares outstanding |
+| `FISCAL_YEAR` | integer | `2026` | Fiscal year |
+| `REVENUE` | integer | `478834000000` | Revenue |
+| `NET_INCOME` | integer | `132175000000` | Net income |
+| `ASSETS` | integer | `404548000000` | Total assets, latest fiscal year (USD) |
+| `LIABILITIES` | integer | `292455000000` | Total liabilities, latest fiscal year (USD) |
+| `EQUITY` | integer | `112093000000` | Stockholders' equity, latest fiscal year (USD) |
+| `EPS_DILUTED` | number | `8.98` | Diluted EPS |
+| `SHARES_OUTSTANDING` | integer | `14532182000` | Shares outstanding |
 | `FINANCIALS` | list of objects |  | Ten fiscal years of annual figures |
 | `FACTS` | list of objects |  | The financial facts held for the company |
 | `FILINGS` | list of objects |  | Recent filings |
 | `INDEX_IDS` | list of strings |  | link to `index-membership` |
 | `FACT_IDS` | list of strings |  | link to `financial-fact` |
 | `FILING_IDS` | list of strings |  | link to `filing` |
-| `LATEST_FILING` | date | `2026-10-22` | Date of the latest filing |
+| `LATEST_FILING` | date | `2026-11-27` | Date of the latest filing |
 | `SIC_SECTOR` | string | `3571` | link to `sic-sector` |
 | `PRICE_HISTORY` | string | `PX-AAPL` | Id of its price-history document (read live, internal only) |
 | `PROVENANCE` | object |  | Source, retrieval date, licence and URL |
@@ -224,9 +224,9 @@ Fields, from 1 sample document:
 | `NAME` | string | `Current reports` | Forms |
 | `FORM` | string | `8-K` | The form type |
 | `FILINGS` | integer | `300` | Filings |
-| `COMPANIES` | integer | `226` | Companies |
-| `LATEST` | date | `2026-10-26` | Latest |
-| `EARLIEST` | date | `2026-10-07` | Earliest shown |
+| `COMPANIES` | integer | `209` | Companies |
+| `LATEST` | date | `2026-11-27` | Latest |
+| `EARLIEST` | date | `2026-11-09` | Earliest shown |
 | `ROWS` | list of objects |  | The filings |
 | `BY` | list of objects |  | Filings by form |
 | `BY_TITLE` | string | `Filings by company` | Filings by company |
@@ -244,25 +244,25 @@ Nested structures:
 
 **SEC filing** · mnemonic `FILING` · read through connector `us-equities-store`.
 
-**Id:** field `ACCESSION`; pattern `^[0-9]{10}-[0-9]{2}-[0-9]{6}$`; for example `0001104659-26-117587`.
+**Id:** field `ACCESSION`; pattern `^[0-9]{10}-[0-9]{2}-[0-9]{6}$`; for example `0001104659-26-127273`.
 
 Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `ACCESSION` | string | `0001104659-26-117587` | SEC accession number |
+| `ACCESSION` | string | `0001104659-26-127273` | SEC accession number |
 | `COMPANY` | string | `ABT` | Company; link to `us-company` |
 | `COMPANY_NAME` | string | `Abbott Laboratories` | The company's name |
 | `FORM` | string | `8-K` | Form |
 | `FORM_NAME` | string | `Current report` | What it is |
-| `FILED` | date | `2026-10-21` | Filed |
-| `REPORT_DATE` | date | `2026-10-21` | Report date |
-| `PRIMARY_DOCUMENT` | string | `tm2627971d1_8k.htm` | File name of the primary document on EDGAR |
+| `FILED` | date | `2026-11-16` | Filed |
+| `REPORT_DATE` | date | `2026-11-11` | Report date |
+| `PRIMARY_DOCUMENT` | string | `tm2629582d1_8k.htm` | File name of the primary document on EDGAR |
 | `DOCUMENT_DESCRIPTION` | string | `FORM 8-K` | EDGAR's description of the document |
-| `SIZE_KB` | integer | `278` | Size of the filing (KB) |
+| `SIZE_KB` | integer | `238` | Size of the filing (KB) |
 | `ITEMS` | list of objects |  | Items reported (8-K) |
-| `ITEMS_TEXT` | string | `8.01, 9.01` | The items, as text |
-| `PATH` | string | `1800/000110465926117587` | EDGAR archive path (CIK/accession without dashes) |
+| `ITEMS_TEXT` | string | `5.02` | The items, as text |
+| `PATH` | string | `1800/000110465926127273` | EDGAR archive path (CIK/accession without dashes) |
 
 Nested structures:
 
