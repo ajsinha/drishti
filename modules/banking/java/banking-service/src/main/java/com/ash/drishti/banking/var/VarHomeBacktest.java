@@ -53,17 +53,14 @@ final class VarHomeBacktest implements HomeTable {
             return out;
         }
         try {
-            if (viaEngine) {
-                for (Map<String, Object> m : engine.history(c.person(), c.today(), "BANK")) {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    row.put("DATE", m.get("date"));
-                    row.put("PNL", m.get("pnl"));
-                    row.put("VAR", m.get("var"));
-                    out.add(row);
-                }
-                return out;
+            Map<String, Object> history;
+            if (viaEngine) {                                      // the scope history route proven equal to in-tree (RiskSideBySideTest)
+                com.ash.drishti.banking.compute.var.VarLens l = svc.props().defaultLens();
+                history = engine.history(c.person(), "BANK", c.today(), null, n -> views.lensNote(l, n, null));
+            } else {
+                history = views.history(c.person(), "BANK", c.today());
             }
-            for (Object r : views.history(c.person(), "BANK", c.today()).get("rows") instanceof List<?> l ? l : List.of()) {
+            for (Object r : history.get("rows") instanceof List<?> l ? l : List.of()) {
                 Map<String, Object> m = (Map<String, Object>) r;
                 Map<String, Object> row = new LinkedHashMap<>();
                 row.put("DATE", m.get("date"));
@@ -72,6 +69,9 @@ final class VarHomeBacktest implements HomeTable {
                 out.add(row);
             }
         } catch (RuntimeException e) {
+            if (viaEngine) {                                      // the engine path says why the panel is empty
+                org.slf4j.LoggerFactory.getLogger(VarHomeBacktest.class).warn("role Home backtest from the market-risk engine: {}", e.toString());
+            }
             return List.of();                                     // no history for the date, or none the person may see
         }
         return out;

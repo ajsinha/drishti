@@ -91,27 +91,27 @@ final class VarHomeMeasures implements MeasureSource {
         }
     }
 
-    /** The engine path: the firm (or a node by {@code NODE:id}) from node-var, the days from backtest-days; nothing for another scope word. */
+    /**
+     * The engine path: the same scope word answered by the engine's routes that are proven equal to in-tree (RiskSideBySideTest): the
+     * headline ({@link VarEnginePath#headline}) for VAR, ES and LIM_USE, the scope's history on the offered lens
+     * ({@link VarEnginePath#history}) for PNL_DAY and BREACHES. The firm word {@code BANK} is resolved by Drishti's scope resolver to
+     * the first hierarchy's root, as in-tree (asking the engine's node list for an id {@code BANK} found none: the Home panels were empty).
+     */
     private OptionalDouble engineKpi(Principal p, String measure, String scope, LocalDate date) {
-        String node = scope.regionMatches(true, 0, "NODE:", 0, 5) ? scope.substring(5) : scope;
-        if (node.contains(":") || node.contains(" ")) {
-            return OptionalDouble.empty();                          // a scope expression: the engine path answers nodes only (R2 step 4b)
-        }
         return switch (measure) {
-            case "VAR", "ES", "LIM_USE" -> {
-                Map<String, Object> n = engine.node(p, date, node);
-                yield n == null ? OptionalDouble.empty() : number(n.get(measure.equals("VAR") ? "var" : measure.equals("ES") ? "es" : "limitUse"));
-            }
-            case "PNL_DAY" -> {
-                List<Map<String, Object>> r = engine.history(p, date, node);
-                yield r.isEmpty() ? OptionalDouble.empty() : number(r.get(r.size() - 1).get("pnl"));
-            }
-            case "BREACHES" -> {
-                List<Map<String, Object>> r = engine.history(p, date, node);
-                yield r.isEmpty() ? OptionalDouble.empty() : OptionalDouble.of(r.stream().filter(x -> Boolean.TRUE.equals(x.get("exception"))).count());
-            }
+            case "VAR" -> number(engine.headline(p, scope, date, null, (String) null).get("var"));
+            case "ES" -> number(engine.headline(p, scope, date, null, (String) null).get("es"));
+            case "LIM_USE" -> number(engine.headline(p, scope, date, null, (String) null).get("limitUse"));
+            case "PNL_DAY" -> lastPnl(engineHistory(p, scope, date));
+            case "BREACHES" -> breaches(engineHistory(p, scope, date));
             default -> OptionalDouble.empty();
         };
+    }
+
+    /** A scope's history on the engine path, on the offered lens (what the in-tree {@code views.history(p, scope, date)} reads). */
+    Map<String, Object> engineHistory(Principal p, String scope, LocalDate date) {
+        com.ash.drishti.banking.compute.var.VarLens l = svc.props().defaultLens();
+        return engine.history(p, scope, date, null, n -> views.lensNote(l, n, null));
     }
 
     @Override

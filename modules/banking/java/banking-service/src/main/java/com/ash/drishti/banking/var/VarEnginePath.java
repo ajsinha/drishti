@@ -120,36 +120,6 @@ public class VarEnginePath {
         return out;
     }
 
-    /** One node's row of {@link #nodes}: the firm ({@code BANK}) or a node by its id; null when the person sees none. */
-    public Map<String, Object> node(Principal p, LocalDate date, String id) {
-        return nodes(p, date).stream().filter(n -> id.equals(String.valueOf(n.get("id")))).findFirst().orElse(null);
-    }
-
-    /**
-     * A node's tested days at the configured confidence (backtest-days), oldest first, shaped for a consumer: {@code date}, {@code var}
-     * (the official VaR the day is held to), {@code pnl} (the hypothetical P&amp;L), {@code exception}.
-     */
-    public List<Map<String, Object>> history(Principal p, LocalDate date, String node) {
-        Map<String, Object> params = new LinkedHashMap<>();
-        params.put("node", node);
-        Map<String, Object> a = ask(p, List.of("backtest-days"), params, Map.of("date", date.toString()));
-        double conf = Double.parseDouble(env.getProperty("drishti.module.banking.var.confidence", "0.99"));
-        List<Map<String, Object>> out = new java.util.ArrayList<>();
-        for (Map<String, Object> rm : rows(a, "backtest-days")) {
-            if (Math.abs(((Number) rm.get("CONFIDENCE")).doubleValue() - conf) > 1e-9) {
-                continue;
-            }
-            Map<String, Object> m = new LinkedHashMap<>();
-            m.put("date", String.valueOf(rm.get("DATE")));
-            m.put("var", VarViews.round(((Number) rm.get("VAR")).doubleValue()));
-            m.put("pnl", VarViews.round(((Number) rm.get("HYPOTHETICAL")).doubleValue()));
-            m.put("exception", Boolean.TRUE.equals(rm.get("EXCEPTION")));
-            out.add(m);
-        }
-        out.sort(java.util.Comparator.comparing(m -> String.valueOf(m.get("date"))));
-        return out;
-    }
-
     private Map<String, Object> windowParams() {
         String w = env.getProperty("drishti.module.banking.var.window", "250").trim();
         Map<String, Object> params = new LinkedHashMap<>();
