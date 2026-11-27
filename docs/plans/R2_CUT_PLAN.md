@@ -371,6 +371,18 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
 | `VarTradeLinks`, `VarCapacityFigures`, `VarReadyRule`, `config/alerts/platform-alerts.yaml` | a loaded date, running state, sizes; no VaR figure | nothing to switch |
 | `ExposureHomeMeasures`, `ExposureFigures` | exposure figures | the exposure family (`exposure.route`, lane D) |
 
+- **Regression at this stop** (default mapped tier unless said): `PackagedVarGoldenTest` green (167,372,692 / 210,131,972), headline
+  1,572 answers with 3,918 of 3,918 raw bits, statistics 2,144 answers 0 differences, backtesting 402 answers 0 differences, what-if 393
+  equal; banking `Var*`, `*Official*`, `*Backtest*`, `*Regulatory*`, `*Report*` tests 270 green; `MarketRecordedIT` not rerun (drishti-risk
+  unchanged by this work). Two `RiskSideBySideTest` cases red on the mapped tier, neither from the consumers work: (a) captures, 117
+  asserted differences in the last unit (float32 position parts, MC-12; **heap tier green: 786 pairs, 0 differences**, as lane G stated);
+  (b) the parametric test reached the matrix of a leaf node's positions (lane G part 6 made leaf contributions engine-answered) and the
+  engine path refused it as "needs a scope with parts (0)": now refused in words (ask it in-tree) and counted in-tree by the test, as the
+  path test does; **heap tier green: 2,023,570 numbers within relative 1e-12, 234 matrices, 0 differences**. No tolerance loosened. Open:
+  the leaf node's positions' matrix on the engine (`scope-pmatrix` over position row sets); **the parametric test on the mapped tier is red**:
+  519,471 of 2,023,570 numbers outside relative 1e-12, USD 16,020 (it was USD 0 before part 6): the leaf nodes' position parts now
+  compared there carry the in-tree float32 position rows (MC-12), as contributions and captures do; the test does not yet tag them
+  `[positions]` as the contributions test does. Lane G's to decide: tag and count them, or wait for MC-12.
 - **Next**: the `VarResultEngine` headline fields on the engine path (the headline answer would carry kind, label, k, esCount, scenarios,
   lens words), then the position and portfolio pages once the engine answers parts by trade and by position; switch the consumers' default
   only on the owner's word.
