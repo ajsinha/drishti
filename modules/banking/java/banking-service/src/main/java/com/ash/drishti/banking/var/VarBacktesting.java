@@ -291,8 +291,8 @@ final class VarBacktesting {
             if (c[0] < 0) {
                 m.put("note", "the official records of these days carry no VaR at " + VarLens.pct(qs.get(k)));
             } else if (k == 0) {
-                m.put("actualZone", bt.zone(c[0]));
-                m.put("hypotheticalZone", bt.zone(c[1]));
+                m.put("actualZone", bt.zone(c[0], c[3]));
+                m.put("hypotheticalZone", bt.zone(c[1], c[3]));
             }
             counts.add(m);
         }
@@ -300,7 +300,7 @@ final class VarBacktesting {
         int[] c0 = counts(s, 0);
         int n = c0[0] < 0 ? 0 : counted(c0);
         out.put("counted", n);
-        out.put("zone", c0[0] < 0 ? null : bt.zone(n));
+        out.put("zone", c0[0] < 0 ? null : bt.zone(n, c0[3]));
         out.put("multiplier", c0[0] < 0 ? null : bt.multiplier(n));
         out.put("full", s.days().size() >= bt.window());
         if (s.days().size() < bt.window()) {

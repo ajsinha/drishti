@@ -1394,7 +1394,7 @@ public final class VarService implements AutoCloseable {
      */
     Scoped scoped(Principal p, String scope, LocalDate asked, String ccy, com.ash.drishti.banking.compute.var.VarLens lens) {
         boolean stressed = lens != null && lens.stressed();
-        if (stressed && !VarDate.USD.equals(VarCurrencies.normalise(ccy))) {
+        if (stressed && ccy != null && !ccy.isBlank() && !VarDate.USD.equals(VarCurrencies.normalise(ccy))) {   // none named: USD, the stress set's
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "stressed VaR is answered in USD, the stress set's own currency (asked: "
                     + VarCurrencies.normalise(ccy) + ")");
         }

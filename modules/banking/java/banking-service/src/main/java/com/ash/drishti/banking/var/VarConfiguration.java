@@ -47,6 +47,7 @@ public class VarConfiguration {
     /** The VaR settings: {@code drishti.var.*}, and the ones the banking module owns from {@code drishti.module.banking.var.*} (the manifest's settings). */
     @Bean
     public VarProperties varProperties(org.springframework.core.env.Environment env) {
+        VarCurrencies.reporting(env.getProperty("drishti.module.banking.var.reporting-currency", VarDate.USD));
         return com.ash.drishti.banking.ModuleBound.bind(env, "drishti.var", VarProperties.class, java.util.Map.ofEntries(
                 java.util.Map.entry("scenario-window", "var.window"), java.util.Map.entry("confidence", "var.confidence"),
                 java.util.Map.entry("es-confidence", "var.es-confidence"), java.util.Map.entry("ten-day-method", "var.ten-day-method"),

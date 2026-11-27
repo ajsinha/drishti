@@ -290,7 +290,7 @@ class VarRegulatoryApiTest {
         assertThat(bt.at("/counts/0/hypothetical").asInt()).isEqualTo(hypo);
         assertThat(bt.at("/counts/1/actual").asInt()).isEqualTo(actual975);
         RegulatoryProperties.Backtesting cfg = new RegulatoryProperties.Backtesting(25, null, null, null, null, null);
-        assertThat(bt.get("zone").asText()).isEqualTo(cfg.zone(actual));
+        assertThat(bt.get("zone").asText()).isEqualTo(cfg.zone(actual, 25));   // 25 days: the scaled Basel light (owner 2026-11-27)
         assertThat(bt.get("multiplier").asDouble()).isEqualTo(cfg.multiplier(actual));
         assertThat(bt.get("rows")).hasSize(25);
         assertThat(bt.get("exceptions").size()).isGreaterThanOrEqualTo(actual);
