@@ -39,7 +39,5 @@ columns:
   TRAFFIC_LIGHT:   { path: "$.TRAFFIC_LIGHT", type: string }
   CONFIDENCE:      { path: "$.CONFIDENCE", type: decimal, additive: false, format: pct }
   ES_CONFIDENCE:   { path: "$.ES_CONFIDENCE", type: decimal, additive: false, format: pct }
-  BACKTEST_CONFIDENCE: { path: "$.BACKTEST_CONFIDENCE", type: decimal, additive: false, format: pct }
-  BACKTEST_VAR:    { path: "$.BACKTEST_VAR", type: decimal, additive: false, format: amount0 }
 refresh: { on-load: true }
 materialize: on-load

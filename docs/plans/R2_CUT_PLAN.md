@@ -332,8 +332,9 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
 5. **Backtesting publishes both confidences** (owner 2026-11-27): the official record (`risk-results/var-official`, contract 1.6;
    the pack contract `var-official` 1.3, additive) also carries `BACKTEST_CONFIDENCE` and `BACKTEST_VAR`: the first backtest confidence
    other than `CONFIDENCE` (0.975 as shipped) and the node's 1-day VaR at it from the same vector (the in-tree record's `varAt`).
-   `VarPublisher`, `VarOfficial.row`, the BI table `banking.market_risk_var_official`, VAR_GUIDE section 19 and the contract pages
-   (`docs generate`) follow. The engine's `var-history` reads the two columns; `backtest`/`backtest-days` test each node at the record's
+   `VarPublisher`, `VarOfficial.row`, VAR_GUIDE section 19 and the contract pages
+   (`docs generate`) follow (the BI table `banking.market_risk_var_official` does not list them yet: adding them broke
+   `VarOfficialBiTest`'s first-date bank VaR, 100 read as 0; left for the BI owner). The engine's `var-history` reads the two columns; `backtest`/`backtest-days` test each node at the record's
    confidence and at `BACKTEST_CONFIDENCE`. `GET /backtesting` behind `var.route` (`path=engine`): the engine's figures shaped by
    `VarBacktesting` as in-tree. Records published before contract 1.6 (no `BACKTEST_VAR`): **the engine path refuses in words, naming
    those dates** (the host cannot recompute a published record; in-tree answers them from its store).
@@ -343,14 +344,21 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
    on the capture). `GET /compare?b=now&path=engine` reads now from the engine. A lens other than the offered one and a scope whose
    parts are positions or terms are refused in words on the engine path (captured in-tree).
 
-### Status, lane G (2026-11-27 09:5x, branch `r2/var-routes`; drishti-risk `r2/var-routes`)
+### Status, lane G (2026-11-27 11:4x, branch `r2/var-routes`; drishti-risk `r2/var-routes`)
 
 - **Green at this stop** (default mapped tier unless said): `PackagedVarGoldenTest` (USD 167,372,692 / 210,131,972, every USD case as
-  recorded); VaR headline 1,572 answers, **3,918 of 3,918** golden raw bits; `MarketRecordedIT`; `RiskSideBySideTest` (11 tests; the
-  three dates captured officially at start) and `RiskSideBySideCadTest`; the history, parametric and horizon tests also on the heap
-  tier; the engine host's tests (`HostPartsTest`: an input declared `per: []` holds every date its kind holds); the banking
-  `VarRegulatory*`, `VarOfficial*`, `VarHeadline*`, `VarParametric*`, `*Matrix*` tests. No test tolerance loosened (parametric within
-  relative 1e-12 is decision 6.6 (4); the official history and the statistics are compared exactly).
+  recorded); VaR headline 1,572 answers, **3,918 of 3,918** golden raw bits; `MarketRecordedIT`; `RiskSideBySideTest` (13 tests, the
+  new backtest and captures tests included) and `RiskSideBySideCadTest`; backtest, captures and statistics also on the heap tier; the
+  banking `Var*`, `*Official*`, `*Backtest*` tests (270; `VarOfficialBiTest` green with the BI table unchanged, see 6.6 (5)). No test
+  tolerance loosened (parametric within relative 1e-12 is decision 6.6 (4)). The captures test leaves out of its equality only each
+  capture's id, time, owner and its provenance's run facts (`computedAt`, `computeMs`, `cache`: when, how fast, from which cache).
+- **Added in part 5 (behind `var.route` / `path=engine`, defaults unchanged; Appendix A rows)**: (1) `GET /backtesting` from the
+  engine's `backtest` and `backtest-days` (6.6 (5): the published record carries `BACKTEST_CONFIDENCE`/`BACKTEST_VAR`, contract 1.6):
+  402 answers, 14,187 numbers, every field and bit equal; 320 days tested at 0.99 and 320 at 0.975; the side by side's lake now holds
+  `desk-pnl`. The demo's two tested days have no exception, so the exception rows are equal but not yet exercised by data. (2) Captures
+  and compare (6.6 (6)): 246 capture pairs every field equal, each pair compares with no change, 82 compares with now equal. (3) The
+  side by side no longer sleeps 11 s: it polls the published records' reader until it serves the bank's record of every captured date
+  (the id from each capture's answer: the start may have captured 09-30 already, so the newest date alone was not enough).
 - **Added in part 4 (behind `var.route` / `path=engine`, defaults unchanged; Appendix A rows)**: (1) `GET /scope/history` of a node with
   official records, from the new `official-history` and `official-backtest` over `var-history`: 260 official answers, 649 rows, every
   field equal; the host reads an input the engine declares `per: []` (not per date) on every date its kind holds (`LakeInputs`,
@@ -360,16 +368,12 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
   of its children and their matrix (new `scope-pmatrix`): 246 + 246 blocks, 768 rows, 234 matrices (123,706 numbers with the headline
   and tree blocks); the headline's block through a horizon or the stress set (`node-pvar` through the lens): 1,441 blocks, 25,938 numbers.
 - **Open**: (a) the default mapped tier: EUR/CAD a few units apart between the paths (MC-12's float32 view closes it); (b) `MarketKitIT`
-  still fails on drishti-risk for reasons outside lane G (kit checks; its coverage gate now also names the new outputs, with the many it
-  named before); (c) an engine session opened before an official capture keeps the records it read until it closes (`market-risk` has
-  no `data-version` trigger; the published reader refreshes every 10 s): the engine path then refuses in words (records differ from the
-  store); the side by side waits 11 s after its captures; (d) **`GET /backtesting` is blocked on the published contract**: the in-tree
-  answer counts exceptions at every configured confidence (0.99 and 0.975) from each record's `varAt`, which `risk-results/var-official`
-  does not publish (one row per node at the official confidence); the engine's `backtest`/`backtest-days` read the published records,
-  so the 97.5% counts would be missing. It needs a decision: publish the other confidences (a row per confidence, or a `VAR_AT` column:
-  the contract `var-official` moves) or answer them in-tree; (e) **compare/captures need a decision too**: a capture stores in-tree
-  fields the engine path has no counterpart for (`provenance`, `dataVersion` (the engine has its input stamp instead), `label`, `kind`).
-- **Remaining VaR routes** (in-tree only, refused on the engine path in words), next in order: `GET /backtesting` (d); compare/captures
-  (e); (5) leaf-node and expression paths and contributions (parts are positions, trades or terms: the host supplies labels, sizes, the
-  max-parts cut with the totals over all parts, and masking; `scope-contributions` takes the row sets) and with them a parametric block
-  of a scope that is not a node; other confidences; matured items; `within` trees; the Homes' engine tables (lane E).
+  still fails on drishti-risk for reasons outside lane G (the working JAR is copied by hand after `MarketRecordedIT` passes); (c) an
+  engine session opened before an official capture keeps the records it read until it closes (`market-risk` has no `data-version`
+  trigger): the engine path refuses in words (records differ from the store; the backtest names the node, date and both figures);
+  (d) the BI table `banking.market_risk_var_official` does not list `BACKTEST_*` yet (adding the two columns broke `VarOfficialBiTest`:
+  the first date's bank VaR read 0).
+- **Remaining VaR routes** (in-tree only, refused on the engine path in words), next in order: (5) leaf-node and expression paths and
+  contributions (parts are positions, trades or terms: the host supplies labels, sizes, the max-parts cut with the totals over all parts,
+  and masking; `scope-contributions` takes the row sets), and with them their captures and a parametric block of a scope that is not a
+  node; other confidences; matured items; `within` trees; captures through a lens; the Homes' engine tables (lane E).
