@@ -327,21 +327,22 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
    blocks, 25,938 numbers, all within). Still in-tree only: a block of a scope
    that is not a node.
 
-### Status, lane G (2026-11-27 09:3x, branch `r2/var-routes`; drishti-risk `r2/var-routes`)
+### Status, lane G (2026-11-27 09:5x, branch `r2/var-routes`; drishti-risk `r2/var-routes`)
 
 - **Green at this stop** (default mapped tier unless said): `PackagedVarGoldenTest` (USD 167,372,692 / 210,131,972, every USD case as
-  recorded); VaR headline 1,572 answers, **3,918 of 3,918** golden raw bits; `MarketRecordedIT`; `RiskSideBySideTest` (now 11 tests: the
-  three dates captured officially at start) and `RiskSideBySideCadTest`; the history and parametric tests also on the heap tier; the
-  engine host's tests (`HostPartsTest`: an input declared `per: []` holds every date its kind holds).
+  recorded); VaR headline 1,572 answers, **3,918 of 3,918** golden raw bits; `MarketRecordedIT`; `RiskSideBySideTest` (11 tests; the
+  three dates captured officially at start) and `RiskSideBySideCadTest`; the history, parametric and horizon tests also on the heap
+  tier; the engine host's tests (`HostPartsTest`: an input declared `per: []` holds every date its kind holds); the banking
+  `VarRegulatory*`, `VarOfficial*`, `VarHeadline*`, `VarParametric*`, `*Matrix*` tests. No test tolerance loosened (parametric within
+  relative 1e-12 is decision 6.6 (4); the official history and the statistics are compared exactly).
 - **Added in part 4 (behind `var.route` / `path=engine`, defaults unchanged; Appendix A rows)**: (1) `GET /scope/history` of a node with
   official records, from the new `official-history` and `official-backtest` over `var-history`: 260 official answers, 649 rows, every
   field equal; the host reads an input the engine declares `per: []` (not per date) on every date its kind holds (`LakeInputs`,
-  `KindData.dates`; documented in ENGINES_IN_DRISHTI.md), and `PackagedServer` points the published records' reader at the publisher's
-  root (`LAKE_VAR_OFFICIAL_ROOT`). (2) `GET /statistics` from the new `official-statistics`: 2,144 answers, 15,946 numbers, every field
-  and bit equal. (4, part) the P&L path's parametric block and normal curve of a node and the contributions' parametric columns and
-  totals of its children and their matrix: 246 + 246 blocks, 768 rows and 234 matrices within relative 1e-12 (123,706 numbers with the
-  headline and tree blocks); the
-  headline's block through a horizon or the stress set: 1,441 blocks, 25,938 numbers within.
+  `KindData.dates`; ENGINES_IN_DRISHTI.md), and `PackagedServer` points the published records' reader at the publisher's root
+  (`LAKE_VAR_OFFICIAL_ROOT`). (2) `GET /statistics` from the new `official-statistics`: 2,144 answers, 15,946 numbers, every field and
+  bit equal. (4) parametric, within relative 1e-12: the P&L path's block and normal curve of a node, the contributions' columns and totals
+  of its children and their matrix (new `scope-pmatrix`): 246 + 246 blocks, 768 rows, 234 matrices (123,706 numbers with the headline
+  and tree blocks); the headline's block through a horizon or the stress set (`node-pvar` through the lens): 1,441 blocks, 25,938 numbers.
 - **Open**: (a) the default mapped tier: EUR/CAD a few units apart between the paths (MC-12's float32 view closes it); (b) `MarketKitIT`
   still fails on drishti-risk for reasons outside lane G (kit checks; its coverage gate now also names the new outputs, with the many it
   named before); (c) an engine session opened before an official capture keeps the records it read until it closes (`market-risk` has
@@ -350,9 +351,9 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
   answer counts exceptions at every configured confidence (0.99 and 0.975) from each record's `varAt`, which `risk-results/var-official`
   does not publish (one row per node at the official confidence); the engine's `backtest`/`backtest-days` read the published records,
   so the 97.5% counts would be missing. It needs a decision: publish the other confidences (a row per confidence, or a `VAR_AT` column:
-  the contract `var-official` moves) or answer them in-tree.
-- **Remaining VaR routes** (in-tree only, refused on the engine path in words), next in order: `GET /backtesting` (see (d)); the
-  compare/captures (Drishti's stored captures; their figures come from the headline, contributions and path, and a capture stores
-  in-tree fields the engine path does not give yet: `provenance`, `dataVersion`, `label`, `kind`); a parametric block of a scope that
-  is not a node; leaf-node and expression
-  paths and contributions; other confidences; matured items; `within` trees; the Homes' engine tables (lane E).
+  the contract `var-official` moves) or answer them in-tree; (e) **compare/captures need a decision too**: a capture stores in-tree
+  fields the engine path has no counterpart for (`provenance`, `dataVersion` (the engine has its input stamp instead), `label`, `kind`).
+- **Remaining VaR routes** (in-tree only, refused on the engine path in words), next in order: `GET /backtesting` (d); compare/captures
+  (e); (5) leaf-node and expression paths and contributions (parts are positions, trades or terms: the host supplies labels, sizes, the
+  max-parts cut with the totals over all parts, and masking; `scope-contributions` takes the row sets) and with them a parametric block
+  of a scope that is not a node; other confidences; matured items; `within` trees; the Homes' engine tables (lane E).
