@@ -51,7 +51,21 @@ class RiskSideBySideTest {
 
     /** The differences asserted on this tier: all of them on the heap tier, the USD ones on the mapped tier. */
     static java.util.List<String> asserted(java.util.List<String> differences) {
-        return HEAP ? differences : differences.stream().filter(x -> !x.contains("/EUR ")).toList();
+        return HEAP ? differences : differences.stream().filter(x -> !x.contains("/EUR ") && !x.startsWith(POSITIONS)).toList();
+    }
+
+    /**
+     * The tag of a difference in a leaf node's position parts (lane G part 6). On the default mapped tier the in-tree book reads a whole
+     * position from the hot file's float32 position rows while the engine sums the position's rows, so those figures may differ in the
+     * last bits there (counted and printed, MC-12's float32 view closes it, as EUR/CAD); on the heap tier they are asserted to the bit.
+     */
+    static final String POSITIONS = "[positions] ";
+
+    /** Tags the differences from {@code from} on as a leaf node's position parts when {@code positions}. */
+    static void tagPositions(java.util.List<String> differences, int from, boolean positions) {
+        for (int i = from; positions && i < differences.size(); i++) {
+            differences.set(i, POSITIONS + differences.get(i));
+        }
     }
 
     static final Path FOLDER = Path.of(System.getProperty("drishti.g14.dir")).toAbsolutePath().resolve("side-by-side");
@@ -71,7 +85,10 @@ class RiskSideBySideTest {
         deleteTree(work);
         SideBySide.dropJars(Path.of(jars), work);
         String tier = System.getProperty("sbs.tier", "");               // -Dsbs.tier=heap: the in-tree rows as float64 (the default mapped tier keeps them float32)
-        server = tier.isBlank() ? PackagedServer.start(work, lake, "2026-09-30") : PackagedServer.start(work, lake, "2026-09-30", java.util.Map.of("DRISHTI_VAR_TIER", tier, "DRISHTI_VAR_MEMORY_MB", "900"));
+        server = tier.isBlank() ? PackagedServer.start(work, lake, "2026-09-30") : PackagedServer.start(work, lake, "2026-09-30", java.util.Map.of("DRISHTI_VAR_TIER", tier, "DRISHTI_VAR_MEMORY_MB", "900",
+                // the heap tier's books are float64: with the leaf nodes' positions now compared on both paths (lane G part 6) the
+                // in-tree side keeps their position vectors too, past the automatic net of a 1.5 GB heap (DRS-9502 on the third date)
+                "DRISHTI_VAR_OPEN_HEAP_MB", "700"));
         List<String> published = new ArrayList<>();                     // each record's id: <NODE_ID>@<date>#v<RESULT_VERSION>
         for (String d : List.of("2026-09-28", "2026-09-29", "2026-09-30")) {   // the official records of the three dates, oldest first: a
             JsonNode o = server.post("/api/v1/risk/var/official?asOf=" + d, "{}");   // node's history on 09-29 and 09-30 is its records
@@ -598,9 +615,16 @@ class RiskSideBySideTest {
                     refused++;
                     continue;
                 }
+                int from = sbs.differences.size();
                 JsonNode[] both = sbs.both(server, what, "/api/v1/risk/var/scope/path?" + q + "&size=509&parametric=false&exact=true",
                         "canonical", "currency", "var", "es", "k", "esCount", "histogram", "worst", "series", "dates", "scenarioDates", "page",
                         "pageSize", "total", "rows");
+                boolean leaf = both[0].path("rows").path(0).path("fromScope").asText().startsWith("POS:");
+                for (int i = from; leaf && i < sbs.differences.size(); i++) {   // only the part that lost most: the series is the node's own
+                    if (sbs.differences.get(i).contains(" rows: ")) {
+                        sbs.differences.set(i, POSITIONS + sbs.differences.get(i));
+                    }
+                }
                 JsonNode head = server.get("/api/v1/risk/var/scope?" + q + "&window=" + both[0].path("total").asInt() + "&exact=true&path=in-tree");
                 sbs.bits(what + " VAR", head.path("varExact").asDouble(), both[1].path("varExact").asDouble());   // the date's VaR, in-tree
                 sbs.bits(what + " ES", head.path("esExact").asDouble(), both[1].path("esExact").asDouble());
@@ -610,7 +634,8 @@ class RiskSideBySideTest {
                 + sbs.differences.stream().filter(x -> x.contains("/EUR ")).count() + " (fields: " + sbs.differences.stream()
                 .map(x -> x.replaceAll("^\\S+ \\S+ (\\S+): .*$", "$1")).distinct().toList() + "); USD: " + sbs.differences.stream()
                 .filter(x -> x.contains("/USD ")).limit(5).toList());
-        System.out.println("side by side, P&L path: " + sbs.compared + " node paths on both paths (" + refused + " leaf nodes refused on the "
+        System.out.println("side by side, P&L path: " + sbs.compared + " node paths on both paths (" + sbs.differences.stream()
+                .filter(x -> x.startsWith(POSITIONS)).count() + " differences in a leaf node's position parts; " + refused + " refused on the "
                 + "engine path); " + sbs.sameBits + " engine VaR and ES figures equal to the in-tree raw bits; first differences: "
                 + sbs.differences.stream().limit(5).map(x -> x.substring(0, Math.min(400, x.length()))).toList()
                 + "; first raw-bit differences: " + sbs.bitDifferences.stream().limit(10).toList());
@@ -831,6 +856,7 @@ class RiskSideBySideTest {
         SideBySide sbs = new SideBySide();
         java.util.Set<String> done = new java.util.HashSet<>();
         int refused = 0;
+        int positionNodes = 0;
         Iterator<String> cases = golden.fieldNames();
         while (cases.hasNext()) {
             String[] k = cases.next().split("/");
@@ -850,6 +876,7 @@ class RiskSideBySideTest {
                     refused++;
                     continue;
                 }
+                int from = sbs.differences.size();
                 JsonNode[] both = sbs.both(server, what, "/api/v1/risk/var/scope/contributions?" + q + "&parametric=false&exact=true",
                         "canonical", "currency", "by", "var", "es", "sumStandalone", "sumComponent", "diversification", "truncated", "total",
                         "shown", "rows");
@@ -857,10 +884,14 @@ class RiskSideBySideTest {
                 sbs.bits(what + " ES", g.get(id).path("es").asDouble(), both[1].path("esExact").asDouble());
                 sbs.both(server, what + " headline", "/api/v1/risk/var/scope?" + q, "children", "childKind",
                         "sumStandalone", "diversification");
+                boolean leaf = "position".equals(both[0].path("by").asText());
+                positionNodes += leaf ? 1 : 0;
+                tagPositions(sbs.differences, from, leaf);
             }
         }
         System.out.println("side by side, contributions: " + sbs.compared + " answers (contributions and the headline's parts) on both paths ("
-                + refused + " nodes of positions refused on the engine path); " + sbs.sameBits + " engine VaR and ES figures equal to the golden "
+                + positionNodes + " leaf nodes whose parts are positions, " + sbs.differences.stream().filter(x -> x.startsWith(POSITIONS)).count()
+                + " position-part differences; " + refused + " refused on the engine path); " + sbs.sameBits + " engine VaR and ES figures equal to the golden "
                 + "raw bits; differences USD " + sbs.differences.stream().filter(x -> x.contains("/USD ")).count() + ", EUR "
                 + sbs.differences.stream().filter(x -> x.contains("/EUR ")).count() + "; first: " + sbs.differences.stream().limit(6)
                 .map(x -> x.substring(0, Math.min(400, x.length()))).toList() + "; first raw-bit differences: "
@@ -919,6 +950,53 @@ class RiskSideBySideTest {
                 .map(x -> x.substring(0, Math.min(300, x.length()))).toList() + "; first raw-bit differences: "
                 + sbs.bitDifferences.stream().limit(8).toList());
         assertThat(sbs.compared).as("answers compared").isGreaterThan(1000);
+        assertThat(asserted(sbs.differences)).as("answers that differ (EUR too on the heap tier)").isEmpty();
+        assertThat(asserted(sbs.bitDifferences)).as("raw bits that differ").isEmpty();
+    }
+
+    /**
+     * The headline of every golden node at the other offered confidences ({@code GET /scope} with {@code confidence} and
+     * {@code esConfidence} from the offered lists, R2 lane G part 6: {@code node-var-horizon} and {@code node-pvar} at the lens's
+     * confidences), each date, USD and EUR, 1-day and 10-day by sums: VaR, ES, the confidences, scenarios, trades and the limit block equal
+     * on both paths, the engine's VaR and ES equal to the in-tree raw bits, the parametric block within relative 1e-12 (decision 6.6 (4)).
+     */
+    @Test
+    void theOtherConfidencesAreTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        SideBySide pSbs = new SideBySide();
+        int[] pNumbers = new int[2];
+        int pBlocks = 0;
+        java.util.Set<String> dates = new java.util.TreeSet<>();
+        golden.fieldNames().forEachRemaining(c -> dates.add(c.split("/")[0]));
+        List<String[]> lenses = List.of(new String[] {"USD", "confidence=0.975"}, new String[] {"USD", "confidence=0.95&esConfidence=0.99"},
+                new String[] {"EUR", "confidence=0.995&esConfidence=0.95"}, new String[] {"USD", "confidence=0.975&horizon=10d&method=sum"});
+        for (String date : dates) {
+            Iterator<String> ids = golden.path(date + "/509/USD").path("nodes").fieldNames();
+            while (ids.hasNext()) {
+                String id = ids.next();
+                for (String[] l : lenses) {
+                    String what = date + "/" + l[0] + " " + l[1] + " NODE:" + id;
+                    JsonNode[] both = sbs.both(server, what, "/api/v1/risk/var/scope?scope=" + URLEncoder.encode("NODE:" + id, StandardCharsets.UTF_8)
+                            + "&asOf=" + date + "&ccy=" + l[0] + "&" + l[1] + "&exact=true", "currency", "var", "es", "confidence", "esConfidence",
+                            "scenarios", "horizon", "set", "trades", "limit", "limitComparable", "limitUse");
+                    sbs.bits(what + " VAR", both[0].path("varExact").asDouble(), both[1].path("varExact").asDouble());
+                    sbs.bits(what + " ES", both[0].path("esExact").asDouble(), both[1].path("esExact").asDouble());
+                    parametricSame(pSbs, pNumbers, what + " parametric", both[0].path("parametric"), both[1].path("parametric"));
+                    pBlocks += both[0].has("parametric") ? 1 : 0;
+                }
+            }
+        }
+        System.out.println("side by side, other confidences, parametric: " + pBlocks + " blocks; " + pNumbers[0] + " numbers compared, "
+                + pNumbers[1] + " within relative 1e-12; differences " + pSbs.differences.size() + "; first: " + pSbs.differences.stream().limit(6)
+                .map(x -> x.substring(0, Math.min(300, x.length()))).toList());
+        System.out.println("side by side, other confidences: " + sbs.compared + " node answers on both paths; " + sbs.sameBits
+                + " engine VaR and ES figures equal to the in-tree raw bits; differences " + sbs.differences.size() + " (USD "
+                + sbs.differences.stream().filter(x -> x.contains("/USD ")).count() + "); first: " + sbs.differences.stream().limit(8)
+                .map(x -> x.substring(0, Math.min(300, x.length()))).toList() + "; first raw-bit differences: "
+                + sbs.bitDifferences.stream().limit(8).toList());
+        assertThat(sbs.compared).as("answers compared").isGreaterThan(1000);
+        assertThat(pBlocks).as("parametric blocks at other confidences").isGreaterThan(1000);
+        assertThat(asserted(pSbs.differences)).as("parametric figures at other confidences beyond relative 1e-12 or in words").isEmpty();
         assertThat(asserted(sbs.differences)).as("answers that differ (EUR too on the heap tier)").isEmpty();
         assertThat(asserted(sbs.bitDifferences)).as("raw bits that differ").isEmpty();
     }

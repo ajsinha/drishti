@@ -76,7 +76,7 @@ final class VarCaptures {
      * selects where the figures come from; the capture itself stays Drishti's): the headline, the child contributions and the P&amp;L path
      * (its worst scenarios, the rounded vector, the scenario dates, k) from {@link VarEnginePath}; the host's fields (scope, label, kind,
      * members, data version, provenance, the lens's words) from Drishti as in-tree. A lens other than the offered one, and a scope whose
-     * parts are positions or terms, are refused in words by the engine path (capture them in-tree).
+     * parts are terms or positions of a scope that is not a node, are refused in words by the engine path (capture them in-tree); a leaf node's positions are the host's parts measured by the engine (lane G part 6).
      */
     Map<String, Object> capture(Principal p, String scope, LocalDate date, String note, String ccy, com.ash.drishti.banking.compute.var.VarLens lens,
             Engine engine) {

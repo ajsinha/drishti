@@ -170,11 +170,12 @@ public class VarController {
     private Map<String, Object> headlineAnswer(String scope, String ccy, String window, Double confidence, Double esConfidence, String horizon,
             String method, Double esq, String set, AsOf asOf, Boolean parametric, boolean matured, String path, Principal p) {
         if (enginePath.engine(path)) {                                 // R2: the market-risk engine through the host (VarEnginePath)
-            if (confidence != null || esConfidence != null || esq != null || matured) {
-                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the headline at the configured confidences for "
-                        + "now; another confidence or matured items are answered in-tree (path=in-tree)");
+            if (esConfidence != null || matured || confidence != null && (window != null || !offered(confidence))) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the headline at an offered confidence (the lens) "
+                        + "for now; a confidence outside the offered lists (an override), es-confidence or matured items are answered in-tree "
+                        + "(path=in-tree)");
             }
-            com.ash.drishti.banking.compute.var.VarLens l = lens(horizon, method, null, null, set);
+            com.ash.drishti.banking.compute.var.VarLens l = lens(horizon, method, confidence, esq, set);   // lane G part 6: the offered confidences
             if (l != null && !l.equals(svc.props().defaultLens())) {         // a horizon or the stress set (VAR_GUIDE 18.6, 18.8)
                 if (set != null && VarProperties.stressed(set(set)) && ccy != null && !ccy.isBlank() && !"USD".equalsIgnoreCase(ccy.trim())) {
                     throw new DrishtiException(ErrorCode.BAD_REQUEST, "stressed VaR is answered in USD, the stress set's own currency (asked: "
@@ -443,19 +444,25 @@ public class VarController {
         if (x == null) {
             return answer;
         }
-        var comps = enginePath.pComponents(p, date, currency, node);
-        String label = enginePath.nodeName(p, date, currency, node);
         List<Map<String, Object>> rows = (List<Map<String, Object>>) answer.getOrDefault("rows", List.of());
+        // a leaf node's parts are positions (lane G part 6): their components from scope-pcomponents, with the host's sizes
+        boolean positions = !rows.isEmpty() && "position".equals(rows.get(0).get("kind"));
+        Map<String, VarEnginePath.PositionComponent> pos = positions ? enginePath.pPositionComponents(p, date, currency, node) : Map.of();
+        var comps = positions ? Map.<String, com.ash.drishti.banking.compute.var.ParametricVar.Component>of()
+                : enginePath.pComponents(p, date, currency, node);
+        String label = enginePath.nodeName(p, date, currency, node);
         List<Map<String, Object>> out = new java.util.ArrayList<>();
         double pComp = 0;
         double pAlone = 0;
         for (Map<String, Object> r : rows) {
-            var pc = comps.get(String.valueOf(r.get("key")));
+            String key = String.valueOf(r.get("key"));
+            var pc = positions ? (pos.get(key) == null ? null : pos.get(key).component()) : comps.get(key);
+            double size = positions && pos.get(key) != null ? pos.get(key).size() : Double.NaN;
             if (pc == null) {
                 throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine market-risk has no parametric component of " + r.get("key")
                         + " in " + node + ": ask it in-tree (path=in-tree)");
             }
-            Map<String, Object> m = new LinkedHashMap<>(views.parametric().row(pc, x.figures(), Double.NaN, String.valueOf(r.get("label")), label,
+            Map<String, Object> m = new LinkedHashMap<>(views.parametric().row(pc, x.figures(), size, String.valueOf(r.get("label")), label,
                     true, rows.size()));
             if (arrow) {
                 m.remove("describe");

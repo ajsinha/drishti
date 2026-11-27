@@ -837,18 +837,28 @@ final class VarViews {
     }
 
     Part position(VarBook b, OrdinalSet set, int pi) {
+        return position(b, set, pi, true);
+    }
+
+    /**
+     * A position part of the scope; {@code withVector} false: its key, scope, label, size and attributes only (the vector null), the
+     * host's own data the engine path labels the engine's figures with (R2: the parts' figures come from the engine).
+     */
+    static Part position(VarBook b, OrdinalSet set, int pi, boolean withVector) {
         boolean whole = b.positionWithin(pi, set);
         double[] v;
         double qty;
         Columns pc = b.positions();
         if (whole) {
-            v = b.positionVector(pi);
+            v = withVector ? b.positionVector(pi) : null;
             qty = pc.number("QUANTITY", pi);
         } else {                                                     // part of a position: the trades of it the scope holds
-            double[] acc = new double[b.width()];
+            double[] acc = withVector ? new double[b.width()] : null;
             double[] q = {0};
             b.forEachPositionMemberIn(pi, set, o -> {
-                b.store().addInto(acc, o);
+                if (acc != null) {
+                    b.store().addInto(acc, o);
+                }
                 q[0] += nz(b.trades().number("QUANTITY", o));
             });
             v = acc;

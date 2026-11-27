@@ -218,8 +218,11 @@ public class VarEnginePath {
         out.put("limitUse", Double.isNaN(official.limit()) || official.limit() == 0 ? null : official.var() / official.limit());
         if (resolvedNode != null) {                                     // the parts (child nodes): standalone sum and diversification
             EngineScopeBook book = index(p, date, currency);
-            if (!book.children.getOrDefault(resolvedNode, List.of()).isEmpty()) {
-                Parts parts = nodeParts(p, book, resolve(p, book, "NODE:" + resolvedNode, date), date, currency);
+            VarService svc = service.getIfAvailable();
+            boolean leaf = book.children.getOrDefault(resolvedNode, List.of()).isEmpty();
+            if (!leaf || svc != null) {                                 // a leaf node's parts are its positions, every one (never cut)
+                ScopeResolver.Resolution nr = resolve(p, book, "NODE:" + resolvedNode, date);
+                Parts parts = leaf ? positionParts(p, svc, book, nr, date, currency, false) : nodeParts(p, book, nr, date, currency);
                 double alone = 0;
                 for (Map<String, Object> r : parts.rows()) {
                     alone += (Double) r.get("_alone");
@@ -260,6 +263,7 @@ public class VarEnginePath {
         params.put("stressed", lens.stressed());
         params.put("horizon", lens.tenDay() ? "10d" : "1d");
         params.put("ten-day-method", lens.method() == com.ash.drishti.banking.compute.var.VarLens.Method.SUM ? "sum" : "sqrt10");
+        lensConfidences(params, lens);
         Map<String, Object> a = ask(p, List.of("node-var-horizon"), params, Map.of("date", date.toString()));
         Map<String, Object> r = row(a, "node-var-horizon", "NODE_ID", res.node());
         if (r == null) {
@@ -280,6 +284,8 @@ public class VarEnginePath {
         out.put("varExact", var);
         out.put("esExact", es);
         out.put("scenarios", ((Number) r.get("SCENARIOS")).intValue());
+        out.put("confidence", lens.confidence());
+        out.put("esConfidence", lens.esConfidence());
         out.put("horizon", lens.horizon());
         out.put("method", lens.methodName());
         out.put("set", lens.set());
@@ -297,9 +303,9 @@ public class VarEnginePath {
      * window's dates), shaped as the in-tree route shapes them: {@code canonical}, {@code currency}, {@code var}, {@code es}, {@code k},
      * {@code esCount}, {@code lens}, {@code histogram}, {@code worst} (25), {@code series}, {@code dates}, {@code scenarioDates}, and the
      * ranked table a page at a time with the part that lost most on each scenario ({@code from}, {@code fromScope}, {@code fromPnl}).
-     * The parts are a node's child nodes (each the engine's figure of the child whole); a trade has none. Other scope kinds (a leaf node,
-     * whose parts are positions; an expression or a list, whose parts are terms or positions) and the parametric curve are answered
-     * in-tree for now, said in one sentence.
+     * The parts are a node's child nodes (each the engine's figure of the child whole) or a leaf node's positions (the host's labels, each
+     * position's rows summed by the engine's {@code scope-var}); a trade has none. Other scope kinds (an expression or a list, whose parts
+     * are terms or positions) are answered in-tree for now, said in one sentence.
      */
     public Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size, String ccy) {
         if (date == null) {
@@ -314,10 +320,11 @@ public class VarEnginePath {
         EngineScopeBook book = index(p, date, currency);
         ScopeResolver.Resolution res = resolve(p, book, scope, date);
         List<String> kids = res.node() == null ? List.of() : book.children.getOrDefault(res.node(), List.of());
-        if (res.node() != null && kids.isEmpty() || res.node() == null && res.trade() < 0) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the P&L path of a node with child nodes or of one "
-                    + "trade for now; the parts of " + res.canonical() + " are positions or terms: ask it in-tree (path=in-tree)");
+        if (res.node() == null && res.trade() < 0) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the P&L path of a node or of one trade for now; the "
+                    + "parts of " + res.canonical() + " are positions or terms: ask it in-tree (path=in-tree)");
         }
+        HostPositions positions = res.node() != null && kids.isEmpty() ? hostPositions(p, svc, book, res, date, currency, true) : null;
         Map<String, Object> params = params(window, currency);
         params.put("rows", ordinals(res.set()));
         params.put("node", res.node() == null ? "" : res.node());
@@ -355,8 +362,19 @@ public class VarEnginePath {
             if (!cr.isEmpty()) {
                 String value = c.substring(Math.max(c.lastIndexOf('/'), c.lastIndexOf('~')) + 1);
                 String named = book.levels.get(c) == null ? null : names.of(book.levels.get(c), value);   // the reference entity's name (VAR_GUIDE 15.14)
-                parts.add(new Object[] {named != null ? named : book.names.getOrDefault(c, c), "NODE:" + c, doubles(cr.get(0).get("PNL"))});
+                parts.add(new Object[] {named != null ? named : book.names.getOrDefault(c, c), "NODE:" + c, doubles(cr.get(0).get("PNL")), null});
             }
+        }
+        for (int i = 0; positions != null && i < positions.parts().size(); i++) {   // a leaf node's positions, the host's labels (lane G part 6)
+            VarViews.Part pt = positions.parts().get(i);
+            Map<String, Object> cp = params(window, currency);
+            cp.put("rows", positions.rows().get(i));
+            cp.put("node", "");
+            List<Map<String, Object>> cr = rows(ask(p, List.of("scope-var"), cp, Map.of("date", date.toString())), "scope-var");
+            if (cr.isEmpty()) {
+                throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine " + ENGINE + " answered no P&L for " + pt.scope() + " on " + date);
+            }
+            parts.add(new Object[] {pt.label(), pt.scope(), doubles(cr.get(0).get("PNL")), pt.attrs().get("tradeCurrency")});
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("canonical", res.canonical());
@@ -409,6 +427,9 @@ public class VarEnginePath {
                 }
             }
             if (worstPart != null) {
+                if (worstPart[3] != null) {
+                    row.put("fromCurrency", worstPart[3]);
+                }
                 row.put("from", worstPart[0]);
                 row.put("fromScope", worstPart[1]);
                 row.put("fromPnl", VarViews.round(((double[]) worstPart[2])[j]));
@@ -534,8 +555,9 @@ public class VarEnginePath {
      * by the engine's {@code scope-contributions} in the scope (standalone VaR and ES, component VaR and ES, share, incremental VaR), shaped
      * as the in-tree route ({@code canonical}, {@code currency}, {@code by}, {@code var}, {@code es}, {@code sumStandalone},
      * {@code sumComponent}, {@code diversification}, {@code truncated}, {@code total}, {@code shown}, the rows largest component first).
-     * A scope whose parts are positions, trades, terms, desks, books or attribute groups, a scenario's column and the parametric columns
-     * are answered in-tree for now, said in one sentence.
+     * A leaf node's parts are its positions ({@link #hostPositions}: the host's labels, sizes and attributes, the engine's figures). A
+     * scope that is not a node, other parts (trades, terms, desks, books, attribute groups) and a scenario's column are answered in-tree
+     * for now, said in one sentence.
      */
     public Map<String, Object> contributions(Principal p, String scope, LocalDate date, String ccy) {
         if (date == null) {
@@ -942,8 +964,7 @@ public class VarEnginePath {
         }
         List<String> kids = res.node() == null ? List.of() : book.children.getOrDefault(res.node(), List.of());
         if (kids.isEmpty()) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the parts of a node with child nodes for now; the parts of "
-                    + res.canonical() + " are positions, trades or terms: ask it in-tree (path=in-tree)");
+            return positionParts(p, svc, book, res, date, currency, true);
         }
         Map<String, Object> params = params(dateWindow(), currency);
         params.put("rows", ordinals(res.set()));
@@ -982,6 +1003,107 @@ public class VarEnginePath {
             m.put("incrementalVar", VarViews.round(num(r.get("INCREMENTAL_VAR"))));
             m.put("marginalPer1m", null);
             m.put("level", book.levels.get(c));
+            m.put("_alone", alone);
+            m.put("_comp", comp);
+            rows.add(m);
+        }
+        return new Parts(num(sv.get(0).get("VAR")), num(sv.get(0).get("ES")), rows);
+    }
+
+    /** The host's position parts of a scope: each in-tree part without its vector (labels, size, attributes) and its rows in the engine's index. */
+    record HostPositions(List<VarViews.Part> parts, List<List<Integer>> rows) {}
+
+    /**
+     * The positions of a leaf node as the in-tree route lists them (R2 lane G part 6): the host's own data gives each part's key, label,
+     * size and attributes ({@link VarViews#position(com.ash.drishti.banking.compute.var.VarBook, OrdinalSet, int, boolean)} without the
+     * vector), in the in-tree order ({@link VarPartTotals#positionRuns}), masked as in-tree; each part's rows are its position's rows of the
+     * engine's index the scope holds. Empty for a viewer who sees the node in aggregate only (as in-tree: no parts). More positions than
+     * {@code max-parts} when {@code cut} (the host's cut with the totals over all parts: the headline asks every one uncut) and a scope that is not a node are refused in words for now.
+     */
+    HostPositions hostPositions(Principal p, VarService svc, EngineScopeBook book, ScopeResolver.Resolution res, LocalDate date, String currency,
+            boolean cut) {
+        if (res.node() == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the parts of a node for now; the parts of "
+                    + res.canonical() + " are positions, trades or terms: ask it in-tree (path=in-tree)");
+        }
+        VarService.Scoped s = svc.scoped(p, "NODE:" + res.node(), date, currency);
+        com.ash.drishti.banking.compute.var.VarBook b = s.date().book();
+        if (!s.view().seesPositions(s.set())) {
+            return new HostPositions(List.of(), List.of());          // an aggregate-only viewer: no position level below this node
+        }
+        List<int[]> runs = VarPartTotals.positionRuns(b, s.set());
+        if (cut && runs.size() > svc.props().maxParts()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers up to max-parts (" + svc.props().maxParts() + ") positions "
+                    + "for now; " + res.canonical() + " holds " + runs.size() + ": ask it in-tree (path=in-tree)");
+        }
+        List<VarViews.Part> parts = new ArrayList<>(runs.size());
+        List<List<Integer>> rows = new ArrayList<>(runs.size());
+        for (int[] r : runs) {
+            VarViews.Part pt = VarViews.position(b, s.set(), r[0], false);
+            int e = book.positionIndexAnyCase(pt.key());
+            if (e < 0) {
+                throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine " + ENGINE + " has no position " + pt.key() + " on " + date
+                        + ": ask it in-tree (path=in-tree)");
+            }
+            List<Integer> own = new ArrayList<>();
+            book.forEachPositionRun(e, (from, to) -> {
+                for (int o = from; o < to; o++) {
+                    if (res.set().contains(o)) {
+                        own.add(o);
+                    }
+                }
+            });
+            Map<String, Object> attrs = new LinkedHashMap<>();
+            pt.attrs().forEach((k, v) -> attrs.put(k, v != null && svc.access().masked(p, k) ? com.ash.drishti.api.DataNode.MASK : v));
+            parts.add(new VarViews.Part(pt.key(), pt.scope(), pt.label(), pt.kind(), null, pt.size(), attrs));
+            rows.add(own);
+        }
+        return new HostPositions(parts, rows);
+    }
+
+    /** A leaf node's position parts measured by the engine's {@code scope-contributions}, the rows shaped as the in-tree route's. */
+    private Parts positionParts(Principal p, VarService svc, EngineScopeBook book, ScopeResolver.Resolution res, LocalDate date, String currency,
+            boolean cut) {
+        HostPositions hp = hostPositions(p, svc, book, res, date, currency, cut);
+        Map<String, Object> params = params(dateWindow(), currency);
+        params.put("rows", ordinals(res.set()));
+        params.put("node", res.node());
+        List<Integer> all = new ArrayList<>();
+        for (List<Integer> r : hp.rows()) {
+            all.addAll(r);
+            all.add(-1);
+        }
+        params.put("parts", all);
+        List<String> outputs = hp.parts().isEmpty() ? List.of("scope-var") : List.of("scope-var", "scope-contributions");
+        Map<String, Object> a = ask(p, outputs, params, Map.of("date", date.toString()));
+        List<Map<String, Object>> sv = rows(a, "scope-var");
+        if (sv.isEmpty()) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " answered no VaR for " + res.canonical() + " on "
+                    + date + missing(a));
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Map<String, Object> r : hp.parts().isEmpty() ? List.<Map<String, Object>>of() : rows(a, "scope-contributions")) {
+            VarViews.Part pt = hp.parts().get(((Number) r.get("PART")).intValue());
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("key", pt.key());
+            m.put("scope", pt.scope());
+            m.put("label", pt.label());
+            m.put("kind", pt.kind());
+            double alone = num(r.get("STANDALONE_VAR"));
+            double comp = num(r.get("COMPONENT_VAR"));
+            m.put("standaloneVar", VarViews.round(alone));
+            m.put("standaloneEs", VarViews.round(num(r.get("STANDALONE_ES"))));
+            m.put("componentVar", VarViews.round(comp));
+            m.put("componentEs", VarViews.round(num(r.get("COMPONENT_ES"))));
+            m.put("pct", num(r.get("PCT")));
+            m.put("incrementalVar", VarViews.round(num(r.get("INCREMENTAL_VAR"))));
+            // the in-tree calculator's marginal: component VaR per million of the part's size (VarCalc.contributions), the host's size
+            double marginal = Double.isNaN(pt.size()) || pt.size() == 0 ? Double.NaN : comp / Math.abs(pt.size()) * 1_000_000;
+            m.put("marginalPer1m", Double.isNaN(marginal) ? null : VarViews.round(marginal));
+            m.putAll(pt.attrs());
+            if (!pt.attrs().containsKey("level")) {
+                m.put("level", pt.kind());
+            }
             m.put("_alone", alone);
             m.put("_comp", comp);
             rows.add(m);
@@ -1243,6 +1365,43 @@ public class VarEnginePath {
         return out;
     }
 
+    /** A position part's parametric component from the engine and the host's size of it (its market value, NaN without one). */
+    record PositionComponent(com.ash.drishti.banking.compute.var.ParametricVar.Component component, double size) {}
+
+    /**
+     * The parametric components of a leaf node's positions (the contributions' parametric columns, R2 lane G part 6): the host's parts
+     * ({@link #hostPositions}) measured by the engine's {@code scope-pcomponents} against the node's own fit, keyed by position id.
+     */
+    Map<String, PositionComponent> pPositionComponents(Principal p, LocalDate date, String currency, String node) {
+        VarService svc = service.getIfAvailable();
+        if (svc == null) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the VaR service is not configured here: the parts are answered nowhere");
+        }
+        EngineScopeBook book = index(p, date, currency);
+        ScopeResolver.Resolution res = resolve(p, book, "NODE:" + node, date);
+        HostPositions hp = hostPositions(p, svc, book, res, date, currency, true);
+        Map<String, PositionComponent> out = new LinkedHashMap<>();
+        if (hp.parts().isEmpty()) {
+            return out;
+        }
+        Map<String, Object> params = params(dateWindow(), currency);
+        params.put("rows", ordinals(res.set()));
+        params.put("node", node);
+        List<Integer> all = new ArrayList<>();
+        for (List<Integer> r : hp.rows()) {
+            all.addAll(r);
+            all.add(-1);
+        }
+        params.put("parts", all);
+        for (Map<String, Object> r : rows(ask(p, List.of("scope-pcomponents"), params, Map.of("date", date.toString())), "scope-pcomponents")) {
+            VarViews.Part pt = hp.parts().get(((Number) r.get("PART")).intValue());
+            out.put(pt.key(), new PositionComponent(new com.ash.drishti.banking.compute.var.ParametricVar.Component(num(r.get("MU")),
+                    num(r.get("SIGMA")), num(r.get("COV")), num(r.get("RHO")), num(r.get("COMPONENT_PVAR")), num(r.get("COMPONENT_PES")),
+                    num(r.get("STANDALONE_PVAR")), num(r.get("INCREMENTAL_PVAR"))), pt.size()));
+        }
+        return out;
+    }
+
     /**
      * Every node's parametric figures through a lens (a horizon or the stress set: {@code node-pvar} on the lens's vectors, the configured
      * confidences, the date's window), keyed by node id; the 1-day normal lens is {@link #parametric(Principal, LocalDate, String, int,
@@ -1254,8 +1413,21 @@ public class VarEnginePath {
         params.put("stressed", lens.stressed());
         params.put("horizon", lens.tenDay() ? "10d" : "1d");
         params.put("ten-day-method", lens.method() == com.ash.drishti.banking.compute.var.VarLens.Method.SUM ? "sum" : "sqrt10");
+        lensConfidences(params, lens);
         return parametricRows(ask(p, List.of("node-pvar"), params, Map.of("date", date.toString())), lens.confidence(), lens.esConfidence(),
                 settings);
+    }
+
+    /** A lens's confidences when they are not the configured ones (an offered confidence, lane G part 6): the engine's lens-* params. */
+    private void lensConfidences(Map<String, Object> params, com.ash.drishti.banking.compute.var.VarLens lens) {
+        VarService svc = service.getIfAvailable();
+        com.ash.drishti.banking.compute.var.VarLens d = svc == null ? null : svc.props().defaultLens();
+        if (d == null || lens.confidence() != d.confidence()) {
+            params.put("lens-confidence", lens.confidence());
+        }
+        if (d == null || lens.esConfidence() != d.esConfidence()) {
+            params.put("lens-es-confidence", lens.esConfidence());
+        }
     }
 
     /** A node's parts' matrix through the engine: the parts' keys and labels in the in-tree order, {covariance, correlation}, the algebra. */
