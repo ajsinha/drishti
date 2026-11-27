@@ -333,8 +333,7 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
    the pack contract `var-official` 1.3, additive) also carries `BACKTEST_CONFIDENCE` and `BACKTEST_VAR`: the first backtest confidence
    other than `CONFIDENCE` (0.975 as shipped) and the node's 1-day VaR at it from the same vector (the in-tree record's `varAt`).
    `VarPublisher`, `VarOfficial.row`, VAR_GUIDE section 19 and the contract pages
-   (`docs generate`) follow (the BI table `banking.market_risk_var_official` does not list them yet: adding them broke
-   `VarOfficialBiTest`'s first-date bank VaR, 100 read as 0; left for the BI owner). The engine's `var-history` reads the two columns; `backtest`/`backtest-days` test each node at the record's
+   (`docs generate`) follow, and the BI table `banking.market_risk_var_official` lists them (lane G part 6: the lake `var-official` promotes the two columns; before, the table asked for columns the lake did not promote, so it fell back to reading documents one by one, which did not answer the first date: its bank VaR read 0; that fallback is left to the BI owner). The engine's `var-history` reads the two columns; `backtest`/`backtest-days` test each node at the record's
    confidence and at `BACKTEST_CONFIDENCE`. `GET /backtesting` behind `var.route` (`path=engine`): the engine's figures shaped by
    `VarBacktesting` as in-tree. Records published before contract 1.6 (no `BACKTEST_VAR`): **the engine path refuses in words, naming
    those dates** (the host cannot recompute a published record; in-tree answers them from its store).
