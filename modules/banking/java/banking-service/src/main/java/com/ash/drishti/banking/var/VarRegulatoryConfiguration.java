@@ -29,12 +29,13 @@ public class VarRegulatoryConfiguration {
 
     @Bean
     VarRegulatory varRegulatory(VarService svc, RegulatoryProperties props, SourceRouter router, VarOfficial official,
-            ObjectProvider<LoadService> loads) {
+            ObjectProvider<LoadService> loads, ObjectProvider<VarEnginePath> engine) {
         official.backtestConfidences(props.backtesting().confidences());       // each node's record keeps its VaR at them
         VarDeskPnl pnl = new VarDeskPnl(router, props.pnlKind());
         VarBacktesting bt = new VarBacktesting(svc.official(), pnl, props, svc.props().confidence());
         VarPeriodStats stats = new VarPeriodStats(svc.official(), props, svc.props().stress().averageWeeks(), pnl);
-        VarReports reports = new VarReports(svc.official(), stats, bt, props);
+        VarReports reports = new VarReports(svc.official(), stats, bt, props, engine.getIfAvailable(),
+                svc.props().stress().averageWeeks());   // R2: var.consumers.route
         LoadService l = loads.getIfAvailable();
         if (l != null) {
             l.onReady(r -> {

@@ -212,7 +212,7 @@ public class VarRegulatoryController {
     public Map<String, Object> generate(@PathVariable String report, @RequestParam(required = false) String period,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         seesAll(p);
-        Map<String, Object> run = reports.generate(report, period, p.user());
+        Map<String, Object> run = reports.generate(report, period, p);
         svc.audit(p.user(), "var-report-run", report, "period=" + run.get("period") + " version=" + run.get("version"));
         return signoff.view(run);
     }

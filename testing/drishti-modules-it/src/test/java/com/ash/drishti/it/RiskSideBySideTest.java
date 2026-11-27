@@ -89,6 +89,27 @@ class RiskSideBySideTest {
                 // the heap tier's books are float64: with the leaf nodes' positions now compared on both paths (lane G part 6) the
                 // in-tree side keeps their position vectors too, past the automatic net of a 1.5 GB heap (DRS-9502 on the third date)
                 "DRISHTI_VAR_OPEN_HEAP_MB", "700"));
+        captureThreeDates(server);
+        long end = System.currentTimeMillis() + 180_000;               // the engine answers once its day is read: wait for it, once
+        while (true) {
+            try {
+                server.get("/api/v1/risk/var/scope?scope=NODE:MGMT~BANK&asOf=2026-09-30&path=engine");
+                break;
+            } catch (IllegalStateException e) {
+                if (System.currentTimeMillis() > end) {
+                    throw e;
+                }
+                Thread.sleep(3000);
+            }
+        }
+    }
+
+    /**
+     * Captures the official records of the three dates (oldest first) and waits, polling, until the published records' reader (var-results,
+     * Delta, refresh-seconds 10) serves the bank's record of each: the engine's first read of var-history (lazy, once per session) must
+     * come after it has seen them.
+     */
+    static void captureThreeDates(PackagedServer server) throws Exception {
         List<String> published = new ArrayList<>();                     // each record's id: <NODE_ID>@<date>#v<RESULT_VERSION>
         for (String d : List.of("2026-09-28", "2026-09-29", "2026-09-30")) {   // the official records of the three dates, oldest first: a
             JsonNode o = server.post("/api/v1/risk/var/official?asOf=" + d, "{}");   // node's history on 09-29 and 09-30 is its records
@@ -112,18 +133,6 @@ class RiskSideBySideTest {
                 Thread.sleep(250);                                        // a poll interval, not a wait for something to happen
             }
           }
-        }
-        long end = System.currentTimeMillis() + 180_000;               // the engine answers once its day is read: wait for it, once
-        while (true) {
-            try {
-                server.get("/api/v1/risk/var/scope?scope=NODE:MGMT~BANK&asOf=2026-09-30&path=engine");
-                break;
-            } catch (IllegalStateException e) {
-                if (System.currentTimeMillis() > end) {
-                    throw e;
-                }
-                Thread.sleep(3000);
-            }
         }
     }
 
