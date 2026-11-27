@@ -92,7 +92,7 @@ public class RiskOperations {
 
     @Operation(value = "var.whatif", rest = "POST /api/v1/risk/var/what-if")
     public Figures varWhatIf(Person p, Body r) {
-        return new Figures(var.whatIf(r.body(), null, asOf(p), principal(p)));
+        return new Figures(var.whatIf(r.body(), null, asOf(p), null, false, principal(p)));
     }
 
     @Operation(value = "exposure.predeal", rest = "POST /api/v1/risk/exposure/predeal")

@@ -50,6 +50,10 @@ final class EngineScopeBook implements ScopeResolver.Book {
     private final Map<String, String> roots = new LinkedHashMap<>();
     final Map<String, String> words = new LinkedHashMap<>();
     final Map<String, Double> basketLimits = new LinkedHashMap<>();
+    /** Each node's name and its child nodes, in the engine's node order (the P&amp;L path's parts). */
+    final Map<String, String> names = new HashMap<>();
+    final Map<String, String> levels = new HashMap<>();
+    final Map<String, List<String>> children = new HashMap<>();
 
     EngineScopeBook(Map<String, Object> answer) {
         List<Map<String, Object>> idx = VarEnginePath.rows(answer, "scope-index");
@@ -108,6 +112,13 @@ final class EngineScopeBook implements ScopeResolver.Book {
             nodes.put(id, b.build());
             if (r.get("LIMIT") instanceof Number l) {
                 nodeLimits.put(id, l.doubleValue());
+            }
+            names.put(id, r.get("NAME") == null ? id : String.valueOf(r.get("NAME")));
+            if (r.get("LEVEL") != null) {
+                levels.put(id, String.valueOf(r.get("LEVEL")));
+            }
+            if (r.get("PARENT") != null) {
+                children.computeIfAbsent(String.valueOf(r.get("PARENT")), k -> new ArrayList<>()).add(id);
             }
             if (r.get("PARENT") == null) {
                 roots.putIfAbsent(String.valueOf(r.get("HIERARCHY")), id);

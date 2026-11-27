@@ -251,7 +251,24 @@ public class VarController {
             @RequestParam(required = false) String ccy, @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matured,
+            @RequestParam(name = "path", required = false) String route, @RequestParam(defaultValue = "false") boolean exact,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(route)) {                                // R2: the market-risk engine's scope-path (VarEnginePath.path)
+            if (confidence != null || horizon != null || method != null || esq != null || set != null || matured) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the P&L path on the offered lens for now; "
+                        + "a lens or matured items are answered in-tree (path=in-tree)");
+            }
+            if (!Boolean.FALSE.equals(parametric) && views.parametric() != null && views.parametric().enabled()) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the P&L path without the parametric curve for now: "
+                        + "ask parametric=false, or in-tree (path=in-tree)");
+            }
+            Map<String, Object> answer = enginePath.path(p, scope(scope), date(asOf), page, size, ccy);
+            if (!exact) {
+                answer.remove("varExact");
+                answer.remove("esExact");
+            }
+            return answer;
+        }
         return parametric(views.path(p, scope(scope), date(asOf), page, size, ccy, lens(horizon, method, confidence, esq, set), matured), parametric);
     }
 
@@ -337,12 +354,20 @@ public class VarController {
     /** A pre-deal what-if: {@code {scope, items: [{copyOf, factor, label}]}}, computed by the Java VaR engine (VarWhatIf). */
     @PostMapping("/what-if")
     public Map<String, Object> whatIf(@RequestBody Map<String, Object> body, @RequestParam(required = false) String ccy, AsOf asOf,
+            @RequestParam(name = "path", required = false) String route, @RequestParam(defaultValue = "false") boolean exact,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, svc.props().kinds().vector());
         Map<String, Object> b = body;
         if (ccy != null && !body.containsKey("ccy")) {
             b = new LinkedHashMap<>(body);
             b.put("ccy", ccy);
+        }
+        if (enginePath.engine(route)) {                                // R2: the market-risk engine's what-if (VarEnginePath.whatIf)
+            Map<String, Object> answer = enginePath.whatIf(p, b, date(asOf));
+            if (!exact) {
+                answer.remove("varExact");
+            }
+            return answer;
         }
         return whatIf.whatIf(p, b, date(asOf));
     }

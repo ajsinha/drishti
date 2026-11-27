@@ -55,7 +55,21 @@ final class SideBySide {
             JsonNode a = inTree.path(f);
             JsonNode b = engine.path(f);
             if (!Objects.equals(norm(a), norm(b))) {
-                differences.add(what + " " + f + ": in-tree " + a + ", engine " + b);
+                differences.add(what + " " + f + ": " + first(a, b));
+            }
+        }
+        return new JsonNode[] {inTree, engine};
+    }
+
+    /** The same for a POST of {@code json}. */
+    JsonNode[] bothPost(PackagedServer server, String what, String pathAndQuery, String json, String... fields) throws IOException, InterruptedException {
+        String sep = pathAndQuery.contains("?") ? "&" : "?";
+        JsonNode inTree = server.post(pathAndQuery + sep + "path=in-tree", json);
+        JsonNode engine = server.post(pathAndQuery + sep + "path=engine", json);
+        compared++;
+        for (String f : fields) {
+            if (!Objects.equals(norm(inTree.path(f)), norm(engine.path(f)))) {
+                differences.add(what + " " + f + ": " + first(inTree.path(f), engine.path(f)));
             }
         }
         return new JsonNode[] {inTree, engine};
@@ -65,15 +79,39 @@ final class SideBySide {
     void bits(String what, double reference, double engine) {
         if (Double.doubleToRawLongBits(reference) == Double.doubleToRawLongBits(engine)) {
             sameBits++;
-        } else if (bitDifferences.size() < 50) {
+        } else if (bitDifferences.size() < 5000) {
             bitDifferences.add(what + ": reference " + reference + ", engine " + engine);
         }
+    }
+
+    /** The first place two answers' field differ: the element (an array) or the key (an object), both sides. */
+    static String first(JsonNode a, JsonNode b) {
+        if (a.isArray() && b.isArray()) {
+            for (int i = 0; i < Math.max(a.size(), b.size()); i++) {
+                if (!Objects.equals(norm(a.path(i)), norm(b.path(i)))) {
+                    return "[" + i + "] " + first(a.path(i), b.path(i)) + " (sizes " + a.size() + ", " + b.size() + ")";
+                }
+            }
+        }
+        if (a.isObject() && b.isObject()) {
+            java.util.Set<String> keys = new java.util.LinkedHashSet<>();
+            a.fieldNames().forEachRemaining(keys::add);
+            b.fieldNames().forEachRemaining(keys::add);
+            for (String k : keys) {
+                if (!Objects.equals(norm(a.path(k)), norm(b.path(k)))) {
+                    return "." + k + " " + first(a.path(k), b.path(k));
+                }
+            }
+        }
+        String x = String.valueOf(a);
+        String y = String.valueOf(b);
+        return "in-tree " + x.substring(0, Math.min(200, x.length())) + ", engine " + y.substring(0, Math.min(200, y.length()));
     }
 
     private static Object norm(JsonNode n) {
         if (n.isMissingNode() || n.isNull()) {
             return null;
         }
-        return n.isNumber() ? (Object) n.decimalValue().stripTrailingZeros() : n.asText();
+        return n.isNumber() ? (Object) n.decimalValue().stripTrailingZeros() : n.isContainerNode() ? n.toString() : n.asText();
     }
 }

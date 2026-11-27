@@ -77,7 +77,7 @@ class HomesSideBySideTest {
             long end = System.currentTimeMillis() + 180_000;
             while (true) {
                 try {
-                    server.get("/api/v1/risk/var/scope?scope=NODE:BANK&asOf=2026-09-30&window=250&path=engine");
+                    server.get("/api/v1/risk/var/scope?scope=NODE:MGMT~BANK&asOf=2026-09-30&window=250&path=engine");
                     break;
                 } catch (IllegalStateException e) {
                     if (System.currentTimeMillis() > end) {

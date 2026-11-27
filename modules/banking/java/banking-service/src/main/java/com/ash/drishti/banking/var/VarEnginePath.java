@@ -19,6 +19,7 @@ import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.banking.compute.var.ScopeExpr;
 import com.ash.drishti.banking.compute.var.ScopeResolver;
+import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.kernel.api.services.Engines;
 import com.ash.drishti.kernel.api.services.Kernel;
@@ -52,10 +53,15 @@ public class VarEnginePath {
     /** The saved and system baskets and captures (Drishti's, kept); the in-tree engine half is not asked for a figure. */
     private final ObjectProvider<VarService> service;
 
-    VarEnginePath(ObjectProvider<Engines> engines, Environment env, ObjectProvider<VarService> service) {
+    /** The limit status words (within, near, breach) of a use: the banking module's configured rule. */
+    private final ObjectProvider<com.ash.drishti.banking.RiskLimits> limits;
+
+    VarEnginePath(ObjectProvider<Engines> engines, Environment env, ObjectProvider<VarService> service,
+            ObjectProvider<com.ash.drishti.banking.RiskLimits> limits) {
         this.engines = engines;
         this.env = env;
         this.service = service;
+        this.limits = limits;
     }
 
     /** True when this request is answered by the engine: its own {@code path}, else the family's switch. */
@@ -216,6 +222,337 @@ public class VarEnginePath {
         return out;
     }
 
+    /**
+     * A scope's P&amp;L path through the engine ({@code GET /scope/path}, VAR_GUIDE.md section 15): the engine's {@code scope-path} (the
+     * summed scenario P&amp;L ranked in the measures' own order, the VaR rank, the ES count, the histogram) and {@code scope-scenarios} (the
+     * window's dates), shaped as the in-tree route shapes them: {@code canonical}, {@code currency}, {@code var}, {@code es}, {@code k},
+     * {@code esCount}, {@code lens}, {@code histogram}, {@code worst} (25), {@code series}, {@code dates}, {@code scenarioDates}, and the
+     * ranked table a page at a time with the part that lost most on each scenario ({@code from}, {@code fromScope}, {@code fromPnl}).
+     * The parts are a node's child nodes (each the engine's figure of the child whole); a trade has none. Other scope kinds (a leaf node,
+     * whose parts are positions; an expression or a list, whose parts are terms or positions) and the parametric curve are answered
+     * in-tree for now, said in one sentence.
+     */
+    public Map<String, Object> path(Principal p, String scope, LocalDate date, int page, int size, String ccy) {
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path needs the business date: give asOf");
+        }
+        VarService svc = service.getIfAvailable();
+        if (svc == null) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the VaR service is not configured here: the path is answered nowhere");
+        }
+        String currency = ccy == null || ccy.isBlank() ? "USD" : ccy.trim().toUpperCase(Locale.ROOT);
+        int window = dateWindow();
+        EngineScopeBook book = index(p, date);
+        ScopeResolver.Resolution res = resolve(p, book, scope, date);
+        List<String> kids = res.node() == null ? List.of() : book.children.getOrDefault(res.node(), List.of());
+        if (res.node() != null && kids.isEmpty() || res.node() == null && res.trade() < 0) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the P&L path of a node with child nodes or of one "
+                    + "trade for now; the parts of " + res.canonical() + " are positions or terms: ask it in-tree (path=in-tree)");
+        }
+        Map<String, Object> params = params(window, currency);
+        params.put("rows", ordinals(res.set()));
+        params.put("node", res.node() == null ? "" : res.node());
+        params.put("bins", svc.props().histogramBins());
+        Map<String, Object> a = ask(p, List.of("scope-path"), params, Map.of("date", date.toString()));
+        List<Map<String, Object>> r = rows(a, "scope-path");
+        if (r.isEmpty()) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " answered no path for " + res.canonical() + " on "
+                    + date + missing(a));
+        }
+        Map<String, Object> x = r.get(0);
+        double[] v = doubles(x.get("PNL"));
+        int[] order = ints(x.get("ORDER"));
+        List<String> dates = new ArrayList<>();
+        for (Map<String, Object> d : rows(ask(p, List.of("scope-scenarios"), Map.of("window", window), Map.of("date", date.toString())),
+                "scope-scenarios")) {
+            dates.add(String.valueOf(d.get("DATE")));
+        }
+        if (dates.size() != v.length) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine " + ENGINE + " answered " + v.length + " scenario P&Ls over "
+                    + dates.size() + " scenario dates for " + res.canonical());
+        }
+        // the parts: each child node whole, the engine's figure of it (the in-tree route takes the child's stored aggregate)
+        List<Object[]> parts = new ArrayList<>();
+        com.ash.drishti.banking.compute.var.Cells.Names names = svc.loader().names(com.ash.drishti.api.AsOf.of(date), svc.hierarchies());
+        for (String c : kids) {
+            OrdinalSet m = book.members(c).and(res.set());
+            if (m.isEmpty()) {
+                continue;
+            }
+            Map<String, Object> cp = params(window, currency);
+            cp.put("rows", ordinals(m));
+            cp.put("node", c);
+            List<Map<String, Object>> cr = rows(ask(p, List.of("scope-var"), cp, Map.of("date", date.toString())), "scope-var");
+            if (!cr.isEmpty()) {
+                String value = c.substring(Math.max(c.lastIndexOf('/'), c.lastIndexOf('~')) + 1);
+                String named = book.levels.get(c) == null ? null : names.of(book.levels.get(c), value);   // the reference entity's name (VAR_GUIDE 15.14)
+                parts.add(new Object[] {named != null ? named : book.names.getOrDefault(c, c), "NODE:" + c, doubles(cr.get(0).get("PNL"))});
+            }
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("canonical", res.canonical());
+        out.put("currency", currency);
+        out.put("intraday", null);
+        out.put("var", VarViews.round(((Number) x.get("VAR")).doubleValue()));
+        out.put("es", VarViews.round(((Number) x.get("ES")).doubleValue()));
+        out.put("varExact", ((Number) x.get("VAR")).doubleValue());
+        out.put("esExact", ((Number) x.get("ES")).doubleValue());
+        out.put("k", ((Number) x.get("K")).intValue());
+        out.put("esCount", ((Number) x.get("ES_COUNT")).intValue());
+        Map<String, Object> lens = new LinkedHashMap<>();
+        lens.put("horizon", "1d");
+        lens.put("default", true);
+        lens.put("scenarios", v.length);
+        lens.put("set", "NORMAL");
+        out.put("lens", lens);
+        double[] edges = doubles(x.get("EDGES"));
+        long[] e = new long[edges.length];
+        for (int i = 0; i < e.length; i++) {
+            e[i] = VarViews.round(edges[i]);
+        }
+        Map<String, Object> hist = new LinkedHashMap<>();
+        hist.put("edges", e);
+        hist.put("counts", ints(x.get("COUNTS")));
+        out.put("histogram", hist);
+        List<Map<String, Object>> worst = new ArrayList<>();
+        for (int k = 0; k < Math.min(25, order.length); k++) {
+            worst.add(scenarioRow(dates, order[k], k + 1, v[order[k]]));
+        }
+        out.put("worst", worst);
+        long[] series = new long[v.length];
+        for (int j = 0; j < v.length; j++) {
+            series[j] = Math.round(v[j]);
+        }
+        out.put("series", series);
+        out.put("dates", List.of(dates.get(0), dates.get(dates.size() - 1)));
+        out.put("scenarioDates", dates);
+        int sz = size <= 0 ? svc.props().pathPage() : Math.min(size, Math.max(509, order.length));
+        int from = Math.max(0, page) * sz;
+        List<Map<String, Object>> table = new ArrayList<>();
+        for (int k = from; k < Math.min(order.length, from + sz); k++) {
+            int j = order[k];
+            Map<String, Object> row = scenarioRow(dates, j, k + 1, v[j]);
+            Object[] worstPart = null;
+            for (Object[] pt : parts) {
+                if (worstPart == null || ((double[]) pt[2])[j] < ((double[]) worstPart[2])[j]) {
+                    worstPart = pt;
+                }
+            }
+            if (worstPart != null) {
+                row.put("from", worstPart[0]);
+                row.put("fromScope", worstPart[1]);
+                row.put("fromPnl", VarViews.round(((double[]) worstPart[2])[j]));
+            }
+            table.add(row);
+        }
+        out.put("page", Math.max(0, page));
+        out.put("pageSize", sz);
+        out.put("total", order.length);
+        out.put("rows", table);
+        out.put("path", "engine");
+        return out;
+    }
+
+    /**
+     * A pre-deal what-if through the engine ({@code POST /what-if}): the engine's {@code what-if} on a node's stored aggregate, each item's
+     * vector supplied by the host (a copy of a booked trade's or any scope's summed P&amp;L, {@code scope-var}, or a P&amp;L priced
+     * elsewhere), its factor applied by the engine; shaped as the in-tree route ({@code before}, {@code after}, {@code change},
+     * {@code items}, {@code limit}). A scope that is not a node, and a currency other than USD (the engine's vectors are USD), are
+     * answered in-tree for now, said in one sentence.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> whatIf(Principal p, Map<String, Object> body, LocalDate date) {
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path needs the business date: give asOf");
+        }
+        VarService svc = service.getIfAvailable();
+        if (svc == null) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the VaR service is not configured here: the what-if is answered nowhere");
+        }
+        String scope = body.get("scope") == null ? "" : String.valueOf(body.get("scope")).trim();
+        if (scope.isEmpty()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a what-if names its scope: {\"scope\": \"DESK:RATES\", \"items\": [{\"copyOf\": \"MX-30000121\", \"factor\": -1}]}");
+        }
+        String currency = body.get("ccy") == null ? "USD" : String.valueOf(body.get("ccy")).trim().toUpperCase(Locale.ROOT);
+        if (!currency.equals("USD")) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers a what-if in USD for now: ask " + currency + " in-tree (path=in-tree)");
+        }
+        List<Map<String, Object>> asked = body.get("items") instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
+        if (asked.isEmpty() || asked.size() > 50) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a what-if has 1 to 50 items: [{\"copyOf\": <a booked trade>, \"factor\": 1}]");
+        }
+        int window = dateWindow();
+        EngineScopeBook book = index(p, date);
+        ScopeResolver.Resolution res = resolve(p, book, scope, date);
+        if (res.node() == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers a what-if on a node for now; " + res.canonical()
+                    + " is not one: ask it in-tree (path=in-tree)");
+        }
+        List<Map<String, Object>> trades = new ArrayList<>();
+        for (Map<String, Object> it : asked) {
+            String from = it.get("copyOf") == null ? "" : String.valueOf(it.get("copyOf")).trim();
+            boolean priced = it.get("pnl") instanceof List<?>;
+            if (from.isEmpty() && !priced) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "a what-if item is a copy of a booked trade, {\"copyOf\": \"MX-30000121\", \"factor\": 1}, "
+                        + "or a P&L priced elsewhere, {\"label\": \"new swap\", \"pnl\": [one per scenario day], \"factor\": 1}");
+            }
+            double f;
+            try {
+                f = it.get("factor") instanceof Number n ? n.doubleValue() : it.get("factor") == null ? 1.0 : Double.parseDouble(String.valueOf(it.get("factor")));
+            } catch (NumberFormatException e) {
+                f = Double.NaN;
+            }
+            if (!Double.isFinite(f)) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "a what-if factor is a finite number (-1: the unwind), not " + it.get("factor"));
+            }
+            List<Double> v = new ArrayList<>();
+            if (priced) {
+                for (Object x : (List<?>) it.get("pnl")) {
+                    if (!(x instanceof Number n) || !Double.isFinite(n.doubleValue())) {
+                        throw new DrishtiException(ErrorCode.BAD_REQUEST, "what-if item " + (it.get("label") == null ? "" : it.get("label") + " ")
+                                + "has a P&L that is not a number on scenario day " + (v.size() + 1));
+                    }
+                    v.add(n.doubleValue());
+                }
+                from = it.get("label") == null ? "a trade priced elsewhere" : String.valueOf(it.get("label"));
+            } else {
+                String text = from.contains(":") ? from : "TRD:" + from;
+                ScopeResolver.Resolution t = resolve(p, book, text, date);
+                if (t.set().isEmpty()) {
+                    throw new DrishtiException(ErrorCode.BAD_REQUEST, text + " has no P&L vector on " + date);
+                }
+                Map<String, Object> cp = params(window, currency);
+                cp.put("rows", ordinals(t.set()));
+                cp.put("node", t.node() == null ? "" : t.node());
+                List<Map<String, Object>> cr = rows(ask(p, List.of("scope-var"), cp, Map.of("date", date.toString())), "scope-var");
+                if (cr.isEmpty()) {
+                    throw new DrishtiException(ErrorCode.BAD_REQUEST, text + " has no P&L vector on " + date);
+                }
+                for (double x : doubles(cr.get(0).get("PNL"))) {
+                    v.add(x);
+                }
+            }
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("LABEL", it.get("label") == null ? (f == Math.rint(f) ? String.valueOf((long) f) : String.valueOf(f)) + " × " + from
+                    : String.valueOf(it.get("label")));
+            row.put("FACTOR", f);
+            row.put("PNL", v);
+            trades.add(row);
+        }
+        Map<String, Object> params = params(window, currency);
+        params.put("node", res.node());
+        params.put("trades", trades);
+        Map<String, Object> a = ask(p, List.of("what-if"), params, Map.of("date", date.toString()));
+        Map<String, Object> b = row(a, "what-if", "ROW", "BEFORE");
+        Map<String, Object> af = row(a, "what-if", "ROW", "AFTER");
+        if (b == null || af == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " answered no what-if for " + res.canonical() + " on "
+                    + date + missing(a));
+        }
+        double bv = num(b.get("VAR"));
+        double av = num(af.get("VAR"));
+        Map<String, Object> before = new LinkedHashMap<>();
+        Map<String, Object> after = new LinkedHashMap<>();
+        Map<String, Object> change = new LinkedHashMap<>();
+        before.put("var", whole(bv));
+        after.put("var", whole(av));
+        change.put("var", whole(num(af.get("INCREMENTAL_VAR"))));
+        before.put("es", whole(num(b.get("ES"))));
+        after.put("es", whole(num(af.get("ES"))));
+        change.put("es", whole(num(af.get("ES")) - num(b.get("ES"))));
+        before.put("stressedVar", whole(num(b.get("STRESSED_VAR"))));
+        after.put("stressedVar", whole(num(af.get("STRESSED_VAR"))));
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (Map<String, Object> r : rows(a, "what-if")) {
+            String id = String.valueOf(r.get("ROW"));
+            if (!id.startsWith("TRADE:")) {
+                continue;
+            }
+            Map<String, Object> x = new LinkedHashMap<>();
+            x.put("label", id.substring("TRADE:".length()));
+            x.put("factor", num(r.get("FACTOR")));
+            x.put("standaloneVar", whole(num(r.get("VAR"))));
+            x.put("incrementalVar", whole(num(r.get("INCREMENTAL_VAR"))));
+            x.put("incrementalAlone", whole(num(r.get("INCREMENTAL_ALONE"))));
+            x.put("componentVar", whole(num(r.get("COMPONENT_VAR"))));
+            items.add(x);
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("scope", scope);
+        out.put("canonical", res.canonical());
+        out.put("businessDate", date.toString());
+        out.put("currency", currency);
+        out.put("confidence", svc.calc().confidence());
+        out.put("esConfidence", svc.calc().esConfidence());
+        out.put("before", before);
+        out.put("after", after);
+        out.put("change", change);
+        out.put("items", items);
+        double limit = book.nodeLimit(res.node());
+        if (Double.isNaN(limit) || limit == 0 || !svc.loader().limitBasis(date, res.node()).matches(svc.props().defaultLens())) {
+            out.put("limit", null);
+        } else {
+            com.ash.drishti.banking.RiskLimits lim = limits.getIfAvailable(com.ash.drishti.banking.RiskLimits::defaults);
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("limit", VarViews.round(limit));
+            m.put("useBefore", bv / limit);
+            m.put("useAfter", av / limit);
+            m.put("statusBefore", lim.status(bv / limit));
+            m.put("status", lim.status(av / limit));
+            m.put("near", lim.limitNear());
+            out.put("limit", m);
+        }
+        out.put("engine", ENGINE);
+        out.put("varExact", av);
+        out.put("path", "engine");
+        return out;
+    }
+
+    private static double num(Object o) {
+        return o instanceof Number n ? n.doubleValue() : Double.NaN;
+    }
+
+    private static Long whole(double x) {
+        return Double.isFinite(x) ? Math.round(x) : null;
+    }
+
+    private static Map<String, Object> scenarioRow(List<String> dates, int j, int rank, double pnl) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("rank", rank);
+        m.put("index", j);
+        m.put("date", dates.get(j));
+        m.put("pnl", VarViews.round(pnl));
+        return m;
+    }
+
+    private static List<Integer> ordinals(com.ash.drishti.compute.vector.OrdinalSet set) {
+        List<Integer> rows = new ArrayList<>(set.size());
+        set.forEach(rows::add);
+        return rows;
+    }
+
+    private static double[] doubles(Object list) {
+        if (list instanceof double[] d) {
+            return d;
+        }
+        java.util.Collection<?> c = list instanceof java.util.Collection<?> l ? l : List.of();
+        double[] out = new double[c.size()];
+        int i = 0;
+        for (Object o : c) {
+            out[i++] = ((Number) o).doubleValue();
+        }
+        return out;
+    }
+
+    private static int[] ints(Object list) {
+        double[] d = doubles(list);
+        int[] out = new int[d.length];
+        for (int i = 0; i < d.length; i++) {
+            out[i] = (int) d[i];
+        }
+        return out;
+    }
+
     /** One scope's figures on one window: VaR, ES, the rows counted and the limit (NaN when none) in the answer's currency. */
     record Figures(double var, double es, long members, double limit) {}
 
@@ -272,7 +609,7 @@ public class VarEnginePath {
             return (EngineScopeBook) have[1];
         }
         Map<String, Object> a = ask(p, List.of("scope-index", "scope-positions", "scope-position-values", "scope-nodes", "scope-words",
-                "scope-limits"), params(dateWindow(), "USD"), Map.of("date", date.toString()));
+                "scope-limits"), Map.of("window", dateWindow()), Map.of("date", date.toString()));
         if (rows(a, "scope-index").isEmpty() && !missing(a).isEmpty()) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no rows on " + date + missing(a));
         }
