@@ -143,7 +143,11 @@ public class ExposureController {
     @GetMapping("/scope/distribution")
     public Map<String, Object> distribution(@RequestParam String scope, @RequestParam(required = false) String date,
             @RequestParam(defaultValue = "0") int bins, @RequestParam(required = false) String q, @RequestParam(required = false) String collateral,
-            @RequestParam(defaultValue = "false") boolean bands, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(defaultValue = "false") boolean bands, AsOf asOf, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the ccr engine's distribution through the host
+            return enginePath.distribution(p, scope(scope), date(asOf), new ExposureEnginePath.Measures(q, collateral), date, bins, bands);
+        }
         return views.distribution(p, scope(scope), date(asOf), ask(q, collateral, null, null), date, bins, bands);
     }
 
@@ -160,7 +164,12 @@ public class ExposureController {
     }
 
     @GetMapping("/tree")
-    public Map<String, Object> tree(@RequestParam(required = false) String q, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> tree(@RequestParam(required = false) String q, AsOf asOf, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the figures from the ccr engine, the tree's shape and names the host's
+            LocalDate d = svc.date(date(asOf)).date();                  // the date the host's tree reads (its newest with paths when later)
+            return views.tree(p, d, ask(q, null, null, null), enginePath.tree(p, d, q));
+        }
         return views.tree(p, date(asOf), ask(q, null, null, null));
     }
 

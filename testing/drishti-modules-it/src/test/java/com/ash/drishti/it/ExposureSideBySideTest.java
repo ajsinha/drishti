@@ -264,6 +264,120 @@ class ExposureSideBySideTest {
         assertThat(sbs.differences).as("contributions that differ between in-tree and engine").isEmpty();
     }
 
+    /**
+     * The tree ({@code /tree}) on both paths, at the default confidence and at 0.99: the host's shape, names, groups and reference netting
+     * sets either way; every node's figures from the engine on the engine path (each netting set's, counterparty's, the bank's and each
+     * legal entity's EPE, peak PFE and its tenor, peak EE, EE line, flags, netting sets, each counterparty's limit use): the whole answer
+     * must be equal, field by field.
+     */
+    @Test
+    void theTreeIsTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        int[] nodes = {0};
+        for (String q : List.of("", "&q=0.99")) {
+            JsonNode[] both = sbs.both(server, "tree" + q, "/api/v1/risk/exposure/tree?asOf=" + DATE + q);
+            diff(sbs, "tree" + q, both[0], both[1], nodes);
+        }
+        System.out.println("side by side, tree (tier " + (MAPPED ? "mapped" : "heap") + "): " + sbs.compared + " trees, " + nodes[0]
+                + " values on both paths; first differences: " + sbs.differences.stream().limit(Integer.getInteger("sbs.show", 10)).toList());
+        assertThat(nodes[0]).as("tree values compared").isGreaterThan(1000);
+        assertThat(sbs.differences).as("tree values that differ between in-tree and engine").isEmpty();
+    }
+
+    /**
+     * The distribution route ({@code /scope/distribution}) on both paths for every scope: at the peak PFE's date, at 1Y, with 10 bins and
+     * the path fan, uncollateralised at 99% at 5Y with the fan: every field equal (histogram edges and counts, quantiles, mean, share of
+     * paths without exposure, the fan at every primary date).
+     */
+    @Test
+    void theDistributionOfEveryScopeIsTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        int[] values = {0};
+        for (String scope : scopes()) {
+            for (String a : List.of("", "&date=1Y", "&bins=10&bands=true", "&collateral=none&q=0.99&date=5Y&bands=true")) {
+                String what = scope + " distribution" + a;
+                JsonNode[] both = sbs.both(server, what, "/api/v1/risk/exposure/scope/distribution?scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8)
+                        + "&asOf=" + DATE + a);
+                diff(sbs, what, both[0], both[1], values);
+            }
+        }
+        System.out.println("side by side, distribution (tier " + (MAPPED ? "mapped" : "heap") + "): " + sbs.compared + " answers, " + values[0]
+                + " values on both paths; first differences: " + sbs.differences.stream().limit(Integer.getInteger("sbs.show", 10)).toList());
+        assertThat(values[0]).as("distribution values compared").isGreaterThan(10_000);
+        assertThat(sbs.differences).as("distribution values that differ between in-tree and engine").isEmpty();
+    }
+
+    /**
+     * The audit line of the contributions and distribution routes: each path writes one {@code ccr-view} line for the scope, with the same date, run, view,
+     * confidence, collateral model, EPE, peak PFE, netting sets, trades and what was read (the engine's says {@code path=engine}, its time
+     * and version are its own).
+     */
+    @Test
+    void theContributionsRouteWritesTheSameAuditLineOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        for (String scope : List.of("BANK", scopes().stream().filter(x -> x.startsWith("CPTY:")).findFirst().orElseThrow())) {
+            for (String a : List.of("by=netting-set&figure=PFE", "by=asset&figure=EE&date=5Y&collateral=none&q=0.99", "distribution:date=1Y&q=0.99")) {
+                String what = scope + " " + a;
+                boolean dist = a.startsWith("distribution:");
+                JsonNode[] both = sbs.both(server, what, "/api/v1/risk/exposure/scope/" + (dist ? "distribution" : "contributions") + "?scope="
+                        + URLEncoder.encode(scope, StandardCharsets.UTF_8) + "&asOf=" + DATE + "&" + (dist ? a.substring(13) : a));
+                String canonical = both[0].path("canonical").asText();
+                String read = dist ? "distribution" : "contributions by=" + both[0].path("by").asText() + " figure=" + both[0].path("figure").asText();
+                JsonNode events = server.get("/api/v1/admin/audit?limit=50&subject=" + URLEncoder.encode(canonical, StandardCharsets.UTF_8));
+                String in = null;
+                String en = null;
+                for (JsonNode e : events) {
+                    String d = e.path("detail").asText();
+                    if (!"ccr-view".equals(e.path("action").asText()) || !d.contains(read)) {
+                        continue;
+                    }
+                    if (d.contains("path=engine")) {
+                        en = en == null ? d : en;
+                    } else {
+                        in = in == null ? d : in;
+                    }
+                }
+                if (in == null || en == null) {
+                    sbs.differences.add(what + ": audit lines in-tree " + in + ", engine " + en);
+                    continue;
+                }
+                String a1 = in.replaceAll(" (version|ms|hiddenSets)=\\S+", "");
+                String b1 = en.replaceAll(" (version|ms|hiddenSets|path)=\\S+", "");
+                if (!a1.equals(b1)) {
+                    sbs.differences.add(what + ": audit in-tree [" + in + "], engine [" + en + "]");
+                }
+            }
+        }
+        System.out.println("side by side, contributions audit: " + sbs.compared + " reads; differences: " + sbs.differences);
+        assertThat(sbs.differences).as("audit lines that differ between in-tree and engine").isEmpty();
+    }
+
+    /** Every value of two answers, recursively: each difference kept with its JSON path. */
+    private static void diff(SideBySide sbs, String at, JsonNode a, JsonNode b, int[] count) {
+        if (a.isObject() || b.isObject()) {
+            Set<String> names = new LinkedHashSet<>();
+            a.fieldNames().forEachRemaining(names::add);
+            b.fieldNames().forEachRemaining(names::add);
+            names.remove("path");
+            for (String n : names) {
+                diff(sbs, at + "." + n, a.path(n), b.path(n), count);
+            }
+        } else if (a.isArray() || b.isArray()) {
+            if (a.size() != b.size()) {
+                sbs.differences.add(at + " size: in-tree " + a.size() + ", engine " + b.size());
+                return;
+            }
+            for (int i = 0; i < a.size(); i++) {
+                diff(sbs, at + "[" + i + "]", a.get(i), b.get(i), count);
+            }
+        } else {
+            count[0]++;
+            if (!Objects.equals(text(a), text(b))) {
+                sbs.differences.add(at + ": in-tree " + a + ", engine " + b);
+            }
+        }
+    }
+
     private static JsonNode post(String path, Object body) throws IOException, InterruptedException {
         java.net.http.HttpResponse<String> r = java.net.http.HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(
                 java.net.URI.create(server.base + path)).timeout(java.time.Duration.ofMinutes(5)).header("Content-Type", "application/json")

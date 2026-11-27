@@ -119,8 +119,8 @@ public class ExposureConfiguration {
 
     /** The exposure figures views show (the kernel collects every ViewAugmenter: its own context's beans, a module's through the bridge). */
     @Bean
-    ExposureFigures exposureFigures(ExposureService svc, ExposureViews views) {
-        return new ExposureFigures(svc, views);
+    ExposureFigures exposureFigures(ExposureService svc, ExposureViews views, ExposureEnginePath engine) {
+        return new ExposureFigures(svc, views, engine);
     }
 
     /** A trade page's Risk links: its exposure. */
