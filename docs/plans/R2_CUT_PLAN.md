@@ -114,7 +114,7 @@ view types. The first route switched end to end is the VaR headline (`GET /api/v
 
 1. **One family switch.** A module setting per route family, `drishti.module.<module>.<family>.path`: `in-tree` (the default until the
    family is green) or `engine`, declared in the module's `module.yaml` `settings:` and in its engine file (`engines/var.yaml`:
-   `var.path`). A request may name its own path (`path=engine` or `path=in-tree`), so both answers come from one server.
+   `var.route`). A request may name its own path (`path=engine` or `path=in-tree`), so both answers come from one server.
 2. **The engine path class.** One class per family beside the controller (`banking/var/VarEnginePath`): it asks
    `Engines.ask(principal, engine, outputs, params, snapshot)` by output name and reads plain values back (tables of rows by column). It
    names no Risk type (step 6's guard). It returns the route's own JSON shape: the same keys, the in-tree rounding (whole units by

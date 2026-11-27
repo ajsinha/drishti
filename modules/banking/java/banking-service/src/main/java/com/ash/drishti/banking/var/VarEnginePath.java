@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * R2 (docs/plans/R2_CUT_PLAN.md, "Switching a route"): the VaR routes answered by Drishti Risk's market-risk engine through the kernel's
- * {@link Engines} service, never by a Risk type. One switch per route family, {@code drishti.module.banking.var.path}: {@code in-tree}
+ * {@link Engines} service, never by a Risk type. One switch per route family, {@code drishti.module.banking.var.route}: {@code in-tree}
  * (the default until the family's side by side is green) or {@code engine}; a request may name its path ({@code path=engine} or
  * {@code path=in-tree}) so both answers can be compared on one server. The engine's figures are unrounded; the route rounds them to whole
  * units as the in-tree route does.
@@ -45,7 +45,7 @@ public class VarEnginePath {
 
     /** The engine's id (config/engines/market-risk.yaml). */
     public static final String ENGINE = "market-risk";
-    static final String SETTING = "drishti.module.banking.var.path";   // engines/var.yaml
+    static final String SETTING = "drishti.module.banking.var.route";   // engines/var.yaml
 
     private final ObjectProvider<Engines> engines;
     private final Environment env;
