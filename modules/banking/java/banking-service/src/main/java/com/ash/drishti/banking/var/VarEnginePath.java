@@ -1123,7 +1123,12 @@ public class VarEnginePath {
      */
     Map<String, Parametric> parametric(Principal p, LocalDate date, String currency, int window, double confidence, double esConfidence,
             com.ash.drishti.banking.compute.var.ParametricVar.Settings settings) {
-        Map<String, Object> a = ask(p, List.of("node-pvar"), params(window, currency), Map.of("date", date.toString()));
+        return parametricRows(ask(p, List.of("node-pvar"), params(window, currency), Map.of("date", date.toString())), confidence, esConfidence,
+                settings);
+    }
+
+    private static Map<String, Parametric> parametricRows(Map<String, Object> a, double confidence, double esConfidence,
+            com.ash.drishti.banking.compute.var.ParametricVar.Settings settings) {
         Map<String, Parametric> out = new LinkedHashMap<>();
         for (Map<String, Object> r : rows(a, "node-pvar")) {
             double sigma = num(r.get("SIGMA"));
@@ -1153,6 +1158,21 @@ public class VarEnginePath {
             }
         }
         return out;
+    }
+
+    /**
+     * Every node's parametric figures through a lens (a horizon or the stress set: {@code node-pvar} on the lens's vectors, the configured
+     * confidences, the date's window), keyed by node id; the 1-day normal lens is {@link #parametric(Principal, LocalDate, String, int,
+     * double, double, com.ash.drishti.banking.compute.var.ParametricVar.Settings)}.
+     */
+    Map<String, Parametric> parametric(Principal p, LocalDate date, String currency, com.ash.drishti.banking.compute.var.VarLens lens,
+            com.ash.drishti.banking.compute.var.ParametricVar.Settings settings) {
+        Map<String, Object> params = params(dateWindow(), currency);
+        params.put("stressed", lens.stressed());
+        params.put("horizon", lens.tenDay() ? "10d" : "1d");
+        params.put("ten-day-method", lens.method() == com.ash.drishti.banking.compute.var.VarLens.Method.SUM ? "sum" : "sqrt10");
+        return parametricRows(ask(p, List.of("node-pvar"), params, Map.of("date", date.toString())), lens.confidence(), lens.esConfidence(),
+                settings);
     }
 
     /** The window a headline's figures are on: the asked one cut to the date's, or the date's (0: the whole set). */

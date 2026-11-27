@@ -184,11 +184,22 @@ public class VarController {
                     throw new DrishtiException(ErrorCode.BAD_REQUEST, "window recomputes the normal set's 1-day VaR; a horizon or the stress "
                             + "set takes the offered window");
                 }
-                if (Boolean.TRUE.equals(parametric)) {
-                    throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the parametric block on the offered lens for "
-                            + "now; through a horizon or the stress set ask it in-tree (path=in-tree)");
+                Map<String, Object> h = enginePath.headline(p, scope(scope), date(asOf), l.stressed() ? "USD" : ccy, l);
+                if (!Boolean.FALSE.equals(parametric) && h.get("node") instanceof String node && pOn()) {   // the node's block through the lens
+                    if (!"lens".equals(views.parametric().props().horizonRule())) {
+                        throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path fits the lens's own vector (horizon-rule lens); "
+                                + "drishti.var.parametric.horizon-rule is " + views.parametric().props().horizonRule() + " here: ask it in-tree "
+                                + "(path=in-tree) or with parametric=false");
+                    }
+                    VarEnginePath.Parametric x = enginePath.parametric(p, date(asOf), (String) h.get("currency"), l, views.parametric().props()
+                            .settings()).get(node);
+                    if (x != null) {
+                        h = new LinkedHashMap<>(h);
+                        h.put("parametric", views.parametric().headline(x.figures(), l, enginePath.nodeName(p, date(asOf), (String) h.get("currency"),
+                                node), x.set(), x.lastDay(), (Double) h.get("varExact"), (Double) h.get("esExact"), x.k()));
+                    }
                 }
-                return enginePath.headline(p, scope(scope), date(asOf), l.stressed() ? "USD" : ccy, l);
+                return parametric(h, parametric);
             }
             Map<String, Object> h = enginePath.headline(p, scope(scope), date(asOf), ccy, window);
             if (!Boolean.FALSE.equals(parametric) && h.get("node") instanceof String node && pOn()) {   // a node's block from node-pvar

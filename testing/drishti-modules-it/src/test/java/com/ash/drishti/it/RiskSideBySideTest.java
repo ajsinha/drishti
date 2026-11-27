@@ -719,6 +719,9 @@ class RiskSideBySideTest {
     @Test
     void theHorizonsAndTheStressSetAreTheSameOnBothPaths() throws Exception {
         SideBySide sbs = new SideBySide();
+        SideBySide pSbs = new SideBySide();
+        int[] pNumbers = new int[2];
+        int pBlocks = 0;
         java.util.Set<String> dates = new java.util.TreeSet<>();
         golden.fieldNames().forEachRemaining(c -> dates.add(c.split("/")[0]));
         java.util.Map<String, Boolean> stress = new java.util.HashMap<>();
@@ -738,9 +741,18 @@ class RiskSideBySideTest {
                             "trades", "limit", "limitComparable", "limitUse");
                     sbs.bits(what + " VAR", both[0].path("varExact").asDouble(), both[1].path("varExact").asDouble());
                     sbs.bits(what + " ES", both[0].path("esExact").asDouble(), both[1].path("esExact").asDouble());
+                    // the parametric block through the lens (node-pvar on the lens's vectors; decision 6.6 (4): within relative 1e-12)
+                    parametricSame(pSbs, pNumbers, what + " parametric", both[0].path("parametric"), both[1].path("parametric"));
+                    pBlocks += both[0].has("parametric") ? 1 : 0;
                 }
             }
         }
+        System.out.println("side by side, horizons and the stress set, parametric: " + pBlocks + " blocks; " + pNumbers[0] + " numbers compared, "
+                + pNumbers[1] + " within relative 1e-12; differences " + pSbs.differences.size() + " (USD " + pSbs.differences.stream()
+                .filter(x -> x.contains("/USD ")).count() + "); first: " + pSbs.differences.stream().limit(6).map(x -> x.substring(0,
+                Math.min(300, x.length()))).toList());
+        assertThat(pBlocks).as("parametric blocks through a lens").isGreaterThan(1000);
+        assertThat(asserted(pSbs.differences)).as("parametric figures through a lens beyond relative 1e-12 or in words").isEmpty();
         System.out.println("side by side, horizons and the stress set: " + sbs.compared + " node answers on both paths; " + sbs.sameBits
                 + " engine VaR and ES figures equal to the in-tree raw bits; differences " + sbs.differences.size() + " (USD "
                 + sbs.differences.stream().filter(x -> x.contains("/USD ")).count() + "); first: " + sbs.differences.stream().limit(8)
