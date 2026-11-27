@@ -114,7 +114,7 @@ Fields, from 1 sample document:
 | `MANAGING_LOU` | string | `Bloomberg Finance L.P.` | The LEI issuer (LOU) managing the record |
 | `BICS` | string | `APLEUS66XXX` | Its BICs (GLEIF mapping file) |
 | `BIC_COUNT` | integer | `1` | Number of BICs |
-| `ISIN_COUNT` | integer | `949` | Number of ISINs mapped to it (GLEIF mapping file) |
+| `ISIN_COUNT` | integer | `956` | Number of ISINs mapped to it (GLEIF mapping file) |
 | `LEI_GROUP` | string | `HWUPKR0MPOU8FGXBT394` | The ownership group (its ultimate parent's LEI); link to `lei-group` |
 | `PARENT_EXCEPTIONS` | list of objects |  | Reporting exceptions (why no parent is reported) |
 | `CHILDREN` | list of objects |  | Entities it directly consolidates, in the pack |
@@ -236,8 +236,8 @@ Fields, from 2 sample documents:
 | `ENTITY_NAME` | string | `WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORP…` | That entity's legal name |
 | `COUNTRY` | string | `US` | — |
 | `LEI_GROUP` | string | `06BTX5UWZD0GQ5N5Y745` | link to `lei-group` |
-| `MAPPING_FILE` | string | `LEI-BIC-20260925.zip` | The GLEIF mapping file it came from |
-| `ISIN_COUNT` | integer | `909` | ISINs of the issuer (in 50%) |
+| `MAPPING_FILE` | string | `LEI-BIC-20261127.zip` | The GLEIF mapping file it came from |
+| `ISIN_COUNT` | integer | `906` | ISINs of the issuer (in 50%) |
 
 Links: `ENTITY_LEI` → `lei-entity`, `LEI_GROUP` → `lei-group`.
 
