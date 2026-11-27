@@ -18,7 +18,7 @@
 kind: var-official
 mnemonic: VOFF
 pack: market-risk
-version: '1.2'
+version: '1.3'
 class: computed
 status: active
 title: VaR official results (published)
@@ -56,6 +56,8 @@ binding-hint:
   - TRAFFIC_LIGHT
   - CONFIDENCE
   - ES_CONFIDENCE
+  - BACKTEST_CONFIDENCE
+  - BACKTEST_VAR
 fields:
 - name: BUSINESS_DATE
   type: date
@@ -156,6 +158,19 @@ fields:
   presence: optional
   description: 'The stress scenario set SVAR and SES are of (HS-STRESS-2008 in the demo); null when the date has none.'
   example: HS-STRESS-2008
+- name: BACKTEST_CONFIDENCE
+  type: rate
+  presence: optional
+  description: 'The regulatory backtest''s other confidence (contract version 1.6): the first of drishti.regulatory.backtesting.confidences
+    other than CONFIDENCE (0.975 as shipped), as a fraction. Null when none is configured; rows published before the column existed lack
+    it, and a backtest at it does not test their dates.'
+  example: 0.975
+- name: BACKTEST_VAR
+  type: amount
+  presence: optional
+  unit: USD
+  description: 'VaR at BACKTEST_CONFIDENCE (1-day, the same vector and scenarios as VAR), positive for a loss, kept for the regulatory
+    backtest at both confidences (VAR_GUIDE.md section 18.11). Not additive across nodes.'
 - name: SCENARIO_SET_ID
   type: id
   presence: required

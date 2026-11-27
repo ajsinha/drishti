@@ -812,6 +812,89 @@ public class VarEnginePath {
         return out;
     }
 
+    /**
+     * The regulatory backtest's figures through the engine ({@code GET /backtesting}, {@code path=engine}, decision 6.6 (5)): the engine's
+     * {@code backtest} and {@code backtest-days} over {@code var-history} (the published records, which carry the VaR at the backtest's
+     * other confidence since contract 1.6) on the newest official date to the one asked, every node, for {@link VarBacktesting} to shape
+     * as in-tree. Refused in words when the engine's records are not the store's (publish off, a session opened before a capture), when
+     * the period holds a synthetic demo history (never published), or when a tested day's record was published without the VaR at a
+     * backtest confidence (before contract 1.6): those dates are named.
+     */
+    VarBacktesting.Engine backtesting(Principal p, LocalDate last, VarBacktesting held, List<Double> confidences, int window) {
+        VarService svc = service.getIfAvailable();
+        if (svc == null) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the VaR service is not configured here: the backtest is answered nowhere");
+        }
+        VarOfficialStore store = svc.official();
+        List<LocalDate> span = new ArrayList<>(store.dates().headSet(last, true));
+        for (LocalDate d : span.subList(Math.max(0, span.size() - (window + 31)), span.size())) {
+            Map<String, Object> rec = store.index(d).orElse(null);
+            if (rec != null && Boolean.TRUE.equals(rec.get("synthetic"))) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the official records to " + last + " hold a synthetic demo history (" + d
+                        + "), which is never published: the engine reads the published records; ask it in-tree (path=in-tree)");
+            }
+        }
+        Map<String, Object> a = ask(p, List.of("backtest", "backtest-days"), new LinkedHashMap<>(Map.of("node", "")),
+                Map.of("date", last.toString()));
+        Map<String, Map<Double, Map<String, Object>>> tests = new LinkedHashMap<>();
+        for (Map<String, Object> r : rows(a, "backtest")) {
+            tests.computeIfAbsent(String.valueOf(r.get("NODE_ID")), k -> new java.util.TreeMap<>()).put(num(r.get("CONFIDENCE")), r);
+        }
+        // node -> confidence index -> date -> the tested day's row
+        Map<String, List<Map<LocalDate, Map<String, Object>>>> days = new LinkedHashMap<>();
+        for (Map<String, Object> r : rows(a, "backtest-days")) {
+            int k = -1;
+            for (int i = 0; i < confidences.size(); i++) {
+                k = Math.abs(confidences.get(i) - num(r.get("CONFIDENCE"))) < 1e-9 ? i : k;
+            }
+            if (k < 0) {
+                continue;                                                   // a confidence not configured here
+            }
+            List<Map<LocalDate, Map<String, Object>>> byQ = days.computeIfAbsent(String.valueOf(r.get("NODE_ID")), x -> {
+                List<Map<LocalDate, Map<String, Object>>> l = new ArrayList<>();
+                confidences.forEach(q -> l.add(new LinkedHashMap<>()));
+                return l;
+            });
+            byQ.get(k).put(LocalDate.parse(String.valueOf(r.get("DATE")).substring(0, 10)), r);
+        }
+        Map<String, List<VarBacktesting.DayRow>> out = new LinkedHashMap<>();
+        for (Map.Entry<String, List<Map<LocalDate, Map<String, Object>>>> e : days.entrySet()) {
+            String node = e.getKey();
+            List<VarBacktesting.DayRow> list = new ArrayList<>();
+            List<String> without = new ArrayList<>();
+            for (Map.Entry<LocalDate, Map<String, Object>> d : e.getValue().get(0).entrySet()) {
+                Map<String, Object> r0 = d.getValue();
+                LocalDate prior = LocalDate.parse(String.valueOf(r0.get("PRIOR")).substring(0, 10));
+                Map<?, ?> stored = store.index(prior).orElse(null) instanceof Map<?, ?> rec && rec.get("nodes") instanceof Map<?, ?> n
+                        && n.get(node) instanceof Map<?, ?> f ? f : null;
+                double[] var = new double[confidences.size()];
+                for (int k = 0; k < confidences.size(); k++) {
+                    Map<String, Object> rk = e.getValue().get(k).get(d.getKey());
+                    var[k] = rk == null ? Double.NaN : num(rk.get("VAR"));
+                    double kept = stored == null ? Double.NaN : held.varAt(stored, confidences.get(k));
+                    if (Double.isFinite(kept) && rk == null) {
+                        without.add(prior.toString());                      // the store keeps it, the published record does not
+                    } else if (Double.isFinite(kept) && Double.doubleToLongBits(kept) != Double.doubleToLongBits(var[k])
+                            || stored == null && k == 0) {
+                        throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine " + ENGINE + " reads the official VaR of " + node + " on "
+                                + prior + " as " + var[k] + ", the official store " + kept + " (published: drishti.var.official.publish; a "
+                                + "session opened before a capture keeps the records it read): ask it in-tree (path=in-tree)");
+                    }
+                }
+                Object rtpl = r0.get("RTPL");
+                list.add(new VarBacktesting.DayRow(d.getKey(), prior, var, num(r0.get("ACTUAL")), num(r0.get("HYPOTHETICAL")),
+                        rtpl == null ? Double.NaN : num(rtpl), false));
+            }
+            if (!without.isEmpty()) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the published official records of " + node + " on " + String.join(", ",
+                        new java.util.TreeSet<>(without)) + " carry no VaR at every backtest confidence " + confidences + " (published "
+                        + "before contract 1.6 added BACKTEST_VAR): the engine path does not test those dates; ask it in-tree (path=in-tree)");
+            }
+            out.put(node, list);
+        }
+        return new VarBacktesting.Engine(out, tests);
+    }
+
     private static Map<String, Object> point(Map<String, Object> x, String date, String value, String version, String capture) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("date", String.valueOf(x.get(date)));

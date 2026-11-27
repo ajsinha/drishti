@@ -125,9 +125,14 @@ public class VarRegulatoryController {
 
     @GetMapping("/backtesting")
     public ResponseEntity<Object> backtest(@RequestParam(required = false) String scope, @RequestParam(required = false) String format, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        String node = node(p, scope);
-        Map<String, Object> out = backtesting.answer(node, date(asOf), true);
+            @RequestParam(name = "path", required = false) String route, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        boolean engine = enginePath.engine(route);                    // R2: the market-risk engine's backtest (VarEnginePath.backtesting)
+        String node = engine ? engineNode(p, scope) : node(p, scope);
+        Map<String, Object> out = engine ? backtesting.answer(node, date(asOf), true, last -> enginePath.backtesting(p, last, backtesting,
+                props.backtesting().confidences(), props.backtesting().window())) : backtesting.answer(node, date(asOf), true);
+        if (engine) {
+            out.put("path", "engine");
+        }
         if ("xlsx".equalsIgnoreCase(format)) {
             Map<String, Object> run = new LinkedHashMap<>();
             run.put("type", "backtesting-chart");

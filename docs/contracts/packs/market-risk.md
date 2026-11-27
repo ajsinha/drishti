@@ -38,7 +38,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [SENS](#sens-position-sensitivities-position-sensitivity) | `position-sensitivity` | input | active | 28 | 1 |
 | [RFAC](#rfac-risk-factor-dictionary-risk-factor) | `risk-factor` | fundamental | active | 27 | 1 |
 | [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 44 | 0 |
-| [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 31 | 0 |
+| [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 33 | 0 |
 | [SSPNL](#sspnl-stress-pl-of-a-scenario-across-desks-derived-from-the-stress-results-stress-scenario-pnl) | `stress-scenario-pnl` | computed | active | 11 | 0 |
 
 ## SCN: Stress scenario (`stress-scenario`)
@@ -1759,7 +1759,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 
 |  |  |
 |---|---|
-| Contract | [var-official.contract.yaml](../../../modules/banking/packs/market-risk/contracts/var-official.contract.yaml) · version 1.2 |
+| Contract | [var-official.contract.yaml](../../../modules/banking/packs/market-risk/contracts/var-official.contract.yaml) · version 1.3 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official |
@@ -1769,7 +1769,7 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 | Dated by | `BUSINESS_DATE` |
 | Cadence | daily (due: when the date's inputs load (the data-load signal), at start for the newest date without a record, or by an administrator) |
 | Binding hint | lake table `risk-results.var-official`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Columns | `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, `CAPTURE_ID`, `RESULT_VERSION`, `VAR`, `ES`, `LIMIT`, `LIMIT_USE`, `DIVERSIFICATION`, `HYPO_PNL`, `EXCEPTIONS_250`, `TRAFFIC_LIGHT`, `CONFIDENCE`, `ES_CONFIDENCE` |
+| Columns | `HIERARCHY`, `NODE_ID`, `NODE_NAME`, `PARENT_ID`, `LEVEL`, `CAPTURE_ID`, `RESULT_VERSION`, `VAR`, `ES`, `LIMIT`, `LIMIT_USE`, `DIVERSIFICATION`, `HYPO_PNL`, `EXCEPTIONS_250`, `TRAFFIC_LIGHT`, `CONFIDENCE`, `ES_CONFIDENCE`, `BACKTEST_CONFIDENCE`, `BACKTEST_VAR` |
 | Partitioned by | `business_date` |
 
 **Fields**
@@ -1796,6 +1796,8 @@ The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchi
 | `SVAR` | amount | optional | USD | Stressed VaR at CONFIDENCE and HORIZON: the node on the date's stress scenario set (STRESS_SET_ID), positive for a loss (VAR_GUIDE.md section 18.8; contract version 1.5). Null when the date has no stress set, never zero. Not additive across nodes. |  |  |
 | `SES` | amount | optional | USD | Stressed ES at ES_CONFIDENCE on the same stress set; null when the date has none. |  |  |
 | `STRESS_SET_ID` | id | optional |  | The stress scenario set SVAR and SES are of (HS-STRESS-2008 in the demo); null when the date has none. | `HS-STRESS-2008` |  |
+| `BACKTEST_CONFIDENCE` | rate | optional |  | The regulatory backtest's other confidence (contract version 1.6): the first of drishti.regulatory.backtesting.confidences other than CONFIDENCE (0.975 as shipped), as a fraction. Null when none is configured; rows published before the column existed lack it, and a backtest at it does not test their dates. | `0.975` |  |
+| `BACKTEST_VAR` | amount | optional | USD | VaR at BACKTEST_CONFIDENCE (1-day, the same vector and scenarios as VAR), positive for a loss, kept for the regulatory backtest at both confidences (VAR_GUIDE.md section 18.11). Not additive across nodes. |  |  |
 | `SCENARIO_SET_ID` | id | required |  | The scenario set the date's vectors were valued over (HS-509). | `HS-509` |  |
 | `SCENARIO_WINDOW` | integer | optional |  | The scenarios the record was computed on: the newest N of the scenario set (drishti.module.banking.var.window; the set's length, for all). Records captured before a change keep theirs; older records lack it. | `509` |  |
 | `STANDALONE_SUM` | amount | optional | USD | The sum of the children's VaR (positions for a book). |  |  |

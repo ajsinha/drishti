@@ -778,12 +778,13 @@ public class VarController {
     @PostMapping("/captures")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> capture(@RequestBody Map<String, Object> body, @RequestParam(required = false) String ccy, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(name = "path", required = false) String route, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         Object c = body.get("ccy") != null ? body.get("ccy") : ccy;
         com.ash.drishti.banking.compute.var.VarLens l = lens(str(body.get("horizon")), str(body.get("method")), num(body.get("confidence")),
                 num(body.get("esConfidence")), str(body.get("set")));
+        boolean engine = enginePath.engine(route != null ? route : str(body.get("path")));   // R2 (6.6 (6)): the figures from the engine
         return captures.capture(p, scope((String) body.get("scope")), date(asOf), body.get("note") == null ? null : String.valueOf(body.get("note")),
-                c == null ? null : String.valueOf(c), l);
+                c == null ? null : String.valueOf(c), l, engine ? captureEngine() : null);
     }
 
     private static String str(Object o) {
@@ -835,8 +836,17 @@ public class VarController {
     /** Two captures side by side ({@code a}, {@code b}), or a capture and now ({@code b=now}). */
     @GetMapping("/compare")
     public Map<String, Object> compare(@RequestParam String a, @RequestParam(required = false) String b,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(name = "path", required = false) String route, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, svc.props().kinds().vector());
-        return captures.compare(p, a, b);
+        return captures.compare(p, a, b, enginePath.engine(route) ? captureEngine() : null);
+    }
+
+    /** A capture's figures on the engine path: the contributions with their parametric columns as {@code GET /scope/contributions} gives them. */
+    private VarCaptures.Engine captureEngine() {
+        return new VarCaptures.Engine(enginePath, (p, scope, date, ccy) -> {
+            String node = pOn() ? enginePath.node(p, scope, date, ccy) : null;
+            Map<String, Object> answer = enginePath.contributions(p, scope, date, ccy);
+            return node == null ? answer : parametricParts(p, answer, node, date, false, null, ccy);
+        });
     }
 }

@@ -65,19 +65,37 @@ class RiskSideBySideTest {
         try (InputStream in = new GZIPInputStream(Files.newInputStream(PackagedServer.REPO.resolve(PackagedVarGoldenTest.GOLDEN)))) {
             golden = PackagedServer.JSON.readTree(in);
         }
-        Path lake = FOLDER.resolve("lake");                            // its own lake: the golden test builds the other one at the same time
-        PackagedServer.buildLake(lake, PackagedVarGoldenTest.ONLY);
+        Path lake = FOLDER.resolve("lake-desk-pnl");                   // with the desk P&L (a lake built without it is kept by its stamp)                            // its own lake: the golden test builds the other one at the same time
+        PackagedServer.buildLake(lake, PackagedVarGoldenTest.ONLY + ",market-risk/desk-pnl");   // + the desk P&L: the backtest's input
         Path work = FOLDER.resolve("server");
         deleteTree(work);
         SideBySide.dropJars(Path.of(jars), work);
         String tier = System.getProperty("sbs.tier", "");               // -Dsbs.tier=heap: the in-tree rows as float64 (the default mapped tier keeps them float32)
         server = tier.isBlank() ? PackagedServer.start(work, lake, "2026-09-30") : PackagedServer.start(work, lake, "2026-09-30", java.util.Map.of("DRISHTI_VAR_TIER", tier, "DRISHTI_VAR_MEMORY_MB", "900"));
+        List<String> published = new ArrayList<>();                     // each record's id: <NODE_ID>@<date>#v<RESULT_VERSION>
         for (String d : List.of("2026-09-28", "2026-09-29", "2026-09-30")) {   // the official records of the three dates, oldest first: a
-            server.post("/api/v1/risk/var/official?asOf=" + d, "{}");          // node's history on 09-29 and 09-30 is its records (mode official)
+            JsonNode o = server.post("/api/v1/risk/var/official?asOf=" + d, "{}");   // node's history on 09-29 and 09-30 is its records
+            published.add("MGMT~BANK%40" + d + "%23v" + o.path("resultVersion").asLong(1) + "?asOf=" + d);   // (mode official); 09-30 may be the start's
         }
         // the published records' reader (var-results, Delta) checks the table's latest version every refresh-seconds (10): the engine's
-        // first read of var-history (lazy, once per session) comes after it has seen the three captures
-        Thread.sleep(11_000);
+        // first read of var-history (lazy, once per session) must come after it has seen the three captures, so wait (no fixed sleep)
+        // until the reader serves the bank's record of every captured date (the start may have captured 09-30 before the others)
+        long seen = System.currentTimeMillis() + 120_000;
+        for (String id : published) {
+          while (true) {
+            try {
+                JsonNode v = server.get("/api/v1/views/var-official/" + id);   // '~' as it is
+                if (v.toString().contains("\"$.NODE_NAME\"")) {               // the record itself (its fields), not an empty page
+                    break;
+                }
+                throw new IllegalStateException("not yet: " + v.toString().substring(0, Math.min(300, v.toString().length())));
+            } catch (IllegalStateException e) {
+                assertThat(System.currentTimeMillis()).as("the published records' reader serves the newest capture within 120 s: " + e.getMessage())
+                        .isLessThan(seen);
+                Thread.sleep(250);                                        // a poll interval, not a wait for something to happen
+            }
+          }
+        }
         long end = System.currentTimeMillis() + 180_000;               // the engine answers once its day is read: wait for it, once
         while (true) {
             try {
@@ -321,6 +339,140 @@ class RiskSideBySideTest {
                 x.length()))).toList());
         assertThat(withFigures).as("statistics with figures compared").isGreaterThan(500);
         assertThat(differences).as("statistics that differ between in-tree and engine (every field, every bit)").isEmpty();
+    }
+
+    /**
+     * The regulatory backtest ({@code GET /backtesting}, decision 6.6 (5)): every golden node and three scope words, to each official
+     * date and to the newest, in-tree (the store's records, each keeping its VaR at 97.5% as {@code varAt}) against the engine's
+     * {@code backtest} and {@code backtest-days} over the published records (contract 1.6: {@code BACKTEST_CONFIDENCE},
+     * {@code BACKTEST_VAR}) and the desk P&amp;L: every field equal, every number to the bit (the exceptions at 0.99 and 0.975 counted
+     * alike, the zone, the multiplier, the tested days with the VaR of the day before at both confidences, the desks' rows); Kupiec and
+     * Christoffersen as the answer rounds them (4 decimals).
+     */
+    @Test
+    void theBacktestOfEveryGoldenNodeIsTheSameOnBothPaths() throws Exception {
+        List<String> scopes = new ArrayList<>(List.of("BANK", "DESK:RATES", "LE:LE-NY"));
+        golden.get("2026-09-30/509/USD").get("nodes").fieldNames().forEachRemaining(id -> scopes.add("NODE:" + id));
+        List<String> differences = new ArrayList<>();
+        int answers = 0;
+        int numbers = 0;
+        int[] tested = new int[2];                                        // tested days at 0.99 and at 0.975 (the node and its desks)
+        int[] exceptions = new int[2];
+        for (String scope : scopes) {
+            for (String asOf : List.of("", "2026-09-29", "2026-09-30")) {
+                String q = "/api/v1/risk/var/backtesting?scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8)
+                        + (asOf.isEmpty() ? "" : "&asOf=" + asOf);
+                JsonNode inTree = server.get(q + "&path=in-tree");
+                com.fasterxml.jackson.databind.node.ObjectNode engine = server.get(q + "&path=engine").deepCopy();
+                assertThat(engine.path("path").asText()).isEqualTo("engine");
+                engine.remove("path");
+                answers++;
+                numbers += countNumbers(inTree);
+                List<JsonNode> parts = new ArrayList<>(List.of(inTree));
+                inTree.path("parts").forEach(parts::add);                 // the node again, then its desks
+                for (JsonNode part : parts) {
+                    for (JsonNode c : part.path("counts")) {
+                        int k = Math.abs(c.path("confidence").asDouble() - 0.99) < 1e-9 ? 0 : 1;
+                        tested[k] += c.path("days").asInt();
+                        exceptions[k] += c.path("actual").asInt() + c.path("hypothetical").asInt();
+                    }
+                }
+                if (!inTree.equals(engine)) {
+                    differences.add(scope + " " + asOf + ": in-tree " + SideBySide.first(inTree, engine));
+                }
+            }
+        }
+        System.out.println("side by side, backtesting: " + answers + " answers on both paths, " + numbers + " numbers; tested days at 0.99 "
+                + tested[0] + " and at 0.975 " + tested[1] + ", exceptions (actual + hypothetical) " + exceptions[0] + " and " + exceptions[1]
+                + "; differences " + differences.size() + "; first: " + differences.stream().limit(3).map(x -> x.substring(0, Math.min(1500,
+                x.length()))).toList());
+        assertThat(tested[1]).as("days tested at 97.5%").isGreaterThan(0).isEqualTo(tested[0]);
+        assertThat(differences).as("backtests that differ between in-tree and engine (every field, every bit)").isEmpty();
+    }
+
+    /**
+     * Captures and compares (decision 6.6 (6)): a capture stays Drishti's (provenance, data version, label, kind, members), its figures
+     * come from the path {@code var.route} selects. Every golden node with child nodes (3 dates x USD/EUR) captured on both paths: every
+     * field of the two captures equal (headline, k, the child contributions, the worst scenarios, the rounded vector, the scenario dates,
+     * the members, the provenance) but the capture's own id, time and owner; the compare of the two shows no change at all; and on the
+     * newest date the compare of the in-tree capture with now is the same on both paths. Nodes whose parts are positions are refused on
+     * the engine path in words (counted).
+     */
+    @Test
+    void theCapturesOfEveryGoldenNodeAreTheSameOnBothPaths() throws Exception {
+        List<String> differences = new ArrayList<>();
+        int pairs = 0;
+        int refused = 0;
+        int nowCompared = 0;
+        Map<String, Integer> reasons = new java.util.TreeMap<>();
+        for (String date : List.of("2026-09-28", "2026-09-29", "2026-09-30")) {
+            for (String ccy : List.of("USD", "EUR")) {
+                Iterator<String> ids = golden.get(date + "/509/" + ccy).get("nodes").fieldNames();
+                while (ids.hasNext()) {
+                    String id = ids.next();
+                    String what = date + "/" + ccy + " NODE:" + id;
+                    String body = "{\"scope\":\"NODE:" + id + "\",\"ccy\":\"" + ccy + "\",\"note\":\"side by side\"}";
+                    JsonNode e;
+                    try {
+                        e = server.created("/api/v1/risk/var/captures?asOf=" + date + "&path=engine", body);
+                    } catch (IllegalStateException x) {
+                        assertThat(x.getMessage()).as(what + ": refused in words").startsWith("400 ");
+                        String why = x.getMessage().replaceAll(".*\"detail\":\"", "").replaceAll("[A-Z]+~[^ :,)]*", "<node>");
+                        reasons.merge(why.substring(0, Math.min(140, why.length())), 1, Integer::sum);
+                        refused++;
+                        continue;
+                    }
+                    JsonNode i = server.created("/api/v1/risk/var/captures?asOf=" + date + "&path=in-tree", body);
+                    com.fasterxml.jackson.databind.node.ObjectNode ci = server.get("/api/v1/risk/var/captures/" + i.path("id").asText()).deepCopy();
+                    com.fasterxml.jackson.databind.node.ObjectNode ce = server.get("/api/v1/risk/var/captures/" + e.path("id").asText()).deepCopy();
+                    assertThat(ce.path("figuresFrom").asText()).isEqualTo("engine");
+                    for (String f : List.of("id", "capturedAt", "owner", "figuresFrom")) {
+                        ci.remove(f);
+                        ce.remove(f);
+                    }
+                    for (com.fasterxml.jackson.databind.node.ObjectNode c : List.of(ci, ce)) {   // when and how fast each was computed,
+                        if (c.path("provenance") instanceof com.fasterxml.jackson.databind.node.ObjectNode pv) {   // and whether from the
+                            pv.remove(List.of("computedAt", "computeMs", "cache"));                                // in-tree cache: run facts
+                        }
+                    }
+                    pairs++;
+                    if (!ci.equals(ce)) {
+                        List<String> fields = new ArrayList<>();
+                        ci.fieldNames().forEachRemaining(f -> {
+                            if (!ci.get(f).equals(ce.get(f))) {
+                                fields.add(f + ": in-tree " + SideBySide.first(ci.get(f), ce.path(f)));
+                            }
+                        });
+                        differences.add(what + " capture: " + fields);
+                    }
+                    JsonNode cmp = server.get("/api/v1/risk/var/compare?a=" + i.path("id").asText() + "&b=" + e.path("id").asText());
+                    boolean still = cmp.path("varChange").asDouble() == 0 && cmp.path("esChange").asDouble() == 0
+                            && cmp.path("membersAdded").isEmpty() && cmp.path("membersRemoved").isEmpty();
+                    for (JsonNode c : cmp.path("components")) {
+                        still &= c.path("change").asDouble() == 0;
+                    }
+                    if (!still) {
+                        differences.add(what + " compare of the two: " + cmp);
+                    }
+                    if (date.equals("2026-09-30")) {
+                        String q = "/api/v1/risk/var/compare?a=" + i.path("id").asText() + "&b=now";
+                        com.fasterxml.jackson.databind.node.ObjectNode ni = server.get(q + "&path=in-tree").deepCopy();
+                        com.fasterxml.jackson.databind.node.ObjectNode ne = server.get(q + "&path=engine").deepCopy();
+                        ((com.fasterxml.jackson.databind.node.ObjectNode) ni.path("b")).remove("capturedAt");
+                        ((com.fasterxml.jackson.databind.node.ObjectNode) ne.path("b")).remove("capturedAt");
+                        nowCompared++;
+                        if (!ni.equals(ne)) {
+                            differences.add(what + " compare with now: " + SideBySide.first(ni, ne));
+                        }
+                    }
+                }
+            }
+        }
+        System.out.println("side by side, captures: " + pairs + " pairs of captures (" + refused + " nodes refused on the engine path: parts are "
+                + "positions: " + reasons + "), " + nowCompared + " compares with now; differences " + differences.size() + " (asserted "
+                + asserted(differences).size() + "); first: " + differences.stream().limit(3).map(x -> x.substring(0, Math.min(1500, x.length()))).toList());
+        assertThat(pairs).as("pairs of captures compared").isGreaterThan(100);
+        assertThat(asserted(differences)).as("captures that differ between in-tree and engine (every field, every bit)").isEmpty();
     }
 
     private static int countNumbers(JsonNode n) {

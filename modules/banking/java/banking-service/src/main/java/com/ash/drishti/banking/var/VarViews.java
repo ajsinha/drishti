@@ -365,12 +365,7 @@ final class VarViews {
         Map<String, Object> hist = history(s);
         out.put("backtest", hist.get("backtest"));
         out.put("ancestors", ancestors(b, s.res().node(), s));
-        Map<String, Object> pv = provenance(s);
-        Map<String, Object> matured = VarMaturedView.of(s, svc.tradeIdsMasked(p));
-        if (matured != null) {
-            pv.put("matured", matured);
-        }
-        out.put("provenance", pv);
+        out.put("provenance", provenance(p, s));
         svc.audit(p, "var-view", s, null);
         return out;
     }
@@ -440,6 +435,16 @@ final class VarViews {
     }
 
     /** How the number was built: the members, the data, the method, the engine, the viewer's view, the time (from the result's stamp). */
+    /** A scope's provenance as the headline gives it (with its matured items): host facts, the same on both paths (a capture keeps it). */
+    Map<String, Object> provenance(Principal p, VarService.Scoped s) {
+        Map<String, Object> pv = provenance(s);
+        Map<String, Object> matured = VarMaturedView.of(s, svc.tradeIdsMasked(p));
+        if (matured != null) {
+            pv.put("matured", matured);
+        }
+        return pv;
+    }
+
     private Map<String, Object> provenance(VarService.Scoped s) {
         VarBook b = s.date().book();
         VarProperties pr = svc.props();

@@ -275,6 +275,16 @@ final class PackagedServer implements AutoCloseable {
         return JSON.readTree(r.body());
     }
 
+    /** One POST of a JSON body that creates something; an answer that is not 201 is an error naming the request. */
+    JsonNode created(String pathAndQuery, String json) throws IOException, InterruptedException {
+        HttpResponse<String> r = http.send(HttpRequest.newBuilder(URI.create(base + pathAndQuery)).timeout(Duration.ofMinutes(5))
+                .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(json)).build(), HttpResponse.BodyHandlers.ofString());
+        if (r.statusCode() != 201) {
+            throw new IllegalStateException(r.statusCode() + " for POST " + pathAndQuery + ": " + r.body().substring(0, Math.min(300, r.body().length())));
+        }
+        return JSON.readTree(r.body());
+    }
+
     /** Any request: the status and the body as JSON (an empty object when the body is not JSON). */
     Answer send(String method, String pathAndQuery) throws IOException, InterruptedException {
         HttpResponse<String> r = http.send(HttpRequest.newBuilder(URI.create(base + pathAndQuery)).timeout(Duration.ofMinutes(5))
