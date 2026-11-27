@@ -381,8 +381,15 @@ public class VarController {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers a node's child nodes on the offered lens for now; "
                         + "a lens, a scenario, the matrix or other parts (by) are answered in-tree (path=in-tree)");
             }
-            parametricOff(parametric, "the contributions");
+            String node = !Boolean.FALSE.equals(parametric) && pOn() ? enginePath.node(p, scope(scope), date(asOf), ccy) : null;
+            if (node == null) {
+                parametricOff(parametric, "the contributions of a scope that is not a node");
+            }
             Map<String, Object> answer = enginePath.contributions(p, scope(scope), date(asOf), ccy);
+            if (node != null) {
+                answer = parametricParts(p, answer, node, date(asOf), accept != null && accept.contains("arrow"));
+            }
+            answer = parametric(answer, parametric);
             if (!exact) {
                 answer.remove("varExact");
                 answer.remove("esExact");
@@ -409,6 +416,57 @@ public class VarController {
     }
 
     /**
+     * The contributions' parametric columns on the engine path (decision 6.6 (4)): each child's component from {@code node-pvar-components}
+     * and the node's figures from {@code node-pvar}, shaped by {@code VarParametric} as in-tree (each row's columns first, the totals block
+     * after the rows; Arrow leaves the tooltips' lines to JSON).
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parametricParts(Principal p, Map<String, Object> answer, String node, java.time.LocalDate date, boolean arrow) {
+        String currency = (String) answer.get("currency");
+        VarEnginePath.Parametric x = enginePath.parametric(p, date, currency, enginePath.window(null), svc.props().defaultLens().confidence(),
+                svc.props().defaultLens().esConfidence(), views.parametric().props().settings()).get(node);
+        if (x == null) {
+            return answer;
+        }
+        var comps = enginePath.pComponents(p, date, currency, node);
+        String label = enginePath.nodeName(p, date, currency, node);
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) answer.getOrDefault("rows", List.of());
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        double pComp = 0;
+        double pAlone = 0;
+        for (Map<String, Object> r : rows) {
+            var pc = comps.get(String.valueOf(r.get("key")));
+            if (pc == null) {
+                throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine market-risk has no parametric component of " + r.get("key")
+                        + " in " + node + ": ask it in-tree (path=in-tree)");
+            }
+            Map<String, Object> m = new LinkedHashMap<>(views.parametric().row(pc, x.figures(), Double.NaN, String.valueOf(r.get("label")), label,
+                    true, rows.size()));
+            if (arrow) {
+                m.remove("describe");
+            }
+            m.putAll(r);
+            out.add(m);
+            pComp += pc.componentVar();
+            pAlone += pc.standaloneVar();
+        }
+        Map<String, Object> a = new LinkedHashMap<>();
+        answer.forEach((k, v) -> {
+            a.put(k, k.equals("rows") ? out : v);
+        });
+        Map<String, Object> totals = views.parametric().totals(x.figures(), pComp, pAlone, true);
+        Map<String, Object> b = new LinkedHashMap<>();
+        a.forEach((k, v) -> {
+            b.put(k, v);
+            if (k.equals("rows")) {
+                b.put("parametric", totals);                           // where the in-tree answer has it
+            }
+        });
+        return b;
+    }
+
+    /**
+     * The same scope in every listed reporting currency    /**
      * The same scope in every listed reporting currency (the explorer's "In other currencies" tab, VAR_GUIDE.md section 15.11): each
      * currency's VaR and ES from the scope's per-trade-currency totals, that VaR in {@code ccy} at today's rate and the difference.
      */

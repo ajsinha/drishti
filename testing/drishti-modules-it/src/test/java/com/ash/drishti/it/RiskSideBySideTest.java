@@ -144,6 +144,7 @@ class RiskSideBySideTest {
             }
         }
         int curves = 0;                                                 // the P&L path's block and normal curve of every node with child nodes
+        int parts = 0;                                                  // the contributions' parametric columns of their children
         for (String date : List.of("2026-09-28", "2026-09-29", "2026-09-30")) {
             for (String ccy : List.of("USD", "EUR")) {
                 Iterator<String> ids = golden.get(date + "/509/" + ccy).get("nodes").fieldNames();
@@ -161,16 +162,45 @@ class RiskSideBySideTest {
                     JsonNode inTree = server.get(q + "&path=in-tree");
                     parametricSame(sbs, numbers, date + "/" + ccy + " path NODE:" + id + " parametric", inTree.path("parametric"), engine.path("parametric"));
                     curves++;
+                    // the contributions' parametric columns of each child and the totals block (the matrix stays in-tree)
+                    String c = "/api/v1/risk/var/scope/contributions?scope=" + URLEncoder.encode("NODE:" + id, StandardCharsets.UTF_8) + "&asOf="
+                            + date + "&ccy=" + ccy;
+                    JsonNode ce = server.get(c + "&path=engine");
+                    JsonNode ci = server.get(c + "&path=in-tree");
+                    Map<String, JsonNode> byKey = new java.util.HashMap<>();
+                    ce.path("rows").forEach(r -> byKey.put(r.path("key").asText(), r));
+                    if (ci.path("rows").size() != ce.path("rows").size()) {
+                        sbs.differences.add(date + "/" + ccy + " contributions NODE:" + id + " rows: in-tree " + ci.path("rows").size() + ", engine "
+                                + ce.path("rows").size());
+                    }
+                    for (JsonNode r : ci.path("rows")) {
+                        JsonNode e = byKey.getOrDefault(r.path("key").asText(), PackagedServer.JSON.missingNode());
+                        com.fasterxml.jackson.databind.node.ObjectNode pi = PackagedServer.JSON.createObjectNode();
+                        com.fasterxml.jackson.databind.node.ObjectNode pe = PackagedServer.JSON.createObjectNode();
+                        r.fieldNames().forEachRemaining(f -> {
+                            if (f.startsWith("p") && f.length() > 1 && Character.isUpperCase(f.charAt(1))
+                                    || List.of("rho", "sigma", "mu", "cov", "zCovOverSigma", "describe").contains(f)) {
+                                pi.set(f, r.get(f));
+                                pe.set(f, e.path(f).isMissingNode() ? PackagedServer.JSON.nullNode() : e.get(f));
+                            }
+                        });
+                        parametricSame(sbs, numbers, date + "/" + ccy + " contributions NODE:" + id + " " + r.path("key").asText(), pi, pe);
+                        parts++;
+                    }
+                    parametricSame(sbs, numbers, date + "/" + ccy + " contributions NODE:" + id + " parametric", ci.path("parametric"),
+                            ce.path("parametric"));
                 }
             }
         }
         System.out.println("side by side, parametric (tier " + System.getProperty("sbs.tier", "mapped") + "): " + blocks + " blocks (headline "
-                + "and tree cells) and " + curves + " P&L path blocks with their curves on both paths; " + numbers[0] + " numbers compared, " + numbers[1] + " within relative 1e-12; differences "
+                + "and tree cells), " + curves + " P&L path blocks with their curves and as many contributions' totals, " + parts
+                + " contributions' rows on both paths; " + numbers[0] + " numbers compared, " + numbers[1] + " within relative 1e-12; differences "
                 + sbs.differences.size() + " (USD " + sbs.differences.stream().filter(x -> x.contains("/USD")).count() + "); first: "
                 + sbs.differences.stream().limit(8).map(x -> x.substring(0, Math.min(300, x.length()))).toList() + "; fields: "
                 + sbs.differences.stream().map(x -> x.replaceAll("^.* parametric\\.?([a-zA-Z]*).*$", "$1")).distinct().toList());
         assertThat(blocks).as("parametric blocks compared").isGreaterThan(2000);
         assertThat(curves).as("P&L path parametric blocks compared").isGreaterThan(100);
+        assertThat(parts).as("contributions' parametric rows compared").isGreaterThan(300);
         assertThat(asserted(sbs.differences)).as("parametric figures that differ beyond relative 1e-12 or in words").isEmpty();
     }
 

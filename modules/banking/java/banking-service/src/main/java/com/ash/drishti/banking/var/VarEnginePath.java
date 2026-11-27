@@ -1138,6 +1138,23 @@ public class VarEnginePath {
         return out;
     }
 
+    /**
+     * The parametric components of a node's children on the date's window in a currency ({@code node-pvar-components}), keyed by child id:
+     * what the contributions' parametric columns are made of (the in-tree route's {@code ParametricVar.component} of each child in the node).
+     */
+    Map<String, com.ash.drishti.banking.compute.var.ParametricVar.Component> pComponents(Principal p, LocalDate date, String currency, String node) {
+        Map<String, Object> a = ask(p, List.of("node-pvar-components"), params(dateWindow(), currency), Map.of("date", date.toString()));
+        Map<String, com.ash.drishti.banking.compute.var.ParametricVar.Component> out = new LinkedHashMap<>();
+        for (Map<String, Object> r : rows(a, "node-pvar-components")) {
+            if (node.equals(String.valueOf(r.get("NODE_ID")))) {
+                out.put(String.valueOf(r.get("CHILD")), new com.ash.drishti.banking.compute.var.ParametricVar.Component(num(r.get("MU")),
+                        num(r.get("SIGMA")), num(r.get("COV")), num(r.get("RHO")), num(r.get("COMPONENT_PVAR")), num(r.get("COMPONENT_PES")),
+                        num(r.get("STANDALONE_PVAR")), num(r.get("INCREMENTAL_PVAR"))));
+            }
+        }
+        return out;
+    }
+
     /** The window a headline's figures are on: the asked one cut to the date's, or the date's (0: the whole set). */
     int window(String window) {
         int dateWindow = dateWindow();
