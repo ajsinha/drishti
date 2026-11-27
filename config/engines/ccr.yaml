@@ -29,5 +29,8 @@ drishti:
         collateral-balance: { kinds: [ collateral-balance ] }
         trade-valuation: { kinds: [ trade-valuation ] }
         credit-limit: { kinds: [ credit-limit ] }
+        credit-limit-bucket: { kinds: [ credit-limit ], as-of: on-or-before, field: BUCKETS }   # each limit's tenor buckets: the items of its BUCKETS list, under its LIMIT_ID
+      snapshot: { hot: 1 }               # one business date's session kept open (its books released when another date is asked)
+      limits: { memory-mb: 768, request-seconds: 300 }   # one date's paths and the book built from them for each visibility asked; the first ask of a date reads its paths
       access:
         visibility: row-rules

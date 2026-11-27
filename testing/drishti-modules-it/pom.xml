@@ -45,6 +45,7 @@
   <properties>
     <drishti.risk.jars></drishti.risk.jars>
     <drishti.python></drishti.python>
+    <drishti.risk.recorded></drishti.risk.recorded>
     <drishti.repo>${project.basedir}/../..</drishti.repo>
     <drishti.modules.home>${project.build.directory}/modules-home</drishti.modules.home>
   </properties>
@@ -116,6 +117,8 @@
             <drishti.risk.jars>${drishti.risk.jars}</drishti.risk.jars>
             <!-- the Python that builds the tests' lakes (it needs the drishti_lake wheel): default: drishti-console/.venv of the checkout (what the drill uses); -Ddrishti.python=/abs/venv/bin/python overrides -->
             <drishti.python>${drishti.python}</drishti.python>
+            <!-- R2 side by side (ExposureSideBySideTest): drishti-risk's tck/recorded/ccr/recorder-<date>.yaml, the raw-bit reference; empty skips it -->
+            <drishti.risk.recorded>${drishti.risk.recorded}</drishti.risk.recorded>
             <drishti.module.jars>${project.basedir}/../../packaging/dist/target/module-jars</drishti.module.jars>
             <drishti.exec.jar>${project.basedir}/../../kernel/drishti-server/target/drishti-server-${project.version}-exec.jar</drishti.exec.jar>
           </systemPropertyVariables>

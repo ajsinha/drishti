@@ -97,6 +97,6 @@ public class RiskOperations {
 
     @Operation(value = "exposure.predeal", rest = "POST /api/v1/risk/exposure/predeal")
     public Figures exposurePreDeal(Person p, Body r) {
-        return new Figures(preDeal.check(r.body(), asOf(p), principal(p)));
+        return new Figures(preDeal.check(r.body(), asOf(p), null, principal(p)));
     }
 }

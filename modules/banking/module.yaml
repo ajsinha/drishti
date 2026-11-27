@@ -486,6 +486,7 @@ settings:                               # read as drishti.module.banking.<key> (
   - { key: var.system-baskets.seed, type: boolean, retired: drishti.var.system-baskets.seed, group: Hierarchies, meaning: "Import a loaded pack's system-basket seed once into an empty system scope at start" }
   - { key: exposure.limit-confidence, type: number, retired: drishti.ccr.exposure.limit-confidence, group: Exposure, meaning: "The PFE confidence credit limits are set on" }
   - { key: exposure.rank-rule, type: string, retired: drishti.ccr.exposure.rank-rule, group: Exposure, meaning: "kth or interpolated" }
+  - { key: exposure.route, type: string, group: Exposure, meaning: "in-tree, or engine: the exposure routes asked of Drishti Risk's ccr engine through the host (R2)" }
   - { key: frtb.parameters-dir, type: string, retired: drishti.frtb.parameters-dir, group: FRTB-SA, meaning: "The folder of the FRTB-SA parameter files" }
   - { key: simm.parameters-dir, type: string, retired: drishti.simm.parameters-dir, group: SIMM, meaning: "The bank's licensed SIMM parameter files" }
   - { key: simm.default-version, type: string, retired: drishti.simm.default-version, group: SIMM, meaning: "The SIMM version for a CSA naming none" }
