@@ -76,7 +76,7 @@ public class RiskOperations {
     @Operation(value = "var.contributions", rest = "GET /api/v1/risk/var/scope/contributions")
     @SuppressWarnings("unchecked")
     public Figures varContributions(Person p, Contributions r) {
-        ResponseEntity<Object> answer = var.contributions(r.scope(), r.by(), null, null, null, null, null, null, null, asOf(p), null, false, principal(p), null);
+        ResponseEntity<Object> answer = var.contributions(r.scope(), r.by(), null, null, null, null, null, null, null, asOf(p), null, false, null, false, principal(p), null);
         return new Figures((Map<String, Object>) answer.getBody());
     }
 

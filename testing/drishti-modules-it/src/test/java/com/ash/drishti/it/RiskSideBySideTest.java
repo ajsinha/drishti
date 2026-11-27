@@ -207,6 +207,52 @@ class RiskSideBySideTest {
     }
 
     /**
+     * The pre-deal what-if on every scope kind that is not a node (expressions, system baskets, ad-hoc trade and position lists, a
+     * counterparty), each date, USD: the engine's what-if over the scope's row set; before, after, change, every item and the limit block
+     * (a system basket's own) equal on both paths. The row sums are the scope kinds': equal on the heap tier ({@code -Dsbs.tier=heap}); the
+     * mapped tier keeps rows as float32 (MC-12), so there the differences are counted, not asserted.
+     */
+    @Test
+    void theWhatIfOnEveryScopeKindIsTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        int refused = 0;
+        java.util.Set<String> dates = new java.util.TreeSet<>();
+        golden.fieldNames().forEachRemaining(c -> dates.add(c.split("/")[0]));
+        for (String date : dates) {
+            List<String> scopes = new ArrayList<>(List.of("BANK - DESK:RATES", "DESK:RATES + DESK:FX", "LE:NY - DESK:RATES", "DESK:RATES & LE:NY",
+                    "PORT:PF-USD-RATES", "PORT:PF-EUR-ALL", "PORT:PF-SHORT-RISK", "PORT:PF-LISTED", "PORT:PF-NETTED-FLOW", "PORT:PF-EUR-ALL - DESK:FX"));
+            List<String> adHoc = adHoc(date);
+            scopes.addAll(adHoc);
+            String trade = adHoc.get(2);
+            for (String scope : scopes) {
+                String body = "{\"scope\":\"" + scope + "\",\"items\":[{\"copyOf\":\"" + trade + "\",\"factor\":-1},"
+                        + "{\"copyOf\":\"DESK:FX\",\"factor\":0.5}]}";
+                try {
+                    server.post("/api/v1/risk/var/what-if?asOf=" + date + "&path=in-tree", body);
+                } catch (IllegalStateException e) {                     // refused in-tree (a scope with no trades): refused on the engine path too
+                    refused++;
+                    try {
+                        server.post("/api/v1/risk/var/what-if?asOf=" + date + "&path=engine", body);
+                        sbs.differences.add(date + " " + scope + ": refused in-tree (" + e.getMessage() + "), answered on the engine path");
+                    } catch (IllegalStateException expected) {
+                        // both refuse
+                    }
+                    continue;
+                }
+                sbs.bothPost(server, date + " " + scope, "/api/v1/risk/var/what-if?asOf=" + date, body, "canonical", "businessDate", "currency",
+                        "before", "after", "change", "items", "limit");
+            }
+        }
+        System.out.println("side by side, what-if on scope kinds (tier " + System.getProperty("sbs.tier", "mapped") + "): " + sbs.compared
+                + " what-ifs on both paths (" + refused + " refused on both); differences " + sbs.differences.size() + "; first: " + sbs.differences.stream().limit(6)
+                .map(x -> x.substring(0, Math.min(400, x.length()))).toList());
+        assertThat(sbs.compared).as("what-ifs compared").isGreaterThan(30);
+        if ("heap".equals(System.getProperty("sbs.tier", ""))) {
+            assertThat(sbs.differences).as("what-if answers that differ between in-tree and engine").isEmpty();
+        }
+    }
+
+    /**
      * Every scope kind through the host's row set (ENGINE_INTEGRATION_DESIGN 18.1, EN-68): scope expressions, the system baskets (nodes,
      * rules over the positions' columns, named lists), ad-hoc lists of 1 and 50 trades and of 1 and 20 positions, a counterparty, a legal
      * entity; each date, window and currency of the goldens; the route's fields equal and the engine's VaR and ES equal to the in-tree raw
@@ -259,6 +305,167 @@ class RiskSideBySideTest {
         assertThat(sbs.compared).as("scope answers compared").isGreaterThanOrEqualTo(300);
         assertThat(sbs.differences).as("route answers that differ between in-tree and engine").isEmpty();
         assertThat(sbs.bitDifferences).as("engine figures whose raw bits differ from the in-tree").isEmpty();
+    }
+
+    /**
+     * The tree ({@code GET /tree}) of every hierarchy, each golden date and currency, on the offered lens: the nodes in the same order with
+     * the same fields (name, level, parent, depth, VaR, ES, limit, limit use and status, trades, expandable, the (Blank) note), the
+     * hierarchies, titles and system baskets; the engine's VaR and ES of every golden node equal to the golden's raw bits.
+     */
+    @Test
+    void theTreeOfEveryHierarchyIsTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        java.util.Set<String> done = new java.util.HashSet<>();
+        int nodes = 0;
+        Iterator<String> cases = golden.fieldNames();
+        while (cases.hasNext()) {
+            String[] k = cases.next().split("/");
+            if (!done.add(k[0] + "/" + k[2])) {
+                continue;
+            }
+            JsonNode g = golden.path(k[0] + "/509/" + k[2]).path("nodes");
+            JsonNode first = server.get("/api/v1/risk/var/tree?asOf=" + k[0] + "&ccy=" + k[2] + "&parametric=false&path=in-tree");
+            for (JsonNode h : first.path("hierarchies")) {
+                String what = k[0] + "/" + k[2] + " " + h.asText();
+                JsonNode[] both = sbs.both(server, what, "/api/v1/risk/var/tree?asOf=" + k[0] + "&ccy=" + k[2] + "&hierarchy=" + h.asText()
+                        + "&parametric=false&exact=true", "hierarchy", "currency", "hierarchies", "hierarchyInfo", "title", "businessDate", "portfolios");
+                List<String> a = new ArrayList<>();
+                List<String> b = new ArrayList<>();
+                both[0].path("nodes").forEach(n -> a.add(n.path("id").asText()));
+                both[1].path("nodes").forEach(n -> b.add(n.path("id").asText()));
+                if (!a.equals(b)) {
+                    sbs.differences.add(what + " node order: in-tree " + a.size() + ", engine " + b.size() + ": " + SideBySide.first(
+                            both[0].path("nodes"), both[1].path("nodes")));
+                    continue;
+                }
+                for (int i = 0; i < a.size(); i++) {
+                    JsonNode x = both[0].path("nodes").get(i);
+                    JsonNode y = both[1].path("nodes").get(i);
+                    nodes++;
+                    for (String f : List.of("id", "scope", "name", "level", "parent", "depth", "var", "es", "limit", "limitUse", "limitStatus",
+                            "limitComparable", "trades", "hidden", "expandable", "blank", "blankNote")) {
+                        // EUR limit use: the in-tree tree divides the node's VaR by its limit as the headline does (the open EUR decision)
+                        if (!java.util.Objects.equals(String.valueOf(x.get(f)), String.valueOf(y.get(f)))) {
+                            sbs.differences.add(what + " " + a.get(i) + " " + f + ": in-tree " + x.get(f) + ", engine " + y.get(f));
+                        }
+                    }
+                    if (g.has(a.get(i))) {
+                        sbs.bits(what + " " + a.get(i) + " VAR", g.get(a.get(i)).path("var").asDouble(), y.path("varExact").asDouble());
+                        sbs.bits(what + " " + a.get(i) + " ES", g.get(a.get(i)).path("es").asDouble(), y.path("esExact").asDouble());
+                    }
+                }
+            }
+        }
+        System.out.println("side by side, tree: " + sbs.compared + " trees, " + nodes + " node rows on both paths; " + sbs.sameBits
+                + " engine VaR and ES figures equal to the golden raw bits; differences " + sbs.differences.size() + " (USD "
+                + sbs.differences.stream().filter(x -> x.contains("/USD ")).count() + "; fields " + sbs.differences.stream()
+                .map(x -> x.replaceAll("^\\S+ \\S+ \\S+ (\\S+):.*$", "$1")).distinct().toList() + "); first: "
+                + sbs.differences.stream().limit(8).toList() + "; first raw-bit differences: " + sbs.bitDifferences.stream().limit(10).toList());
+        assertThat(nodes).as("tree rows compared").isGreaterThan(500);
+        assertThat(sbs.differences.stream().filter(x -> x.contains("/USD ")).toList()).as("USD tree answers that differ").isEmpty();
+        assertThat(sbs.bitDifferences).as("engine figures whose raw bits differ from the golden").isEmpty();
+    }
+
+    /**
+     * The contributions ({@code GET /scope/contributions}, the default parts) of every golden node with child nodes, each date and currency:
+     * every row (standalone VaR and ES, component VaR and ES, share, incremental VaR) and the sums equal on both paths, and the headline's
+     * parts block (children, their kind, the standalone sum, the diversification); VaR and ES equal to the golden's raw bits. A node whose
+     * parts are positions is refused on the engine path in words, and counted.
+     */
+    @Test
+    void theContributionsOfEveryGoldenNodeAreTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        java.util.Set<String> done = new java.util.HashSet<>();
+        int refused = 0;
+        Iterator<String> cases = golden.fieldNames();
+        while (cases.hasNext()) {
+            String[] k = cases.next().split("/");
+            if (!done.add(k[0] + "/" + k[2])) {
+                continue;
+            }
+            JsonNode g = golden.path(k[0] + "/509/" + k[2]).path("nodes");
+            Iterator<String> ids = g.fieldNames();
+            while (ids.hasNext()) {
+                String id = ids.next();
+                String what = k[0] + "/" + k[2] + " NODE:" + id;
+                String q = "scope=" + URLEncoder.encode("NODE:" + id, StandardCharsets.UTF_8) + "&asOf=" + k[0] + "&ccy=" + k[2];
+                try {
+                    server.get("/api/v1/risk/var/scope/contributions?" + q + "&parametric=false&path=engine");
+                } catch (IllegalStateException e) {
+                    assertThat(e.getMessage()).as(what).contains("path=in-tree");
+                    refused++;
+                    continue;
+                }
+                JsonNode[] both = sbs.both(server, what, "/api/v1/risk/var/scope/contributions?" + q + "&parametric=false&exact=true",
+                        "canonical", "currency", "by", "var", "es", "sumStandalone", "sumComponent", "diversification", "truncated", "total",
+                        "shown", "rows");
+                sbs.bits(what + " VAR", g.get(id).path("var").asDouble(), both[1].path("varExact").asDouble());
+                sbs.bits(what + " ES", g.get(id).path("es").asDouble(), both[1].path("esExact").asDouble());
+                sbs.both(server, what + " headline", "/api/v1/risk/var/scope?" + q, "children", "childKind",
+                        "sumStandalone", "diversification");
+            }
+        }
+        System.out.println("side by side, contributions: " + sbs.compared + " answers (contributions and the headline's parts) on both paths ("
+                + refused + " nodes of positions refused on the engine path); " + sbs.sameBits + " engine VaR and ES figures equal to the golden "
+                + "raw bits; differences USD " + sbs.differences.stream().filter(x -> x.contains("/USD ")).count() + ", EUR "
+                + sbs.differences.stream().filter(x -> x.contains("/EUR ")).count() + "; first: " + sbs.differences.stream().limit(6)
+                .map(x -> x.substring(0, Math.min(400, x.length()))).toList() + "; first raw-bit differences: "
+                + sbs.bitDifferences.stream().limit(10).toList());
+        assertThat(sbs.compared).as("answers compared").isGreaterThan(100);
+        // EUR: the engine's scope-var of a node whole takes the per-currency totals, the golden (and node-var) the converted book's
+        // aggregate, last digits apart; the in-tree parts are the converted book trade by trade (the EUR canonical, R2_CUT_PLAN 6.6)
+        assertThat(sbs.differences.stream().filter(x -> x.contains("/USD ")).toList()).as("USD answers that differ").isEmpty();
+        assertThat(sbs.bitDifferences.stream().filter(x -> x.contains("/USD ")).toList()).as("USD raw bits that differ from the golden").isEmpty();
+    }
+
+    /**
+     * The headline of every golden node through the other lenses ({@code GET /scope} with {@code horizon=10d} by the square root of 10 and
+     * by overlapping sums, {@code set=stressed} at 1 and 10 days), each date (USD; 10-day also EUR): VaR, ES, scenarios, trades, limit and
+     * limit use (null where the limit is set for another lens) equal on both paths, the engine's VaR and ES equal to the in-tree raw bits.
+     */
+    @Test
+    void theHorizonsAndTheStressSetAreTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        java.util.Set<String> dates = new java.util.TreeSet<>();
+        golden.fieldNames().forEachRemaining(c -> dates.add(c.split("/")[0]));
+        java.util.Map<String, Boolean> stress = new java.util.HashMap<>();
+        List<String[]> lenses = List.of(new String[] {"USD", "horizon=10d"}, new String[] {"EUR", "horizon=10d"},
+                new String[] {"USD", "horizon=10d&method=sum"}, new String[] {"USD", "set=stressed"}, new String[] {"USD", "set=stressed&horizon=10d"});
+        for (String date : dates) {
+            Iterator<String> ids = golden.path(date + "/509/USD").path("nodes").fieldNames();
+            while (ids.hasNext()) {
+                String id = ids.next();
+                for (String[] l : lenses) {
+                    String what = date + "/" + l[0] + " " + l[1] + " NODE:" + id;
+                    if (l[1].startsWith("set=stressed") && !stress.computeIfAbsent(date, d -> stressSet(d))) {
+                        continue;                                       // the date holds no stress scenario set: refused on both paths
+                    }
+                    JsonNode[] both = sbs.both(server, what, "/api/v1/risk/var/scope?scope=" + URLEncoder.encode("NODE:" + id, StandardCharsets.UTF_8)
+                            + "&asOf=" + date + "&ccy=" + l[0] + "&" + l[1] + "&exact=true", "currency", "var", "es", "scenarios", "horizon", "set",
+                            "trades", "limit", "limitComparable", "limitUse");
+                    sbs.bits(what + " VAR", both[0].path("varExact").asDouble(), both[1].path("varExact").asDouble());
+                    sbs.bits(what + " ES", both[0].path("esExact").asDouble(), both[1].path("esExact").asDouble());
+                }
+            }
+        }
+        System.out.println("side by side, horizons and the stress set: " + sbs.compared + " node answers on both paths; " + sbs.sameBits
+                + " engine VaR and ES figures equal to the in-tree raw bits; differences " + sbs.differences.size() + " (USD "
+                + sbs.differences.stream().filter(x -> x.contains("/USD ")).count() + "); first: " + sbs.differences.stream().limit(8)
+                .map(x -> x.substring(0, Math.min(300, x.length()))).toList() + "; first raw-bit differences: "
+                + sbs.bitDifferences.stream().limit(8).toList());
+        assertThat(sbs.compared).as("answers compared").isGreaterThan(1000);
+        assertThat(sbs.differences.stream().filter(x -> x.contains("/USD ")).toList()).as("USD answers that differ").isEmpty();
+        assertThat(sbs.bitDifferences.stream().filter(x -> x.contains("/USD ")).toList()).as("USD raw bits that differ").isEmpty();
+    }
+
+    /** True when the date has a stress scenario set (the in-tree stressed headline of the firm answers). */
+    private static boolean stressSet(String date) {
+        try {
+            server.get("/api/v1/risk/var/scope?scope=NODE:MGMT~BANK&asOf=" + date + "&set=stressed&path=in-tree");
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /** Ad-hoc lists of the date: 1 and 50 trades, 1 and 20 positions (from the in-tree contributions), and a counterparty. */

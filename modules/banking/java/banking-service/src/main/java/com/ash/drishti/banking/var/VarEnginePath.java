@@ -25,6 +25,7 @@ import com.ash.drishti.kernel.api.services.Engines;
 import com.ash.drishti.kernel.api.services.Kernel;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -173,7 +174,7 @@ public class VarEnginePath {
         if (date == null) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path needs the business date: give asOf");
         }
-        String currency = ccy == null || ccy.isBlank() ? "USD" : ccy.trim().toUpperCase(Locale.ROOT);
+        String currency = VarCurrencies.normalise(ccy);   // none named: the installation's reporting currency
         int dateWindow = dateWindow();
         int asked = window == null || window.isBlank() || window.equalsIgnoreCase("all") ? 0 : Integer.parseInt(window.trim());
         int w = dateWindow == 0 ? asked : asked == 0 || asked > dateWindow ? dateWindow : asked;
@@ -215,9 +216,77 @@ public class VarEnginePath {
         out.put("trades", f.members());
         out.put("limit", Double.isNaN(official.limit()) ? null : VarViews.round(official.limit()));
         out.put("limitUse", Double.isNaN(official.limit()) || official.limit() == 0 ? null : official.var() / official.limit());
+        if (resolvedNode != null) {                                     // the parts (child nodes): standalone sum and diversification
+            EngineScopeBook book = index(p, date, currency);
+            if (!book.children.getOrDefault(resolvedNode, List.of()).isEmpty()) {
+                Parts parts = nodeParts(p, book, resolve(p, book, "NODE:" + resolvedNode, date), date, currency);
+                double alone = 0;
+                for (Map<String, Object> r : parts.rows()) {
+                    alone += (Double) r.get("_alone");
+                }
+                int n = parts.rows().size();
+                out.put("children", n);
+                out.put("childKind", n == 0 ? null : parts.rows().get(0).get("kind"));
+                out.put("sumStandalone", n == 0 ? null : VarViews.round(alone));
+                out.put("diversification", n < 2 ? null : VarViews.round(alone - parts.var()));
+            }
+        }
         if (warning != null) {
             out.put("warning", warning);
         }
+        out.put("path", "engine");
+        return out;
+    }
+
+    /**
+     * A node's headline through a lens other than the offered one ({@code horizon} 10d by the square root of 10 or overlapping sums,
+     * {@code set=stressed}), from the engine's {@code node-var-horizon}: {@code var}, {@code es} (and their exact doubles), {@code trades},
+     * {@code limit}, and {@code limitUse} only when the limit is set for that lens (a 1-day limit is not compared with a 10-day VaR, a
+     * stressed VaR never with a limit), as the in-tree headline. A scope that is not a node whole is answered in-tree for now.
+     */
+    public Map<String, Object> headline(Principal p, String scope, LocalDate date, String ccy, com.ash.drishti.banking.compute.var.VarLens lens) {
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path needs the business date: give asOf");
+        }
+        VarService svc = service.getIfAvailable();
+        String currency = VarCurrencies.normalise(ccy);
+        EngineScopeBook book = index(p, date, currency);
+        ScopeResolver.Resolution res = resolve(p, book, scope == null ? "" : scope.trim(), date);
+        if (res.node() == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers a horizon or the stress set for a node for now; "
+                    + res.canonical() + " is not a node: ask it in-tree (path=in-tree)");
+        }
+        Map<String, Object> params = params(dateWindow(), currency);
+        params.put("stressed", lens.stressed());
+        params.put("horizon", lens.tenDay() ? "10d" : "1d");
+        params.put("ten-day-method", lens.method() == com.ash.drishti.banking.compute.var.VarLens.Method.SUM ? "sum" : "sqrt10");
+        Map<String, Object> a = ask(p, List.of("node-var-horizon"), params, Map.of("date", date.toString()));
+        Map<String, Object> r = row(a, "node-var-horizon", "NODE_ID", res.node());
+        if (r == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " answered no " + lens.label() + " VaR for "
+                    + res.canonical() + " on " + date + missing(a));
+        }
+        double var = num(r.get("VAR"));
+        double es = num(r.get("ES"));
+        double limit = nodeFigures(p, res.node(), date, currency, dateWindow()).limit();   // the node's limit in the answer's currency
+        boolean comparable = svc != null && svc.loader().limitBasis(date, res.node()).matches(lens);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("scope", scope);
+        out.put("asOf", date.toString());
+        out.put("currency", currency);
+        out.put("node", res.node());
+        out.put("var", VarViews.round(var));
+        out.put("es", VarViews.round(es));
+        out.put("varExact", var);
+        out.put("esExact", es);
+        out.put("scenarios", ((Number) r.get("SCENARIOS")).intValue());
+        out.put("horizon", lens.horizon());
+        out.put("method", lens.methodName());
+        out.put("set", lens.set());
+        out.put("trades", res.set().size());
+        out.put("limit", Double.isNaN(limit) ? null : VarViews.round(limit));
+        out.put("limitComparable", Double.isNaN(limit) ? null : comparable);
+        out.put("limitUse", Double.isNaN(limit) || limit == 0 || !comparable ? null : var / limit);
         out.put("path", "engine");
         return out;
     }
@@ -240,7 +309,7 @@ public class VarEnginePath {
         if (svc == null) {
             throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the VaR service is not configured here: the path is answered nowhere");
         }
-        String currency = ccy == null || ccy.isBlank() ? "USD" : ccy.trim().toUpperCase(Locale.ROOT);
+        String currency = VarCurrencies.normalise(ccy);   // none named: the installation's reporting currency
         int window = dateWindow();
         EngineScopeBook book = index(p, date, currency);
         ScopeResolver.Resolution res = resolve(p, book, scope, date);
@@ -354,11 +423,226 @@ public class VarEnginePath {
     }
 
     /**
+     * A hierarchy's tree through the engine ({@code GET /tree}, the explorer's left pane): every node of {@code node-var} the person sees,
+     * walked from the root in the engine's node order (each node's children in order, depth first, as the in-tree walk), each row the
+     * in-tree row's fields ({@code id}, {@code scope}, {@code name}, {@code level}, {@code parent}, {@code depth}, {@code var}, {@code es},
+     * {@code limit}, {@code limitUse}, {@code limitStatus}, {@code limitComparable}, {@code trades}, {@code hidden}, {@code expandable},
+     * the (Blank) note) plus {@code varExact} and {@code esExact}. The hierarchies' titles and the system baskets are Drishti's. A lens,
+     * the matured-items switch, a basket's own tree ({@code within}) and the parametric cells are answered in-tree for now.
+     */
+    public Map<String, Object> tree(Principal p, String hierarchy, LocalDate date, String ccy) {
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path needs the business date: give asOf");
+        }
+        VarService svc = service.getIfAvailable();
+        if (svc == null) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the VaR service is not configured here: the tree is answered nowhere");
+        }
+        String currency = VarCurrencies.normalise(ccy);   // none named: the installation's reporting currency
+        EngineScopeBook book = index(p, date, currency);
+        List<String> present = book.hierarchies();
+        String h = hierarchy == null || hierarchy.isBlank() ? (present.contains("MGMT") || present.isEmpty() ? "MGMT" : present.get(0))
+                : hierarchy.toUpperCase(Locale.ROOT);
+        String root = book.rootId(h);
+        if (root == null) {
+            throw new DrishtiException(ErrorCode.VAR_HIERARCHY_UNKNOWN, "no hierarchy " + h + " on " + date + " (it has "
+                    + (present.isEmpty() ? "none: configure hierarchies: in the pack or drishti.var.hierarchies" : String.join(", ", present)) + ")");
+        }
+        Map<String, Object> a = ask(p, List.of("node-var"), params(dateWindow(), currency), Map.of("date", date.toString()));
+        Map<String, Map<String, Object>> byId = new HashMap<>();
+        for (Map<String, Object> r : rows(a, "node-var")) {
+            byId.put(String.valueOf(r.get("NODE_ID")), r);
+        }
+        com.ash.drishti.banking.compute.var.Cells.Names names = svc.loader().names(com.ash.drishti.api.AsOf.of(date), svc.hierarchies());
+        List<Map<String, Object>> out = new ArrayList<>();
+        java.util.ArrayDeque<Object[]> stack = new java.util.ArrayDeque<>();
+        stack.push(new Object[] {root, 0});
+        while (!stack.isEmpty()) {
+            Object[] top = stack.pop();
+            String id = (String) top[0];
+            int depth = (Integer) top[1];
+            Map<String, Object> r = byId.get(id);
+            if (r == null) {
+                continue;                                                // a node the person does not see: not a row, nor its subtree
+            }
+            OrdinalSet members = book.members(id);
+            List<String> kids = book.children.getOrDefault(id, List.of());
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("id", id);
+            m.put("scope", "NODE:" + id);
+            m.put("name", nodeName(book, names, id));
+            m.put("level", r.get("LEVEL"));
+            m.put("parent", r.get("PARENT"));
+            m.put("depth", depth);
+            double var = ((Number) r.get("VAR")).doubleValue();
+            double es = ((Number) r.get("ES")).doubleValue();
+            m.put("var", VarViews.round(var));
+            m.put("es", VarViews.round(es));
+            m.put("varExact", var);
+            m.put("esExact", es);
+            double limit = r.get("LIMIT") == null ? Double.NaN : ((Number) r.get("LIMIT")).doubleValue();
+            boolean noLimit = Double.isNaN(limit);
+            boolean comparable = svc.loader().limitBasis(date, id).matches(svc.props().defaultLens());
+            m.put("limit", noLimit ? null : VarViews.round(limit));
+            m.put("limitUse", noLimit || limit == 0 || !comparable ? null : var / limit);
+            com.ash.drishti.banking.RiskLimits rl = limits.getIfAvailable();
+            m.put("limitStatus", rl == null ? null : rl.status((Double) m.get("limitUse")));
+            m.put("limitComparable", noLimit ? null : comparable);
+            int trades = members == null ? 0 : members.size();
+            m.put("trades", trades);
+            m.put("hidden", 0);
+            m.put("expandable", !kids.isEmpty() || trades > 0);
+            String blank = svc.hierarchies().blankNote(h, id, String.valueOf(r.get("LEVEL")), trades);
+            if (blank != null) {
+                m.put("blank", true);
+                m.put("blankNote", blank);
+            }
+            out.add(m);
+            for (int i = kids.size() - 1; i >= 0; i--) {
+                stack.push(new Object[] {kids.get(i), depth + 1});
+            }
+        }
+        Map<String, Object> t = new LinkedHashMap<>();
+        t.put("hierarchy", h);
+        t.put("currency", currency);
+        t.put("intraday", null);
+        List<Map<String, Object>> info = svc.hierarchies().describe(present);
+        t.put("hierarchies", info.stream().map(x -> String.valueOf(x.get("id"))).toList());
+        t.put("hierarchyInfo", info);
+        t.put("title", svc.hierarchies().title(h));
+        t.put("businessDate", date.toString());
+        t.put("nodes", out);
+        List<Map<String, Object>> ports = new ArrayList<>();
+        svc.saved().system().portfolios(date, book.basketLimits).values().forEach(pf -> {
+            Map<String, Object> x = new LinkedHashMap<>();
+            x.put("id", pf.id());
+            x.put("scope", "PORT:" + pf.id());
+            x.put("name", pf.name());
+            x.put("type", pf.type());
+            x.put("owner", pf.owner());
+            svc.saved().system().get(pf.id()).ifPresent(sb -> x.put("description", sb.description()));
+            ports.add(x);
+        });
+        t.put("portfolios", ports);
+        t.put("path", "engine");
+        return t;
+    }
+
+    /**
+     * A node's parts through the engine ({@code GET /scope/contributions}, {@code by} child or node): each child node the scope holds, measured
+     * by the engine's {@code scope-contributions} in the scope (standalone VaR and ES, component VaR and ES, share, incremental VaR), shaped
+     * as the in-tree route ({@code canonical}, {@code currency}, {@code by}, {@code var}, {@code es}, {@code sumStandalone},
+     * {@code sumComponent}, {@code diversification}, {@code truncated}, {@code total}, {@code shown}, the rows largest component first).
+     * A scope whose parts are positions, trades, terms, desks, books or attribute groups, a scenario's column and the parametric columns
+     * are answered in-tree for now, said in one sentence.
+     */
+    public Map<String, Object> contributions(Principal p, String scope, LocalDate date, String ccy) {
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path needs the business date: give asOf");
+        }
+        String currency = VarCurrencies.normalise(ccy);   // none named: the installation's reporting currency
+        EngineScopeBook book = index(p, date, currency);
+        ScopeResolver.Resolution res = resolve(p, book, scope, date);
+        Parts parts = nodeParts(p, book, res, date, currency);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("canonical", res.canonical());
+        out.put("currency", currency);
+        out.put("intraday", null);
+        out.put("by", parts.rows().isEmpty() ? null : parts.rows().get(0).get("kind"));   // the in-tree route names the parts' level
+        out.put("var", VarViews.round(parts.var()));
+        out.put("es", VarViews.round(parts.es()));
+        out.put("varExact", parts.var());
+        out.put("esExact", parts.es());
+        double standalone = 0;
+        double comp = 0;
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Map<String, Object> r : parts.rows()) {
+            standalone += (Double) r.remove("_alone");
+            comp += (Double) r.remove("_comp");
+            rows.add(r);
+        }
+        rows.sort(java.util.Comparator.comparingDouble(r -> -((Number) r.get("componentVar")).doubleValue()));
+        out.put("sumStandalone", VarViews.round(standalone));
+        out.put("sumComponent", VarViews.round(comp));
+        out.put("diversification", VarViews.round(standalone - parts.var()));
+        out.put("truncated", false);
+        out.put("total", rows.size());
+        out.put("shown", rows.size());
+        out.put("rows", rows);
+        out.put("path", "engine");
+        return out;
+    }
+
+    /** A node's name as the in-tree book names it: the reference entity's name of its value (VAR_GUIDE 15.14), else the engine's name. */
+    static String nodeName(EngineScopeBook book, com.ash.drishti.banking.compute.var.Cells.Names names, String c) {
+        String value = c.substring(Math.max(c.lastIndexOf('/'), c.lastIndexOf('~')) + 1);
+        String named = book.levels.get(c) == null ? null : names.of(book.levels.get(c), value);
+        return named != null ? named : book.names.getOrDefault(c, c);
+    }
+
+    /** A scope's VaR and ES and its child-node parts' rows (with the raw standalone and component VaR under {@code _alone}, {@code _comp}). */
+    record Parts(double var, double es, List<Map<String, Object>> rows) {}
+
+    Parts nodeParts(Principal p, EngineScopeBook book, ScopeResolver.Resolution res, LocalDate date, String currency) {
+        VarService svc = service.getIfAvailable();
+        if (svc == null) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the VaR service is not configured here: the parts are answered nowhere");
+        }
+        List<String> kids = res.node() == null ? List.of() : book.children.getOrDefault(res.node(), List.of());
+        if (kids.isEmpty()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the parts of a node with child nodes for now; the parts of "
+                    + res.canonical() + " are positions, trades or terms: ask it in-tree (path=in-tree)");
+        }
+        Map<String, Object> params = params(dateWindow(), currency);
+        params.put("rows", ordinals(res.set()));
+        params.put("node", res.node());
+        List<Integer> all = new ArrayList<>();
+        List<String> named = new ArrayList<>();
+        com.ash.drishti.banking.compute.var.Cells.Names names = svc.loader().names(com.ash.drishti.api.AsOf.of(date), svc.hierarchies());
+        for (String c : kids) {
+            all.addAll(ordinals(book.members(c).and(res.set())));
+            all.add(-1);
+            named.add(c);
+        }
+        params.put("parts", all);
+        params.put("part-nodes", String.join(",", named));
+        Map<String, Object> a = ask(p, List.of("scope-var", "scope-contributions"), params, Map.of("date", date.toString()));
+        List<Map<String, Object>> sv = rows(a, "scope-var");
+        if (sv.isEmpty()) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " answered no VaR for " + res.canonical() + " on "
+                    + date + missing(a));
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Map<String, Object> r : rows(a, "scope-contributions")) {
+            String c = named.get(((Number) r.get("PART")).intValue());
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("key", c);
+            m.put("scope", "NODE:" + c);
+            m.put("label", nodeName(book, names, c));
+            m.put("kind", book.levels.get(c));
+            double alone = num(r.get("STANDALONE_VAR"));
+            double comp = num(r.get("COMPONENT_VAR"));
+            m.put("standaloneVar", VarViews.round(alone));
+            m.put("standaloneEs", VarViews.round(num(r.get("STANDALONE_ES"))));
+            m.put("componentVar", VarViews.round(comp));
+            m.put("componentEs", VarViews.round(num(r.get("COMPONENT_ES"))));
+            m.put("pct", num(r.get("PCT")));
+            m.put("incrementalVar", VarViews.round(num(r.get("INCREMENTAL_VAR"))));
+            m.put("marginalPer1m", null);
+            m.put("level", book.levels.get(c));
+            m.put("_alone", alone);
+            m.put("_comp", comp);
+            rows.add(m);
+        }
+        return new Parts(num(sv.get(0).get("VAR")), num(sv.get(0).get("ES")), rows);
+    }
+
+    /**
      * A pre-deal what-if through the engine ({@code POST /what-if}): the engine's {@code what-if} on a node's stored aggregate, each item's
      * vector supplied by the host (a copy of a booked trade's or any scope's summed P&amp;L, {@code scope-var}, or a P&amp;L priced
      * elsewhere), its factor applied by the engine; shaped as the in-tree route ({@code before}, {@code after}, {@code change},
-     * {@code items}, {@code limit}). A scope that is not a node, and a currency other than USD (the engine's vectors are USD), are
-     * answered in-tree for now, said in one sentence.
+     * {@code items}, {@code limit}). A scope that is not a node is its row set ({@code rows}, summed as scope-var sums it; a system
+     * basket's own limit); a currency other than USD (the engine's vectors are USD) is answered in-tree for now, said in one sentence.
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> whatIf(Principal p, Map<String, Object> body, LocalDate date) {
@@ -373,7 +657,7 @@ public class VarEnginePath {
         if (scope.isEmpty()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a what-if names its scope: {\"scope\": \"DESK:RATES\", \"items\": [{\"copyOf\": \"MX-30000121\", \"factor\": -1}]}");
         }
-        String currency = body.get("ccy") == null ? "USD" : String.valueOf(body.get("ccy")).trim().toUpperCase(Locale.ROOT);
+        String currency = VarCurrencies.normalise(body.get("ccy") == null ? null : String.valueOf(body.get("ccy")));
         if (!currency.equals("USD")) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers a what-if in USD for now: ask " + currency + " in-tree (path=in-tree)");
         }
@@ -384,9 +668,8 @@ public class VarEnginePath {
         int window = dateWindow();
         EngineScopeBook book = index(p, date, currency);
         ScopeResolver.Resolution res = resolve(p, book, scope, date);
-        if (res.node() == null) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers a what-if on a node for now; " + res.canonical()
-                    + " is not one: ask it in-tree (path=in-tree)");
+        if (res.node() == null && res.set().isEmpty()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, res.canonical() + " holds no trades on " + date + ": nothing to add the items to");
         }
         List<Map<String, Object>> trades = new ArrayList<>();
         for (Map<String, Object> it : asked) {
@@ -440,7 +723,11 @@ public class VarEnginePath {
             trades.add(row);
         }
         Map<String, Object> params = params(window, currency);
-        params.put("node", res.node());
+        if (res.node() != null) {
+            params.put("node", res.node());
+        } else {
+            params.put("rows", ordinals(res.set()));                       // any other scope: its row set, summed as scope-var sums it
+        }
         params.put("trades", trades);
         Map<String, Object> a = ask(p, List.of("what-if"), params, Map.of("date", date.toString()));
         Map<String, Object> b = row(a, "what-if", "ROW", "BEFORE");
@@ -488,8 +775,9 @@ public class VarEnginePath {
         out.put("after", after);
         out.put("change", change);
         out.put("items", items);
-        double limit = book.nodeLimit(res.node());
-        if (Double.isNaN(limit) || limit == 0 || !svc.loader().limitBasis(date, res.node()).matches(svc.props().defaultLens())) {
+        String port = res.node() == null && res.canonical().startsWith("PORT:") ? res.canonical().substring(5) : null;   // a system basket's own limit
+        double limit = res.node() != null ? book.nodeLimit(res.node()) : port != null ? book.basketLimits.getOrDefault(port, Double.NaN) : Double.NaN;
+        if (Double.isNaN(limit) || limit == 0 || !svc.loader().limitBasis(date, res.node() != null ? res.node() : port).matches(svc.props().defaultLens())) {
             out.put("limit", null);
         } else {
             com.ash.drishti.banking.RiskLimits lim = limits.getIfAvailable(com.ash.drishti.banking.RiskLimits::defaults);

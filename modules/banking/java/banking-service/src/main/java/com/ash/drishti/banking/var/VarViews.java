@@ -294,6 +294,8 @@ final class VarViews {
         out.put("asOfNotice", asOfNotice(s.date()));                 // the date asked had no P&L load: said, never silent
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
+        out.put("varExact", s.measures().var());                       // the unrounded figures (served on exact=true only: R2's side by side)
+        out.put("esExact", s.measures().es());
         out.put("k", s.measures().k());
         out.put("esCount", s.measures().esCount());
         out.put("scenarios", s.vector().length);
