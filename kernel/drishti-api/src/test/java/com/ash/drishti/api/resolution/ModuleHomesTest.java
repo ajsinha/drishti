@@ -52,7 +52,7 @@ class ModuleHomesTest {
 
     @Test
     void aDevelopmentFolderHasNoContentHashAndAPackageAlwaysHasOne() {
-        ModuleHomes.Home dev = new ModuleHomes.Home("genomics", "0.1.0", Path.of("/src/genomics"), null, ModuleHomes.Origin.DEVELOPMENT);
+        ModuleHomes.Home dev = new ModuleHomes.Home("genomics", "0.1.0", Path.of("/src/genomics").toAbsolutePath(), null, ModuleHomes.Origin.DEVELOPMENT);
 
         assertThat(dev.identity()).isEqualTo("genomics 0.1.0 development");
         assertThat(dev.contentHash16()).isNull();
@@ -76,7 +76,7 @@ class ModuleHomesTest {
     @Test
     void theFingerprintIsTheSha256OfTheIdentityLines() {
         ModuleHomes h = ModuleHomes.of(List.of(home("banking", A),
-                new ModuleHomes.Home("genomics", "0.1.0", Path.of("/src/genomics"), null, ModuleHomes.Origin.DEVELOPMENT)));
+                new ModuleHomes.Home("genomics", "0.1.0", Path.of("/src/genomics").toAbsolutePath(), null, ModuleHomes.Origin.DEVELOPMENT)));
 
         assertThat(h.fingerprint()).isEqualTo("f7339103d32cab19ed228794976e07e9be7eb28dc4f104c10dceaba7d2cf2f29");
     }
@@ -87,7 +87,7 @@ class ModuleHomesTest {
     @Test
     void theValueTravelsAsOneSettingWhateverItsFolders() {
         ModuleHomes h = ModuleHomes.of(List.of(home("banking", A), new ModuleHomes.Home("genomics", "0.1.0",
-                Path.of(WINDOWS ? "/src/a folder, with; odd%chars/genomics" : "/src/a folder, with: odd%chars/genomics"), null, ModuleHomes.Origin.DEVELOPMENT)));
+                Path.of(WINDOWS ? "/src/a folder, with; odd%chars/genomics" : "/src/a folder, with: odd%chars/genomics").toAbsolutePath(), null, ModuleHomes.Origin.DEVELOPMENT)));
 
         assertThat(ModuleHomes.fromProperty(h.toProperty())).isEqualTo(h);
         assertThat(ModuleHomes.fromProperty("")).isEqualTo(ModuleHomes.none());
@@ -127,6 +127,6 @@ class ModuleHomesTest {
     }
 
     private static ModuleHomes.Home home(String id, String hash) {
-        return new ModuleHomes.Home(id, "1.0.0", Path.of("/cache/" + id), hash, ModuleHomes.Origin.FIRST_PARTY);
+        return new ModuleHomes.Home(id, "1.0.0", Path.of("/cache/" + id).toAbsolutePath(), hash, ModuleHomes.Origin.FIRST_PARTY);
     }
 }

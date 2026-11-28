@@ -33,9 +33,9 @@ class TableCatalogueTest {
 
     @Test
     void aLocalLocationIsAbsoluteAndNormalised() {
-        assertEquals(Path.of("/data/delta/risklake/risk/pnl").toString(), TableCatalogue.locate("/data/delta/risklake/", "risk", "pnl"));
-        assertEquals(Path.of("/data/x").toString(), TableCatalogue.locate("/data/a/..", "x", ""));
-        assertEquals(Path.of("/data/feeds/news").toString(), TableCatalogue.locateLocal("/data/feeds", "news").toString());
+        assertEquals(Path.of("/data/delta/risklake/risk/pnl").toAbsolutePath().toString(), TableCatalogue.locate("/data/delta/risklake/", "risk", "pnl"));
+        assertEquals(Path.of("/data/x").toAbsolutePath().toString(), TableCatalogue.locate("/data/a/..", "x", ""));
+        assertEquals(Path.of("/data/feeds/news").toAbsolutePath().toString(), TableCatalogue.locateLocal("/data/feeds", "news").toString());
     }
 
     @Test

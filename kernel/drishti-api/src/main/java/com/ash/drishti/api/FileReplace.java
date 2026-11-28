@@ -49,7 +49,13 @@ public final class FileReplace {
                 Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
                 return;
             } catch (FileSystemException e) {
-                if (!RETRIES || !held(e) || System.nanoTime() + pause * 1_000_000 > until) {
+                if (!RETRIES || !held(e)) {
+                    throw e;
+                }
+                if (movedAside(tmp, file)) {
+                    return;                                            // held open (not mapped): its name is free to take
+                }
+                if (System.nanoTime() + pause * 1_000_000 > until) {
                     throw e;
                 }
             }
@@ -61,6 +67,36 @@ public final class FileReplace {
             }
             pause = Math.min(250, pause * 2);
         }
+    }
+
+    /**
+     * Windows refuses to replace a file another handle holds open, but renames it (Java opens files sharing delete): the old file is
+     * renamed to a temporary name in its folder, {@code tmp} takes the name, and the old file is deleted (it goes when its holder closes).
+     * A file that is memory-mapped cannot be renamed either: false, and the caller waits for the mapping to be released.
+     */
+    private static boolean movedAside(Path tmp, Path file) {
+        Path aside = file.resolveSibling(file.getFileName() + ".tmp-old-" + System.nanoTime());
+        try {
+            Files.move(file, aside);
+        } catch (IOException | RuntimeException e) {
+            return false;
+        }
+        try {
+            Files.move(tmp, file);
+        } catch (IOException | RuntimeException e) {
+            try {
+                Files.move(aside, file);                               // put the old file back: nothing changed
+            } catch (IOException | RuntimeException again) {
+                // the caller sees the original refusal
+            }
+            return false;
+        }
+        try {
+            Files.deleteIfExists(aside);
+        } catch (IOException | RuntimeException e) {
+            // a stray ".tmp-" file: removed with the folder's next clean
+        }
+        return true;
     }
 
     /** A refusal because the old file is held open (Windows), not a missing file, an unsupported move or a folder in the way. */

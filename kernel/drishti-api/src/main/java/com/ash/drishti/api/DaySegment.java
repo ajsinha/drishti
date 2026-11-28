@@ -26,7 +26,6 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -246,7 +245,7 @@ public final class DaySegment {
                 ChannelIo.write(ch, tail);
                 ch.force(true);
             }
-            Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            FileReplace.atomically(tmp, target);                       // Windows: an old segment still read does not stop the replace
         } catch (IOException e) {
             try {
                 Files.deleteIfExists(tmp);

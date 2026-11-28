@@ -61,7 +61,7 @@ class ModuleOverridesTest {
 
             assertThat(ModuleOverrides.installedFiles()).extracting(ModuleOverrides.File::path)
                     .containsExactly("banking/packs/trading/sutras/endur/endur-cash.v1.sutra.yaml");
-            String refused = String.join("\n", ModuleOverrides.installedRefused());
+            String refused = String.join("\n", ModuleOverrides.installedRefused()).replace('\\', '/');     // Windows: the paths read with its separator
             assertThat(refused).contains("lib/ holds the module's code", "python/ holds the module's code", "engines/ holds the module's code",
                     "a .py file is code", "a .class file is code", "a .so file is code", "a .dll file is code", "a .jar file is code",
                     "banking/packs/x/pack.yaml: a symbolic link is never followed", "banking/packs/linked: a symbolic link is never followed");
@@ -134,7 +134,7 @@ class ModuleOverridesTest {
     @Test
     void theSettingNamesFoldersAbsoluteOrUnderTheHome() {
         Path home = tmp.resolve("home");
-        assertThat(ModuleOverrides.dirs(" /abs/a , rel/b ,, ", home)).containsExactly(Path.of("/abs/a"), home.resolve("rel/b").toAbsolutePath());
+        assertThat(ModuleOverrides.dirs(" /abs/a , rel/b ,, ", home)).containsExactly(Path.of("/abs/a").toAbsolutePath(), home.resolve("rel/b").toAbsolutePath());
         assertThat(ModuleOverrides.dirs("", home)).isEmpty();
         assertThat(ModuleOverrides.dirs(null, home)).isEmpty();
     }
