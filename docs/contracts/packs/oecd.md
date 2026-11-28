@@ -102,55 +102,55 @@ One OECD member: the latest leading indicator, unemployment, inflation and growt
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
 
 <a id="example-oecd-oecd-country"></a>
-**Example: `modules/economy/packs/oecd/samples/oecd-country.jsonl`**
+**Example: `data/testdata/oecd/oecd-country`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
 ```json
 {
-  "COUNTRY_ID": "OECD-AUS",
-  "COUNTRY_NAME": "Australia",
-  "GDP_GROWTH": 0.419502713,
-  "GDP_GROWTH_PERIOD": "2026-Q2",
-  "INFLATION": 4.34,
-  "INFLATION_PERIOD": "2026-09",
-  "ISO3": "AUS",
-  "LEADING_INDICATOR": 99.9505,
-  "LEADING_INDICATOR_PERIOD": "2026-09",
+  "COUNTRY_ID": "OECD-GBR",
+  "COUNTRY_NAME": "United Kingdom",
+  "GDP_GROWTH": 0.744976513,
+  "GDP_GROWTH_PERIOD": "2026-Q3",
+  "INFLATION": 3.7,
+  "INFLATION_PERIOD": "2026-10",
+  "ISO3": "GBR",
+  "LEADING_INDICATOR": 101.4263,
+  "LEADING_INDICATOR_PERIOD": "2026-10",
   "MEASURES": [
     {
-      "CHANGE": -0.04308,
-      "LATEST": 99.9505,
+      "CHANGE": 0.0695,
+      "LATEST": 101.4263,
       "MEASURE": "CLI",
-      "OECD_SERIES": "OECDS-AUS-CLI",
-      "PERIOD": "2026-09",
+      "OECD_SERIES": "OECDS-GBR-CLI",
+      "PERIOD": "2026-10",
       "TITLE": "Composite leading indicator",
       "UNIT": "index, long-term average = 100"
     },
     {
-      "CHANGE": 0.066741,
-      "LATEST": 4.718349,
+      "CHANGE": -0.1,
+      "LATEST": 4.6,
       "MEASURE": "UNEMPLOYMENT",
-      "OECD_SERIES": "OECDS-AUS-UNEMPLOYMENT",
-      "PERIOD": "2026-09",
+      "OECD_SERIES": "OECDS-GBR-UNEMPLOYMENT",
+      "PERIOD": "2026-08",
       "TITLE": "Unemployment rate, seasonally adjusted",
       "UNIT": "% of labour force"
     },
     "… 2 more elements of the same shape"
   ],
   "MEASURE_COUNT": 4,
-  "NAME": "Australia",
+  "NAME": "United Kingdom",
   "PROVENANCE": {
     "ATTRIBUTION": "Source: OECD Data Explorer (CC BY 4.0).",
     "DATASET": "OECD Data Explorer (SDMX)",
     "INTERNAL_ONLY": false,
     "LICENCE": "OECD terms and conditions: data may be extracted, copied and redistributed, also commercially, with the source acknowledged (CC BY 4.0 for OECD data since July 2024)",
-    "RETRIEVED_AT": "2026-11-06",
+    "RETRIEVED_AT": "2026-11-27",
     "SOURCE": "OECD",
     "URL": "https://data-explorer.oecd.org/"
   },
-  "UNEMPLOYMENT": 4.718349,
-  "UNEMPLOYMENT_PERIOD": "2026-09"
+  "UNEMPLOYMENT": 4.6,
+  "UNEMPLOYMENT_PERIOD": "2026-08"
 }
 ```
 
@@ -228,45 +228,45 @@ One OECD measure of one member by period: the history, the latest value and the 
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
 
 <a id="example-oecd-oecd-series"></a>
-**Example: `modules/economy/packs/oecd/samples/oecd-series.jsonl`**
+**Example: `data/testdata/oecd/oecd-series`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
 ```json
 {
-  "CHANGE": 0.0529,
-  "COUNTRY_NAME": "United States",
+  "CHANGE": 0.0695,
+  "COUNTRY_NAME": "United Kingdom",
   "DATAFLOW": "OECD.SDD.STES,DSD_STES@DF_CLI,",
   "FREQUENCY": "monthly",
   "HISTORY": [
     {
-      "PERIOD": "2024-01",
-      "VALUE": 99.09195
+      "PERIOD": "2020-11",
+      "VALUE": 97.87898
     },
     {
-      "PERIOD": "2024-02",
-      "VALUE": 99.19873
+      "PERIOD": "2020-12",
+      "VALUE": 99.01772
     },
-    "… 31 more elements of the same shape"
+    "… 70 more elements of the same shape"
   ],
-  "ISO3": "USA",
-  "LATEST": 100.9993,
-  "LATEST_PERIOD": "2026-09",
+  "ISO3": "GBR",
+  "LATEST": 101.4263,
+  "LATEST_PERIOD": "2026-10",
   "MEASURE": "CLI",
-  "NAME": "United States · Composite leading indicator",
-  "OECD_COUNTRY": "OECD-USA",
-  "PREVIOUS": 100.9464,
-  "PREVIOUS_PERIOD": "2026-08",
+  "NAME": "United Kingdom · Composite leading indicator",
+  "OECD_COUNTRY": "OECD-GBR",
+  "PREVIOUS": 101.3568,
+  "PREVIOUS_PERIOD": "2026-09",
   "PROVENANCE": {
     "ATTRIBUTION": "Source: OECD Data Explorer (CC BY 4.0).",
     "DATASET": "OECD DSD_STES@DF_CLI",
     "INTERNAL_ONLY": false,
     "LICENCE": "OECD terms and conditions: data may be extracted, copied and redistributed, also commercially, with the source acknowledged (CC BY 4.0 for OECD data since July 2024)",
-    "RETRIEVED_AT": "2026-11-06",
+    "RETRIEVED_AT": "2026-11-27",
     "SOURCE": "OECD",
     "URL": "https://data-explorer.oecd.org/?lc=en&df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_STES%40DF_CLI"
   },
-  "SERIES_ID": "OECDS-USA-CLI",
+  "SERIES_ID": "OECDS-GBR-CLI",
   "TITLE": "Composite leading indicator",
   "UNIT": "index, long-term average = 100"
 }

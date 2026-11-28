@@ -28,6 +28,7 @@ The economy module's public-sector central-banks pack (docs/guides/WORLD_DATA_GU
 python3 tools/drishti.py feed run central-banks --dry-run      # what it would fetch and load; changes nothing
 python3 tools/drishti.py feed run central-banks                # pull today, write data/datafeeds/central-banks/<date>/, load into worldlake
 python3 tools/drishti.py feed status central-banks             # its last runs
+python3 tools/drishti.py feed run central-banks --snapshot     # refresh the committed demo snapshot instead
 ```
 
 Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).

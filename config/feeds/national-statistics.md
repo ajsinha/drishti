@@ -26,6 +26,7 @@ The economy module's public-sector national-statistics pack (docs/guides/WORLD_D
 python3 tools/drishti.py feed run national-statistics --dry-run      # what it would fetch and load; changes nothing
 python3 tools/drishti.py feed run national-statistics                # pull today, write data/datafeeds/national-statistics/<date>/, load into worldlake
 python3 tools/drishti.py feed status national-statistics             # its last runs
+python3 tools/drishti.py feed run national-statistics --snapshot     # refresh the committed demo snapshot instead
 ```
 
 Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).

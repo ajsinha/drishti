@@ -58,31 +58,31 @@ Every kind the pack owns, read from its manifest, its samples and its Sutras: ho
 
 **World events by country** · mnemonic `GDELT` · read through connector `gdelt-store`.
 
-**Id:** field `EVENT_COUNTRY_ID`; pattern `^GDELT-`; for example `GDELT-AUS`.
+**Id:** field `EVENT_COUNTRY_ID`; pattern `^GDELT-`; for example `GDELT-AFG`.
 
 Fields, from 13 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `AVG_GOLDSTEIN` | number | `1.0946` | The average Goldstein scale of the day's events: the theoretical impact of the event type on a country's stability, -10 (most conflictual) to +10 (most cooperative). |
-| `AVG_TONE` | number | `-2.8054` | GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by mentions. |
-| `AVG_TONE_WINDOW` | number | `-2.2956` | The mention-weighted average tone over the window. |
+| `AVG_GOLDSTEIN` | number | `-0.4407` | The average Goldstein scale of the day's events: the theoretical impact of the event type on a country's stability, -10 (most conflictual) to +10 (most cooperative). |
+| `AVG_TONE` | number | `-3.7949` | GDELT's tone of the articles reporting the events (-100 very negative to +100 very positive; most fall between -10 and +10), weighted by mentions. |
+| `AVG_TONE_WINDOW` | number | `-3.9284` | The mention-weighted average tone over the window. |
 | `BY_CATEGORY` | list of objects |  | The day's events by CAMEO root category, the most first (CODE, CATEGORY, EVENTS, AVG_TONE). |
-| `CONFLICT_SHARE` | number | `25.0` | The share of the day's events in CAMEO's quad classes 3 and 4 (verbal and material conflict). (%) |
-| `COOPERATION_SHARE` | number | `75.0` | The share in quad classes 1 and 2 (verbal and material cooperation). (%) |
-| `COUNTRY_NAME` | string | `Australia` | The country's name (Natural Earth). |
-| `DATE` | date | `2026-11-05` | The latest day the feed read (the events added to GDELT that day). |
-| `EVENTS` | integer | `92` | The day's events whose first actor is the country. |
-| `EVENTS_WINDOW` | integer | `160` | The events over the days the history holds. |
-| `EVENT_COUNTRY_ID` | string | `GDELT-AUS` | GDELT- and the country's ISO 3166-1 alpha-3 code (the CAMEO country code of the event's first actor). |
+| `CONFLICT_SHARE` | number | `33.79` | The share of the day's events in CAMEO's quad classes 3 and 4 (verbal and material conflict). (%) |
+| `COOPERATION_SHARE` | number | `66.21` | The share in quad classes 1 and 2 (verbal and material cooperation). (%) |
+| `COUNTRY_NAME` | string | `Afghanistan` | The country's name (Natural Earth). |
+| `DATE` | date | `2026-11-26` | The latest day the feed read (the events added to GDELT that day). |
+| `EVENTS` | integer | `145` | The day's events whose first actor is the country. |
+| `EVENTS_WINDOW` | integer | `1040` | The events over the days the history holds. |
+| `EVENT_COUNTRY_ID` | string | `GDELT-AFG` | GDELT- and the country's ISO 3166-1 alpha-3 code (the CAMEO country code of the event's first actor). |
 | `HISTORY` | list of objects |  | The country's events and average tone by day over the window, oldest first (DATE, EVENTS, AVG_TONE). |
-| `ISO3` | string | `AUS` | The country's ISO 3166-1 alpha-3 code, the key the map shades by. |
-| `MENTIONS` | integer | `4410` | How many times those events were mentioned across the day's coverage. |
-| `NAME` | string | `Australia` | The country's name (Natural Earth). |
+| `ISO3` | string | `AFG` | The country's ISO 3166-1 alpha-3 code, the key the map shades by. |
+| `MENTIONS` | integer | `845` | How many times those events were mentioned across the day's coverage. |
+| `NAME` | string | `Afghanistan` | The country's name (Natural Earth). |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
-| `TONE_CHANGE` | number | `-0.5098` | The day's average tone less the window's: below zero, coverage turned more negative. |
+| `TONE_CHANGE` | number | `0.1335` | The day's average tone less the window's: below zero, coverage turned more negative. |
 | `TOP_STORIES` | list of objects |  | The day's most-mentioned events' source articles (MENTIONS, URL, CATEGORY), links to the originals. |
-| `WINDOW_DAYS` | integer | `2` | How many days of the window have events for the country. |
+| `WINDOW_DAYS` | integer | `7` | How many days of the window have events for the country. |
 
 Nested structures:
 
@@ -138,9 +138,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The **gdelt-events** feed (`config/feeds/gdelt-events.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 04:30 local time, and its selection in `options`) pulls what is new into `<data>/datafeeds/gdelt-events/<date>/` and loads it into the `newslake` lake: `python3 tools/drishti.py feed run gdelt-events` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). With the Python you run Drishti with: `python3 tools/drishti.py feed run gdelt-events` on Linux and macOS, `py -3.13 tools\drishti.py feed run gdelt-events` on Windows; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **gdelt-events** feed (`config/feeds/gdelt-events.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 04:30 local time, and its selection in `options`) pulls what is new into `<data>/datafeeds/gdelt-events/<date>/` and loads it into the `newslake` lake: `python3 tools/drishti.py feed run gdelt-events` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). With the Python you run Drishti with: `python3 tools/drishti.py feed run gdelt-events` on Linux and macOS, `py -3.13 tools\drishti.py feed run gdelt-events` on Windows; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The pack's data is its committed snapshot, `data/testdata/gdelt-events/<kind>/`, from a live run: `python3 tools/drishti.py feed run gdelt-events --snapshot` pulls the latest data and rewrites it, with the pack's reference samples (a few documents of each kind for this README and the docs, never served) and this README; `python3 tools/drishti.py lake demo` builds the snapshot into the lake the connector reads.
 
-The data feed `gdelt-events` (config/feeds/gdelt-events.yaml) pulls `event-country`: `python3 tools/drishti.py feed run gdelt-events` fetches them daily into `data/datafeeds/gdelt-events/<date>/` and loads them into the lake `newslake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `gdelt-events` (config/feeds/gdelt-events.yaml) pulls `event-country`: `python3 tools/drishti.py feed run gdelt-events` fetches them daily into `data/datafeeds/gdelt-events/<date>/` and loads them into the lake `newslake`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 
@@ -160,7 +160,7 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `GDELT` | `event-country` | external: GDELT 1.0 daily event files (GDELT terms: free for any use with a citation) — refreshed by `drishti.py feed run gdelt-events` | the daily feed `gdelt-events` → `<data>/delta/newslake/gdelt/event-country/` (lake `newslake`) → connector `gdelt-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `GDELT` | `event-country` | external: GDELT 1.0 daily event files (GDELT terms: free for any use with a citation) — refreshed by `drishti.py feed run gdelt-events` | the daily feed `gdelt-events` → `<data>/delta/newslake/gdelt/event-country/` (lake `newslake`) → connector `gdelt-store`; the committed snapshot `data/testdata/gdelt-events/event-country/` (135 documents, retrieved 2026-11-27) → `lake demo` → the lake `newslake`, same connector |
 
 ### External sources
 
@@ -181,9 +181,9 @@ The same with the Python you run Drishti with: `python3 tools/drishti.py feed ru
 
 ### Into the lake, checking, offline
 
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
 - **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+- **Offline.** Everything committed works without a network: the test data and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
 
 ## See also
 

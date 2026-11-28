@@ -62,34 +62,34 @@ Every kind the pack owns, read from its manifest, its samples and its Sutras: ho
 
 **Development profile** · mnemonic `WDI` · read through connector `development-store`.
 
-**Id:** field `PROFILE_ID`; pattern `^WDI-`; for example `WDI-AUS`.
+**Id:** field `PROFILE_ID`; pattern `^WDI-`; for example `WDI-ABW`.
 
 Fields, from 12 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `CAPITAL` | string | `Canberra` | The capital city as the World Bank lists it. |
-| `CENTRAL_GOVERNMENT_DEBT` | number | `57.8834285733848` | Central government debt, total (GC.DOD.TOTL.GD.ZS), the latest year; empty for most economies that do not report it. (% of GDP) |
-| `COUNTRY_NAME` | string | `Australia` | The economy's name as the World Bank writes it. |
+| `CAPITAL` | string | `Oranjestad` | The capital city as the World Bank lists it. |
+| `CENTRAL_GOVERNMENT_DEBT` | number | `49.9643490499689` | Central government debt, total (GC.DOD.TOTL.GD.ZS), the latest year; empty for most economies that do not report it. (% of GDP) |
+| `COUNTRY_NAME` | string | `Aruba` | The economy's name as the World Bank writes it. |
 | `DATA_YEAR` | string | `2025` | The most recent year any indicator of the economy has a value for. |
 | `ELECTRICITY_ACCESS` | number | `100.0` | Share of the population with access to electricity (EG.ELC.ACCS.ZS), the latest year. (% of population) |
-| `GDP_GROWTH` | number | `1.35039785076631` | Annual growth of GDP at constant prices (NY.GDP.MKTP.KD.ZG), the latest year. (% a year) |
-| `GDP_PER_CAPITA` | number | `65129.7227990563` | GDP divided by mid-year population, current US dollars (NY.GDP.PCAP.CD), the latest year. (USD) |
+| `GDP_GROWTH` | number | `6.81077669324554` | Annual growth of GDP at constant prices (NY.GDP.MKTP.KD.ZG), the latest year. (% a year) |
+| `GDP_PER_CAPITA` | number | `38590.5650288641` | GDP divided by mid-year population, current US dollars (NY.GDP.PCAP.CD), the latest year. (USD) |
 | `INCOME_GROUP` | string | `High income` | The World Bank income group by GNI per head (Low, Lower middle, Upper middle, High income). |
 | `INDICATORS` | list of objects |  | Every indicator the feed pulled for the economy, one row each: INDICATOR, UNIT, LATEST, YEAR, CODE and WDI_SERIES. |
-| `INDICATOR_COUNT` | integer | `10` | How many indicators have at least one value for the economy. |
-| `INFLATION` | number | `2.87403791660173` | Consumer price inflation (FP.CPI.TOTL.ZG), the latest year. (% a year) |
-| `INTERNET_USERS` | number | `96.13140106` | Share of the population using the internet (IT.NET.USER.ZS), the latest year. (% of population) |
-| `ISO2` | string | `AU` | The country's ISO 3166-1 alpha-2 code (the World Bank's own id). |
-| `ISO3` | string | `AUS` | The country's ISO 3166-1 alpha-3 code, the key the map shades by. |
-| `LIFE_EXPECTANCY` | number | `83.0512195121951` | Life expectancy at birth (SP.DYN.LE00.IN), the latest year. (years) |
-| `NAME` | string | `Australia` | The economy's name as the World Bank writes it. |
-| `POPULATION` | number | `27614411.0` | Total population, mid-year (SP.POP.TOTL), the latest year with a value. (persons) |
-| `POVERTY_HEADCOUNT` | number | `0.9` | Share living below the World Bank's international poverty line (SI.POV.DDAY), the latest survey year. (% of population) |
-| `PROFILE_ID` | string | `WDI-AUS` | WDI- and the country's ISO 3166 alpha-3 code. |
+| `INDICATOR_COUNT` | integer | `7` | How many indicators have at least one value for the economy. |
+| `INFLATION` | number | `4.25746204335427` | Consumer price inflation (FP.CPI.TOTL.ZG), the latest year. (% a year) |
+| `INTERNET_USERS` | number | `97.17` | Share of the population using the internet (IT.NET.USER.ZS), the latest year. (% of population) |
+| `ISO2` | string | `AW` | The country's ISO 3166-1 alpha-2 code (the World Bank's own id). |
+| `ISO3` | string | `ABW` | The country's ISO 3166-1 alpha-3 code, the key the map shades by. |
+| `LIFE_EXPECTANCY` | number | `76.5` | Life expectancy at birth (SP.DYN.LE00.IN), the latest year. (years) |
+| `NAME` | string | `Aruba` | The economy's name as the World Bank writes it. |
+| `POPULATION` | number | `108785.0` | Total population, mid-year (SP.POP.TOTL), the latest year with a value. (persons) |
+| `POVERTY_HEADCOUNT` | number | `39.3` | Share living below the World Bank's international poverty line (SI.POV.DDAY), the latest survey year. (% of population) |
+| `PROFILE_ID` | string | `WDI-ABW` | WDI- and the country's ISO 3166 alpha-3 code. |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
-| `REGION` | string | `East Asia & Pacific` | The World Bank region the economy belongs to (East Asia & Pacific, Sub-Saharan Africa ...). |
-| `UNEMPLOYMENT` | number | `4.09` | Unemployed share of the labour force, ILO modelled estimate (SL.UEM.TOTL.ZS), the latest year. (% of labour force) |
+| `REGION` | string | `Latin America & Caribbean ` | The World Bank region the economy belongs to (East Asia & Pacific, Sub-Saharan Africa ...). |
+| `UNEMPLOYMENT` | number | `13.351` | Unemployed share of the labour force, ILO modelled estimate (SL.UEM.TOTL.ZS), the latest year. (% of labour force) |
 
 Nested structures:
 
@@ -102,27 +102,27 @@ Nested structures:
 
 **Development indicator series** · mnemonic `WDIS` · read through connector `development-store`.
 
-**Id:** field `SERIES_ID`; pattern `^WDIS-`; for example `WDIS-CAN-EG_ELC_ACCS_ZS`.
+**Id:** field `SERIES_ID`; pattern `^WDIS-`; for example `WDIS-CAN-BN_CAB_XOKA_GD_ZS`.
 
 Fields, from 16 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `CHANGE` | number | `0.0` | The latest value less the previous one, in the unit shown. |
+| `CHANGE` | number | `-0.4731268299` | The latest value less the previous one, in the unit shown. |
 | `COUNTRY_NAME` | string | `Canada` | The economy's name as the World Bank writes it. |
-| `DEFINITION` | string | `Access to electricity is the percentage …` | The World Bank's source note for the indicator, cut at 600 characters. |
+| `DEFINITION` | string | `Balance of current transactions (transac…` | The World Bank's source note for the indicator, cut at 600 characters. |
 | `HISTORY` | list of objects |  | The value by year, oldest first, over the feed's window (YEAR, VALUE). |
-| `INDICATOR` | string | `Access to electricity (% of population)` | The indicator's name as the World Bank publishes it. |
-| `INDICATOR_CODE` | string | `EG.ELC.ACCS.ZS` | The indicator's code in the World Bank API. |
+| `INDICATOR` | string | `Current account balance (% of GDP)` | The indicator's name as the World Bank publishes it. |
+| `INDICATOR_CODE` | string | `BN.CAB.XOKA.GD.ZS` | The indicator's code in the World Bank API. |
 | `ISO3` | string | `CAN` | The country's ISO 3166-1 alpha-3 code. |
-| `LATEST` | number | `100.0` | The latest published value, in the unit shown. |
-| `LATEST_YEAR` | string | `2024` | The calendar year of the latest value. |
-| `NAME` | string | `Canada · Access to electricity (% of pop…` | The country and the indicator, as one name. |
-| `PREVIOUS` | number | `100.0` | The value of the year before the latest one with a value; empty for a one-year series. |
-| `PREVIOUS_YEAR` | string | `2023` | The year of the previous value. |
+| `LATEST` | number | `-0.96097945348872` | The latest published value, in the unit shown. |
+| `LATEST_YEAR` | string | `2025` | The calendar year of the latest value. |
+| `NAME` | string | `Canada · Current account balance (% of G…` | The country and the indicator, as one name. |
+| `PREVIOUS` | number | `-0.487852623579787` | The value of the year before the latest one with a value; empty for a one-year series. |
+| `PREVIOUS_YEAR` | string | `2024` | The year of the previous value. |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
-| `SERIES_ID` | string | `WDIS-CAN-EG_ELC_ACCS_ZS` | WDIS-, the country's ISO alpha-3 code and the indicator's code with its dots as underscores. |
-| `UNIT` | string | `% of population` | What the value measures (the feed's YAML names it). |
+| `SERIES_ID` | string | `WDIS-CAN-BN_CAB_XOKA_GD_ZS` | WDIS-, the country's ISO alpha-3 code and the indicator's code with its dots as underscores. |
+| `UNIT` | string | `% of GDP` | What the value measures (the feed's YAML names it). |
 | `WDI_PROFILE` | string | `WDI-CAN` | The country's development-profile page (WDI-<ISO3>).; link to `development-profile` |
 
 Nested structures:
@@ -182,9 +182,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The **world-development** feed (`config/feeds/world-development.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 06:30 local time, and its selection in `options`) pulls what is new into `<data>/datafeeds/world-development/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run world-development` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). With the Python you run Drishti with: `python3 tools/drishti.py feed run world-development` on Linux and macOS, `py -3.13 tools\drishti.py feed run world-development` on Windows; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **world-development** feed (`config/feeds/world-development.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 06:30 local time, and its selection in `options`) pulls what is new into `<data>/datafeeds/world-development/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run world-development` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). With the Python you run Drishti with: `python3 tools/drishti.py feed run world-development` on Linux and macOS, `py -3.13 tools\drishti.py feed run world-development` on Windows; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The pack's data is its committed snapshot, `data/testdata/world-development/<kind>/`, from a live run: `python3 tools/drishti.py feed run world-development --snapshot` pulls the latest data and rewrites it, with the pack's reference samples (a few documents of each kind for this README and the docs, never served) and this README; `python3 tools/drishti.py lake demo` builds the snapshot into the lake the connector reads.
 
-The data feed `world-development` (config/feeds/world-development.yaml) pulls `development-profile`, `development-series`: `python3 tools/drishti.py feed run world-development` fetches them daily into `data/datafeeds/world-development/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `world-development` (config/feeds/world-development.yaml) pulls `development-profile`, `development-series`: `python3 tools/drishti.py feed run world-development` fetches them daily into `data/datafeeds/world-development/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 
@@ -205,8 +205,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `WDI` | `development-profile` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-profile/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
-| `WDIS` | `development-series` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-series/` (lake `worldlake`) → connector `development-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `WDI` | `development-profile` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-profile/` (lake `worldlake`) → connector `development-store`; the committed snapshot `data/testdata/world-development/development-profile/` (217 documents, retrieved 2026-11-27) → `lake demo` → the lake `worldlake`, same connector |
+| `WDIS` | `development-series` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | the daily feed `world-development` → `<data>/delta/worldlake/development/development-series/` (lake `worldlake`) → connector `development-store`; the committed snapshot `data/testdata/world-development/development-series/` (8,729 documents, retrieved 2026-11-27) → `lake demo` → the lake `worldlake`, same connector |
 
 ### External sources
 
@@ -228,9 +228,9 @@ The same with the Python you run Drishti with: `python3 tools/drishti.py feed ru
 
 ### Into the lake, checking, offline
 
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
 - **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+- **Offline.** Everything committed works without a network: the test data and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
 
 ## See also
 

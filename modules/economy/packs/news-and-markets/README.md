@@ -251,9 +251,9 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `TOPIC` | `news-topic` | hand-written reference data: `python3 modules/economy/packs/news-and-markets/tools/make_samples.py` | `modules/economy/packs/news-and-markets/samples/` → `lake demo` → connector `news-store` |
+| `TOPIC` | `news-topic` | hand-written reference data: `python3 modules/economy/packs/news-and-markets/tools/make_samples.py` | `data/testdata/news-and-markets/news-topic/` → `lake demo` → connector `news-store` |
 | `NEWS` | `news` | external: Google News RSS headlines (the news connector) (the headlines belong to their publishers; **internal only**) — refreshed by `drishti.py feed run news-and-markets` | `data/testdata/news-and-markets/news/` → `lake demo` → connector `news-store`; live through connector `news` (plugin `news`) when it is switched on (off as shipped) |
-| `CO` | `listed-company` | hand-written reference data: `python3 modules/economy/packs/news-and-markets/tools/make_samples.py` | `modules/economy/packs/news-and-markets/samples/` → `lake demo` → connector `news-store` |
+| `CO` | `listed-company` | hand-written reference data: `python3 modules/economy/packs/news-and-markets/tools/make_samples.py` | `data/testdata/news-and-markets/listed-company/` → `lake demo` → connector `news-store` |
 | `QUOTE` | `quote` | external: Yahoo Finance quotes and daily history (the yfinance connector) (Yahoo terms: personal use, no redistribution; **internal only**) — refreshed by `drishti.py feed run news-and-markets` | `data/testdata/news-and-markets/quote/` → `lake demo` → connector `news-store`; live through connector `yfinance` (plugin `yfinance`) when it is switched on (off as shipped) |
 
 ### External sources
@@ -285,9 +285,9 @@ The same with the Python you run Drishti with: `python3 tools/drishti.py feed ru
 
 ### Into the lake, checking, offline
 
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
 - **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+- **Offline.** Everything committed works without a network: the test data and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
 
 ## See also
 

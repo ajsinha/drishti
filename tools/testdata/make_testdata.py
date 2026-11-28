@@ -24,8 +24,8 @@ trades/wss, trades/swapone, trades/ici (a few hundred each, mocked in each syste
 then <pack>/<kind> for every kind of core, market-data, counterparty-risk and market-risk (universe.py). Each folder holds one file per
 business date named by the lake table it feeds, <table>.<YYYY-MM-DD>.jsonl.gz (docs/guides/DATA_LAKE_GUIDE.md section 5.2): the
 first day's the whole snapshot, each later day's what changed (history.py); the market-risk pack's VaR data (positions, P&L vectors, hierarchies, the
-nodes' 250-day history, portfolios) is dated by its files instead (``dated-by``: every row's date its file's; tools/packgen/var/make_var_data.py). world-economy and news-and-markets are static reference data already in the
-repository (their packs' samples), so the manifest points at them instead of copying them. The news-and-markets pack's quotes and
+nodes' 250-day history, portfolios) is dated by its files instead (``dated-by``: every row's date its file's; tools/packgen/var/make_var_data.py). the economy module's packs (world-economy, news-and-markets, the six public-sector packs) are real public data: committed snapshots
+(data/testdata/<pack>/<kind>/, written by their feeds' --snapshot and listed by publicsnap.py, kept here as they are). The news-and-markets pack's quotes and
 headlines are a real snapshot captured by capture_market.py (data/testdata/news-and-markets/, kept here and listed as they are), and
 so are the us-equities and gleif packs' public data (data/testdata/us-equities/, data/testdata/gleif/: written by their generators,
 publicsnap.py; kept and listed as they are). The manifest, data/testdata/testdata.yaml, says for each dataset its pack, kind, connector, key, partitions, files and counts: `lake demo` reads only it. Never reads a real
@@ -52,7 +52,7 @@ import publicsnap as PS  # noqa: E402
 import universe as UV  # noqa: E402
 
 PACKS = ("core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets", "compute-demo")
-FROM_SAMPLES = ("world-economy", "news-and-markets", "compute-demo")
+FROM_SAMPLES = ("compute-demo",)       # the others are committed snapshots (publicsnap.py PACKS: the economy module's packs)
 SYSTEMS = ("ENDUR", "CALYPSO", "MUREX")
 KEEP = (CM.PACK, *PS.PACKS)   # real, dated snapshots (capture_market.py, the us-equities and gleif generators): never regenerated here
 

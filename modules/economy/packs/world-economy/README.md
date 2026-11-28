@@ -101,7 +101,7 @@ Every kind the pack owns, read from its manifest, its samples and its Sutras: ho
 
 **Id:** field `ECONOMY_ID`; pattern `^ECON-`; for example `ECON-ABW`.
 
-Fields, from 213 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -118,7 +118,7 @@ Fields, from 213 sample documents:
 | `GROWTH` | number | `6.81078` | The yearly change of GDP after removing inflation, so it measures the growth of output rather than of prices. (% a year) |
 | `INFLATION` | number | `4.25746` | The yearly change of consumer prices (the consumer price index). (% a year) |
 | `UNEMPLOYMENT` | number | `13.351` | The share of the labour force without work but available for and seeking employment (ILO modelled estimate). (% of labour force) |
-| `DEBT_TO_GDP` | number | `63.6` | General government gross debt as a share of a year's GDP (IMF), the usual measure of how heavy public debt is. (% of GDP) |
+| `DEBT_TO_GDP` | number | `64.8` | General government gross debt as a share of a year's GDP (IMF), the usual measure of how heavy public debt is. (% of GDP) |
 | `CURRENT_ACCOUNT` | number | `5.19137` | Net exports of goods and services plus net income and transfers, as a share of GDP. (% of GDP) |
 | `RESERVES_USD_BN` | number | `2.23143` | Total reserves including gold (USD bn) |
 | `TRADE_SHARE` | number | `164.139` | Trade as a share of GDP (%) |
@@ -149,24 +149,24 @@ Links: `FISCAL` → `fiscal-position`, `INCOME_GROUP` → `country-group`, `INDI
 
 **Macro indicator** · mnemonic `MACRO` · read through connector `macro-store`.
 
-**Id:** field `INDICATOR_ID`; pattern `^MACRO-`; for example `MACRO-ABW-AGRICULTURE`.
+**Id:** field `INDICATOR_ID`; pattern `^MACRO-`; for example `MACRO-ABW-GDP`.
 
-Fields, from 3119 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `INDICATOR_ID` | string | `MACRO-ABW-AGRICULTURE` | The document's id |
-| `NAME` | string | `Aruba · Agriculture, value added` | The economy and the statistic, as one name. |
-| `INDICATOR` | string | `Agriculture, value added` | Indicator name |
+| `INDICATOR_ID` | string | `MACRO-ABW-GDP` | The document's id |
+| `NAME` | string | `Aruba · GDP, current prices` | The economy and the statistic, as one name. |
+| `INDICATOR` | string | `GDP, current prices` | Indicator name |
 | `COUNTRY_NAME` | string | `Aruba` | The country |
-| `UNIT` | string | `% of GDP` | What the value measures: a rate, a share of GDP, a level in US dollars. |
-| `DEFINITION` | string | `Value added of agriculture, forestry and…` | The source's definition of the indicator |
-| `LATEST` | number | `0.0395295` | The most recent published value of the statistic, in the unit shown. |
-| `LATEST_YEAR` | string | `2023` | The calendar year the latest value refers to. |
-| `PREVIOUS` | number | `0.0341749` | The value one year before the latest observation, where published. |
-| `PREVIOUS_YEAR` | string | `2022` | Year of the previous value |
-| `RANK` | integer | `193` | The position of the economy among all economies with a value from 2022 or later, highest value first. |
-| `OF_COUNT` | integer | `196` | Countries ranked |
+| `UNIT` | string | `USD bn` | What the value measures: a rate, a share of GDP, a level in US dollars. |
+| `DEFINITION` | string | `Gross domestic product at purchasers' pr…` | The source's definition of the indicator |
+| `LATEST` | number | `4.16759` | The most recent published value of the statistic, in the unit shown. |
+| `LATEST_YEAR` | string | `2024` | The calendar year the latest value refers to. |
+| `PREVIOUS` | number | `3.74657` | The value one year before the latest observation, where published. |
+| `PREVIOUS_YEAR` | string | `2023` | Year of the previous value |
+| `RANK` | integer | `173` | The position of the economy among all economies with a value from 2022 or later, highest value first. |
+| `OF_COUNT` | integer | `209` | Countries ranked |
 | `HISTORY` | list of objects |  | Nested: see below |
 | `FACTS` | object |  | Nested: see below |
 | `ECONOMY` | string | `ECON-ABW` | link to `economy` |
@@ -188,16 +188,16 @@ Links: `ECONOMY` → `economy`.
 
 **Id:** field `FORECAST_ID`; pattern `^FCST-`; for example `FCST-ABW-WEO`.
 
-Fields, from 192 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `FORECAST_ID` | string | `FCST-ABW-WEO` | The document's id |
 | `ECONOMY_NAME` | string | `Aruba` | The country or territory the figures describe. |
-| `VINTAGE` | string | `IMF World Economic Outlook, April 2026 e…` | The IMF World Economic Outlook edition the figures come from; the IMF revises them twice a year. |
-| `GROWTH_2027` | number | `2` | The IMF projection of real GDP growth in 2027. (% a year) |
-| `INFLATION_2027` | number | `2` | The IMF projection of average consumer-price inflation in 2027. (% a year) |
-| `DEBT_2030` | number | `50.3` | The IMF projection of general government gross debt as a share of GDP in 2030. (% of GDP) |
+| `VINTAGE` | string | `IMF World Economic Outlook, October 2026…` | The IMF World Economic Outlook edition the figures come from; the IMF revises them twice a year. |
+| `GROWTH_2027` | number | `2.7` | The IMF projection of real GDP growth in 2027. (% a year) |
+| `INFLATION_2027` | number | `2.2` | The IMF projection of average consumer-price inflation in 2027. (% a year) |
+| `DEBT_2030` | number | `48.7` | The IMF projection of general government gross debt as a share of GDP in 2030. (% of GDP) |
 | `PROJECTIONS` | list of objects |  | Nested: see below |
 | `PATH` | list of objects |  | Nested: see below |
 | `ECONOMY` | string | `ECON-ABW` | link to `economy` |
@@ -219,7 +219,7 @@ Links: `ECONOMY` → `economy`.
 
 **Id:** field `LABOUR_ID`; pattern `^LABR-`; for example `LABR-AFG`.
 
-Fields, from 185 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -253,15 +253,15 @@ Links: `ECONOMY` → `economy`.
 
 **Id:** field `FISCAL_ID`; pattern `^FISC-`; for example `FISC-ABW`.
 
-Fields, from 192 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `FISCAL_ID` | string | `FISC-ABW` | The document's id |
 | `ECONOMY_NAME` | string | `Aruba` | The country or territory the figures describe. |
 | `YEAR` | string | `2025` | Year of the figures |
-| `DEBT` | number | `63.6` | All liabilities of the general government that require payment of interest or principal, as a share of GDP (IMF). (% of GDP) |
-| `BALANCE` | number | `1.9` | General government revenue minus total expenditure, as a share of GDP (IMF). (% of GDP) |
+| `DEBT` | number | `64.8` | All liabilities of the general government that require payment of interest or principal, as a share of GDP (IMF). (% of GDP) |
+| `BALANCE` | number | `4` | General government revenue minus total expenditure, as a share of GDP (IMF). (% of GDP) |
 | `REVENUE` | number | `13.0393` | Central government revenue excluding grants, as a share of GDP (World Bank). (% of GDP) |
 | `SPENDING` | number | `39.2201` | Central government cash payments for operating activities, as a share of GDP (World Bank). (% of GDP) |
 | `MILITARY` | number | `1.82793` | All spending on the armed forces, as a share of GDP (SIPRI via the World Bank). (% of GDP) |
@@ -310,22 +310,22 @@ No samples ship: documents are read live from its connector `macro-groupings` (p
 
 **Region economy** · mnemonic `REGE` · read through connector `macro-store`.
 
-**Id:** field `REGION_ID`; pattern `^REGE-`; for example `REGE-AU-ACT`.
+**Id:** field `REGION_ID`; pattern `^REGE-`; for example `REGE-AU-NSW`.
 
-Fields, from 59 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `REGION_ID` | string | `REGE-AU-ACT` | The document's id |
-| `NAME` | string | `Australian Capital Territory` | The state or territory. |
-| `REGION_CODE` | string | `AU-ACT` | The ISO 3166-2 code of the region (AU-NSW, US-CA); the BI map shades the region it names. |
+| `REGION_ID` | string | `REGE-AU-NSW` | The document's id |
+| `NAME` | string | `New South Wales` | The state or territory. |
+| `REGION_CODE` | string | `AU-NSW` | The ISO 3166-2 code of the region (AU-NSW, US-CA); the BI map shades the region it names. |
 | `ISO3` | string | `AUS` | The country's ISO alpha-3 code |
 | `COUNTRY_NAME` | string | `Australia` | The country the region belongs to. |
 | `YEAR` | string | `2023` | Year of the figures |
-| `POPULATION_M` | number | `0.46` | People living in the region, rounded to the nearest 10,000 and shown in millions. Illustrative. (millions) |
-| `POPULATION` | integer | `460000` | Population |
-| `GDP_USD_BN` | integer | `33` | The region's output in US dollars, rounded to the nearest billion. Illustrative, not for reporting. (USD billions) |
-| `GDP_PER_CAPITA` | integer | `71739` | GDP over population, in US dollars. Illustrative. (USD) |
+| `POPULATION_M` | number | `8.34` | People living in the region, rounded to the nearest 10,000 and shown in millions. Illustrative. (millions) |
+| `POPULATION` | integer | `8340000` | Population |
+| `GDP_USD_BN` | integer | `510` | The region's output in US dollars, rounded to the nearest billion. Illustrative, not for reporting. (USD billions) |
+| `GDP_PER_CAPITA` | integer | `61151` | GDP over population, in US dollars. Illustrative. (USD) |
 | `SOURCE` | string | `Illustrative, rounded from public figure…` | Where the figures come from |
 | `FACTS` | object |  | Nested: see below |
 | `ECONOMY` | string | `ECON-AUS` | link to `economy` |
@@ -346,7 +346,7 @@ Links: `ECONOMY` → `economy`.
 
 **Id:** field `JURISDICTION_ID`; pattern `^JUR-`; for example `JUR-ABW`.
 
-Fields, from 216 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -363,16 +363,16 @@ Fields, from 216 sample documents:
 | `INDEPENDENCE` | string | `none (part of the Kingdom of the Netherl…` | Independence (as the Factbook writes it) |
 | `LEGISLATURE_NAME` | string | `Legislature (Staten)` | The legislature's name |
 | `LEGISLATURE_STRUCTURE` | string | `unicameral` | Unicameral or bicameral |
-| `LEGISLATURE` | list or list of objects |  | Nested: see below |
+| `LEGISLATURE` | list |  | — |
 | `INDICATORS` | list of objects |  | Nested: see below; link to `macro-indicator` |
 | `PARTIES_LISTED` | list of objects |  | Nested: see below |
 | `PROFILE` | object |  | Nested: see below |
 | `REGION` | string | `REGN-LCN` | link to `region` |
 | `CHIEF_OF_STATE` | string | `OFFC-ABW-COS` | link to `office-holder` |
 | `HEAD_OF_GOVERNMENT` | string | `OFFC-ABW-HOG` | link to `office-holder` |
-| `LAST_ELECTION` | string | `ELEC-ARG-LOW` | link to `election` |
+| `LAST_ELECTION` | null |  | link to `election` |
 | `ELECTIONS` | list of strings |  | link to `election` |
-| `PARTIES` | list or list of strings |  | link to `party` |
+| `PARTIES` | list |  | link to `party` |
 | `SOCIAL_INDICATORS` | list of strings |  | link to `social-indicator` |
 | `PROVENANCE` | object |  | Nested: see below |
 
@@ -384,7 +384,6 @@ Nested structures:
 | `PARTIES_LISTED[]` | `PARTY` (string): A political party as the Factbook publishes the name. |
 | `PROFILE` | `OFFICIAL_NAME` (string): The conventional long form of the country's name., `RELIGIONS` (string): The religious affiliations and their shares, as published., `LEGAL_SYSTEM` (string): The legal tradition of the country., `SUFFRAGE` (string): The voting age and who may vote., `INDEPENDENCE` (string): When and from whom the country became independent., `NATIONAL_HOLIDAY` (string): The national day., `LOCATION` (string): Where the country is., `CURRENCY_TEXT` (string): The currency and its exchange-rate basis, as published., `LANGUAGES` (string): The languages spoken and their shares, as published. |
 | `PROVENANCE` | `SOURCE` (string): The organisation or organisations whose published data this view shows., `DATASET` (string): The named dataset and its vintage (the release the numbers come from)., `RETRIEVED_AT` (date): The date the data was downloaded by tools/realdata., `LICENCE` (string): The terms under which the source allows reuse; attribution is required., `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `URL` (string): The web page of the dataset. |
-| `LEGISLATURE[]` | `PARTY` (string): A party or group in the lower chamber, as the Factbook lists it., `SEATS` (integer): The seats the party won at the most recent election. |
 
 Links: `CHIEF_OF_STATE` → `office-holder`, `ELECTIONS` → `election`, `HEAD_OF_GOVERNMENT` → `office-holder`, `INDICATORS` → `macro-indicator`, `LAST_ELECTION` → `election`, `PARTIES` → `party`, `REGION` → `region`, `SOCIAL_INDICATORS` → `social-indicator`.
 
@@ -394,7 +393,7 @@ Links: `CHIEF_OF_STATE` → `office-holder`, `ELECTIONS` → `election`, `HEAD_O
 
 **Id:** field `PARTY_ID`; pattern `^PARTY-`; for example `PARTY-ARG-01`.
 
-Fields, from 282 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -427,7 +426,7 @@ Links: `ELECTION` → `election`, `JURISDICTION` → `jurisdiction`.
 
 **Id:** field `OFFICE_ID`; pattern `^OFFC-`; for example `OFFC-ABW-COS`.
 
-Fields, from 430 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -462,7 +461,7 @@ Links: `JURISDICTION` → `jurisdiction`.
 
 **Id:** field `ELECTION_ID`; pattern `^ELEC-`; for example `ELEC-ABW-EXE`.
 
-Fields, from 378 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -473,12 +472,12 @@ Fields, from 378 sample documents:
 | `DATE` | date | `2024-12-06` | Election date |
 | `DATE_TEXT` | string | `6 December 2024` | When the most recent election took place, as the Factbook publishes the date. |
 | `SYSTEM` | string | `the monarchy is hereditary; governor gen…` | The electoral system, for example plurality, proportional representation or an electoral college. |
-| `TERM` | string | `4 years` | Term of office |
+| `TERM` | null |  | Term of office |
 | `WINNER` | string | `King WILLEM-ALEXANDER of the Netherlands…` | The party with the most seats, or the elected head of state. |
 | `NEXT_ELECTION` | string | `by December 2028` | When the next election is expected, as published. |
-| `WOMEN` | string | `42.4%` | Share of seats held by women |
-| `SEATS_TEXT` | string | `257 (all directly elected)` | Seats as published |
-| `RESULTS` | list or list of objects |  | Nested: see below |
+| `WOMEN` | null |  | Share of seats held by women |
+| `SEATS_TEXT` | null |  | Seats as published |
+| `RESULTS` | list |  | — |
 | `SUMMARY` | object |  | Nested: see below |
 | `JURISDICTION` | string | `JUR-ABW` | link to `jurisdiction` |
 | `PROVENANCE` | object |  | Nested: see below |
@@ -487,9 +486,8 @@ Nested structures:
 
 | Path | Fields |
 |---|---|
-| `SUMMARY` | `SELECTION` (string): How the head of state is chosen., `HELD_ON` (string): The date, as published., `NEXT_ELECTION` (string): The date, as published., `RESULTS` (string): The result as the Factbook publishes it., `CHAMBER` (string): The legislative chamber., `SEATS` (string): The number of seats and how many are elected., `ELECTORAL_SYSTEM` (string): How votes become seats., `TERM` (string): How long members serve., `WOMEN` (string): The share of seats held by women. (% of seats) |
+| `SUMMARY` | `SELECTION` (string): How the head of state is chosen., `HELD_ON` (string): The date, as published., `NEXT_ELECTION` (string): The date, as published., `RESULTS` (string): The result as the Factbook publishes it. |
 | `PROVENANCE` | `SOURCE` (string): The organisation or organisations whose published data this view shows., `DATASET` (string): The named dataset and its vintage (the release the numbers come from)., `RETRIEVED_AT` (date): The date the data was downloaded by tools/realdata., `LICENCE` (string): The terms under which the source allows reuse; attribution is required., `ATTRIBUTION` (string): The credit line to repeat when the data is shown or republished., `URL` (string): The web page of the dataset. |
-| `RESULTS[]` | `PARTY` (string): A party or group., `SEATS` (integer): The seats it won., `SHARE` (number): Its seats as a share of the seats listed. (% of seats) |
 
 Links: `JURISDICTION` → `jurisdiction`.
 
@@ -499,7 +497,7 @@ Links: `JURISDICTION` → `jurisdiction`.
 
 **Id:** field `REGION_ID`; pattern `^REGN-`; for example `REGN-EAS`.
 
-Fields, from 7 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
@@ -533,23 +531,23 @@ Links: `MEMBER_STATES` → `jurisdiction`.
 
 **Social indicator** · mnemonic `SOCI` · read through connector `civic-store`.
 
-**Id:** field `INDICATOR_ID`; pattern `^SOCI-`; for example `SOCI-ABW-EDUCATION-SPEND`.
+**Id:** field `INDICATOR_ID`; pattern `^SOCI-`; for example `SOCI-ABW-FERTILITY`.
 
-Fields, from 4000 sample documents:
+Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `INDICATOR_ID` | string | `SOCI-ABW-EDUCATION-SPEND` | The document's id |
-| `NAME` | string | `Aruba · Government expenditure on educat…` | The country and the statistic. |
-| `INDICATOR` | string | `Government expenditure on education` | Indicator name |
+| `INDICATOR_ID` | string | `SOCI-ABW-FERTILITY` | The document's id |
+| `NAME` | string | `Aruba · Fertility rate` | The country and the statistic. |
+| `INDICATOR` | string | `Fertility rate` | Indicator name |
 | `COUNTRY_NAME` | string | `Aruba` | The country |
 | `THEME` | string | `Society` | Theme of the indicator |
-| `LATEST` | number | `3.61856` | The most recent published value. |
-| `LATEST_YEAR` | string | `2021` | The year of the latest value. |
-| `UNIT` | string | `% of GDP` | What the value measures. |
-| `CHANGE_5Y` | number | `-1.8728` | The latest value minus the value about five years earlier. |
+| `LATEST` | number | `1.606` | The most recent published value. |
+| `LATEST_YEAR` | string | `2024` | The year of the latest value. |
+| `UNIT` | string | `births per woman` | What the value measures. |
+| `CHANGE_5Y` | number | `-0.095` | The latest value minus the value about five years earlier. |
 | `SOURCE_NAME` | string | `World Bank, World Development Indicators` | The dataset the series comes from. |
-| `DEFINITION` | string | `General government spending on education…` | The source's definition |
+| `DEFINITION` | string | `Births per woman if she lived to the end…` | The source's definition |
 | `SERIES` | list of objects |  | Nested: see below |
 | `BY_REGION` | list of objects |  | Nested: see below |
 | `REGION_NAME` | string | `Latin America & Caribbean` | World Bank region |
@@ -690,19 +688,19 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `ECON` | `economy` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
-| `MACRO` | `macro-indicator` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
-| `FCST` | `economic-forecast` | external: IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
-| `LABR` | `labour-market` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
-| `FISC` | `fiscal-position` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
+| `ECON` | `economy` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `data/testdata/world-economy/economy/` → `lake demo` → connector `macro-store` |
+| `MACRO` | `macro-indicator` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | `data/testdata/world-economy/macro-indicator/` → `lake demo` → connector `macro-store` |
+| `FCST` | `economic-forecast` | external: IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-economy` | `data/testdata/world-economy/economic-forecast/` → `lake demo` → connector `macro-store` |
+| `LABR` | `labour-market` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development` | `data/testdata/world-economy/labour-market/` → `lake demo` → connector `macro-store` |
+| `FISC` | `fiscal-position` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); IMF World Economic Outlook (DataMapper) (IMF terms: reuse with attribution; commercial reuse needs the IMF's permission; **internal only**) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `data/testdata/world-economy/fiscal-position/` → `lake demo` → connector `macro-store` |
 | `ECG` | `country-group` | computed by Drishti: the derived connector macro-groupings over the kind economy; see the [Groupings and analytics guide](../../../../docs/guides/bi/README.md) | nothing to load: computed from its inputs when asked |
-| `REGE` | `region-economy` | external: US Census Bureau population estimates and BEA state GDP (rounded by hand, illustrative) (public domain (US Government work)) — refreshed by `tools/packgen/world/make.py` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `macro-store` |
-| `JUR` | `jurisdiction` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)); World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
-| `PARTY` | `party` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
-| `OFFC` | `office-holder` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
-| `ELEC` | `election` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
-| `REGN` | `region` | external: World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
-| `SOCI` | `social-indicator` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); UNDP Human Development Index (CC BY 3.0 IGO) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `modules/economy/packs/world-economy/samples/` → `lake demo` → connector `civic-store` |
+| `REGE` | `region-economy` | external: US Census Bureau population estimates and BEA state GDP (rounded by hand, illustrative) (public domain (US Government work)) — refreshed by `tools/packgen/world/make.py` | `data/testdata/world-economy/region-economy/` → `lake demo` → connector `macro-store` |
+| `JUR` | `jurisdiction` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)); World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `data/testdata/world-economy/jurisdiction/` → `lake demo` → connector `civic-store` |
+| `PARTY` | `party` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `data/testdata/world-economy/party/` → `lake demo` → connector `civic-store` |
+| `OFFC` | `office-holder` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `data/testdata/world-economy/office-holder/` → `lake demo` → connector `civic-store` |
+| `ELEC` | `election` | external: CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `data/testdata/world-economy/election/` → `lake demo` → connector `civic-store` |
+| `REGN` | `region` | external: World Bank Worldwide Governance Indicators and country list (its development indicators come from the world-development feed) (CC BY 4.0); CIA World Factbook (the factbook.json mirror at a pinned commit) (public domain (the mirror CC0 1.0)) — refreshed by `drishti.py feed run world-economy` | `data/testdata/world-economy/region/` → `lake demo` → connector `civic-store` |
+| `SOCI` | `social-indicator` | external: World Bank World Development Indicators API (v2), pulled only by the world-development feed (CC BY 4.0); UNDP Human Development Index (CC BY 3.0 IGO) — refreshed by `drishti.py feed run world-development`, `drishti.py feed run world-economy` | `data/testdata/world-economy/social-indicator/` → `lake demo` → connector `civic-store` |
 
 ### External sources
 
@@ -743,9 +741,9 @@ The same with the Python you run Drishti with: `python3 tools/drishti.py feed ru
 
 ### Into the lake, checking, offline
 
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
 - **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+- **Offline.** Everything committed works without a network: the test data and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
 
 ## See also
 

@@ -99,51 +99,51 @@ One Statistics Canada series by vector: the latest value, the change on the peri
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
 
 <a id="example-national-statistics-statistics-series"></a>
-**Example: `modules/economy/packs/national-statistics/samples/statistics-series.jsonl`**
+**Example: `data/testdata/national-statistics/statistics-series`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
 ```json
 {
-  "CHANGE": 80343.0,
-  "CHANGE_PCT": 0.1926,
-  "FREQUENCY": "quarterly",
+  "CHANGE": 0.4,
+  "CHANGE_PCT": 0.2353,
+  "FREQUENCY": "monthly",
   "GEOGRAPHY": "Canada",
   "HISTORY": [
     {
-      "PERIOD": "2021-01-01",
-      "VALUE": 38058291.0
+      "PERIOD": "2021-11-01",
+      "VALUE": 144.2
     },
     {
-      "PERIOD": "2021-04-01",
-      "VALUE": 38140918.0
+      "PERIOD": "2021-12-01",
+      "VALUE": 144.0
     },
-    "… 21 more elements of the same shape"
+    "… 58 more elements of the same shape"
   ],
-  "LATEST": 41798407.0,
-  "LATEST_PERIOD": "2026-07-01",
+  "LATEST": 170.4,
+  "LATEST_PERIOD": "2026-10-01",
   "MEMBERS": null,
-  "NAME": "Population of Canada",
-  "PREVIOUS": 41718064.0,
-  "PREVIOUS_PERIOD": "2026-04-01",
+  "NAME": "Consumer price index, all-items (Canada)",
+  "PREVIOUS": 170.0,
+  "PREVIOUS_PERIOD": "2026-09-01",
   "PROVENANCE": {
     "ATTRIBUTION": "Source: Statistics Canada, <table>. Reproduced and distributed on an \"as is\" basis with the permission of Statistics Canada (Statistics Canada Open Licence).",
-    "DATASET": "Statistics Canada table 17-10-0009-01, vector v1",
+    "DATASET": "Statistics Canada table 18-10-0004-01, vector v41690973",
     "INTERNAL_ONLY": false,
     "LICENCE": "Statistics Canada Open Licence",
-    "RETRIEVED_AT": "2026-11-06",
+    "RETRIEVED_AT": "2026-11-27",
     "SOURCE": "Statistics Canada",
-    "URL": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1710000901"
+    "URL": "https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1810000401"
   },
-  "RELEASED": "2026-09-23T08:30",
+  "RELEASED": "2026-11-16T08:30",
   "SCALE": "units",
-  "SERIES_ID": "NSTAT-V1",
-  "TABLE_ID": "17-10-0009-01",
-  "TABLE_TITLE": "Population estimates, quarterly",
-  "TITLE": "Population of Canada",
-  "TOPIC": "Population",
-  "UNIT": "persons",
-  "VECTOR": "v1",
-  "YEAR_ON_YEAR_PCT": 0.4553
+  "SERIES_ID": "NSTAT-V41690973",
+  "TABLE_ID": "18-10-0004-01",
+  "TABLE_TITLE": "Consumer Price Index, monthly, not seasonally adjusted",
+  "TITLE": "Consumer price index, all-items (Canada)",
+  "TOPIC": "Prices",
+  "UNIT": "index 2002=100",
+  "VECTOR": "v41690973",
+  "YEAR_ON_YEAR_PCT": 3.0853
 }
 ```

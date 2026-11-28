@@ -29,7 +29,10 @@ files (dated names, or tars of <table>/<YYYY-MM-DD>/ folders): each date staged 
 The exposure engine's paths are the exception: by default (`--exposure demo`) they are generated from the committed netting sets
 and CSAs for every netting set of 23 of the 24 counterparties (8,022 live trades on the data's date, about a minute; the committed run of eight sets
 is a subset with the same figures), `--exposure committed` loads the committed run alone.
-Datasets of static reference data (world-economy, news-and-markets) are built from their packs' samples, the same on every day.
+A dataset with `lake:` is written into that lake (config/lakes/<name>.yaml) instead of the demo lake: the economy module's public-sector packs
+(central-banks, national-statistics, oecd, world-development in worldlake; official-news, gdelt-events in newslake) read their own lakes,
+where their feeds load them daily. A public snapshot is real, dated data: with `dates: last` it is loaded once, under the lake's newest
+business date, and the packs' connectors read it with mode.<kind>: effective (the newest load on or before the day asked).
 The news-and-markets pack's captured market snapshot (data/testdata/news-and-markets/quote and news: real quotes and headlines,
 written by `drishti.py testdata capture-market`) becomes news/quote and news/news, the same snapshot on every day and never re-dated,
 so the pack's quote and headline pages work with no internet (the live connectors off, or DRISHTI_OFFLINE=true). The us-equities
@@ -398,13 +401,23 @@ class DemoLake:
                 out += [f"--{k}", getattr(self.a, k)]
         return out
 
+    def lake_of(self, ds: dict) -> tuple[str, pathlib.Path]:
+        """The lake a dataset is written into: the demo lake, or the lake its manifest entry names (``lake:``, the public-sector packs
+        read worldlake and newslake, config/lakes/<name>.yaml). Beside the demo lake when the demo lake is somewhere else (--lake)."""
+        name = ds.get("lake")
+        if not name or name == self.lake_name:
+            return self.lake_name, self.lake
+        if self.lake == self.resolve(DEFAULT_ROOT):
+            return name, pathlib.Path(lakeconfig.root(name)).resolve()
+        return name, (self.lake.parent / name).resolve()
+
     def group_key(self, ds: dict) -> str:
         """Datasets that write one table (trades_shared) or share a staged folder (the exposure run) form a group, loaded in order, one
         after the other; the groups are independent of each other."""
         if ds.get("folder") in self.EXPOSURE_FOLDERS:
             return "exposure"
         domain, table = self.packs.table(ds["pack"], ds["connector"], ds["kind"])
-        return f"{domain}/{table}"
+        return f"{ds['lake']}/{domain}/{table}" if ds.get("lake") else f"{domain}/{table}"
 
     def size_of(self, ds: dict) -> int:
         folder = self.testdata / (ds.get("folder") or "")
@@ -578,7 +591,7 @@ class DemoLake:
             for part in got[max(got)] if got else []:          # the newest snapshot's files (a large one a tar of parts: the funds' holdings)
                 for line in part.lines():
                     state[_key(json.loads(line), ds["key"])] = line
-            for _ in self.manifest.dates:
+            for _ in self.manifest.dates[-1:] if ds.get("dates") == "last" else self.manifest.dates:
                 yield state
             return
         if "samples" in ds:
@@ -724,7 +737,7 @@ class DemoLake:
         rows = 0
         moved: dict[str, tuple[str, str]] = {}               # key -> (the line, its moved and renamed text): a document that did not change
         snapshot = "snapshot" in ds                           # between two days is moved once, not once a day
-        for day, state in zip(self.dates, self.states(ds)):
+        for day, state in zip(self.dates[-1:] if ds.get("dates") == "last" else self.dates, self.states(ds)):
             if key is None:
                 key = next((k for k in json.loads(next(iter(state.values()))) if k.endswith("_ID")), "id") if state else "id"
             out = []
@@ -741,7 +754,8 @@ class DemoLake:
     def dataset(self, ds: dict) -> int:
         pack, kind, connector = ds["pack"], ds["kind"], ds["connector"]
         domain, table = self.packs.table(pack, connector, kind)
-        path = self.lake / domain / table
+        lake_name, lake_root = self.lake_of(ds)
+        path = lake_root / domain / table
         mode = ds.get("mode", REPLACE)                    # a shared table: each system replaces only its own partitions (SOURCE_SYSTEM)
         if not (getattr(self.a, "keep_other_dates", False) and ds.get("dated-by") and path.is_dir()):
             if path not in self.cleared:                  # a table several datasets share (trades_shared) is cleared once, by the first
@@ -760,7 +774,7 @@ class DemoLake:
             self.staged[tag] = self.stage_days(ds, table, days_dir, key)
         rows, key = self.staged[tag]
         argv = ["--from", str(days_dir), "--pack", str(pack_dir(pack, self.packs.dir)), "--kind", kind, "--connector", connector, "--key", key or "id",
-                "--mode", mode, "--lake", self.lake_name, "--lake-root", str(self.lake), *self.engine_args(), "-q", "--no-stamp"]
+                "--mode", mode, "--lake", lake_name, "--lake-root", str(lake_root), *self.engine_args(), "-q", "--no-stamp"]
         code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
         if code:
             print(f"  {domain}/{table}: {summary.get('status')} {summary.get('error', '')}", file=sys.stderr)
@@ -775,7 +789,9 @@ class DemoLake:
             self.written.append((pack, kind, f"{domain}/{table}"))
         if not self.a.quiet:
             note = f" (snapshot captured {ds.get('captured') or ds['snapshot']})" if "snapshot" in ds else ""
-            print(f"  {domain}/{table}: {rows:,} rows over {len(self.manifest.dates)} days{note}" + (" (failed)" if worst == 1 else ""))
+            ndays = 1 if ds.get("dates") == "last" else len(self.manifest.dates)
+            where = "" if lake_name == self.lake_name else f" in {lake_name}"
+            print(f"  {domain}/{table}{where}: {rows:,} rows over {ndays} day{'s' if ndays != 1 else ''}{note}" + (" (failed)" if worst == 1 else ""))
         return worst
 
     def write_feeds(self) -> pathlib.Path:
@@ -821,6 +837,9 @@ class DemoLake:
         for name, (pack, template) in sorted(self.packs.delta_connectors(packs).items()):
             f = folder / f"{name}.yaml"
             want = DEFAULT_ROOT if default else str(self.lake)
+            if ((template.get("settings") or {}).get("lake") or self.lake_name) not in (self.lake_name, "demo"):
+                notes.append(f"{name}: reads its own lake ({template['settings']['lake']}), left as it is")   # worldlake, newslake: datasets with lake:
+                continue
             if (template.get("settings") or {}).get("domain") == "risk-results":
                 notes.append(self.results_reader(name, f))
                 continue

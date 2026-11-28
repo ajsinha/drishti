@@ -146,7 +146,7 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 - no unit stated for the amounts RESERVES_USD_BN, POPULATION_M (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
 <a id="example-world-economy-economy"></a>
-**Example: `modules/economy/packs/world-economy/samples/economy.jsonl`**
+**Example: `data/testdata/world-economy/economy`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -165,7 +165,7 @@ A real record, the most complete of the first rows (the one with the most non-em
   "GROWTH": 1.87319,
   "INFLATION": -6.60119,
   "UNEMPLOYMENT": 13.351,
-  "DEBT_TO_GDP": 8,
+  "DEBT_TO_GDP": 7.6,
   "CURRENT_ACCOUNT": -15.7183,
   "RESERVES_USD_BN": 9.74895,
   "TRADE_SHARE": 83.763,
@@ -219,18 +219,11 @@ A real record, the most complete of the first rows (the one with the most non-em
   ],
   "PROVENANCE": {
     "SOURCE": "World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper); CIA, The World Factbook (factbook.json mirror, CC0)",
-    "DATASET": "World Development Indicators (updated 2026-10-08); World Economic Outlook (April 2026 edition); The World Factbook (mirror commit 144d6977b2)",
-    "RETRIEVED_AT": "2026-10-10",
+    "DATASET": "World Development Indicators (updated ); World Economic Outlook (October 2026 edition); The World Factbook (mirror commit 144d6977b2)",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "CC BY 4.0; IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission; Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
     "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0). Source: International Monetary Fund, World Economic Outlook database, https://www.imf.org/external/datamapper. Central Intelligence Agency, The World Factbook (public domain).",
     "URL": "https://databank.worldbank.org/source/world-development-indicators"
-  },
-  "_meta": {
-    "source": "World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper); CIA, The World Factbook (factbook.json mirror, CC0)",
-    "dataset": "World Development Indicators (updated 2026-10-08); World Economic Outlook (April 2026 edition); The World Factbook (mirror commit 144d6977b2)",
-    "retrievedAt": "2026-10-10",
-    "licence": "CC BY 4.0; IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission; Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
-    "generation": 1
   }
 }
 ```
@@ -324,57 +317,50 @@ One headline statistic of one economy: the series, the latest value, the change 
 - no unit stated for the amounts LATEST, PREVIOUS, HISTORY[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
 <a id="example-world-economy-macro-indicator"></a>
-**Example: `modules/economy/packs/world-economy/samples/macro-indicator.jsonl`**
+**Example: `data/testdata/world-economy/macro-indicator`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
 ```json
 {
-  "INDICATOR_ID": "MACRO-ABW-AGRICULTURE",
-  "NAME": "Aruba · Agriculture, value added",
-  "INDICATOR": "Agriculture, value added",
+  "INDICATOR_ID": "MACRO-ABW-GDP",
+  "NAME": "Aruba · GDP, current prices",
+  "INDICATOR": "GDP, current prices",
   "COUNTRY_NAME": "Aruba",
-  "UNIT": "% of GDP",
-  "DEFINITION": "Value added of agriculture, forestry and fishing as a share of GDP.",
-  "LATEST": 0.0395295,
-  "LATEST_YEAR": "2023",
-  "PREVIOUS": 0.0341749,
-  "PREVIOUS_YEAR": "2022",
-  "RANK": 193,
-  "OF_COUNT": 196,
+  "UNIT": "USD bn",
+  "DEFINITION": "Gross domestic product at purchasers' prices: the sum of gross value added by all resident producers plus product taxes less subsidies, in current US dollars converted at market exchange rates.",
+  "LATEST": 4.16759,
+  "LATEST_YEAR": "2024",
+  "PREVIOUS": 3.74657,
+  "PREVIOUS_YEAR": "2023",
+  "RANK": 173,
+  "OF_COUNT": 209,
   "HISTORY": [
     {
       "YEAR": "2015",
-      "VALUE": 0.0125198
+      "VALUE": 2.96291
     },
     {
       "YEAR": "2016",
-      "VALUE": 0.0186118
+      "VALUE": 2.98364
     },
-    "… 7 more elements of the same shape"
+    "… 8 more elements of the same shape"
   ],
   "FACTS": {
-    "INDICATOR": "Agriculture, value added",
-    "UNIT": "% of GDP",
-    "LATEST_YEAR": "2023",
-    "RANK": "193 of 196",
-    "WORLD_BANK_CODE": "NV.AGR.TOTL.ZS"
+    "INDICATOR": "GDP, current prices",
+    "UNIT": "USD bn",
+    "LATEST_YEAR": "2024",
+    "RANK": "173 of 209",
+    "WORLD_BANK_CODE": "NY.GDP.MKTP.CD"
   },
   "ECONOMY": "ECON-ABW",
   "PROVENANCE": {
     "SOURCE": "World Bank, World Development Indicators",
-    "DATASET": "World Development Indicators (updated 2026-10-08)",
-    "RETRIEVED_AT": "2026-10-10",
+    "DATASET": "World Development Indicators (updated )",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "CC BY 4.0",
     "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0).",
     "URL": "https://databank.worldbank.org/source/world-development-indicators"
-  },
-  "_meta": {
-    "source": "World Bank, World Development Indicators",
-    "dataset": "World Development Indicators (updated 2026-10-08)",
-    "retrievedAt": "2026-10-10",
-    "licence": "CC BY 4.0",
-    "generation": 1
   }
 }
 ```
@@ -462,7 +448,7 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 - enum values inferred from the data, not from a glossary: PROJECTIONS[].BASIS: confirm they are closed lists.
 
 <a id="example-world-economy-economic-forecast"></a>
-**Example: `modules/economy/packs/world-economy/samples/economic-forecast.jsonl`**
+**Example: `data/testdata/world-economy/economic-forecast`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -470,10 +456,10 @@ A real record, the most complete of the first rows (the one with the most non-em
 {
   "FORECAST_ID": "FCST-ABW-WEO",
   "ECONOMY_NAME": "Aruba",
-  "VINTAGE": "IMF World Economic Outlook, April 2026 edition",
-  "GROWTH_2027": 2,
-  "INFLATION_2027": 2,
-  "DEBT_2030": 50.3,
+  "VINTAGE": "IMF World Economic Outlook, October 2026 edition",
+  "GROWTH_2027": 2.7,
+  "INFLATION_2027": 2.2,
+  "DEBT_2030": 48.7,
   "PROJECTIONS": [
     {
       "YEAR": "2015",
@@ -513,18 +499,11 @@ A real record, the most complete of the first rows (the one with the most non-em
   "ECONOMY": "ECON-ABW",
   "PROVENANCE": {
     "SOURCE": "International Monetary Fund, World Economic Outlook (DataMapper)",
-    "DATASET": "World Economic Outlook (April 2026 edition)",
-    "RETRIEVED_AT": "2026-10-10",
+    "DATASET": "World Economic Outlook (October 2026 edition)",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission",
     "ATTRIBUTION": "Source: International Monetary Fund, World Economic Outlook database, https://www.imf.org/external/datamapper.",
     "URL": "https://www.imf.org/external/datamapper"
-  },
-  "_meta": {
-    "source": "International Monetary Fund, World Economic Outlook (DataMapper)",
-    "dataset": "World Economic Outlook (April 2026 edition)",
-    "retrievedAt": "2026-10-10",
-    "licence": "IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission",
-    "generation": 1
   }
 }
 ```
@@ -610,7 +589,7 @@ Unemployment, participation, youth and female labour, and employment and output 
 - no unit stated for the amounts VULNERABLE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
 <a id="example-world-economy-labour-market"></a>
-**Example: `modules/economy/packs/world-economy/samples/labour-market.jsonl`**
+**Example: `data/testdata/world-economy/labour-market`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -656,18 +635,11 @@ A real record, the most complete of the first rows (the one with the most non-em
   "ECONOMY": "ECON-AFG",
   "PROVENANCE": {
     "SOURCE": "World Bank, World Development Indicators",
-    "DATASET": "World Development Indicators (updated 2026-10-08)",
-    "RETRIEVED_AT": "2026-10-10",
+    "DATASET": "World Development Indicators (updated )",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "CC BY 4.0",
     "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0).",
     "URL": "https://databank.worldbank.org/source/world-development-indicators"
-  },
-  "_meta": {
-    "source": "World Bank, World Development Indicators",
-    "dataset": "World Development Indicators (updated 2026-10-08)",
-    "retrievedAt": "2026-10-10",
-    "licence": "CC BY 4.0",
-    "generation": 1
   }
 }
 ```
@@ -758,7 +730,7 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 - enum values inferred from the data, not from a glossary: RATIOS[].ITEM: confirm they are closed lists.
 
 <a id="example-world-economy-fiscal-position"></a>
-**Example: `modules/economy/packs/world-economy/samples/fiscal-position.jsonl`**
+**Example: `data/testdata/world-economy/fiscal-position`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -767,8 +739,8 @@ A real record, the most complete of the first rows (the one with the most non-em
   "FISCAL_ID": "FISC-AFG",
   "ECONOMY_NAME": "Afghanistan",
   "YEAR": "2025",
-  "DEBT": 8,
-  "BALANCE": -0.9,
+  "DEBT": 7.6,
+  "BALANCE": -0.5,
   "REVENUE": 13.0393,
   "SPENDING": 39.2201,
   "MILITARY": 1.82793,
@@ -808,18 +780,11 @@ A real record, the most complete of the first rows (the one with the most non-em
   "ECONOMY": "ECON-AFG",
   "PROVENANCE": {
     "SOURCE": "World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper)",
-    "DATASET": "World Development Indicators (updated 2026-10-08); World Economic Outlook (April 2026 edition)",
-    "RETRIEVED_AT": "2026-10-10",
+    "DATASET": "World Development Indicators (updated ); World Economic Outlook (October 2026 edition)",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "CC BY 4.0; IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission",
     "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0). Source: International Monetary Fund, World Economic Outlook database, https://www.imf.org/external/datamapper.",
     "URL": "https://databank.worldbank.org/source/world-development-indicators"
-  },
-  "_meta": {
-    "source": "World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper)",
-    "dataset": "World Development Indicators (updated 2026-10-08); World Economic Outlook (April 2026 edition)",
-    "retrievedAt": "2026-10-10",
-    "licence": "CC BY 4.0; IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission",
-    "generation": 1
   }
 }
 ```
@@ -977,26 +942,26 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 - enum values inferred from the data, not from a glossary: ISO3, COUNTRY_NAME, SOURCE, PROVENANCE.SOURCE: confirm they are closed lists.
 
 <a id="example-world-economy-region-economy"></a>
-**Example: `modules/economy/packs/world-economy/samples/region-economy.jsonl`**
+**Example: `data/testdata/world-economy/region-economy`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
 ```json
 {
-  "REGION_ID": "REGE-AU-ACT",
-  "NAME": "Australian Capital Territory",
-  "REGION_CODE": "AU-ACT",
+  "REGION_ID": "REGE-AU-NSW",
+  "NAME": "New South Wales",
+  "REGION_CODE": "AU-NSW",
   "ISO3": "AUS",
   "COUNTRY_NAME": "Australia",
   "YEAR": "2023",
-  "POPULATION_M": 0.46,
-  "POPULATION": 460000,
-  "GDP_USD_BN": 33,
-  "GDP_PER_CAPITA": 71739,
+  "POPULATION_M": 8.34,
+  "POPULATION": 8340000,
+  "GDP_USD_BN": 510,
+  "GDP_PER_CAPITA": 61151,
   "SOURCE": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting",
   "FACTS": {
     "STATUS": "Illustrative, rounded from public figures, not for reporting",
-    "REGION_CODE": "AU-ACT",
+    "REGION_CODE": "AU-NSW",
     "POPULATION": "to the nearest 10,000",
     "GDP": "to the nearest US$ billion"
   },
@@ -1008,13 +973,6 @@ A real record, the most complete of the first rows (the one with the most non-em
     "LICENCE": "Illustrative, rounded from public figures; not for reporting",
     "ATTRIBUTION": "Illustrative, rounded from public figures, not for reporting. Population to the nearest 10,000, GDP to the nearest US$ billion. Australian GDP is shown in US dollars at a rounded rate. Replace with a fetched series (ABS, US Census Bureau, BEA) before any reporting use.",
     "URL": ""
-  },
-  "_meta": {
-    "source": "Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting",
-    "dataset": "Region economics (illustrative sample)",
-    "retrievedAt": "2026-10-12",
-    "licence": "Illustrative, rounded from public figures; not for reporting",
-    "generation": 1
   }
 }
 ```
@@ -1143,7 +1101,7 @@ A country: government type, capital, legislature and seats by party, office hold
 - no unit stated for the amounts INDICATORS[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
 <a id="example-world-economy-jurisdiction"></a>
-**Example: `modules/economy/packs/world-economy/samples/jurisdiction.jsonl`**
+**Example: `data/testdata/world-economy/jurisdiction`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -1230,18 +1188,11 @@ A real record, the most complete of the first rows (the one with the most non-em
   ],
   "PROVENANCE": {
     "SOURCE": "CIA, The World Factbook (factbook.json mirror, CC0); World Bank, World Development Indicators; World Bank, Worldwide Governance Indicators; UNDP, Human Development Report: composite indices time series",
-    "DATASET": "The World Factbook (mirror commit 144d6977b2); World Development Indicators (updated 2026-10-08); Worldwide Governance Indicators (updated 2026-09-25); Human Development Index time series (2025 report)",
-    "RETRIEVED_AT": "2026-10-10",
+    "DATASET": "The World Factbook (mirror commit 144d6977b2); World Development Indicators (updated ); Worldwide Governance Indicators (updated 2026-09-25); Human Development Index time series (2025 report)",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0; CC BY 4.0; CC BY 3.0 IGO",
     "ATTRIBUTION": "Central Intelligence Agency, The World Factbook (public domain). The World Bank: World Development Indicators (CC BY 4.0). The World Bank: Worldwide Governance Indicators (CC BY 4.0). UNDP, Human Development Report 2025 data (CC BY 3.0 IGO).",
     "URL": "https://www.cia.gov/the-world-factbook/"
-  },
-  "_meta": {
-    "source": "CIA, The World Factbook (factbook.json mirror, CC0); World Bank, World Development Indicators; World Bank, Worldwide Governance Indicators; UNDP, Human Development Report: composite indices time series",
-    "dataset": "The World Factbook (mirror commit 144d6977b2); World Development Indicators (updated 2026-10-08); Worldwide Governance Indicators (updated 2026-09-25); Human Development Index time series (2025 report)",
-    "retrievedAt": "2026-10-10",
-    "licence": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0; CC BY 4.0; CC BY 3.0 IGO",
-    "generation": 1
   }
 }
 ```
@@ -1320,7 +1271,7 @@ A political party that won seats in the lower chamber at the most recent electio
 - no unit stated for the amounts TOTAL_SEATS (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
 <a id="example-world-economy-party"></a>
-**Example: `modules/economy/packs/world-economy/samples/party.jsonl`**
+**Example: `data/testdata/world-economy/party`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -1353,17 +1304,10 @@ A real record, the most complete of the first rows (the one with the most non-em
   "PROVENANCE": {
     "SOURCE": "CIA, The World Factbook (factbook.json mirror, CC0)",
     "DATASET": "The World Factbook (mirror commit 144d6977b2)",
-    "RETRIEVED_AT": "2026-10-10",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
     "ATTRIBUTION": "Central Intelligence Agency, The World Factbook (public domain).",
     "URL": "https://www.cia.gov/the-world-factbook/"
-  },
-  "_meta": {
-    "source": "CIA, The World Factbook (factbook.json mirror, CC0)",
-    "dataset": "The World Factbook (mirror commit 144d6977b2)",
-    "retrievedAt": "2026-10-10",
-    "licence": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
-    "generation": 1
   }
 }
 ```
@@ -1446,7 +1390,7 @@ The chief of state or head of government of a country as the CIA World Factbook 
 - enum values inferred from the data, not from a glossary: ROLE: confirm they are closed lists.
 
 <a id="example-world-economy-office-holder"></a>
-**Example: `modules/economy/packs/world-economy/samples/office-holder.jsonl`**
+**Example: `data/testdata/world-economy/office-holder`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -1468,17 +1412,10 @@ A real record, the most complete of the first rows (the one with the most non-em
   "PROVENANCE": {
     "SOURCE": "CIA, The World Factbook (factbook.json mirror, CC0)",
     "DATASET": "The World Factbook (mirror commit 144d6977b2)",
-    "RETRIEVED_AT": "2026-10-10",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
     "ATTRIBUTION": "Central Intelligence Agency, The World Factbook (public domain).",
     "URL": "https://www.cia.gov/the-world-factbook/"
-  },
-  "_meta": {
-    "source": "CIA, The World Factbook (factbook.json mirror, CC0)",
-    "dataset": "The World Factbook (mirror commit 144d6977b2)",
-    "retrievedAt": "2026-10-10",
-    "licence": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
-    "generation": 1
   },
   "MANDATE": {
     "SELECTION": "the monarchy is hereditary; governor general appointed by the monarch for a 6-year term; prime minister and deputy prime minister indirectly elected by the Staten for 4-year term",
@@ -1581,7 +1518,7 @@ The most recent election to a chamber or to the executive, with the system, term
 - enum values inferred from the data, not from a glossary: SUMMARY.ELECTORAL_SYSTEM: confirm they are closed lists.
 
 <a id="example-world-economy-election"></a>
-**Example: `modules/economy/packs/world-economy/samples/election.jsonl`**
+**Example: `data/testdata/world-economy/election`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -1625,17 +1562,10 @@ A real record, the most complete of the first rows (the one with the most non-em
   "PROVENANCE": {
     "SOURCE": "CIA, The World Factbook (factbook.json mirror, CC0)",
     "DATASET": "The World Factbook (mirror commit 144d6977b2)",
-    "RETRIEVED_AT": "2026-10-10",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
     "ATTRIBUTION": "Central Intelligence Agency, The World Factbook (public domain).",
     "URL": "https://www.cia.gov/the-world-factbook/"
-  },
-  "_meta": {
-    "source": "CIA, The World Factbook (factbook.json mirror, CC0)",
-    "dataset": "The World Factbook (mirror commit 144d6977b2)",
-    "retrievedAt": "2026-10-10",
-    "licence": "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
-    "generation": 1
   }
 }
 ```
@@ -1727,7 +1657,7 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 - no unit stated for the amounts URBAN (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
 <a id="example-world-economy-region"></a>
-**Example: `modules/economy/packs/world-economy/samples/region.jsonl`**
+**Example: `data/testdata/world-economy/region`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -1783,18 +1713,11 @@ A real record, the most complete of the first rows (the one with the most non-em
   ],
   "PROVENANCE": {
     "SOURCE": "World Bank, World Development Indicators; CIA, The World Factbook (factbook.json mirror, CC0)",
-    "DATASET": "World Development Indicators (updated 2026-10-08); The World Factbook (mirror commit 144d6977b2)",
-    "RETRIEVED_AT": "2026-10-10",
+    "DATASET": "World Development Indicators (updated ); The World Factbook (mirror commit 144d6977b2)",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "CC BY 4.0; Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
     "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0). Central Intelligence Agency, The World Factbook (public domain).",
     "URL": "https://databank.worldbank.org/source/world-development-indicators"
-  },
-  "_meta": {
-    "source": "World Bank, World Development Indicators; CIA, The World Factbook (factbook.json mirror, CC0)",
-    "dataset": "World Development Indicators (updated 2026-10-08); The World Factbook (mirror commit 144d6977b2)",
-    "retrievedAt": "2026-10-10",
-    "licence": "CC BY 4.0; Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0",
-    "generation": 1
   }
 }
 ```
@@ -1901,42 +1824,42 @@ A social or governance statistic of one country over time, with the regional com
 - no unit stated for the amounts LATEST, CHANGE_5Y, SERIES[].VALUE, BY_REGION[].VALUE (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
 
 <a id="example-world-economy-social-indicator"></a>
-**Example: `modules/economy/packs/world-economy/samples/social-indicator.jsonl`**
+**Example: `data/testdata/world-economy/social-indicator`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
 ```json
 {
-  "INDICATOR_ID": "SOCI-ABW-EDUCATION-SPEND",
-  "NAME": "Aruba · Government expenditure on education",
-  "INDICATOR": "Government expenditure on education",
+  "INDICATOR_ID": "SOCI-ABW-LIFE-EXPECTANCY",
+  "NAME": "Aruba · Life expectancy at birth",
+  "INDICATOR": "Life expectancy at birth",
   "COUNTRY_NAME": "Aruba",
   "THEME": "Society",
-  "LATEST": 3.61856,
-  "LATEST_YEAR": "2021",
-  "UNIT": "% of GDP",
-  "CHANGE_5Y": -1.8728,
+  "LATEST": 76.5,
+  "LATEST_YEAR": "2024",
+  "UNIT": "years",
+  "CHANGE_5Y": 0.481,
   "SOURCE_NAME": "World Bank, World Development Indicators",
-  "DEFINITION": "General government spending on education, as a share of GDP.",
+  "DEFINITION": "Number of years a newborn would live if prevailing patterns of mortality at the time of birth stayed the same throughout life.",
   "SERIES": [
     {
       "YEAR": "2015",
-      "VALUE": 5.88827
+      "VALUE": 75.405
     },
     {
       "YEAR": "2016",
-      "VALUE": 5.49136
+      "VALUE": 75.54
     },
-    "… 4 more elements of the same shape"
+    "… 8 more elements of the same shape"
   ],
   "BY_REGION": [
     {
-      "COUNTRY": "Cuba",
-      "VALUE": 8.44086
+      "COUNTRY": "Puerto Rico (US)",
+      "VALUE": 81.902
     },
     {
-      "COUNTRY": "Bolivia",
-      "VALUE": 7.5398
+      "COUNTRY": "Chile",
+      "VALUE": 81.359
     },
     "… 8 more elements of the same shape"
   ],
@@ -1944,23 +1867,16 @@ A real record, the most complete of the first rows (the one with the most non-em
   "JURISDICTION": "JUR-ABW",
   "PROVENANCE": {
     "SOURCE": "World Bank, World Development Indicators",
-    "DATASET": "World Development Indicators (updated 2026-10-08)",
-    "RETRIEVED_AT": "2026-10-10",
+    "DATASET": "World Development Indicators (updated )",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "CC BY 4.0",
     "ATTRIBUTION": "The World Bank: World Development Indicators (CC BY 4.0).",
     "URL": "https://databank.worldbank.org/source/world-development-indicators"
   },
-  "_meta": {
-    "source": "World Bank, World Development Indicators",
-    "dataset": "World Development Indicators (updated 2026-10-08)",
-    "retrievedAt": "2026-10-10",
-    "licence": "CC BY 4.0",
-    "generation": 1
-  },
   "MEANING": {
-    "INDICATOR": "Government expenditure on education",
-    "UNIT": "% of GDP",
-    "DEFINITION": "General government spending on education, as a share of GDP.",
+    "INDICATOR": "Life expectancy at birth",
+    "UNIT": "years",
+    "DEFINITION": "Number of years a newborn would live if prevailing patterns of mortality at the time of birth stayed the same throughout life.",
     "COMPARED_WITH": "countries of Latin America & Caribbean (latest value, 2022 or later)"
   }
 }

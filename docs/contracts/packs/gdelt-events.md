@@ -114,75 +114,76 @@ What the world's news reported about one country yesterday (GDELT): events, tone
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
 
 <a id="example-gdelt-events-event-country"></a>
-**Example: `modules/economy/packs/gdelt-events/samples/event-country.jsonl`**
+**Example: `data/testdata/gdelt-events/event-country`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
 ```json
 {
-  "AVG_GOLDSTEIN": 1.0946,
-  "AVG_TONE": -2.8054,
-  "AVG_TONE_WINDOW": -2.2956,
+  "AVG_GOLDSTEIN": -0.4407,
+  "AVG_TONE": -3.7949,
+  "AVG_TONE_WINDOW": -3.9284,
   "BY_CATEGORY": [
     {
-      "AVG_TONE": -1.9561,
+      "AVG_TONE": -2.5015,
       "CATEGORY": "Consult",
       "CODE": "04",
-      "EVENTS": 23
+      "EVENTS": 31
     },
     {
-      "AVG_TONE": -2.608,
-      "CATEGORY": "Make public statement",
-      "CODE": "01",
-      "EVENTS": 15
+      "AVG_TONE": -6.0469,
+      "CATEGORY": "Fight",
+      "CODE": "19",
+      "EVENTS": 18
     },
-    "… 13 more elements of the same shape"
+    "… 16 more elements of the same shape"
   ],
-  "CONFLICT_SHARE": 25.0,
-  "COOPERATION_SHARE": 75.0,
-  "COUNTRY_NAME": "Australia",
-  "DATE": "2026-11-05",
-  "EVENTS": 92,
-  "EVENTS_WINDOW": 160,
-  "EVENT_COUNTRY_ID": "GDELT-AUS",
+  "CONFLICT_SHARE": 33.79,
+  "COOPERATION_SHARE": 66.21,
+  "COUNTRY_NAME": "Afghanistan",
+  "DATE": "2026-11-26",
+  "EVENTS": 145,
+  "EVENTS_WINDOW": 1040,
+  "EVENT_COUNTRY_ID": "GDELT-AFG",
   "HISTORY": [
     {
-      "AVG_TONE": -1.4378,
-      "DATE": "2026-11-04",
-      "EVENTS": 68
+      "AVG_TONE": -3.5178,
+      "DATE": "2026-11-20",
+      "EVENTS": 186
     },
     {
-      "AVG_TONE": -2.8054,
-      "DATE": "2026-11-05",
-      "EVENTS": 92
-    }
+      "AVG_TONE": -4.0033,
+      "DATE": "2026-11-21",
+      "EVENTS": 102
+    },
+    "… 5 more elements of the same shape"
   ],
-  "ISO3": "AUS",
-  "MENTIONS": 4410,
-  "NAME": "Australia",
+  "ISO3": "AFG",
+  "MENTIONS": 845,
+  "NAME": "Afghanistan",
   "PROVENANCE": {
     "ATTRIBUTION": "Source: The GDELT Project (https://www.gdeltproject.org/).",
-    "DATASET": "GDELT 1.0 daily events 2026-11-05",
+    "DATASET": "GDELT 1.0 daily events 2026-11-26",
     "INTERNAL_ONLY": false,
     "LICENCE": "GDELT terms of use: free and open for any use, commercial included, with a citation of the GDELT Project and a link to it",
-    "RETRIEVED_AT": "2026-11-06",
+    "RETRIEVED_AT": "2026-11-27",
     "SOURCE": "The GDELT Project",
     "URL": "https://www.gdeltproject.org/data.html"
   },
-  "TONE_CHANGE": -0.5098,
+  "TONE_CHANGE": 0.1335,
   "TOP_STORIES": [
     {
-      "CATEGORY": "Consult",
-      "MENTIONS": 1211,
-      "URL": "https://www.bandt.com.au/melbourne-confidential-tiffany-damm/"
+      "CATEGORY": "Yield",
+      "MENTIONS": 44,
+      "URL": "https://www.eldoradonews.com/news/2026/nov/25/fort-hood-shooter-asks-court-to-delay-firing/"
     },
     {
-      "CATEGORY": "Appeal",
-      "MENTIONS": 620,
-      "URL": "https://www.aol.co.uk/articles/scare-campaigns-victoria-major-parties-230046000.html"
+      "CATEGORY": "Yield",
+      "MENTIONS": 30,
+      "URL": "https://www.bbc.co.uk/news/articles/ck62y23z58yeo"
     },
     "… 3 more elements of the same shape"
   ],
-  "WINDOW_DAYS": 2
+  "WINDOW_DAYS": 7
 }
 ```

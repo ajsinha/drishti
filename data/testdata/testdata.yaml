@@ -21515,62 +21515,6 @@ datasets:
   files:
   - risk-factor.2026-09-30.jsonl.gz
   bytes: 21745
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: economic-forecast
-  connector: macro-store
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: economy
-  connector: macro-store
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: election
-  connector: civic-store
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: fiscal-position
-  connector: macro-store
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: jurisdiction
-  connector: civic-store
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: labour-market
-  connector: macro-store
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: macro-indicator
-  connector: macro-store
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: office-holder
-  connector: civic-store
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: party
-  connector: civic-store
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: region
-  connector: civic-store
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: region-economy
-  connector: macro-store
-- samples: modules/economy/packs/world-economy/samples
-  pack: world-economy
-  kind: social-indicator
-  connector: civic-store
-- samples: modules/economy/packs/news-and-markets/samples
-  pack: news-and-markets
-  kind: listed-company
-  connector: news-store
-- samples: modules/economy/packs/news-and-markets/samples
-  pack: news-and-markets
-  kind: news-topic
-  connector: news-store
 - samples: config/packs/core/compute-demo/samples
   pack: compute-demo
   kind: path-book
@@ -21903,3 +21847,351 @@ datasets:
   files:
   - design-round.2026-11-16.jsonl.gz
   bytes: 749
+- folder: central-banks/central-bank
+  pack: central-banks
+  kind: central-bank
+  connector: centralbank-store
+  key: BANK_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: FRED (Federal Reserve Bank of St. Louis; needs DRISHTI_FRED_API_KEY) and the Bank of Canada Valet API (drishti.py feed run central-banks
+    --snapshot)
+  documents: 2
+  files:
+  - central-bank.2026-11-27.jsonl.gz
+  bytes: 2353
+  lake: worldlake
+  dates: last
+- folder: central-banks/rate-series
+  pack: central-banks
+  kind: rate-series
+  connector: centralbank-store
+  key: SERIES_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: FRED (Federal Reserve Bank of St. Louis; needs DRISHTI_FRED_API_KEY) and the Bank of Canada Valet API (drishti.py feed run central-banks
+    --snapshot)
+  documents: 5
+  files:
+  - rate-series.2026-11-27.jsonl.gz
+  bytes: 10378
+  lake: worldlake
+  dates: last
+- folder: national-statistics/statistics-series
+  pack: national-statistics
+  kind: statistics-series
+  connector: statistics-store
+  key: SERIES_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: Statistics Canada Web Data Service (drishti.py feed run national-statistics --snapshot)
+  documents: 7
+  files:
+  - statistics-series.2026-11-27.jsonl.gz
+  bytes: 3631
+  lake: worldlake
+  dates: last
+- folder: oecd/oecd-country
+  pack: oecd
+  kind: oecd-country
+  connector: oecd-store
+  key: COUNTRY_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: OECD Data Explorer SDMX API (drishti.py feed run oecd --snapshot)
+  documents: 38
+  files:
+  - oecd-country.2026-11-27.jsonl.gz
+  bytes: 4343
+  lake: worldlake
+  dates: last
+- folder: oecd/oecd-series
+  pack: oecd
+  kind: oecd-series
+  connector: oecd-store
+  key: SERIES_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: OECD Data Explorer SDMX API (drishti.py feed run oecd --snapshot)
+  documents: 123
+  files:
+  - oecd-series.2026-11-27.jsonl.gz
+  bytes: 45357
+  lake: worldlake
+  dates: last
+- folder: world-development/development-profile
+  pack: world-development
+  kind: development-profile
+  connector: development-store
+  key: PROFILE_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank World Development Indicators API (drishti.py feed run world-development --snapshot)
+  documents: 217
+  files:
+  - development-profile.2026-11-27.jsonl.gz
+  bytes: 43211
+  lake: worldlake
+  dates: last
+- folder: world-development/development-series
+  pack: world-development
+  kind: development-series
+  connector: development-store
+  key: SERIES_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank World Development Indicators API (drishti.py feed run world-development --snapshot)
+  documents: 8729
+  files:
+  - development-series.2026-11-27.jsonl.gz
+  bytes: 1467311
+  lake: worldlake
+  dates: last
+- folder: gdelt-events/event-country
+  pack: gdelt-events
+  kind: event-country
+  connector: gdelt-store
+  key: EVENT_COUNTRY_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: GDELT 1.0 daily event files (drishti.py feed run gdelt-events --snapshot)
+  documents: 135
+  files:
+  - event-country.2026-11-27.jsonl.gz
+  bytes: 68270
+  lake: newslake
+  dates: last
+- folder: official-news/release-source
+  pack: official-news
+  kind: release-source
+  connector: officialnews-store
+  key: SOURCE_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: central banks' and regulators' press-release feeds (drishti.py feed run official-news --snapshot)
+  documents: 9
+  files:
+  - release-source.2026-11-27.jsonl.gz
+  bytes: 13013
+  lake: newslake
+  dates: last
+- folder: official-news/press-release
+  pack: official-news
+  kind: press-release
+  connector: officialnews-store
+  key: RELEASE_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: central banks' and regulators' press-release feeds (drishti.py feed run official-news --snapshot)
+  documents: 196
+  files:
+  - press-release.2026-11-27.jsonl.gz
+  bytes: 26821
+  lake: newslake
+  dates: last
+- folder: world-economy/economy
+  pack: world-economy
+  kind: economy
+  connector: macro-store
+  key: ECONOMY_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 213
+  files:
+  - economy.2026-11-27.jsonl.gz
+  bytes: 68488
+  dates: last
+  internal-only: true
+- folder: world-economy/macro-indicator
+  pack: world-economy
+  kind: macro-indicator
+  connector: macro-store
+  key: INDICATOR_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 3119
+  files:
+  - macro-indicator.2026-11-27.jsonl.gz
+  bytes: 335444
+  dates: last
+  internal-only: true
+- folder: world-economy/economic-forecast
+  pack: world-economy
+  kind: economic-forecast
+  connector: macro-store
+  key: FORECAST_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 192
+  files:
+  - economic-forecast.2026-11-27.jsonl.gz
+  bytes: 78224
+  dates: last
+  internal-only: true
+- folder: world-economy/labour-market
+  pack: world-economy
+  kind: labour-market
+  connector: macro-store
+  key: LABOUR_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 185
+  files:
+  - labour-market.2026-11-27.jsonl.gz
+  bytes: 25241
+  dates: last
+  internal-only: true
+- folder: world-economy/fiscal-position
+  pack: world-economy
+  kind: fiscal-position
+  connector: macro-store
+  key: FISCAL_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 192
+  files:
+  - fiscal-position.2026-11-27.jsonl.gz
+  bytes: 34803
+  dates: last
+  internal-only: true
+- folder: world-economy/region-economy
+  pack: world-economy
+  kind: region-economy
+  connector: macro-store
+  key: REGION_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 59
+  files:
+  - region-economy.2026-11-27.jsonl.gz
+  bytes: 2988
+  dates: last
+  internal-only: true
+- folder: world-economy/jurisdiction
+  pack: world-economy
+  kind: jurisdiction
+  connector: civic-store
+  key: JURISDICTION_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 216
+  files:
+  - jurisdiction.2026-11-27.jsonl.gz
+  bytes: 154273
+  dates: last
+  internal-only: true
+- folder: world-economy/party
+  pack: world-economy
+  kind: party
+  connector: civic-store
+  key: PARTY_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 282
+  files:
+  - party.2026-11-27.jsonl.gz
+  bytes: 16220
+  dates: last
+  internal-only: true
+- folder: world-economy/office-holder
+  pack: world-economy
+  kind: office-holder
+  connector: civic-store
+  key: OFFICE_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 430
+  files:
+  - office-holder.2026-11-27.jsonl.gz
+  bytes: 67559
+  dates: last
+  internal-only: true
+- folder: world-economy/election
+  pack: world-economy
+  kind: election
+  connector: civic-store
+  key: ELECTION_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 378
+  files:
+  - election.2026-11-27.jsonl.gz
+  bytes: 66039
+  dates: last
+  internal-only: true
+- folder: world-economy/region
+  pack: world-economy
+  kind: region
+  connector: civic-store
+  key: REGION_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 7
+  files:
+  - region.2026-11-27.jsonl.gz
+  bytes: 3339
+  dates: last
+  internal-only: true
+- folder: world-economy/social-indicator
+  pack: world-economy
+  kind: social-indicator
+  connector: civic-store
+  key: INDICATOR_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot
+    --internal-ok)
+  documents: 4297
+  files:
+  - social-indicator.2026-11-27.jsonl.gz
+  bytes: 1006139
+  dates: last
+  internal-only: true
+- folder: news-and-markets/listed-company
+  pack: news-and-markets
+  kind: listed-company
+  connector: news-store
+  key: COMPANY_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: the pack's own lists (modules/economy/packs/news-and-markets/README.md)
+  documents: 20
+  files:
+  - listed-company.2026-11-27.jsonl.gz
+  bytes: 1186
+  dates: last
+- folder: news-and-markets/news-topic
+  pack: news-and-markets
+  kind: news-topic
+  connector: news-store
+  key: TOPIC_ID
+  snapshot: true
+  captured: '2026-11-27'
+  source: the pack's own lists (modules/economy/packs/news-and-markets/README.md)
+  documents: 15
+  files:
+  - news-topic.2026-11-27.jsonl.gz
+  bytes: 871
+  dates: last

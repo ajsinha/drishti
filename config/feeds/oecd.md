@@ -26,6 +26,7 @@ The economy module's public-sector oecd pack (docs/guides/WORLD_DATA_GUIDE.md): 
 python3 tools/drishti.py feed run oecd --dry-run      # what it would fetch and load; changes nothing
 python3 tools/drishti.py feed run oecd                # pull today, write data/datafeeds/oecd/<date>/, load into worldlake
 python3 tools/drishti.py feed status oecd             # its last runs
+python3 tools/drishti.py feed run oecd --snapshot     # refresh the committed demo snapshot instead
 ```
 
 Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).

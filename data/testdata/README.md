@@ -31,6 +31,10 @@ data/testdata/
   market-risk/<kind>/           trade valuations, FRTB sensitivities, VaR, stress scenarios and results, P&L explain
   news-and-markets/quote/       a REAL snapshot of the twenty companies' quotes (a year of daily bars), Yahoo Finance
   news-and-markets/news/        a REAL snapshot of the companies' and topics' headlines, Google News
+  news-and-markets/<list>/      the pack's lists: the twenty listed companies and the fifteen topics the capture asks for
+  world-economy/<kind>/         REAL public data: economies, indicators, forecasts, governments, parties, elections (World Bank, IMF, UNDP, CIA Factbook; IMF: internal demos only)
+  central-banks, national-statistics, oecd, world-development/<kind>/   REAL public data, live-run snapshots, loaded into worldlake
+  official-news, gdelt-events/<kind>/                                   REAL public data, live-run snapshots, loaded into newslake
   us-equities/<kind>/           REAL public data: the index companies, their filings and financial facts (SEC EDGAR, Wikidata, GLEIF)
   gleif/<kind>/                 REAL public data: LEI records, ownership groups, relationships, countries, identifiers (GLEIF, CC0)
   genomics-showcase/<kind>/     SYNTHETIC: the genomics module's showcase, a cohort of 1,500 invented patients (100,000 rows, seeded)
@@ -40,8 +44,7 @@ data/testdata/
 Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whether the files are current), guarded by
 `tools/testdata/test_testdata.py`, read by `drishti.py lake demo` (`tools/lake/demo.py`). The market snapshot under
 `news-and-markets/` is the exception: real data, captured with internet by `tools/testdata/capture_market.py`
-([below](#the-market-snapshot-news-and-markets-offline)), kept as it is by `make_testdata.py`; so are the us-equities and gleif
-packs' public data ([below](#public-data-us-equities-and-gleif)), written by their own generators.
+([below](#the-market-snapshot-news-and-markets-offline)), kept as it is by `make_testdata.py`; so are the public packs' data ([below](#public-data-every-public-packs-snapshot-one-table)), written by their own generators.
 
 **File names.** Every file follows the load rules ([DATA_LAKE_GUIDE.md](../../docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), section 5.2):
 `<table>.<YYYY-MM-DD>.jsonl.gz`, the table the dataset's connector reads (`trade_endur`, `counterparty`, `pnl-vector` ...) and the
@@ -79,8 +82,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), and so do the dates a market document holds a fixed
    number of business days from its date (an FX spot's value date `SPOT_DATE`, T+2; an IR curve's pillar `POINTS[].MATURITY`), so a price history has no missing days between the series
    and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`), and the fields quoted next to the price move with it ([below](#the-datasets)). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
-   103 tables, about 3.4 GB on disk (14 tables are static reference data built from the world-economy and
-   news-and-markets packs' samples, 2 the captured quotes and headlines, 8 the us-equities and gleif public data; since 2.9.2 the
+   103 tables, about 3.4 GB on disk (the public packs' tables are built from their committed snapshots: [below](#public-data-every-public-packs-snapshot-one-table); since 2.9.2 the
    country groups, SIC sectors, ownership groups and LEI countries are computed from them, not stored).
 4. **Start** the server and the console: the run configurations **Drishti: run server (demo)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
@@ -175,14 +177,16 @@ on the last day, and the folder's compressed size (MB).
 | `market-risk/trade-valuation` | market-risk · `trade-valuation` | `VALUATION_ID` | `risk-store` → `risk/trade-valuation` | business_date | 12,076 | 12,096–15,000 | 15,000 | 34.60 |
 | `core/trader` | core · `trader` | `TRADER_ID` | `reference-store` → `reference/trader` | business_date | 20 | 0–0 | 20 | 0.00 |
 
-Built from the packs' samples (static reference data already in the repository, the same on every day):
+Built from the public packs' committed snapshots (real, dated data, loaded once under the newest business date; the table [below](#public-data-every-public-packs-snapshot-one-table) has every file, row count, source, date and refresh command):
 
 | Pack | Connector → tables |
 |---|---|
-| `world-economy` samples | `macro-store` → `macro/`: `economic-forecast`, `economy`, `fiscal-position`, `labour-market`, `macro-indicator`, `region-economy` |
-| `world-economy` samples | `civic-store` → `civic/`: `election`, `jurisdiction`, `office-holder`, `party`, `region`, `social-indicator` |
-| `news-and-markets` samples | `news-store` → `news/`: `listed-company`, `news-topic` |
+| `world-economy` | `macro-store` → `macro/`: `economic-forecast`, `economy`, `fiscal-position`, `labour-market`, `macro-indicator`, `region-economy` |
+| `world-economy` | `civic-store` → `civic/`: `election`, `jurisdiction`, `office-holder`, `party`, `region`, `social-indicator` |
+| `news-and-markets` (lists) | `news-store` → `news/`: `listed-company`, `news-topic` |
 | `news-and-markets/quote`, `news-and-markets/news` (captured) | `news-store` → `news/`: `quote`, `news` (below) |
+| `central-banks`, `national-statistics`, `oecd`, `world-development` | their own stores → `worldlake` |
+| `official-news`, `gdelt-events` | their own stores → `newslake` |
 
 **Trades.** The common 47-attribute schema of every source system (`SOURCE_SYSTEM`, `TRADE_ID`, `PRODUCT_TYPE`, `COUNTERPARTY`,
 `LEGS[]` with `INDEX` and `CASH_FLOWS[]` → `RESETS[]`, `EVENTS[]`: `tools/packgen/trades/schema.py`). Ids are unique across the
@@ -310,8 +314,8 @@ those same connectors, which the pack serves from the demo lake when the live co
   The company page (`/v/listed-company/CO-AAPL`: quote, closing-price chart, headlines), the topic pages (`/v/news-topic/TOPIC-FED`),
   `QUOTE QUOTE-MSFT`, `NEWS NEWS-Federal_Reserve` and search look as they do live. A name or ticker outside the snapshot (`NEWS-Anything`)
   is *not found* offline.
-- **world-economy** needs no snapshot: its thirteen kinds are the pack's samples (real World Bank, IMF, Factbook and UNDP figures),
-  already in the repository and built into `macro/` and `civic/`; it has no live connector.
+- **world-economy** has its own snapshot under `world-economy/<kind>/` (real World Bank, IMF, Factbook and UNDP figures, written by
+  `drishti.py feed run world-economy --snapshot --internal-ok`), built into `macro/` and `civic/`; it has no live connector.
 
 **Refreshing it** (on a machine with internet; the server jar built: run configuration **Drishti: build all**):
 
@@ -327,23 +331,83 @@ server error. `--server URL` uses a server you run instead. It replaces the olde
 sizes; then run `lake demo` and commit `data/testdata`. Exit 0 all captured, 2 some ids missing (the rest written), 1 nothing.
 Guarded by `tools/testdata/test_capture_market.py` (a stub server, never the internet) and `test_testdata.py`.
 
-## Public data: us-equities and gleif
+## Public data: every public pack's snapshot, one table
 
-The us-equities and gleif packs carry published public data, not generated documents. It follows the same pattern as everything
-here: one gzipped JSON Lines snapshot per kind, `us-equities/<kind>/<kind>.<date>.jsonl.gz` (us-company, index-membership,
-filing-feed, filing, financial-fact) and `gleif/<kind>/<kind>.<date>.jsonl.gz` (lei-entity, lei-relationship, lei-mapping), about
-3.8 MB in all (the SIC sectors, ownership groups and LEI countries are computed from them since 2.9.2, never stored), each listed in `testdata.yaml` with its key, capture date, source, documents and size.
+The packs that carry published public data (us-equities, funds, gleif, the economy module's world-economy, news-and-markets and six
+public-sector packs, the genomics showcase) follow the one pattern of everything here: **the data is not kept in the pack**. It is one gzipped
+JSON Lines snapshot per kind, `<pack>/<kind>/<kind>.<date>.jsonl.gz` (a large kind a tar of parts), named by the load rules and listed in
+`testdata.yaml` with its key, the lake it is written to, source, retrieval date, documents and size. `drishti.py lake demo` loads it into the
+pack's lake and the pack's Delta connector reads it; a pack's `samples/` folder keeps only a few reference documents for its README
+and the docs (`tools/testdata/test_public_data_pattern.py` guards that nothing is served from there).
 
-- **In the lake.** `lake demo` writes each kind into `us-equities/<kind>` and `gleif/<kind>` (the same snapshot on every day, never
-  re-dated); the packs' Delta connectors `us-equities-store` and `gleif-store` serve them, so both packs work with the demo connector
-  off. Their `samples/` folders keep only a few reference documents for their READMEs and guides; nothing is served from there.
-  Both packs are off by default: add `us-equities,gleif` to `DRISHTI_PACKS`.
-- **Writing it.** The packs' generators write the snapshots and their `testdata.yaml` entries (`tools/testdata/publicsnap.py`):
-  `tools/packgen/us_equities/make.py`, `tools/packgen/gleif/make.py`, run by the data feeds `drishti.py feed run us-equities`
-  and `gleif.py` ([external data](../../docs/guides/DATA_GUIDE.md#4-external-data-where-it-comes-from-and-how-to-refresh-it)); `make.py --check` without a cache checks the committed
-  snapshot. `make_testdata.py` keeps both folders as they are and lists them.
-- **Licences.** SEC EDGAR is public domain, GLEIF and Wikidata CC0, the Nasdaq Trader directory a public file; no prices, index
-  weights or GICS are included (the packs' guides).
+- **In the lake.** The six public-sector packs read their own lakes, where their feeds load them daily: `central-banks`,
+  `national-statistics`, `oecd` and `world-development` read `worldlake`, `official-news` and `gdelt-events` read `newslake`. Their
+  entries in `testdata.yaml` say `lake: worldlake` or `lake: newslake`, so `lake demo` writes them there (under `<data>/delta/<lake>/`,
+  beside the demo lake; `--lake` elsewhere puts them beside it). Real public data is not re-dated and is not copied sixty times:
+  `dates: last` loads the snapshot once, under the newest business date, and the connectors read it with `mode.<kind>: effective`
+  (the newest load on or before the day asked), so every earlier day shows it too. The other public packs read the demo lake.
+- **Writing it.** Each feed writes its pack's snapshot from a live run: `python3 tools/drishti.py feed run <feed> --snapshot` pulls the
+  latest data (the feed file's selection), writes `data/testdata/<pack>/...`, updates `testdata.yaml` and this table, and rebuilds the
+  pack's reference samples and README. `world-economy` carries IMF data: internal demonstrations only (`--snapshot --internal-ok`).
+  `central-banks` needs a free `DRISHTI_FRED_API_KEY` for the Federal Reserve series; without one the snapshot holds the Bank of Canada's
+  only (said in the run's log).
+- **Offline.** Everything here is committed; `lake demo` reads only it.
+
+<!-- BEGIN public-data table (tools/testdata/publicsnap.py) -->
+| Pack | Kind | Files | Rows | Source | Date | Refresh |
+|---|---|---|---|---|---|---|
+| `news-and-markets` | `quote` | `news-and-markets/quote/quote.2026-11-27.jsonl.gz` | 20 | Yahoo Finance (yfinance connector) | 2026-11-27 | `python3 tools/drishti.py testdata capture-market (quote, news); python3 modules/economy/packs/news-and-markets/tools/make_samples.py (lists)` |
+| `news-and-markets` | `news` | `news-and-markets/news/news.2026-11-27.jsonl.gz` | 71 | Google News (news connector) | 2026-11-27 | `python3 tools/drishti.py testdata capture-market (quote, news); python3 modules/economy/packs/news-and-markets/tools/make_samples.py (lists)` |
+| `us-equities` | `us-company` | `us-equities/us-company/us-company.2026-11-27.jsonl.gz` | 586 | SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) | 2026-11-27 | `python3 tools/drishti.py feed run us-equities --snapshot` |
+| `us-equities` | `index-membership` | `us-equities/index-membership/index-membership.2026-11-27.jsonl.gz` | 7 | SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) | 2026-11-27 | `python3 tools/drishti.py feed run us-equities --snapshot` |
+| `us-equities` | `filing-feed` | `us-equities/filing-feed/filing-feed.2026-11-27.jsonl.gz` | 6 | SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) | 2026-11-27 | `python3 tools/drishti.py feed run us-equities --snapshot` |
+| `us-equities` | `filing` | `us-equities/filing/filing.2026-11-27.jsonl.gz` | 11,686 | SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) | 2026-11-27 | `python3 tools/drishti.py feed run us-equities --snapshot` |
+| `us-equities` | `financial-fact` | `us-equities/financial-fact/financial-fact.2026-11-27.jsonl.gz` | 4,026 | SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) | 2026-11-27 | `python3 tools/drishti.py feed run us-equities --snapshot` |
+| `gleif` | `lei-entity` | `gleif/lei-entity/lei-entity.2026-11-27.jsonl.gz` | 10,207 | GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif) | 2026-11-27 | `python3 tools/drishti.py feed run gleif --snapshot` |
+| `gleif` | `lei-relationship` | `gleif/lei-relationship/lei-relationship.2026-11-27.jsonl.gz` | 9,572 | GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif) | 2026-11-27 | `python3 tools/drishti.py feed run gleif --snapshot` |
+| `gleif` | `lei-mapping` | `gleif/lei-mapping/lei-mapping.2026-11-27.jsonl.gz` | 3,514 | GLEIF LEI records, relationship records and mapping files (drishti.py feed run gleif) | 2026-11-27 | `python3 tools/drishti.py feed run gleif --snapshot` |
+| `funds` | `fund` | `funds/fund/fund.tar` | 200 | SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds) | 2026-11-27 | `python3 tools/drishti.py feed run funds --snapshot` |
+| `funds` | `fund-holder` | `funds/fund-holder/fund-holder.2026-11-27.jsonl.gz` | 586 | SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds) | 2026-11-27 | `python3 tools/drishti.py feed run funds --snapshot` |
+| `funds` | `index-funds` | `funds/index-funds/index-funds.2026-11-27.jsonl.gz` | 3 | SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds) | 2026-11-27 | `python3 tools/drishti.py feed run funds --snapshot` |
+| `genomics-showcase` | `study-gene` | `genomics-showcase/study-gene/study-gene.2026-11-16.jsonl.gz` | 2,000 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `genomics-showcase` | `study-sample` | `genomics-showcase/study-sample/study-sample.2026-11-16.jsonl.gz` | 1,500 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `genomics-showcase` | `study-variant` | `genomics-showcase/study-variant/study-variant.2026-11-16.jsonl.gz` | 12,000 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `genomics-showcase` | `variant-call` | `genomics-showcase/variant-call/variant-call.2026-11-16.jsonl.gz` | 45,000 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `genomics-showcase` | `association` | `genomics-showcase/association/association.2026-11-16.jsonl.gz` | 36,000 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `genomics-showcase` | `cnv-segment` | `genomics-showcase/cnv-segment/cnv-segment.2026-11-16.jsonl.gz` | 3,000 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `genomics-showcase` | `pathway-gene` | `genomics-showcase/pathway-gene/pathway-gene.2026-11-16.jsonl.gz` | 500 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `protein-engineering` | `protein` | `protein-engineering/protein/protein.2026-11-16.jsonl.gz` | 4 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `protein-engineering` | `residue` | `protein-engineering/residue/residue.2026-11-16.jsonl.gz` | 1,196 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `protein-engineering` | `residue-contact` | `protein-engineering/residue-contact/residue-contact.2026-11-16.jsonl.gz` | 5,952 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `protein-engineering` | `dms-score` | `protein-engineering/dms-score/dms-score.2026-11-16.jsonl.gz` | 47,840 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `protein-engineering` | `design` | `protein-engineering/design/design.2026-11-16.jsonl.gz` | 12,000 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `protein-engineering` | `design-mutation` | `protein-engineering/design-mutation/design-mutation.2026-11-16.jsonl.gz` | 33,000 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `protein-engineering` | `design-round` | `protein-engineering/design-round/design-round.2026-11-16.jsonl.gz` | 8 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `central-banks` | `central-bank` | `central-banks/central-bank/central-bank.2026-11-27.jsonl.gz` | 2 | FRED (Federal Reserve Bank of St. Louis; needs DRISHTI_FRED_API_KEY) and the Bank of Canada Valet API (drishti.py feed run central-banks --snapshot) | 2026-11-27 | `python3 tools/drishti.py feed run central-banks --snapshot` |
+| `central-banks` | `rate-series` | `central-banks/rate-series/rate-series.2026-11-27.jsonl.gz` | 5 | FRED (Federal Reserve Bank of St. Louis; needs DRISHTI_FRED_API_KEY) and the Bank of Canada Valet API (drishti.py feed run central-banks --snapshot) | 2026-11-27 | `python3 tools/drishti.py feed run central-banks --snapshot` |
+| `national-statistics` | `statistics-series` | `national-statistics/statistics-series/statistics-series.2026-11-27.jsonl.gz` | 7 | Statistics Canada Web Data Service (drishti.py feed run national-statistics --snapshot) | 2026-11-27 | `python3 tools/drishti.py feed run national-statistics --snapshot` |
+| `oecd` | `oecd-country` | `oecd/oecd-country/oecd-country.2026-11-27.jsonl.gz` | 38 | OECD Data Explorer SDMX API (drishti.py feed run oecd --snapshot) | 2026-11-27 | `python3 tools/drishti.py feed run oecd --snapshot` |
+| `oecd` | `oecd-series` | `oecd/oecd-series/oecd-series.2026-11-27.jsonl.gz` | 123 | OECD Data Explorer SDMX API (drishti.py feed run oecd --snapshot) | 2026-11-27 | `python3 tools/drishti.py feed run oecd --snapshot` |
+| `world-development` | `development-profile` | `world-development/development-profile/development-profile.2026-11-27.jsonl.gz` | 217 | World Bank World Development Indicators API (drishti.py feed run world-development --snapshot) | 2026-11-27 | `python3 tools/drishti.py feed run world-development --snapshot` |
+| `world-development` | `development-series` | `world-development/development-series/development-series.2026-11-27.jsonl.gz` | 8,729 | World Bank World Development Indicators API (drishti.py feed run world-development --snapshot) | 2026-11-27 | `python3 tools/drishti.py feed run world-development --snapshot` |
+| `gdelt-events` | `event-country` | `gdelt-events/event-country/event-country.2026-11-27.jsonl.gz` | 135 | GDELT 1.0 daily event files (drishti.py feed run gdelt-events --snapshot) | 2026-11-27 | `python3 tools/drishti.py feed run gdelt-events --snapshot` |
+| `official-news` | `release-source` | `official-news/release-source/release-source.2026-11-27.jsonl.gz` | 9 | central banks' and regulators' press-release feeds (drishti.py feed run official-news --snapshot) | 2026-11-27 | `python3 tools/drishti.py feed run official-news --snapshot` |
+| `official-news` | `press-release` | `official-news/press-release/press-release.2026-11-27.jsonl.gz` | 196 | central banks' and regulators' press-release feeds (drishti.py feed run official-news --snapshot) | 2026-11-27 | `python3 tools/drishti.py feed run official-news --snapshot` |
+| `world-economy` | `economy` | `world-economy/economy/economy.2026-11-27.jsonl.gz` | 213 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `world-economy` | `macro-indicator` | `world-economy/macro-indicator/macro-indicator.2026-11-27.jsonl.gz` | 3,119 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `world-economy` | `economic-forecast` | `world-economy/economic-forecast/economic-forecast.2026-11-27.jsonl.gz` | 192 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `world-economy` | `labour-market` | `world-economy/labour-market/labour-market.2026-11-27.jsonl.gz` | 185 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `world-economy` | `fiscal-position` | `world-economy/fiscal-position/fiscal-position.2026-11-27.jsonl.gz` | 192 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `world-economy` | `region-economy` | `world-economy/region-economy/region-economy.2026-11-27.jsonl.gz` | 59 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `world-economy` | `jurisdiction` | `world-economy/jurisdiction/jurisdiction.2026-11-27.jsonl.gz` | 216 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `world-economy` | `party` | `world-economy/party/party.2026-11-27.jsonl.gz` | 282 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `world-economy` | `office-holder` | `world-economy/office-holder/office-holder.2026-11-27.jsonl.gz` | 430 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `world-economy` | `election` | `world-economy/election/election.2026-11-27.jsonl.gz` | 378 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `world-economy` | `region` | `world-economy/region/region.2026-11-27.jsonl.gz` | 7 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `world-economy` | `social-indicator` | `world-economy/social-indicator/social-indicator.2026-11-27.jsonl.gz` | 4,297 | World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok) (IMF data: internal demos only) | 2026-11-27 | `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` |
+| `news-and-markets` | `listed-company` | `news-and-markets/listed-company/listed-company.2026-11-27.jsonl.gz` | 20 | the pack's own lists (modules/economy/packs/news-and-markets/README.md) | 2026-11-27 | `python3 tools/drishti.py testdata capture-market (quote, news); python3 modules/economy/packs/news-and-markets/tools/make_samples.py (lists)` |
+| `news-and-markets` | `news-topic` | `news-and-markets/news-topic/news-topic.2026-11-27.jsonl.gz` | 15 | the pack's own lists (modules/economy/packs/news-and-markets/README.md) | 2026-11-27 | `python3 tools/drishti.py testdata capture-market (quote, news); python3 modules/economy/packs/news-and-markets/tools/make_samples.py (lists)` |
+<!-- END public-data table -->
 
 ## The manual way: one dataset at a time
 
@@ -394,5 +458,5 @@ python3 -m unittest -q tools/testdata/test_testdata.py tools/testdata/test_marke
 
 The generator builds on the banking generators (`tools/packgen/banking`, `tools/packgen/trades`): change those, regenerate the
 samples, then the test data. It never touches `news-and-markets/` (the captured market snapshot; `capture-market` refreshes it),
-`us-equities/` or `gleif/` (their generators write them). The world-economy and news-and-markets datasets are those packs' samples; the world-economy figures
+`us-equities/`, `gleif/` or the other public packs' folders (their feeds' `--snapshot` write them). The world-economy figures
 include IMF series, so they are for internal demonstrations only.

@@ -221,11 +221,19 @@ def _table_path(c: dict) -> str:
 
 
 def _feed_lake(o: dict, c: dict, conn: str | None) -> str:
-    """How a feed-filled kind reaches Drishti: its feed, its lake's table, its connector (the samples are never served beside it)."""
+    """How a feed-filled kind reaches Drishti: its feed, its lake's table, its connector, and the committed snapshot of the same data
+    (data/testdata/<pack>/<kind>/: the standard data pattern; the packs' samples/ hold a few reference documents only, never served)."""
     feed = yaml.safe_load((ROOT / "config" / "feeds" / f"{o['feed']}.yaml").read_text(encoding="utf-8"))
     domain = _table_path(c).split("/", 1)[0]
+    snap = [x for x in _testdata().get(c["kind"], []) if x.get("snapshot") and x.get("folder")]
+    shot = ""
+    if snap:
+        x = snap[0]
+        lake = x.get("lake") or "demo"
+        shot = (f"; the committed snapshot `data/testdata/{x['folder']}/` ({x['documents']:,} documents, retrieved {str(x['captured'])[:10]}) → "
+                f"`lake demo` → the lake `{lake}`" + ("" if conn is None else f", same connector"))
     return (f"the daily feed `{o['feed']}` → `<data>/delta/{feed['lake']}/{domain}/{c['kind']}/` (lake `{feed['lake']}`) → connector "
-            f"`{conn}`; nothing is committed but a few documents in `samples/` for the tests")
+            f"`{conn}`{shot}")
 
 
 def retrieval_section(pack: str, items: list[dict]) -> list[str]:
@@ -313,13 +321,13 @@ def retrieval_section(pack: str, items: list[dict]) -> list[str]:
                                                          f"`{s['generators'][g]['check']}`" if s["generators"][g].get("check") else "—"] for g in used_gen])
     out += ["### Into the lake, checking, offline", "",
             "- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, "
-            "the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta "
+            "the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta "
             "connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way "
             "([Command line](../../../../../docs/guides/CLI_REFERENCE.md)).",
             "- **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's "
             "`--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists "
             "a kind and the pack's code opens its overview with the count of each kind.",
-            "- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in "
+            "- **Offline.** Everything committed works without a network: the test data and the public-data snapshots are in "
             "the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a "
             "connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine "
             "configured offline (`drishti.offline.plugins`).", ""]

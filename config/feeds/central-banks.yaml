@@ -60,6 +60,8 @@ datasets:
     pack: central-banks
     kind: rate-series
     key: SERIES_ID
+snapshot:
+  note: refreshes data/testdata/central-banks (the latest data of a live run), its reference samples and its README
 options:
   module: economy
   sources:

@@ -117,6 +117,7 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"docs/knowledge/[^/]+\.md", "keep", "A", "", ""),
     (r"docs/lenses/mockups/[^/]+/README\.md", "merge", "B", "docs/architecture/LENSES.md", ""),
     (r"docs/products/.+\.md", "generate", "A", "", "tools/docs/product_docs.py"),
+    (r"docs/loaders/[^/]+\.md", "generate", "A", "", "tools/docs/loader_docs.py"),
     (r"docs/plans/(COUNTERPARTY_ENGINES|FINANCIAL_CRIME|IFRS9_ECL|HIGH_PERFORMANCE_NATIVE|FIGMA_INTEGRATION|LENSES_PROPOSALS|AI_MANAGEMENT|QUANT_SERVICE|DRISHTI_RISK_DESIGN|ENGINE_INTEGRATION_DESIGN|H2_INVENTORY|R2_CUT_PLAN)\.md", "keep", "B", "", ""),
     (r"docs/plans/[^/]+\.md", "delete", "B", "", ""),
     (r"docs/strategy/BI_AND_POWER_BI\.md", "merge", "A", GL + "bi/README.md", ""),

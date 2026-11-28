@@ -36,7 +36,7 @@ doc:
   avoid-when: "You want many records of this kind side by side: use the pack's list or the BI pivot; this page shows one."
   data:
     in-words: "One social indicator record (kind social-indicator); the page reads INDICATOR_ID, NAME, LATEST, UNIT, LATEST_YEAR, CHANGE_5Y, SOURCE_NAME, SERIES, BY_REGION, MEANING, JURISDICTION."
-    sample-row: {"INDICATOR_ID": "SOCI-ABW-EDUCATION-SPEND", "INDICATOR": "Government expenditure on education", "COUNTRY_NAME": "Aruba", "THEME": "Society", "LATEST": 3.61856, "LATEST_YEAR": "2021", "UNIT": "% of GDP", "CHANGE_5Y": -1.8728}
+    sample-row: {"INDICATOR_ID": "SOCI-ABW-FERTILITY", "NAME": "Aruba · Fertility rate", "INDICATOR": "Fertility rate", "COUNTRY_NAME": "Aruba", "THEME": "Society", "LATEST": 1.606, "LATEST_YEAR": "2024", "UNIT": "births per woman"}
   example: "SOCI SOCI-ABW-EDUCATION-SPEND"
   see-also: ["jurisdiction"]
   keywords: ["social indicator", "politics and society"]

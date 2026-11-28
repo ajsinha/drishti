@@ -18,6 +18,7 @@
   samples/news-topic.jsonl              the topics (companies, countries, central banks, themes), one a line
   samples/listed-company.jsonl          about twenty well-known listed companies
   samples/catalog.jsonl                 their ids, titles and subtitles, one a line
+  data/testdata/news-and-markets/{news-topic,listed-company}/   the same documents as the pack's committed data (the lake's source)
 
 and the aliases block of the news connector template in pack.yaml (between the BEGIN and END markers), so the connector
 knows every other name of every entity it is asked about. Run: python3 modules/economy/packs/news-and-markets/tools/make_samples.py
@@ -113,6 +114,11 @@ def main():
             d.rmdir()
     for name, text in packsamples.files(DOCS, catalog, packsamples.part_mb(sys.argv)).items():
         (out / name).write_text(text, encoding="utf-8")
+    # the data pattern: the same lists are the pack's committed data, data/testdata/news-and-markets/<kind>/ (listed in testdata.yaml, built into
+    # the lake by `drishti.py lake demo`, read by news-store); samples/ keeps them for the README and docs, nothing is served from there
+    sys.path.insert(0, str(HERE.parents[3] / "tools" / "testdata"))
+    import publicsnap
+    publicsnap.write(publicsnap.TESTDATA, "news-and-markets", DOCS)
 
     lines = []
     for _, _, query, aliases, *_ in COMPANIES:

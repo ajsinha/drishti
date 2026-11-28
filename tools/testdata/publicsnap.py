@@ -69,6 +69,38 @@ PACKS: dict[str, dict] = {
                             "keys": {"protein": "PROTEIN", "residue": "RESIDUE_ID", "residue-contact": "CONTACT_ID",
                                      "dms-score": "SCORE_ID", "design": "DESIGN_ID", "design-mutation": "DESIGN_MUTATION_ID",
                                      "design-round": "ROUND_ID"}},
+    # the economy module's public-sector packs (docs/guides/WORLD_DATA_GUIDE.md): each read from its own lake (worldlake, newslake), where its
+    # feed loads it daily; the demo lake build loads the snapshot there once (dates: last), the connectors read it as of the newest load
+    "central-banks": {"connector": "centralbank-store", "lake": "worldlake", "dates": "last", "feed": "central-banks",
+                      "source": "FRED (Federal Reserve Bank of St. Louis; needs DRISHTI_FRED_API_KEY) and the Bank of Canada Valet API (drishti.py feed run central-banks --snapshot)",
+                      "keys": {"central-bank": "BANK_ID", "rate-series": "SERIES_ID"}},
+    "national-statistics": {"connector": "statistics-store", "lake": "worldlake", "dates": "last", "feed": "national-statistics",
+                            "source": "Statistics Canada Web Data Service (drishti.py feed run national-statistics --snapshot)",
+                            "keys": {"statistics-series": "SERIES_ID"}},
+    "oecd": {"connector": "oecd-store", "lake": "worldlake", "dates": "last", "feed": "oecd",
+             "source": "OECD Data Explorer SDMX API (drishti.py feed run oecd --snapshot)",
+             "keys": {"oecd-country": "COUNTRY_ID", "oecd-series": "SERIES_ID"}},
+    "world-development": {"connector": "development-store", "lake": "worldlake", "dates": "last", "feed": "world-development",
+                          "source": "World Bank World Development Indicators API (drishti.py feed run world-development --snapshot)",
+                          "keys": {"development-profile": "PROFILE_ID", "development-series": "SERIES_ID"}},
+    "gdelt-events": {"connector": "gdelt-store", "lake": "newslake", "dates": "last", "feed": "gdelt-events",
+                     "source": "GDELT 1.0 daily event files (drishti.py feed run gdelt-events --snapshot)",
+                     "keys": {"event-country": "EVENT_COUNTRY_ID"}},
+    "official-news": {"connector": "officialnews-store", "lake": "newslake", "dates": "last", "feed": "official-news",
+                      "source": "central banks' and regulators' press-release feeds (drishti.py feed run official-news --snapshot)",
+                      "keys": {"release-source": "SOURCE_ID", "press-release": "RELEASE_ID"}},
+    # the world-economy pack (internal demos only: it carries IMF data): macro-store and civic-store, the demo lake
+    "world-economy": {"connector": "macro-store", "dates": "last", "strip-meta": True, "feed": "world-economy", "internal-only": True,
+                      "connectors": {"jurisdiction": "civic-store", "party": "civic-store", "office-holder": "civic-store", "election": "civic-store",
+                                     "region": "civic-store", "social-indicator": "civic-store"},
+                      "source": "World Bank (WDI, WGI, country list), IMF World Economic Outlook, UNDP HDI, CIA World Factbook (drishti.py feed run world-economy --snapshot --internal-ok)",
+                      "keys": {"economy": "ECONOMY_ID", "macro-indicator": "INDICATOR_ID", "economic-forecast": "FORECAST_ID", "labour-market": "LABOUR_ID",
+                               "fiscal-position": "FISCAL_ID", "region-economy": "REGION_ID", "jurisdiction": "JURISDICTION_ID", "party": "PARTY_ID",
+                               "office-holder": "OFFICE_ID", "election": "ELECTION_ID", "region": "REGION_ID", "social-indicator": "INDICATOR_ID"}},
+    # the news-and-markets pack's lists of what the capture asks for (the twenty companies, the fifteen topics); its quotes and headlines are
+    # captured by tools/testdata/capture_market.py
+    "news-and-markets": {"connector": "news-store", "dates": "last", "strip-meta": True, "captured": "2026-11-27", "source": "the pack's own lists (modules/economy/packs/news-and-markets/README.md)",
+                         "keys": {"listed-company": "COMPANY_ID", "news-topic": "TOPIC_ID"}},
 }
 #: a pack with "part-bytes" has each kind's snapshot cut into parts of about that many compressed bytes, so no member is large; a kind
 #: in several parts is a tar of <kind>/<date>/snapshot.part-NN.jsonl.gz (<kind>.tar), one part the plain <kind>.<date>.jsonl.gz
@@ -143,6 +175,8 @@ def files(pack: str, docs: dict[str, dict[str, dict]]) -> dict[str, bytes]:
     """{"<pack>/<kind>/<kind>.<date>.jsonl.gz": bytes} for every kind the pack keeps in the test data; a large kind in parts, as a tar
     "<pack>/<kind>/<kind>.tar" of <kind>/<date>/snapshot.part-01.jsonl.gz, part-02 ..."""
     when = PACKS[pack].get("captured") or captured(docs)     # a synthetic pack names its own date
+    if PACKS[pack].get("strip-meta"):                        # the generators' record metadata (_meta) is not data: the lake holds the document
+        docs = {k: {i: {f: v for f, v in d.items() if f != "_meta"} for i, d in kd.items()} for k, kd in docs.items()}
     out = {}
     for kind in PACKS[pack]["keys"]:
         parts = _parts(docs.get(kind, {}), PACKS[pack].get("part-bytes"))
@@ -232,9 +266,14 @@ def datasets(testdata: Path) -> list[dict]:
                 continue
             n = sum(1 for part in fs for _ in part.lines())
             names = sorted({part.path.name for part in fs})
-            entry = {"folder": f"{pack}/{kind}", "pack": pack, "kind": kind, "connector": spec["connector"], "key": key,
-                     "snapshot": True, "captured": fs[0].date, "source": spec["source"], "documents": n, "files": names,
+            entry = {"folder": f"{pack}/{kind}", "pack": pack, "kind": kind, "connector": (spec.get("connectors") or {}).get(kind, spec["connector"]),
+                     "key": key, "snapshot": True, "captured": fs[0].date, "source": spec["source"], "documents": n, "files": names,
                      "bytes": sum((Path(testdata) / pack / kind / x).stat().st_size for x in names)}
+            for extra in ("lake", "dates"):               # where the demo build writes it (its own lake), and for how many days
+                if spec.get(extra):
+                    entry[extra] = spec[extra]
+            if spec.get("internal-only"):
+                entry["internal-only"] = True
             out.append(entry)
     return out
 
@@ -256,9 +295,54 @@ def update_manifest(testdata: Path) -> None:
         i += 1
     head = "\n".join(lines[:i]) + "\n" if i else ""
     m = yaml.safe_load(text) or {}
-    keep = [ds for ds in m.get("datasets") or [] if ds.get("pack") not in PACKS]
+    # the news-and-markets pack shares its folder with capture_market.py (quote, news): only this module's kinds are replaced
+    keep = [ds for ds in m.get("datasets") or [] if ds.get("pack") not in PACKS
+            or (ds["pack"] == "news-and-markets" and ds.get("kind") not in PACKS["news-and-markets"]["keys"])]
     m["datasets"] = keep + datasets(testdata)
     path.write_text(head + yaml.safe_dump(m, sort_keys=False, width=140), encoding="utf-8")
+    update_readme(testdata)
+
+
+#: how each snapshot is refreshed (the last column of data/testdata/README.md's table), for the packs that no feed names in PACKS
+REFRESH = {"us-equities": "python3 tools/drishti.py feed run us-equities --snapshot", "gleif": "python3 tools/drishti.py feed run gleif --snapshot",
+           "funds": "python3 tools/drishti.py feed run funds --snapshot",
+           "genomics-showcase": "python3 tools/packgen/genomics_showcase/make.py", "protein-engineering": "python3 tools/packgen/genomics_showcase/make.py",
+           "news-and-markets": "python3 tools/drishti.py testdata capture-market (quote, news); python3 modules/economy/packs/news-and-markets/tools/make_samples.py (lists)"}
+TABLE_BEGIN, TABLE_END = "<!-- BEGIN public-data table (tools/testdata/publicsnap.py) -->", "<!-- END public-data table -->"
+
+
+def refresh_command(pack: str) -> str:
+    spec = PACKS.get(pack, {})
+    if spec.get("feed"):
+        return f"python3 tools/drishti.py feed run {spec['feed']} --snapshot" + (" --internal-ok" if spec.get("internal-only") else "")
+    return REFRESH.get(pack, "")
+
+
+def readme_table(testdata: Path) -> str:
+    """The one table of data/testdata/README.md: every committed snapshot (real or seeded, dated) by pack and kind."""
+    rows = ["| Pack | Kind | Files | Rows | Source | Date | Refresh |", "|---|---|---|---|---|---|---|"]
+    for ds in _manifest(testdata).get("datasets") or []:
+        if not ds.get("snapshot"):
+            continue
+        files = ", ".join(f"`{ds['folder']}/{f}`" for f in ds.get("files") or [])
+        src = str(ds.get("source") or "").replace("|", "/")
+        note = " (IMF data: internal demos only)" if ds.get("internal-only") else ""
+        rows.append(f"| `{ds['pack']}` | `{ds['kind']}` | {files} | {ds.get('documents', 0):,} | {src}{note} | {str(ds.get('captured'))[:10]} "
+                    f"| `{refresh_command(ds['pack'])}` |")
+    return "\n".join(rows)
+
+
+def update_readme(testdata: Path) -> None:
+    """data/testdata/README.md's table between its markers, from the manifest (kept current by every write of a snapshot)."""
+    path = Path(testdata) / "README.md"
+    if not path.is_file():
+        return
+    text = path.read_text(encoding="utf-8")
+    if TABLE_BEGIN not in text:
+        return
+    head, rest = text.split(TABLE_BEGIN, 1)
+    tail = rest.split(TABLE_END, 1)[1]
+    path.write_text(f"{head}{TABLE_BEGIN}\n{readme_table(testdata)}\n{TABLE_END}{tail}", encoding="utf-8")
 
 
 def default_testdata(pack_dir: Path, committed: Path) -> Path:

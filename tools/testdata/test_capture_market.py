@@ -78,17 +78,16 @@ class CaptureMarketTest(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="capture-market-test-"))
         pack = self.tmp / "packs" / CM.PACK
-        (pack / "samples").mkdir(parents=True)
-        (pack / "samples" / "listed-company.jsonl").write_text("".join(json.dumps(d) + "\n" for d in COMPANIES), encoding="utf-8")
-        (pack / "samples" / "news-topic.jsonl").write_text("".join(json.dumps(d) + "\n" for d in TOPICS), encoding="utf-8")
+        pack.mkdir(parents=True)
         (pack / "pack.yaml").write_text("pack: news-and-markets\nconsole:\n  examples:\n    - ['NEWS NEWS-Extra', 'any name']\n"
                                         "    - ['QUOTE QUOTE-AAA', 'again: listed once']\n", encoding="utf-8")
         self.td = self.tmp / "testdata"
         self.td.mkdir()
         (self.td / "testdata.yaml").write_text("# the header\n# stays\n\nbusiness-dates: ['2026-09-30']\nas-of: '2026-09-30'\ndatasets:\n"
-                                               "- {samples: modules/economy/packs/news-and-markets/samples, pack: news-and-markets, kind: news-topic, connector: news-store}\n"
                                                "- {folder: news-and-markets/quote, pack: news-and-markets, kind: quote, connector: news-store, key: QUOTE_ID, snapshot: old}\n",
                                                encoding="utf-8")
+        import publicsnap       # the companies and topics the capture asks for are the pack's committed lists (data/testdata/news-and-markets/)
+        publicsnap.write(self.td, CM.PACK, {"listed-company": {d["COMPANY_ID"]: d for d in COMPANIES}, "news-topic": {d["TOPIC_ID"]: d for d in TOPICS}})
         old = self.td / CM.PACK / "quote"
         old.mkdir(parents=True)
         (old / "snapshot-2026-01-01.jsonl.gz").write_bytes(gzip.compress(b'{"QUOTE_ID":"QUOTE-OLD"}\n'))
@@ -106,7 +105,7 @@ class CaptureMarketTest(unittest.TestCase):
         return CM.build_parser().parse_args(["--server", self.url, "--testdata", str(self.td), "--packs", str(self.tmp / "packs"), "-q", *extra])
 
     def test_targets_are_the_companies_topics_and_examples_once_each(self):
-        t = CM.targets(self.tmp / "packs" / CM.PACK)
+        t = CM.targets(self.tmp / "packs" / CM.PACK, self.td)
         self.assertEqual(t["quote"], ["QUOTE-AAA", "QUOTE-BBB"])
         self.assertEqual(t["news"], ["NEWS-Aaa", "NEWS-Aaa~all", "NEWS-Bbb", "NEWS-Bbb~all", "NEWS-X@de-DE", "NEWS-X@de-DE~all", "NEWS-Extra"])
 

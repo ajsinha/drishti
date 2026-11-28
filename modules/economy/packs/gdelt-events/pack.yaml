@@ -42,6 +42,7 @@ connectors:
     settings:
       lake: newslake
       lake-tables: gdelt.event-country
+      mode.event-country: effective
 lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
   tables:
     gdelt.event-country:

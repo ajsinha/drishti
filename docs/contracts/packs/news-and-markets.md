@@ -80,7 +80,7 @@ A topic and the news about it: headlines (newest first) with their publishers an
 - enum values inferred from the data, not from a glossary: CATEGORY: confirm they are closed lists.
 
 <a id="example-news-and-markets-news-topic"></a>
-**Example: `modules/economy/packs/news-and-markets/samples/news-topic.jsonl`**
+**Example: `data/testdata/news-and-markets/news-topic`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -97,12 +97,7 @@ A real record, the most complete of the first rows (the one with the most non-em
   "EDITION": "default",
   "NEWS_ID": "NEWS-India",
   "NEWS_ALL_ID": "NEWS-India~all",
-  "ECONOMY": "ECON-IND",
-  "_meta": {
-    "source": "reference",
-    "generation": 1,
-    "live": false
-  }
+  "ECONOMY": "ECON-IND"
 }
 ```
 
@@ -337,7 +332,7 @@ A listed company: its live quote and price history (yfinance connector) and its 
 - enum values inferred from the data, not from a glossary: EXCHANGE: confirm they are closed lists.
 
 <a id="example-news-and-markets-listed-company"></a>
-**Example: `modules/economy/packs/news-and-markets/samples/listed-company.jsonl`**
+**Example: `data/testdata/news-and-markets/listed-company`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -358,12 +353,7 @@ A real record, the most complete of the first rows (the one with the most non-em
   "ECONOMY": "ECON-USA",
   "QUOTE_ID": "QUOTE-AAPL",
   "NEWS_ID": "NEWS-Apple",
-  "NEWS_ALL_ID": "NEWS-Apple~all",
-  "_meta": {
-    "source": "reference",
-    "generation": 1,
-    "live": false
-  }
+  "NEWS_ALL_ID": "NEWS-Apple~all"
 }
 ```
 

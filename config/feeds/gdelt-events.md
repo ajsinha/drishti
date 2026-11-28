@@ -26,6 +26,7 @@ The economy module's public-sector gdelt-events pack (docs/guides/WORLD_DATA_GUI
 python3 tools/drishti.py feed run gdelt-events --dry-run      # what it would fetch and load; changes nothing
 python3 tools/drishti.py feed run gdelt-events                # pull today, write data/datafeeds/gdelt-events/<date>/, load into newslake
 python3 tools/drishti.py feed status gdelt-events             # its last runs
+python3 tools/drishti.py feed run gdelt-events --snapshot     # refresh the committed demo snapshot instead
 ```
 
 Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).

@@ -27,6 +27,7 @@ The economy module's public-sector official-news pack (docs/guides/WORLD_DATA_GU
 python3 tools/drishti.py feed run official-news --dry-run      # what it would fetch and load; changes nothing
 python3 tools/drishti.py feed run official-news                # pull today, write data/datafeeds/official-news/<date>/, load into newslake
 python3 tools/drishti.py feed status official-news             # its last runs
+python3 tools/drishti.py feed run official-news --snapshot     # refresh the committed demo snapshot instead
 ```
 
 Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windows`). The guide: [WORLD_DATA_GUIDE.md](../../docs/guides/WORLD_DATA_GUIDE.md).

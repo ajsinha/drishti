@@ -51,6 +51,8 @@ datasets:
     pack: national-statistics
     kind: statistics-series
     key: SERIES_ID
+snapshot:
+  note: refreshes data/testdata/national-statistics (the latest data of a live run), its reference samples and its README
 options:
   module: economy
   sources:

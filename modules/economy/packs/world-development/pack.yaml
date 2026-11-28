@@ -47,6 +47,8 @@ connectors:
     settings:
       lake: worldlake
       lake-tables: development.development-profile,development.development-series
+      mode.development-profile: effective
+      mode.development-series: effective
 lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
   tables:
     development.development-profile:

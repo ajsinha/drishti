@@ -47,6 +47,8 @@ connectors:
     settings:
       lake: worldlake
       lake-tables: oecd.oecd-country,oecd.oecd-series
+      mode.oecd-country: effective
+      mode.oecd-series: effective
 lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
   tables:
     oecd.oecd-country:

@@ -52,6 +52,7 @@ GENERATORS: list[tuple[str, list[str], list[str]]] = [
     ("the guides' settings tables (tools/docs/guide_settings.yaml)", ["tools/docs/guide_settings.py"], ["tools/docs/guide_settings.py", "--check"]),
     ("the BI pages' navigation strips (docs/guides/bi)", ["tools/docs/bi_nav.py"], ["tools/docs/bi_nav.py", "--check"]),
     ("docs/products/ (the pinned Rachana and Elements documents, offline Help)", ["tools/docs/product_docs.py"], ["tools/docs/product_docs.py", "--check"]),
+    ("docs/loaders/*.md (the loaders' READMEs as Help pages)", ["tools/docs/loader_docs.py"], ["tools/docs/loader_docs.py", "--check"]),
     ("docs/README.md (the Help map)", ["tools/docs/help_map.py"], ["tools/docs/help_map.py", "--check"]),
     ("the docs corpus tables", ["tools/docs/corpus.py", "--write"], ["tools/docs/corpus.py", "--check"]),
 ]

@@ -70,17 +70,17 @@ Fields, from 10 sample documents:
 | `COUNTRY_NAME` | string | `Australia` | The member's name as the OECD writes it. |
 | `GDP_GROWTH` | number | `0.419502713` | Real GDP growth on the previous quarter, seasonally adjusted. (%) |
 | `GDP_GROWTH_PERIOD` | string | `2026-Q2` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
-| `INFLATION` | number | `4.34` | Consumer price inflation, all items, on the same month a year before. (% a year) |
-| `INFLATION_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
+| `INFLATION` | number | `4.920492` | Consumer price inflation, all items, on the same month a year before. (% a year) |
+| `INFLATION_PERIOD` | string | `2026-10` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
 | `ISO3` | string | `AUS` | The member's ISO 3166-1 alpha-3 code (the OECD's REF_AREA), the key the map shades by. |
-| `LEADING_INDICATOR` | number | `99.9505` | The composite leading indicator, amplitude adjusted: above 100 and rising, growth above trend ahead. (index, long-term average = 100) |
-| `LEADING_INDICATOR_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
+| `LEADING_INDICATOR` | number | `99.97236` | The composite leading indicator, amplitude adjusted: above 100 and rising, growth above trend ahead. (index, long-term average = 100) |
+| `LEADING_INDICATOR_PERIOD` | string | `2026-10` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
 | `MEASURES` | list of objects |  | Every measure the feed pulled for the member, one row each: MEASURE, TITLE, UNIT, LATEST, PERIOD, CHANGE and OECD_SERIES. |
 | `MEASURE_COUNT` | integer | `4` | How many measures have a value for the member. |
 | `NAME` | string | `Australia` | The member's name as the OECD writes it. |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
-| `UNEMPLOYMENT` | number | `4.718349` | The harmonised unemployment rate, seasonally adjusted, ages 15 and over. (% of labour force) |
-| `UNEMPLOYMENT_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
+| `UNEMPLOYMENT` | number | `4.864832` | The harmonised unemployment rate, seasonally adjusted, ages 15 and over. (% of labour force) |
+| `UNEMPLOYMENT_PERIOD` | string | `2026-10` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
 
 Nested structures:
 
@@ -99,19 +99,19 @@ Fields, from 10 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `CHANGE` | number | `0.0529` | The latest value less the previous one. |
+| `CHANGE` | number | `0.0256` | The latest value less the previous one. |
 | `COUNTRY_NAME` | string | `United States` | The member's name as the OECD writes it. |
 | `DATAFLOW` | string | `OECD.SDD.STES,DSD_STES@DF_CLI,` | The OECD dataflow (agency, id, version) the series is read from. |
 | `FREQUENCY` | string | `monthly` | Monthly or quarterly, from the feed's YAML. |
 | `HISTORY` | list of objects |  | The value by period, oldest first, over the feed's history-periods (PERIOD, VALUE). |
 | `ISO3` | string | `USA` | The member's ISO 3166-1 alpha-3 code. |
-| `LATEST` | number | `100.9993` | The latest value, in the unit shown. |
-| `LATEST_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
+| `LATEST` | number | `100.9566` | The latest value, in the unit shown. |
+| `LATEST_PERIOD` | string | `2026-10` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
 | `MEASURE` | string | `CLI` | The measure's id in the feed's YAML. |
 | `NAME` | string | `United States · Composite leading indica…` | The member and the measure, as one name. |
 | `OECD_COUNTRY` | string | `OECD-USA` | The member's oecd-country page (OECD-<ISO3>).; link to `oecd-country` |
-| `PREVIOUS` | number | `100.9464` | The previous period's value. |
-| `PREVIOUS_PERIOD` | string | `2026-08` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
+| `PREVIOUS` | number | `100.931` | The previous period's value. |
+| `PREVIOUS_PERIOD` | string | `2026-09` | The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter). |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
 | `SERIES_ID` | string | `OECDS-USA-CLI` | OECDS-, the member's ISO alpha-3 code and the measure's id. |
 | `TITLE` | string | `Composite leading indicator` | The measure's title in the feed's YAML. |
@@ -173,9 +173,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The **oecd** feed (`config/feeds/oecd.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 07:00 local time, and its selection in `options`) pulls what is new into `<data>/datafeeds/oecd/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run oecd` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). With the Python you run Drishti with: `python3 tools/drishti.py feed run oecd` on Linux and macOS, `py -3.13 tools\drishti.py feed run oecd` on Windows; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **oecd** feed (`config/feeds/oecd.yaml`: its sources and their licences in `options.sources`, its schedule, daily at 07:00 local time, and its selection in `options`) pulls what is new into `<data>/datafeeds/oecd/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run oecd` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). With the Python you run Drishti with: `python3 tools/drishti.py feed run oecd` on Linux and macOS, `py -3.13 tools\drishti.py feed run oecd` on Windows; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. It needs no key. The pack's data is its committed snapshot, `data/testdata/oecd/<kind>/`, from a live run: `python3 tools/drishti.py feed run oecd --snapshot` pulls the latest data and rewrites it, with the pack's reference samples (a few documents of each kind for this README and the docs, never served) and this README; `python3 tools/drishti.py lake demo` builds the snapshot into the lake the connector reads.
 
-The data feed `oecd` (config/feeds/oecd.yaml) pulls `oecd-country`, `oecd-series`: `python3 tools/drishti.py feed run oecd` fetches them daily into `data/datafeeds/oecd/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `oecd` (config/feeds/oecd.yaml) pulls `oecd-country`, `oecd-series`: `python3 tools/drishti.py feed run oecd` fetches them daily into `data/datafeeds/oecd/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 
@@ -196,8 +196,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `OECD` | `oecd-country` | external: OECD Data Explorer SDMX API (OECD terms: reuse with the source acknowledged (CC BY 4.0)) — refreshed by `drishti.py feed run oecd` | the daily feed `oecd` → `<data>/delta/worldlake/oecd/oecd-country/` (lake `worldlake`) → connector `oecd-store`; nothing is committed but a few documents in `samples/` for the tests |
-| `OECDS` | `oecd-series` | external: OECD Data Explorer SDMX API (OECD terms: reuse with the source acknowledged (CC BY 4.0)) — refreshed by `drishti.py feed run oecd` | the daily feed `oecd` → `<data>/delta/worldlake/oecd/oecd-series/` (lake `worldlake`) → connector `oecd-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `OECD` | `oecd-country` | external: OECD Data Explorer SDMX API (OECD terms: reuse with the source acknowledged (CC BY 4.0)) — refreshed by `drishti.py feed run oecd` | the daily feed `oecd` → `<data>/delta/worldlake/oecd/oecd-country/` (lake `worldlake`) → connector `oecd-store`; the committed snapshot `data/testdata/oecd/oecd-country/` (38 documents, retrieved 2026-11-27) → `lake demo` → the lake `worldlake`, same connector |
+| `OECDS` | `oecd-series` | external: OECD Data Explorer SDMX API (OECD terms: reuse with the source acknowledged (CC BY 4.0)) — refreshed by `drishti.py feed run oecd` | the daily feed `oecd` → `<data>/delta/worldlake/oecd/oecd-series/` (lake `worldlake`) → connector `oecd-store`; the committed snapshot `data/testdata/oecd/oecd-series/` (123 documents, retrieved 2026-11-27) → `lake demo` → the lake `worldlake`, same connector |
 
 ### External sources
 
@@ -218,9 +218,9 @@ The same with the Python you run Drishti with: `python3 tools/drishti.py feed ru
 
 ### Into the lake, checking, offline
 
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
 - **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+- **Offline.** Everything committed works without a network: the test data and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
 
 ## See also
 

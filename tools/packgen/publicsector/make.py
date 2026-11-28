@@ -13,23 +13,20 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes the public-sector packs' samples and READMEs (docs/guides/WORLD_DATA_GUIDE.md): each feed is run on its recorded
-fixtures (tools/loaders/common/tests/fixtures/publicsector, never the network) with the tests' narrower selection, a few documents of each
-kind are kept as the pack's samples (samples/<kind>.jsonl and catalog.jsonl), and the README is rendered from the pack, the samples
-and the `intro:` of its config/about.yaml.
+"""Writes the public-sector packs' reference samples and READMEs (docs/guides/WORLD_DATA_GUIDE.md). The data is not here: it is the
+committed snapshot of each pack, data/testdata/<pack>/<kind>/<kind>.<date>.jsonl.gz (the standard data pattern, tools/testdata/publicsnap.py),
+written by the pack's feed (`drishti.py feed run <feed> --snapshot`: a live run, the latest data), built into the pack's lake (worldlake or
+newslake) by `drishti.py lake demo` and read by the pack's Delta connector. A few documents of each kind are kept as the pack's reference
+samples (samples/<kind>.jsonl and catalog.jsonl: the README's data structures and the docs; nothing is served from them) and the README is
+rendered from the pack, those samples, the testdata manifest and the `intro:` of its config/about.yaml.
 
-    python3 tools/packgen/publicsector/make.py            write the six packs' samples and READMEs
+    python3 tools/packgen/publicsector/make.py            write the six packs' reference samples and READMEs from the snapshots
     python3 tools/packgen/publicsector/make.py --check    fail when what is committed is not what it would write
 """
 from __future__ import annotations
 
-import gzip
 import importlib.util
-import json
-import os
 import sys
-import tempfile
-from datetime import date
 from pathlib import Path
 
 import yaml
@@ -38,13 +35,8 @@ ROOT = Path(__file__).resolve().parents[3]
 if str(ROOT / "tools") not in sys.path:
     sys.path.insert(0, str(ROOT / "tools"))
 from resolved import pack_dir as _pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
-FEEDS = ROOT / "tools" / "loaders" / "common"
-FIXTURES = FEEDS / "tests" / "fixtures" / "publicsector"
-AS_OF = date(2026, 11, 6)                  # the business date the fixtures were recorded for
-for _p in (FEEDS, FEEDS.parent / "external", FEEDS.parent / "news"):
-    sys.path.insert(0, str(_p))
-import feedbase as FB  # noqa: E402
-import publicsector as PS  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "testdata"))
+import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 
 
 def _load(name: str, path: Path):
@@ -74,22 +66,6 @@ TITLE_FIELDS = {"development-profile": ("WDI", "INCOME_GROUP"), "development-ser
                 "central-bank": ("CBANK", "COUNTRY_NAME"), "rate-series": ("CBSER", "SOURCE"), "statistics-series": ("NSTAT", "TABLE_ID"),
                 "oecd-country": ("OECD", "COUNTRY_NAME"), "oecd-series": ("OECDS", "TITLE"), "release-source": ("PRESS", "PUBLISHER_TYPE"),
                 "press-release": ("PREL", "PUBLISHER_NAME"), "event-country": ("GDELT", "DATE")}
-
-
-def pull(feed: str) -> dict[str, list[dict]]:
-    """The feed's documents (by kind) from one drishti-feeds run on its recorded fixtures, with the tests' selection, in a scratch folder."""
-    spec = FB.load_spec(feed)
-    narrow = yaml.safe_load((FIXTURES / "selection.yaml").read_text(encoding="utf-8")) or {}
-    os.environ.setdefault("DRISHTI_FRED_API_KEY", "recorded")    # the fixtures answer FRED whatever the key
-    with tempfile.TemporaryDirectory(prefix="publicsector-") as tmp:
-        run = FB.FeedRun(spec, AS_OF, sets=narrow.get(feed) or {}, root=Path(tmp), opener=PS.Fixtures(FIXTURES / feed), log=lambda *_: None,
-                         sleep=lambda s: None)
-        FB.feed_class(spec)(spec).pull(run)
-        out = {}
-        for f in run.finish():
-            with gzip.open(f["path"], "rt", encoding="utf-8") as fh:
-                out[f["kind"]] = [json.loads(line) for line in fh if line.strip()]
-        return out
 
 
 def key_of(pack_dir: Path, kind: str) -> str:
@@ -123,7 +99,9 @@ def build() -> dict[Path, str]:
     out: dict[Path, str] = {}
     for feed, (pack, kinds) in PACKS.items():
         pack_dir = _pack_dir(pack)
-        got = pull(feed)
+        got = {k: list(v.values()) for k, v in SNAP.read(SNAP.TESTDATA, pack).items()}
+        if not got:
+            raise SystemExit(f"no snapshot of {pack} in data/testdata/{pack}: python3 tools/drishti.py feed run {feed} --snapshot")
         docs, catalog = {}, []
         for kind, (wanted, n) in kinds.items():
             key = key_of(pack_dir, kind)

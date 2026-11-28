@@ -1,13 +1,13 @@
 {"kind":"oecd-country","id":"OECD-AUS","title":"OECD OECD-AUS","subtitle":"Australia · Australia"}
+{"kind":"oecd-country","id":"OECD-AUT","title":"OECD OECD-AUT","subtitle":"Austria · Austria"}
+{"kind":"oecd-country","id":"OECD-BEL","title":"OECD OECD-BEL","subtitle":"Belgium · Belgium"}
 {"kind":"oecd-country","id":"OECD-CAN","title":"OECD OECD-CAN","subtitle":"Canada · Canada"}
+{"kind":"oecd-country","id":"OECD-CHE","title":"OECD OECD-CHE","subtitle":"Switzerland · Switzerland"}
+{"kind":"oecd-country","id":"OECD-CHL","title":"OECD OECD-CHL","subtitle":"Chile · Chile"}
+{"kind":"oecd-country","id":"OECD-COL","title":"OECD OECD-COL","subtitle":"Colombia · Colombia"}
+{"kind":"oecd-country","id":"OECD-CRI","title":"OECD OECD-CRI","subtitle":"Costa Rica · Costa Rica"}
+{"kind":"oecd-country","id":"OECD-CZE","title":"OECD OECD-CZE","subtitle":"Czechia · Czechia"}
 {"kind":"oecd-country","id":"OECD-DEU","title":"OECD OECD-DEU","subtitle":"Germany · Germany"}
-{"kind":"oecd-country","id":"OECD-FRA","title":"OECD OECD-FRA","subtitle":"France · France"}
-{"kind":"oecd-country","id":"OECD-GBR","title":"OECD OECD-GBR","subtitle":"United Kingdom · United Kingdom"}
-{"kind":"oecd-country","id":"OECD-ITA","title":"OECD OECD-ITA","subtitle":"Italy · Italy"}
-{"kind":"oecd-country","id":"OECD-JPN","title":"OECD OECD-JPN","subtitle":"Japan · Japan"}
-{"kind":"oecd-country","id":"OECD-KOR","title":"OECD OECD-KOR","subtitle":"Korea · Korea"}
-{"kind":"oecd-country","id":"OECD-MEX","title":"OECD OECD-MEX","subtitle":"Mexico · Mexico"}
-{"kind":"oecd-country","id":"OECD-USA","title":"OECD OECD-USA","subtitle":"United States · United States"}
 {"kind":"oecd-series","id":"OECDS-USA-CLI","title":"OECDS OECDS-USA-CLI","subtitle":"United States · Composite leading indicator · Composite leading indicator"}
 {"kind":"oecd-series","id":"OECDS-USA-GDP_GROWTH","title":"OECDS OECDS-USA-GDP_GROWTH","subtitle":"United States · Real GDP growth, quarter on quarter · Real GDP growth, quarter on quarter"}
 {"kind":"oecd-series","id":"OECDS-USA-INFLATION","title":"OECDS OECDS-USA-INFLATION","subtitle":"United States · Consumer price inflation, year on year · Consumer price inflation, year on year"}

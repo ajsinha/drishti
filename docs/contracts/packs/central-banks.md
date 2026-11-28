@@ -109,7 +109,7 @@ One central bank: its policy rate, the last move, the rate's history and the mar
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
 
 <a id="example-central-banks-central-bank"></a>
-**Example: `modules/economy/packs/central-banks/samples/central-bank.jsonl`**
+**Example: `data/testdata/central-banks/central-bank`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -124,17 +124,17 @@ A real record, the most complete of the first rows (the one with the most non-em
   "NAME": "Bank of Canada",
   "POLICY_HISTORY": [
     {
-      "DATE": "2025-10-02",
-      "VALUE": 2.5
+      "DATE": "2024-11-27",
+      "VALUE": 3.75
     },
     {
-      "DATE": "2025-10-03",
-      "VALUE": 2.5
+      "DATE": "2024-11-28",
+      "VALUE": 3.75
     },
-    "… 280 more elements of the same shape"
+    "… 516 more elements of the same shape"
   ],
   "POLICY_RATE": 2.5,
-  "POLICY_RATE_DATE": "2026-11-05",
+  "POLICY_RATE_DATE": "2026-11-26",
   "POLICY_SERIES": "CBSER-BOC-V39079",
   "PRESS": "PRESS-BOC",
   "PROVENANCE": {
@@ -142,23 +142,23 @@ A real record, the most complete of the first rows (the one with the most non-em
     "DATASET": "Bank of Canada: policy rate and market series",
     "INTERNAL_ONLY": false,
     "LICENCE": "Bank of Canada terms of use: free to use, copy, distribute and transmit with attribution; inside a paid service, tell buyers the data is free on bankofcanada.ca",
-    "RETRIEVED_AT": "2026-11-06",
+    "RETRIEVED_AT": "2026-11-27",
     "SOURCE": "Bank of Canada",
     "URL": "https://www.bankofcanada.ca"
   },
   "SERIES": [
     {
       "CHANGE": 0.0,
-      "DATE": "2026-11-05",
+      "DATE": "2026-11-26",
       "LATEST": 2.5,
       "RATE_SERIES": "CBSER-BOC-V39079",
       "TITLE": "Bank of Canada target for the overnight rate",
       "UNIT": "%"
     },
     {
-      "CHANGE": 0.0,
-      "DATE": "2026-11-05",
-      "LATEST": 2.52,
+      "CHANGE": -0.01,
+      "DATE": "2026-11-26",
+      "LATEST": 2.54,
       "RATE_SERIES": "CBSER-BOC-AVG_INTWO",
       "TITLE": "CORRA, Canadian overnight repo rate average",
       "UNIT": "%"
@@ -247,7 +247,7 @@ One central-bank or market series from FRED or the Bank of Canada: the history, 
 - Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256 and row count (DATA_LAKE_GUIDE.md section 4).
 
 <a id="example-central-banks-rate-series"></a>
-**Example: `modules/economy/packs/central-banks/samples/rate-series.jsonl`**
+**Example: `data/testdata/central-banks/rate-series`**
 
 A real record, the most complete of the first rows (the one with the most non-empty fields), two-space indents. A string such as `"… 506 more numbers"` inside an array marks a fold: it stands for the elements left out and is not part of the data.
 
@@ -256,40 +256,40 @@ A real record, the most complete of the first rows (the one with the most non-em
   "CENTRAL_BANK": "CBANK-BOC",
   "CHANGE": 0.0,
   "CHANGE_1Y": 0.25,
-  "CODE": "AVG.INTWO",
-  "DESCRIPTION": "A measure of the cost of overnight general collateral funding in Canadian dollars using Government of Canada treasury bills and bonds as collateral for repurchase transactions (repos).",
+  "CODE": "V39079",
+  "DESCRIPTION": "Also called the policy interest rate, the average rate that the Bank of Canada wants to see in the market for overnight money market financing. (V39079)",
   "FREQUENCY": "Business daily",
-  "HIGH": 2.56,
+  "HIGH": 3.75,
   "HISTORY": [
     {
-      "DATE": "2025-10-02",
-      "VALUE": 2.56
+      "DATE": "2024-11-27",
+      "VALUE": 3.75
     },
     {
-      "DATE": "2025-10-03",
-      "VALUE": 2.56
+      "DATE": "2024-11-28",
+      "VALUE": 3.75
     },
-    "… 271 more elements of the same shape"
+    "… 516 more elements of the same shape"
   ],
-  "LATEST": 2.52,
-  "LATEST_DATE": "2026-11-05",
-  "LOW": 2.24,
-  "NAME": "CORRA, Canadian overnight repo rate average",
-  "OBSERVATIONS": 273,
-  "PREVIOUS": 2.52,
-  "PREVIOUS_DATE": "2026-11-04",
+  "LATEST": 2.5,
+  "LATEST_DATE": "2026-11-26",
+  "LOW": 2.25,
+  "NAME": "Bank of Canada target for the overnight rate",
+  "OBSERVATIONS": 518,
+  "PREVIOUS": 2.5,
+  "PREVIOUS_DATE": "2026-11-25",
   "PROVENANCE": {
     "ATTRIBUTION": "Source: Bank of Canada.",
-    "DATASET": "Bank of Canada: AVG.INTWO",
+    "DATASET": "Bank of Canada: V39079",
     "INTERNAL_ONLY": false,
     "LICENCE": "Bank of Canada terms of use: free to use, copy, distribute and transmit with attribution; inside a paid service, tell buyers the data is free on bankofcanada.ca",
-    "RETRIEVED_AT": "2026-11-06",
+    "RETRIEVED_AT": "2026-11-27",
     "SOURCE": "Bank of Canada",
-    "URL": "https://www.bankofcanada.ca/valet/series/AVG.INTWO"
+    "URL": "https://www.bankofcanada.ca/valet/series/V39079"
   },
-  "SERIES_ID": "CBSER-BOC-AVG_INTWO",
+  "SERIES_ID": "CBSER-BOC-V39079",
   "SOURCE": "Bank of Canada",
-  "TITLE": "CORRA, Canadian overnight repo rate average",
+  "TITLE": "Bank of Canada target for the overnight rate",
   "UNIT": "%"
 }
 ```

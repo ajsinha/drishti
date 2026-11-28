@@ -316,7 +316,12 @@ class Feed:
 
     def snapshot(self, run: "FeedRun") -> int:
         """--snapshot: refresh the committed demo snapshot where the feed keeps one (data/testdata); an exit code."""
-        raise FeedRefused(f"feed {self.spec.name} keeps no committed snapshot (--snapshot)")
+        packs = _snapshot_packs(self.spec.name)
+        if not packs:
+            raise FeedRefused(f"feed {self.spec.name} keeps no committed snapshot (--snapshot)")
+        if self.spec.internal_only and not run.internal_ok:
+            raise FeedRefused(f"feed {self.spec.name} is internal only: --snapshot --internal-ok writes it into data/testdata (internal demos)")
+        return _snapshot_public(self, run, packs)
 
     def check(self, run: "FeedRun") -> list[str]:
         """Problems with what this run wrote, in words (an empty list: fine)."""
@@ -563,3 +568,43 @@ def _alive(pid: int) -> bool:
         return True
     except OSError:
         return False
+
+
+# ------------------------------------------------------------------------------------------------ --snapshot of the public-sector feeds
+
+def _snapshot_packs(feed: str) -> list[str]:
+    """The packs whose committed snapshot (data/testdata/<pack>/<kind>/, tools/testdata/publicsnap.py PACKS) this feed refreshes."""
+    import sys
+    tools = str(Path(__file__).resolve().parents[2] / "testdata")
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+    import publicsnap as SNAP
+    return [p for p, s in SNAP.PACKS.items() if s.get("feed") == feed]
+
+
+def _snapshot_public(feed: "Feed", run: "FeedRun", packs: list[str]) -> int:
+    """--snapshot of a feed that keeps its pack's data in the committed test data: one pull (latest data, the feed file's selection), the
+    documents written as the pack's snapshot (data/testdata/<pack>/<kind>/<kind>.<date>.jsonl.gz, listed in testdata.yaml) and the pack's
+    reference samples and README rebuilt from it (tools/packgen/publicsector/make.py). The run's own files stay in <data>/datafeeds."""
+    import gzip
+    import subprocess
+    import sys
+    import publicsnap as SNAP
+    run.state["datasets"] = {}            # a snapshot is the feed's whole selection, latest data: never "what is new since the last run"
+    feed.pull(run)
+    files = run.finish()
+    root = Path(__file__).resolve().parents[3]
+    for pack in packs:
+        spec = SNAP.PACKS[pack]
+        docs: dict[str, dict[str, dict]] = {}
+        for f in files:
+            if f["kind"] in spec["keys"] and f["pack"] == pack:
+                with gzip.open(f["path"], "rt", encoding="utf-8") as fh:
+                    rows = [json.loads(x) for x in fh if x.strip()]
+                docs.setdefault(f["kind"], {}).update({SNAP._id(d, spec["keys"][f["kind"]]): d for d in rows})
+        if not docs:
+            run.log(f"snapshot: the feed wrote no document of {pack}: nothing changed")
+            return 1
+        SNAP.write(SNAP.TESTDATA, pack, docs)
+        run.log(f"snapshot: {pack}: " + ", ".join(f"{k} {len(v)}" for k, v in docs.items()) + f" -> data/testdata/{pack}")
+    return subprocess.call([sys.executable, str(root / "tools" / "packgen" / "publicsector" / "make.py")], cwd=root)

@@ -58,6 +58,8 @@ datasets:
     pack: official-news
     kind: press-release
     key: RELEASE_ID
+snapshot:
+  note: refreshes data/testdata/official-news (the latest data of a live run), its reference samples and its README
 options:
   module: economy
   sources:

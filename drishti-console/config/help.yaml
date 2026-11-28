@@ -177,6 +177,14 @@ sections:
           - { slug: benchmark, domain: core, doc: admin/BENCHMARK.md, title: "Benchmark: every measurement and how to run it", icon: speedometer2, summary: "The one home of every benchmark: what is measured and why, the harness (tools/bench, the store-only benchmarks) and the exact commands to run each again, the machine and data; VaR at 200,000 positions on one server and a three-node cluster with 50 to 200 users, Java 21 and 25, G1 and ZGC; the VaR store, first open and cost per request; exposure; the Python and Java loaders; trades at scale; every store compared; memory and heap; scaling fits and extrapolations to 2.3M and 10M positions; how to read the numbers." }
   - id: reference
     groups:
+      - title: "Loading data daily"
+        guides:
+          - { slug: loaders, domain: core, doc: loaders/index.md, title: "Loaders: which one do I use?", icon: cloud-download, summary: "The loader packages in one page: the bank's own files (mrloader), public data from the internet (external, news), genomics, and the one engine behind them; which to use, the same commands on Linux and Windows, how to check a day's load." }
+          - { slug: loaders-mrloader, domain: core, doc: loaders/mrloader.md, title: "Loaders: the bank's files (mrloader)", icon: upload, summary: "PVF scenario PVs, the daily scenario set and FX and the CSV datasets of VaR and exposure: the commands, the daily routine and what a refused file says." }
+          - { slug: loaders-external, domain: core, doc: loaders/external.md, title: "Loaders: public data (external)", icon: globe, summary: "GLEIF, funds, US equities, central banks, national statistics, OECD, official market data and the world economy: what each feed pulls, its daily routine, scheduling, the committed demo snapshots and what to do when something goes wrong." }
+          - { slug: loaders-news, domain: core, doc: loaders/news.md, title: "Loaders: news and events (news)", icon: newspaper, summary: "Official press releases, news and quotes and GDELT world events: what the three feeds load, their licences and how to run them." }
+          - { slug: loaders-genomics, domain: core, doc: loaders/genomics.md, title: "Loaders: genomics", icon: diagram-3, summary: "Public genomics sources and your own genomics files." }
+          - { slug: loaders-common, domain: core, doc: loaders/common.md, title: "Loaders: the feed engine (common)", icon: gear, summary: "The one engine behind the external and news feeds: the feed file, a run, state, the ledger and how a new feed is added; for developers." }
       - title: "Programming"
         guides:
           - { slug: api, domain: core, doc: guides/API_REFERENCE.md, title: "API reference", icon: braces-asterisk, summary: "Every REST endpoint by area (views, search, BI, models, SQL, runs, reports, approvals, alerts, administration, {product}*net) and the one error code table." }

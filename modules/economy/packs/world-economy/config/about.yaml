@@ -238,7 +238,7 @@ kinds:
     title: Economy
     about: ${$.NAME} (${$.REGION_NAME}) had a GDP of ${fmt($.GDP_USD_BN, 'amount0')} billion USD in ${$.YEAR}; real GDP grew ${fmt($.GROWTH, 'pc2')}, inflation was ${fmt($.INFLATION,
       'pc2')} and unemployment ${fmt($.UNEMPLOYMENT, 'pc2')}. Figures are published World Bank, IMF and CIA data.
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       NAME:
         term: Economy
@@ -319,7 +319,7 @@ kinds:
   macro-indicator:
     title: Macro indicator
     about: ${$.NAME} was ${fmt($.LATEST, 'price2')} (${$.UNIT}) in ${$.LATEST_YEAR}; its rank among economies with recent data is ${fmt($.RANK, 'amount0')}.
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       NAME:
         term: Indicator
@@ -381,7 +381,7 @@ kinds:
   economic-forecast:
     title: Economic forecast
     about: The ${$.VINTAGE} has ${$.ECONOMY_NAME} growing ${fmt($.GROWTH_2027, 'pc2')} in 2027 with inflation of ${fmt($.INFLATION_2027, 'pc2')}.
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       ECONOMY_NAME:
         term: Economy
@@ -465,7 +465,7 @@ kinds:
   labour-market:
     title: Labour market
     about: In ${$.YEAR} ${$.ECONOMY_NAME} had unemployment of ${fmt($.UNEMPLOYMENT, 'pc2')} and a labour-force participation rate of ${fmt($.PARTICIPATION, 'pc1')}.
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       ECONOMY_NAME:
         term: Economy
@@ -529,7 +529,7 @@ kinds:
   fiscal-position:
     title: Fiscal position
     about: ${$.ECONOMY_NAME}'s general government gross debt was ${fmt($.DEBT, 'pc1')} of GDP and its net lending ${fmt($.BALANCE, 'pc2')} of GDP (IMF).
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       ECONOMY_NAME:
         term: Economy
@@ -598,7 +598,7 @@ kinds:
   country-group:
     title: Country group
     about: ${$.NAME} (${$.GROUP_TYPE}) groups ${fmt($.ECONOMIES, 'amount0')} economies with GDP of ${fmt($.GDP_USD_BN, 'amount0')} billion USD.
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       NAME:
         term: Group
@@ -672,7 +672,7 @@ kinds:
   region-economy:
     title: Region economy
     about: ${$.NAME} (${$.REGION_CODE}) has about ${fmt($.POPULATION_M, 'price2')} million people and GDP of ${fmt($.GDP_USD_BN, 'amount0')} billion USD. Illustrative, rounded from public figures, not for reporting.
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       NAME:
         term: Region
@@ -701,7 +701,7 @@ kinds:
   jurisdiction:
     title: Jurisdiction
     about: ${$.NAME} is a ${$.GOVERNMENT_TYPE} with its capital at ${$.CAPITAL}, per the CIA World Factbook; population ${fmt($.POPULATION_M, 'price2')} million.
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       NAME:
         term: Country
@@ -792,7 +792,7 @@ kinds:
   party:
     title: Party
     about: ${$.NAME} won ${fmt($.SEATS, 'amount0')} seats (${fmt($.SEAT_SHARE, 'pc1')}) in the ${$.CHAMBER} of ${$.COUNTRY_NAME}.
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       NAME:
         term: Party
@@ -840,7 +840,7 @@ kinds:
   office-holder:
     title: Office holder
     about: ${$.COUNTRY_NAME}'s ${lower($.ROLE)} is ${$.HOLDER}, as the CIA World Factbook publishes it.
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       COUNTRY_NAME:
         term: Country
@@ -896,7 +896,7 @@ kinds:
   election:
     title: Election
     about: '${$.TITLE}: held ${$.DATE_TEXT}; the largest party was ${$.WINNER}; the next election is expected ${$.NEXT_ELECTION}.'
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       TITLE:
         term: Election
@@ -973,7 +973,7 @@ kinds:
     title: World region
     about: ${$.NAME} has ${fmt($.COUNTRIES, 'amount0')} countries and ${fmt($.POPULATION_M, 'price2')} million people; life expectancy is ${fmt($.LIFE_EXPECTANCY, 'price2')}
       years.
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       NAME:
         term: Region
@@ -1038,7 +1038,7 @@ kinds:
   social-indicator:
     title: Social indicator
     about: ${$.NAME} was ${fmt($.LATEST, 'price2')} (${$.UNIT}) in ${$.LATEST_YEAR}.
-    guide: world-data-guide
+    guide: world-economy
     glossary:
       NAME:
         term: Indicator

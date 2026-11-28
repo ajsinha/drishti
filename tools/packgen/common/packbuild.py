@@ -37,6 +37,8 @@ sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import sutradoc as SD  # noqa: E402  (the structured doc fields of a Sutra)
+sys.path.insert(0, str(ROOT / "tools" / "testdata"))
+import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 import packlake  # noqa: E402  (tools/packlake.py: the templates' tables as the pack's lake: entries, docs/guides/DATA_LAKE_GUIDE.md)
 
 
@@ -198,6 +200,16 @@ def check(spec: PackSpec, docs: dict) -> list[str]:
     return problems
 
 
+def _snapshot_of(spec: PackSpec) -> bool:
+    return spec.name in SNAP.PACKS
+
+
+def _testdata_of(spec: PackSpec) -> Path:
+    """Where the pack's snapshot is: data/testdata for the committed pack, beside a widened build's pack folder otherwise."""
+    base = pack_dir(spec)
+    return SNAP.TESTDATA if not os.environ.get("DRISHTI_PACKS_OUT") else SNAP.default_testdata(base, ROOT / "none")
+
+
 def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     base = pack_dir(spec)
     out: dict[Path, str] = {}
@@ -207,13 +219,15 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
         if k.kind not in spec.hand_written:
             f = base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"
             out[f] = written(spec, k, min(docs.get(k.kind) or [None], key=lambda x: x or ""), f)
+    snap = _snapshot_of(spec)            # a pack whose data is a committed snapshot (data/testdata/<pack>/): samples/ keep a few reference documents
+    shown = SNAP.reference(spec.name, docs) if snap else docs
     catalog = []
     for k in spec.kinds:
-        for id_, d in sorted(docs.get(k.kind, {}).items()):
+        for id_, d in sorted(shown.get(k.kind, {}).items()):
             sub = next((d[f] for f in ("NAME", "LEGAL_ENTITY_NAME", "SCENARIO_NAME", "COUNTERPARTY_NAME", "SECURITY", "name", "legalEntityName", "scenarioName", "counterpartyName", "security") if isinstance(d.get(f), str)), "")
             catalog.append({"kind": k.kind, "id": id_, "title": id_, "subtitle": f"{k.label}" + (f" · {sub}" if sub else "")})
     # samples/: the catalogue and one JSON Lines file per kind (packsamples.py), the retired example packs too (JSONL is the data standard)
-    for name, text in SAMPLES.files({k.kind: docs.get(k.kind, {}) for k in spec.kinds if k.kind not in spec.computed_kinds}, catalog, SAMPLES.part_mb(sys.argv),
+    for name, text in SAMPLES.files({k.kind: shown.get(k.kind, {}) for k in spec.kinds if k.kind not in spec.computed_kinds}, catalog, SAMPLES.part_mb(sys.argv),
                                     None if spec.compact_json else 1).items():
         out[base / "samples" / name] = text
     if spec.retired:                                           # an example pack: an empty Help entry (its pack.yaml and samples are the sample)
@@ -243,6 +257,7 @@ def main(spec: PackSpec, docs: dict, known_fields: dict, lake_kinds_by_domain=No
                 and f.name.removesuffix(".v1.sutra.yaml") not in spec.hand_written}
     if "--check" in sys.argv:
         stale = [str(f) for f, t in want.items() if not f.exists() or f.read_text(encoding="utf-8") != t]
+        stale += SNAP.differences(_testdata_of(spec), spec.name, docs) if _snapshot_of(spec) else []
         extra = [str(f) for f in existing - set(want)]
         if stale or extra:
             raise SystemExit(f"{spec.name} pack out of date; run {spec.generator}. stale={stale[:3]} extra={extra[:3]}")
@@ -257,6 +272,8 @@ def main(spec: PackSpec, docs: dict, known_fields: dict, lake_kinds_by_domain=No
         f.parent.mkdir(parents=True, exist_ok=True)
         if not f.exists() or f.read_text(encoding="utf-8") != t:
             f.write_text(t, encoding="utf-8")
+    if _snapshot_of(spec):
+        SNAP.write(_testdata_of(spec), spec.name, {k: v for k, v in docs.items() if k in SNAP.PACKS[spec.name]["keys"]})
     print(f"{spec.name}: wrote {len(want)} files ({sum(len(v) for v in docs.values())} documents, {len(spec.kinds)} kinds)")
     if "--lake" in sys.argv:                            # generate the history as JSONL rows, then load them (two steps)
         from datetime import date

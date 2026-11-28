@@ -1117,9 +1117,9 @@ generated pack documents. The raw downloads are cached outside the repository an
 <!-- realdata:begin sources -->
 | Source | Dataset and vintage | Licence | Terms |
 |---|---|---|---|
-| World Bank, World Development Indicators | World Development Indicators (updated 2026-10-08) | CC BY 4.0 | https://datacatalog.worldbank.org/public-licenses#cc-by |
+| World Bank, World Development Indicators | World Development Indicators (updated ) | CC BY 4.0 | https://datacatalog.worldbank.org/public-licenses#cc-by |
 | World Bank, Worldwide Governance Indicators | Worldwide Governance Indicators (updated 2026-09-25) | CC BY 4.0 | https://datacatalog.worldbank.org/public-licenses#cc-by |
-| International Monetary Fund, World Economic Outlook (DataMapper) | World Economic Outlook (April 2026 edition) | IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission | https://www.imf.org/en/About/copyright-and-terms |
+| International Monetary Fund, World Economic Outlook (DataMapper) | World Economic Outlook (October 2026 edition) | IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission | https://www.imf.org/en/About/copyright-and-terms |
 | UNDP, Human Development Report: composite indices time series | Human Development Index time series (2025 report) | CC BY 3.0 IGO | https://creativecommons.org/licenses/by/3.0/igo/ |
 | CIA, The World Factbook (factbook.json mirror, CC0) | The World Factbook (mirror commit 144d6977b2) | Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0 | https://github.com/factbook/factbook.json/blob/master/LICENSE.md |
 <!-- realdata:end sources -->
@@ -1172,8 +1172,8 @@ Each document has a `provenance` object (shown by the *Data source and licence* 
 
 <!-- realdata:begin provenance -->
 ```json
-"provenance": {"source": "International Monetary Fund, World Economic Outlook (DataMapper)", "dataset": "World Economic Outlook (April 2026 edition)",
-  "retrievedAt": "2026-10-10", "licence": "IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission",
+"provenance": {"source": "International Monetary Fund, World Economic Outlook (DataMapper)", "dataset": "World Economic Outlook (October 2026 edition)",
+  "retrievedAt": "2026-11-27", "licence": "IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission",
   "attribution": "Source: International Monetary Fund, World Economic Outlook database, https://www.imf.org/external/datamapper.",
   "url": "https://www.imf.org/external/datamapper"}
 ```

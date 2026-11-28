@@ -80,8 +80,11 @@ def data_dir() -> pathlib.Path:
 
 # ---- what to capture -------------------------------------------------------------------------------------------------------------------
 
-def targets(pack_dir: pathlib.Path) -> dict[str, list[str]]:
-    """kind -> ids: the companies' quotes, the companies' and topics' headlines (filtered and ~all), and the console examples' ids."""
+def targets(pack_dir: pathlib.Path, testdata: pathlib.Path | None = None) -> dict[str, list[str]]:
+    """kind -> ids: the companies' quotes, the companies' and topics' headlines (filtered and ~all), and the console examples' ids. The
+    companies and topics are the pack's committed lists, data/testdata/news-and-markets/{listed-company,news-topic} (the lake's source)."""
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    import publicsnap
     import yaml
     out: dict[str, list[str]] = {"quote": [], "news": []}
 
@@ -89,13 +92,10 @@ def targets(pack_dir: pathlib.Path) -> dict[str, list[str]]:
         if id_ and str(id_) not in out[kind]:
             out[kind].append(str(id_))
     for name in ("listed-company", "news-topic"):
-        f = pack_dir / "samples" / f"{name}.jsonl"
-        for line in f.read_text(encoding="utf-8").splitlines() if f.is_file() else []:
-            if line.strip():
-                d = json.loads(line)
-                add("quote", d.get("QUOTE_ID"))
-                add("news", d.get("NEWS_ID"))
-                add("news", d.get("NEWS_ALL_ID"))
+        for d in sorted(publicsnap.kind_docs(PACK, name, testdata or publicsnap.TESTDATA), key=lambda x: str(x.get("COMPANY_ID") or x.get("TOPIC_ID"))):
+            add("quote", d.get("QUOTE_ID"))
+            add("news", d.get("NEWS_ID"))
+            add("news", d.get("NEWS_ALL_ID"))
     spec = yaml.safe_load((pack_dir / "pack.yaml").read_text(encoding="utf-8"))
     for cmd, _what in (spec.get("console") or {}).get("examples") or []:
         for word in str(cmd).split():
@@ -312,7 +312,7 @@ def run(a, say=print, sleep=time.sleep) -> int:
     a.delay = max(2.0, float(a.delay))                   # politeness is not optional
     pack_dir = _pack_dir(PACK, a.packs)
     testdata = pathlib.Path(a.testdata)
-    want = targets(pack_dir)
+    want = targets(pack_dir, testdata)
     for kind, ids in (getattr(a, "extra", None) or {}).items():        # drishti.py feed run news-and-markets --scope: more tickers and topics
         want[kind] += [i for i in ids if i not in want[kind]]
     kinds = [k for k in KINDS if not a.only or k in a.only.split(",")]

@@ -79,7 +79,7 @@ Fields, from 2 sample documents:
 | `NAME` | string | `Bank of Canada` | The central bank's name. |
 | `POLICY_HISTORY` | list of objects |  | The policy rate by date over the window, oldest first (DATE, VALUE). |
 | `POLICY_RATE` | number | `2.5` | The latest value of the bank's policy-rate series (the Fed: the target range's upper limit; the Bank of Canada: the target for the overnight rate). (%) |
-| `POLICY_RATE_DATE` | date | `2026-11-05` | The date of that value. |
+| `POLICY_RATE_DATE` | date | `2026-11-26` | The date of that value. |
 | `POLICY_SERIES` | string | `CBSER-BOC-V39079` | The rate-series page of the policy rate.; link to `rate-series` |
 | `PRESS` | string | `PRESS-BOC` | The bank's publisher page in the official-news pack (PRESS-<id>).; link to `release-source` |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
@@ -102,25 +102,25 @@ Links: `POLICY_SERIES` → `rate-series`, `PRESS` → `release-source`.
 
 **Id:** field `SERIES_ID`; pattern `^CBSER-`; for example `CBSER-BOC-AVG_INTWO`.
 
-Fields, from 13 sample documents:
+Fields, from 5 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
 | `CENTRAL_BANK` | string | `CBANK-BOC` | The central-bank page the series belongs to (CBANK-<id>).; link to `central-bank` |
-| `CHANGE` | number | `0.0` | The latest observation less the previous one, in the series' unit. |
-| `CHANGE_1Y` | number | `0.25` | The latest observation less the last one at least a year before it; empty when the window is shorter. |
+| `CHANGE` | number | `-0.01` | The latest observation less the previous one, in the series' unit. |
+| `CHANGE_1Y` | number | `0.3` | The latest observation less the last one at least a year before it; empty when the window is shorter. |
 | `CODE` | string | `AVG.INTWO` | The series' code at its source (DGS10, V39079). |
 | `DESCRIPTION` | string | `A measure of the cost of overnight gener…` | The source's description of the series (FRED's notes, the Valet description), cut at 600 characters. |
 | `FREQUENCY` | string | `Business daily` | How often the source publishes the series, in its own words. |
-| `HIGH` | number | `2.56` | The highest observation in the history window. |
+| `HIGH` | number | `3.79` | The highest observation in the history window. |
 | `HISTORY` | list of objects |  | The observations over the window (the feed's history-days), oldest first (DATE, VALUE). |
-| `LATEST` | number | `2.52` | The latest observation, in the series' unit. |
-| `LATEST_DATE` | date | `2026-11-05` | The date of the latest observation. |
+| `LATEST` | number | `2.54` | The latest observation, in the series' unit. |
+| `LATEST_DATE` | date | `2026-11-26` | The date of the latest observation. |
 | `LOW` | number | `2.24` | The lowest observation in the history window. |
 | `NAME` | string | `CORRA, Canadian overnight repo rate aver…` | The series' title, as NAME for search. |
-| `OBSERVATIONS` | integer | `273` | How many observations the history holds. |
-| `PREVIOUS` | number | `2.52` | The observation before the latest one. |
-| `PREVIOUS_DATE` | date | `2026-11-04` | The date of the previous observation. |
+| `OBSERVATIONS` | integer | `498` | How many observations the history holds. |
+| `PREVIOUS` | number | `2.55` | The observation before the latest one. |
+| `PREVIOUS_DATE` | date | `2026-11-25` | The date of the previous observation. |
 | `PROVENANCE` | object |  | Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY. |
 | `SERIES_ID` | string | `CBSER-BOC-AVG_INTWO` | CBSER-, the source (FRED or BOC) and the source's series code with dots as underscores. |
 | `SOURCE` | string | `Bank of Canada` | The source the series is read from: FRED (Federal Reserve Bank of St. Louis) or the Bank of Canada. |
@@ -185,9 +185,9 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-The **central-banks** feed (`config/feeds/central-banks.yaml`: its sources and their licences in `options.sources`, its schedule, weekdays at 18:15 local time, and its selection in `options`) pulls what is new into `<data>/datafeeds/central-banks/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run central-banks` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). With the Python you run Drishti with: `python3 tools/drishti.py feed run central-banks` on Linux and macOS, `py -3.13 tools\drishti.py feed run central-banks` on Windows; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. FRED needs a free key in `DRISHTI_FRED_API_KEY` (never in a file); without it the FRED series are left out, said in the run's log, and the Bank of Canada's still load. The samples (a few documents for the tests) are written by `python3 tools/packgen/publicsector/make.py` from the feed's recorded fixtures, never from the network.
+The **central-banks** feed (`config/feeds/central-banks.yaml`: its sources and their licences in `options.sources`, its schedule, weekdays at 18:15 local time, and its selection in `options`) pulls what is new into `<data>/datafeeds/central-banks/<date>/` and loads it into the `worldlake` lake: `python3 tools/drishti.py feed run central-banks` (the parallel loader), `--load inbox` (the server's data inbox loads it), `--dry-run` (what it would ask). With the Python you run Drishti with: `python3 tools/drishti.py feed run central-banks` on Linux and macOS, `py -3.13 tools\drishti.py feed run central-banks` on Windows; the schedule for cron, systemd or Task Scheduler: `python3 tools/drishti.py feed schedule`. FRED needs a free key in `DRISHTI_FRED_API_KEY` (never in a file); without it the FRED series are left out, said in the run's log, and the Bank of Canada's still load. The pack's data is its committed snapshot, `data/testdata/central-banks/<kind>/`, from a live run: `python3 tools/drishti.py feed run central-banks --snapshot` pulls the latest data and rewrites it, with the pack's reference samples (a few documents of each kind for this README and the docs, never served) and this README; `python3 tools/drishti.py lake demo` builds the snapshot into the lake the connector reads.
 
-The data feed `central-banks` (config/feeds/central-banks.yaml) pulls `central-bank`, `rate-series`: `python3 tools/drishti.py feed run central-banks` fetches them daily into `data/datafeeds/central-banks/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
+The data feed `central-banks` (config/feeds/central-banks.yaml) pulls `central-bank`, `rate-series`: `python3 tools/drishti.py feed run central-banks` fetches them daily into `data/datafeeds/central-banks/<date>/` and loads them into the lake `worldlake`; `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/WORLD_DATA_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/publicsector/make.py`; its `--check` fails when the committed files differ from what it would write.
 
@@ -208,8 +208,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 | Command | Kind | Origin | How it reaches Drishti |
 |---|---|---|---|
-| `CBANK` | `central-bank` | external: FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) (FRED API terms; the default series are US government works (public domain)); Bank of Canada Valet API (Bank of Canada terms: free use with attribution) — refreshed by `drishti.py feed run central-banks` | the daily feed `central-banks` → `<data>/delta/worldlake/centralbank/central-bank/` (lake `worldlake`) → connector `centralbank-store`; nothing is committed but a few documents in `samples/` for the tests |
-| `CBSER` | `rate-series` | external: FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) (FRED API terms; the default series are US government works (public domain)); Bank of Canada Valet API (Bank of Canada terms: free use with attribution) — refreshed by `drishti.py feed run central-banks` | the daily feed `central-banks` → `<data>/delta/worldlake/centralbank/rate-series/` (lake `worldlake`) → connector `centralbank-store`; nothing is committed but a few documents in `samples/` for the tests |
+| `CBANK` | `central-bank` | external: FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) (FRED API terms; the default series are US government works (public domain)); Bank of Canada Valet API (Bank of Canada terms: free use with attribution) — refreshed by `drishti.py feed run central-banks` | the daily feed `central-banks` → `<data>/delta/worldlake/centralbank/central-bank/` (lake `worldlake`) → connector `centralbank-store`; the committed snapshot `data/testdata/central-banks/central-bank/` (2 documents, retrieved 2026-11-27) → `lake demo` → the lake `worldlake`, same connector |
+| `CBSER` | `rate-series` | external: FRED, Federal Reserve Bank of St. Louis (API key in DRISHTI_FRED_API_KEY) (FRED API terms; the default series are US government works (public domain)); Bank of Canada Valet API (Bank of Canada terms: free use with attribution) — refreshed by `drishti.py feed run central-banks` | the daily feed `central-banks` → `<data>/delta/worldlake/centralbank/rate-series/` (lake `worldlake`) → connector `centralbank-store`; the committed snapshot `data/testdata/central-banks/rate-series/` (5 documents, retrieved 2026-11-27) → `lake demo` → the lake `worldlake`, same connector |
 
 ### External sources
 
@@ -231,9 +231,9 @@ The same with the Python you run Drishti with: `python3 tools/drishti.py feed ru
 
 ### Into the lake, checking, offline
 
-- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the packs' samples and the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
+- **The lake.** `python3 tools/drishti.py lake demo` reads `data/testdata/testdata.yaml` and writes every dataset (test data, the committed public-data snapshots) into `<data>/delta/<domain>/<kind>/`, where the pack's Delta connector serves it; a computed kind needs nothing loaded. `lake build` loads your own large JSON exports the same way ([Command line](../../../../docs/guides/CLI_REFERENCE.md)).
 - **Checking.** `python3 tools/contracts.py check` compares every contract with the pack and its data; each generator's `--check` (above) fails when the committed files differ from what it would write; in the console, `<MNEMONIC> <GO>` lists a kind and the pack's code opens its overview with the count of each kind.
-- **Offline.** Everything committed works without a network: the test data, the samples and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
+- **Offline.** Everything committed works without a network: the test data and the public-data snapshots are in the repository and `lake demo` reads only them. A data feed runs offline from its download cache (`--offline`); a connector that reaches the internet (news, yfinance, the public-data feeds) is off as shipped and never starts on a machine configured offline (`drishti.offline.plugins`).
 
 ## See also
 

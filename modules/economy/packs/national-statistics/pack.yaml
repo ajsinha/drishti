@@ -41,6 +41,7 @@ connectors:
     settings:
       lake: worldlake
       lake-tables: statistics.statistics-series
+      mode.statistics-series: effective
 lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
   tables:
     statistics.statistics-series:

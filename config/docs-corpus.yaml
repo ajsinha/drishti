@@ -250,6 +250,12 @@ files:
   - {path: 'docs/lenses/mockups/ready-upload/README.md', class: merge, lane: B}
   - {path: 'docs/lenses/mockups/trading-blotter/README.md', class: merge, lane: B}
   - {path: 'docs/lenses/mockups/var-matured/README.md', class: merge, lane: B}
+  - {path: 'docs/loaders/common.md', class: generate, lane: A, tool: 'tools/docs/loader_docs.py'}
+  - {path: 'docs/loaders/external.md', class: generate, lane: A, tool: 'tools/docs/loader_docs.py'}
+  - {path: 'docs/loaders/genomics.md', class: generate, lane: A, tool: 'tools/docs/loader_docs.py'}
+  - {path: 'docs/loaders/index.md', class: generate, lane: A, tool: 'tools/docs/loader_docs.py'}
+  - {path: 'docs/loaders/mrloader.md', class: generate, lane: A, tool: 'tools/docs/loader_docs.py'}
+  - {path: 'docs/loaders/news.md', class: generate, lane: A, tool: 'tools/docs/loader_docs.py'}
   - {path: 'docs/plans/AI_MANAGEMENT.md', class: keep, lane: B}
   - {path: 'docs/plans/COUNTERPARTY_ENGINES.md', class: keep, lane: B}
   - {path: 'docs/plans/CSV_LOADERS.md', class: delete, lane: B}
