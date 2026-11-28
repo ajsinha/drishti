@@ -1,0 +1,124 @@
+<!doctype html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Mock-up only: synthetic figures, no network, no external fonts or scripts.
+-->
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Home mock-ups, compared</title><style>:root{--bg:#f4f6f9;--card:#fff;--ink:#17202c;--muted:#566272;--line:#e1e6ed;--soft:#eef2f7;--accent:#1f5fbf;--accent-ink:#fff;--red:#b3202a;--redbg:#fdecee;--amber:#8a5a00;--amberdot:#d99a00;--amberbg:#fff6e0;--green:#1b7443;--greenbg:#e7f5ec;--shadow:0 1px 2px rgba(20,30,50,.06);--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+:root[data-theme=dark]{--bg:#0e131a;--card:#161d27;--ink:#e7ecf3;--muted:#9eabbc;--line:#263140;--soft:#1d2733;--accent:#78aeff;--accent-ink:#0b1320;--red:#ff7b7b;--redbg:#3a1a1e;--amber:#e7b94a;--amberdot:#e3b341;--amberbg:#33290f;--green:#56c98e;--greenbg:#12301f;--shadow:none}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.num,.big{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* mock-up controls (not part of the product) */
+.mock{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:8px 16px;background:#101826;color:#dbe3ee;font-size:12px;position:sticky;top:0;z-index:30}
+.mock b{letter-spacing:.06em;text-transform:uppercase;font-size:11px;color:#8fa3bd}
+.mock .grp{display:flex;gap:2px;align-items:center}
+.mock button{background:#1b2638;border:1px solid #2c3a52;color:#dbe3ee;padding:3px 10px;border-radius:5px;font-size:12px}
+.mock button[aria-pressed=true]{background:#dbe3ee;color:#101826;border-color:#dbe3ee}
+.mock a{color:#9cc2ff}
+.stage{padding:18px 16px 60px}
+.frame{container:frame/inline-size;max-width:1240px;margin:0 auto;transition:max-width .2s}
+.frame.phone{max-width:390px;border:1px solid var(--line);border-radius:22px;padding:12px;background:var(--bg);box-shadow:0 8px 30px rgba(0,0,0,.12)}
+/* app header */
+.app{display:flex;align-items:center;gap:12px;padding:6px 0 14px}
+.brand{font-weight:700;letter-spacing:.02em;font-size:16px;display:flex;gap:8px;align-items:center}
+.brand i{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block}
+.search{flex:1;max-width:520px;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--muted);text-align:left}
+.search kbd{margin-left:auto;font:11px var(--mono);border:1px solid var(--line);border-radius:4px;padding:1px 5px;background:var(--soft)}
+.ghost{background:none;border:1px solid transparent;border-radius:8px;padding:6px 10px;color:var(--muted)}
+.ghost:hover{background:var(--soft);color:var(--ink)}
+.user{margin-left:auto;display:flex;gap:8px;align-items:center;color:var(--muted)}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:12px}
+.greet h1{font-size:22px;margin:0;font-weight:650;letter-spacing:-.01em}
+.fresh{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:13px;margin-top:2px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;flex:none}
+.dot.late{background:var(--amberdot)}.dot.red{background:var(--red)}
+/* needs you */
+.needs{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amberdot);border-radius:10px;padding:10px 14px;margin:14px 0;box-shadow:var(--shadow)}
+.needs h2{font-size:12px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.need{display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.need:first-of-type{border-top:0}
+.need .t{flex:1}.need .t small{display:block;color:var(--muted)}
+.tag{font-size:11px;padding:1px 7px;border-radius:99px;font-weight:600;white-space:nowrap}
+.tag.warn{background:var(--amberbg);color:var(--amber)}.tag.breach{background:var(--redbg);color:var(--red)}.tag.ok{background:var(--greenbg);color:var(--green)}.tag.info{background:var(--soft);color:var(--muted)}
+.btn{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:4px 11px;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}.btn.pri:hover{color:var(--accent-ink);opacity:.9}
+.calm{color:var(--muted);padding:8px 0;font-size:13px}
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);position:relative;min-width:0}
+.card.drag{opacity:.45}.card.over{outline:2px dashed var(--accent)}
+.card h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:650;display:flex;gap:6px;align-items:center}
+.card h3 .pin{color:var(--accent)}
+.big{font-size:28px;font-weight:650;letter-spacing:-.02em;line-height:1.15}
+.big small{font-size:13px;font-weight:500;color:var(--muted);margin-left:4px}
+.delta{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.delta.bad{color:var(--amber)}.delta.good{color:var(--green)}.delta.breach{color:var(--red);font-weight:600}
+.row{display:flex;align-items:center;gap:10px}
+.spark{display:block;overflow:visible}
+.spark path{fill:none;stroke:var(--accent);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.spark .area{fill:var(--accent);opacity:.08;stroke:none}.spark circle{fill:var(--accent)}
+.spark.warn path:not(.area){stroke:var(--amberdot)}.spark.warn circle{fill:var(--amberdot)}.spark.warn .area{fill:var(--amberdot)}
+.spark.breach path:not(.area){stroke:var(--red)}.spark.breach circle{fill:var(--red)}
+.sub{color:var(--muted);font-size:13px}
+.rows{margin:8px 0 0;padding:0;list-style:none}
+.rows li{display:flex;gap:8px;align-items:center;padding:3px 0;font-size:13px}
+.rows li .k{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rows li .v{font-variant-numeric:tabular-nums}
+.bar{height:6px;background:var(--soft);border-radius:4px;overflow:hidden;width:90px;flex:none}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}.bar.warn i{background:var(--amberdot)}.bar.breach i{background:var(--red)}
+.acts{display:flex;gap:2px;opacity:0;transition:opacity .12s;margin-left:auto}
+.card:hover .acts,.card:focus-within .acts,.item:hover .acts,.item:focus-within .acts{opacity:1}
+@media (hover:none){.acts{opacity:1}}
+.ib{background:none;border:1px solid transparent;border-radius:6px;width:26px;height:26px;display:grid;place-items:center;color:var(--muted);font-size:13px;padding:0}
+.ib:hover:not(:disabled){background:var(--soft);color:var(--ink)}.ib:disabled{opacity:.3;cursor:default}.ib[aria-pressed=true]{color:var(--accent)}
+.link{background:none;border:0;color:var(--accent);padding:0;text-decoration:underline;text-underline-offset:2px}
+.exp{background:none;border:0;color:var(--accent);padding:0;font-size:12.5px}
+.exp:hover{text-decoration:underline}
+.hidden-note{color:var(--muted);font-size:13px;margin-top:12px}
+/* overlays */
+#palette{position:fixed;inset:0;background:rgba(10,16,26,.5);display:none;align-items:flex-start;justify-content:center;padding-top:12vh;z-index:50}
+#palette.open{display:flex}
+.pal{width:min(560px,94vw);background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
+.pal input{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);padding:14px 16px;font:16px var(--sans);outline:none}
+.pal ul{list-style:none;margin:0;padding:6px;max-height:50vh;overflow:auto}
+.pal li{padding:7px 10px;border-radius:7px;display:flex;gap:10px;cursor:pointer}
+.pal li b{font-family:var(--mono);font-weight:600;min-width:130px}.pal li span{color:var(--muted)}
+.pal li[aria-selected=true]{background:var(--accent);color:var(--accent-ink)}.pal li[aria-selected=true] span{color:inherit;opacity:.85}
+.pal .gh{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.07em;padding:8px 10px 2px;cursor:default}
+.pal .ft{padding:7px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+#explain{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);background:var(--card);border-left:1px solid var(--line);box-shadow:-10px 0 40px rgba(0,0,0,.2);transform:translateX(105%);transition:transform .18s;z-index:40;padding:18px 20px;overflow:auto}
+#explain.open{transform:none}
+#explain h2{margin:0 0 2px;font-size:17px}#explain dl{margin:14px 0}#explain dt{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-top:12px}#explain dd{margin:2px 0 0}
+#explain .x{position:absolute;top:10px;right:10px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#101826;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:90vw}
+#toast.on{opacity:1}
+@container frame (max-width:700px){.search span.lbl,.hide-s{display:none}.greet h1{font-size:19px}.need{flex-wrap:wrap}.big{font-size:25px}.app{flex-wrap:wrap}.user .nm{display:none}.acts{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.wrap{max-width:1100px;margin:0 auto;padding:28px 16px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-top:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}@media(max-width:800px){.g3{grid-template-columns:1fr}}</style></head><body><div class="wrap">
+<h1 style="margin:0">Drishti Home, three mock-ups</h1><p class="sub">Where every user lands after sign-in. Each page has a role switcher (risk manager, credit officer, admin), light and dark, desktop and phone width, a Needs-you full/empty toggle, a Ctrl or Cmd K command bar, pin, hide and reorder (drag, or the arrow buttons that appear on hover or focus), and Explain on every number. All figures are synthetic; no network, no external fonts or scripts.</p>
+<div class="g3"><article class="card"><h3>Option A</h3><h2 style="margin:4px 0 8px">Calm</h2><p>Greeting and freshness line, a Needs-you strip that disappears when empty, four to six ranked cards in a two-column grid (quiet cards shrink to one line), then Since your last visit, Recent, Pinned and shared.</p><p class="sub"><b>Best for:</b> Most people. Least to read; the owner brief in its purest form.</p><p class="sub"><b>Trade-off:</b> Lower density: a risk manager sees fewer numbers at once.</p><p><a class="btn pri" style="text-decoration:none;display:inline-block" href="a-calm.html">Open Calm</a> <a class="btn" style="text-decoration:none;display:inline-block" href="a-calm.html?role=credit&amp;theme=dark">Credit officer, dark</a> <a class="btn" style="text-decoration:none;display:inline-block" href="a-calm.html?role=admin&amp;phone=1">Admin, phone</a></p></article><article class="card"><h3>Option B</h3><h2 style="margin:4px 0 8px">Feed</h2><p>Three pinned numbers on top, then one timeline of what changed, newest first, each entry expandable to detail, sparkline and Explain; a divider marks your last visit.</p><p class="sub"><b>Best for:</b> Occasional users and managers who read top to bottom, and phone.</p><p class="sub"><b>Trade-off:</b> Less at-a-glance comparison; ranking is time and size of change, not layout.</p><p><a class="btn pri" style="text-decoration:none;display:inline-block" href="b-feed.html">Open Feed</a> <a class="btn" style="text-decoration:none;display:inline-block" href="b-feed.html?role=credit&amp;theme=dark">Credit officer, dark</a> <a class="btn" style="text-decoration:none;display:inline-block" href="b-feed.html?role=admin&amp;phone=1">Admin, phone</a></p></article><article class="card"><h3>Option C</h3><h2 style="margin:4px 0 8px">Cockpit</h2><p>Key-number strip, limits heat list, two-series trend panel, backtest light with 250-day strip, data-load table, alerts column (calm text when empty).</p><p class="sub"><b>Best for:</b> Risk managers and analysts who live in the page.</p><p class="sub"><b>Trade-off:</b> Denser; needs a width of about 1000 px, collapses to one column below.</p><p><a class="btn pri" style="text-decoration:none;display:inline-block" href="c-cockpit.html">Open Cockpit</a> <a class="btn" style="text-decoration:none;display:inline-block" href="c-cockpit.html?role=credit&amp;theme=dark">Credit officer, dark</a> <a class="btn" style="text-decoration:none;display:inline-block" href="c-cockpit.html?role=admin&amp;phone=1">Admin, phone</a></p></article></div>
+<h2>Shared across all three</h2><table><tr><th>Principle</th><th>How it shows</th></tr>
+<tr><td>What needs my attention, and where next</td><td>Needs-you strip or column; disappears (A, B) or turns calm (C) when empty</td></tr>
+<tr><td>Ranked cards, role decides</td><td>Cards ranked by change and urgency; each role has its own set; user pins, hides, reorders</td></tr>
+<tr><td>Numbers carry context</td><td>Change vs yesterday, sparkline, Explain panel with how, sources, as-of</td></tr>
+<tr><td>Freshness</td><td>One line under the greeting; amber dot when a load is late</td></tr>
+<tr><td>All content reachable</td><td>Ctrl or Cmd K command bar (also / ), All functions button opens the grouped list</td></tr>
+<tr><td>Red only for a real breach</td><td>Credit officer role shows CP-KAPPA at 103%; everything else uses amber</td></tr></table>
+<h2>Decisions for the owner</h2><ol><li>Pick one option or a mix (for example A for most roles, C for risk managers by role setting).</li><li>Default for a new user: all role cards ranked, or pre-pinned three?</li><li>Is Explain a side panel (shown) or an in-place expansion?</li><li>Does Needs you allow snooze (shown) or only act and dismiss?</li></ol>
+</div></body></html>

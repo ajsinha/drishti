@@ -1,0 +1,298 @@
+<!doctype html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  Mock-up only: synthetic figures, no network, no external fonts or scripts.
+-->
+<html lang="en" data-opt="a" data-theme="light">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Home, option A: Calm</title>
+<style>:root{--bg:#f4f6f9;--card:#fff;--ink:#17202c;--muted:#566272;--line:#e1e6ed;--soft:#eef2f7;--accent:#1f5fbf;--accent-ink:#fff;--red:#b3202a;--redbg:#fdecee;--amber:#8a5a00;--amberdot:#d99a00;--amberbg:#fff6e0;--green:#1b7443;--greenbg:#e7f5ec;--shadow:0 1px 2px rgba(20,30,50,.06);--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+:root[data-theme=dark]{--bg:#0e131a;--card:#161d27;--ink:#e7ecf3;--muted:#9eabbc;--line:#263140;--soft:#1d2733;--accent:#78aeff;--accent-ink:#0b1320;--red:#ff7b7b;--redbg:#3a1a1e;--amber:#e7b94a;--amberdot:#e3b341;--amberbg:#33290f;--green:#56c98e;--greenbg:#12301f;--shadow:none}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--sans);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.num,.big{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* mock-up controls (not part of the product) */
+.mock{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:8px 16px;background:#101826;color:#dbe3ee;font-size:12px;position:sticky;top:0;z-index:30}
+.mock b{letter-spacing:.06em;text-transform:uppercase;font-size:11px;color:#8fa3bd}
+.mock .grp{display:flex;gap:2px;align-items:center}
+.mock button{background:#1b2638;border:1px solid #2c3a52;color:#dbe3ee;padding:3px 10px;border-radius:5px;font-size:12px}
+.mock button[aria-pressed=true]{background:#dbe3ee;color:#101826;border-color:#dbe3ee}
+.mock a{color:#9cc2ff}
+.stage{padding:18px 16px 60px}
+.frame{container:frame/inline-size;max-width:1240px;margin:0 auto;transition:max-width .2s}
+.frame.phone{max-width:390px;border:1px solid var(--line);border-radius:22px;padding:12px;background:var(--bg);box-shadow:0 8px 30px rgba(0,0,0,.12)}
+/* app header */
+.app{display:flex;align-items:center;gap:12px;padding:6px 0 14px}
+.brand{font-weight:700;letter-spacing:.02em;font-size:16px;display:flex;gap:8px;align-items:center}
+.brand i{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block}
+.search{flex:1;max-width:520px;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:var(--muted);text-align:left}
+.lbs{display:none}.search kbd{margin-left:auto;font:11px var(--mono);border:1px solid var(--line);border-radius:4px;padding:1px 5px;background:var(--soft)}
+.ghost{background:none;border:1px solid transparent;border-radius:8px;padding:6px 10px;color:var(--muted)}
+.ghost:hover{background:var(--soft);color:var(--ink)}
+.user{margin-left:auto;display:flex;gap:8px;align-items:center;color:var(--muted)}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:700;font-size:12px}
+.greet h1{font-size:22px;margin:0;font-weight:650;letter-spacing:-.01em}
+.fresh{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:13px;margin-top:2px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;flex:none}
+.dot.late{background:var(--amberdot)}.dot.red{background:var(--red)}
+/* needs you */
+.needs{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amberdot);border-radius:10px;padding:10px 14px;margin:14px 0;box-shadow:var(--shadow)}
+.needs h2{font-size:12px;margin:0 0 6px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.need{display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.need:first-of-type{border-top:0}
+.need .t{flex:1}.need .t small{display:block;color:var(--muted)}
+.tag{font-size:11px;padding:1px 7px;border-radius:99px;font-weight:600;white-space:nowrap}
+.tag.warn{background:var(--amberbg);color:var(--amber)}.tag.breach{background:var(--redbg);color:var(--red)}.tag.ok{background:var(--greenbg);color:var(--green)}.tag.info{background:var(--soft);color:var(--muted)}
+.btn{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:4px 11px;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}.btn.pri:hover{color:var(--accent-ink);opacity:.9}
+.calm{color:var(--muted);padding:8px 0;font-size:13px}
+/* cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);position:relative;min-width:0}
+.card.drag{opacity:.45}.card.over{outline:2px dashed var(--accent)}
+.card h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:650;display:flex;gap:6px;align-items:center}
+.card h3 .pin{color:var(--accent)}
+.big{font-size:28px;font-weight:650;letter-spacing:-.02em;line-height:1.15}
+.big small{font-size:13px;font-weight:500;color:var(--muted);margin-left:4px}
+.delta{font-size:12.5px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.delta.bad{color:var(--amber)}.delta.good{color:var(--green)}.delta.breach{color:var(--red);font-weight:600}
+.row{display:flex;align-items:center;gap:10px}
+.spark{display:block;overflow:visible}
+.spark path{fill:none;stroke:var(--accent);stroke-width:1.6;stroke-linejoin:round;stroke-linecap:round}
+.spark .area{fill:var(--accent);opacity:.08;stroke:none}.spark circle{fill:var(--accent)}
+.spark.warn path:not(.area){stroke:var(--amberdot)}.spark.warn circle{fill:var(--amberdot)}.spark.warn .area{fill:var(--amberdot)}
+.spark.breach path:not(.area){stroke:var(--red)}.spark.breach circle{fill:var(--red)}
+.sub{color:var(--muted);font-size:13px}
+.rows{margin:8px 0 0;padding:0;list-style:none}
+.rows li{display:flex;gap:8px;align-items:center;padding:3px 0;font-size:13px}
+.rows li .k{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rows li .v{font-variant-numeric:tabular-nums}
+.bar{height:6px;background:var(--soft);border-radius:4px;overflow:hidden;width:90px;flex:none}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}.bar.warn i{background:var(--amberdot)}.bar.breach i{background:var(--red)}
+.acts{display:flex;gap:2px;opacity:0;transition:opacity .12s;margin-left:auto}
+.card:hover .acts,.card:focus-within .acts,.item:hover .acts,.item:focus-within .acts{opacity:1}
+@media (hover:none){.acts{opacity:1}}
+.ib{background:none;border:1px solid transparent;border-radius:6px;width:26px;height:26px;display:grid;place-items:center;color:var(--muted);font-size:13px;padding:0}
+.ib:hover:not(:disabled){background:var(--soft);color:var(--ink)}.ib:disabled{opacity:.3;cursor:default}.ib[aria-pressed=true]{color:var(--accent)}
+.link{background:none;border:0;color:var(--accent);padding:0;text-decoration:underline;text-underline-offset:2px}
+.exp{background:none;border:0;color:var(--accent);padding:0;font-size:12.5px}
+.exp:hover{text-decoration:underline}
+.hidden-note{color:var(--muted);font-size:13px;margin-top:12px}
+/* overlays */
+#palette{position:fixed;inset:0;background:rgba(10,16,26,.5);display:none;align-items:flex-start;justify-content:center;padding-top:12vh;z-index:50}
+#palette.open{display:flex}
+.pal{width:min(560px,94vw);background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden}
+.pal input{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);padding:14px 16px;font:16px var(--sans);outline:none}
+.pal ul{list-style:none;margin:0;padding:6px;max-height:50vh;overflow:auto}
+.pal li{padding:7px 10px;border-radius:7px;display:flex;gap:10px;cursor:pointer}
+.pal li b{font-family:var(--mono);font-weight:600;min-width:130px}.pal li span{color:var(--muted)}
+.pal li[aria-selected=true]{background:var(--accent);color:var(--accent-ink)}.pal li[aria-selected=true] span{color:inherit;opacity:.85}
+.pal .gh{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.07em;padding:8px 10px 2px;cursor:default}
+.pal .ft{padding:7px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+#explain{position:fixed;top:0;right:0;bottom:0;width:min(400px,100%);background:var(--card);border-left:1px solid var(--line);box-shadow:-10px 0 40px rgba(0,0,0,.2);transform:translateX(105%);transition:transform .18s;z-index:40;padding:18px 20px;overflow:auto}
+#explain.open{transform:none}
+#explain h2{margin:0 0 2px;font-size:17px}#explain dl{margin:14px 0}#explain dt{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-top:12px}#explain dd{margin:2px 0 0}
+#explain .x{position:absolute;top:10px;right:10px}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#101826;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:60;max-width:90vw}
+#toast.on{opacity:1}
+@container frame (max-width:700px){.search span.lbl,.hide-s{display:none}.search span.lbs{display:inline}.greet h1{font-size:19px}.need{flex-wrap:wrap}.big{font-size:25px}.app{flex-wrap:wrap}.user .nm{display:none}.acts{opacity:1}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card.quiet{grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:9px 16px}
+.card.quiet h3{min-width:150px}.big.q{font-size:16px}
+.card.quiet .acts{margin-left:0}
+.card.quiet .exp{margin-left:auto}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+.rows .link{text-align:left;font-family:var(--mono);font-size:12.5px}
+@container frame (max-width:700px){.grid,.trio{grid-template-columns:1fr}.card.quiet{flex-wrap:wrap;gap:6px 12px}.card.quiet h3{min-width:0;flex:1}}
+</style></head><body>
+<div class="mock" role="toolbar" aria-label="Mock-up controls"><b>Mock-up</b><a href="index.html">All options</a>
+<span class="grp" role="group" aria-label="Role"><span>Role&nbsp;</span><button data-set="role:risk" aria-pressed="true">Risk manager</button><button data-set="role:credit">Credit officer</button><button data-set="role:admin">Admin</button></span>
+<span class="grp" role="group" aria-label="Theme"><button data-set="theme:light">Light</button><button data-set="theme:dark">Dark</button></span>
+<span class="grp" role="group" aria-label="Width"><button data-set="phone:false">Desktop</button><button data-set="phone:true">Phone</button></span>
+<span class="grp" role="group" aria-label="Needs you state"><button data-set="empty:false">Needs you: has items</button><button data-set="empty:true">Needs you: empty</button></span>
+<button data-act="reset">Reset</button></div>
+<div class="stage"><div class="frame" id="frame"><div id="chrome"></div><main id="main"></main></div></div>
+<div id="palette" role="dialog" aria-modal="true" aria-label="Command bar"><div class="pal"><input id="pin" type="text" role="combobox" aria-expanded="true" aria-controls="plist" autocomplete="off" placeholder="Type a command or name: VAR BANK, GENE HLXK7, TRD T-1" aria-label="Command"><ul id="plist" role="listbox"></ul><div class="ft">Arrow keys to move, Enter to open, Esc to close</div></div></div>
+<aside id="explain" tabindex="-1" aria-live="polite"></aside><div id="toast" role="status"></div>
+<script>'use strict';
+const OPT=document.documentElement.dataset.opt;
+function series(n,a,b,seed,noise){let s=seed,out=[];for(let i=0;i<n;i++){s=(s*9301+49297)%233280;const r=s/233280-.5;out.push(a+(b-a)*i/(n-1)+r*noise*Math.abs(b-a||a));}out[n-1]=b;return out;}
+const D=(v,dir,bad,txt)=>({v,dir,bad:bad||'',txt:txt||'vs yesterday'});
+const ROLES={
+risk:{label:'Risk manager',user:'Ananya Rao',init:'AR',title:'Head of Market Risk, BANK',
+ fresh:{text:'Data as of 06:10 today',note:'positions load is late (expected 06:00)',late:true},
+ needs:[{t:'LE-NY is at 94% of its VaR limit',s:'Up from 89% yesterday; 6 points of headroom',tag:'warn',tl:'Limit',go:'Open limits',cmd:'LIM LE-NY'},
+        {t:'Limit increase request for DESK-RATES',s:'Raised by T. Okafor, waiting 2 h for your approval',tag:'info',tl:'Approval',go:'Review',cmd:'APR 1042'},
+        {t:'Positions load is late',s:'Expected 06:00; last good load is yesterday 18:05',tag:'warn',tl:'Data load',go:'Load status',cmd:'LOAD STATUS'}],
+ digest:['BANK VaR 99% rose 2.1% to 167.4m','DESK-CREDIT crossed 85% of its limit (now 88%)','New scenario set 2026-11-26 loaded','2 trades amended on DESK-RATES'],
+ cards:[
+ {id:'limits',score:92,title:'Limit utilisation',big:'94%',unit:'LE-NY',d:D('+5 pts','up','bad'),spark:series(14,78,94,3,.5),sk:'warn',sub:'3 of 12 limits above 85%',
+  rows:[['LE-NY',94,'warn'],['DESK-CREDIT',88,'warn'],['DESK-RATES',71],['DESK-FX',64]],
+  ex:{how:'Utilisation = measured VaR 99% 1d divided by the approved limit, per limit node. Warning from 85%, breach above 100%.',src:'var.bank (computed on the server) and limits.register (approved limits)',asof:'2026-11-27 06:10',cmp:'Same measure at yesterday close (2026-11-26 18:05)',open:'LIM LE-NY'}},
+ {id:'var',score:80,title:'BANK VaR 99% 1d',big:'167,372,692',unit:'',d:D('+2.1%','up','bad'),spark:series(14,158e6,167372692,7,.4),sub:'84% of the 200.0m bank limit',
+  rows:[['DESK-CREDIT','41.2m'],['DESK-RATES','38.9m'],['DESK-FX','22.4m']],
+  ex:{how:'Historical simulation, 509 scenario days, 99th percentile of full-revaluation P&L over all positions in BANK. Computed on the server.',src:'positions (trade grain), scenario set 2026-11-26, market data snapshot 06:10',asof:'2026-11-27 06:10',cmp:'2026-11-26 close: 163,930,000 (approx.)',open:'VAR BANK'}},
+ {id:'loads',score:70,title:'Data loads',big:'3 of 4',unit:'on time',d:D('1 late','flat','bad','positions'),spark:null,sub:'Positions expected 06:00',
+  rows:[['Market data','06:02 ok'],['Scenarios','06:04 ok'],['Trades','06:06 ok'],['Positions','late']],
+  ex:{how:'Each daily load has an expected time; a load is late when it has not completed 10 minutes after that time.',src:'loads.journal',asof:'2026-11-27 06:35',cmp:'Schedule from config/loads.yaml',open:'LOAD STATUS'}},
+ {id:'es',score:55,title:'BANK ES 97.5%',big:'210,131,972',unit:'',d:D('+1.8%','up','bad'),spark:series(14,203e6,210131972,11,.4),sub:'Expected shortfall, 1d',
+  ex:{how:'Mean of the losses beyond the 97.5th percentile of the same scenario P&L vector used for VaR.',src:'same vector as BANK VaR',asof:'2026-11-27 06:10',cmp:'2026-11-26 close: 206,410,000 (approx.)',open:'ES BANK'}},
+ {id:'movers',score:40,title:'Biggest movers',big:'T-48213',unit:'+4.8m',d:D('3 trades','up','','drive 61% of the change'),spark:series(14,0,4.8,5,.5),sub:'Contribution to the VaR change',
+  rows:[['T-48213 IRS 10Y',' +4.8m'],['T-47990 CDS ITRAXX',' +2.1m'],['T-48120 FX FWD',' -1.3m']],
+  ex:{how:'Incremental VaR change per trade between yesterday and today, largest absolute first.',src:'var.bank, trade grain',asof:'2026-11-27 06:10',cmp:'2026-11-26 close',open:'TRD T-48213'}},
+ {id:'bt',score:12,title:'Backtest',big:'Green',unit:'2 / 250',d:D('0 new','flat','','this week'),spark:null,sub:'Zone green (0 to 4 exceptions)',
+  ex:{how:'Exceptions are days where the actual or hypothetical loss exceeded VaR 99%; 250-day window, Basel traffic light.',src:'backtest.daily',asof:'2026-11-26',cmp:'Previous window: 2',open:'BT BANK'}}],
+ cockpit:{heatT:'Limits',heat:[['LE-NY',94],['DESK-CREDIT',88],['DESK-RATES',71],['DESK-FX',64],['LE-LDN',58],['DESK-EQ',43]],
+  chartT:'VaR 99% and ES 97.5%, 30 days',s1:{n:'VaR',v:series(30,148e6,167372692,3,.35)},s2:{n:'ES',v:series(30,184e6,210131972,9,.3)},
+  light:{t:'Backtest',st:'ok',txt:'Green zone: 2 exceptions in 250 days',ticks:[18,77]},
+  loads:[['Market data','06:02','ok'],['Scenarios','06:04','ok'],['Trades','06:06','ok'],['Positions','expected 06:00','late']]}},
+credit:{label:'Credit officer',user:'Marcus Chen',init:'MC',title:'Credit Officer, Counterparty Risk',
+ fresh:{text:'Data as of 06:10 today',note:'all loads complete',late:false},
+ needs:[{t:'CP-KAPPA is over its PFE limit (103%)',s:'Breach since 05:50; exposure 92m against 89m limit',tag:'breach',tl:'Breach',go:'Open counterparty',cmd:'EXP CP-KAPPA'},
+        {t:'Collateral call to CP-SIGMA unanswered for 2 days',s:'Call of 18.4m issued 2026-11-25',tag:'warn',tl:'Collateral',go:'Open call',cmd:'COL CP-SIGMA'},
+        {t:'New facility request: CP-ZETA',s:'Needs credit approval before trading',tag:'info',tl:'Approval',go:'Review',cmd:'APR 1051'}],
+ digest:['Total exposure up 3.4% to 4.82bn','CP-ALPHA downgraded A- to BBB+ by one agency','2 collateral calls issued, 1 settled','CP-KAPPA moved above its PFE limit'],
+ cards:[
+ {id:'cpbreach',score:95,title:'Counterparty limits',big:'1 breach',unit:'3 near',d:D('+1','up','breach','vs yesterday'),spark:series(14,0,1,2,.1),sk:'breach',sub:'PFE 95% against approved limits',
+  rows:[['CP-KAPPA',103,'breach'],['CP-ALPHA',91,'warn'],['CP-DELTA',87,'warn'],['CP-OMEGA',69]],
+  ex:{how:'PFE at the 95th percentile over the netting-set life divided by the approved counterparty limit. Breach above 100%.',src:'exposure.pfe (netting-set grain) and limits.register',asof:'2026-11-27 06:10',cmp:'2026-11-26 close',open:'EXP CP-KAPPA'}},
+ {id:'exposure',score:78,title:'Total current exposure',big:'4.82bn',unit:'',d:D('+3.4%','up','bad'),spark:series(14,4.45,4.82,4,.35),sub:'After netting and collateral',
+  rows:[['CP-ALPHA','612m'],['CP-DELTA','488m'],['CP-OMEGA','455m']],
+  ex:{how:'Sum over netting sets of max(MtM of the set minus collateral held, 0). Mark-to-market is supplied by the source systems; Drishti does not price.',src:'trades (Endur, Calypso), collateral.held',asof:'2026-11-27 06:10',cmp:'2026-11-26 close: 4.66bn',open:'EXP ALL'}},
+ {id:'coll',score:66,title:'Collateral calls',big:'3 open',unit:'41.2m',d:D('1 aged','up','bad','over 2 days'),spark:series(14,1,3,6,.4),sub:'Shortfall against margin agreements',
+  rows:[['CP-SIGMA','18.4m, 2 d'],['CP-DELTA','14.1m, 1 d'],['CP-OMEGA','8.7m, today']],
+  ex:{how:'Calls are issued when exposure less collateral exceeds the threshold plus minimum transfer amount of the CSA.',src:'collateral.agreements, collateral.held',asof:'2026-11-27 06:10',cmp:'Yesterday: 2 open',open:'COL ALL'}},
+ {id:'rating',score:52,title:'Rating migrations',big:'2',unit:'downgrades',d:D('+2','up','bad','this week'),spark:null,sub:'External ratings, any agency',
+  rows:[['CP-ALPHA','A- to BBB+'],['CP-ZETA','BBB to BBB-']],
+  ex:{how:'Ratings are read from the supplied counterparty reference data; a migration is any change since the previous business day.',src:'refdata.counterparty',asof:'2026-11-27 06:10',cmp:'Previous business day',open:'CP RATINGS'}},
+ {id:'conc',score:30,title:'Concentration',big:'38%',unit:'top 5',d:D('+0.4 pts','up','','vs yesterday'),spark:series(14,36.5,38,8,.3),sub:'Share of total exposure',
+  ex:{how:'Exposure of the five largest counterparties divided by total current exposure.',src:'exposure.cva grain (netting set)',asof:'2026-11-27 06:10',cmp:'2026-11-26 close: 37.6%',open:'EXP TOP5'}},
+ {id:'loads',score:14,title:'Data loads',big:'4 of 4',unit:'on time',d:D('all ok','flat','good','today'),spark:null,sub:'Last: positions 06:06',
+  ex:{how:'Each daily load must complete within 10 minutes of its expected time.',src:'loads.journal',asof:'2026-11-27 06:35',cmp:'Schedule from config/loads.yaml',open:'LOAD STATUS'}}],
+ cockpit:{heatT:'Counterparty PFE vs limit',heat:[['CP-KAPPA',103],['CP-ALPHA',91],['CP-DELTA',87],['CP-OMEGA',69],['CP-SIGMA',52],['CP-ZETA',31]],
+  chartT:'Current exposure (bn) and collateral held (bn), 30 days',s1:{n:'Exposure',v:series(30,4.2,4.82,5,.3)},s2:{n:'Collateral',v:series(30,2.9,3.35,2,.3)},
+  light:{t:'Collateral coverage',st:'warn',txt:'3 calls open, 41.2m outstanding',ticks:null},
+  loads:[['Market data','06:02','ok'],['Trades','06:06','ok'],['Collateral','06:08','ok'],['Ref data','06:09','ok']]}},
+admin:{label:'Administrator',user:'Rohan Iyer',init:'RI',title:'Platform administrator',
+ fresh:{text:'Cluster state as of 06:35',note:'1 load failed',late:true},
+ needs:[{t:'FX curves load failed at 05:40',s:'Source file missing; retry available',tag:'warn',tl:'Load failed',go:'Retry',cmd:'LOAD fx-curves'},
+        {t:'3 access requests waiting',s:'Oldest 1 day (credit desk)',tag:'info',tl:'Approval',go:'Review',cmd:'ADMIN ACCESS'}],
+ digest:['Node 18791 restarted at 02:10 and rejoined','5 more users active than yesterday','Exposure engine switched off by you on 11-24'],
+ cards:[
+ {id:'cluster',score:60,title:'Cluster',big:'3 of 3',unit:'nodes up',d:D('stable','flat','good','7 days'),spark:series(14,3,3,1,0),sub:'18480, 18791, 18792; console 17480',
+  rows:[['18480 (owner)','12% cpu'],['18791','9% cpu'],['18792','14% cpu']],
+  ex:{how:'Heartbeat from each node every 5 s; a node is down after 3 missed beats.',src:'cluster.members',asof:'2026-11-27 06:35',cmp:'7-day history',open:'ADMIN CLUSTER'}},
+ {id:'loadf',score:85,title:'Daily loads',big:'3 of 4',unit:'ok',d:D('1 failed','up','bad'),spark:null,sub:'fx-curves failed 05:40',
+  rows:[['market-data','06:02 ok'],['scenarios','06:04 ok'],['trades','06:06 ok'],['fx-curves','failed']],
+  ex:{how:'Journal of every load run with outcome and duration.',src:'loads.journal',asof:'2026-11-27 06:35',cmp:'Schedule in config/loads.yaml',open:'LOAD STATUS'}},
+ {id:'users',score:50,title:'Active users',big:'42',unit:'today',d:D('+5','up','good'),spark:series(14,31,42,9,.3),sub:'4 sessions in the last hour',
+  ex:{how:'Distinct signed-in users with a request since 00:00.',src:'audit.sessions',asof:'2026-11-27 06:35',cmp:'Yesterday: 37',open:'ADMIN USERS'}},
+ {id:'access',score:62,title:'Access requests',big:'3',unit:'pending',d:D('+1','up','bad'),spark:null,sub:'Oldest waiting 1 day',
+  ex:{how:'Role and module access requests awaiting an administrator.',src:'access.requests',asof:'2026-11-27 06:35',cmp:'Yesterday: 2',open:'ADMIN ACCESS'}},
+ {id:'engines',score:24,title:'Engines',big:'6 of 7',unit:'on',d:D('no change','flat'),spark:null,sub:'Exposure engine is off',
+  ex:{how:'Each compute engine is switched on or off per instance in config/engines.',src:'config/engines/*.yaml',asof:'2026-11-27 06:35',cmp:'Yesterday',open:'ADMIN ENGINES'}},
+ {id:'lake',score:10,title:'Lake storage',big:'61%',unit:'used',d:D('+0.4 pts','up','','vs yesterday'),spark:series(14,58,61,4,.2),sub:'Delta + file store',
+  ex:{how:'Used bytes over capacity of the lake root volume.',src:'host filesystem',asof:'2026-11-27 06:35',cmp:'Yesterday',open:'ADMIN STORAGE'}}],
+ cockpit:{heatT:'Node and volume load',heat:[['18480 cpu',12],['18791 cpu',9],['18792 cpu',14],['Lake disk',61],['Heap 18480',47],['Heap 18791',44]],
+  chartT:'Active users and load jobs, 30 days',s1:{n:'Users',v:series(30,30,42,4,.3)},s2:{n:'Jobs',v:series(30,60,78,6,.3)},
+  light:{t:'Cluster health',st:'ok',txt:'All nodes up, quorum 3 of 3',ticks:null},
+  loads:[['market-data','06:02','ok'],['scenarios','06:04','ok'],['trades','06:06','ok'],['fx-curves','failed 05:40','late']]}}
+};
+const CMDS=[['Risk','VAR BANK','VaR 99% for the whole bank'],['Risk','VAR DESK-CREDIT','VaR for a desk'],['Risk','ES BANK','Expected shortfall'],['Risk','LIM LE-NY','Limit LE-NY and its history'],['Risk','BT BANK','Backtest and exceptions'],
+ ['Trades','TRD T-1','Trade T-1 with all sources'],['Trades','TRD T-48213','IRS 10Y, DESK-RATES'],['Counterparty','EXP CP-ALPHA','Exposure for a counterparty'],['Counterparty','COL CP-SIGMA','Collateral calls'],
+ ['Genomics','GENE HLXK7','Gene HLXK7 (genomics module)'],['Data','LOAD STATUS','Daily loads and freshness'],['Data','SUTRA NEW','New Sutra query'],['Admin','ADMIN CLUSTER','Nodes and engines'],['Admin','ADMIN ACCESS','Users and access requests'],
+ ['All content','FUNCTIONS','Browse the full functions list'],['All content','HELP','Guides and tutorials'],['All content','HOME','Back to this Home']];
+/* state */
+const KEY='drishtiHomeMock.'+OPT;
+let S={role:'risk',theme:'light',phone:false,empty:false,hidden:{},pinned:{},order:{},hint:{}};
+try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSON.parse(j));}catch(e){}
+try{const p=new URLSearchParams(location.search);if(p.get('role')&&ROLES[p.get('role')])S.role=p.get('role');if(p.get('theme'))S.theme=p.get('theme');if(p.get('phone'))S.phone=p.get('phone')==='1';if(p.get('empty'))S.empty=p.get('empty')==='1';}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const $=(s,r)=>(r||document).querySelector(s),$$=(s,r)=>[...(r||document).querySelectorAll(s)];
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const R=()=>ROLES[S.role];
+const card=id=>R().cards.find(c=>c.id===id);
+function allIds(){const base=[...R().cards].sort((a,b)=>b.score-a.score).map(c=>c.id);const o=(S.order[S.role]||[]).filter(i=>base.includes(i));return o.concat(base.filter(i=>!o.includes(i)));}
+function visIds(){const h=S.hidden[S.role]||[],p=S.pinned[S.role]||[];const v=allIds().filter(i=>!h.includes(i));return v.filter(i=>p.includes(i)).concat(v.filter(i=>!p.includes(i)));}
+const isPinned=id=>(S.pinned[S.role]||[]).includes(id);
+function toggle(map,id){const a=map[S.role]=map[S.role]||[];const i=a.indexOf(id);i<0?a.push(id):a.splice(i,1);}
+function move(id,dir){const v=visIds(),i=v.indexOf(id),j=i+dir;if(j<0||j>=v.length||isPinned(v[j])!==isPinned(id))return;[v[i],v[j]]=[v[j],v[i]];S.order[S.role]=v.concat(allIds().filter(x=>!v.includes(x)));}
+function dropOn(src,dst){if(src===dst||isPinned(src)!==isPinned(dst))return;const v=visIds().filter(x=>x!==src);v.splice(v.indexOf(dst),0,src);S.order[S.role]=v.concat(allIds().filter(x=>!v.includes(x)));}
+/* helpers */
+function spark(a,w,h,cls){if(!a)return'';const mn=Math.min(...a),mx=Math.max(...a),sp=(mx-mn)||1,pts=a.map((v,i)=>[(i*(w-4)/(a.length-1)+2).toFixed(1),(h-3-(v-mn)/sp*(h-6)).toFixed(1)]);const d=pts.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join('');const l=pts[pts.length-1];
+ return `<svg class="spark ${cls||''}" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="trend, last ${a.length} days"><path class="area" d="${d}L${l[0]} ${h}L2 ${h}Z"/><path d="${d}"/><circle cx="${l[0]}" cy="${l[1]}" r="2.4"/></svg>`;}
+function delta(c){const d=c.d,ar=d.dir==='up'?'▲':d.dir==='down'?'▼':'●';return `<span class="delta ${d.bad}">${ar} ${esc(d.v)} <span class="hide-s">${esc(d.txt)}</span></span>`;}
+function rowsHTML(c,n){if(!c.rows)return'';return '<ul class="rows">'+c.rows.slice(0,n||9).map(r=>{if(typeof r[1]==='number'){return `<li><span class="k">${esc(r[0])}</span><span class="bar ${r[2]||''}" aria-hidden="true"><i style="width:${Math.min(100,r[1])}%"></i></span><span class="v">${r[1]}%${r[2]==='breach'?' <span class="tag breach">breach</span>':''}</span></li>`;}return `<li><span class="k">${esc(r[0])}</span><span class="v">${esc(r[1])}</span></li>`;}).join('')+'</ul>';}
+function acts(c,vis){const i=vis.indexOf(c.id),n=vis.length,p=isPinned(c.id);const up=i<1||isPinned(vis[i-1])!==p,dn=i>=n-1||isPinned(vis[i+1])!==p;
+ return `<span class="acts" role="group" aria-label="Card options for ${esc(c.title)}"><button class="ib" data-act="pin" data-id="${c.id}" aria-pressed="${p}" title="${p?'Unpin':'Pin to top'}" aria-label="${p?'Unpin':'Pin'} ${esc(c.title)}">&#9733;</button><button class="ib" data-act="up" data-id="${c.id}" ${up?'disabled':''} title="Move up" aria-label="Move ${esc(c.title)} up">&#8593;</button><button class="ib" data-act="down" data-id="${c.id}" ${dn?'disabled':''} title="Move down" aria-label="Move ${esc(c.title)} down">&#8595;</button><button class="ib" data-act="hide" data-id="${c.id}" title="Hide card" aria-label="Hide ${esc(c.title)}">&#10005;</button></span>`;}
+function needsHTML(){const n=R().needs;if(S.empty)return '';return `<section class="needs" aria-label="Needs you"><h2>Needs you (${n.length})</h2>${n.map((x,i)=>`<div class="need"><span class="tag ${x.tag}">${esc(x.tl)}</span><div class="t">${esc(x.t)}<small>${esc(x.s)}</small></div><button class="btn" data-act="go" data-cmd="${esc(x.cmd)}">${esc(x.go)}</button><button class="ib" data-act="snooze" data-i="${i}" title="Snooze until tomorrow" aria-label="Snooze: ${esc(x.t)}">&#8987;</button></div>`).join('')}</section>`;}
+function freshHTML(){const f=R().fresh;return `<div class="fresh"><span class="dot ${f.late?'late':''}"></span><span>${esc(f.text)}${f.late?' &middot; <b style="color:var(--amber);font-weight:600">'+esc(f.note)+'</b>':' &middot; '+esc(f.note)}</span></div>`;}
+function greetHTML(){const r=R();return `<div class="greet"><h1>Good morning, ${esc(r.user.split(' ')[0])}</h1>${freshHTML()}</div>`;}
+function hiddenHTML(){const h=S.hidden[S.role]||[];if(!h.length)return'';return `<p class="hidden-note">${h.length} hidden: ${h.map(i=>`<button class="link" data-act="restore" data-id="${i}">${esc(card(i).title)}</button>`).join(', ')}</p>`;}
+function digestHTML(){return `<ul class="rows">${R().digest.map(x=>`<li><span class="k" style="white-space:normal">${esc(x)}</span></li>`).join('')}</ul>`;}
+function appHeader(){const r=R();return `<header class="app"><div class="brand"><i></i>Drishti</div><button class="search" data-act="pal" aria-label="Open command bar"><span aria-hidden="true">&#8981;</span><span class="lbl">Jump to anything: VAR BANK, GENE HLXK7, TRD T-1</span><span class="lbs">Jump to anything</span><kbd>Ctrl K</kbd></button><button class="ghost hide-s" data-act="browse">All functions</button><div class="user"><span class="nm">${esc(r.title)}</span><span class="avatar" aria-hidden="true">${r.init}</span></div></header>`;}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2200);}
+/* explain */
+let lastFocus=null;
+function explain(id){const c=card(id);if(!c)return;lastFocus=document.activeElement;const x=c.ex,p=$('#explain');
+ p.innerHTML=`<button class="ib x" data-act="xclose" aria-label="Close explanation">&#10005;</button><h2 id="exh">${esc(c.title)}</h2><div class="big num">${esc(c.big)}<small>${esc(c.unit)}</small></div><div>${delta(c)}</div><dl><dt>How it was calculated</dt><dd>${esc(x.how)}</dd><dt>Sources</dt><dd>${esc(x.src)}</dd><dt>As of</dt><dd class="num">${esc(x.asof)}</dd><dt>Compared with</dt><dd>${esc(x.cmp)}</dd></dl><button class="btn pri" data-act="go" data-cmd="${esc(x.open)}">Open ${esc(x.open)}</button>`;
+ p.setAttribute('role','dialog');p.setAttribute('aria-labelledby','exh');p.classList.add('open');$('.x',p).focus();}
+function xclose(){const p=$('#explain');p.classList.remove('open');if(lastFocus&&document.body.contains(lastFocus))lastFocus.focus();}
+/* palette */
+let pi=0,plist=[];
+function palOpen(browse){const p=$('#palette');p.classList.add('open');lastFocus=lastFocus||document.activeElement;const i=$('#pin');i.value='';palRender();i.focus();}
+function palClose(){$('#palette').classList.remove('open');}
+function palRender(){const q=$('#pin').value.trim().toLowerCase();plist=CMDS.filter(c=>!q||(c[1]+' '+c[2]+' '+c[0]).toLowerCase().includes(q));if(pi>=plist.length)pi=0;let g='',h='';plist.forEach((c,i)=>{if(!q&&c[0]!==g){g=c[0];h+=`<li class="gh" role="presentation">${esc(g)}</li>`;}h+=`<li role="option" id="po${i}" data-i="${i}" aria-selected="${i===pi}"><b>${esc(c[1])}</b><span>${esc(c[2])}</span></li>`;});
+ $('#plist').innerHTML=h||'<li class="gh">No match. Try VAR, TRD, GENE, EXP.</li>';$('#pin').setAttribute('aria-activedescendant',plist.length?'po'+pi:'');}
+function palGo(c){palClose();toast('Would open: '+(c?c[1]+' ('+c[2]+')':''));}
+/* wiring */
+function applyChrome(){document.documentElement.dataset.theme=S.theme;$('#frame').classList.toggle('phone',S.phone);
+ $$('[data-set]').forEach(b=>{const [k,v]=b.dataset.set.split(':');b.setAttribute('aria-pressed',String(String(S[k])===v));});}
+function renderAll(){applyChrome();$('#main').innerHTML=window.render();wireDrag();save();}
+function wireDrag(){$$('[data-drag]').forEach(el=>{el.draggable=true;el.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',el.dataset.drag);el.classList.add('drag');});el.addEventListener('dragend',()=>el.classList.remove('drag'));el.addEventListener('dragover',e=>{e.preventDefault();el.classList.add('over');});el.addEventListener('dragleave',()=>el.classList.remove('over'));el.addEventListener('drop',e=>{e.preventDefault();dropOn(e.dataTransfer.getData('text/plain'),el.dataset.drag);renderAll();});});}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-act],[data-set],#palette,.pal li[data-i]');if(!b)return;
+ if(b.dataset.set){const [k,v]=b.dataset.set.split(':');S[k]=(v==='true'||v==='false')?v==='true':v;renderAll();return;}
+ if(b.id==='palette'&&e.target===b){palClose();return;}
+ if(b.matches('.pal li[data-i]')){palGo(plist[+b.dataset.i]);return;}
+ const a=b.dataset.act,id=b.dataset.id;
+ if(a==='pin'){toggle(S.pinned,id);renderAll();}else if(a==='up'){move(id,-1);renderAll();}else if(a==='down'){move(id,1);renderAll();}
+ else if(a==='hide'){toggle(S.hidden,id);renderAll();toast('Hidden. Restore it from the line at the bottom.');}else if(a==='restore'){toggle(S.hidden,id);renderAll();}
+ else if(a==='explain')explain(id);else if(a==='xclose')xclose();else if(a==='pal')palOpen();else if(a==='browse')palOpen(true);
+ else if(a==='go'){xclose();toast('Would open: '+b.dataset.cmd);}else if(a==='snooze'){R().needs.splice(+b.dataset.i,1);if(!R().needs.length)S.empty=true;renderAll();toast('Snoozed until tomorrow.');}
+ else if(a==='reset'){S.hidden={};S.pinned={};S.order={};S.empty=false;location.reload();}
+ else if(a==='expand'){const el=b.closest('.item');el.classList.toggle('open');b.setAttribute('aria-expanded',el.classList.contains('open'));}});
+document.addEventListener('keydown',e=>{
+ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();palOpen();return;}
+ if(e.key==='Escape'){if($('#palette').classList.contains('open')){palClose();}else xclose();return;}
+ if($('#palette').classList.contains('open')&&['ArrowDown','ArrowUp','Enter'].includes(e.key)){e.preventDefault();if(e.key==='Enter')palGo(plist[pi]);else{pi=(pi+(e.key==='ArrowDown'?1:-1)+plist.length)%plist.length;palRender();const s=$('#po'+pi);s&&s.scrollIntoView({block:'nearest'});}}
+ if(e.key==='/'&&!/INPUT|TEXTAREA/.test(document.activeElement.tagName)){e.preventDefault();palOpen();}});
+document.addEventListener('input',e=>{if(e.target.id==='pin'){pi=0;palRender();}});
+window.addEventListener('DOMContentLoaded',()=>{window.init&&window.init();renderAll();});
+
+const RECENT={risk:['VAR BANK','LIM LE-NY','TRD T-48213','ES BANK'],credit:['EXP CP-KAPPA','COL CP-SIGMA','EXP CP-ALPHA','CP RATINGS'],admin:['ADMIN CLUSTER','LOAD STATUS','ADMIN ACCESS','ADMIN USERS']};
+const SHARED={risk:[['Rates desk morning view','T. Okafor'],['Stress week pack','M. Lindqvist']],credit:[['Watchlist counterparties','S. Bhatt'],['CSA review sheet','L. Moreau']],admin:[['Onboarding checklist','HR Ops'],['Quarter-end runbook','Platform team']]};
+function cardA(c,vis){const quiet=c.score<30;const pin=isPinned(c.id)?'<span class="pin" title="Pinned" aria-label="pinned">&#9733;</span>':'';
+ if(quiet)return `<article class="card quiet" data-drag="${c.id}"><h3>${esc(c.title)} ${pin}</h3><span class="big num q">${esc(c.big)}<small>${esc(c.unit)}</small></span>${delta(c)}<button class="exp" data-act="explain" data-id="${c.id}">Explain</button>${acts(c,vis)}</article>`;
+ return `<article class="card" data-drag="${c.id}"><h3>${esc(c.title)} ${pin}${acts(c,vis)}</h3><div class="row"><div class="big num">${esc(c.big)}<small>${esc(c.unit)}</small></div><span style="margin-left:auto">${spark(c.spark,96,34,c.sk)}</span></div><div class="row">${delta(c)}<span class="sub">${esc(c.sub)}</span></div>${rowsHTML(c,4)}<div style="margin-top:8px"><button class="exp" data-act="explain" data-id="${c.id}">Explain this number</button></div></article>`;}
+window.render=function(){const HDR=appHeader();const vis=visIds().map(card);const top=vis.slice(0,6);
+ const pinned=vis.filter(c=>isPinned(c.id));
+ return HDR+greetHTML()+needsHTML()+`<section class="grid" aria-label="Your cards">${top.map(c=>cardA(c,visIds())).join('')}</section>${hiddenHTML()}
+ <section class="trio"><div class="card"><h3>Since your last visit</h3><div class="sub">Yesterday 17:42</div>${digestHTML()}</div>
+ <div class="card"><h3>Recent</h3><ul class="rows">${RECENT[S.role].map(x=>`<li><button class="link k" data-act="go" data-cmd="${esc(x)}">${esc(x)}</button></li>`).join('')}</ul></div>
+ <div class="card"><h3>Pinned and shared</h3><ul class="rows">${pinned.length?pinned.map(c=>`<li><span aria-hidden="true">&#9733;</span><span class="k">${esc(c.title)}</span></li>`).join(''):'<li class="sub">Pin a card with the star to keep it here.</li>'}${SHARED[S.role].map(s=>`<li><span class="k">${esc(s[0])}</span><span class="sub">${esc(s[1])}</span></li>`).join('')}</ul></div></section>`;};
+</script></body></html>
