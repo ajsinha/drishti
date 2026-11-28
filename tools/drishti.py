@@ -1160,6 +1160,14 @@ def is_setup(argv: list[str]) -> bool:
     return i < len(argv) and argv[i] == "setup"
 
 
+def is_upgrade(argv: list[str]) -> bool:
+    """True when the command is ``upgrade``: the new release's tools read the site's settings, which name the running release."""
+    i = 0
+    while i < len(argv) and argv[i].startswith("-"):
+        i += 2 if argv[i] in ("--settings", "--profile") else 1
+    return i < len(argv) and argv[i] == "upgrade"
+
+
 REEXEC = "DRISHTI_TOOLS_REEXEC"
 
 
@@ -1270,7 +1278,7 @@ def main(argv: list[str] | None = None) -> int:
             entries = {k: v for k, v in entries.items() if k not in settingsfile.ROOTS}
         else:
             settingsfile.apply_roots(entries)       # the Python side reads the roots the files name, as the JVMs do
-            warning = settingsfile.other_home(entries)
+            warning = None if is_upgrade(argv) else settingsfile.other_home(entries)   # `upgrade check` runs the NEW release's tools on the running site's settings
             if warning:
                 print(warning, file=sys.stderr)
         javacmd.set_settings(settings, entries)

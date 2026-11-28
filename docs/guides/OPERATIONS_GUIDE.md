@@ -2850,12 +2850,15 @@ Run it from cron as the `drishti` user (`30 1 * * * /opt/drishti/backup.sh`) and
 4. **Stop** both: `sudo systemctl stop drishti-console drishti-server` (or `python tools/drishti.py stop all`; Windows `py -3.13 tools\drishti.py stop all`).
 5. **Replace** the jar, `bin/`, `modules/`, `config/` (keep your own files in it: overrides in `config/connectors/`, module switches you
    changed), `drishti-console/`, `tools/` and `docs/` (keep your settings files and your local files), then
-   the two pip commands with the new release's wheel pack in case the libraries changed ([DEPLOYMENT_AND_QA_GUIDE.md 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)), then `python3 tools/drishti.py setup`, which only checks.
+   the two pip commands with the new release's wheel pack **into a Python of its own when the pins changed** (never into the one the running release uses: `python tools/drishti.py upgrade check <new release folder>` says which case it is) ([DEPLOYMENT_AND_QA_GUIDE.md 1.6](../DEPLOYMENT_AND_QA_GUIDE.md#16-the-settings-file-and-drishtipy-setup)), then `python3 tools/drishti.py setup`, which only checks.
    **Coming from a release that generated connector files or installed modules into the data folder**, move that state aside first: the
    list and the commands are in [DEPLOYMENT_AND_QA_GUIDE.md › Upgrading an older install](../DEPLOYMENT_AND_QA_GUIDE.md#41-upgrading-an-older-install-start-from-clean-state).
 6. **Start** the server, then the console: servers before consoles, always (a console newer than its server cannot sign anyone in).
 7. **Verify**: `curl -s localhost:18480/actuator/info` shows the new `version`, `curl -s localhost:18480/actuator/health/readiness` shows
    `{"status":"UP"}`, Admin → Health shows `OK`, and a view opens.
+
+**On a production Linux machine** keep the releases side by side and switch one link, so that a rollback is the same switch back with the previous Python
+untouched: [the production deployment guide, section 11](#11-upgrade-and-rollback) (backups before the switch, the check, the acceptance, the rollback, tried once).
 
 With Docker: build the images with the new tag, change the `image:` tags and run `docker compose --env-file deploy/.env -f deploy/docker/compose.yaml up
 -d` (named volumes are kept). **Rollback**: stop, put the old jar (or image tag) back, restore the backup if the new version changed stored data, start.
@@ -3582,7 +3585,7 @@ The whole install on one Linux machine, as root, in order. Each line says what y
 8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
 9. [Check it works](#9-check-it-works)
 10. [Operate: logs, health, backups](#10-operate-logs-health-backups)
-11. [Upgrade](#11-upgrade)
+11. [Upgrade and rollback](#11-upgrade-and-rollback)
 12. [Security checklist](#12-security-checklist)
 13. [Troubleshooting](#13-troubleshooting)
 14. [Command line reference](#command-line-reference)
@@ -3718,8 +3721,8 @@ plugins) go in `/opt/drishti/<release>/drishti/lib/ext`; copy them from the prev
 `setup --settings /etc/drishti/prod.ini` reads and keeps your settings file (never moves it), adds `drishti.python` (the Python it ran with:
 the one both services and the server's compute work use) and writes no developer settings folder or IDE files in the home of whoever runs
 it. `setup --check` changes nothing and only reports (exit 1 when something needs doing). The Python is shared by every release that names
-it, and a release whose pins differ changes it for the others: keep one release per machine, or give each release its own Python (a
-second prefix, or a virtual environment you make yourself) named in that release's `drishti.python`.
+it, and a release whose pins differ changes it for the others: **give each release its own Python** (a second prefix, or a virtual
+environment you make yourself), linked into the release as `python` and named once through `current` ([section 11](#11-upgrade-and-rollback)).
 
 #### 3.1 What setup tells you
 
@@ -4246,44 +4249,195 @@ Lake compaction and the lake build run as their own scheduled units ([OPERATIONS
 value in `secrets.env` on every machine and restart all servers and consoles together; everyone signs in again
 ([OPERATIONS_GUIDE.md › The token secret is a master key](OPERATIONS_GUIDE.md#112-the-token-secret-is-a-master-key)).
 
-### 11. Upgrade
+### 11. Upgrade and rollback
 
-The install folder is replaced, never edited; the settings, the secrets and the data folder are kept. **Run the two pip commands again** with the
-new release's wheel pack (they change only what the new pins need), then `setup` to check.
+An upgrade swaps **one thing**: which release folder `current` points at. Each release has its own folder and its own Python beside the
+others; the site's settings, secrets and data folder are outside every release and are never replaced. Nothing is installed by Drishti and
+nothing is installed into a Python that is running: the new release's libraries go into **another** Python, made and filled by you
+(`setup` and `upgrade check` only check them). A rollback is the same switch the other way, with the previous release and its Python still as
+they were.
 
-```bash
-# 1. read RELEASE_NOTES.md and CHANGELOG.md of the new release; back up (10.3) and note the running release
-# 2. unpack and build the new release beside the old one; its libraries: your pip command with its wheel pack (section 3)
-sudo mkdir -p /opt/drishti/<new> && sudo unzip -q /root/drishti-platform-<new>-source.zip -d /opt/drishti/<new>
-PY=/opt/python3.13/bin/python3.13
-cd /opt/drishti/<new> && sudo $PY build_all.py --skip-tests
-sudo unzip -q /root/drishti-platform-<new>-wheels-linux-x64-py313.zip -d /root/drishti-wheels-<new>
-cd /opt/drishti/<new>/drishti/drishti-console                      # the new pack, unzipped: the two pip commands
-sudo $PY -m pip install --no-index --find-links /root/drishti-wheels-<new> -r requirements.txt
-sudo $PY -m pip install --no-index --find-links /root/drishti-wheels-<new> -r ../config/compute/locks/python.lock
-sudo $PY /opt/drishti/<new>/drishti/tools/drishti.py setup --settings /etc/drishti/prod.ini     # checks: "Drishti is ready."
-sudo chown -R root:root /opt/drishti/<new> && sudo chmod -R go-w /opt/drishti/<new>
-
-# 3. carry over your jars; the site's configuration is /etc/drishti and is not touched (no config diff: the release holds only defaults)
-sudo cp -a /opt/drishti/<old>/drishti/lib/ext/. /opt/drishti/<new>/drishti/lib/ext/
-
-# 4. stop (the console, then the server), switch the release, start (the server, then the console)
-sudo systemctl stop drishti-console drishti-server
-sudo sed -i 's#/opt/drishti/<old>/drishti#/opt/drishti/<new>/drishti#' /etc/drishti/release.env /etc/drishti/prod.ini
-sudo systemctl start drishti-server && curl -s http://127.0.0.1:18480/actuator/health/readiness
-sudo systemctl start drishti-console
+```text
+/opt/drishti/releases/2.9.11/            the release folder: drishti-console/, tools/, lib/, modules/, config/ (read only, root)
+/opt/drishti/releases/2.9.11/python  ->  /opt/drishti/python/2.9.11      the Python of THAT release (a link you make)
+/opt/drishti/releases/2.9.12/  and  .../python -> /opt/drishti/python/2.9.12
+/opt/drishti/current   ->  releases/2.9.12     the running release: the only link an upgrade changes
+/opt/drishti/previous  ->  releases/2.9.11     what a rollback switches back to
+/etc/drishti/prod.ini, release.env, secrets.*   the site's files, outside the releases
 ```
 
-`prod.ini` names the release in `drishti.home` and `drishti.modules.home`: the `sed` changes both (`drishti.python` names the Python, not the release). Then check the
-version in **Admin → Health** (or `/actuator/info` with an administrator's token) and run [section 9](#9-check-it-works).
+A Python whose pins did not change may be the same prefix for two releases (`ln -s` to it from both); when the pins changed it must be another
+prefix, because installing into the first would change the libraries of the console that is running on it, and of the rollback target.
+Retired settings names are not migrated: the new server **refuses to start** and names each key to use instead (section 11.4).
 
-- The database schema is applied again at the start (idempotent, no migrations). Keep the backup of before the upgrade.
+#### 11.1 Once: make the install switchable
+
+Do this in the window of the first upgrade, with both services stopped. `<old>` is the release now running.
+
+```bash
+sudo systemctl stop drishti-console drishti-server
+sudo mkdir -p /opt/drishti/releases /opt/drishti/python
+sudo mv /opt/drishti/<old>/drishti /opt/drishti/releases/<old>                  # the install folder is the release
+sudo ln -s /opt/python3.13 /opt/drishti/python/<old>                            # the Python it runs with, as its own prefix
+sudo ln -s /opt/drishti/python/<old> /opt/drishti/releases/<old>/python
+sudo ln -sfn releases/<old> /opt/drishti/current
+sudo sed -i -e 's#/opt/drishti/<old>/drishti#/opt/drishti/current#g' -e 's#^drishti.python=.*#drishti.python=/opt/drishti/current/python/bin/python3.13#' /etc/drishti/prod.ini
+sudo sed -i 's#/opt/drishti/<old>/drishti#/opt/drishti/current#g' /etc/drishti/release.env
+sudo sed -i 's#/opt/python3.13/bin/python3.13#/opt/drishti/current/python/bin/python3.13#' /etc/systemd/system/drishti-console.service
+sudo systemctl daemon-reload && sudo systemctl start drishti-server drishti-console
+```
+
+`prod.ini` and `release.env` now name `/opt/drishti/current` and never change again.
+
+#### 11.2 Prepare the new release (the old one keeps running)
+
+```bash
+NEW=2.9.12 ; PY=/opt/python3.13/bin/python3.13
+# 1. read RELEASE_NOTES.md and CHANGELOG.md of the new release (retired settings, storage changes); back up (11.3)
+# 2. unpack and build it beside the others (the build is described in section 3), then place the install folder
+sudo mkdir -p /opt/drishti/stage/$NEW && sudo unzip -q /root/drishti-platform-$NEW-source.zip -d /opt/drishti/stage/$NEW
+(cd /opt/drishti/stage/$NEW/* && sudo $PY build_all.py --skip-tests)
+sudo mv /opt/drishti/stage/$NEW/*/drishti /opt/drishti/releases/$NEW
+sudo cp -a /opt/drishti/current/lib/ext/. /opt/drishti/releases/$NEW/lib/ext/          # the site's own jars
+# 3. ask what the new release needs of its Python (read only); pass the Python you intend to use
+sudo $PY /opt/drishti/releases/$NEW/tools/drishti.py --settings /etc/drishti/prod.ini upgrade check /opt/drishti/releases/$NEW
+```
+
+The report says whether the pins changed (the lines `changed: markdown>=3.6  ->  markdown>=3.7` name each) and what to do:
+
+- **Pins unchanged**: the new release may use the running Python: `sudo ln -s /opt/drishti/python/<old> /opt/drishti/python/$NEW`.
+- **Pins changed**: make a Python of your choosing in its own prefix, for example `sudo python3.13 -m venv /opt/drishti/python/$NEW` (or build
+  another prefix from python.org's source, or copy the running one), then run the two pip commands **with that Python** from the new release
+  and its wheel pack, exactly the lines the check prints under `run yourself`:
+
+```bash
+sudo unzip -q /root/drishti-platform-$NEW-wheels-linux-x64-py313.zip -d /root/drishti-wheels-$NEW
+cd /opt/drishti/releases/$NEW/drishti-console
+sudo /opt/drishti/python/$NEW/bin/python3.13 -m pip install --no-index --find-links /root/drishti-wheels-$NEW -r requirements.txt
+sudo /opt/drishti/python/$NEW/bin/python3.13 -m pip install --no-index --find-links /root/drishti-wheels-$NEW -r ../config/compute/locks/python.lock
+```
+
+Then link it into the release, run the check again until it exits 0, and lock the folder:
+
+```bash
+sudo ln -s /opt/drishti/python/$NEW /opt/drishti/releases/$NEW/python
+sudo /opt/drishti/python/$NEW/bin/python3.13 /opt/drishti/releases/$NEW/tools/drishti.py --settings /etc/drishti/prod.ini upgrade check /opt/drishti/releases/$NEW --python /opt/drishti/python/$NEW/bin/python3.13   # exit 0
+sudo chown -R root:root /opt/drishti/releases/$NEW && sudo chmod -R go-w /opt/drishti/releases/$NEW
+```
+
+The check exits 1 (a `[FAIL]`) when the Python named is the running release's while the pins changed, when a library is missing or at the
+wrong version, when the folder is incomplete, or when it is the running release itself. Its `[TODO]` lines are what you confirm: settings keys
+of `prod.ini` the new release's `CONFIGURATION.md` does not list (a retired key refuses the start, 11.4), and modules the new release drops.
+
+#### 11.3 Switch (the maintenance window)
+
+```bash
+NEW=2.9.12 ; OLD=$(basename "$(readlink -f /opt/drishti/current)") ; B=/backup/drishti/pre-$NEW
+PY=/opt/drishti/current/python/bin/python3.13 ; DR="$PY /opt/drishti/current/tools/drishti.py --settings /etc/drishti/prod.ini"   # the RUNNING release's Python and tools
+# 1. drain and stop: the console first, then the server (the stop drains first, section 6.1)
+sudo systemctl stop drishti-console
+sudo -u drishti $DR node drain --server http://127.0.0.1:18480 --wait 240
+sudo systemctl stop drishti-server
+# 2. back up with everything stopped: the site's files, the identity database, the content store (rollback puts them back)
+sudo mkdir -p $B && sudo cp -a /etc/drishti $B/etc-drishti && sudo cp -a /srv/drishti/data/identity /srv/drishti/data/fstore $B/
+#    PostgreSQL identity database instead of data/identity:  sudo -u postgres pg_dump -Fc drishti > $B/identity.dump
+# 3. switch: previous = the running release, current = the new one, each in one atomic rename
+sudo ln -sfn releases/$OLD /opt/drishti/previous
+sudo ln -sfn releases/$NEW /opt/drishti/current.new && sudo mv -T /opt/drishti/current.new /opt/drishti/current
+# 4. start, servers before consoles (after the switch $PY and $DR name the NEW release's Python and tools)
+sudo systemctl start drishti-server && sudo -u drishti $DR node wait-ready --server http://127.0.0.1:18480      # now the NEW release's
+sudo systemctl start drishti-console
+# 5. acceptance: the new version answers and readiness is UP; then a signed-in look at Admin → Health and the checks of section 9
+curl -s http://127.0.0.1:18480/actuator/info | grep -o '"version":"[^"]*"'
+curl -s http://127.0.0.1:18480/actuator/health/readiness
+```
+
+Accepted: the version is the new one, readiness is `UP`, Admin → Health shows `OK` and a view opens ([section 9](#9-check-it-works)). Remove nothing yet: keep the previous release, its Python
+and the backup until the new release has run a business day. The database schema is applied again at the start (idempotent; **there are no
+migrations**), which is why the backup of step 2 is the way back if the new release changed stored data.
+
+#### 11.4 When a retired settings key stops the start
+
+The new server (and the console) refuses to start when a settings name that was retired is still set, and says which key replaces each one:
+
+```text
+the server cannot start: settings names that were retired are still set; rename each one:
+  <old key> (set in /etc/drishti/prod.ini) is retired: use <new key>
+```
+
+Nothing is read from the old name and nothing is migrated. **Fix**: edit `/etc/drishti/prod.ini` (or the file named after "set in") to the
+new key and start again; the backup `$B/etc-drishti` keeps the old file. The previous release does not know the new key: a rollback puts
+the old files back (below). Run `upgrade check` first to see such keys before the window.
+
+#### 11.5 Roll back
+
+Use it when the acceptance fails or the new release must not run. The previous release folder and its Python were not touched, so this is the
+switch in reverse and a start:
+
+```bash
+sudo systemctl stop drishti-console drishti-server
+OLD=$(basename "$(readlink -f /opt/drishti/previous)")
+sudo ln -sfn releases/$OLD /opt/drishti/current.new && sudo mv -T /opt/drishti/current.new /opt/drishti/current       # release AND its Python
+# only when the new release started and took traffic or you edited the site's files: put the backup of 11.3 step 2 back
+sudo rm -rf /etc/drishti.failed && sudo mv /etc/drishti /etc/drishti.failed && sudo cp -a $B/etc-drishti /etc/drishti
+sudo mv /srv/drishti/data/identity /srv/drishti/data/identity.failed && sudo mv /srv/drishti/data/fstore /srv/drishti/data/fstore.failed
+sudo cp -a $B/identity $B/fstore /srv/drishti/data/        # PostgreSQL: sudo -u postgres pg_restore --clean --if-exists -d drishti $B/identity.dump
+sudo systemctl start drishti-server && sudo systemctl start drishti-console
+curl -s http://127.0.0.1:18480/actuator/info | grep -o '"version":"[^"]*"'                  # the old version again
+```
+
+`current` carries both the release and its Python (the `python` link inside the folder), so nothing else is switched; the previous Python was
+never written to. What the old release did meanwhile, the restore removes (changes made after the backup are lost: that is why you stop
+before the backup and accept quickly). If the new release never started with the data (it refused to start, 11.4), the data restore lines are
+not needed. When all is well again, move the failed folders away and keep them for the investigation.
+
+#### 11.6 Tried once
+
+Tried on a scratch machine on 2026-11-28 (a server on port 28480; two release folders; the second changes the pin `markdown>=3.6` to `>=3.7`
+and has its own Python prefix; the scratch folder stands in for `/opt/drishti`; one jar serves both, so the acceptance on the new version was
+rejected on purpose to exercise the rollback). The check first, run with the running Python, then with the new one:
+
+```text
+$ python/2.9.12/bin/python releases/2.9.12/tools/drishti.py --settings etc/prod.ini upgrade check releases/2.9.12 --python current/python/bin/python
+[ OK ] the new release is 2.9.12 at /opt/drishti/releases/2.9.12
+[ OK ] the running release is 2.9.11 at /opt/drishti/releases/2.9.11
+[TODO] the Python pins changed; the new release needs a Python of its own, made and filled by you BEFORE the switch, and the running release's Python must not be touched ...
+[TODO]     changed: markdown>=3.6  ->  markdown>=3.7
+[FAIL] the Python for the new release (/opt/drishti/current/python/bin/python) is the running release's (/opt/drishti/current/python/bin/python): its libraries would change under the running console. ...
+upgrade check: 1 to fix before the switch, 3 to do or confirm
+[exit 1]
+$ ... upgrade check releases/2.9.12 --python python/2.9.12/bin/python
+[ OK ] /opt/drishti/python/2.9.12/bin/python has every library of the new release at the pinned version (requirements.txt, python.lock, the Lake wheel)
+[TODO] drishti.demo.enabled (in prod.ini) is not in the new release's CONFIGURATION.md: if the new release retired it the server REFUSES to start ...
+upgrade check: 0 to fix before the switch, 4 to do or confirm; no switch is blocked
+[exit 0]
+```
+
+Then the switch, the failed acceptance and the rollback (`dr` is `current/python/bin/python current/tools/drishti.py --settings etc/prod.ini`):
+
+```text
+before: current -> releases/2.9.11; python -> /opt/drishti/python/2.9.11
+acceptance: running "version":"2.9.11.i7n", readiness {"status":"UP"}                     ACCEPTED
+$ dr node drain --server http://127.0.0.1:28480 --wait 30      drishti-node: safe to stop        [exit 0]
+$ dr stop server                                               server: stopped (pid 230491)      [exit 0]
+current -> releases/2.9.12; previous -> releases/2.9.11; python -> /opt/drishti/python/2.9.12
+$ dr setup --check        ... [  ok] python /opt/drishti/current/python/bin/python 3.13.15 ... [  ok] libraries ... Drishti is ready.
+$ dr start server --background    Drishti server: drishti-server-2.9.12-exec.jar ... home /opt/drishti/releases/2.9.12 ...
+                                  server: up on http://192.168.2.77:28480                        [exit 0]
+acceptance: running "version":"2.9.11.i7n", readiness {"status":"UP"}, wanted "2.9.12"    REJECTED
+$ dr stop server                                               server: stopped (pid 238323)      [exit 0]
+current -> releases/2.9.11; python -> /opt/drishti/python/2.9.11
+$ dr start server --background    Drishti server: drishti-server-2.9.11-exec.jar ... home /opt/drishti/releases/2.9.11 ...
+                                  server: up on http://192.168.2.77:28480                        [exit 0]
+acceptance: running "version":"2.9.11.i7n", readiness {"status":"UP"}, wanted "2.9.11"    ACCEPTED
+```
+
+The data restore was tried as well (stop, move `identity` and `fstore` aside, copy the backup in, start: readiness `UP`).
+
 - **A cluster upgrades one node at a time**, servers first, consoles last, draining each before its stop: `tools/rolling.py` does it from an
   inventory (`deploy/rolling.example.yaml`; `--dry-run` prints every step). Releases run side by side during the roll
-  ([CLUSTER_GUIDE.md › Rolling upgrades](CLUSTER_GUIDE.md#82-rolling-upgrades)).
-- **Roll back:** stop both, point `release.env` and `prod.ini` at the previous release (its environment is still in its folder), restore the
-  pre-upgrade backup if the new release changed stored data, start.
-- Remove an old release when nothing needs it: `sudo rm -rf /opt/drishti/<old>`.
+  ([CLUSTER_GUIDE.md › Rolling upgrades](CLUSTER_GUIDE.md#82-rolling-upgrades)); on each node the release and its Python are switched as above.
+- Remove an old release when nothing needs it (a business day later): `sudo rm -rf /opt/drishti/releases/<old> /opt/drishti/python/<old>`.
 
 ### 12. Security checklist
 

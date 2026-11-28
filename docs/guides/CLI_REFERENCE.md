@@ -76,6 +76,7 @@ codes and, where it helps scripts, `--json`.
 | `lake` | `build`, `scan`, `status`, `publish`, `demo`, `show`, `check`, `maintain`, `undo`, `memory` | `tools/lake/`; the server jar's writer and parallel loader | [7](#7-lake-a-large-json-export-into-a-delta-lake) |
 | `server`, `admin` | `server health`, `caches`, `packs`, `commands`, `smoke`, `engines`, `blas`; `admin capacity` (also `admin engines`, `admin blas`) | REST `/api/v1/admin/...` (an administrator) | [8](#8-server-health-and-packs) |
 | `doctor` | `drishti.py doctor` | this machine, and with `--server` the server | [8](#doctor-is-this-machine-ready) |
+| `upgrade` | `check <new-release-dir>` | read-only: the new release's folder, Python pins and libraries, site settings keys and modules against the running release | [8](#upgrade-check-before-switching-to-a-new-release) |
 | `connector` | `list`, `get`, `apply`, `delete`, `test`, `plugins`, `enable`, `disable`, `reset`, `history` | REST (Admin → Connectors) | [9](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history) |
 | `net` | `list`, `check`, `add-peer`, `set`, `members` | the `config/net/` folder; REST for `members` | [9](#net-drishtinets-confignet-folder) |
 | `view`, `history`, `convert` | `view get`, `view explain`; `history KIND ID`; `convert FILE` | REST; `tools/convertcmd.py` | [10](#10-view-history-and-convert) |
@@ -273,6 +274,9 @@ positional arguments:
                 (never by name)
     node        node drain|undrain|status|wait-ready: one server's drain
                 before a stop and its readiness (CLUSTER_GUIDE.md 4.6)
+    upgrade     upgrade check <new-release-dir>: read-only; what to do before
+                switching to a new release (Python pins, settings keys,
+                modules)
     launchers   launchers [--check|--machine|--list|--run NAME]: the IDE
                 launchers and IDE_GUIDE section 4 from
                 tools/launch/launchers.yaml; this machine's JVM arguments
@@ -2607,6 +2611,24 @@ credit-limit          LIM-ALDERSHOT             2026-10-02  4       0      9.0  
 16 views, p50 10.2 ms, max 61.4 ms
 smoke: passed
 ```
+
+### `upgrade check`: before switching to a new release
+
+`python3 tools/drishti.py --settings /etc/drishti/prod.ini upgrade check /opt/drishti/releases/<new> --python /opt/drishti/python/<new>/bin/python3.13`
+(run it with the **new** release's tools; `--current <folder>` names the running release when the settings do not; `--json` for a script).
+It reads, and never writes, installs, starts or stops anything:
+
+| Line | Meaning |
+|---|---|
+| the release folder is complete | `drishti-console/requirements.txt`, `config/compute/locks/python.lock`, `lib/lake-wheel.pin`, `tools/`, `modules/` are there |
+| the Python pins | the new release's pins against the running release's: unchanged (one Python may serve both) or changed (the new release needs a Python of its own; the running one is never touched) |
+| `[FAIL]` the Python is the running release's | the new pins would change libraries under the running console: make another prefix |
+| `[FAIL]` a library is missing or at the wrong version | the pip commands are printed for you to run; Drishti never runs them |
+| site settings keys | a key of your settings files that the new release's `CONFIGURATION.md` does not list: if the release retired it, the server refuses to start and names the replacement; fix it before the switch |
+| modules | modules the new release lacks (switch them off first) or adds (off until you switch them on) |
+
+Exit 0: nothing blocks the switch (the `[TODO]` lines are confirmations); 1: at least one `[FAIL]`. The whole procedure:
+[OPERATIONS_GUIDE.md, Upgrades and rollback](OPERATIONS_GUIDE.md#18-upgrades-and-rollback).
 
 ### `doctor`: is this machine ready
 

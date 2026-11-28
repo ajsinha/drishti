@@ -1,2 +1,3 @@
 # Lane leftovers merge log (documentation content pass, i7n): items deliberately not carried over.
 # <old path> | <heading or first line of the block> | <the place that already says it>
+docs/PRODUCTION_DEPLOYMENT.md | # 1. read RELEASE_NOTES.md and CHANGELOG.md of the new release; back up (10.3) and note the running release | replaced by the side-by-side upgrade of OPERATIONS_GUIDE section 11 (the old block ran pip into the running release's shared Python before the stop, audit B5)

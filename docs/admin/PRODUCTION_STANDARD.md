@@ -125,3 +125,14 @@ asymmetric token signing and TLS between hosts are later sections of the standar
 switches), `SiteFolderGuardTest` (writers ask the guard; no class writes what it reads from the release), console `test_site_config.py`
 (the console's file). By hand: `chmod -R a-w` the release, start both services with a separate `drishti.site.dir`, change a module switch, a
 connector override and a setting in Admin, restart, and `find <release> -newer <marker>` is empty.
+
+## 3. Upgrades
+
+| Rule | How it is met | Enforced by |
+|---|---|---|
+| An upgrade swaps one release; the site's files and data are outside it | releases side by side (`/opt/drishti/releases/<version>`), one `current` link, settings in `/etc/drishti`, data in the data folder | [OPERATIONS_GUIDE, section 11](../guides/OPERATIONS_GUIDE.md#11-upgrade-and-rollback) |
+| The Python libraries of a running release are never changed | each release has its own Python prefix (`<release>/python`); when the pins did not change two releases may share one prefix | `drishti.py upgrade check <new-release-dir>` fails the run that would install into the running one |
+| Drishti never creates an environment and never installs a library | the operator makes the Python and runs pip; `setup` and `upgrade check` only check and print the command | `tools/test_no_venv.py`, `tools/test_upgradecheck.py` |
+| A rollback needs nothing that the upgrade removed | the previous release folder and its Python stay until the new release has run a business day; the site's files, the identity database and the content store are copied before the switch | the rollback of section 11.5, tried on a scratch machine |
+| No migrations | a retired settings name refuses the start and names its replacement; stored data is only read by the release that wrote it or restored from the backup | section 11.4 |
+| The check is read-only | it writes, installs, starts and stops nothing and reads no secret value | `tools/test_upgradecheck.py` |

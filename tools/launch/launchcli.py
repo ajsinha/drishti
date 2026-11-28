@@ -353,6 +353,18 @@ def register(groups, add) -> None:
     lg.add_argument("--input", metavar="VALUE", help="with --run: the value a launcher asks for in the IDE (for example the file to load)")
     lg.set_defaults(func=lambda a, extra: __import__("launchers").main(a), cmd=None)
 
+    up = groups.add_parser("upgrade", help="upgrade check <new-release-dir>: read-only; what to do before switching to a new release (Python pins, settings keys, modules)",
+                           formatter_class=RAW, description=__import__("upgradecheck").__doc__,
+                           epilog=f"examples:\n  {P} --settings /etc/drishti/prod.ini upgrade check /opt/drishti/releases/2.9.12 --python /opt/drishti/python/2.9.12/bin/python3.13\n"
+                                  f"  {P} upgrade check /opt/drishti/releases/2.9.12 --current /opt/drishti/current --json")
+    ups = up.add_subparsers(dest="cmd", metavar="COMMAND", required=True)
+    uc = ups.add_parser("check", help="check <new-release-dir>: compare the new release with the running one; change nothing (exit 1: something blocks the switch)", formatter_class=RAW)
+    uc.add_argument("new_release", metavar="NEW_RELEASE_DIR", help="the new release's folder (the one holding drishti-console/ and tools/, or its parent holding drishti/)")
+    uc.add_argument("--current", metavar="DIR", help="the running release (default drishti.home of --settings, else DRISHTI_HOME)")
+    uc.add_argument("--python", metavar="PY", help="the Python made for the new release (default drishti.python of --settings); it is only asked what it has installed")
+    uc.add_argument("--json", action="store_true", help="the report as JSON")
+    uc.set_defaults(func=lambda a, extra: _run(__import__("upgradecheck").main, a))
+
     st = groups.add_parser("status", help="status: the resolved home, data, modules and java; then every process started with drishti.py start",
                            formatter_class=RAW, epilog=f"examples:\n  {P} status\n  {P} status --cluster deploy/stack/stack.yaml\n"
                            "Exit codes: 0 every process found runs and answers (or none was started); 1 one is not running or not answering.")
