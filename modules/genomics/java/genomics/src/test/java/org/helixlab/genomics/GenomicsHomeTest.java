@@ -65,7 +65,7 @@ class GenomicsHomeTest {
         });
         GenomicsHome h = new GenomicsHome(data, showcase);
         h.attach((kind, sink) -> {
-            if (feeds && kind.equals("clinvar-variant")) {
+            if (feeds && kind.equals(GenomicsHome.CLINVAR)) {
                 clinvar.forEach(sink);
                 return true;
             }

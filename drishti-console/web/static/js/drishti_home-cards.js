@@ -23,7 +23,7 @@
   if (!root) { return; }
   var D = (g.Drishti = g.Drishti || {});
   var host = root.querySelector('[data-home-cards-view]');
-  var data = JSON.parse(document.getElementById('home-cards-data').textContent);
+  var data = JSON.parse(document.getElementById('home-cards-data').getAttribute('data-home'));
   var handle = null;
 
   function csrf() {

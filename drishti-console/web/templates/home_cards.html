@@ -20,7 +20,7 @@
 <section class="home-cards" data-home-cards data-layout="{{ layout }}" aria-label="Your Home">
   <div class="home-viewas" data-home-viewas hidden><span class="home-viewas-label" id="home-viewas-label">View as</span><div data-home-viewas-group></div></div>
   <div data-home-cards-view></div>
-  <script type="application/json" id="home-cards-data">{{ home | tojson }}</script>
+  <div id="home-cards-data" data-home="{{ home | tojson | forceescape }}" hidden></div>
 </section>
 {% endblock %}
 {% block scripts %}<script src="{{ BASE }}/static/js/drishti_home-cards.js?v={{ ASSET_V }}" defer></script>{% endblock %}
