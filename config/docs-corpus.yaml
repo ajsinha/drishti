@@ -36,6 +36,8 @@ files:
   - {path: 'config/connectors.examples/redis/README.md', class: generate, lane: C, tool: 'tools/connector_readmes.py'}
   - {path: 'config/connectors.examples/s3tables/README.md', class: generate, lane: C, tool: 'tools/connector_readmes.py'}
   - {path: 'config/feeds/central-banks.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/clinvar.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
+  - {path: 'config/feeds/ensembl.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
   - {path: 'config/feeds/funds.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
   - {path: 'config/feeds/gdelt-events.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
   - {path: 'config/feeds/gleif.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
