@@ -50,6 +50,7 @@ final class VarCurrencies {
 
     /** A reporting currency as asked ({@code ccy=eur}): an ISO code in upper case; none is USD. */
     /** The installation's reporting currency ({@code drishti.module.banking.var.reporting-currency}, USD as shipped): set once at start. */
+    @com.ash.drishti.kernel.api.module.EngineWide("the installation's reporting currency: one setting for the whole server, set once at start, never a person's")
     private static volatile String reporting = VarDate.USD;
 
     /** The setting {@link #normalise} answers a request naming no currency in (VarConfiguration, at start; a bad code refuses the start). */
