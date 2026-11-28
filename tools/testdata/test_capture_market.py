@@ -138,13 +138,13 @@ class CaptureMarketTest(unittest.TestCase):
         news = [json.loads(x) for x in gzip.decompress(next((self.td / CM.PACK / "news").glob("news.*.jsonl.gz")).read_bytes()).decode().splitlines()]
         self.assertEqual([n["NEWS_ID"] for n in news], sorted(["NEWS-Aaa", "NEWS-Aaa~all", "NEWS-Bbb", "NEWS-X@de-DE", "NEWS-X@de-DE~all", "NEWS-Extra"]))
         self.assertTrue(all("(snapshot captured " in n["FETCHED_AT"] and "Google News" in n["SNAPSHOT"] for n in news))
-        # the manifest: the header kept, the sample dataset kept, the old quote entry replaced by the two captured datasets
+        # the manifest: the header kept, the lists kept, the old quote entry replaced by the two captured datasets
         import yaml
         text = (self.td / "testdata.yaml").read_text(encoding="utf-8")
         self.assertTrue(text.startswith("# the header\n# stays\n"))
         ds = yaml.safe_load(text)["datasets"]
-        self.assertEqual([d["kind"] for d in ds], ["news-topic", "quote", "news"])
-        quote = ds[1]
+        self.assertEqual([d["kind"] for d in ds], ["listed-company", "news-topic", "quote", "news"])
+        quote = ds[2]
         self.assertEqual((quote["folder"], quote["connector"], quote["key"], quote["documents"]), ("news-and-markets/quote", "news-store", "QUOTE_ID", 2))
         self.assertEqual(quote["files"], [quote_files[0].name])
         self.assertTrue(quote["captured"].endswith("Z") and "Yahoo Finance" in quote["source"])

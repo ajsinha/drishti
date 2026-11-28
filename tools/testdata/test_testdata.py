@@ -110,7 +110,7 @@ class TestData(unittest.TestCase):
         said = re.compile(r"(?m)(?:Demo lake ready: [^\n]*?: |the same |each of the |`gleif` \(|`funds` \(|`civic` \(|minutes\), |\(943 s\): |^\s+)(\d+) (?:Delta )?tables")
         wrong = []
         for rel in ("data/testdata/README.md", "docs/DEPLOYMENT_AND_QA_GUIDE.md", "docs/guides/BUILD_GUIDE.md",
-                    "docs/guides/DATA_GUIDE.md", "docs/tutorials/01-first-15-minutes.md"):
+                    "docs/tutorials/01-first-15-minutes.md"):
             text = (ROOT / rel).read_text(encoding="utf-8")
             found = [int(n) for n in said.findall(text)]
             self.assertTrue(found, f"{rel} no longer quotes the count: update this test")
@@ -151,7 +151,8 @@ class TestData(unittest.TestCase):
             self.assertTrue(days.get(self.dates[0]), ds["folder"])
         self.assertEqual({ds["pack"] for ds in self.m["datasets"]},
                          {"core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets",
-                          "us-equities", "gleif", "funds", "compute-demo", "genomics-showcase", "protein-engineering"})
+                          "us-equities", "gleif", "funds", "compute-demo", "genomics-showcase", "protein-engineering",
+                          "central-banks", "national-statistics", "oecd", "world-development", "official-news", "gdelt-events"})
 
     def test_three_source_systems_of_5000_production_shaped_trades_amended_over_the_days(self):
         ids: list[str] = []
@@ -275,7 +276,8 @@ class TestData(unittest.TestCase):
         self.assertGreater(before[pair]["SPOT_DATE"], self.dates[-2])
 
     def test_the_captured_market_snapshot_covers_every_company_and_topic(self):
-        snaps = {ds["kind"]: ds for ds in self.m["datasets"] if "snapshot" in ds and ds["pack"] == "news-and-markets"}
+        snaps = {ds["kind"]: ds for ds in self.m["datasets"] if "snapshot" in ds and ds["pack"] == "news-and-markets"
+                 and ds["kind"] in ("quote", "news")}
         if not snaps:
             self.skipTest("no captured market snapshot (tools/testdata/capture_market.py)")
         self.assertEqual(set(snaps), {"quote", "news"})

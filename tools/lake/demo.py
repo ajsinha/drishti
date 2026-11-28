@@ -837,8 +837,9 @@ class DemoLake:
         for name, (pack, template) in sorted(self.packs.delta_connectors(packs).items()):
             f = folder / f"{name}.yaml"
             want = DEFAULT_ROOT if default else str(self.lake)
-            if ((template.get("settings") or {}).get("lake") or self.lake_name) not in (self.lake_name, "demo"):
-                notes.append(f"{name}: reads its own lake ({template['settings']['lake']}), left as it is")   # worldlake, newslake: datasets with lake:
+            own = (template.get("settings") or {}).get("root") or ""          # the template's lake as the tools read it: a lake's name, or the demo root
+            if own and "$" not in own and "/" not in own and own != self.lake_name:
+                notes.append(f"{name}: reads its own lake ({own}), left as it is")   # worldlake, newslake: the datasets with lake: are written there
                 continue
             if (template.get("settings") or {}).get("domain") == "risk-results":
                 notes.append(self.results_reader(name, f))

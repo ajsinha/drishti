@@ -82,7 +82,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), and so do the dates a market document holds a fixed
    number of business days from its date (an FX spot's value date `SPOT_DATE`, T+2; an IR curve's pillar `POINTS[].MATURITY`), so a price history has no missing days between the series
    and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`), and the fields quoted next to the price move with it ([below](#the-datasets)). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
-   103 tables, about 3.4 GB on disk (the public packs' tables are built from their committed snapshots: [below](#public-data-every-public-packs-snapshot-one-table); since 2.9.2 the
+   113 tables, about 3.4 GB on disk (the public packs' tables are built from their committed snapshots: [below](#public-data-every-public-packs-snapshot-one-table); since 2.9.2 the
    country groups, SIC sectors, ownership groups and LEI countries are computed from them, not stored).
 4. **Start** the server and the console: the run configurations **Drishti: run server (demo)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
