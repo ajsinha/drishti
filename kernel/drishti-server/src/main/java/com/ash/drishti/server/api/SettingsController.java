@@ -126,6 +126,7 @@ public class SettingsController {
                     next.put("searchLimit", v.asInt());
                 }
                 case "pinned" -> next.set("pinned", pins(v));
+                case "homeCards" -> next.set("homeCards", homeCards(v));
                 case "savedSearches" -> next.set("savedSearches", savedSearches(v));
                 case "notify" -> next.set("notify", notify(v, next.path("notify")));
                 case "refresh" -> next.set("refresh", refresh(v, next.path("refresh")));
@@ -267,6 +268,66 @@ public class SettingsController {
                 out.addObject().put("name", name).put("path", path);
             }
         }
+        return out;
+    }
+
+    private static final Pattern CARD = Pattern.compile("^[a-z0-9][a-z0-9._-]{0,63}$");
+    static final int MAX_CARDS = 60;
+
+    /**
+     * The person's own arrangement of their role Home (the console's {@code /home}): {@code {pins: [card], hidden: [card], order: [card],
+     * snooze: {key: ISO instant}, lastVisit: ISO instant}}, every part optional and the whole replaced by a patch. Card ids are lower-case
+     * words; a card the person's modules do not offer is simply never drawn, so nothing here can widen what they may see.
+     */
+    private ObjectNode homeCards(JsonNode v) {
+        if (!v.isObject()) {
+            throw bad("homeCards is {pins, hidden, order, snooze, lastVisit}");
+        }
+        ObjectNode out = json.createObjectNode();
+        v.fields().forEachRemaining(e -> {
+            JsonNode x = e.getValue();
+            switch (e.getKey()) {
+                case "pins", "hidden", "order" -> {
+                    if (!x.isArray() || x.size() > MAX_CARDS) {
+                        throw bad("homeCards." + e.getKey() + " is a list of at most " + MAX_CARDS + " card ids");
+                    }
+                    ArrayNode ids = out.putArray(e.getKey());
+                    Set<String> seen = new HashSet<>();
+                    for (JsonNode id : x) {
+                        if (!id.isTextual() || !CARD.matcher(id.asText()).matches()) {
+                            throw bad("homeCards." + e.getKey() + ": '" + id.asText() + "' is not a card id");
+                        }
+                        if (seen.add(id.asText())) {
+                            ids.add(id.asText());
+                        }
+                    }
+                }
+                case "snooze" -> {
+                    if (!x.isObject() || x.size() > 2 * MAX_CARDS) {
+                        throw bad("homeCards.snooze is an object of card or item keys to the time they wake");
+                    }
+                    ObjectNode snooze = out.putObject("snooze");
+                    x.fields().forEachRemaining(s -> {
+                        if (!s.getKey().matches("^[A-Za-z0-9._:/ #@-]{1,120}$") || !s.getValue().isTextual()) {
+                            throw bad("homeCards.snooze: '" + s.getKey() + "' needs a time");
+                        }
+                        try {
+                            snooze.put(s.getKey(), java.time.Instant.parse(s.getValue().asText()).toString());
+                        } catch (DateTimeException ex) {
+                            throw bad("homeCards.snooze: '" + s.getKey() + "' is not a time (ISO 8601, UTC)");
+                        }
+                    });
+                }
+                case "lastVisit" -> {
+                    try {
+                        out.put("lastVisit", java.time.Instant.parse(x.asText()).toString());
+                    } catch (DateTimeException ex) {
+                        throw bad("homeCards.lastVisit is a time (ISO 8601, UTC)");
+                    }
+                }
+                default -> throw bad("homeCards has pins, hidden, order, snooze and lastVisit, not '" + e.getKey() + "'");
+            }
+        });
         return out;
     }
 

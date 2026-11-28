@@ -32,12 +32,12 @@
   var pick = root.querySelector('[data-role-home-pick]');
   if (pick) {
     pick.addEventListener('change', function () {
-      fetch('/api/home/me', {
+      fetch(drishti_url('/api/home/me'), {
         method: 'PUT', credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf() },
         body: JSON.stringify({ home: pick.value })
       }).then(function (r) {
-        if (r.ok) { g.location.href = '/home/role/' + encodeURIComponent(pick.value); }
+        if (r.ok) { g.location.href = drishti_url('/home/role/' + encodeURIComponent(pick.value)); }
       });
     });
   }
@@ -57,7 +57,7 @@
     var d = e.detail || {};
     var cmd = d.payload && d.payload.command;
     if (/^(open[0-7]?|open)$/.test(d.name || '') && typeof cmd === 'string' && cmd.trim()) {
-      g.location.href = '/go?q=' + encodeURIComponent(cmd.trim());
+      g.location.href = drishti_url('/go?q=' + encodeURIComponent(cmd.trim()));
     }
   });
 

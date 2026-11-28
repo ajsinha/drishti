@@ -169,3 +169,19 @@ console page `/home/role`, a test per role and a browser walk of both Homes, and
 | The role definition's `home` field | `RoleDefinition` has no such field; `drishti.homes.roles` carries the mapping until the role store changes |
 | Contracts `docs/contracts/HOME.md` for the `home/*` tables | to write with the first run |
 | Build, run the tests, regenerate the fragment goldens and hashes | owner: builds later |
+
+## 6. Your Home: the cards every person lands on
+
+`/home` (drishti-console `routes/home_cards_routes.py`, `core/home_cards.py`) is where everyone lands after signing in. It does not replace the
+Home Sutras above; it reads the **same home tables** (`GET /api/v1/homes/<home>/tables/<table>`, for the person) and shows them as ranked cards.
+
+| Piece | What |
+|---|---|
+| Cards | declared by modules (console `plugin.yaml`, `home: role-cards:`) and by the console (`drishti-console/config/home-cards.yaml`): `id`, `kind` (`metric`, `bars`, `table`), `table`, `pick`, `rank` per role Home, `open`, `explain` |
+| Layout | Calm; Cockpit for the Homes named in `layouts:` (risk-manager, risk-officer); phone: stacked, Needs you first |
+| Needs you | raised alerts, the approvals inbox, late/missing/failed loads (`home_loads`), the high rows of `home_exceptions`; absent from the document when empty |
+| The document | a ViewModel (contract 1.2: panels, `layout.areas` and `place`, `phone`, panel `actions`) drawn by drishti-views; button effects (`host`) come back to the page: pin, unpin, hide, show, up, down, snooze, reset, explain, open |
+| Per person | the person's setting `homeCards` `{pins, hidden, order, snooze, lastVisit}` (`PATCH /api/v1/me/settings`), validated by the server; nothing per person is held in the console |
+
+Increment 2: the genomics module's cards and a digest keyed to the person's own last visit (today it is the Home's reference cut-off).
+

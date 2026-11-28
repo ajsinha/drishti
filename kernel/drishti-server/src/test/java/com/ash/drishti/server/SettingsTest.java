@@ -60,6 +60,23 @@ class SettingsTest {
         patchAs(cy, "{\"refresh\":{\"trade/x\":{\"all\":\"yes\"}}}").andExpect(status().isBadRequest());
     }
 
+    /** A person's own arrangement of their role Home: kept per person, replaced whole by a patch, checked, never another person's. */
+    @Test
+    void theRoleHomeArrangementIsPerPersonAndChecked() throws Exception {
+        String ana = "ana-" + System.nanoTime();
+        String bea = "bea-" + System.nanoTime();
+        patchAs(ana, "{\"homeCards\":{\"pins\":[\"var\",\"var\",\"limits\"],\"hidden\":[\"news\"],\"order\":[\"es\",\"var\"],"
+                + "\"snooze\":{\"load:EQ\":\"2026-11-28T09:00:00Z\"},\"lastVisit\":\"2026-11-27T20:00:00Z\"}}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.homeCards.pins", hasSize(2))).andExpect(jsonPath("$.homeCards.hidden[0]").value("news"))
+                .andExpect(jsonPath("$.homeCards.snooze['load:EQ']").value("2026-11-28T09:00:00Z"));
+        mvc.perform(get("/api/v1/me/settings").header("Authorization", "Bearer " + tokens.mint(bea, List.of("viewer"), 60)))
+                .andExpect(jsonPath("$.homeCards").isEmpty());
+        patchAs(ana, "{\"homeCards\":{\"pins\":[\"Not A Card\"]}}").andExpect(status().isBadRequest());
+        patchAs(ana, "{\"homeCards\":{\"snooze\":{\"x\":\"tomorrow\"}}}").andExpect(status().isBadRequest());
+        patchAs(ana, "{\"homeCards\":{\"colour\":[]}}").andExpect(status().isBadRequest());
+        patchAs(ana, "{\"homeCards\":null}").andExpect(jsonPath("$.homeCards").isEmpty());
+    }
+
     /** The lens and the edition landing a person chose (LENSES.md 8) are kept and read back, as the console needs them. */
     @Test
     void theLensAndTheChosenLandingAreReadBack() throws Exception {

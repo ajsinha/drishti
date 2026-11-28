@@ -24,6 +24,7 @@ home: risk-manager
 reference: { cut-off: "17:00", zone: site, day: previous-business-day }   # yesterday 17:00 in the site's time zone, as the plan's cut-off
 kpis:
   - { label: Firm VaR,        engine: var,      measure: VAR,      args: { level: 0.99, horizon: 1, scope: firm },  fmt: compact, history: 30, open: "VAR BANK" }
+  - { label: Expected shortfall, engine: var,  measure: ES,       args: { level: 0.975, horizon: 1, scope: firm },  fmt: compact, history: 30, open: "VAR BANK" }
   - { label: Day P&L,         engine: var,      measure: PNL_DAY,  args: { scope: firm },                          fmt: compact, history: 30, open: "VHIST BANK" }
   - { label: Limit use,       engine: var,      measure: LIM_USE,  args: { scope: firm },                          fmt: pct0,    history: 30 }
   - { label: Exposure (PFE),  engine: exposure, measure: PFE,      args: { scope: firm, quantile: 0.95 },          fmt: compact, history: 30, open: "EXP BANK" }

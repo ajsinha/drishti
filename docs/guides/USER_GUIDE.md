@@ -57,6 +57,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Share a view with a note](#share-a-view-with-a-note), [Your inbox](#your-inbox) | Send a view to colleagues; what they sent you |
 | [Monitors](#monitors), [Alerts](#alerts), [Workspaces](#workspaces) | Watching many entities at once |
 | [Approvals](#approvals) | Everything waiting for your four eyes, in one queue |
+| [Your Home](#your-home) | The page you land on after signing in: Needs you, your role's cards, pin, hide and move them |
 | [Your settings](#your-settings), [Themes](#themes), [Domain packs](#domain-packs-choosing-what-you-see) | Making the console yours |
 | [The workbench](#the-workbench-changing-how-a-screen-looks) | Changing how a screen looks |
 | [Administration](ADMIN_GUIDE.md#29-the-admin-pages-at-a-glance) | Users, roles, packs, audit, health, caches, capacity |
@@ -89,6 +90,38 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Admin | `/admin/users`, `/admin/roles`, `/admin/audit`, `/admin/packs`, `/admin/connectors`, `/admin/artifacts`, `/admin/loads`, `/admin/lakes`, `/admin/collab`, `/admin/embedding`, `/admin/net`, `/admin/health`, `/admin/caches` (and `/admin/ai`, `/admin/bi`, `/admin/tokens`, `/admin/access` where those features are on) | Users, roles, audit log, packs, connectors, installed artifacts, data loads, lakes (Delta, the default; Iceberg tables where configured: a **Format** column, and Iceberg maintenance with orphan-file removal, [OPERATIONS_GUIDE.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](OPERATIONS_GUIDE.md#163-iceberg-lakes)), collaboration moderation, embedding, Drishti\*net, health and caches (admins only) |
 | Help | `/help` | Tutorials, guides and every reference |
 | About | `/about` | The product page: features, measured performance, competitive analysis, technology, licence (system details for admins: `/admin/health`) |
+
+## Your Home
+
+After you sign in you land on **Your Home**, the page made for your role (`/home`); the functions list stays in the menu and in the command
+line (`Ctrl+K` / `⌘K`). Your Home is a set of cards drawn from the figures the server already holds for you, so what you see follows your
+roles and, like every table, your row rules and masks.
+
+**What is on it**
+
+- **A greeting and one line of freshness:** the business date and whether every daily load is in. A small amber mark means a daily load is late or failed.
+- **Needs you:** alerts raised for you, approvals waiting in your inbox, late or failed data loads and the high exceptions of your Home. When
+  nothing needs you the strip is not on the page at all. **Snooze for 4 hours** puts what it lists to sleep (it comes back when the time is up).
+- **Your cards,** best first for your role. A risk manager sees firm VaR, expected shortfall, the backtest light, limit utilisation by desk and
+  the biggest movers; a credit officer starts with exposure against limits; a trader with their desk's VaR. Every role also gets **Data loads**,
+  **Pinned** (the entities you pinned) and **Recently used**. If you hold several roles you see the cards of all of them, ranked together.
+- **Since yesterday 17:00:** what moved since the Home's reference cut-off, from the same change detection the Home Sutras use.
+
+**Two layouts.** Most roles get the calm layout: two cards across, room to read. Risk-manager roles get the cockpit: the same cards, denser,
+the figures in one row first. On a phone the cards stack and Needs you comes first.
+
+**Make it yours.** Each card has its own buttons in its header:
+
+| Button | Does |
+|---|---|
+| **Explain** | opens the one Explain in a side panel: formula, inputs, why it moved |
+| **Open** | runs the card's command (for example `VAR BANK`) |
+| **Pin** / **Unpin** | keeps the card at the top, in the order you pinned (up to 8) |
+| **Up**, **Down** | moves the card in your order |
+| **Hide** | takes the card off your Home; **Show …** in the **Your Home** card at the bottom brings it back, **Reset my Home** puts your role's order back |
+
+What you pin, hide, move or snooze is **your own setting** on the server (`homeCards`), so it follows you to every browser and is never seen
+by anyone else. Light and dark follow your theme.
 
 ## Home: the fact of the day
 
