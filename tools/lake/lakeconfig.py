@@ -142,6 +142,12 @@ def default_root(name: str, data: pathlib.Path | None = None, fmt: str = "delta"
     return lakes_parent(data, fmt) / name
 
 
+def locate(root, domain: str, table: str) -> str:
+    """Where a table is when the lake's layout puts it: ``<root>/<domain>/<table>``. The one join of the Python tools (the Java side's is
+    TableCatalogue.join); a table a lake file gives its own ``uri:`` is found by ``table()['location']`` instead."""
+    return "/".join(p for p in (str(root).rstrip("/"), str(domain).strip("/"), str(table).strip("/")) if p)
+
+
 def root(name: str = "demo", folder: pathlib.Path | None = None) -> str:
     """Lake ``name``'s root as its lake file says, read by the one reader (a folder, s3://bucket/prefix or mem://store); a relative folder is
     this checkout's. Without Java to read the lake files, the documented default (default_root)."""

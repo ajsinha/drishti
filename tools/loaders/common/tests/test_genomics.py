@@ -104,8 +104,10 @@ def test_the_feed_files_are_valid_and_carry_their_licence(name):
 def test_the_lake_file_lists_the_four_kinds():
     import yaml
     doc = yaml.safe_load((FB.ROOT / "config" / "lakes" / "genomicslake.yaml").read_text(encoding="utf-8"))
-    assert set(doc["tables"]) == {f"genomics.{k}" for k in G.KINDS}
+    # the four kinds, and the two feeds' own tables (the module's Home reads them by these names), each of a kind the contracts know
+    assert set(doc["tables"]) == {f"genomics.{k}" for k in G.KINDS} | {"genomics.clinvar-variant", "genomics.ensembl-gene"}
     assert {t["id"] for t in doc["tables"].values()} == {G.contract(k)["key"] for k in G.KINDS}
+    assert doc["tables"]["genomics.clinvar-variant"]["kind"] == "variant" and doc["tables"]["genomics.ensembl-gene"]["kind"] == "gene"
 
 
 # ---- clinvar
@@ -113,7 +115,7 @@ def test_the_lake_file_lists_the_four_kinds():
 def test_the_clinvar_feed_writes_variant_rows_in_the_contract(data):
     rc, entry, logs, op = feed("clinvar", genes="BRCA1")
     assert rc == 0, logs
-    got = {r["CLINVAR_ID"]: r for r in rows(data, "clinvar", "variant")}
+    got = {r["CLINVAR_ID"]: r for r in rows(data, "clinvar", "clinvar-variant")}
     assert len(got) == 3 and all("api_key" not in u for u in op.urls)
     r = got["VCV005042465"]
     assert (r["CHROM"], r["POS"], r["REF"], r["ALT"]) == ("17", 43094820, "TT", "T")           # SPDI is 0-based: position + 1
@@ -147,7 +149,7 @@ def test_a_clinvar_dry_run_names_the_requests_and_writes_nothing(data):
 def test_the_ensembl_feed_writes_a_gene_row(data):
     rc, entry, logs, op = feed("ensembl", genes="TP53")
     assert rc == 0, logs
-    (g,) = rows(data, "ensembl", "gene")
+    (g,) = rows(data, "ensembl", "ensembl-gene")
     assert (g["GENE"], g["CHROM"], g["START"], g["STRAND"], g["PROTEIN_LENGTH"]) == ("TP53", "17", 7661779, "-", 393)
     assert g["ENSEMBL_ID"] == "ENSG00000141510" and "Source:" not in g["DESCRIPTION"] and g["DOMAINS"] == []
 

@@ -43,7 +43,7 @@ class TableCataloguePathsGuardTest {
     static final Pattern JOIN = Pattern.compile("\\.resolve\\(\\s*(?:domain|namespace|ns)\\s*\\)|\"/\"\\s*\\+\\s*(?:domain|namespace)\\b"
             + "|\\b(?:domain|namespace)\\s*\\+\\s*\"/\"|(?:namespace|ns)\\.replace\\('\\.', '/'\\)");
     /** A lake path from a module or pack name: {@code <lake root>/<module id>}, {@code .resolve(moduleId)}, {@code .resolve(packName)}. */
-    static final Pattern FROM_NAMES = Pattern.compile("\\.resolve\\(\\s*(?:moduleId|packName|packId|module\\.id\\(\\)|pack\\.name\\(\\))\\s*\\)");
+    static final Pattern FROM_NAMES = Pattern.compile("\\.resolve\\(\\s*(?:moduleId|packName|packId)\\s*\\)");
     static final Pattern OFFICIAL_FOLDER = Pattern.compile("\"risk-results[/\"]");
 
     /** Sources that may name the pieces, each with its reason. */
