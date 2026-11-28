@@ -632,6 +632,7 @@ public class VarEnginePath {
         java.util.Set<String> kept = largestPositions(p, res, date, currency, total);
         if (kept != null) {                                             // the rows are the largest max-parts; the sums are over all (as in-tree)
             rows.removeIf(r -> !kept.contains(String.valueOf(r.get("key"))));
+            comp = parts.var();                                         // in-tree: the scope's own component (the parts partition it), its VaR
         }
         rows.sort(java.util.Comparator.comparingDouble(r -> -((Number) r.get("componentVar")).doubleValue()));
         out.put("sumStandalone", VarViews.round(standalone));
@@ -1163,7 +1164,9 @@ public class VarEnginePath {
             all.addAll(r);
             all.add(-1);
         }
-        params.put("parts", all);
+        if (!hp.parts().isEmpty()) {
+            params.put("parts", all);                                   // scope-var alone takes no parts
+        }
         List<String> outputs = hp.parts().isEmpty() ? List.of("scope-var") : List.of("scope-var", "scope-contributions");
         Map<String, Object> a = ask(p, outputs, params, Map.of("date", date.toString()));
         List<Map<String, Object>> sv = rows(a, "scope-var");
