@@ -19,7 +19,7 @@ lake with sign-in off and its own copy of config/ (the rules are written to that
     DRISHTI_T36_WORK=<the server's working folder> DRISHTI_SHOTS_SERVER_PORT=<port> DRISHTI_SHOTS_CONSOLE_PORT=<port> \\
         python3 tools/docs/screenshots.py --guide t36
 
-Every command's output is printed (the tutorial quotes it). Every rule writes to the scratch lake ./data/tutorial-36/delta under the
+Every command's output is printed (the tutorial quotes it). Every rule writes to the scratch lake ./data/tutorial-14/delta under the
 working folder, never to the demo lake. Run the pictures all together and once: each step moves files on."""
 from __future__ import annotations
 
@@ -43,14 +43,14 @@ RULE_1 = """dataload:
       kind: trade
       connector: trade-endur               # the table that connector reads (trading/trade_endur)
       date-from: name                      # the YYYY-MM-DD in the name is every row's business date
-      lake: ./data/tutorial-36/delta       # tutorial only: a lake of its own
+      lake: ./data/tutorial-14/delta       # tutorial only: a lake of its own
 """
 RULE_2 = """    - match: "endur.*.jsonl.gz"
       pack: trading
       kind: trade
       connector: trade-endur
       date-from: name
-      lake: ./data/tutorial-36/delta
+      lake: ./data/tutorial-14/delta
 """
 
 

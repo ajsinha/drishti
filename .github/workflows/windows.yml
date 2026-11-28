@@ -29,7 +29,7 @@ jobs:
       DRISHTI_PORT: '18480'
       TOOLS_TAG: v1.1.0-ide2          # the products are built from their release tags, never fetched from Maven Central (see fast.yml)
       RACHANA_TAG: v1.0.1-ide2
-      LAKE_TAG: v0.9.1-ide2
+      LAKE_TAG: i8/catalogue          # the pom wants lake 0.9.2, not tagged yet: its branch until then (set to the tag when it is cut)
     defaults:
       run: { shell: pwsh }
     steps:

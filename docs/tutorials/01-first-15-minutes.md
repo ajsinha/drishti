@@ -40,7 +40,9 @@ In these tutorials `<GO>` means "press Enter", commands are run from the reposit
 - where business intelligence (BI) lives;
 - how to make a token so the command line can use your server.
 
-### Part A · Install, start and look around
+<a id="part-a--install-start-and-look-around"></a>
+
+**Install, start and look around**
 
 Install Drishti, build the demo lakes, start it, sign in, open a trade, search, try the search form and look at business intelligence. At the end you will also have a token that lets the command line talk to your server, which the data and build tutorials use.
 

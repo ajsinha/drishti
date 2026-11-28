@@ -21,10 +21,10 @@ From your own data to a pack and a screen. Part A turns a schema and a folder of
 
 ## Time to complete
 
-About 70 minutes in all; each part can be done on its own day.
+About 50 minutes in all; each part can be done on its own day.
 
-- Part A · Build a pack from your data: About 30 minutes.
-- Part B · Design a screen in the workbench: About 40 minutes (steps 8 to 15).
+- Part A · Build a pack from your data: About 20 minutes.
+- Part B · Design a screen in the workbench: About 30 minutes (steps 8 to 15).
 
 ## Before you start
 
@@ -211,149 +211,8 @@ next: read build/desk-quotes/README.txt; for a new server  DRISHTI_HOME=<install
 
 You should see it choose the key and the date and say why, one Sutra for each venue (Reuters has one of its own, plus a catch-all), then run `pack check` and `pack verify` and finish with
 `pack check passed, pack verify passed`. (`pack make` reads the data only, not the schema: its Sutras show the prices with the default number format. The page of Steps 1 to 5 reads the
-schema's `x-drishti-format: df4` too.) This is the folder it made:
-
-```text
-$ find build/desk-quotes -maxdepth 3
-build/desk-quotes
-build/desk-quotes/bundle
-build/desk-quotes/bundle/desk-quotes-1.2.0.manifest.json
-build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz
-build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz.sha256
-build/desk-quotes/config
-build/desk-quotes/config/drishti-site.yaml
-build/desk-quotes/data
-build/desk-quotes/data/delta
-build/desk-quotes/data/delta/desk-quotes
-build/desk-quotes/MANIFEST.json
-build/desk-quotes/pack
-build/desk-quotes/pack/desk-quotes
-build/desk-quotes/pack/desk-quotes/config
-build/desk-quotes/pack/desk-quotes/generated
-build/desk-quotes/pack/desk-quotes/pack.yaml
-build/desk-quotes/pack/desk-quotes/README.md
-build/desk-quotes/pack/desk-quotes/samples
-build/desk-quotes/pack/desk-quotes/sutras
-build/desk-quotes/pack/desk-quotes/tests
-build/desk-quotes/README.txt
-build/desk-quotes/run-server.ps1
-build/desk-quotes/run-server.sh
-```
-
-The pack it made, `build/desk-quotes/pack/desk-quotes/pack.yaml`, names the kind, its mnemonic and the columns a search shows, and routes the kind to its own Delta store:
-
-```yaml
-pack: desk-quotes
-version: 1.2.0
-code: DQ
-kinds:
-- desk-quote
-mnemonics:
-  DQ:
-    kind: desk-quote
-    label: Desk quote
-columns:
-  desk-quote: [INSTRUMENT, CURRENCY, BID, ASK, MID, VENUE, AS_OF]
-connectors:
-- desk-quotes-store
-routes:
-  desk-quote: desk-quotes-store
-```
-
-On this server that store reads `<data>/delta/desk-quotes`, which is empty until you copy `build/desk-quotes/data/delta/desk-quotes` there (Admin → Health then lists
-`desk-quotes-store` as `DOWN: cannot reach ...`); the quotes keep being served by the `desk-quotes` connector of tutorial 15, which serves the same kind.
-
-Verify the bundle, as a colleague would before deploying it:
-
-```text
-$ python3 tools/drishti.py pack verify build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz
-verify build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz: desk-quotes 1.2.0
-  checksums ok
-  schema    ok
-  server    ok
-  sutra     ok
-verified
-```
-
-Ask the server what a deploy would do, without doing it (`--preview` discards the upload):
-
-```text
-$ python3 tools/drishti.py server packs deploy build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz --preview
-archive desk-quotes-1.2.0.tar.gz (4559 bytes, sha256 2ef97e13fb4c877c...)
-  ok    archive         4559 bytes, sha256 2ef97e13fb4c877c...
-  ok    checksum        matches the sha256 you gave
-  warn  signature       not signed; sign it with a publisher key listed in drishti.packs.registry.trusted-keys to prove where it came from
-  ok    unpack          20 files, 16 KB; no path leaves the pack folder, no links
-  ok    pack.yaml       desk-quotes 1.2.0
-  ok    manifest        19 files listed; every checksum matches; nothing unlisted
-  ok    server version  needs >=2.2.0, this is 2.6.7
-  ok    sutra lint      2 Sutra file(s) passed
-  ok    sutra test      2 Sutra file(s) passed
-  ok    dependencies    extends no other pack
-
-Preview: desk-quotes 1.0.0 (loaded) -> 1.2.0 (newer)
-  CHANGE (1)
-    version                    desk-quotes   1.0.0 -> 1.2.0
-  summary: 1 change
-
-preview only: nothing was deployed
-```
-
-You should see the checks again and a **Preview** that says `desk-quotes 1.0.0 (loaded) -> 1.2.0 (newer)` with the changes counted. (This output was captured with a 1.0.0 that
-was itself made by `pack make`, so only the version differs; after the page's 1.0.0 the preview also lists `sutra added desk-quote-reuters` under SELECTION and the changed
-Sutra and glossary under CHANGE.) Then deploy it for real, look at the history, roll back and look again:
-
-```text
-$ python3 tools/drishti.py server packs deploy build/desk-quotes/bundle/desk-quotes-1.2.0.tar.gz
-archive desk-quotes-1.2.0.tar.gz (4559 bytes, sha256 2ef97e13fb4c877c...)
-  ok    archive         4559 bytes, sha256 2ef97e13fb4c877c...
-  ok    checksum        matches the sha256 you gave
-  warn  signature       not signed; sign it with a publisher key listed in drishti.packs.registry.trusted-keys to prove where it came from
-  ok    unpack          20 files, 16 KB; no path leaves the pack folder, no links
-  ok    pack.yaml       desk-quotes 1.2.0
-  ok    manifest        19 files listed; every checksum matches; nothing unlisted
-  ok    server version  needs >=2.2.0, this is 2.6.7
-  ok    sutra lint      2 Sutra file(s) passed
-  ok    sutra test      2 Sutra file(s) passed
-  ok    dependencies    extends no other pack
-
-Preview: desk-quotes 1.0.0 (loaded) -> 1.2.0 (newer)
-  CHANGE (1)
-    version                    desk-quotes   1.0.0 -> 1.2.0
-  summary: 1 change
-
-deployed desk-quotes 1.2.0 (replacing 1.0.0): Applied now; no restart.
-```
-
-```text
-$ python3 tools/drishti.py server packs history --pack desk-quotes --limit 6
-  when (UTC)           action    pack         version  replaced  by
-  -------------------  --------  -----------  -------  --------  -----------------
-  2026-10-17 21:42:46  deploy    desk-quotes  1.2.0    1.0.0     drishti-dev-admin
-  2026-10-17 21:41:43  rollback  desk-quotes  1.0.0    1.1.0     drishti-dev-admin
-  2026-10-17 21:41:43  deploy    desk-quotes  1.1.0    1.0.0     drishti-dev-admin
-  2026-10-17 21:41:01  deploy    desk-quotes  1.0.0              drishti-dev-admin
-  kept for rollback, desk-quotes: 1.0.0, 1.1.0
-```
-
-```text
-$ python3 tools/drishti.py server packs rollback desk-quotes --version 1.0.0
-rolled desk-quotes back to 1.0.0 (replacing 1.2.0): Applied now; no restart.
-```
-
-```text
-$ python3 tools/drishti.py server packs history --pack desk-quotes --limit 3
-  when (UTC)           action    pack         version  replaced  by
-  -------------------  --------  -----------  -------  --------  -----------------
-  2026-10-17 21:42:47  rollback  desk-quotes  1.0.0    1.2.0     drishti-dev-admin
-  2026-10-17 21:42:46  deploy    desk-quotes  1.2.0    1.0.0     drishti-dev-admin
-  2026-10-17 21:41:43  rollback  desk-quotes  1.0.0    1.1.0     drishti-dev-admin
-  kept for rollback, desk-quotes: 1.2.0, 1.1.0
-```
-
-You should see the rollback recorded and the pack back at `1.0.0`. A **breaking** change (a kind or mnemonic removed or renamed) makes `deploy` stop with exit 1 until you add `--accept-breaking`.
-
-
+schema's `x-drishti-format: df4` too.) The folder it made (the pack, a checksummed bundle, a server configuration, start scripts), verifying and previewing the bundle, the deploy, the history and the rollback from the command line
+are in the [build guide, section 10.1](../guides/BUILD_GUIDE.md#101-after-pack-make-the-folder-verify-preview-deploy-history-and-rollback).
 
 ### Part B · Design a screen in the workbench
 
@@ -452,53 +311,7 @@ The Problems tab lists everything wrong; the Tests tab checks every sample.
 You should see `No problems: the YAML reads, the operations applied and the bound fields are in the samples.` Introduce a mistake (change `kind: tabs` to `kind: tab`) and the tab names the line and the
 reason, with the code (`DRS-2021 unknown panel kind`). Undo with `Ctrl+Z`.
 
-The command line runs the same checks, which is what a CI job would do. Put the Sutra and one document side by side and lint it:
-
-```bash
-mkdir -p desk-test && cp docs/tutorials/data/desk-book.sutra.yaml desk-test/
-cp docs/tutorials/data/desks/desk-rates.json desk-test/desk-book.json
-python3 tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
-```
-
-```text
-$ python3 tools/drishti.py sutra lint desk-test/desk-book.sutra.yaml
-ok      desk-test/desk-book.sutra.yaml
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'VAR_99' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-...
-[exit 0]
-```
-
-You should see `ok desk-test/desk-book.sutra.yaml` and a list of warnings, one per field the screen shows, `DRS-2047 field 'MTM' is shown but has no glossary entry`: the screen works, but nothing yet says what its fields mean. (Lint is quiet by
-default about help text: exit 0; `--strict` makes these warnings fail the run.)
-
-```text
-$ python3 tools/drishti.py sutra lint --strict desk-test/desk-book.sutra.yaml
-ok      desk-test/desk-book.sutra.yaml
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'VAR_99' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'LIMIT_USE' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'OPEN_TRADES' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'HEAD_OF_DESK' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'CODE' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'NET_MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'NOTIONAL' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.ID' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.PRODUCT' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.NOTIONAL' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.MTM' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-desk-test/desk-book.sutra.yaml:15 warning DRS-2047 field 'TRADES.MATURITY' is shown but has no glossary entry (kinds.desk.glossary in config/about.yaml, or a vocabulary entry)
-[exit 1]
-```
-
-`preview` renders every sample and reports panels in error:
-
-```text
-$ python3 tools/drishti.py sutra preview desk-test/desk-book.sutra.yaml
-desk-book / desk-book.json: 1 panels, 0 in error
-```
-
-You should see `1 panels, 0 in error`.
+The command line runs the same checks, which is what a CI job would do: `sutra lint` and `sutra preview`, in the [build guide, section 24.1](../guides/BUILD_GUIDE.md#241-the-same-checks-from-the-command-line-sutra-lint-and-sutra-preview).
 
 ## Step 13 · About this page
 

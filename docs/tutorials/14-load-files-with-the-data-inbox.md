@@ -46,13 +46,13 @@ The reference is the [data guide, section 7](../guides/DATA_GUIDE.md#7-the-data-
 
 The inbox is an engine, off as shipped.
 
-**The UI.** Admin → Engines → **Data inbox** → On, with a reason (*Part C*). The row says whether it took effect at once or needs
+**The UI.** Admin → Engines → **Data inbox** → On, with a reason. The row says whether it took effect at once or needs
 a restart; once on, **Admin → Data loads** gets an **Inbox** tab.
 
 **The command line.**
 
 ```bash
-python3 tools/drishti.py server engines on dataload --reason "tutorial 16"
+python3 tools/drishti.py server engines on dataload --reason "tutorial 14"
 python3 tools/drishti.py dataload status
 ```
 
@@ -76,7 +76,7 @@ drishti:
   engines:
     dataload:
       enabled: true                  # written by Admin -> Engines (or DRISHTI_DATALOAD_ENABLED=true)
-      changed: { by: "admin", at: "...", reason: "tutorial 16" }
+      changed: { by: "admin", at: "...", reason: "tutorial 14" }
   dataload:
     owner: true                      # this node runs the cycles (in a cluster: one node only)
     dir: ./data/dataload             # inbox/, inprocess/, outbox/, failed/, ledger/
@@ -119,7 +119,7 @@ dataload:
       kind: trade
       connector: trade-endur               # the table that connector reads (trading/trade_endur)
       date-from: name                      # the YYYY-MM-DD in the name is every row's business date
-      lake: ./data/tutorial-36/delta       # tutorial only: a lake of its own
+      lake: ./data/tutorial-14/delta       # tutorial only: a lake of its own
   unmatched: fail
 ```
 
@@ -310,7 +310,7 @@ run, time, the reason in words, a link to its `.failed.json`, and **Retry**; the
       kind: trade
       connector: trade-endur
       date-from: name
-      lake: ./data/tutorial-36/delta
+      lake: ./data/tutorial-14/delta
 ```
 
 Then press **Retry** on the failure, or:
@@ -368,7 +368,7 @@ trades-endur.2026-09-29.jsonl.gz.loaded.json
     "route": {
         "pack": "trading",
         "kind": "trade",
-        "lake": "./data/tutorial-36/delta",
+        "lake": "./data/tutorial-14/delta",
         "format": "delta",
         "by": "the rule trades-endur.*.jsonl.gz",
         "batch": "inbox:20261105T003005Z-oryxpro#1",
@@ -396,14 +396,14 @@ ledger listing every step of all four files.
 ## Step 8 · Tidy up
 
 ```bash
-rm -rf data/tutorial-36                    # the scratch lake
+rm -rf data/tutorial-14                    # the scratch lake
 ```
 
 Remove the two rules from `config/dataload.yaml` (back to `rules: []`), put `stable-seconds: 30` back, and switch the engine off if you
-do not want it: Admin → Engines → Data inbox → Off, or `python3 tools/drishti.py server engines off dataload --reason "Part C done"`.
+do not want it: Admin → Engines → Data inbox → Off, or `python3 tools/drishti.py server engines off dataload --reason "tutorial 14 done"`.
 The Inbox tab then disappears and `/admin/loads/inbox` answers 404.
 
-**You should see** `data/tutorial-36` gone, Admin → Data loads → Inbox showing no rules (*unmatched: fail* only), or, with the engine
+**You should see** `data/tutorial-14` gone, Admin → Data loads → Inbox showing no rules (*unmatched: fail* only), or, with the engine
 off, no Inbox tab and `drishti.py dataload status` exiting 3 (`DRS-1020`).
 
 #### What you did

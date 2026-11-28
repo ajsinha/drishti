@@ -21,10 +21,10 @@ Write a lake of your own, load a day of your own data into it, and then load the
 
 ## Time to complete
 
-About 55 minutes in all; each part can be done on its own day.
+About 40 minutes in all; each part can be done on its own day.
 
 - Part A · A new lake of your own: About 30 minutes.
-- Part B · Load it every day: About 25 minutes.
+- Part B · Load it every day: About 10 minutes.
 
 ## Before you start
 
@@ -45,15 +45,14 @@ About 55 minutes in all; each part can be done on its own day.
 
 The reference for every step is the [data lake and data load guide](../guides/DATA_LAKE_GUIDE.md).
 
-The reference for every step is the [data lake and data load guide](../guides/DATA_LAKE_GUIDE.md).
 **Part B · Load it every day**
 
-- the **data-load signal** (`ready` and `failed`), through the command line and through the REST API;
-- why announcing the same batch twice is harmless;
-- an **expectation** (`trade by 18:00 New York time`) and its states: on time, late, landed late, missing, failed;
-- where late data shows: Data loads, Admin → Health, and a notice to the people the pack names;
-- a **measure alert** with the condition *no data by a time*, triggered after a load;
-- taking a day back out with the **Export data** (`DATA`) and `data get`: chosen columns, filter lines, the count first, a `.jsonl.gz` file.
+- an **expectation** (`trade by 18:00 New York time`) the pack's people are told about when it is missed;
+- the **data-load signal** from the command line, and why announcing the same batch twice is harmless;
+- the history of loads, the states of an expectation and where late data shows;
+- an **alert** that fires when a day's trades are not there.
+
+The failed batch, the REST call, the states in full, the alert's YAML and the export of a day are in the [guide, section 18](../guides/DATA_LAKE_GUIDE.md#18-announcing-a-load-expectations-late-data-and-alerts).
 
 ### Part A · A new lake of your own
 
@@ -430,7 +429,7 @@ rm -rf data/delta/risklake config/lakes/risklake.yaml
 
 ### Part B · Load it every day
 
-In production your own job loads the store every day, and its last step tells Drishti: *this pack's data for this business date has landed*. Drishti then refreshes what it caches, checks that the data can be read, looks at the alerts that follow loads and tells the right people. If the job never calls, Drishti notices that too. In this tutorial you play the job: set an expectation, announce loads from the command line and the API, watch a failure and a late day, make an alert that fires when a day's trades are not there, and take a day back out. The pack here is `trading` and its kind is `trade` (15,000 trades a day on the demo lakes); the dates are the lakes' (2026-10-13 to 2026-10-16 here), use yours. Drishti never copies or transforms your data: it reads the store your job loaded ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) tells the whole story); `lake demo` and `lake build --signal URL` send this same signal for every table and date they write. The token needs the scope `loads:write` (tutorial 1, Part A ticked it); a real nightly job should use its own token with that one scope and nothing else.
+In production your own job loads the store every day, and its last step tells Drishti: *this pack's data for this business date has landed*. Drishti then refreshes what it caches, checks that the data can be read, looks at the alerts that follow loads and tells the right people; if the job never calls, Drishti notices that too ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) tells the whole story). Here you play the job on the demo lakes: the pack is `trading`, its kind `trade`, the dates 2026-10-13 to 2026-10-16 (use yours). The token needs the scope `loads:write` ([tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line)).
 
 ## Step 8 · Say when you expect data
 
@@ -447,7 +446,7 @@ You should see a dialog: **Tell these roles** (`admin`), users, an email box, a 
 
 **From the command line** there is no command for it: the page saves it with `PUT /api/v1/admin/loads/trading/config` from your signed-in session, and a personal API token
 is refused (`403 DRS-5002 API tokens may not call this endpoint`), so a script cannot change who is told. `GET` the same address (or `drishti.py data loads --expectations`,
-Step 12) reads it. What the page writes:
+the guide, section 18.3) reads it. What the page writes:
 
 ```yaml
 notify: { roles: [admin], users: [], email: false }
@@ -493,182 +492,45 @@ trade for 2026-10-15 loaded: 15,000 rows, 0 rejected; 0 alerts fired
 ```
 
 You should see `(already announced: nothing ran again)` on the load line. A load is keyed by pack, kind, business date **and batch id**: the same key with the same facts is a duplicate and does nothing, so a job may
-be retried safely. (The step lines below repeat the first record.) A different batch id for the same date is a reload, and runs the steps again.
+be retried safely. A different batch id for the same date is a reload, and runs the steps again.
 
-## Step 10 · A failed batch
+## Step 10 · See the history and a late day
 
-If the copy breaks, say so (quote the note: it has spaces):
-
-```text
-$ python3 tools/drishti.py data landed --pack trading --kind trade --date 2026-10-14 --status failed --note "copy stopped: disk full" --batch eod-20261014
-trade load for 2026-10-14 FAILED: copy stopped: disk full
-  load mvcxd8um-3  status failed  verified skipped  attempt 1
-  record  ok      recorded
-  late    skipped a failed load does not clear a late-data flag
-  notices ok      1 person told
-```
-
-You should see `FAILED`, the note, and only `record`, `late` and `notices`: Drishti tells people and does nothing else, and `late` says that a failed load does not clear a flag already raised. A later `ready` for the same kind and
-date replaces a `failed`.
-
-## Step 11 · The same through the API
-
-The command is a wrapper for one REST call, which is what Airflow, cron or any scheduler would make:
-
-```text
-$ curl -s -X POST $DRISHTI_SERVER/api/v1/packs/trading/loads -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
-    -d '{"kind":"trade","businessDate":"2026-10-13","status":"ready","rows":14998,"rejected":2,"source":"nightly-trade-etl","batchId":"eod-20261013"}' | python3 -m json.tool
-{
-    "id": "mvcxcy6h-2",
-    "pack": "trading",
-    "kind": "trade",
-    "businessDate": "2026-10-13",
-    "status": "ready",
-    "rows": 14998,
-    "rejected": 2,
-    "source": "nightly-trade-etl",
-    "batchId": "eod-20261013",
-    "receivedAt": "2026-10-17T21:44:48.137965280Z",
-    "receivedBy": "drishti-dev-admin",
-    "attempt": 1,
-    "reload": false,
-    "verified": "verified",
-    "entities": 1000,
-    "alerts": 0,
-    "notices": 1,
-    "steps": [
-        {
-            "name": "record",
-            "status": "ok",
-            "detail": "recorded",
-            "ms": 0
-        },
-        {
-            "name": "refresh",
-            "status": "ok",
-            "detail": "caches dropped: file, trade-calypso, trade-endur, trade-murex, trade-pages",
-            "ms": 33
-        },
-        {
-            "name": "verify",
-            "status": "ok",
-            "detail": "1000 or more trade entities on 2026-10-13",
-            "ms": 15
-        },
-        {
-            "name": "alerts",
-            "status": "ok",
-            "detail": "0 alerts fired",
-            "ms": 0
-        },
-        {
-            "name": "smoke",
-...
-```
-
-You should see the same steps as JSON: `receivedBy` is the token's owner, `verified: verified`, `entities`, `alerts` fired and `notices` sent, and the list of `steps`. The status is `201` for a new load and `200` for a duplicate.
-[DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) has recipes for curl, Python, Airflow, a shell script after a copy, and DishtaYantra.
-
-## Step 12 · Read the history and what is due
-
-```text
-$ python3 tools/drishti.py data loads --pack trading --limit 6 --expectations
-received             kind              date        status        rows    rej  verified  alerts told  batch / source
-2026-10-17 21:45:01  trade             2026-10-14  failed                     skipped        0    1  eod-20261014
-2026-10-17 21:44:48  trade             2026-10-13  ready        14998      2  verified       0    1  eod-20261013 nightly-trade-etl
-2026-10-17 21:44:46  trade             2026-10-15  ready        15000      0  verified       0    1  eod-20261015 nightly-trade-etl
-expectations:
-  2026-10-16  trade             by 18:00 America/New_York    missing
-  2026-10-15  trade             by 18:00 America/New_York    landed-late
-  2026-10-14  trade             by 18:00 America/New_York    failed
-```
-
-You should see the history first, newest first: status, rows, rejected, whether it verified, alerts fired, people told, batch and source. Under `expectations:` is each business day of the lookback window and its state. Here the
-date 2026-10-16 is `missing` (nothing ever landed `ready`: `lake demo` wrote it, but no server was running to hear its signal), 2026-10-15 is `landed-late` (it landed after its
-18:00 deadline, because this tutorial announced it a day later), and 2026-10-14 is `failed` (its newest announcement says so).
-
-The same on the page, with each load's steps on a click:
+Open **Admin**, **Data loads**, the pack `trading` again.
 
 ![The history of loads with each step open: recorded, refreshed, verified, alerts, smoke, notices](img/t07/03-history.jpg)
 
-You should see a row for each announcement, a *ready* or *failed* badge, a *verified* badge, and the load's steps. A pop-up in the corner is the notice the pack sent: *load-late trade for 2026-10-16 is MISSING: expected
-by 18:00 America/New_York*.
+You should see a row for each announcement, a *ready* or *failed* badge, a *verified* badge, and the load's steps on a click. The command line shows the same: `python3 tools/drishti.py data loads --pack trading --limit 6 --expectations`.
 
 ![The expectations table: 2026-10-16 missing, 2026-10-15 landed-late, 2026-10-14 failed](img/t07/04-expectation-states.jpg)
 
-The states are: `pending` (today, deadline not yet passed), `on-time`, `landed-late`, `late` (today, the deadline passed, nothing ready), `missing` (an earlier day, nothing ever ready) and `failed` (the newest
-announcement for the date says so). `late` and `missing` are flagged **once**: one notice to the people the pack names, and a line on Admin → Health that makes the overall status `DEGRADED`. A restart does not tell again; a `ready` load clears the flag.
+Each business day of the lookback window has a state: `on-time`, `landed-late`, `late`, `missing` or `failed`. A `late` or `missing` day is flagged **once**: a notice to the people the pack names and a line on Admin → Health.
 
 ![Admin → Health: data late, with the pack, kind, date and deadline](img/t07/05-health-late.jpg)
 
-You should see the late data listed on Health, linked to the pack's Data loads page.
+You should see the late data listed on Health, linked to the pack's Data loads page. A `ready` load clears it.
 
-## Step 13 · An alert for a missing day
+## Step 11 · An alert for a missing day
 
-An expectation tells the people the pack names. An **alert** can tell *you*, and carry a number. Open **Views**, then **Reports**, then **My alerts** (on the Reports page), then **New alert on a number**.
+An expectation tells the people the pack names; an **alert** can tell *you*. Open **Views**, **Reports**, **My alerts**, **New alert on a number**.
 
 ![The alert form: a measure of a model, no data by 18:30, after a data load of kind trade, by inbox](img/t07/06-alert-form.jpg)
 
-Fill in: name `trades-loaded`, title `Trades have not been loaded`, severity `warn`; **Watch** *a measure of a model*, model `file:model:trades-basic` (*Trades, the basics*: the
-trade valuations of the market-risk pack, one row per trade), measure `Trades`; **Tell me when** *has no data by a time*, `18:30`; **Look** *after a data load*, only loads of kind
-`trade`; **Tell me by** *my inbox and the bell*. You should see the form as in the picture. Press **Check now**.
+Fill in: name `trades-loaded`, severity `warn`; **Watch** *a measure of a model*, model `file:model:trades-basic`, measure `Trades`; **Tell me when** *has no data by a time*, `18:30`; **Look** *after a data load*, kind `trade`; **Tell me by** *my inbox and the bell*. Press **Check now**.
 
 ![Check now: what the alert reads, without saving anything](img/t07/07-alert-checked.jpg)
 
-You should see an answer in words that says what the alert read: here `15,000` trades, data of `2026-10-16`, the current business date, so *no data* is not true and nothing
-would fire. On a business day whose data has not arrived by 18:30 the same check says there is nothing to read for the day, which is exactly what *no data* means. Check now
-saves nothing and fires nothing. Press **Save alert**.
-
-**From the command line** there is no command for alerts: the form sends `PUT /api/v1/alerts/rules/{name}` (and Check now `POST /api/v1/alerts/rules/preview`)
-from your signed-in session; a personal API token is refused (`DRS-5002`). This is the body the form sends, and what Check now answered:
-
-```yaml
-title: Trades have not been loaded
-severity: warn
-source: { type: model, model: "file:model:trades-basic", query: { select: { measures: [Trades] } } }
-condition: { type: nodata, by: "18:30" }
-trigger: { mode: after-load, kind: trade }
-delivery: { inbox: true }
-```
-
-```text
-{"status": "ok", "value": 15000.0, "asOf": "2026-10-16", "note": "", "condition": "no data by 18:30", "live": true}
-```
-
-A *measure of a version 1 dataset* (the form's other choice) refuses a model's measure: `DRS-9062 ... dataset 'file:dataset:trades-basic-trade' has no measure 'Trades'`; since
-2.2 the measures live on the model.
+You should see what the alert read (here `15,000` trades of `2026-10-16`, so *no data* is not true). Check now saves and fires nothing. Press **Save alert**.
 
 ![The alerts page: trades-loaded, a dataset measure, no data by 18:30, after-load, armed](img/t07/08-alert-saved.jpg)
 
-You should see `Alert saved: trades-loaded` and the alert in **Alerts on numbers**: *no data by 18:30*, *after-load*, state `armed`. On a business day, from 18:30 on, if the dataset shows no data for the day, it fires into your inbox; and
-because a *no data* alert is looked at after **every** load, announcing a `ready` load clears it once the data is there. The number is read as you, with your row rules and masks.
+You should see the alert in **Alerts on numbers**, state `armed`. The body the form sends (there is no command for alerts) is in the [guide, section 18.4](../guides/DATA_LAKE_GUIDE.md#184-an-alert-for-a-missing-day).
 
-## Step 14 · Take a day back out
+## Where the rest of Part B is
 
-The day that landed can be taken out again as a file, for a check in another tool or a hand-over: the **Export data**. Type `EXPORT trade 2026-10-15 <GO>`
-(or open **Views**, then **Data**, and pick `trade` under *Trading*).
+A failed batch, the same call through REST, the history on the command line, the alert's body and taking a day back out are reference, not a walk-through: they are in the
+[data lake guide, section 18](../guides/DATA_LAKE_GUIDE.md#18-announcing-a-load-expectations-late-data-and-alerts).
 
-You should see every dataset you may open on the left, `trade` among them with its format and the number of dates it holds, and on the right
-its source, the calendar with 2026-10-13 to 2026-10-16 filled and 2026-10-15 chosen, and every column ticked. Press **none**, then tick
-`TRADE_ID`, `PORTFOLIO`, `PRODUCT_TYPE` and `QUANTITY`. Press **+ Add a line** and make it `PRODUCT_TYPE` · *one of* · `ComSwap, ComFut`; add a
-second, `QUANTITY` · *greater than* · `10000`. You should see *Your selection* read it back, *From trade on 2026-10-15: 4 columns, rows
-where PRODUCT_TYPE is one of ComSwap or ComFut, and QUANTITY is greater than 10000.*, the SQL-like line under it, and under **Download**
-the row count of the day before you download (*n of 15,000 on the date*) with the estimated size. Press **Download trade_2026-10-15.jsonl.gz**:
-the browser saves the file as it streams. **Copy link** copies the address, which holds the whole selection.
-
-**From the command line** the same, with the count first:
-
-```text
-$ python3 tools/drishti.py data get trade --date 2026-10-15 --columns TRADE_ID,PORTFOLIO,PRODUCT_TYPE,QUANTITY \
-      --where "PRODUCT_TYPE in ComSwap,ComFut" --where "QUANTITY > 10000" --count
-$ python3 tools/drishti.py data get trade --date 2026-10-15 --columns TRADE_ID,PORTFOLIO,PRODUCT_TYPE,QUANTITY \
-      --where "PRODUCT_TYPE in ComSwap,ComFut" --where "QUANTITY > 10000"
-$ zcat trade_2026-10-15.jsonl.gz | head -2
-```
-
-You should see the selection in words, the SQL-like line and the count, then the file written, then its first two rows, one JSON object a
-line with the four columns. The selection the address and the CLI carry is the same text (`where=PRODUCT_TYPE in ComSwap,ComFut`). The
-download is audited: Admin → Audit lists it as `data.download` with the date, the selection and the rows.
 
 ## Next steps
 
