@@ -42,7 +42,7 @@ jobs:
         with: { python-version: '3.13' }
       - name: Build Drishti Tools, Rachana and Lake from their release tags
         run: |
-          foreach ($spec in @("drishti-tools:$env:TOOLS_TAG", "drishti-rachana:$env:RACHANA_TAG", "drishti-lake:$env:LAKE_TAG")) {
+          foreach ($spec in @("drishti-tools:$env:TOOLS_TAG", "drishti-rachana:$env:RACHANA_TAG", "drishti-lake:$env:LAKE_TAG", "drishti-engine:develop")) {   # the engine API (0.1.0-SNAPSHOT) has no tag yet
             $repo, $tag = $spec -split ':'
             git clone -q --depth 1 --branch $tag "https://github.com/drishti-platform/$repo.git" "$env:RUNNER_TEMP/$repo"
             if ($LASTEXITCODE -ne 0) { throw "clone of $repo $tag failed" }
