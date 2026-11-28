@@ -18,8 +18,8 @@
 .home-cards { max-width: 1480px; margin: 0 auto; padding: 16px; }
 .home-cards[data-layout="calm"] { max-width: 1200px; }
 .home-cards [data-home-cards-view] { min-height: 40vh; }
-@media (max-width: 639px) { .home-cards { padding: 12px 16px; } }
+@media (max-width: 639.98px) { .home-cards { padding: 12px 16px; } }
 .home-viewas { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; }
 .home-viewas[hidden] { display: none; }
-.home-viewas-label { font-size: 0.85em; opacity: 0.75; }
+.home-viewas-label { font-size: var(--d-fs-13_6); opacity: 0.75; }
 .home-viewas .di-button-group { display: flex; flex-wrap: wrap; gap: 6px; }          /* a phone wraps the buttons rather than scrolling the page */
