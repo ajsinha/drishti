@@ -1,0 +1,157 @@
+# Row-rule route inventory (R11): every controller, how it reaches row rules and masks. Read by RowRuleRouteInventoryGuardTest.
+# class: gated = the source names a gate (Entitlements, PrincipalAccess, ViewerAccess, RowRule, TableRules, OutputGate, DatasetService, an authoriser);
+#        delegated = takes the principal but names no gate itself: the gate sits in a service it calls (to be proven by the i10 matrix test);
+#        none = no row data; the note says why. A new controller must be added here, with a reason when it is none.
+# format: class<TAB>path<TAB>note
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/admin/ArtifactController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/admission/AdmissionController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/alerts/AlertController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/AccessController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/AiController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/ApiTokenController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/AskController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/BuilderController.java	
+none	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/BusinessDateController.java	the business date only
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/CacheController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/CatalogController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/CommandController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/DesignAboutController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/DesignController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/DesignFormController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/DesignShipController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/DraftsController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/EffectiveSettingsController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/ExplainController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/FormController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/FormLookupController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/GovernanceController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/HealthController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/HistoryController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/IdentityController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/ImpactController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/MonitorController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/MyArrangementController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/MyPagesController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/OidcController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/PackAdminController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/PackDeployController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/PackDetailController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/PackOverviewController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/PhraseController.java	
+none	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/PublicAboutController.java	public product facts
+none	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/RachanaController.java	grammar and language reference, no data rows
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/RegistryController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/ReportController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/RetryController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/RoleController.java	
+none	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/RootController.java	index of links
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/SearchController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/SessionController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/SettingsController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/SharedWorkspaceController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/StreamController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/StudioController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/StudioTestsController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/SutraCoverageController.java	
+none	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/SutraLibraryController.java	library of definitions, no data rows
+none	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/UiKitController.java	static UI definitions
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/ViewController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/ViewEventController.java	
+none	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/ViewModelSchemaController.java	schema of view models
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/api/WorkspaceController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/approvals/ApprovalController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/ai/BiAiController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/BiController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/BiGovController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/board/BiBoardController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/DatasetController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/expr/web/ExprController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/mq/MqController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/mq/PreviewAsController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/mq/TransformInputController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bindings/BindingController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/python/PythonController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/report/BiReportController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/runs/RunsController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/sql/SqlController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/bi/theme/ThemeController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/calc/CalcController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/capacity/CapacityController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/collab/bridge/BridgeAdminController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/collab/compliance/ComplianceController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/collab/DirectoryController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/collab/InboxController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/collab/mail/OutboxAdminController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/collab/ShareController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/collab/thread/ThreadController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/compute/ComputeController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/compute/ReactiveController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/connectors/ConnectorController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/connectors/ConnectorTypeReadmeController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/connectors/IndexReloadController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/console/ConsoleController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/data/DataViewController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/dataload/DataLoadController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/dataload/ReadyController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/datamap/DataMapController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/dist/DistController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/dist/StatementController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/edit/ChangesController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/edit/EditAdminController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/edit/EditPeerController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/edit/FormCheckController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/embed/EmbedController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/enginehost/EngineHostController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/engines/EngineAdminController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/explain/NumberExplainController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/feeds/DataFeedsController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/flight/DataOutController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/home/HomeController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/kernelapi/OperationController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/layout/LayoutController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/lifecycle/LifecycleController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/live/LiveTablesController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/loads/LoadController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/loads/PackDataController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/memlake/MemoryLakeController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/modules/ModuleAdminController.java	
+none	kernel/drishti-server/src/main/java/com/ash/drishti/server/modules/ModulePublicController.java	public module facts
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/modules/ModuleSettingsController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/net/NetAdminController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/net/NetController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/net/NetDataController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/net/NetRoutingController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/net/NetSecurityController.java	
+none	kernel/drishti-server/src/main/java/com/ash/drishti/server/node/LauncherStopController.java	local stop signal, token-guarded
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/node/NodeController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/notify/NotifyController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/pivot/PivotCommentsController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/pivot/PivotController.java	
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/pivot/PivotFunctionsController.java	gate in a called service: prove in the i10 matrix test
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/pivot/PivotLiveController.java	gate in a called service: prove in the i10 matrix test
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/pivot/PivotPromoteController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/pivot/PivotScaleController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/placement/PlacementController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/settings/SettingProposalsController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/switches/CommandAdminController.java	
+gated	kernel/drishti-server/src/main/java/com/ash/drishti/server/switches/FunctionsController.java	
+none	kernel/drishti-server/src/main/java/com/ash/drishti/server/switches/SwitchPeerController.java	cluster peer switch sync (net token)
+delegated	kernel/drishti-server/src/main/java/com/ash/drishti/server/tables/EditorController.java	gate in a called service: prove in the i10 matrix test
+gated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/exposure/ExposureController.java	
+delegated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/exposure/ExposurePreDealController.java	gate in a called service: prove in the i10 matrix test
+delegated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/frtb/FrtbController.java	gate in a called service: prove in the i10 matrix test
+delegated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/simm/SimmController.java	gate in a called service: prove in the i10 matrix test
+delegated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/var/MrCubeController.java	gate in a called service: prove in the i10 matrix test
+gated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/var/VarBasketController.java	
+gated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/var/VarController.java	
+delegated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/var/VarExplainController.java	gate in a called service: prove in the i10 matrix test
+gated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/var/VarMatrixController.java	
+delegated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/var/VarPlaygroundController.java	gate in a called service: prove in the i10 matrix test
+gated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/var/VarRegulatoryController.java	
+gated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/var/VarShardController.java	
+delegated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/var/VarStressWindowController.java	gate in a called service: prove in the i10 matrix test
+gated	modules/banking/java/banking-service/src/main/java/com/ash/drishti/banking/var/VarSystemBasketController.java	
+none	modules/genomics/java/genomics/src/main/java/org/helixlab/genomics/GenomicsController.java	showcase module without row-ruled kinds
+none	modules/genomics/java/genomics/src/main/java/org/helixlab/genomics/ShowcaseController.java	showcase landing
+none	modules/market-data/java/market-data-service/src/main/java/com/ash/drishti/marketdata/MarketLandingController.java	landing page
+none	modules/trading/java/trading-service/src/main/java/com/ash/drishti/trading/TradingLandingController.java	landing page
