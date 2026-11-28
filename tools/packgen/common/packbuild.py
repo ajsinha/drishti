@@ -215,10 +215,6 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     out: dict[Path, str] = {}
     out[base / "pack.yaml"] = (f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n# {spec.title} pack for Drishti.\n"
                                + yaml.safe_dump(_lake_form(manifest(spec, known_fields)), sort_keys=False, allow_unicode=True, width=140))
-    for k in spec.kinds:
-        if k.kind not in spec.hand_written:
-            f = base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"
-            out[f] = written(spec, k, min(docs.get(k.kind) or [None], key=lambda x: x or ""), f)
     snap = _snapshot_of(spec)            # a pack whose data is a committed snapshot (data/testdata/<pack>/): samples/ keep a few reference documents
     shown = SNAP.reference(spec.name, docs) if snap else docs
     catalog = []
@@ -230,6 +226,12 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     for name, text in SAMPLES.files({k.kind: shown.get(k.kind, {}) for k in spec.kinds if k.kind not in spec.computed_kinds}, catalog, SAMPLES.part_mb(sys.argv),
                                     None if spec.compact_json else 1).items():
         out[base / "samples" / name] = text
+    SD.PENDING_PACKS.add(base)                # a Sutra's sample-row reads the samples of this build, not what an earlier one left on disk
+    SD.PENDING.update({f: t for f, t in out.items() if f.parent.name == "samples"})
+    for k in spec.kinds:
+        if k.kind not in spec.hand_written:
+            f = base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"
+            out[f] = written(spec, k, min(docs.get(k.kind) or [None], key=lambda x: x or ""), f)
     if spec.retired:                                           # an example pack: an empty Help entry (its pack.yaml and samples are the sample)
         out[base / "config" / "help.yaml"] = f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n" + yaml.safe_dump({"guides": []}, sort_keys=False)
     # a shipped pack has no guide since i7k: its facts are its README (below) and contracts, its story a section of a feature guide

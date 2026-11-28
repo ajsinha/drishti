@@ -22,6 +22,7 @@ A doc that already has use-when is left as it is, so the function is safe to run
 """
 from __future__ import annotations
 
+import io
 import json
 import re
 import sys
@@ -45,9 +46,15 @@ def slug(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
 
 
+# What a generator is about to write (path -> text), so a Sutra's sample-row comes from the samples of THIS build, also in a folder where
+# nothing was written yet (a fresh build folder: the first pass and the --check pass must agree). Filled by packbuild.files().
+PENDING: dict[Path, str] = {}
+PENDING_PACKS: set[Path] = set()
+
+
 def pack_of(path: Path) -> Path | None:
     for p in path.resolve().parents:
-        if (p / "pack.yaml").exists():
+        if (p / "pack.yaml").exists() or p in PENDING_PACKS:
             return p
     return None
 
@@ -62,10 +69,11 @@ def sample_row(pack: Path | None, kind: str, where: str) -> dict | None:
     if pack is None:
         return None
     f = pack / "samples" / f"{kind}.jsonl"
-    if not f.exists():
+    pending = PENDING.get(f)
+    if pending is None and not f.exists():
         return None
     need = dict(WHERE.findall(where or ""))
-    with f.open(encoding="utf-8") as fh:
+    with (io.StringIO(pending) if pending is not None else f.open(encoding="utf-8")) as fh:
         for line in fh:
             if not line.strip():
                 continue
