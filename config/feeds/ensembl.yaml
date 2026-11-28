@@ -43,6 +43,6 @@ licence:
 history:
   first-run-days: 1
 datasets:
-  gene: {pack: genomics, kind: gene, key: GENE, description: "one gene of the panel: chromosome, start, end, strand, biotype, protein length of the canonical transcript"}
+  gene: {pack: genomics, kind: gene, table: ensembl-gene, key: GENE, description: "one gene of the panel: chromosome, start, end, strand, biotype, protein length of the canonical transcript"}
 options:
   genes: [BRCA1, BRCA2, TP53]         # the gene panel (HGNC symbols); --set genes=MLH1,APC

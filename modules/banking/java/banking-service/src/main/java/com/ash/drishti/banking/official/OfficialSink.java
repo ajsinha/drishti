@@ -46,7 +46,7 @@ public interface OfficialSink {
 
     /** The table's location: {@code <root>/risk-results/<table>}. */
     default String where(String table) {
-        return root() + "/" + FOLDER + "/" + table;
+        return com.ash.drishti.api.resolution.TableCatalogue.join(root(), FOLDER, table);
     }
 
     /**
@@ -75,7 +75,7 @@ public interface OfficialSink {
 
     /** The JSON Lines of one commit beside the table: written whole, on the sink's storage. */
     default void writeJsonl(String table, LocalDate date, long version, List<? extends Map<String, ?>> docs) throws IOException {
-        String path = root() + "/" + FOLDER + "/jsonl/" + table + "/" + date + "/" + table + "-v" + version + ".jsonl";
+        String path = com.ash.drishti.api.resolution.TableCatalogue.join(root(), FOLDER + "/jsonl", table) + "/" + date + "/" + table + "-v" + version + ".jsonl";
         if (LakeStorage.isLocal(path)) {
             JsonlWriter.writeFile(LakeStorage.localPath(path), docs);
             return;
@@ -126,7 +126,7 @@ public interface OfficialSink {
         boolean delta;
         boolean iceberg;
         if (local(root())) {
-            java.nio.file.Path f = folder(root()).resolve(FOLDER).resolve(table);
+            java.nio.file.Path f = folder(com.ash.drishti.api.resolution.TableCatalogue.join(root(), FOLDER, table));
             t = f.toString();
             delta = java.nio.file.Files.isDirectory(f.resolve("_delta_log"));
             iceberg = !delta && java.nio.file.Files.isDirectory(f.resolve("metadata"));

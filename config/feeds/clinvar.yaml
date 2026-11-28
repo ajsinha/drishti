@@ -43,7 +43,7 @@ licence:
 history:
   first-run-days: 1
 datasets:
-  variant: {pack: genomics, kind: variant, key: VARIANT_ID, description: "one variant of the panel: GRCh38 position and alleles, gene, consequence, impact, ClinVar significance, review status and conditions"}
+  variant: {pack: genomics, kind: variant, table: clinvar-variant, key: VARIANT_ID, description: "one variant of the panel: GRCh38 position and alleles, gene, consequence, impact, ClinVar significance, review status and conditions"}
 options:
   genes: [BRCA1, BRCA2, TP53]         # the gene panel (HGNC symbols); --set genes=MLH1,APC
   significance: [pathogenic, likely pathogenic]   # ClinVar clinical significance terms; an empty list takes every record

@@ -307,7 +307,7 @@ final class VarPvStream {
             appends.add(new com.ash.drishti.lakehost.LakeRowsLoad.Row(r.get(key).asText(), JSON.writeValueAsString(doc), cols));
         }
         // the window as one append (nothing replaced: a window beside the morning's run), by the table's own format
-        com.ash.drishti.lakehost.LakeRowsLoad.load(iceberg ? "iceberg" : "delta", lake.resolve("risk").resolve(kind).toString(), "risk", kind, day,
+        com.ash.drishti.lakehost.LakeRowsLoad.load(iceberg ? "iceberg" : "delta", com.ash.drishti.api.resolution.TableCatalogue.join(lake.toString(), "risk", kind), "risk", kind, day,
                 "append", appends, promoted, List.of(vector), Map.of(), Map.of());
     }
 }

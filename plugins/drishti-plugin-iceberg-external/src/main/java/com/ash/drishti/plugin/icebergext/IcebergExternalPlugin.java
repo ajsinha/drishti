@@ -133,7 +133,7 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         String namespace = settings.getOrDefault("namespace", "");
         boolean rest = "rest".equalsIgnoreCase(settings.getOrDefault("catalog", "")) || s3Tables;
         if (!rest && !namespace.isBlank() && !settings.containsKey("domain")) {      // a path-based namespace is the folder <root>/<levels>
-            readerSettings.put("domain", namespace.replace('.', '/'));
+            readerSettings.put("domain", com.ash.drishti.api.resolution.TableCatalogue.namespaceFolder(namespace));
         }
         this.lake = LakeReads.open("iceberg", readerSettings);
         this.idMaps = Caffeine.newBuilder().maximumWeight(mb("id-index-mb", "1024"))

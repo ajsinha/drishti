@@ -105,9 +105,8 @@ public final class FileSourcePlugin implements SourcePlugin {
     @Override
     public void start(SourceContext ctx) {
         this.context = ctx;
-        Path base = Path.of(ctx.setting("root", com.ash.drishti.api.DataDir.under("feeds")));
-        String domain = ctx.setting("domain", "");
-        this.root = (domain.isBlank() ? base : base.resolve(domain)).toAbsolutePath().normalize();
+        this.root = com.ash.drishti.api.resolution.TableCatalogue.locateLocal(ctx.setting("root", com.ash.drishti.api.DataDir.under("feeds")),
+                ctx.setting("domain", ""));
         this.idField = ctx.setting("id-field", "id");
         this.businessZone = ctx.setting("business-zone", "America/New_York");
         this.maxLoadRows = Integer.parseInt(ctx.setting("max-load-rows", "200000"));

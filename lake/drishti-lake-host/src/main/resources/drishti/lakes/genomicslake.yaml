@@ -25,6 +25,16 @@ tables:
     id: VARIANT_ID
     promote: [CHROM, POS, REF, ALT, GENE, IMPACT, CONSEQUENCE]
     retention: 260
+  genomics.clinvar-variant:         # the clinvar feed's variants (config/feeds/clinvar.yaml); the module's Home reads them by this name
+    kind: variant
+    id: VARIANT_ID
+    promote: [CHROM, POS, REF, ALT, GENE, IMPACT, CONSEQUENCE]
+    retention: 260
+  genomics.ensembl-gene:            # the ensembl feed's genes (config/feeds/ensembl.yaml)
+    kind: gene
+    id: GENE
+    promote: [CHROM, START]
+    retention: 260
   genomics.gene:
     id: GENE
     promote: [CHROM, START]
