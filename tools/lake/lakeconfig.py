@@ -70,12 +70,14 @@ def command(jar: str | None = None, java: str | None = None) -> list[str]:
     java_bin = writers.find_java(java)
     if not java_bin:
         raise LakeConfigError("no java found to read the lake files (drishti.java.home in the settings file, DRISHTI_JAVA_HOME, JAVA_HOME, or java on the PATH)")
+    d = str(data_dir())                               # the lake files' ${drishti.data.dir}: the data folder of this run (--data-dir, settings, env)
+    folders = [f"-Ddrishti.data.dir={d}", f"-Dlake.data.dir={d}"]
     cp = os.environ.get("LAKE_CLASSPATH")
     if cp and not jar:
-        return java_cmd(java_bin, ["-cp", cp, MAIN, "lakes"])
+        return java_cmd(java_bin, [*folders, "-cp", cp, MAIN, "lakes"])
     j = writers.find_jar(jar)
     if j:
-        return java_cmd(java_bin, [f"-Dloader.main={MAIN}", "-jar", j, "lakes"])
+        return java_cmd(java_bin, [*folders, f"-Dloader.main={MAIN}", "-jar", j, "lakes"])
     raise LakeConfigError("cannot read the lake files: no server exec jar in <home>/lib (python tools/drishti.py build jar) or LAKE_CLASSPATH names Drishti Lake's jars (lake-config and its dependencies)")
 
 
@@ -126,8 +128,32 @@ OFFICIAL_ROOT_REF = "${" + DEMO_ROOT_ENV + ":${lake.data.dir:${drishti.data.dir}
 
 
 def data_dir() -> pathlib.Path:
-    """The data folder: DRISHTI_DATA_DIR, else this checkout's data/."""
-    return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (ROOT / "data"))
+    """The data folder, the ONE answer of every lake tool (the Java order of javacmd.launch_roots): --data-dir (use_data_dir), else
+    ``drishti.data.dir`` of the settings file, else DRISHTI_DATA_DIR, else this checkout's data/."""
+    import javacmd
+    return javacmd.launch_roots(data_dir=_OVERRIDE or None)["data"][0]
+
+
+_OVERRIDE: str = ""
+
+
+def data_named() -> bool:
+    """Whether a data folder was named at all (--data-dir, the settings file or DRISHTI_DATA_DIR) rather than this checkout's default."""
+    import javacmd
+    return bool(_OVERRIDE or (javacmd.settings()[1].get("drishti.data.dir") or "").strip() or (os.environ.get("DRISHTI_DATA_DIR") or "").strip())
+
+
+def use_data_dir(path) -> pathlib.Path | None:
+    """A command's ``--data-dir``: from now on this process, the lake reader it starts (``drishti.data.dir``, ``lake.data.dir``) and every
+    child (a lake build, a loader) take THIS folder as the data folder. Without one (None or empty) nothing changes."""
+    global _OVERRIDE
+    if not path:
+        return None
+    p = pathlib.Path(path).expanduser().resolve()
+    _OVERRIDE = str(p)
+    os.environ["DRISHTI_DATA_DIR"] = str(p)
+    _table.cache_clear()
+    return p
 
 
 def lakes_parent(data: pathlib.Path | None = None, fmt: str = "delta") -> pathlib.Path:
@@ -140,6 +166,17 @@ def default_root(name: str, data: pathlib.Path | None = None, fmt: str = "delta"
     if name == "demo" and os.environ.get(DEMO_ROOT_ENV):
         return pathlib.Path(os.environ[DEMO_ROOT_ENV])
     return lakes_parent(data, fmt) / name
+
+
+def locate(root, domain: str, table: str) -> str:
+    """Where a table is when the lake's layout puts it: ``<root>/<domain>/<table>``. The one join of the Python tools (the Java side's is
+    TableCatalogue.join); a table a lake file gives its own ``uri:`` is found by ``table()['location']`` instead."""
+    return "/".join(p for p in (str(root).rstrip("/"), str(domain).strip("/"), str(table).strip("/")) if p)
+
+
+def locate_path(root, domain: str, table: str = "") -> pathlib.Path:
+    """:func:`locate` as a Path (a domain's own folder when ``table`` is empty): the join of a lake on a local disk."""
+    return pathlib.Path(locate(root, domain, table))
 
 
 def root(name: str = "demo", folder: pathlib.Path | None = None) -> str:

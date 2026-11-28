@@ -67,6 +67,17 @@ public final class LakeRowsLoad {
         return load(format, table, domain, kind, date, mode, rows, promote, vectors, properties, storage, Map.of());
     }
 
+    /**
+     * As {@link #load}, for a table named by its lake's layout: {@code root}, {@code domain} and the table's {@code folder} are joined by
+     * {@code TableCatalogue} (the one join), or {@code uri} (a table the lake file gave its own location, when not blank) is the location as it is.
+     */
+    public static long loadAt(String format, String uri, String root, String domain, String folder, String kind, LocalDate date, String mode,
+            List<Row> rows, List<String> promote, List<String> vectors, Map<String, String> properties, Map<String, String> storage,
+            Map<String, Object> layout) throws IOException {
+        String where = uri != null && !uri.isBlank() ? uri : com.ash.drishti.api.resolution.TableCatalogue.join(root, domain, folder);
+        return load(format, where, domain, kind, date, mode, rows, promote, vectors, properties, storage, layout);
+    }
+
     /** As {@link #load(String, String, String, String, LocalDate, String, List, List, List, Map, Map)} with the loader's {@code target.layout} settings (a row group size, say). */
     public static long load(String format, String table, String domain, String kind, LocalDate date, String mode, List<Row> rows, List<String> promote,
             List<String> vectors, Map<String, String> properties, Map<String, String> storage, Map<String, Object> layout) throws IOException {

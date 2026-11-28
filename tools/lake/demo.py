@@ -104,7 +104,7 @@ TENOR_MARK = ('"SPOT_DATE":"', '"MATURITY_DATE":"', '"POINTS":[{')
 
 
 def data_dir() -> pathlib.Path:
-    return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (ROOT / "data"))
+    return lakeconfig.data_dir()
 
 
 def demo_data_dir(a, lake: pathlib.Path) -> pathlib.Path:
@@ -112,10 +112,9 @@ def demo_data_dir(a, lake: pathlib.Path) -> pathlib.Path:
     the lake when it is a data folder's delta/<lake> or delta/ (--lake /srv/data/delta/demo or /srv/data/delta: /srv/data), else the
     repository's data/. QA2-21: a server on another
     data folder found no feeds there (its file connector DOWN) because they went to the repository."""
-    if getattr(a, "data_dir", None):
-        return pathlib.Path(a.data_dir).resolve()
-    if os.environ.get("DRISHTI_DATA_DIR"):
-        return pathlib.Path(os.environ["DRISHTI_DATA_DIR"]).resolve()
+    lakeconfig.use_data_dir(getattr(a, "data_dir", None))
+    if lakeconfig.data_named():
+        return lakeconfig.data_dir().resolve()
     if lake.parent.name == "delta" and lake.name != "delta":
         return lake.parent.parent.resolve()
     if lake.name == "delta":
@@ -232,6 +231,7 @@ class RealExtras:
 class DemoLake:
     def __init__(self, a):
         self.a = a
+        lakeconfig.use_data_dir(getattr(a, "data_dir", None))          # --data-dir is the data folder of everything this run reads and starts
         self.testdata = pathlib.Path(a.testdata)
         self.lake_name = getattr(a, "lake_name", None) or "demo"      # the lake file whose layout the demo tables take (config/lakes/demo.yaml)
         self.lake = pathlib.Path(a.lake or lakeconfig.root(self.lake_name)).resolve()   # unset: where the lake file says
@@ -772,7 +772,7 @@ class DemoLake:
         pack, kind, connector = ds["pack"], ds["kind"], ds["connector"]
         domain, table = self.packs.table(pack, connector, kind)
         lake_name, lake_root = self.lake_of(ds)
-        path = lake_root / domain / table
+        path = lakeconfig.locate_path(lake_root, domain, table)
         mode = ds.get("mode", REPLACE)                    # a shared table: each system replaces only its own partitions (SOURCE_SYSTEM)
         if not (getattr(self.a, "keep_other_dates", False) and ds.get("dated-by") and path.is_dir()):
             if path not in self.cleared:                  # a table several datasets share (trades_shared) is cleared once, by the first

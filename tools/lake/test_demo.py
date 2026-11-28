@@ -323,6 +323,8 @@ class DataFolder(unittest.TestCase):
 
     def folder(self, args, env=None):
         import demo
+        import lakeconfig
+        lakeconfig._OVERRIDE = ""                       # a --data-dir of an earlier call in this process is not this call's
         old = os.environ.pop("DRISHTI_DATA_DIR", None)
         if env:
             os.environ["DRISHTI_DATA_DIR"] = env

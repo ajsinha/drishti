@@ -1050,11 +1050,7 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         }
         String domain = own.getOrDefault("domain", "");
         String folder = own.getOrDefault("table." + kind, kind);
-        String joined = (root.endsWith("/") ? root.substring(0, root.length() - 1) : root) + (domain.isBlank() ? "" : "/" + domain) + "/" + folder;
-        if (joined.contains("://")) {
-            return Optional.of(joined);
-        }
-        return Optional.of(java.nio.file.Path.of(joined).toAbsolutePath().normalize().toString());
+        return Optional.of(com.ash.drishti.api.resolution.TableCatalogue.locate(root, domain, folder));
     }
 
     private String lakeName(String connector) {

@@ -35,7 +35,7 @@ Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windo
 
 ### gene
 
-Pack `genomics`, kind `gene`, table `gene`, key `GENE`; files `data/datafeeds/ensembl/<date>/gene.<date>.jsonl.gz`, each row under the run's business date.
+Pack `genomics`, kind `gene`, table `ensembl-gene`, key `GENE`; files `data/datafeeds/ensembl/<date>/ensembl-gene.<date>.jsonl.gz`, each row under the run's business date.
 
 One gene of the panel: chromosome, start, end, strand, biotype, protein length of the canonical transcript.
 

@@ -300,7 +300,7 @@ final class VarOfficial implements AutoCloseable {
         } else if (svc.props().official().publish() && publisher.where() != null) {
             try {
                 long v = publisher.publish(date, rows);
-                index.put("published", "risk-results/var-official (" + publisher.describe(v) + ")");   // never the server's own folder
+                index.put("published", com.ash.drishti.banking.official.OfficialSink.FOLDER + "/" + VarPublisher.TABLE + " (" + publisher.describe(v) + ")");   // never the server's own folder
                 published.run();
             } catch (java.io.IOException | RuntimeException e) {
                 String fmt = publisher.sink().format();

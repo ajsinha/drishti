@@ -39,7 +39,7 @@ final class ExposurePublisher {
 
     /** The contract version the rows carry (EXPOSURE_GUIDE.md's change table). */
     static final String CONTRACT_VERSION = "1.1";
-    static final String FOLDER = "risk-results";
+    static final String FOLDER = com.ash.drishti.banking.official.OfficialSink.FOLDER;
     static final String NODES = "exposure-official";
     static final String CPTY = "exposure-official-cpty";
 
@@ -113,8 +113,8 @@ final class ExposurePublisher {
 
     /** Where a commit's JSON Lines go on a local root: {@code <root>/risk-results/jsonl/<table>/<date>/<table>-v<version>.jsonl}. */
     Path jsonlFile(String table, LocalDate date, long version) {
-        return com.ash.drishti.banking.official.OfficialSink.folder(sink.root()).resolve(FOLDER).resolve("jsonl").resolve(table)
-                .resolve(date.toString()).resolve(table + "-v" + version + ".jsonl");
+        return com.ash.drishti.banking.official.OfficialSink.folder(com.ash.drishti.api.resolution.TableCatalogue.join(sink.root(),
+                FOLDER + "/jsonl", table)).resolve(date.toString()).resolve(table + "-v" + version + ".jsonl");
     }
 
     /** Appends a date's rows to one table ({@link #NODES} or {@link #CPTY}) in one commit; returns the version written. */

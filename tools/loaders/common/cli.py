@@ -98,6 +98,10 @@ def options(a) -> R.RunOptions:
 
 
 def cmd_run(a, extra=None) -> int:
+    if getattr(a, "data_dir", None):                       # the one data folder: this process and the lake build child (environment) take it
+        sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "tools" / "lake"))
+        import lakeconfig
+        lakeconfig.use_data_dir(a.data_dir)
     rest = list(a.rest or []) + list(extra or [])
     if a.all and a.feed:
         rest = [a.feed] + rest
@@ -205,6 +209,8 @@ def register(groups, add=None) -> argparse.ArgumentParser:
     p.add_argument("--offline", action="store_true", help="use the download cache only; fetch nothing")
     p.add_argument("--set", action="append", metavar="NAME=VALUE", help="override an option of the feed file (JSON values allowed)")
     p.add_argument("--inbox", metavar="DIR", help="--load inbox: the inbox folder (default <data>/dataload/inbox)")
+    p.add_argument("--data-dir", metavar="DIR", help="the data folder (default drishti.data.dir of the settings file, else DRISHTI_DATA_DIR, else data/): "
+                   "the feed's files, its lake's root and the lake build it starts are under it")
     p.add_argument("--lake-root", metavar="DIR", help="java/python: write the lake's layout under this folder instead (a scratch copy)")
     p.add_argument("--jar", help="the server's exec jar (default: the newest in <home>/lib)")
     p.add_argument("--java", help="the java binary (default: drishti.java.home of --settings, DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH; Java 21+)")

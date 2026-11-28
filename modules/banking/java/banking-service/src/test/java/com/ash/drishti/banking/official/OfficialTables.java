@@ -63,9 +63,16 @@ final class OfficialTables {
 
     /** Every document of the table on {@link #DAY}: id to its fields. */
     static Map<String, Map<String, Object>> read(String format, String root, String table, Map<String, String> storage) throws Exception {
+        return read(format, root, OfficialSink.FOLDER, table, table, storage);
+    }
+
+    /** As {@link #read(String, String, String, Map)} for a table at {@code <root>/<domain>/<folder>} (a table bound by its own uri). */
+    static Map<String, Map<String, Object>> read(String format, String root, String domain, String table, String folder,
+            Map<String, String> storage) throws Exception {
         Map<String, String> s = new HashMap<>(storage);
         s.put("root", root);
-        s.put("domain", OfficialSink.FOLDER);
+        s.put("domain", domain);
+        s.put("table." + table, folder);
         s.put("kinds", table);
         s.put("source-name", "official-" + format);
         s.put("engine", "native");

@@ -199,6 +199,8 @@ A table's entry:
 |---|---|---|
 | `kind` | the pack's kind, when the entry is not named after it (`trading.trade_endur` holds `kind: trade`) | |
 | `path` | the table's folder under the root (default `<domain>/<table>`) | |
+| `uri` | the table's own location, an absolute path or URI (`s3://fo-data/mx/trades_v7`): nothing is joined to it, so a bank's lake keeps its own layout (an absolute `path:` means the same) | 2.2.1 |
+| `contract` | the schema the table is read by, a kind's contract (`trade@1`); empty: the kind's own | 2.2.1 |
 | `format` | delta or iceberg, when it differs from the lake's | |
 | `partition-by` | the partition columns after `business_date` (at most four; Delta only) | 2.3 |
 | `promote`, `vectors`, `flatten` | the columns beside the document | 2.4 |
@@ -207,6 +209,29 @@ A table's entry:
 | `sort-by`, `file-rows`, `row-group-rows`, `file-size-mb`, `row-group-mb`, `compression`, `vector-compression` | the file layout | 2.5 |
 | `retention`, `maintenance`, `time-travel` | how long dates and old versions are kept, rows dropped for their age, compaction, vacuum, checkpoints | 2.6, 2.7 |
 | `properties` | Delta or Iceberg table properties, passed through as they are | 2.6 |
+
+#### 2.2.1 Tables by symbolic name: where a name is
+
+Code, packs, Sutras, engine inputs and contracts name a table only by its symbolic name (`trading.trade`, `risk.scenario-pv`); the lake
+file of the installation says where that name is, so the demo lake, the owner's lake and a bank's external lake differ in configuration
+only. A table with no `uri:` is at `<root>/<domain>/<table>`, the layout Drishti gives its own lakes; a table with one is exactly there:
+
+```yaml
+lake: bank
+format: delta
+root: s3://bank-lake/curated
+tables:
+  trading.trade_murex:
+    kind: trade
+    uri: s3://fo-data/mx/trades_v7     # any absolute location; its last two folders are the plugins' domain and table folder
+    contract: trade@1
+```
+
+One resolver makes the location, `TableCatalogue` (Java) and `lakeconfig.locate` (the Python tools); a guard test fails a main source that
+joins a root, a namespace and a table itself. **Admin → Lakes** shows each table's resolved location, format, contract and whether it was
+configured or by convention. [Every table of the reference installation](../admin/TABLE_CATALOGUE.md), with what it holds and who uses it,
+is generated from the lake files by `drishti.py docs generate`. A table's name never follows a module or pack: reorganising modules moves
+no data.
 
 ### 2.3 Partitions: business date first, then as few as possible
 
