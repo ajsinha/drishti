@@ -44,8 +44,18 @@ final class ExposureCaptures {
         this.views = views;
     }
 
+    /** Where a capture's figures come from: in-tree ({@code null}), or the engine path's over the host's answer (R2, decision 6.6 (6)). */
+    interface Figures {
+        Map<String, Object> over(Principal p, String scope, LocalDate date, ExposureService.Ask ask, Map<String, Object> head);
+    }
+
     Map<String, Object> capture(Principal p, String scope, LocalDate date, ExposureService.Ask ask, String note) {
-        Map<String, Object> head = views.scope(p, scope, date, ask);
+        return capture(p, scope, date, ask, note, null);
+    }
+
+    Map<String, Object> capture(Principal p, String scope, LocalDate date, ExposureService.Ask ask, String note, Figures figures) {
+        Map<String, Object> inTree = views.scope(p, scope, date, ask);
+        Map<String, Object> head = figures == null ? inTree : figures.over(p, scope, date, ask, inTree);
         ExposureService.Scoped s = svc.scoped(p, scope, date, ask);
         Map<String, Object> c = new LinkedHashMap<>();
         for (String f : List.of("scope", "canonical", "kind", "label", "businessDate", "runId", "paths", "confidence", "collateralModel")) {
@@ -68,6 +78,9 @@ final class ExposureCaptures {
         c.put("dataVersion", s.date().version());
         c.put("inputs", s.date().inputs());
         c.put("provenance", head.get("provenance"));
+        if (head.get("figuresFrom") != null) {
+            c.put("figuresFrom", head.get("figuresFrom"));
+        }
         String id = svc.official().capture(p, c, s.date().date().toString());
         svc.audit(p, "ccr-capture", s, "capture=" + id);
         Map<String, Object> out = new LinkedHashMap<>();
@@ -99,13 +112,20 @@ final class ExposureCaptures {
     /** Two captures side by side, or a capture and now ({@code b = now}): the figures, the profile and the members added and removed. */
     @SuppressWarnings("unchecked")
     Map<String, Object> compare(Principal p, String a, String b) {
+        return compare(p, a, b, null);
+    }
+
+    /** The same, "now" from the figures given (the engine path's over the host's answer, R2), else in-tree. */
+    @SuppressWarnings("unchecked")
+    Map<String, Object> compare(Principal p, String a, String b, Figures figures) {
         Map<String, Object> ca = get(p, a);
         Map<String, Object> cb;
         if (b == null || b.isBlank() || b.equalsIgnoreCase("now")) {
             String scope = String.valueOf(ca.get("scope"));
             ExposureService.Ask ask = ExposureService.Ask.of(svc.props(), String.valueOf(ca.get("confidence")), String.valueOf(ca.get("collateralModel")),
                     null, null);
-            cb = new LinkedHashMap<>(views.scope(p, scope, null, ask));
+            Map<String, Object> now = views.scope(p, scope, null, ask);
+            cb = new LinkedHashMap<>(figures == null ? now : figures.over(p, scope, null, ask, now));
             cb.put("id", "now");
             cb.put("capturedAt", Instant.now().toString());
             ExposureService.Scoped s = svc.scoped(p, scope, null, ask);

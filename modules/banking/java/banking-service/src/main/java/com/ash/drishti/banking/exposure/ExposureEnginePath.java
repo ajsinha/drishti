@@ -332,6 +332,7 @@ public class ExposureEnginePath {
         prm.put("by", mode);
         prm.put("figure", fig);
         prm.put("at", i);
+        groups(scope, date, prm);
         Map<String, Object> c = call(p, List.of("exposure-contributions"), prm, date);
         List<Map<String, Object>> cs = rows(c, "exposure-contributions");
         if (cs == null) {
@@ -581,6 +582,7 @@ public class ExposureEnginePath {
             boolean in = s.regionMatches(true, 0, "NSET:", 0, 5) ? si.id().equalsIgnoreCase(id)
                     : s.regionMatches(true, 0, "CPTY:", 0, 5) ? id.equalsIgnoreCase(si.counterparty())
                     : s.regionMatches(true, 0, "LE:", 0, 3) ? id.equalsIgnoreCase(si.legalEntity())
+                    : s.regionMatches(true, 0, "GROUP:", 0, 6) ? members(d, id).contains(si.counterparty())
                     : s.equalsIgnoreCase("BANK");
             if (!in || !seen.test(si.id())) {
                 continue;
@@ -592,6 +594,271 @@ public class ExposureEnginePath {
             }
         }
         return out;
+    }
+
+    /** A connected group's members as the in-tree scope words read them (the id, else {@code GRP-<id>}). */
+    private static List<String> members(ExposureDate d, String group) {
+        List<String> m = d.groups().get(group);
+        return m != null ? m : d.groups().getOrDefault("GRP-" + group, List.of());
+    }
+
+    /**
+     * The figures of an official record through the engine ({@code exposure-official}, {@code exposure-official-profile},
+     * {@code exposure-trade-ee}), as {@link ExposureOfficial} computes them in-tree, for every scope of the record in one ask: each scope's
+     * figures in whole units (CE, EPE, EEPE, peak EE, peak PFE at 95% and 99%, the peak's date at the limit's confidence, the IMM EAD, PFE
+     * 95% and EE at 1Y and 5Y, the profile, netting sets, partial sets, trades, flags with the host's data-quality flags) and every trade's
+     * EE contribution. The record's structure, versions, store and published tables stay the host's; asked as the server (no viewer).
+     */
+    ExposureOfficial.Figures officialFigures(ExposureDate d, ExposureService.Ask ask, List<String> scopes) {
+        ExposureService es = svc.getObject();
+        Map<String, Object> prm = new LinkedHashMap<>();
+        prm.put("scopes", scopes);
+        prm.put("confidence", ask.q());
+        prm.put("collateral", ask.collateral());
+        List<Map<String, Object>> groups = new ArrayList<>();
+        d.groups().forEach((g, ms) -> ms.forEach(c -> groups.add(new LinkedHashMap<>(Map.of("GROUP", g, "COUNTERPARTY", c)))));
+        if (!groups.isEmpty()) {
+            prm.put("groups", groups);
+        }
+        // a scope only the host resolves (a hierarchy's node over the trades' level columns): its trades, as the engine's scope-members rows;
+        // the netting sets it touches give its data-quality flags
+        List<Map<String, Object>> members = new ArrayList<>();
+        Map<String, java.util.Set<String>> setsOf = new LinkedHashMap<>();
+        com.ash.drishti.banking.compute.ccr.ExposureScopes words = new com.ash.drishti.banking.compute.ccr.ExposureScopes(d.book(),
+                gr -> java.util.Optional.ofNullable(d.groups().get(gr)), es.loader().hierarchySpecs());
+        for (String sc : scopes) {
+            if (sc.equalsIgnoreCase("BANK") || java.util.regex.Pattern.compile("^(NSET|CPTY|GROUP|LE):[^ +&-]+$", java.util.regex.Pattern.CASE_INSENSITIVE)
+                    .matcher(sc).matches()) {
+                continue;
+            }
+            java.util.Set<String> sets = new java.util.LinkedHashSet<>();
+            words.resolve(sc).trades().forEach(t -> {
+                com.ash.drishti.banking.compute.ccr.ExposureBook.TradeInfo ti = d.book().trade(t);
+                members.add(new LinkedHashMap<>(Map.of("SCOPE", sc, "TRADE_ID", ti.id())));
+                sets.add(d.book().set(ti.set()).id());
+            });
+            setsOf.put(sc, sets);
+        }
+        if (!members.isEmpty()) {
+            prm.put("scope-members", members);
+        }
+        Principal server = new Principal(ExposureOfficialStore.OWNER, List.of("*"));
+        Map<String, Object> a = call(server, List.of("exposure-official", "exposure-official-profile"), prm, d.date());
+        Map<String, Object> tp = new LinkedHashMap<>();
+        tp.put("confidence", ask.q());
+        tp.put("collateral", ask.collateral());
+        Map<String, Object> ta = call(server, List.of("exposure-trade-ee"), tp, d.date());
+        List<Map<String, Object>> rows = rows(a, "exposure-official");
+        List<Map<String, Object>> prof = rows(a, "exposure-official-profile");
+        List<Map<String, Object>> tee = rows(ta, "exposure-trade-ee");
+        if (rows == null || prof == null || tee == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no official figures of " + d.date() + missing(a) + missing(ta));
+        }
+        Map<String, Map<String, Object>> byScope = new LinkedHashMap<>();
+        rows.forEach(r -> byScope.put(String.valueOf(r.get("SCOPE")), r));
+        Map<String, List<Map<String, Object>>> profiles = new LinkedHashMap<>();
+        prof.sort(java.util.Comparator.comparingLong(r -> ((Number) r.get("POINT")).longValue()));
+        prof.forEach(r -> profiles.computeIfAbsent(String.valueOf(r.get("SCOPE")), x -> new ArrayList<>()).add(r));
+        double alpha = es.props().alpha();
+        // every trade's EE contribution, in the engine's order (the book's netting sets, each set's trades in the calculation's order)
+        tee.sort(java.util.Comparator.<Map<String, Object>>comparingLong(r -> ((Number) r.get("ORDER")).longValue())
+                .thenComparingLong(r -> ((Number) r.get("POINT")).longValue()));
+        Map<String, Object> trades = new LinkedHashMap<>();
+        List<String> tenors = new ArrayList<>();
+        com.ash.drishti.banking.compute.ccr.ExposureGrid g = d.book().grid();
+        for (int i = 0; i < g.primaryCount(); i++) {
+            tenors.add(g.tenor(g.primaryAt(i)));
+        }
+        trades.put("businessDate", d.date().toString());
+        trades.put("runId", d.book().runId());
+        trades.put("tenors", tenors);
+        Map<String, Object> byTrade = new LinkedHashMap<>();
+        Map<String, List<Long>> ees = new LinkedHashMap<>();
+        Map<String, String> setOf = new LinkedHashMap<>();
+        for (Map<String, Object> r : tee) {
+            String t = String.valueOf(r.get("TRADE_ID"));
+            ees.computeIfAbsent(t, x -> new ArrayList<>()).add(Math.round(((Number) r.get("EE")).doubleValue()));
+            setOf.put(t, String.valueOf(r.get("NETTING_SET")));
+        }
+        ees.forEach((t, ee) -> byTrade.put(t, Map.of("nettingSet", setOf.get(t), "ee", ee)));
+        trades.put("trades", byTrade);
+        return new ExposureOfficial.Figures() {
+            @Override
+            public Map<String, Object> of(String scope) {
+                Map<String, Object> r = byScope.get(scope);
+                if (r == null || r.get("NOTE") != null) {
+                    throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no official figures of " + scope + " on "
+                            + d.date() + (r == null ? "" : ": " + r.get("NOTE")));
+                }
+                Map<String, Object> f = new LinkedHashMap<>();
+                f.put("ce", Math.round(num(r.get("CE"))));
+                f.put("epe", Math.round(num(r.get("EPE"))));
+                f.put("eepe", Math.round(num(r.get("EEPE"))));
+                f.put("peakEe", Math.round(num(r.get("PEAK_EE"))));
+                f.put("peakPfe95", r.get("PEAK_PFE_95") == null ? null : Math.round(num(r.get("PEAK_PFE_95"))));
+                f.put("peakPfe99", r.get("PEAK_PFE_99") == null ? null : Math.round(num(r.get("PEAK_PFE_99"))));
+                f.put("peakPfeDate", r.get("PEAK_PFE_DATE"));
+                f.put("eadImm", Math.round(alpha * num(r.get("EEPE"))));
+                List<Map<String, Object>> pr = profiles.getOrDefault(scope, List.of());
+                f.put("pfe95At1Y", at(pr, "1Y", "PFE_95"));
+                f.put("pfe95At5Y", at(pr, "5Y", "PFE_95"));
+                f.put("eeAt1Y", at(pr, "1Y", "EE"));
+                f.put("eeAt5Y", at(pr, "5Y", "EE"));
+                List<Map<String, Object>> out = new ArrayList<>();
+                for (Map<String, Object> x : pr) {
+                    Map<String, Object> y = new LinkedHashMap<>();
+                    y.put("TENOR", x.get("TENOR"));
+                    y.put("DATE", String.valueOf(x.get("DATE")));
+                    y.put("EE", Math.round(num(x.get("EE"))));
+                    y.put("ENE", Math.round(num(x.get("ENE"))));
+                    y.put("EEE", Math.round(num(x.get("EEE"))));
+                    y.put("PFE_95", x.get("PFE_95") == null ? null : Math.round(num(x.get("PFE_95"))));
+                    y.put("PFE_99", x.get("PFE_99") == null ? null : Math.round(num(x.get("PFE_99"))));
+                    out.add(y);
+                }
+                f.put("profile", out);
+                f.put("nettingSets", ((Number) r.get("NETTING_SETS")).intValue());
+                f.put("partialSets", ((Number) r.get("PARTIAL_SETS")).intValue());
+                f.put("trades", ((Number) r.get("TRADES")).intValue());
+                java.util.Set<String> touched = setsOf.get(scope);
+                f.put("flags", touched == null ? flags(r.get("FLAGS"), d, scope, set -> true) : flags(r.get("FLAGS"), d, "BANK", touched::contains));
+                return f;
+            }
+
+            @Override
+            public Map<String, Object> trades() {
+                return trades;
+            }
+        };
+    }
+
+    /**
+     * A scope's figures through the engine for a capture or the compare's "now" (decision 6.6 (6) as for VaR: the capture's own fields are the
+     * host's, its figures the path's): over the host's answer {@code head} (its kind, label, run, provenance, the grid's dates and times), the
+     * engine's CE, EPE, EEPE, peak EE, peak PFE with its date and tenor, peak PFE at 99%, the IMM EAD, the profile's figures (EE, ENE, effective
+     * EE, PFE at the asked confidence, at 95% and 99%, uncollateralised EE) at every primary date, each netting set's figures
+     * ({@code exposure-by-netting-set}) and the flags; {@code figuresFrom: engine}. Refused in words: a viewer whose role has exposure
+     * access levels (answered in-tree).
+     */
+    @SuppressWarnings("unchecked")
+    Map<String, Object> overlay(Principal p, String scope, LocalDate date, ExposureService.Ask ask, Map<String, Object> head) {
+        ExposureService es = svc.getObject();
+        if (p != null && !es.access().levels(p).isEmpty()) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "your role's exposure access levels are applied in-tree; captures are made "
+                    + "there (path=in-tree)");
+        }
+        LocalDate d = LocalDate.parse(String.valueOf(head.get("businessDate")));
+        Map<String, Object> prm = new LinkedHashMap<>();
+        prm.put("scope", scope);
+        prm.put("standalone", false);
+        prm.put("confidence", ask.q());
+        prm.put("collateral", ask.collateral());
+        groups(scope, d, prm);
+        Map<String, Object> a = call(p, List.of("exposure-summary", "exposure-profile", "exposure-flags", "exposure-by-netting-set", "scope-resolution"),
+                prm, d);
+        Map<String, Map<String, Object>> at = new LinkedHashMap<>();         // the summary and profile at 95% and 99% (the profile's PFE columns)
+        Map<String, List<Map<String, Object>>> prof = new LinkedHashMap<>();
+        for (double q : new double[] {0.95, 0.99}) {
+            Map<String, Object> pq = new LinkedHashMap<>(prm);
+            pq.put("confidence", q);
+            Map<String, Object> aq = call(p, List.of("exposure-summary", "exposure-profile"), pq, d);
+            prof.put(q == 0.95 ? "pfe95" : "pfe99", rows(aq, "exposure-profile"));
+            at.put(q == 0.95 ? "s95" : "s99", rows(aq, "exposure-summary").get(0));
+        }
+        List<Map<String, Object>> summary = rows(a, "exposure-summary");
+        List<Map<String, Object>> profile = rows(a, "exposure-profile");
+        if (summary == null || summary.isEmpty() || profile == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no exposure of " + scope + " on " + d + missing(a));
+        }
+        Map<String, Object> s = summary.get(0);
+        Map<String, Object> out = new LinkedHashMap<>(head);
+        out.put("ce", Math.round(num(s.get("CE"))));
+        out.put("epe", Math.round(num(s.get("EPE"))));
+        out.put("eepe", Math.round(num(s.get("EEPE"))));
+        out.put("peakEe", Math.round(num(s.get("PEAK_EE"))));
+        out.put("peakPfe", Math.round(num(s.get("PEAK_PFE"))));
+        Object peakDate = s.get("PEAK_PFE_DATE");
+        profile.sort(java.util.Comparator.comparingLong(r -> ((Number) r.get("POINT")).longValue()));
+        out.put("peakPfeDate", peakDate == null ? null : peakDate.toString());
+        out.put("peakPfeTenor", peakDate == null ? null : profile.stream().filter(r -> peakDate.toString().equals(String.valueOf(r.get("DATE"))))
+                .map(r -> r.get("TENOR")).findFirst().orElse(null));
+        boolean has99 = java.util.Arrays.stream(es.props().confidences()).anyMatch(c -> Math.abs(c - 0.99) < 1e-12) || Math.abs(ask.q() - 0.99) < 1e-12;
+        out.put("peakPfe99", has99 ? Math.round(num(at.get("s99").get("PEAK_PFE"))) : null);
+        out.put("eadImm", Math.round(es.props().alpha() * num(s.get("EEPE"))));
+        boolean has95 = java.util.Arrays.stream(es.props().confidences()).anyMatch(c -> Math.abs(c - 0.95) < 1e-12) || Math.abs(ask.q() - 0.95) < 1e-12;
+        List<Map<String, Object>> rows = new ArrayList<>();
+        List<Map<String, Object>> hp = head.get("profile") instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
+        for (Map<String, Object> h : hp) {                               // the host's grid rows (dates, times, roles), the engine's figures
+            Map<String, Object> r = new LinkedHashMap<>(h);
+            Map<String, Object> e = byDate(profile, h.get("date"));
+            if (e != null && "PRIMARY".equals(h.get("role"))) {
+                r.put("ee", Math.round(num(e.get("EE"))));
+                r.put("ene", Math.round(num(e.get("ENE"))));
+                r.put("eee", Math.round(num(e.get("EEE"))));
+                r.put("pfe", Math.round(num(e.get("PFE"))));
+                Map<String, Object> e95 = byDate(prof.get("pfe95"), h.get("date"));
+                Map<String, Object> e99 = byDate(prof.get("pfe99"), h.get("date"));
+                r.put("pfe95", has95 && e95 != null ? Math.round(num(e95.get("PFE"))) : null);
+                r.put("pfe99", has99 && e99 != null ? Math.round(num(e99.get("PFE"))) : null);
+                r.put("eeUncoll", Math.round(num(e.get("EE_UNCOLL"))));
+            }
+            rows.add(r);
+        }
+        out.put("profile", rows);
+        List<Map<String, Object>> sets = new ArrayList<>();
+        List<Map<String, Object>> by = rows(a, "exposure-by-netting-set");
+        String kind = String.valueOf(rows(a, "scope-resolution").get(0).get("KIND"));
+        long nsets = ((Number) rows(a, "exposure-flags").get(0).get("NETTING_SETS")).longValue();
+        if (by != null && (nsets >= 2 || List.of("counterparty", "group", "legal-entity", "bank").contains(kind))) {
+            Map<String, String> labels = new LinkedHashMap<>();
+            if (head.get("byNettingSet") instanceof List<?> hb) {           // the label is the host's (the counterparty's name as the viewer sees it)
+                for (Object o : hb) {
+                    Map<String, Object> m = (Map<String, Object>) o;
+                    labels.put(String.valueOf(m.get("nettingSet")), String.valueOf(m.get("label")));
+                }
+            }
+            by.sort(java.util.Comparator.comparingLong(r -> ((Number) r.get("RANK")).longValue()));
+            for (Map<String, Object> r : by) {
+                Map<String, Object> x = new LinkedHashMap<>();
+                x.put("nettingSet", r.get("NETTING_SET"));
+                x.put("counterparty", r.get("COUNTERPARTY"));
+                x.put("label", labels.getOrDefault(String.valueOf(r.get("NETTING_SET")), String.valueOf(r.get("NETTING_SET"))));
+                x.put("partial", r.get("PARTIAL"));
+                x.put("epe", Math.round(num(r.get("EPE"))));
+                x.put("peakEe", Math.round(num(r.get("PEAK_EE"))));
+                x.put("peakPfe", Math.round(num(r.get("PEAK_PFE"))));
+                x.put("pfeContribution", Math.round(num(r.get("PFE_CONTRIBUTION"))));
+                sets.add(x);
+            }
+            sets.sort((x, y) -> Long.compare((Long) y.get("pfeContribution"), (Long) x.get("pfeContribution")));
+        }
+        out.put("byNettingSet", sets);
+        ExposureDate hd = es.date(d);
+        List<String> flags = flags(rows(a, "exposure-flags").get(0).get("FLAGS"), hd, scope, set -> true);
+        if (!hd.warnings().isEmpty() && !flags.contains("stale-run")) {
+            flags.add("stale-run");
+        }
+        out.put("flags", flags);
+        out.put("figuresFrom", "engine");
+        return out;
+    }
+
+    private static Map<String, Object> byDate(List<Map<String, Object>> rows, Object date) {
+        for (Map<String, Object> r : rows == null ? List.<Map<String, Object>>of() : rows) {
+            if (String.valueOf(r.get("DATE")).equals(String.valueOf(date))) {
+                return r;
+            }
+        }
+        return null;
+    }
+
+    private static Long at(List<Map<String, Object>> profile, String tenor, String column) {
+        for (Map<String, Object> x : profile) {
+            if (tenor.equals(x.get("TENOR"))) {
+                return x.get(column) == null ? null : Math.round(num(x.get(column)));
+            }
+        }
+        return null;
     }
 
     /** The quantiles of a distribution (the in-tree route's) and of its path fan. */
@@ -620,13 +887,11 @@ public class ExposureEnginePath {
             i = primary(pts, at);
         }
         String s = scope == null ? "" : scope.trim();
-        if (s.regionMatches(true, 0, "GROUP:", 0, 6)) {
-            ask(p, s, date, m, List.of());                              // refused in words, as every route of the engine path
-        }
         Map<String, Object> prm = new LinkedHashMap<>();
         prm.put("scope", s.isEmpty() ? "BANK" : s);
         prm.put("standalone", false);
         prm.putAll(m.params());
+        groups(s, date, prm);
         prm.put("at", i);
         prm.put("bins", bins <= 0 ? es.props().histogramBins() : Math.min(500, bins));
         List<String> outs = new ArrayList<>(List.of("scope-resolution", "exposure-summary", "exposure-flags", "exposure-run", "exposure-distribution",
@@ -787,15 +1052,267 @@ public class ExposureEnginePath {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the engine path needs the business date: give asOf");
         }
         String s = scope == null ? "" : scope.trim();
-        if (s.regionMatches(true, 0, "GROUP:", 0, 6)) {
-            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the engine path does not resolve counterparty groups yet; " + s
-                    + " is answered in-tree (path=in-tree) until row-set scopes reach the engine path (R2 step 4b)");
-        }
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("scope", s.isEmpty() ? "BANK" : s);
         params.put("standalone", false);
         params.putAll(m.params());
+        groups(s, date, params);
         return call(p, outputs, params, date);
+    }
+
+    /**
+     * A scope naming a connected group ({@code GROUP:<id>}): the date's groups and their member counterparties from the host's reference
+     * (the group kind alone, {@link ExposureLoader#groups}), passed as the engine's {@code groups} rows; the engine resolves the scope by
+     * Drishti's scope words as in-tree.
+     */
+    private void groups(String scope, LocalDate date, Map<String, Object> params) {
+        if (!scope.toUpperCase(Locale.ROOT).contains("GROUP:")) {
+            return;
+        }
+        ExposureService es = svc.getObject();
+        List<Map<String, Object>> rows = new ArrayList<>();
+        es.loader().groups(com.ash.drishti.api.AsOf.of(date)).forEach((g, ms) -> ms.forEach(c -> {
+            Map<String, Object> r = new LinkedHashMap<>();
+            r.put("GROUP", g);
+            r.put("COUNTERPARTY", c);
+            rows.add(r);
+        }));
+        if (!rows.isEmpty()) {
+            params.put("groups", rows);
+        }
+    }
+
+    /**
+     * A what-if through the engine ({@code exposure-what-if}, {@code exposure-what-if-profile}), as the in-tree {@code POST /what-if} answers
+     * it ({@link ExposureWhatIf}: method {@code addon}, the proxy; {@link ExposureWhatIfPaths}: method {@code paths}, exact): the request's
+     * candidates as the engine's {@code candidates} rows (a copy of a booked trade, or supplied paths; maturity dates as years from the
+     * business date, as in-tree), the figures rounded to whole units as in-tree. Refused in words, answered in-tree: candidates' paths as
+     * Arrow, and a viewer whose role has exposure access levels.
+     */
+    @SuppressWarnings("unchecked")
+    Map<String, Object> whatIf(Principal p, Map<String, Object> body, LocalDate date, boolean audited) {
+        String scope = String.valueOf(body.getOrDefault("scope", "")).trim();
+        if (scope.isEmpty()) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "a what-if names its scope: {\"scope\": \"CPTY:CP-ALDERSHOT\", ...}");
+        }
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the engine path needs the business date: give asOf");
+        }
+        String method = String.valueOf(body.getOrDefault("method", "addon")).trim().toLowerCase(Locale.ROOT);
+        ExposureService es = svc.getObject();
+        Object qq = body.get("q");
+        Object cc = body.get("collateral");
+        ExposureService.Ask ask = ExposureService.Ask.of(es.props(), qq == null ? null : String.valueOf(qq), cc == null ? null : String.valueOf(cc), null, null);
+        List<Map<String, Object>> cands = body.get("candidates") instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
+        if (cands.isEmpty()) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "a what-if has candidates: [{tradeId, assetClass, notional, maturityDate, mtm}]");
+        }
+        if (!method.equals("paths") && !method.equals("addon")) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "method is addon or paths, not " + method);
+        }
+        if (p != null && !es.access().levels(p).isEmpty()) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "your role's exposure access levels are applied in-tree; the what-if is "
+                    + "answered there (path=in-tree)");
+        }
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (Map<String, Object> c : cands) {
+            Map<String, Object> r = new LinkedHashMap<>();
+            String id = c.get("tradeId") == null ? "CANDIDATE-" + (rows.size() + 1) : String.valueOf(c.get("tradeId"));
+            r.put("ID", id);
+            r.put("LABEL", c.get("label") == null ? id : String.valueOf(c.get("label")));
+            Map<?, ?> pm = c.get("paths") instanceof Map<?, ?> x ? x : null;
+            r.put("RUN_ID", pm == null || pm.get("runId") == null ? null : String.valueOf(pm.get("runId")));
+            if (method.equals("paths")) {
+                if (pm == null) {
+                    throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "method paths needs each candidate's paths on the run: paths: "
+                            + "{copyOf: <trade>, factor} or {runId, mtm: [grid date by grid date]}; " + id + " has none");
+                }
+                if (pm.get("arrow") != null) {
+                    throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the engine path takes a candidate's paths as copyOf or mtm for now; "
+                            + "Arrow paths are answered in-tree (path=in-tree)");
+                }
+                String set = c.get("nettingSet") == null ? "" : String.valueOf(c.get("nettingSet")).trim().toUpperCase(Locale.ROOT);
+                r.put("NETTING_SET", set.isEmpty() || set.startsWith("NS-") ? set : "NS-" + set);
+                if (pm.get("copyOf") != null) {
+                    r.put("COPY_OF", String.valueOf(pm.get("copyOf")).trim());
+                    r.put("FACTOR", pm.get("factor") instanceof Number f ? f.doubleValue() : 1.0);
+                    r.put("LIFE_YEARS", null);
+                } else {
+                    r.put("MTM", numbers(pm.get("mtm")));
+                    r.put("LIFE_YEARS", years(date, c.get("maturityDate")));
+                }
+                r.put("MTM0", c.get("mtm") instanceof Number x && Double.isFinite(x.doubleValue()) ? x.doubleValue() : null);
+            } else {
+                r.put("ASSET_CLASS", String.valueOf(c.getOrDefault("assetClass", "")));
+                r.put("NOTIONAL", num(c.get("notional")));
+                r.put("DELTA", c.get("delta") == null ? 1.0 : num(c.get("delta")));
+                r.put("MTM0", num(c.get("mtm")));
+                r.put("LIFE_YEARS", years(date, c.get("maturityDate")));
+            }
+            rows.add(r);
+        }
+        List<String> cols = List.of("ID", "LABEL", "RUN_ID", "NETTING_SET", "COPY_OF", "FACTOR", "MTM", "MTM0", "LIFE_YEARS", "ASSET_CLASS", "NOTIONAL", "DELTA");
+        for (int i = 0; i < rows.size(); i++) {                         // every row the same columns (the engine's table takes the first row's)
+            Map<String, Object> full = new LinkedHashMap<>();
+            for (String c : cols) {
+                full.put(c, rows.get(i).get(c));
+            }
+            rows.set(i, full);
+        }
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("scope", scope);
+        params.put("confidence", ask.q());
+        params.put("collateral", ask.collateral());
+        params.put("method", method);
+        params.put("candidates", rows);
+        groups(scope, date, params);
+        long t0 = System.nanoTime();
+        Map<String, Object> a = call(p, List.of("exposure-what-if", "exposure-what-if-profile"), params, date);
+        List<Map<String, Object>> w = rows(a, "exposure-what-if");
+        List<Map<String, Object>> prof = rows(a, "exposure-what-if-profile");
+        if (w == null || w.size() < 2 || prof == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " answered no what-if for " + scope + " on " + date + missing(a));
+        }
+        Map<String, Object> b0 = w.stream().filter(r -> "BEFORE".equals(r.get("ROW"))).findFirst().orElseThrow();   // the engine's rows come by key
+        Map<String, Object> b1 = w.stream().filter(r -> "AFTER".equals(r.get("ROW"))).findFirst().orElseThrow();
+        prof.sort(java.util.Comparator.comparingLong(r -> ((Number) r.get("POINT")).longValue()));
+        boolean exact = method.equals("paths");
+        String[][] figs = exact ? new String[][] {{"EPE", "epe"}, {"EEPE", "eepe"}, {"PEAK_PFE", "peakPfe"}, {"PEAK_EE", "peakEe"}, {"CE", "ce"}}
+                : new String[][] {{"EPE", "epe"}, {"PEAK_PFE", "peakPfe"}, {"PEAK_EE", "peakEe"}};
+        Map<String, Object> fBase = new LinkedHashMap<>();
+        Map<String, Object> fWith = new LinkedHashMap<>();
+        Map<String, Object> inc = new LinkedHashMap<>();
+        for (String[] f : figs) {
+            double x0 = ((Number) b0.get(f[0])).doubleValue();
+            double x1 = ((Number) b1.get(f[0])).doubleValue();
+            fBase.put(f[1], Math.round(x0));
+            fWith.put(f[1], Math.round(x1));
+            if (exact || !f[1].equals("peakEe")) {
+                inc.put(f[1], Math.round(x1 - x0));
+            }
+        }
+        if (exact) {
+            fBase.put("peakPfeTenor", b0.get("PEAK_PFE_TENOR"));
+            fWith.put("peakPfeTenor", b1.get("PEAK_PFE_TENOR"));
+        }
+        List<Map<String, Object>> profile = new ArrayList<>();
+        for (Map<String, Object> r : prof) {
+            Map<String, Object> x = new LinkedHashMap<>();
+            double ee0 = ((Number) r.get("EE_BEFORE")).doubleValue();
+            double ee1 = ((Number) r.get("EE_AFTER")).doubleValue();
+            double pf0 = ((Number) r.get("PFE_BEFORE")).doubleValue();
+            double pf1 = ((Number) r.get("PFE_AFTER")).doubleValue();
+            x.put("tenor", r.get("TENOR"));
+            x.put("date", String.valueOf(r.get("DATE")));
+            double t = ((Number) r.get("T")).doubleValue();
+            x.put("t", exact ? t : ExposureViews.round4(t));
+            x.put("eeBase", Math.round(ee0));
+            x.put("ee", Math.round(ee1));
+            x.put("pfeBase", Math.round(pf0));
+            x.put("pfe", Math.round(pf1));
+            if (exact) {
+                x.put("incrementalEe", Math.round(ee1 - ee0));
+                x.put("incrementalPfe", Math.round(pf1 - pf0));
+            } else {
+                x.put("incrementalPfe", Math.round(((Number) r.get("ADDED")).doubleValue()));
+            }
+            profile.add(x);
+        }
+        inc.put("profile", profile);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("scope", scope);
+        out.put("canonical", b0.get("CANONICAL"));
+        out.put("businessDate", date.toString());
+        out.put("runId", b0.get("RUN_ID"));
+        out.put("confidence", ask.q());
+        out.put("method", method);
+        out.put("base", fBase);
+        out.put("with", fWith);
+        out.put("incremental", inc);
+        out.put("candidates", cands.size());
+        if (exact) {
+            List<Map<String, Object>> items = new ArrayList<>();
+            Map<String, Map<String, Object>> byItem = new LinkedHashMap<>();
+            w.forEach(r -> byItem.put(String.valueOf(r.get("ROW")), r));
+            for (Map<String, Object> cand : rows) {                     // the candidates' order, as in-tree
+                Map<String, Object> r = byItem.get("ITEM:" + cand.get("ID"));
+                if (r == null) {
+                    continue;
+                }
+                Map<String, Object> x = new LinkedHashMap<>();
+                x.put("tradeId", String.valueOf(r.get("ROW")).substring("ITEM:".length()));
+                x.put("label", r.get("LABEL"));
+                x.put("nettingSet", r.get("NETTING_SET"));
+                x.put("peakPfeAlone", Math.round(((Number) r.get("PEAK_PFE_ALONE")).doubleValue()));
+                x.put("incrementalPeakPfe", Math.round(((Number) r.get("INCREMENTAL_PEAK_PFE")).doubleValue()));
+                items.add(x);
+            }
+            out.put("items", items);
+            out.put("flags", List.of("exact"));
+            out.put("note", "exact: each candidate's paths on the run " + b0.get("RUN_ID") + " added to its netting set path by path, collateral ("
+                    + com.ash.drishti.banking.compute.ccr.ExposureMath.Model.of(ask.collateral()).text() + ") and exposure computed again by the Java exposure engine");
+            out.put("engine", "ccr (Drishti Risk)");
+        } else {
+            out.put("flags", List.of("proxy"));
+            out.put("note", "a conservative proxy: each candidate a netting set of its own, uncollateralised, with SA-CCR's supervisory factor; the "
+                    + "exact method is paths (the candidates' paths on the run added to their netting sets)");
+        }
+        out.put("path", "engine");
+        if (audited) {
+            es.audit(p == null ? ExposureOfficialStore.OWNER : p.user(), "ccr-whatif", String.valueOf(b0.get("CANONICAL")), String.format(Locale.ROOT,
+                    "date=%s run=%s version=engine q=%s collateral=%s epe=%.0f peakPfe=%.0f ms=%d method=%s candidates=%d path=engine", date,
+                    b0.get("RUN_ID"), ask.q(), ask.collateral(), ((Number) b0.get("EPE")).doubleValue(), ((Number) b0.get("PEAK_PFE")).doubleValue(),
+                    (System.nanoTime() - t0) / 1_000_000, method, cands.size()));
+        }
+        return out;
+    }
+
+    private static List<Double> numbers(Object o) {
+        if (!(o instanceof List<?> l)) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "a candidate's paths.mtm is a list of numbers (grid date by grid date)");
+        }
+        List<Double> out = new ArrayList<>();
+        for (Object x : l) {
+            if (x instanceof List<?> row) {
+                row.forEach(y -> out.add(finite(y)));
+            } else {
+                out.add(finite(x));
+            }
+        }
+        return out;
+    }
+
+    private static double finite(Object y) {
+        if (y instanceof Number n && Double.isFinite(n.doubleValue())) {
+            return n.doubleValue();
+        }
+        throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "a candidate's path value is a finite number, not " + y);
+    }
+
+    private static double num(Object o) {
+        if (o instanceof Number n) {
+            return n.doubleValue();
+        }
+        if (o == null) {
+            return 0;
+        }
+        try {
+            return Double.parseDouble(String.valueOf(o));
+        } catch (NumberFormatException e) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "a candidate's amount is a number, not " + o);
+        }
+    }
+
+    /** A maturity date as years from the business date (at least a day; absent: one year), as the in-tree what-if reads it. */
+    private static double years(LocalDate bd, Object d) {
+        if (d == null) {
+            return 1;
+        }
+        try {
+            return Math.max(1 / 365.0, java.time.temporal.ChronoUnit.DAYS.between(bd, LocalDate.parse(String.valueOf(d).substring(0, 10))) / 365.0);
+        } catch (RuntimeException e) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "a candidate's maturityDate is a date (YYYY-MM-DD), not " + d);
+        }
     }
 
     private Map<String, Object> call(Principal p, List<String> outputs, Map<String, Object> params, LocalDate date) {

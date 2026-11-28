@@ -79,6 +79,9 @@ class ExposureHomesSideBySideTest {
         System.out.println("exposure homes sample: " + inTree.entrySet().stream().map(e -> e.getKey() + "=" + cut(e.getValue())).toList());
         assertThat(exposureRows).as("counterparty rows compared").isGreaterThan(5);
         assertThat(pagesOk).as("netting-set and counterparty pages with exposure figures").isGreaterThan(20);
+        long official = inTree.keySet().stream().filter(k -> k.startsWith("official ")).count();
+        System.out.println("side by side, official record: " + official + " scopes and trades compared; record " + inTree.get("official record"));
+        assertThat(official).as("official scopes and trades compared").isGreaterThan(50);
         assertThat(differences).as("Home tables that differ between in-tree and engine").isEmpty();
     }
 
@@ -152,6 +155,17 @@ class ExposureHomesSideBySideTest {
                     }
                 }
             }
+            // the official record (EXPOSURE_GUIDE.md section 20): captured as an administrator, read back with every trade's EE contribution;
+            // its figures come from the path exposure.route chose (the engine's record says figuresFrom: engine), its structure the host's
+            server.post("/api/v1/risk/exposure/official?asOf=" + ExposureSideBySideTest.DATE, "{}");
+            JsonNode off = server.get("/api/v1/risk/exposure/official?asOf=" + ExposureSideBySideTest.DATE + "&trades=true");
+            out.put("official from", List.of(off.path("figuresFrom").asText("in-tree").equals(path) ? "the path asked" : "another path: "
+                    + off.path("figuresFrom").asText("in-tree")));
+            off.path("scopes").fields().forEachRemaining(e -> out.put("official " + e.getKey(), List.of(e.getValue().toString())));
+            off.path("tradeContributions").path("trades").fields().forEachRemaining(e -> out.put("official trade " + e.getKey(),
+                    List.of(e.getValue().path("nettingSet").asText() + " " + e.getValue().path("ee"))));
+            out.put("official record", List.of(off.path("runId").asText(), off.path("confidence").asText(), off.path("collateralModel").asText(),
+                    String.valueOf(off.path("scopes").size()), String.valueOf(off.path("tradeContributions").path("trades").size())));
             return out;
         } finally {
             server.close();

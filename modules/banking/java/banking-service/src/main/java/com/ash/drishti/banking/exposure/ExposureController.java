@@ -175,7 +175,11 @@ public class ExposureController {
 
     /** Incremental exposure before dealing: {@code {scope, method: addon|paths, q, candidates: [...]}}. */
     @PostMapping("/what-if")
-    public Map<String, Object> whatIf(@RequestBody Map<String, Object> body, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> whatIf(@RequestBody Map<String, Object> body, AsOf asOf, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the ccr engine's what-if through the host
+            return enginePath.whatIf(p, body, date(asOf), true);
+        }
         return whatIf.whatIf(p, body, date(asOf));
     }
 
@@ -238,12 +242,20 @@ public class ExposureController {
     // ------------------------------------------------------------------------------------------------------------------- official
 
     @GetMapping("/official")
-    public Map<String, Object> officialRecord(AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> officialRecord(AsOf asOf, @RequestParam(defaultValue = "false") boolean trades,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         if (!svc.access().seesAll(p)) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "the official record covers every counterparty: your role sees only some of them");
         }
         LocalDate d = svc.date(date(asOf)).date();
-        return svc.official().index(d).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no official exposure record of " + d));
+        Map<String, Object> index = svc.official().index(d).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND,
+                "no official exposure record of " + d));
+        if (!trades || !(index.get("trades") instanceof String key)) {
+            return index;
+        }
+        Map<String, Object> out = new LinkedHashMap<>(index);          // trades=true: the record's every trade EE contribution beside it
+        out.put("tradeContributions", svc.official().trades(key).orElse(null));
+        return out;
     }
 
     @PostMapping("/official")
@@ -258,11 +270,13 @@ public class ExposureController {
     /** Captures a scope's exposure now: {@code {"scope": "CPTY:CP-ALDERSHOT", "note": "before the unwind", "q": 0.95}}. */
     @PostMapping("/captures")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, Object> capture(@RequestBody Map<String, Object> body, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> capture(@RequestBody Map<String, Object> body, AsOf asOf, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         Object q = body.get("q");
         Object c = body.get("collateral");
         return captures.capture(p, scope((String) body.get("scope")), date(asOf), ask(q == null ? null : String.valueOf(q), c == null ? null
-                : String.valueOf(c), null, null), body.get("note") == null ? null : String.valueOf(body.get("note")));
+                : String.valueOf(c), null, null), body.get("note") == null ? null : String.valueOf(body.get("note")),
+                enginePath.engine(path) ? enginePath::overlay : null);   // R2: the figures from the path exposure.route (or path) selects
     }
 
     @GetMapping("/captures")
@@ -292,8 +306,9 @@ public class ExposureController {
     }
 
     @GetMapping("/compare")
-    public Map<String, Object> compare(@RequestParam String a, @RequestParam(required = false) String b, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> compare(@RequestParam String a, @RequestParam(required = false) String b, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, svc.props().kinds().paths());
-        return captures.compare(p, a, b);
+        return captures.compare(p, a, b, enginePath.engine(path) ? enginePath::overlay : null);   // R2: "now" from the selected path
     }
 }

@@ -104,7 +104,7 @@ public class ExposureConfiguration {
 
     @Bean(destroyMethod = "close")
     ExposureOfficial exposureOfficial(ExposureService svc, ExposureProperties props, ObjectProvider<LoadService> loads,
-            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources) {
+            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources, ObjectProvider<ExposureEnginePath> enginePath) {
         var off = props.official();                                      // a folder or s3://, Delta (the default) or Iceberg (2.9.5)
         ExposureOfficial o = new ExposureOfficial(svc, new ExposurePublisher(com.ash.drishti.banking.official.OfficialSink.of(off.format(),
                 off.root(), off.storage(), off.retentionYears()), off.jsonl()));
@@ -114,6 +114,7 @@ public class ExposureConfiguration {
             l.onDeleted(r -> o.onDeleted(r.kind(), r.businessDate()));     // a date deleted from the lake: dropped, never captured
         }
         o.onPublished(() -> sources.ifAvailable(r -> r.retryFailingFor(ExposurePublisher.CPTY)));   // the exposure-results connector
+        o.engine(enginePath::getIfAvailable);                           // R2: the record's figures from the ccr engine when exposure.route says so
         return o;
     }
 

@@ -55,6 +55,10 @@ public class ExposurePreDealController {
     public Map<String, Object> check(@RequestBody Map<String, Object> body, AsOf asOf,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String path, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         if (enginePath.engine(path)) {                                 // R2: the ccr engine's pre-deal check through the host (ExposureEnginePath)
+            ExposurePreDealCommand cmd = ExposurePreDealCommand.of(body);
+            if (!cmd.exact() || cmd.mtm() != null) {                   // a proxy or a supplied MtM: this check over the engine's what-if
+                return preDeal.check(p, body, asOf == null ? null : asOf.businessDate(), (pp, req, d) -> enginePath.whatIf(pp, req, d, false));
+            }
             return enginePath.preDeal(p, body, asOf == null ? null : asOf.businessDate());
         }
         return preDeal.check(p, body, asOf == null ? null : asOf.businessDate());

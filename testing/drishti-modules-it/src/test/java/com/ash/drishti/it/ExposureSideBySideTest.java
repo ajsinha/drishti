@@ -308,6 +308,212 @@ class ExposureSideBySideTest {
     }
 
     /**
+     * The connected groups ({@code GROUP:<id>}): the scope and profile routes (collateralised and not), the distribution and the
+     * contributions by netting set and by asset of every group of the date on both paths; the engine reads the group's members from the
+     * host's reference (the group kind alone) and resolves the scope by Drishti's scope words.
+     */
+    @Test
+    void theGroupScopesAreTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        Set<String> groups = new LinkedHashSet<>();
+        for (JsonNode g : server.get("/api/v1/risk/exposure/tree?asOf=" + DATE).path("groups")) {
+            if (!g.path("scope").isNull() && !g.path("scope").isMissingNode()) {
+                groups.add(g.path("scope").asText());
+            }
+        }
+        for (String extra : List.of("", "&collateral=none", "&q=0.99")) {
+            compare(sbs, groups, extra);
+        }
+        int[] values = {0};
+        String[] fields = {"canonical", "by", "figure", "date", "total", "rows", "parts", "truncated"};
+        for (String scope : groups) {
+            String enc = URLEncoder.encode(scope, StandardCharsets.UTF_8);
+            for (String a : List.of("", "&bins=10&bands=true")) {
+                JsonNode[] both = sbs.both(server, scope + " distribution" + a, "/api/v1/risk/exposure/scope/distribution?scope=" + enc + "&asOf=" + DATE + a);
+                diff(sbs, scope + " distribution" + a, both[0], both[1], values);
+            }
+            for (String a : List.of("by=netting-set&figure=PFE", "by=asset&figure=EE&date=1Y")) {
+                sbs.both(server, scope + " " + a, "/api/v1/risk/exposure/scope/contributions?scope=" + enc + "&asOf=" + DATE + "&" + a, fields);
+            }
+        }
+        System.out.println("side by side, groups (tier " + (MAPPED ? "mapped" : "heap") + "): " + groups.size() + " groups, " + sbs.compared + " answers, "
+                + values[0] + " distribution values on both paths; first differences: " + sbs.differences.stream().limit(Integer.getInteger("sbs.show", 10)).toList());
+        assertThat(groups).as("groups of the date").isNotEmpty();
+        assertThat(sbs.differences).as("group answers that differ between in-tree and engine").isEmpty();
+    }
+
+    /**
+     * The what-if ({@code POST /what-if}) on both paths: for the bank, every group and every counterparty with paths, the proxy (two
+     * candidates by asset class, notional, maturity, MtM and delta) and, for each counterparty, the exact method (a copy of the first trade
+     * of its first netting set into that set, half its opposite side in a netting set of its own, both at once; also uncollateralised at
+     * 99%): every field of the answer equal (figures, tenors, the profile, each candidate's figures, flags and note), but the engine's name.
+     */
+    @Test
+    void theWhatIfIsTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        int[] values = {0};
+        JsonNode t = server.get("/api/v1/risk/exposure/tree?asOf=" + DATE);
+        List<Map<String, Object>> addon = List.of(Map.of("tradeId", "C-RATES", "assetClass", "Rates", "notional", 1.0e8, "maturityDate", "2031-09-30",
+                "mtm", 1.5e6), Map.of("tradeId", "C-FX", "assetClass", "FX", "notional", 5.0e7, "maturityDate", "2027-03-31", "delta", -1));
+        List<String> scopes = new ArrayList<>(List.of("BANK"));
+        for (JsonNode g : t.path("groups")) {
+            if (!g.path("scope").isNull() && !g.path("scope").isMissingNode()) {
+                scopes.add(g.path("scope").asText());
+            }
+        }
+        for (JsonNode g : t.path("groups")) {
+            for (JsonNode cp : g.path("children")) {
+                if (cp.path("noPaths").asBoolean()) {
+                    continue;
+                }
+                String scope = cp.path("scope").asText();
+                scopes.add(scope);
+                JsonNode ns = null;
+                for (JsonNode n : cp.path("children")) {
+                    if (!n.path("noPaths").asBoolean()) {
+                        ns = n;
+                        break;
+                    }
+                }
+                if (ns == null) {
+                    continue;
+                }
+                String trade = server.get("/api/v1/risk/exposure/scope/contributions?scope=" + URLEncoder.encode(ns.path("scope").asText(), StandardCharsets.UTF_8)
+                        + "&by=trade&asOf=" + DATE).path("rows").path(0).path("key").asText();
+                Map<String, Object> into = Map.of("tradeId", "C-COPY", "nettingSet", ns.path("id").asText(), "paths", Map.of("copyOf", trade, "factor", 1.0));
+                Map<String, Object> own = Map.of("tradeId", "C-HALF", "paths", Map.of("copyOf", trade, "factor", -0.5), "mtm", 250000.0);
+                for (Map<String, Object> body : List.of(Map.<String, Object>of("scope", scope, "method", "paths", "candidates", List.of(into)),
+                        Map.<String, Object>of("scope", scope, "method", "paths", "candidates", List.of(own)),
+                        Map.<String, Object>of("scope", scope, "method", "paths", "candidates", List.of(into, own), "q", 0.99, "collateral", "none"))) {
+                    whatIf(sbs, body, values);
+                }
+            }
+        }
+        for (String scope : scopes) {
+            whatIf(sbs, Map.of("scope", scope, "method", "addon", "candidates", addon), values);
+            whatIf(sbs, Map.of("scope", scope, "method", "addon", "candidates", addon, "q", 0.99), values);
+        }
+        System.out.println("side by side, what-if (tier " + (MAPPED ? "mapped" : "heap") + "): " + sbs.compared + " what-ifs, " + values[0]
+                + " values on both paths; first differences: " + sbs.differences.stream().limit(Integer.getInteger("sbs.show", 10)).toList());
+        assertThat(sbs.compared).as("what-ifs compared").isGreaterThan(50);
+        assertThat(sbs.differences).as("what-if values that differ between in-tree and engine").isEmpty();
+    }
+
+    /**
+     * Captures and compare (decision 6.6 (6), as for VaR): the bank, every legal entity, every group, every counterparty with paths and every
+     * netting set captured on both paths (at the default and, for counterparties, uncollateralised at 99%): every field of the two captures
+     * equal but the capture's own id, time and the run facts of its provenance; then each in-tree capture compared with now on both paths
+     * ({@code GET /compare?b=now}): every field equal but now's time. The engine's capture says {@code figuresFrom: engine}.
+     */
+    @Test
+    void theCapturesAndTheCompareAreTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        int[] values = {0};
+        Set<String> scopes = scopes();
+        for (JsonNode g : server.get("/api/v1/risk/exposure/tree?asOf=" + DATE).path("groups")) {
+            if (!g.path("scope").isNull() && !g.path("scope").isMissingNode()) {
+                scopes.add(g.path("scope").asText());
+            }
+        }
+        int engineFigures = 0;
+        for (String scope : scopes) {
+            List<Map<String, Object>> bodies = new ArrayList<>(List.of(Map.of("scope", scope, "note", "side by side")));
+            if (scope.startsWith("CPTY:")) {
+                bodies.add(Map.of("scope", scope, "note", "side by side", "q", 0.99, "collateral", "none"));
+            }
+            for (Map<String, Object> body : bodies) {
+                String what = "capture " + body;
+                String json = PackagedServer.JSON.writeValueAsString(body);
+                String ia = server.created("/api/v1/risk/exposure/captures?path=in-tree&asOf=" + DATE, json).path("id").asText();
+                String ea = server.created("/api/v1/risk/exposure/captures?path=engine&asOf=" + DATE, json).path("id").asText();
+                com.fasterxml.jackson.databind.node.ObjectNode in = (com.fasterxml.jackson.databind.node.ObjectNode) server.get("/api/v1/risk/exposure/captures/" + ia);
+                com.fasterxml.jackson.databind.node.ObjectNode en = (com.fasterxml.jackson.databind.node.ObjectNode) server.get("/api/v1/risk/exposure/captures/" + ea);
+                engineFigures += "engine".equals(en.path("figuresFrom").asText()) ? 1 : 0;
+                for (com.fasterxml.jackson.databind.node.ObjectNode x : List.of(in, en)) {
+                    x.remove(List.of("id", "capturedAt", "figuresFrom"));
+                    if (x.path("provenance").isObject()) {
+                        ((com.fasterxml.jackson.databind.node.ObjectNode) x.path("provenance")).remove(List.of("computedAt", "computeMs", "cached", "cache",
+                                "ms", "loadedAt", "loadMs"));
+                    }
+                }
+                sbs.compared++;
+                diff(sbs, what, in, en, values);
+                com.fasterxml.jackson.databind.node.ObjectNode ci = (com.fasterxml.jackson.databind.node.ObjectNode) server.get("/api/v1/risk/exposure/compare?a="
+                        + ia + "&b=now&path=in-tree");
+                com.fasterxml.jackson.databind.node.ObjectNode ce = (com.fasterxml.jackson.databind.node.ObjectNode) server.get("/api/v1/risk/exposure/compare?a="
+                        + ia + "&b=now&path=engine");
+                for (com.fasterxml.jackson.databind.node.ObjectNode x : List.of(ci, ce)) {
+                    ((com.fasterxml.jackson.databind.node.ObjectNode) x.path("b")).remove("capturedAt");
+                }
+                sbs.compared++;
+                diff(sbs, "compare " + body, ci, ce, values);
+            }
+        }
+        System.out.println("side by side, captures and compare (tier " + (MAPPED ? "mapped" : "heap") + "): " + sbs.compared + " captures and compares, "
+                + values[0] + " values on both paths, " + engineFigures + " engine captures say figuresFrom engine; first differences: "
+                + sbs.differences.stream().limit(Integer.getInteger("sbs.show", 10)).toList());
+        assertThat(sbs.compared).as("captures and compares").isGreaterThan(100);
+        assertThat(engineFigures).as("engine captures with the engine's figures").isEqualTo(sbs.compared / 2);
+        assertThat(sbs.differences).as("captures and compares that differ between in-tree and engine").isEmpty();
+    }
+
+    private static void whatIf(SideBySide sbs, Map<String, Object> body, int[] values) throws IOException, InterruptedException {
+        String what = "what-if " + body.get("scope") + " " + body.get("method") + " " + body.getOrDefault("q", "") + " " + body.getOrDefault("collateral", "")
+                + " " + ((List<?>) body.get("candidates")).size();
+        JsonNode in = post("/api/v1/risk/exposure/what-if?path=in-tree&asOf=" + DATE, body);
+        JsonNode en = post("/api/v1/risk/exposure/what-if?path=engine&asOf=" + DATE, body);
+        sbs.compared++;
+        ((com.fasterxml.jackson.databind.node.ObjectNode) in).remove("engine");
+        ((com.fasterxml.jackson.databind.node.ObjectNode) en).remove("engine");
+        diff(sbs, what, in, en, values);
+    }
+
+    /**
+     * The pre-deal check's proxy (asset class, notional and maturity: the addon what-if, it only refers) and the exact method with a
+     * supplied MtM (the template's paths with today's MtM given), on both paths for every counterparty with paths: every field of the
+     * answer equal (decision, reasons, method, template, netting set, the limit's figures and buckets, the exposure before and with), but
+     * the check's id and the engine's name.
+     */
+    @Test
+    void thePreDealProxyIsTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        int[] values = {0};
+        JsonNode t = server.get("/api/v1/risk/exposure/tree?asOf=" + DATE);
+        for (JsonNode g : t.path("groups")) {
+            for (JsonNode cp : g.path("children")) {
+                JsonNode ns = null;
+                for (JsonNode n : cp.path("children")) {
+                    if (!n.path("noPaths").asBoolean()) {
+                        ns = n;
+                        break;
+                    }
+                }
+                if (ns == null) {
+                    continue;
+                }
+                String trade = server.get("/api/v1/risk/exposure/scope/contributions?scope=" + URLEncoder.encode(ns.path("scope").asText(), StandardCharsets.UTF_8)
+                        + "&by=trade&asOf=" + DATE).path("rows").path(0).path("key").asText();
+                String id = cp.path("id").asText();
+                for (Map<String, Object> body : List.of(Map.<String, Object>of("counterparty", id, "assetClass", "RATES", "notional", "250m", "maturity", "5Y"),
+                        Map.<String, Object>of("counterparty", id, "assetClass", "FX", "notional", "40m", "maturity", "18M", "side", "REVERSE", "mtm", "2m"),
+                        Map.<String, Object>of("counterparty", id, "like", trade, "mtm", "1m", "nettingSet", ns.path("id").asText()))) {
+                    JsonNode in = post("/api/v1/risk/exposure/predeal?path=in-tree&asOf=" + DATE, body);
+                    JsonNode en = post("/api/v1/risk/exposure/predeal?path=engine&asOf=" + DATE, body);
+                    sbs.compared++;
+                    for (JsonNode x : List.of(in, en)) {
+                        ((com.fasterxml.jackson.databind.node.ObjectNode) x).remove(List.of("checkId", "engine"));
+                    }
+                    diff(sbs, "predeal " + body, in, en, values);
+                }
+            }
+        }
+        System.out.println("side by side, pre-deal proxy and supplied MtM (tier " + (MAPPED ? "mapped" : "heap") + "): " + sbs.compared + " checks, "
+                + values[0] + " values on both paths; first differences: " + sbs.differences.stream().limit(Integer.getInteger("sbs.show", 10)).toList());
+        assertThat(sbs.compared).as("checks compared").isGreaterThan(30);
+        assertThat(sbs.differences).as("pre-deal values that differ between in-tree and engine").isEmpty();
+    }
+
+    /**
      * The audit line of the contributions and distribution routes: each path writes one {@code ccr-view} line for the scope, with the same date, run, view,
      * confidence, collateral model, EPE, peak PFE, netting sets, trades and what was read (the engine's says {@code path=engine}, its time
      * and version are its own).

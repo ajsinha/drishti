@@ -414,17 +414,7 @@ final class ExposureLoader {
                 r.names.put(e.getKey(), n);
             }
         }
-        for (Map.Entry<String, DataNode> e : documents(k.group(), asOf).entrySet()) {
-            List<String> ms = new ArrayList<>();
-            DataNode m = e.getValue().get("MEMBERS");
-            for (int i = 0; i < m.size(); i++) {
-                String id = text(m.get(i), "ID");
-                if (id != null) {
-                    ms.add(id);
-                }
-            }
-            r.groups.put(e.getKey(), ms);
-        }
+        r.groups.putAll(groups(asOf));
         for (Map.Entry<String, DataNode> e : documents(k.limit(), asOf).entrySet()) {     // the approved limit of the credit-limit record (LIM is parked)
             DataNode l = e.getValue();
             String cp = text(l, "COUNTERPARTY");
@@ -444,6 +434,26 @@ final class ExposureLoader {
             }
         }
         return r;
+    }
+
+    /**
+     * The date's connected groups and their member counterparties, read alone (no run, no book): the reference the loaded date keeps, and
+     * what the engine path passes the {@code ccr} engine for a {@code GROUP:} scope (R2).
+     */
+    Map<String, List<String>> groups(AsOf asOf) {
+        Map<String, List<String>> out = new LinkedHashMap<>();
+        for (Map.Entry<String, DataNode> e : documents(props.kinds().group(), asOf).entrySet()) {
+            List<String> ms = new ArrayList<>();
+            DataNode m = e.getValue().get("MEMBERS");
+            for (int i = 0; i < m.size(); i++) {
+                String id = text(m.get(i), "ID");
+                if (id != null) {
+                    ms.add(id);
+                }
+            }
+            out.put(e.getKey(), ms);
+        }
+        return out;
     }
 
     /**
