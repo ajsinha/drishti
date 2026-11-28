@@ -24,55 +24,109 @@ defaults: {load-mode: replace}
 # the tables the bank-data loaders write (tools/loaders/mrloader: the PVF files and the CSV kinds), each with its pack's recommended layout
 tables:
   reference.legal-entity:
+    uri: "${lake.root}/reference/legal-entity"
+    format: delta
+    contract: legal-entity@1
     id: ENTITY_ID
   reference.desk:
+    uri: "${lake.root}/reference/desk"
+    format: delta
+    contract: desk@1
     id: DESK_ID
   reference.book:
+    uri: "${lake.root}/reference/book"
+    format: delta
+    contract: book@1
     id: BOOK_ID
   reference.counterparty-group:
+    uri: "${lake.root}/reference/counterparty-group"
+    format: delta
+    contract: counterparty-group@1
     id: GROUP_ID
   reference.counterparty:
+    uri: "${lake.root}/reference/counterparty"
+    format: delta
+    contract: counterparty@1
     id: COUNTERPARTY_ID
   legal.agreement:
+    uri: "${lake.root}/legal/agreement"
+    format: delta
+    contract: agreement@1
     id: AGREEMENT_ID
   legal.csa:
+    uri: "${lake.root}/legal/csa"
+    format: delta
+    contract: csa@1
     id: CSA_ID
   credit.netting-set:
+    uri: "${lake.root}/credit/netting-set"
+    format: delta
+    contract: netting-set@1
     id: NETTING_SET_ID
   credit.credit-limit:
+    uri: "${lake.root}/credit/credit-limit"
+    format: delta
+    contract: credit-limit@1
     id: LIMIT_ID
   collateral.collateral-balance:
+    uri: "${lake.root}/collateral/collateral-balance"
+    format: delta
+    contract: collateral-balance@1
     id: BALANCE_ID
   risk.risk-factor:
+    uri: "${lake.root}/risk/risk-factor"
+    format: delta
+    contract: risk-factor@1
     promote: [RISK_FACTOR, FACTOR_TYPE, RISK_CLASS, QUALIFIER, TENOR, FRTB_BUCKET, SIMM_RISK_CLASS, SIMM_BUCKET]
     id: RISK_FACTOR
     date: BUSINESS_DATE
   risk.var-limit:
+    uri: "${lake.root}/risk/var-limit"
+    format: delta
+    contract: var-limit@1
     promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
     id: LIMIT_ID
     date: BUSINESS_DATE
   risk.position-sensitivity:
+    uri: "${lake.root}/risk/position-sensitivity"
+    format: delta
+    contract: position-sensitivity@1
     promote: [SENSITIVITY_ID, GRAIN, POSITION_ID, TRADE_ID, SOURCE_SYSTEM, BATCH_ID, STATUS, DESK, TT_BOOK, PRODUCT_TYPE, CURRENCY]
     id: SENSITIVITY_ID
     date: BUSINESS_DATE
   risk.trade-valuation:
+    uri: "${lake.root}/risk/trade-valuation"
+    format: delta
+    contract: trade-valuation@1
     promote: [VALUATION_ID, TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_GROUP, PORTFOLIO, DESK, COUNTERPARTY, NETTING_SET, TRADER_ID, BUY_SELL_CODE, TRADE_STATUS, CURRENCY, NOTIONAL, MTM, MTM_CURRENCY, PNL_1D, DV01, TRADE_DATE, MATURITY_DATE, VALUATION_DATE]
     sort-by: [id]
     file-rows: 250000
     row-group-rows: 1000
     id: VALUATION_ID
   risk.desk-pnl:
+    uri: "${lake.root}/risk/desk-pnl"
+    format: delta
+    contract: desk-pnl@1
     promote: [DESK_PNL_ID, DESK_ID, LEGAL_ENTITY, ACTUAL_PNL, HYPOTHETICAL_PNL, FEES_AND_COMMISSIONS, CURRENCY, SOURCE, AS_OF]
     id: DESK_PNL_ID
     date: BUSINESS_DATE
   risk.scenario-set:
+    uri: "${lake.root}/risk/scenario-set"
+    format: delta
+    contract: scenario-set@1
     id: SCENARIO_SET_ID
     date: BUSINESS_DATE
   risk.fx-scenario:
+    uri: "${lake.root}/risk/fx-scenario"
+    format: delta
+    contract: fx-scenario@1
     promote: [CURRENCY, RATE, SCENARIO_SET_ID]
     id: FX_SCENARIO_ID
     date: BUSINESS_DATE
   risk.scenario-pv:
+    uri: "${lake.root}/risk/scenario-pv"
+    format: delta
+    contract: scenario-pv@1
     promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, BASE_PV, VALUATION_DATE, BASE_VALUATION_DATE, TAGS, TRADE_STATUS, MATURITY_DATE, STATUS, SCENARIO_SET_ID, BATCH_ID, RUN_KIND, COMPUTED_AT, TRADE_IDS, TRADE_CURRENCY]
     vectors: [SCENARIO_PV]
     id: SCENARIO_PV_ID
@@ -86,6 +140,9 @@ tables:
     time-travel: 30d
     maintenance: {checkpoint: true, compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_endur:
+    uri: "${lake.root}/trading/trade_endur"
+    format: delta
+    contract: trade@1
     kind: trade
     partition-by: [PRODUCT_TYPE]
     promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
@@ -96,6 +153,9 @@ tables:
     id: TRADE_ID
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_calypso:
+    uri: "${lake.root}/trading/trade_calypso"
+    format: delta
+    contract: trade@1
     kind: trade
     partition-by: [PRODUCT_GROUP]
     promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
@@ -106,6 +166,9 @@ tables:
     id: TRADE_ID
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_murex:
+    uri: "${lake.root}/trading/trade_murex"
+    format: delta
+    contract: trade@1
     kind: trade
     partition-by: [PRODUCT_GROUP]
     promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
@@ -116,16 +179,25 @@ tables:
     id: TRADE_ID
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_wss:
+    uri: "${lake.root}/trading/trade_wss"
+    format: delta
+    contract: trade@1
     kind: trade
     promote: [SOURCE_SYSTEM]
     sort-by: [id]
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_swapone:
+    uri: "${lake.root}/trading/trade_swapone"
+    format: delta
+    contract: trade@1
     kind: trade
     promote: [SOURCE_SYSTEM]
     sort-by: [id]
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_ici:
+    uri: "${lake.root}/trading/trade_ici"
+    format: delta
+    contract: trade@1
     kind: trade
     promote: [SOURCE_SYSTEM]
     sort-by: [id]

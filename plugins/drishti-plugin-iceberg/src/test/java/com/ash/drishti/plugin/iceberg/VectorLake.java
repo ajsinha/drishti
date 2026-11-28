@@ -129,6 +129,8 @@ final class VectorLake {
 
     static void loadLinesAt(Path tmp, String table, String engine, List<String> lines) throws Exception {
         Path in = Files.createTempDirectory(tmp, "rows");
+        String domainName = Path.of(table).getParent().getFileName().toString();     // the loader takes only rows of its own domain and kind
+        lines = lines.stream().map(x -> x.replace("\"domain\":\"risk\"", "\"domain\":\"" + domainName + "\"")).toList();
         Map<String, List<String>> byDate = new java.util.TreeMap<>();
         for (String l : lines) {
             String d;
@@ -154,7 +156,7 @@ final class VectorLake {
         }
         Path config = tmp.resolve("load-" + System.nanoTime() + ".yaml");
         Files.writeString(config, "source:\n  files: '" + in + "/*'\n  format: loader-rows\n  promote: [DESK, TT_BOOK, QUANTITY]\n"
-                + "  vectors: [PNL]\ntarget:\n  format: iceberg\n  path: '" + root + "/risk/" + KIND + "'\n  domain: risk\n  kind: " + KIND + "\n  mode: replace-date\n");
+                + "  vectors: [PNL]\ntarget:\n  format: iceberg\n  path: '" + table + "'\n  domain: " + Path.of(table).getParent().getFileName() + "\n  kind: " + KIND + "\n  mode: replace-date\n");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         int code = com.ash.lake.load.LakeLoad.run(com.ash.drishti.lakehost.DrishtiLake.runtime(), new String[] {"--config", config.toString()},
                 new PrintStream(out, true, StandardCharsets.UTF_8));

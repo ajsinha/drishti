@@ -24,14 +24,23 @@ root: ${lake.data.dir:${drishti.data.dir}}/delta/newslake
 defaults: {load-mode: replace}
 tables:
   officialnews.release-source:
+    uri: "${lake.root}/officialnews/release-source"
+    format: delta
+    contract: release-source@1
     id: SOURCE_ID
     promote: [NAME, PUBLISHER_TYPE, COUNTRY, INTERNAL_ONLY, RELEASES, LAST_PUBLISHED]
     retention: 90
   officialnews.press-release:
+    uri: "${lake.root}/officialnews/press-release"
+    format: delta
+    contract: press-release@1
     id: RELEASE_ID
     promote: [TITLE, PUBLISHED, DATE, URL, CATEGORY, RELEASE_SOURCE, PUBLISHER_NAME, COUNTRY, INTERNAL_ONLY]
     retention: 90
   gdelt.event-country:
+    uri: "${lake.root}/gdelt/event-country"
+    format: delta
+    contract: event-country@1
     id: EVENT_COUNTRY_ID
     promote: [ISO3, COUNTRY_NAME, DATE, EVENTS, MENTIONS, AVG_TONE, AVG_GOLDSTEIN, CONFLICT_SHARE]
     retention: 90

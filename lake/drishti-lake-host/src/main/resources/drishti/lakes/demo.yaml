@@ -25,123 +25,198 @@ root: ${DRISHTI_DELTA_ROOT:${lake.data.dir:${drishti.data.dir}}/delta/demo}
 defaults: {load-mode: replace}
 tables:
   compute-demo.path-book:
+    uri: "${lake.root}/compute-demo/path-book"
+    format: delta
+    contract: path-book@1
     promote: [BOOK_ID, NAME, DESK, STRIP_COUNT]
   compute-demo.path-strip:
+    uri: "${lake.root}/compute-demo/path-strip"
+    format: delta
+    contract: path-strip@1
     promote: [STRIP_ID, BOOK_ID, INSTRUMENT, DAYS]
-  reference.counterparty: {id: COUNTERPARTY_ID}
-  reference.counterparty-group: {id: GROUP_ID}
-  reference.issuer: {id: ISSUER_ID}
-  reference.ccp: {id: CCP_ID}
-  reference.legal-entity: {id: ENTITY_ID}
-  reference.book: {id: BOOK_ID}
-  reference.desk: {id: DESK_ID}
-  reference.trader: {id: TRADER_ID}
-  reference.calendar: {id: CALENDAR_ID}
-  reference.clearing-account: {id: ACCOUNT_ID}
-  legal.agreement: {id: AGREEMENT_ID}
-  legal.csa: {id: CSA_ID}
-  credit.netting-set: {id: NETTING_SET_ID}
-  credit.credit-limit: {id: LIMIT_ID}
-  credit.cva: {id: RESULT_ID}
-  credit.sa-ccr: {id: CALC_ID}
-  collateral.collateral-balance: {id: BALANCE_ID}
-  collateral.margin-call: {id: CALL_ID}
-  collateral.simm: {id: CALC_ID}
+  reference.counterparty: {uri: "${lake.root}/reference/counterparty", format: delta, contract: counterparty@1, id: COUNTERPARTY_ID}
+  reference.counterparty-group: {uri: "${lake.root}/reference/counterparty-group", format: delta, contract: counterparty-group@1, id: GROUP_ID}
+  reference.issuer: {uri: "${lake.root}/reference/issuer", format: delta, contract: issuer@1, id: ISSUER_ID}
+  reference.ccp: {uri: "${lake.root}/reference/ccp", format: delta, contract: ccp@1, id: CCP_ID}
+  reference.legal-entity: {uri: "${lake.root}/reference/legal-entity", format: delta, contract: legal-entity@1, id: ENTITY_ID}
+  reference.book: {uri: "${lake.root}/reference/book", format: delta, contract: book@1, id: BOOK_ID}
+  reference.desk: {uri: "${lake.root}/reference/desk", format: delta, contract: desk@1, id: DESK_ID}
+  reference.trader: {uri: "${lake.root}/reference/trader", format: delta, contract: trader@1, id: TRADER_ID}
+  reference.calendar: {uri: "${lake.root}/reference/calendar", format: delta, contract: calendar@1, id: CALENDAR_ID}
+  reference.clearing-account: {uri: "${lake.root}/reference/clearing-account", format: delta, contract: clearing-account@1, id: ACCOUNT_ID}
+  legal.agreement: {uri: "${lake.root}/legal/agreement", format: delta, contract: agreement@1, id: AGREEMENT_ID}
+  legal.csa: {uri: "${lake.root}/legal/csa", format: delta, contract: csa@1, id: CSA_ID}
+  credit.netting-set: {uri: "${lake.root}/credit/netting-set", format: delta, contract: netting-set@1, id: NETTING_SET_ID}
+  credit.credit-limit: {uri: "${lake.root}/credit/credit-limit", format: delta, contract: credit-limit@1, id: LIMIT_ID}
+  credit.cva: {uri: "${lake.root}/credit/cva", format: delta, contract: cva@1, id: RESULT_ID}
+  credit.sa-ccr: {uri: "${lake.root}/credit/sa-ccr", format: delta, contract: sa-ccr@1, id: CALC_ID}
+  collateral.collateral-balance: {uri: "${lake.root}/collateral/collateral-balance", format: delta, contract: collateral-balance@1, id: BALANCE_ID}
+  collateral.margin-call: {uri: "${lake.root}/collateral/margin-call", format: delta, contract: margin-call@1, id: CALL_ID}
+  collateral.simm: {uri: "${lake.root}/collateral/simm", format: delta, contract: simm@1, id: CALC_ID}
   risk.simulation-run:
+    uri: "${lake.root}/risk/simulation-run"
+    format: delta
+    contract: simulation-run@1
     promote: [RUN_ID, CALIBRATION, PATHS, STATUS, BATCH_ID]
     id: RUN_ID
     date: BUSINESS_DATE
   risk.exposure-path:
+    uri: "${lake.root}/risk/exposure-path"
+    format: delta
+    contract: exposure-path@1
     promote: [TRADE_ID, NETTING_SET, COUNTERPARTY, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER, ASSET_CLASS, PRODUCT, SOURCE_SYSTEM, MATURITY_DATE,
       NOTIONAL, GRID_INDEX, GRID_DATE, RUN_ID, BATCH_ID, STATUS]
     vectors: [MTM]
     id: PATH_ROW_ID
     date: BUSINESS_DATE
   funds.fund:
+    uri: "${lake.root}/funds/fund"
+    format: delta
+    contract: fund@1
     promote: [TICKER, NAME, TYPE, TICKERS, ADVISER, INDEX_ID, NET_ASSETS, EXPENSE_RATIO, HOLDING_COUNT, REPORT_DATE, RANK]
     id: TICKER
   funds.fund-holder:
+    uri: "${lake.root}/funds/fund-holder"
+    format: delta
+    contract: fund-holder@1
     promote: [TICKER, NAME, FUNDS, TOTAL_VALUE, PCT_OF_SHARES]
     id: TICKER
   funds.index-funds:
+    uri: "${lake.root}/funds/index-funds"
+    format: delta
+    contract: index-funds@1
     promote: [INDEX, NAME, FUNDS, TOTAL_NET_ASSETS]
     id: INDEX
   gleif.lei-entity:
+    uri: "${lake.root}/gleif/lei-entity"
+    format: delta
+    contract: lei-entity@1
     promote: [LEI, NAME, LEI_COUNTRY, LEGAL_CITY, LEGAL_FORM, REGISTRATION_STATUS, RENEWAL_LATE, SEGMENT, NEXT_RENEWAL, US_COMPANY]
     id: LEI
   gleif.lei-relationship:
+    uri: "${lake.root}/gleif/lei-relationship"
+    format: delta
+    contract: lei-relationship@1
     promote: [RELATIONSHIP_ID, LEVEL, CHILD_ENTITY, PARENT_ENTITY, RELATIONSHIP_STATUS]
     id: RELATIONSHIP_ID
   gleif.lei-mapping:
+    uri: "${lake.root}/gleif/lei-mapping"
+    format: delta
+    contract: lei-mapping@1
     promote: [IDENTIFIER, TYPE, ENTITY_LEI, ENTITY_NAME]
     id: IDENTIFIER
   genomics-showcase.study-gene:
+    uri: "${lake.root}/genomics-showcase/study-gene"
+    format: delta
+    contract: study-gene@1
     promote: [GENE, CHROM, START, END, ROLE, PROTEIN_LENGTH, DRIVER, ALTERED_SAMPLES]
     id: GENE
   genomics-showcase.study-sample:
+    uri: "${lake.root}/genomics-showcase/study-sample"
+    format: delta
+    contract: study-sample@1
     promote: [SAMPLE_ID, COHORT, TUMOUR_TYPE, STAGE, RESPONSE, TOXICITY, RELAPSE, CLUSTER]
     id: SAMPLE_ID
   genomics-showcase.study-variant:
+    uri: "${lake.root}/genomics-showcase/study-variant"
+    format: delta
+    contract: study-variant@1
     promote: [VARIANT_ID, GENE, CHROM, POS, CONSEQUENCE, IMPACT, PROTEIN_POS, CARRIERS]
     id: VARIANT_ID
   genomics-showcase.variant-call:
+    uri: "${lake.root}/genomics-showcase/variant-call"
+    format: delta
+    contract: variant-call@1
     promote: [CALL_ID, SAMPLE_ID, VARIANT_ID, GENE, GENOTYPE, VAF]
     id: CALL_ID
   genomics-showcase.association:
+    uri: "${lake.root}/genomics-showcase/association"
+    format: delta
+    contract: association@1
     promote: [TRAIT, CHROM, VARIANT_ID, GENE, NEG_LOG10_P, BETA]
     id: ASSOC_ID
   genomics-showcase.cnv-segment:
+    uri: "${lake.root}/genomics-showcase/cnv-segment"
+    format: delta
+    contract: cnv-segment@1
     promote: [SEGMENT_ID, SAMPLE_ID, CHROM, CALL, GENE]
     id: SEGMENT_ID
   genomics-showcase.pathway-gene:
+    uri: "${lake.root}/genomics-showcase/pathway-gene"
+    format: delta
+    contract: pathway-gene@1
     promote: [PATHWAY_GENE_ID, PATHWAY, GENE, ROLE_IN_PATHWAY]
     id: PATHWAY_GENE_ID
   protein-engineering.protein:
+    uri: "${lake.root}/protein-engineering/protein"
+    format: delta
+    contract: protein@1
     promote: [PROTEIN, GENE, NAME, LENGTH, FAMILY, DESIGN_ROUNDS]
     id: PROTEIN
   protein-engineering.residue:
+    uri: "${lake.root}/protein-engineering/residue"
+    format: delta
+    contract: residue@1
     promote: [RESIDUE_ID, PROTEIN, POS, SECONDARY, ACTIVE_SITE]
     id: RESIDUE_ID
   protein-engineering.residue-contact:
+    uri: "${lake.root}/protein-engineering/residue-contact"
+    format: delta
+    contract: residue-contact@1
     promote: [CONTACT_ID, PROTEIN, POS_A, POS_B]
     id: CONTACT_ID
   protein-engineering.dms-score:
+    uri: "${lake.root}/protein-engineering/dms-score"
+    format: delta
+    contract: dms-score@1
     promote: [SCORE_ID, PROTEIN, POS, AA, ASSAY, SCORE]
     id: SCORE_ID
   protein-engineering.design:
+    uri: "${lake.root}/protein-engineering/design"
+    format: delta
+    contract: design@1
     promote: [DESIGN_ID, PROTEIN, ROUND, ACTIVITY, STATUS]
     id: DESIGN_ID
   protein-engineering.design-mutation:
+    uri: "${lake.root}/protein-engineering/design-mutation"
+    format: delta
+    contract: design-mutation@1
     promote: [DESIGN_MUTATION_ID, DESIGN_ID, PROTEIN, ROUND, POS]
     id: DESIGN_MUTATION_ID
   protein-engineering.design-round:
+    uri: "${lake.root}/protein-engineering/design-round"
+    format: delta
+    contract: design-round@1
     promote: [ROUND_ID, PROTEIN, ROUND, METHOD]
     id: ROUND_ID
-  market.ir-curve: {id: CURVE_ID}
-  market.repo-curve: {id: CURVE_ID}
-  market.fx-spot: {id: PAIR}
-  market.fx-forward-curve: {id: CURVE_ID}
-  market.fx-vol-surface: {id: SURFACE_ID}
-  market.ir-vol-cube: {id: CUBE_ID}
-  market.cap-vol-surface: {id: SURFACE_ID}
-  market.equity: {id: TICKER}
-  market.equity-index: {id: INDEX_ID}
-  market.dividend-curve: {id: CURVE_ID}
-  market.equity-vol-surface: {id: SURFACE_ID}
-  market.credit-curve: {id: CURVE_ID}
-  market.inflation-index: {id: INDEX_ID}
-  market.inflation-curve: {id: CURVE_ID}
-  market.commodity: {id: COMMODITY_ID}
-  market.commodity-curve: {id: CURVE_ID}
-  market.commodity-vol-surface: {id: SURFACE_ID}
-  market.rate-fixing: {id: INDEX_ID}
-  market.bond: {id: ISIN}
-  market.correlation-matrix: {id: MATRIX_ID}
-  risk.stress-scenario: {id: SCENARIO_ID}
-  risk.stress-result: {id: RESULT_ID}
-  risk.frtb-sensitivity: {id: RESULT_ID}
-  risk.pnl-explain: {id: RESULT_ID}
+  market.ir-curve: {uri: "${lake.root}/market/ir-curve", format: delta, contract: ir-curve@1, id: CURVE_ID}
+  market.repo-curve: {uri: "${lake.root}/market/repo-curve", format: delta, contract: repo-curve@1, id: CURVE_ID}
+  market.fx-spot: {uri: "${lake.root}/market/fx-spot", format: delta, contract: fx-spot@1, id: PAIR}
+  market.fx-forward-curve: {uri: "${lake.root}/market/fx-forward-curve", format: delta, contract: fx-forward-curve@1, id: CURVE_ID}
+  market.fx-vol-surface: {uri: "${lake.root}/market/fx-vol-surface", format: delta, contract: fx-vol-surface@1, id: SURFACE_ID}
+  market.ir-vol-cube: {uri: "${lake.root}/market/ir-vol-cube", format: delta, contract: ir-vol-cube@1, id: CUBE_ID}
+  market.cap-vol-surface: {uri: "${lake.root}/market/cap-vol-surface", format: delta, contract: cap-vol-surface@1, id: SURFACE_ID}
+  market.equity: {uri: "${lake.root}/market/equity", format: delta, contract: equity@1, id: TICKER}
+  market.equity-index: {uri: "${lake.root}/market/equity-index", format: delta, contract: equity-index@1, id: INDEX_ID}
+  market.dividend-curve: {uri: "${lake.root}/market/dividend-curve", format: delta, contract: dividend-curve@1, id: CURVE_ID}
+  market.equity-vol-surface: {uri: "${lake.root}/market/equity-vol-surface", format: delta, contract: equity-vol-surface@1, id: SURFACE_ID}
+  market.credit-curve: {uri: "${lake.root}/market/credit-curve", format: delta, contract: credit-curve@1, id: CURVE_ID}
+  market.inflation-index: {uri: "${lake.root}/market/inflation-index", format: delta, contract: inflation-index@1, id: INDEX_ID}
+  market.inflation-curve: {uri: "${lake.root}/market/inflation-curve", format: delta, contract: inflation-curve@1, id: CURVE_ID}
+  market.commodity: {uri: "${lake.root}/market/commodity", format: delta, contract: commodity@1, id: COMMODITY_ID}
+  market.commodity-curve: {uri: "${lake.root}/market/commodity-curve", format: delta, contract: commodity-curve@1, id: CURVE_ID}
+  market.commodity-vol-surface: {uri: "${lake.root}/market/commodity-vol-surface", format: delta, contract: commodity-vol-surface@1, id: SURFACE_ID}
+  market.rate-fixing: {uri: "${lake.root}/market/rate-fixing", format: delta, contract: rate-fixing@1, id: INDEX_ID}
+  market.bond: {uri: "${lake.root}/market/bond", format: delta, contract: bond@1, id: ISIN}
+  market.correlation-matrix: {uri: "${lake.root}/market/correlation-matrix", format: delta, contract: correlation-matrix@1, id: MATRIX_ID}
+  risk.stress-scenario: {uri: "${lake.root}/risk/stress-scenario", format: delta, contract: stress-scenario@1, id: SCENARIO_ID}
+  risk.stress-result: {uri: "${lake.root}/risk/stress-result", format: delta, contract: stress-result@1, id: RESULT_ID}
+  risk.frtb-sensitivity: {uri: "${lake.root}/risk/frtb-sensitivity", format: delta, contract: frtb-sensitivity@1, id: RESULT_ID}
+  risk.pnl-explain: {uri: "${lake.root}/risk/pnl-explain", format: delta, contract: pnl-explain@1, id: RESULT_ID}
   risk.trade-valuation:
+    uri: "${lake.root}/risk/trade-valuation"
+    format: delta
+    contract: trade-valuation@1
     promote: [VALUATION_ID, TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_GROUP, PORTFOLIO, DESK, COUNTERPARTY, NETTING_SET, TRADER_ID, BUY_SELL_CODE,
       TRADE_STATUS, CURRENCY, NOTIONAL, MTM, MTM_CURRENCY, PNL_1D, DV01, TRADE_DATE, MATURITY_DATE, VALUATION_DATE]
     sort-by: [id]
@@ -149,6 +224,9 @@ tables:
     row-group-rows: 1000
     id: VALUATION_ID
   risk.pnl-vector:
+    uri: "${lake.root}/risk/pnl-vector"
+    format: delta
+    contract: pnl-vector@1
     promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK,
       LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, PV, TAGS, TRADE_STATUS, MATURITY_DATE,
       STATUS, REPORTING_CCY, SCENARIO_SET_ID, BATCH_ID, RUN_KIND, COMPUTED_AT, TRADE_IDS, TRADE_CURRENCY]
@@ -157,6 +235,9 @@ tables:
     date: BUSINESS_DATE
     sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, POSITION_ID, TRADE_ID]   # a record by its position or trade: its row group, not the whole file
   risk.scenario-pv:
+    uri: "${lake.root}/risk/scenario-pv"
+    format: delta
+    contract: scenario-pv@1
     promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK,
       LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, BASE_PV, VALUATION_DATE, BASE_VALUATION_DATE,
       TAGS, TRADE_STATUS, MATURITY_DATE, STATUS, SCENARIO_SET_ID, BATCH_ID, RUN_KIND, COMPUTED_AT, TRADE_IDS, TRADE_CURRENCY]
@@ -172,36 +253,57 @@ tables:
     time-travel: 30d
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d, checkpoint: true}
   risk.fx-scenario:
+    uri: "${lake.root}/risk/fx-scenario"
+    format: delta
+    contract: fx-scenario@1
     promote: [CURRENCY, RATE, SCENARIO_SET_ID]
     id: FX_SCENARIO_ID
     date: BUSINESS_DATE
-  risk.scenario-set: {id: SCENARIO_SET_ID, date: BUSINESS_DATE}
+  risk.scenario-set: {uri: "${lake.root}/risk/scenario-set", format: delta, contract: scenario-set@1, id: SCENARIO_SET_ID, date: BUSINESS_DATE}
   risk.var-limit:
+    uri: "${lake.root}/risk/var-limit"
+    format: delta
+    contract: var-limit@1
     promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
     id: LIMIT_ID
     date: BUSINESS_DATE
   risk.desk-pnl:
+    uri: "${lake.root}/risk/desk-pnl"
+    format: delta
+    contract: desk-pnl@1
     promote: [DESK_PNL_ID, DESK_ID, LEGAL_ENTITY, ACTUAL_PNL, HYPOTHETICAL_PNL, FEES_AND_COMMISSIONS, CURRENCY, SOURCE, AS_OF]
     id: DESK_PNL_ID
     date: BUSINESS_DATE
   risk.pnl-history:
+    uri: "${lake.root}/risk/pnl-history"
+    format: delta
+    contract: pnl-history@1
     promote: [HIERARCHY, NODE_ID, LEVEL, CURRENCY, FIRST_DAY, LAST_DAY, DAY_COUNT]
     vectors: [PNL]
     id: HISTORY_ID
     date: BUSINESS_DATE
   risk.position-sensitivity:
+    uri: "${lake.root}/risk/position-sensitivity"
+    format: delta
+    contract: position-sensitivity@1
     promote: [SENSITIVITY_ID, GRAIN, POSITION_ID, TRADE_ID, SOURCE_SYSTEM, BATCH_ID, STATUS, DESK, TT_BOOK, PRODUCT_TYPE, CURRENCY]
     id: SENSITIVITY_ID
     date: BUSINESS_DATE
   risk.risk-factor:
+    uri: "${lake.root}/risk/risk-factor"
+    format: delta
+    contract: risk-factor@1
     promote: [RISK_FACTOR, FACTOR_TYPE, RISK_CLASS, QUALIFIER, TENOR, FRTB_BUCKET, SIMM_RISK_CLASS, SIMM_BUCKET]
     id: RISK_FACTOR
     date: BUSINESS_DATE
-  news.news-topic: null
-  news.listed-company: null
-  news.news: {id: NEWS_ID}
-  news.quote: {id: QUOTE_ID}
+  news.news-topic: {uri: "${lake.root}/news/news-topic", format: delta, contract: news-topic@1}
+  news.listed-company: {uri: "${lake.root}/news/listed-company", format: delta, contract: listed-company@1}
+  news.news: {uri: "${lake.root}/news/news", format: delta, contract: news@1, id: NEWS_ID}
+  news.quote: {uri: "${lake.root}/news/quote", format: delta, contract: quote@1, id: QUOTE_ID}
   trading.trade_endur:
+    uri: "${lake.root}/trading/trade_endur"
+    format: delta
+    contract: trade@1
     kind: trade
     partition-by: [PRODUCT_TYPE]
     promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
@@ -212,6 +314,9 @@ tables:
     id: TRADE_ID
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_calypso:
+    uri: "${lake.root}/trading/trade_calypso"
+    format: delta
+    contract: trade@1
     kind: trade
     partition-by: [PRODUCT_GROUP]
     promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
@@ -222,6 +327,9 @@ tables:
     id: TRADE_ID
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_murex:
+    uri: "${lake.root}/trading/trade_murex"
+    format: delta
+    contract: trade@1
     kind: trade
     partition-by: [PRODUCT_GROUP]
     promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
@@ -232,83 +340,113 @@ tables:
     id: TRADE_ID
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_wss:
+    uri: "${lake.root}/trading/trade_wss"
+    format: delta
+    contract: trade@1
     kind: trade
     promote: [SOURCE_SYSTEM]
     sort-by: [id]
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_swapone:
+    uri: "${lake.root}/trading/trade_swapone"
+    format: delta
+    contract: trade@1
     kind: trade
     promote: [SOURCE_SYSTEM]
     sort-by: [id]
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   trading.trade_ici:
+    uri: "${lake.root}/trading/trade_ici"
+    format: delta
+    contract: trade@1
     kind: trade
     promote: [SOURCE_SYSTEM]
     sort-by: [id]
     maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
   us-equities.us-company:
+    uri: "${lake.root}/us-equities/us-company"
+    format: delta
+    contract: us-company@1
     promote: [TICKER, NAME, LEI_LEGAL_NAME, CIK, LEI, EXCHANGE, INDEX_TEXT, SECTOR, SIC, SIC_DESCRIPTION, STATE_OF_INCORPORATION, REVENUE]
     id: TICKER
   us-equities.index-membership:
+    uri: "${lake.root}/us-equities/index-membership"
+    format: delta
+    contract: index-membership@1
     promote: [INDEX, NAME, MEMBERS]
     id: INDEX
   us-equities.filing-feed:
+    uri: "${lake.root}/us-equities/filing-feed"
+    format: delta
+    contract: filing-feed@1
     promote: [FEED, NAME, FILINGS]
     id: FEED
   us-equities.filing:
+    uri: "${lake.root}/us-equities/filing"
+    format: delta
+    contract: filing@1
     promote: [ACCESSION, COMPANY, COMPANY_NAME, FORM, FILED, REPORT_DATE]
     id: ACCESSION
   us-equities.financial-fact:
+    uri: "${lake.root}/us-equities/financial-fact"
+    format: delta
+    contract: financial-fact@1
     promote: [FACT_ID, COMPANY, COMPANY_NAME, CONCEPT, LABEL, LATEST, LATEST_YEAR]
     id: FACT_ID
   macro.economy:
+    uri: "${lake.root}/macro/economy"
+    format: delta
+    contract: economy@1
     promote: [NAME, ISO3, REGION_NAME, INCOME_NAME, GDP_USD_BN, GDP_PER_CAPITA, GROWTH, INFLATION, UNEMPLOYMENT, POPULATION_M]
-  macro.macro-indicator: null
-  macro.economic-forecast: null
-  macro.labour-market: null
-  macro.fiscal-position: null
+  macro.macro-indicator: {uri: "${lake.root}/macro/macro-indicator", format: delta, contract: macro-indicator@1}
+  macro.economic-forecast: {uri: "${lake.root}/macro/economic-forecast", format: delta, contract: economic-forecast@1}
+  macro.labour-market: {uri: "${lake.root}/macro/labour-market", format: delta, contract: labour-market@1}
+  macro.fiscal-position: {uri: "${lake.root}/macro/fiscal-position", format: delta, contract: fiscal-position@1}
   macro.region-economy:
+    uri: "${lake.root}/macro/region-economy"
+    format: delta
+    contract: region-economy@1
     promote: [ISO3, COUNTRY_NAME, REGION_CODE, NAME, POPULATION, GDP_USD_BN, GDP_PER_CAPITA, YEAR, SOURCE]
-  civic.jurisdiction: null
-  civic.party: null
-  civic.office-holder: null
-  civic.election: null
-  civic.region: null
-  civic.social-indicator: null
-  climate.climate-profile: {}
-  climate.financed-emissions: {}
-  climate.climate-scenario: {}
-  climate.climate-stress: {}
-  climate.physical-asset: {}
-  climate.taxonomy-alignment: {}
-  genomics.gene: {}
-  genomics.variant: {}
-  genomics.protein: {}
-  genomics.pathway: {}
-  genomics.sample: {}
-  genomics.sequencing-run: {}
-  genomics.expression-study: {}
-  genomics.clinical-trial: {}
-  liquidity.lcr: {}
-  liquidity.nsfr: {}
-  liquidity.maturity-ladder: {}
-  liquidity.hqla-holding: {}
-  liquidity.funding-source: {}
-  liquidity.liquidity-stress: {}
-  liquidity.intraday-liquidity: {}
-  oprisk.loss-event: {}
-  oprisk.risk-control: {}
-  oprisk.key-risk-indicator: {}
-  oprisk.issue: {}
-  oprisk.oprisk-scenario: {}
-  oprisk.third-party: {}
-  oprisk.cyber-incident: {}
-  oprisk.oprisk-capital: {}
-  retail.customer: {}
-  retail.deposit-account: {}
-  retail.mortgage: {}
-  retail.card-account: {}
-  retail.personal-loan: {}
-  retail.branch: {}
-  retail.collections-case: {}
-  retail.retail-portfolio: {}
+  civic.jurisdiction: {uri: "${lake.root}/civic/jurisdiction", format: delta, contract: jurisdiction@1}
+  civic.party: {uri: "${lake.root}/civic/party", format: delta, contract: party@1}
+  civic.office-holder: {uri: "${lake.root}/civic/office-holder", format: delta, contract: office-holder@1}
+  civic.election: {uri: "${lake.root}/civic/election", format: delta, contract: election@1}
+  civic.region: {uri: "${lake.root}/civic/region", format: delta, contract: region@1}
+  civic.social-indicator: {uri: "${lake.root}/civic/social-indicator", format: delta, contract: social-indicator@1}
+  climate.climate-profile: {uri: "${lake.root}/climate/climate-profile", format: delta}
+  climate.financed-emissions: {uri: "${lake.root}/climate/financed-emissions", format: delta}
+  climate.climate-scenario: {uri: "${lake.root}/climate/climate-scenario", format: delta}
+  climate.climate-stress: {uri: "${lake.root}/climate/climate-stress", format: delta}
+  climate.physical-asset: {uri: "${lake.root}/climate/physical-asset", format: delta}
+  climate.taxonomy-alignment: {uri: "${lake.root}/climate/taxonomy-alignment", format: delta}
+  genomics.gene: {uri: "${lake.root}/genomics/gene", format: delta}
+  genomics.variant: {uri: "${lake.root}/genomics/variant", format: delta}
+  genomics.protein: {uri: "${lake.root}/genomics/protein", format: delta, contract: protein@1}
+  genomics.pathway: {uri: "${lake.root}/genomics/pathway", format: delta}
+  genomics.sample: {uri: "${lake.root}/genomics/sample", format: delta}
+  genomics.sequencing-run: {uri: "${lake.root}/genomics/sequencing-run", format: delta}
+  genomics.expression-study: {uri: "${lake.root}/genomics/expression-study", format: delta}
+  genomics.clinical-trial: {uri: "${lake.root}/genomics/clinical-trial", format: delta}
+  liquidity.lcr: {uri: "${lake.root}/liquidity/lcr", format: delta}
+  liquidity.nsfr: {uri: "${lake.root}/liquidity/nsfr", format: delta}
+  liquidity.maturity-ladder: {uri: "${lake.root}/liquidity/maturity-ladder", format: delta}
+  liquidity.hqla-holding: {uri: "${lake.root}/liquidity/hqla-holding", format: delta}
+  liquidity.funding-source: {uri: "${lake.root}/liquidity/funding-source", format: delta}
+  liquidity.liquidity-stress: {uri: "${lake.root}/liquidity/liquidity-stress", format: delta}
+  liquidity.intraday-liquidity: {uri: "${lake.root}/liquidity/intraday-liquidity", format: delta}
+  oprisk.loss-event: {uri: "${lake.root}/oprisk/loss-event", format: delta}
+  oprisk.risk-control: {uri: "${lake.root}/oprisk/risk-control", format: delta}
+  oprisk.key-risk-indicator: {uri: "${lake.root}/oprisk/key-risk-indicator", format: delta}
+  oprisk.issue: {uri: "${lake.root}/oprisk/issue", format: delta}
+  oprisk.oprisk-scenario: {uri: "${lake.root}/oprisk/oprisk-scenario", format: delta}
+  oprisk.third-party: {uri: "${lake.root}/oprisk/third-party", format: delta}
+  oprisk.cyber-incident: {uri: "${lake.root}/oprisk/cyber-incident", format: delta}
+  oprisk.oprisk-capital: {uri: "${lake.root}/oprisk/oprisk-capital", format: delta}
+  retail.customer: {uri: "${lake.root}/retail/customer", format: delta}
+  retail.deposit-account: {uri: "${lake.root}/retail/deposit-account", format: delta}
+  retail.mortgage: {uri: "${lake.root}/retail/mortgage", format: delta}
+  retail.card-account: {uri: "${lake.root}/retail/card-account", format: delta}
+  retail.personal-loan: {uri: "${lake.root}/retail/personal-loan", format: delta}
+  retail.branch: {uri: "${lake.root}/retail/branch", format: delta}
+  retail.collections-case: {uri: "${lake.root}/retail/collections-case", format: delta}
+  retail.retail-portfolio: {uri: "${lake.root}/retail/retail-portfolio", format: delta}

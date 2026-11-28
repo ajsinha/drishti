@@ -22,5 +22,8 @@ storage: {region: '${lake.ccr.official.storage.s3.region:}', endpoint: '${lake.c
   access-key: '${lake.ccr.official.storage.s3.access-key:}', secret-key: '${lake.ccr.official.storage.s3.secret-key:}'}
 tables:
   risk-results.exposure-official-cpty:
+    uri: "${lake.root}/risk-results/exposure-official-cpty"
+    format: "${lake.ccr.official.format:delta}"
+    contract: exposure-official-cpty@1
     promote: [HIERARCHY, NODE_ID, NODE_NAME, PARENT_ID, LEVEL, COUNTERPARTY, LEGAL_ENTITY, RESULT_VERSION, RUN_ID, PATHS, CE, EPE, EEPE, PEAK_EE,
       PEAK_PFE_95, PEAK_PFE_99, EAD_IMM, PEAK_PFE_DATE, PFE_95_1Y, PFE_95_5Y, EE_1Y, EE_5Y, NETTING_SETS, TRADES, FAILED_TRADES, PARTIAL_SETS]
