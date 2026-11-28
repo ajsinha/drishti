@@ -42,7 +42,7 @@ jobs:
         with: { python-version: '3.13' }
       - name: Build Drishti Tools, Rachana and Lake from their release tags
         run: |
-          foreach ($spec in @("drishti-tools:$env:TOOLS_TAG", "drishti-rachana:$env:RACHANA_TAG", "drishti-lake:$env:LAKE_TAG", "drishti-engine:develop")) {   # the engine API (0.1.0-SNAPSHOT) has no tag yet
+          foreach ($spec in @("drishti-tools:$env:TOOLS_TAG", "drishti-rachana:$env:RACHANA_TAG", "drishti-lake:$env:LAKE_TAG")) {
             $repo, $tag = $spec -split ':'
             git clone -q --depth 1 --branch $tag "https://github.com/drishti-platform/$repo.git" "$env:RUNNER_TEMP/$repo"
             if ($LASTEXITCODE -ne 0) { throw "clone of $repo $tag failed" }
@@ -51,6 +51,15 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "build of $repo $tag failed" }
             Pop-Location
           }
+      # the engine API and host (0.1.0-SNAPSHOT: no tag yet), from develop; the kit's TCK module (built on an older Rachana) is not needed
+      - name: Build the engine API and host from develop
+        run: |
+          git clone -q --depth 1 --branch develop https://github.com/drishti-platform/drishti-engine.git "$env:RUNNER_TEMP/drishti-engine"
+          if ($LASTEXITCODE -ne 0) { throw 'clone of drishti-engine develop failed' }
+          Push-Location "$env:RUNNER_TEMP/drishti-engine/java"
+          ./mvnw.cmd -B -q install -DskipTests -pl :engine-bom,:engine-api,:engine-host -am
+          if ($LASTEXITCODE -ne 0) { throw 'build of drishti-engine failed' }
+          Pop-Location
       - name: Build (no tests)
         run: ./mvnw.cmd -B -q install -DskipTests
       - name: Tests of the lake host, the Delta and Iceberg connectors and the server
