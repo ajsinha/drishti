@@ -51,13 +51,13 @@ jobs:
             if ($LASTEXITCODE -ne 0) { throw "build of $repo $tag failed" }
             Pop-Location
           }
-      # the engine API and host (0.1.0-SNAPSHOT: no tag yet), from develop; the kit's TCK module (built on an older Rachana) is not needed
+      # the engine API, host and sample (0.1.0-SNAPSHOT: no tag yet), from develop; the kit's TCK module (built on an older Rachana) is not needed
       - name: Build the engine API and host from develop
         run: |
           git clone -q --depth 1 --branch develop https://github.com/drishti-platform/drishti-engine.git "$env:RUNNER_TEMP/drishti-engine"
           if ($LASTEXITCODE -ne 0) { throw 'clone of drishti-engine develop failed' }
           Push-Location "$env:RUNNER_TEMP/drishti-engine/java"
-          ./mvnw.cmd -B -q install -DskipTests -pl :engine-bom,:engine-api,:engine-host -am
+          ./mvnw.cmd -B -q install -DskipTests -pl :engine-bom,:engine-api,:engine-host,:engine-sample -am
           if ($LASTEXITCODE -ne 0) { throw 'build of drishti-engine failed' }
           Pop-Location
       - name: Build (no tests)
