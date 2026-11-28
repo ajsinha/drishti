@@ -157,6 +157,17 @@ class ExposureHomesSideBySideTest {
             }
             // the official record (EXPOSURE_GUIDE.md section 20): captured as an administrator, read back with every trade's EE contribution;
             // its figures come from the path exposure.route chose (the engine's record says figuresFrom: engine), its structure the host's
+            // the capture at start may hold the record's lock (a whole date's scopes): wait for its record (polled), then capture (unchanged or new)
+            long until = System.nanoTime() + java.time.Duration.ofMinutes(20).toNanos();
+            while (System.nanoTime() < until) {
+                try {
+                    server.get("/api/v1/risk/exposure/official?asOf=" + ExposureSideBySideTest.DATE);
+                    break;
+                } catch (IllegalStateException notYet) {
+                    Thread.onSpinWait();
+                    java.util.concurrent.locks.LockSupport.parkNanos(2_000_000_000L);
+                }
+            }
             server.post("/api/v1/risk/exposure/official?asOf=" + ExposureSideBySideTest.DATE, "{}");
             JsonNode off = server.get("/api/v1/risk/exposure/official?asOf=" + ExposureSideBySideTest.DATE + "&trades=true");
             out.put("official from", List.of(off.path("figuresFrom").asText("in-tree").equals(path) ? "the path asked" : "another path: "

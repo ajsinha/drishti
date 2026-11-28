@@ -390,7 +390,7 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
 - **Regression at this stop** (drishti 64e7cf999 and (8) on top, drishti-risk d8851de): `ExposureSideBySideTest` 12/12 and `ExposureHomesSideBySideTest`
   green on both tiers (heap: 560 engine figures equal to the recorder's raw bits); in-tree `Exposure*Test` of banking 43/43; drishti-risk
   `CcrRecordedIT` green (tolerance unchanged), `risk-ccr` tests green; `CcrKitIT`: every case and law green but the pre-existing delivery,
-  scan and coverage findings above. VaR (mapped tier, before (8)): `PackagedVarGoldenTest` green (167,372,692 / 210,131,972), `RiskSideBySideTest` 14/14 (headline 3,918 of 3,918 raw bits), `HomesSideBySideTest` green (1,054 rows); (8) touches no VaR class. After (8): the two exposure side-by-sides green again (mapped; heap: see the next line). Defaults unchanged; nothing removed from in-tree.
+  scan and coverage findings above. VaR (mapped tier, before (8)): `PackagedVarGoldenTest` green (167,372,692 / 210,131,972), `RiskSideBySideTest` 14/14 (headline 3,918 of 3,918 raw bits), `HomesSideBySideTest` green (1,054 rows); (8) touches no VaR class. After (8): `ExposureSideBySideTest` 12/12 and `ExposureHomesSideBySideTest` green again on both tiers (heap: 560 raw bits), banking `Exposure*Test` 43/43. The Homes test now waits for the record the capture at start makes before it captures (under another lane's load the start capture held the lock past the request's 5 minutes). Defaults unchanged; nothing removed from in-tree.
 
 ### Status, exposure part 2 (2026-11-27 19:0x, branch `r2/exposure-routes`; drishti-risk `r2/exposure-routes` 09fba3a)
 
