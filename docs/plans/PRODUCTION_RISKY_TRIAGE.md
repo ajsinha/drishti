@@ -19,8 +19,8 @@ Sizes are the audit's Sonnet lane-hours. "Lane" = the owning area at the time of
 
 | Item | Decision | Why | Size | Owning area |
 |---|---|---|---|---|
-| R1 implicit localhost targets | i8 | Tools default is a wrong-target risk (a command can hit the wrong server); small, tools only | 4 | tools / LOAD |
-| R2 five names for the server address | i8 (tools part) | Cheap; retired names that stop the start; console/deploy names listed for the lead | 3 | tools, PROD |
+| R1 implicit localhost targets | i9 (was i8) | Needs the production mode to know when no default is allowed; every dev command and test relies on the default today | 4 | tools / LOAD |
+| R2 five names for the server address | i9 (was i8) | Retiring names touches CONFIGURATION.md, deploy/aws, console settings and 4 guides: the production merge lane's files | 3 | tools, PROD |
 | R3 four secret mechanisms | i9 (console unit loading server secrets noted for PROD lane) | Needs one reader and vault hook: a design | 8 | PROD |
 | R4 three layouts, one unit | i9 | Packaging with B2; belongs to the production merge lane | 4 | PROD |
 | R5 console boundary | i9 | Roadmap redesign, other lane in flight | 20 | CON |
@@ -35,4 +35,4 @@ Sizes are the audit's Sonnet lane-hours. "Lane" = the owning area at the time of
 | R14 bindings by pack / module folder | i9 | Table registry lane | 6 | S1 |
 | R15 official results follow demo variable | i9 | Table registry lane | 5 | S1 |
 
-Counts: i8 = 5 (R1, R2, R11 guard part, R12, R13 warning handed to lead), i9 = 10.
+Counts: i8 = 3 (R11 guard part, R12, R13 warning handed to the production lead), i9 = 12 (R1 and R2 moved after the first look). Done in i8/risky: R12, R11 guard.
