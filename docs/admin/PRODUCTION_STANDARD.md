@@ -166,5 +166,5 @@ The console (`drishti-console`) is a deployable of its own.
 
 | Rule | How it is met | Enforced by |
 |---|---|---|
-| Every loader stages under `<data>/tmp/loaders`, never the system temp folder | the loaders take their staging folder from the data folder's layout | the loaders' tests (`tools/loaders`, the temp-folder guard) |
-| Every controller is classified for row-rule coverage | each route of the server is listed in `row-rule-route-inventory.tsv` with how its rows are filtered; a new controller without a row fails the build | `RowRuleRouteInventoryGuardTest` |
+| Every loader stages under `<data>/tmp/loaders`, never the system temp folder | the loaders take their staging folder from the data folder's layout | `tools/lake/test_loader_staging.py` |
+| Every controller is classified for row-rule coverage | each controller route is listed in `row-rule-route-inventory.tsv` (test resources of the server) with how its rows are filtered; a new controller without a row fails the build | `RowRuleRouteInventoryGuardTest` |
