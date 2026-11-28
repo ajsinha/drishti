@@ -126,12 +126,17 @@ def hand_by_hand(files: list[Path], lake: str | None, inbox: Path, order: list[s
         return []
 
 
+def _shown(p: Path) -> Path:
+    """A folder as the help shows it: relative to the install when it is in it, else as it is (a data folder named elsewhere)."""
+    return p.relative_to(ROOT) if p.is_relative_to(ROOT) else p
+
+
 def add_arguments(group, shared: bool = True) -> None:
     """--inbox and --load (with --plan): the two optional hooks that end a run; ``shared`` also adds --server, --token-file and
     --settings (a script whose remove options already have them passes False). --lake comes from the script's own options."""
     group.add_argument("--inbox", nargs="?", type=Path, const=DEFAULT_INBOX, metavar="DIR",
                        help="after the files are written, copy them and then their markers into the data inbox the running server watches "
-                            f"(default {DEFAULT_INBOX.relative_to(ROOT)}), in dependency order")
+                            f"(default {_shown(DEFAULT_INBOX)}), in dependency order")
     group.add_argument("--load", action="store_true", help="instead: load the files now, one `drishti.py lake build --engine java` each, "
                        "in dependency order, into --lake; stops at the first failure")
     group.add_argument("--plan", action="store_true", help="with --load: say what each load would do (lake build --plan); write nothing")
