@@ -218,6 +218,8 @@ def test_pin_hide_and_move_are_the_persons_own_and_reach_no_one_else():
     trader, _t = _in(app, "qa-trader")
     before = trader.get("/api/home/cards").json()["cards"]
     assert _post(risk, {"action": "pin", "card": "limits"}).json()["cards"][0] == "limits"
+    ids = _ids(risk.get("/api/home/cards").json()["view"])
+    assert ids.index("limits") < ids.index("var")                                     # on the cockpit too, a pin is above the figures
     assert fake.mine["qa-risk"]["homeCards"]["pins"] == ["limits"] and "qa-trader" not in fake.mine
     assert other.get("/api/home/cards").json()["cards"][0] == "limits"
     assert trader.get("/api/home/cards").json()["cards"] == before

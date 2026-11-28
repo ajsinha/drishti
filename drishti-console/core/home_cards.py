@@ -362,7 +362,7 @@ def build_view(*, title: str, role: str, layout: str, strip: list[dict], needs: 
         blocks.append(("needs", width))
     shown = [(c, p) for c, p in cards if p is not None]
     if layout == "cockpit":                                   # the figures first, as one dense row, then the working cards
-        shown.sort(key=lambda cp: cp[0].kind != "metric")
+        shown.sort(key=lambda cp: (cp[0].id not in pins, cp[0].kind != "metric"))      # (a pinned card stays on top of the figures)
     for c, p in shown:
         panels.append(p)
         blocks.append((c.id, _unit(c, layout)))
