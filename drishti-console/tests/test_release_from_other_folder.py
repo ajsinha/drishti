@@ -138,6 +138,7 @@ class Server:
     def __init__(self, install: Path, other: Path, data: Path, lake: Path, port: int):
         self.install, self.other, self.data, self.lake, self.port = install, other, data, lake, port
         self.base = f"http://127.0.0.1:{port}"
+        (data / "run").mkdir(parents=True, exist_ok=True)   # what setup makes of a data folder (start makes no root: tools/launch/serverstart.require_set_up); setup itself would write the account's settings file
         self.as_of = var_stack.SHARED_AS_OF                 # the shared lake's last business date
 
     def script(self, command: str, *args: str, env: dict[str, str] | None = None, timeout: float = 600) -> subprocess.CompletedProcess:
@@ -315,7 +316,7 @@ def test_the_release_runs_from_another_folder_and_restarts(install, other, lake,
 def test_a_missing_required_root_stops_the_start_at_once(install, other, lake, tmp_path_factory):
     data = tmp_path_factory.mktemp("data-missing")
     s = Server(install, other, data, lake, _free_port())
-    gone = data / "no-such-modules-folder"
+    gone = install / "no-such-modules-folder"      # inside the checkout: a DRISHTI_* folder variable naming another folder is ignored (setup collisions rule)
     t0 = time.monotonic()
     r = s.script("start server", "--background", "--port", str(s.port), "--data-dir", str(data), "--lake-root", str(lake), "--workdir", str(other),
                  "--wait", "120", env=s.env(DRISHTI_MODULES_HOME=str(gone)), timeout=180)
@@ -334,7 +335,7 @@ def test_a_relative_home_is_refused(install, other, lake, tmp_path_factory):
     data = tmp_path_factory.mktemp("data-relative")
     s = Server(install, other, data, lake, _free_port())
     r = s.script("start server", "--background", "--port", str(s.port), "--data-dir", str(data), "--lake-root", str(lake), "--workdir", str(other),
-                 "--wait", "120", env=s.env(DRISHTI_HOME="drishti"), timeout=180)
+                 "--wait", "120", "--home", "drishti", timeout=180)   # --home: a DRISHTI_HOME naming a folder outside the checkout is dropped before it is read (setup collisions rule)
     try:
         assert r.returncode != 0
         text = s.log() + r.stdout + r.stderr
