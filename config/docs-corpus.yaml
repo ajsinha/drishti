@@ -410,6 +410,7 @@ files:
   - {path: 'modules/genomics/docs/tutorial.md', class: merge, lane: A}
   - {path: 'modules/genomics/packs/genomics-showcase/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
   - {path: 'modules/genomics/packs/genomics-showcase/guides/genomics-showcase.md', class: merge, lane: A}
+  - {path: 'modules/genomics/packs/genomics/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
   - {path: 'modules/genomics/packs/protein-engineering/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
   - {path: 'modules/genomics/packs/protein-engineering/guides/protein-engineering.md', class: merge, lane: A}
   - {path: 'modules/market-data/docs/README.md', class: generate, lane: C, tool: 'tools/packgen (module manifest)'}
