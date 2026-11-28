@@ -189,3 +189,7 @@ rebuilds the pack's reference samples (a few documents of each kind, for its REA
 
 `PY -m pytest tools/loaders/common/tests -q` runs every feed against recorded responses, never the network (needs the server jar in
 `lib/`); `PY -m pytest tools/loaders/common/tests/test_live.py --live -k gleif` is the by-hand smoke against the real source.
+
+## Per-type guides
+
+One page per feed with the daily command, the schedule, late and replaced days, the checks and the reference: [docs/guides/loads/README.md](../guides/loads/README.md) ([GLEIF](../guides/loads/load-gleif.md), [funds](../guides/loads/load-funds.md), [US equities](../guides/loads/load-us-equities.md), [market data](../guides/loads/load-market-data.md), [central banks](../guides/loads/load-central-banks.md), [national statistics](../guides/loads/load-national-statistics.md), [OECD](../guides/loads/load-oecd.md), [world economy](../guides/loads/load-world-economy.md), [world development](../guides/loads/load-world-development.md)).

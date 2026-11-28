@@ -25,9 +25,9 @@ Run every command from the Drishti folder (the one that holds `tools`): `/opt/dr
 | `counterparty` | `counterparty.csv` | - | `reference/counterparty` | legal-entity, counterparty-group | `COUNTERPARTY_ID` |
 | `agreement` | `agreement.csv` | - | `legal/agreement` | counterparty | `AGREEMENT_ID` |
 | `csa` | `csa.csv` | `ELIGIBLE=csa.ELIGIBLE.csv` | `legal/csa` | agreement | `CSA_ID` |
-| `netting-set` | `netting-set.csv` | - | `legal/netting-set` | csa, counterparty, legal-entity | `NETTING_SET_ID` |
+| `netting-set` | `netting-set.csv` | - | `credit/netting-set` | csa, counterparty, legal-entity | `NETTING_SET_ID` |
 | `collateral-balance` | `collateral-balance.csv` | `POSITIONS=collateral-balance.POSITIONS.csv` | `(see `lake status`)` | netting-set | `BALANCE_ID` |
-| `credit-limit` | `credit-limit.csv` | `BUCKETS=credit-limit.BUCKETS.csv` | `legal/credit-limit` | counterparty | `LIMIT_ID` |
+| `credit-limit` | `credit-limit.csv` | `BUCKETS=credit-limit.BUCKETS.csv` | `credit/credit-limit` | counterparty | `LIMIT_ID` |
 
 ## Every day
 
@@ -76,16 +76,13 @@ collateral-balance     DONE             6        6        0      0       0
 credit-limit           DONE             8        8        0      0       0
 ```
 
-Exit code 0. Then a real load of this page's author into the shipped `demo` lake: the first four kinds loaded; the fifth stopped on the demo lake file's missing entry (see Errors), and **the kinds after a failed one are not loaded**:
+Exit code 0. Then a real load into the `demo` lake. **A kind that fails stops the day: the kinds after it are not loaded**; each kind writes one `lake-build` line:
 
 ```text
 2026-11-27T19:57:03-05:00 lake-build ok exit=0 run=20261127T195700.289-3617182 domain=reference kind=counterparty-group engine=java-loader mode=overwrite-dates rows=4 rejected=0 dates=1 partitions=1 seconds=2.9
 2026-11-27T19:57:06-05:00 lake-build ok exit=0 run=20261127T195703.443-3617382 domain=reference kind=counterparty engine=java-loader mode=overwrite-dates rows=8 rejected=0 dates=1 partitions=1 seconds=3.034
 2026-11-27T19:57:09-05:00 lake-build ok exit=0 run=20261127T195706.671-3617588 domain=legal kind=agreement engine=java-loader mode=overwrite-dates rows=8 rejected=0 dates=1 partitions=1 seconds=3.098
 2026-11-27T19:57:12-05:00 lake-build ok exit=0 run=20261127T195709.993-3617774 domain=legal kind=csa engine=java-loader mode=overwrite-dates rows=6 rejected=0 dates=1 partitions=1 seconds=2.966
-lake build: lake demo has no table for legal.netting-set: add its entry to /home/ashutosh/IdeaProjects/drishti-lanes/i8-load-guides/config/lakes/demo.yaml (tables: [compute-demo.path-book, compute-demo.path-str
-2026-11-27T19:57:14-05:00 lake-build failed exit=1 run=20261127T195713.161-3617975 mode=overwrite-dates seconds=0.933 error="lake demo has no table for legal.netting-set: add its entry to /home/ashutosh/IdeaPro
-2026-11-27T19:57:14 ERROR lake build of netting-set.2026-11-20.jsonl.gz exited 1: the files after it were not loaded
 kind                   status        read  written rejected  links seconds
 --------------------------------------------------------------------------
 counterparty-group     DONE             4        4        0      0       0
@@ -174,7 +171,7 @@ Windows   py -3.13 tools\drishti.py lake status --lake demo
 
 ## Reference
 
-**What it writes.** Tables reference/counterparty-group, reference/counterparty, legal/agreement, legal/csa, legal/netting-set, legal/credit-limit in the lake you name, symbolic `<domain>/<kind>`. The column-by-column format of every kind, its mapping and a sample: [CSV_FORMATS.md](../../contracts/CSV_FORMATS.md) ([`counterparty-group`](../../contracts/CSV_FORMATS.md#counterparty-group-counterparty-group-from-csv), [`counterparty`](../../contracts/CSV_FORMATS.md#counterparty-counterparty-from-csv), [`agreement`](../../contracts/CSV_FORMATS.md#agreement-master-agreement-from-csv), [`csa`](../../contracts/CSV_FORMATS.md#csa-credit-support-annex-from-csv), [`netting-set`](../../contracts/CSV_FORMATS.md#netting-set-netting-set-from-csv), [`collateral-balance`](../../contracts/CSV_FORMATS.md#collateral-balance-collateral-balance-from-csv), [`credit-limit`](../../contracts/CSV_FORMATS.md#credit-limit-credit-limit-from-csv) are its sections; the contracts are in the packs' contract pages). The files the loader writes are `<kind>.<date>.jsonl.gz` plus a `.ready` marker naming the lake.
+**What it writes.** Tables reference/counterparty-group, reference/counterparty, legal/agreement, legal/csa, credit/netting-set, credit/credit-limit in the lake you name, symbolic `<domain>/<kind>`. The column-by-column format of every kind, its mapping and a sample: [CSV_FORMATS.md](../../contracts/CSV_FORMATS.md) ([`counterparty-group`](../../contracts/CSV_FORMATS.md#counterparty-group-counterparty-group-from-csv), [`counterparty`](../../contracts/CSV_FORMATS.md#counterparty-counterparty-from-csv), [`agreement`](../../contracts/CSV_FORMATS.md#agreement-master-agreement-from-csv), [`csa`](../../contracts/CSV_FORMATS.md#csa-credit-support-annex-from-csv), [`netting-set`](../../contracts/CSV_FORMATS.md#netting-set-netting-set-from-csv), [`collateral-balance`](../../contracts/CSV_FORMATS.md#collateral-balance-collateral-balance-from-csv), [`credit-limit`](../../contracts/CSV_FORMATS.md#credit-limit-credit-limit-from-csv) are its sections; the contracts are in the packs' contract pages). The files the loader writes are `<kind>.<date>.jsonl.gz` plus a `.ready` marker naming the lake.
 **Input and file naming.** One CSV per kind (and one per child list), any name: the day file names them. Delimiter, encoding, decimal and thousands separators, date format and null words are **declared** in the mapping's `csv:` block over `kinds/shared/csv.yaml`, never guessed. A bank's own column names go in a mapping file of your own (a copy of `kinds/<kind>.yaml` with the `from:` columns renamed), named in the day file as `mapping: /site/mappings/<kind>.yaml`; never edit the shipped ones. Export from the source system; do not round-trip a file through Excel (long ids become `2.00001E+11`, dates are rewritten to the machine's locale): import every column as text if you must.
 
 **A real example** (the shipped synthetic samples in `tools/loaders/mrloader/samples/`):
@@ -201,7 +198,7 @@ NS-ALDERSHOT-TRUST,CP-ALDERSHOT-TRUST,AGR-ALDERSHOT-TRUST-ISDA,CSA-ALDERSHOT-TRU
 
 | You see | It means | Do this |
 |---|---|---|
-| *lake demo has no table for legal.netting-set* (the same for `legal.credit-limit`) | the shipped `demo` lake file lists these two kinds under another domain name (`credit.netting-set`, `credit.credit-limit`), so the load of the pack's own table name is refused; seen on 2026-11-27 and **not fixed here** | add the entry for the table the message names to `config/lakes/<lake>.yaml` (`legal.netting-set: {id: NETTING_SET_ID}`, `legal.credit-limit: {id: LIMIT_ID}`), keep the file with your site's settings, run the day again; or load into a lake whose file already has them |
+| *lake demo has no table for DOMAIN.TABLE* | the lake file has no entry for the table the load writes (the shipped `demo` lake has the entries of the standard kinds, `credit.netting-set` and `credit.credit-limit` among them) | add the entry the message names to `config/lakes/<lake>.yaml`, keep the file with your site's settings, run the day again |
 | reject `BAD_DATE` / `BAD_NUMBER` | a locale date, a currency symbol, a decimal comma | export ISO dates and plain numbers, or declare `csv: {dates: DD/MM/YYYY}` / `decimal: ","` in your mapping |
 | reject `MISSING_REQUIRED`, `EXCEL_NUMBER_ID` | an empty required cell, an id turned into a number | fix the source and send again |
 | *no server jar in .../lib* | the tools read the packs from the jar | `python3.13 tools/drishti.py build jar` |

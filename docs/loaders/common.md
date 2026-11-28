@@ -8,7 +8,7 @@
 # common: the feed engine (for developers)
 
 The one engine behind every pull-from-the-internet loader: [external/](external.md) and [news/](news.md) (and
-[genomics/](genomics.md) when built). If you only run daily loads, you need those READMEs, not this one. There is **one** way to
+[genomics/](genomics.md)). If you only run daily loads, you need those READMEs, not this one. There is **one** way to
 pull, write, load, schedule and monitor a source; a feed adds a source class and a YAML file and nothing else. Depth:
 [WORLD_DATA_GUIDE.md](../guides/WORLD_DATA_GUIDE.md) sections 19.7 to 19.10.
 

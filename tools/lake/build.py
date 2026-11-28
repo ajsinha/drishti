@@ -210,7 +210,8 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
     kind = kind or (kinds[0] if len(kinds) == 1 else None)
     out["kind"] = kind
     if delta:
-        name, c = delta[0]
+        serving = [(n, c) for n, c in delta if kind and kind in (c.get("kinds") or [])]
+        name, c = (serving or delta)[0]      # the connector that serves the kind (credit-store for netting-set), not the pack's first
         st = c.get("settings") or {}
         out["connector"], out["domain"] = name, st.get("domain") or out["pack"]
         out["lake_domain"] = st.get("domain")      # the connector's own domain (a lake-form template's lake-tables: name it): it picks the table

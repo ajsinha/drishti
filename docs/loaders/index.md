@@ -15,8 +15,8 @@ for the person who does the daily loads.
 | [`mrloader/`](mrloader.md) | **the bank's own market-risk files**: PVF scenario PVs, the daily scenario set and FX, the CSV datasets of VaR and exposure | [mrloader/README.md](mrloader.md) |
 | [`external/`](external.md) | **public reference, statistics and market data** pulled from the internet: GLEIF, funds, US equities, central banks, national statistics, OECD, official market data, the world economy | [external/README.md](external.md) |
 | [`news/`](news.md) | **public news and events**: official press releases, news and quotes, GDELT world events | [news/README.md](news.md) |
-| [`genomics/`](genomics.md) | planned: public genomics sources and your own genomics files | [genomics/README.md](genomics.md) |
-| [`common/`](common.md) | the one engine behind `external/` and `news/` (the feed engine); for developers | [common/README.md](common.md) |
+| [`genomics/`](genomics.md) | public genomics feeds (ClinVar, Ensembl) and loading your own VCF, gene and sample files | [genomics/README.md](genomics.md) |
+| [`common/`](common.md) | the one engine behind `external/`, `news/` and `genomics/` (the feed engine); for developers | [common/README.md](common.md) |
 
 ## Which one do I use?
 

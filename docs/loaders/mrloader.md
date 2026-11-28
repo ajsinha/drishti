@@ -226,3 +226,7 @@ in this folder carries a real extract, and real extracts are never committed.
 ## Tests
 
 `PY -m pytest tools/loaders/mrloader` (needs the server jar in `lib/`). Samples and expected outputs: `samples/`.
+
+## Per-type guides
+
+One page per data load type, with the daily command, a cron line and a Windows Task Scheduler recipe, late and replaced days, the checks and the reference: [docs/guides/loads/README.md](../guides/loads/README.md) (for this folder: [trades](../guides/loads/load-trade.md), [scenario PVs](../guides/loads/load-scenario-pv.md), [positions](../guides/loads/load-positions.md), [portfolios](../guides/loads/load-portfolio.md) and the four [CSV families](../guides/loads/load-csv-organisation.md)).
