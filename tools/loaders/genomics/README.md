@@ -215,3 +215,7 @@ is reference data for research and engineering, and its classifications change.
 [common/README.md](../common/README.md) (the shared engine, writing a feed) · [external/README.md](../external/README.md) (the same routine for
 the reference-data feeds) · [mrloader/README.md](../mrloader/README.md) (a bank's files) · [the genomics module's guide](../../../modules/genomics/docs/guide.md)
 · [DATA_GUIDE.md](../../../docs/guides/DATA_GUIDE.md) (the data inbox).
+
+## Per-type guides
+
+One page per feed and one for your own files, with the daily command, the schedule, late and replaced days, the checks and the reference: [docs/guides/loads/README.md](../../../docs/guides/loads/README.md) ([ClinVar](../../../docs/guides/loads/load-clinvar.md), [Ensembl](../../../docs/guides/loads/load-ensembl-genes.md), [your own VCF, gene and sample files](../../../docs/guides/loads/load-genomics-files.md)).

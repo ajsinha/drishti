@@ -84,3 +84,7 @@ The exit codes and the general table are in [external/README.md](../external/REA
 
 `pause` seconds between requests (1 to 2), three retries (2, 4, 8 s, or the server's `Retry-After`). Downloads are cached `cache-hours`
 (12) in `data/datafeeds/<feed>/cache/`, so a run that broke resumes. The GDELT day files are streamed and not kept.
+
+## Per-type guides
+
+One page per feed with the daily command, the schedule, late and replaced days, the checks and the reference: [docs/guides/loads/README.md](../../../docs/guides/loads/README.md) ([official news](../../../docs/guides/loads/load-official-news.md), [news and quotes](../../../docs/guides/loads/load-news-and-markets.md), [GDELT events](../../../docs/guides/loads/load-gdelt-events.md)).
