@@ -45,7 +45,8 @@ import org.junit.jupiter.api.Test;
 class RiskSpeedCheckTest {
 
     static final String DATE = "2026-09-30";
-    static final String ONLY = "market-risk/scenario-set,market-risk/var-limit,core/desk,core/book,core/legal-entity";
+    // the sample's scenario FX of the set HS-509 (vargen's set id): the engine reads a date's FX before it builds a book
+    static final String ONLY = "market-risk/scenario-set,market-risk/fx-scenario,market-risk/var-limit,core/desk,core/book,core/legal-entity";
     static int positions;
     static Path folder;
     static PackagedServer server;
