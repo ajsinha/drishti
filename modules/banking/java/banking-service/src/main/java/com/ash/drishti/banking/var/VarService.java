@@ -418,6 +418,12 @@ public final class VarService implements AutoCloseable {
         return vd;
     }
 
+    /** The USD date {@code d} when it is open now (loaded, not failed); never starts a load (R2 zero copy: the rows the engine may read). */
+    Optional<VarDate> heldDate(LocalDate d) {
+        CompletableFuture<VarDate> f = d == null ? null : dates.get(d);
+        return f != null && f.isDone() && !f.isCompletedExceptionally() ? Optional.of(f.join()) : Optional.empty();
+    }
+
     /**
      * The date a page's link would read, only when it is loaded already (a trade page never waits for a date to load); when it is not,
      * its load starts in the background and the answer is empty.

@@ -478,6 +478,7 @@ settings:                               # read as drishti.module.banking.<key> (
   - { key: var.rank-rule, type: string, retired: drishti.var.rank-rule, group: VaR, meaning: "kth-worst or interpolated" }
   - { key: var.reporting-currency, type: string, group: VaR, meaning: "The reporting currency of a VaR answer that names none (ISO code; USD as shipped): the book is converted to it first, then every figure is computed" }
   - { key: var.route, type: string, group: VaR, meaning: "in-tree, or engine: the VaR routes asked of Drishti Risk's market-risk engine through the host (R2)" }
+  - { key: var.zero-copy, type: string, group: VaR, meaning: "off, or on: the mapped tier's float32 rows of an open date served to the market-risk engine in place, no copy (R2)" }
   - { key: var.consumers.route, type: string, group: VaR, meaning: "in-tree, or engine: what reads VaR figures inside Drishti (role Homes) asks the market-risk engine through the host (R2)" }
   - { key: var.threads, type: int, retired: drishti.var.threads, group: VaR, meaning: "Cores the vector sums use (0: every core)" }
   - { key: var.hot-dates, type: int, retired: drishti.var.hot-dates, group: VaR, meaning: "Business dates kept open" }

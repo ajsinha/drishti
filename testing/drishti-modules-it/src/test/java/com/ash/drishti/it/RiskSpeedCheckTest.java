@@ -49,6 +49,9 @@ class RiskSpeedCheckTest {
     static int positions;
     static Path folder;
     static PackagedServer server;
+    static Path work0;
+    /** {@code -Dspeed.zero-copy=on}: the host's float32 rows handed to the engine in place (R2_CUT_PLAN 3a); off: the engine builds its own. */
+    static final String ZERO_COPY = System.getProperty("speed.zero-copy", "off");
 
     @BeforeAll
     static void start() throws Exception {
@@ -74,7 +77,7 @@ class RiskSpeedCheckTest {
             Files.writeString(vargen.resolve("LOADED"), "loaded\n");
         }
         String tier = System.getProperty("sbs.tier", "");
-        Path work = folder.resolve("server-" + (tier.isBlank() ? "mapped" : tier));
+        Path work = folder.resolve("server-" + (tier.isBlank() ? "mapped" : tier) + "-zc-" + ZERO_COPY);
         RiskSideBySideTest.deleteTree(work);
         SideBySide.dropJars(Path.of(jars), work);
         Map<String, String> env = new LinkedHashMap<>();
@@ -84,6 +87,9 @@ class RiskSpeedCheckTest {
         }
         env.put("DRISHTI_VAR_MEMORY_MB", System.getProperty("speed.var-memory-mb", "3000"));   // the in-tree date's room (heap tier: float64 rows)
         env.put("DRISHTI_VAR_OPEN_HEAP_MB", System.getProperty("speed.open-heap-mb", "2500"));
+        env.put("DRISHTI_VAR_ZERO_COPY", ZERO_COPY);
+        env.put("DRISHTI_MARKET_RISK_MEMORY_MB", System.getProperty("speed.engine-memory-mb", "3000"));   // the engine's books of the date                   // -Dspeed.zero-copy=on: the hot file's rows handed to the engine in place
+        work0 = work;
         server = PackagedServer.start(work, lake, DATE, env);
     }
 
@@ -111,6 +117,7 @@ class RiskSpeedCheckTest {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("positions", positions);
         out.put("tier", System.getProperty("sbs.tier", "").isBlank() ? "mapped" : System.getProperty("sbs.tier"));
+        out.put("zero_copy", ZERO_COPY);
         out.put("rss_mb_start", rssMb());
         long[] t = new long[2];
         t[0] = timed(headline("MGMT~BANK", "in-tree"));
@@ -134,6 +141,7 @@ class RiskSpeedCheckTest {
         }
         Map<String, List<Long>> inner = new LinkedHashMap<>();
         Map<String, List<Long>> leaf = new LinkedHashMap<>();
+        Map<String, List<Long>> tree = new LinkedHashMap<>();
         for (int round = 0; round < 2; round++) {
             for (String id : nodes) {
                 compare(id, inner, differ);
@@ -150,11 +158,35 @@ class RiskSpeedCheckTest {
             out.put("leaf_p99_ms_" + path, pct(leaf.get(path), 0.99));
         }
         out.put("leaf_asked", sample.size());
+        for (int round = 0; round < 3; round++) {                           // the tree of the hierarchy (the explorer's left pane), warm
+            JsonNode[] tr = new JsonNode[2];
+            int i = 0;
+            for (String path : List.of("in-tree", "engine")) {
+                long t0 = System.nanoTime();
+                tr[i++] = server.get("/api/v1/risk/var/tree?hierarchy=MGMT&asOf=" + DATE + "&path=" + path);
+                tree.computeIfAbsent(path, k -> new ArrayList<>()).add((System.nanoTime() - t0) / 1_000_000);
+            }
+            if (round == 0) {
+                Map<String, String> a = new LinkedHashMap<>();
+                tr[0].path("nodes").forEach(n -> a.put(n.path("id").asText(), n.path("var").asText() + "/" + n.path("es").asText()));
+                Map<String, String> b = new LinkedHashMap<>();
+                tr[1].path("nodes").forEach(n -> b.put(n.path("id").asText(), n.path("var").asText() + "/" + n.path("es").asText()));
+                if (!a.equals(b)) {
+                    differ.add("tree: " + a.size() + " rows in-tree, " + b.size() + " engine, not equal");
+                }
+                out.put("tree_rows", a.size());
+            }
+        }
+        for (String path : List.of("in-tree", "engine")) {
+            out.put("tree_first_ms_" + path, tree.get(path).get(0));
+            out.put("tree_p50_ms_" + path, pct(tree.get(path), 0.50));
+        }
         out.put("figures_differ", differ.size());
         out.put("rss_mb_end", rssMb());
+        out.put("zero_copy_served", Files.readString(work0.resolve("server.log")).contains("served to the engine in place"));
         String line = PackagedServer.JSON.writeValueAsString(out);
         System.out.println("speed check: " + line + "; first differences " + differ.stream().limit(5).toList());
-        Files.writeString(folder.resolve("speed-" + out.get("tier") + ".json"), line + "\n");
+        Files.writeString(folder.resolve("speed-" + out.get("tier") + "-zc-" + ZERO_COPY + ".json"), line + "\n");
         assertThat(differ).as("VaR and ES that differ between the paths").isEmpty();
     }
 

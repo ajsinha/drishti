@@ -35,10 +35,29 @@ final class RouterKindData implements KindData {
 
     private final SourceRouter router;
     private final Duration budget;
+    /** The modules' read-only vector views (zero copy, R2_CUT_PLAN 3a); empty: none offered. */
+    private final java.util.function.Supplier<java.util.List<com.ash.drishti.kernel.api.services.VectorViews>> views;
 
     RouterKindData(SourceRouter router, Duration budget) {
+        this(router, budget, java.util.List::of);
+    }
+
+    RouterKindData(SourceRouter router, Duration budget,
+            java.util.function.Supplier<java.util.List<com.ash.drishti.kernel.api.services.VectorViews>> views) {
         this.router = router;
         this.budget = budget;
+        this.views = views;
+    }
+
+    @Override
+    public Object vectorView(String kind, String name, LocalDate date) {
+        for (com.ash.drishti.kernel.api.services.VectorViews v : views.get()) {
+            Object view = v.view(kind, name, date);
+            if (view != null) {
+                return view;
+            }
+        }
+        return null;
     }
 
     private static AsOf asOf(LocalDate date) {

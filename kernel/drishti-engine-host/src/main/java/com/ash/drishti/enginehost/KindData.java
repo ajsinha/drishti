@@ -71,5 +71,13 @@ public interface KindData {
     }
 
     /** One vector column with some text columns, row by row in a stable order; false when the kind keeps no such vector column. */
+    /**
+     * A read-only view {@code name} of a kind's vectors on a date that the host already holds (R2_CUT_PLAN 3a: zero copy), or null:
+     * what {@code InputTable.vectorView} answers for a view name that is not a vector column.
+     */
+    default Object vectorView(String kind, String name, LocalDate date) {
+        return null;
+    }
+
     boolean vectors(String kind, String column, List<String> texts, LocalDate date, VectorSink sink) throws Exception;
 }

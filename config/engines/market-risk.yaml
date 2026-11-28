@@ -47,7 +47,10 @@ drishti:
           - { name: otc }
         # the rows as the VaR tier keeps them (drishti.var.tier.mode): mapped = float32 position rows as the hot file, so the two paths agree to the bit
         vector-tier: ${drishti.var.tier.mode:${DRISHTI_VAR_TIER:mapped}}
+        # the host's own float32 rows of an open date, read in place (R2_CUT_PLAN 3a); off as shipped
+        zero-copy: ${drishti.module.banking.var.zero-copy:${DRISHTI_VAR_ZERO_COPY:off}}
       snapshot: { hot: 1 }               # one business date's session kept open (its books released when another date is asked)
-      limits: { memory-mb: 768 }         # the books of one date: every window and currency asked of it
+      limits:
+        memory-mb: ${DRISHTI_MARKET_RISK_MEMORY_MB:768}   # the books of one date: every window and currency asked of it (the speed check sets more)
       access:
         visibility: row-rules

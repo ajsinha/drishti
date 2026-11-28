@@ -408,6 +408,31 @@ final class LakeInputs implements Inputs {
             return Arrays.copyOf(keep, k);
         }
 
+        /**
+         * A view the host already holds (R2_CUT_PLAN 3a, zero copy): a name that is not this input's vector column is asked of the host's
+         * modules ({@link KindData#vectorView}) for each bound kind on the session's date, and only when the caller reads the kind whole
+         * (no row rule, no where): a view is never filtered. Null when none is held; the vector column itself as the engine API's default.
+         */
+        @Override
+        public Object vectorView(String name) throws EngineException {
+            if (input.vector() != null && input.vector().equals(name)) {
+                return InputTable.super.vectorView(name);
+            }
+            if (where() != RowRule.ALL) {
+                return null;
+            }
+            for (String kind : kinds) {
+                if (rule(kind) != RowRule.ALL) {
+                    return null;
+                }
+                Object v = data.vectorView(kind, name, date);
+                if (v != null) {
+                    return v;
+                }
+            }
+            return null;
+        }
+
         @Override
         public void vectors(VectorScan scan, VectorSink sink) throws EngineException {
             if (input.vector() == null || !input.vector().equals(scan.column())) {

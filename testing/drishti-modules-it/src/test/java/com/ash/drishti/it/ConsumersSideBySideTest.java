@@ -110,6 +110,9 @@ class ConsumersSideBySideTest {
         PackagedServer server = PackagedServer.start(work, lake, "2026-09-30", env);
         try {
             RiskSideBySideTest.captureThreeDates(server);
+            if (path.equals("engine") && "on".equals(System.getProperty("sbs.zero-copy"))) {   // zero copy reads the date the host holds:
+                server.get("/api/v1/risk/var/scope?scope=NODE:MGMT~BANK&asOf=2026-09-30&path=in-tree");   // open it here before the engine does
+            }
             if (path.equals("engine")) {                              // the engine answers once its day is read: wait for it, once
                 long end = System.currentTimeMillis() + 180_000;
                 while (true) {
@@ -142,6 +145,9 @@ class ConsumersSideBySideTest {
             }
             if (path.equals("engine")) {                              // the runs were the engine's (the switch reached the reports)
                 assertThat(Files.readString(work.resolve("server.log"))).contains("figures from the market-risk engine");
+                if ("on".equals(System.getProperty("sbs.zero-copy"))) {   // the engine read the host's rows in place
+                    assertThat(Files.readString(work.resolve("server.log"))).contains("served to the engine in place");
+                }
             }
             return out;
         } finally {

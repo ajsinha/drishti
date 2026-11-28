@@ -25,6 +25,7 @@ drishti:
         window: ${DRISHTI_VAR_SCENARIO_WINDOW:250}  # the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo)
         reporting-currency: ${DRISHTI_VAR_REPORTING_CURRENCY:USD}   # the reporting currency a request that names none is answered in (owner 2026-11-27): the book is converted to it first, then every figure computed; USD as shipped, set per installation (CAD ...)
         route: ${DRISHTI_VAR_ROUTE:in-tree}   # R2 (docs/plans/R2_CUT_PLAN.md): in-tree, or engine (the VaR routes asked of Drishti Risk's market-risk engine through the host); a request may name its own (path=; the setting is not called path: a key ending in .path is a folder)
+        zero-copy: ${DRISHTI_VAR_ZERO_COPY:off}   # R2: on serves the mapped tier's float32 rows of an open date to the market-risk engine in place (no copy; the engine's option zero-copy follows); off as shipped
         consumers:
           route: ${DRISHTI_VAR_CONSUMERS_ROUTE:in-tree}   # R2: in-tree, or engine, for what reads VaR figures inside Drishti (the role Homes now): asked of the market-risk engine through the host by output name; no per-request path
         rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
