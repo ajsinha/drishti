@@ -143,6 +143,24 @@ final class VarEngineParts {
         return rows;
     }
 
+    /** The engine's {@code scope-path} row of a scope in a currency (null: USD): {@code PNL} (exact), {@code K}, {@code ES_COUNT}, {@code VAR}, {@code ES}. */
+    Map<String, Object> path(Principal p, String scope, LocalDate date, String ccy) {
+        String currency = VarCurrencies.normalise(ccy);   // none named: the reporting currency, as in-tree
+        EngineScopeBook book = engine.index(p, date, currency);
+        ScopeResolver.Resolution res = engine.resolve(p, book, scope, date);
+        Map<String, Object> params = VarEnginePath.params(engine.dateWindow(), currency);
+        params.put("rows", VarEnginePath.ordinals(res.set()));
+        params.put("node", res.node() == null ? "" : res.node());
+        params.put("bins", svc.props().histogramBins());
+        Map<String, Object> a = engine.ask(p, List.of("scope-path"), params, Map.of("date", date.toString()));
+        List<Map<String, Object>> r = VarEnginePath.rows(a, "scope-path");
+        if (r.isEmpty()) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + VarEnginePath.ENGINE + " answered no path for "
+                    + res.canonical() + " on " + date + VarEnginePath.missing(a));
+        }
+        return r.get(0);
+    }
+
     /** The scope's P&amp;L over the date's scenarios, whole units (the in-tree path's {@code series}), from the engine's {@code scope-path}. */
     List<Long> series(Principal p, String scope, LocalDate date) {
         EngineScopeBook book = engine.index(p, date, VarDate.USD);

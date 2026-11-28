@@ -56,8 +56,15 @@ public final class VarResultEngine implements ComputeEngine {
     public static final String KIND = "var-result";
     private static final AtomicReference<VarViews> INSTALLED = new AtomicReference<>();
 
+    /** R2: the market-risk engine's path; its figures replace the in-tree ones when {@code var.consumers.route} is engine. */
+    private static final AtomicReference<VarEnginePath> ENGINE = new AtomicReference<>();
+
     static void install(VarViews views) {
         INSTALLED.set(views);
+    }
+
+    static void installEngine(VarEnginePath engine) {
+        ENGINE.set(engine);
     }
 
     @Override
@@ -151,10 +158,67 @@ public final class VarResultEngine implements ComputeEngine {
             row.put("PARAMETRIC_OFFICIAL", false);
         }
         row.put("PROVENANCE", upper(head.get("provenance")));
+        VarEnginePath engine = ENGINE.get();
+        if (engine != null && engine.consumers() && lens == null && date != null) {
+            try {
+                engineFigures(row, engine, new VarEngineParts(views.service(), engine), p, scope, date, ccy, String.valueOf(parts.get("by")));
+            } catch (DrishtiException e) {
+                throw new EngineException(e.getMessage());
+            }
+        }
         Map<String, Object> meta = new LinkedHashMap<>();
         meta.put("engine", "var-engine");
         meta.put("tier", VarViews.tier(s));
-        return new EngineResult(List.of(row), Map.of("children", children, "worst", worst), meta);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> shown = (List<Map<String, Object>>) row.get("CHILDREN");
+        return new EngineResult(List.of(row), Map.of("children", shown, "worst", worst), meta);
+    }
+
+    /**
+     * R2 (var.consumers.route engine, the offered lens): the record's figures from the market-risk engine, its words (kind, label,
+     * confidences, scenarios, horizon, method, set, backtest, provenance, the parametric cross-check) the host's: {@code VAR}, {@code ES},
+     * {@code LIMIT}, {@code LIMIT_USE} (and a node's {@code SUM_STANDALONE}, {@code DIVERSIFICATION}) from the headline, {@code K},
+     * {@code ES_COUNT} and the raw {@code PNL} from {@code scope-path}, the {@code CHILDREN} from {@code scope-contributions} (a node's
+     * child nodes or positions, a position's trades, any other scope's positions; parts of terms stay the host's).
+     */
+    private static void engineFigures(Map<String, Object> row, VarEnginePath engine, VarEngineParts parts, Principal p, String scope,
+            LocalDate date, String ccy, String by) {
+        Map<String, Object> h = engine.headline(p, scope, date, ccy, (String) null);
+        row.put("VAR", h.get("var"));
+        row.put("ES", h.get("es"));
+        row.put("LIMIT", h.get("limit"));
+        row.put("LIMIT_USE", h.get("limitUse"));
+        if (h.get("node") != null) {
+            row.put("SUM_STANDALONE", h.get("sumStandalone"));
+            row.put("DIVERSIFICATION", h.get("diversification"));
+        }
+        Map<String, Object> x = parts.path(p, scope, date, ccy);
+        row.put("K", ((Number) x.get("K")).intValue());
+        row.put("ES_COUNT", ((Number) x.get("ES_COUNT")).intValue());
+        List<Double> pnl = new ArrayList<>();
+        for (double v : VarEnginePath.doubles(x.get("PNL"))) {
+            pnl.add(v);
+        }
+        row.put("PNL", pnl);
+        List<?> rows;
+        if (h.get("node") != null) {
+            rows = (List<?>) engine.contributions(p, scope, date, ccy).get("rows");
+        } else if ("trade".equals(by) || "position".equals(by)) {
+            rows = parts.rows(p, scope, date, by);
+        } else {
+            return;                                                     // terms or no parts: the host's rows
+        }
+        List<Map<String, Object>> children = new ArrayList<>();
+        for (Object r : rows) {
+            if (r instanceof Map<?, ?> m) {
+                Map<String, Object> c = new LinkedHashMap<>();
+                for (String f : List.of("key", "scope", "label", "kind", "standaloneVar", "componentVar", "componentEs", "incrementalVar", "pct")) {
+                    c.put(snake(f), m.get(f));
+                }
+                children.add(c);
+            }
+        }
+        row.put("CHILDREN", children);
     }
 
     /**

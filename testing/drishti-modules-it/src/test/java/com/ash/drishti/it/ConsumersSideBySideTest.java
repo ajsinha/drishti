@@ -68,10 +68,16 @@ class ConsumersSideBySideTest {
         System.out.println("side by side, consumers: " + inTree.size() + " answers (" + refused + " refused in-tree), keys " + inTree.keySet()
                 + "; differences " + differences.size() + ": " + differences);
         assertThat(inTree.size() - refused).as("answers compared").isGreaterThan(0);
-        long pages = inTree.entrySet().stream().filter(e -> !e.getKey().startsWith("report ") && figures(e.getValue()) > 0).count();
-        int items = inTree.entrySet().stream().filter(e -> !e.getKey().startsWith("report ")).mapToInt(e -> figures(e.getValue())).sum();
+        long vres = inTree.keySet().stream().filter(k -> k.startsWith("var-result ")).count();
+        long vresRefused = inTree.entrySet().stream().filter(e -> e.getKey().startsWith("var-result ") && e.getValue().has("refused")).count();
+        System.out.println("side by side, var-result records: " + vres + " (" + vresRefused + " refused in-tree)");
+        long pages = inTree.entrySet().stream().filter(e -> !e.getKey().startsWith("report ") && !e.getKey().startsWith("var-result ")
+                && figures(e.getValue()) > 0).count();
+        int items = inTree.entrySet().stream().filter(e -> !e.getKey().startsWith("report ") && !e.getKey().startsWith("var-result "))
+                .mapToInt(e -> figures(e.getValue())).sum();
         System.out.println("side by side, desk, legal-entity, system-basket and position pages: " + pages + " with the engine's VaR figures, " + items + " items shown");
-        assertThat(pages).as("desk and legal-entity pages with VaR figures compared").isEqualTo(inTree.size() - 2L);
+        assertThat(pages).as("desk and legal-entity pages with VaR figures compared").isEqualTo(inTree.size() - 2L - vres);
+        assertThat(vresRefused).as("var-result records refused in-tree").isLessThan(vres);
         assertThat(differences).as("consumer answers that differ between in-tree and engine").isEmpty();
     }
 
@@ -143,6 +149,24 @@ class ConsumersSideBySideTest {
                     out.put(kind + " " + id, v);
                 }
             }
+            // the computed kind var-result (VRES: FORM results, blotters): the bank, every desk and entity, every system basket, the positions
+            List<String> vres = new ArrayList<>(List.of("BANK"));
+            ids("desk").forEach(d -> vres.add("DESK:" + d));
+            ids("legal-entity").forEach(e -> vres.add("LE:" + e));
+            seeded("system-basket").forEach(b -> vres.add("PORT:" + b));
+            seeded("position").forEach(x -> vres.add("POS:" + x));
+            for (String id : vres) {
+                JsonNode v;
+                try {
+                    v = server.get("/api/v1/entities/var-result/" + java.net.URLEncoder.encode(id, java.nio.charset.StandardCharsets.UTF_8)
+                            .replace("%3A", ":") + "/raw?asOf=2026-09-30");
+                    strip(v, work.toString());
+                    dropKeys(v, java.util.Set.of("PROVENANCE", "provenance", "meta", "generation", "computedAt", "stamp"));
+                } catch (IllegalStateException e) {
+                    v = PackagedServer.JSON.readTree("{\"refused\":" + PackagedServer.JSON.writeValueAsString(e.getMessage()) + "}");
+                }
+                out.put("var-result " + id, v);
+            }
             if (path.equals("engine")) {                              // the runs were the engine's (the switch reached the reports)
                 assertThat(Files.readString(work.resolve("server.log"))).contains("figures from the market-risk engine");
                 if ("on".equals(System.getProperty("sbs.zero-copy"))) {   // the engine read the host's rows in place
@@ -201,6 +225,16 @@ class ConsumersSideBySideTest {
             c += figures(x);
         }
         return c;
+    }
+
+    /** Removes the named keys at any depth (a computed record's provenance and stamps: its clocks and the cache's words). */
+    private static void dropKeys(JsonNode n, java.util.Set<String> keys) {
+        if (n instanceof ObjectNode o) {
+            keys.forEach(o::remove);
+            o.forEach(x -> dropKeys(x, keys));
+        } else if (n.isArray()) {
+            n.forEach(x -> dropKeys(x, keys));
+        }
     }
 
     /** A run generated now, without its clock ({@code frozenAt}); a refusal as its words. */

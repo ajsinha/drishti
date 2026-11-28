@@ -339,6 +339,7 @@ public class VarConfiguration {
     /** The VaR figures views show (the kernel collects every ViewAugmenter: its own context's beans, a module's through the bridge). */
     @Bean
     VarFigures varFigures(VarService svc, VarViews views, org.springframework.beans.factory.ObjectProvider<VarEnginePath> engine) {
+        VarResultEngine.installEngine(engine.getIfAvailable());       // R2: var-result's figures from the engine on var.consumers.route
         return new VarFigures(svc, views, engine.getIfAvailable());   // R2: var.consumers.route
     }
 
