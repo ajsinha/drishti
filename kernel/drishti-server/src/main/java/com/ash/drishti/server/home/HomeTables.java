@@ -23,6 +23,7 @@ import com.ash.drishti.kernel.api.home.HomeDefinition;
 import com.ash.drishti.kernel.api.security.Principal;
 import com.ash.drishti.server.loads.ExpectationService;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -44,7 +45,7 @@ public final class HomeTables {
 
     /** The tables the server itself serves (a module adds more with a {@link HomeTable} bean). */
     public static final Set<String> BUILT_IN = Set.copyOf(List.of("home_meta", "home_kpis", "home_kpi_history", "home_exceptions", "home_changes", "home_desk_limits",
-                "home_exposure", "home_stress", "home_mnemonics", "home_calendar", "home_news", "home_loads", "home_held_changes", "home_model_runs",
+                "home_exposure", "home_digest", "home_stress", "home_mnemonics", "home_calendar", "home_news", "home_loads", "home_held_changes", "home_model_runs",
                 "home_margin_calls", "home_backtest", "home_indicators", "home_indicator_history", "home_positions", "home_pnl_days", "home_market_tiles"));
 
     private final HomeStore store;
@@ -70,15 +71,23 @@ public final class HomeTables {
     public Set<String> names() {
         Set<String> out = new java.util.TreeSet<>(BUILT_IN);
         out.addAll(extra.keySet());
+        com.ash.drishti.common.Extensions.of(HomeTable.class).forEach(t -> out.add(t.name()));       // a loaded module's own tables
         return out;
     }
 
     public Optional<List<Map<String, Object>>> rows(String table, Principal p, HomeDefinition h) {
-        HomeTable.Context c = new HomeTable.Context(p, h, clock.today(), clock.previous());
-        if (extra.containsKey(table)) {
-            return Optional.of(extra.get(table).rows(c));
+        return rows(table, p, h, null);
+    }
+
+    /** One table's rows; {@code since} (null: the Home's cut-off) is where a window-reading table such as {@code home_digest} starts. */
+    public Optional<List<Map<String, Object>>> rows(String table, Principal p, HomeDefinition h, Instant since) {
+        HomeTable.Context c = new HomeTable.Context(p, h, clock.today(), clock.previous(), since);
+        HomeTable own = HomeSources.table(extra, table);
+        if (own != null) {
+            return own.homes().isEmpty() || own.homes().contains(h.name()) ? Optional.of(own.rows(c)) : Optional.empty();   // a module's table is its Homes' only
         }
         return switch (table) {
+            case "home_digest" -> Optional.of(digest(c));
             case "home_meta" -> Optional.of(meta(c));
             case "home_kpis" -> Optional.of(kpis(c));
             case "home_kpi_history" -> Optional.of(history(c));
@@ -120,7 +129,7 @@ public final class HomeTables {
         Map<String, Double> was = byLabel(store.kpis(c.previous()));
         List<Map<String, Object>> out = new ArrayList<>();
         for (HomeDefinition.Kpi k : c.home().measures().kpis()) {
-            MeasureSource s = sources.get(k.engine());
+            MeasureSource s = HomeSources.find(sources, k.engine());
             if (s == null || !s.on()) {
                 continue;                                       // an engine that is off drops its figures (engine switch)
             }
@@ -150,7 +159,7 @@ public final class HomeTables {
     }
 
     private List<Map<String, Object>> limits(HomeTable.Context c, String engine, String measure, String kind, String nameCol, String valueCol) {
-        MeasureSource s = sources.get(engine);
+        MeasureSource s = HomeSources.find(sources, engine);
         if (s == null || !s.on()) {
             return List.of();
         }
@@ -189,7 +198,7 @@ public final class HomeTables {
 
     private void measureRule(HomeTable.Context c, HomeDefinition.Rule r, String measure, double threshold, List<Map<String, Object>> out) {
         for (HomeDefinition.Follow f : c.home().measures().follow()) {
-            MeasureSource s = sources.get(f.engine());
+            MeasureSource s = HomeSources.find(sources, f.engine());
             if (!f.measure().equals(measure) || s == null || !s.on()) {
                 continue;
             }
@@ -248,7 +257,7 @@ public final class HomeTables {
         Set<String> visible = new HashSet<>();
         List<HomeData.MeasureValue> now = new ArrayList<>();
         for (HomeDefinition.Follow f : c.home().measures().follow()) {
-            MeasureSource s = sources.get(f.engine());
+            MeasureSource s = HomeSources.find(sources, f.engine());
             if (s != null && s.on()) {
                 List<HomeData.MeasureValue> v = s.values(c.person(), f.measure(), f.subjects(), c.today());
                 now.addAll(v);
@@ -273,6 +282,57 @@ public final class HomeTables {
                     ch.why(), "COMMAND", ch.command()));
         }
         return out;
+    }
+
+    /**
+     * What the server recorded since {@code c.since()} (the Home's cut-off when none), for "since your last visit": the events of the Home's kinds
+     * (loads, limit moves and the like) and each followed measure that has moved since the snapshot of that day, for the subjects the person may
+     * see. Newest first; the figures are the engines' own, only compared here.
+     */
+    private List<Map<String, Object>> digest(HomeTable.Context c) {
+        Instant since = c.since() != null ? c.since() : clock.cutoff(c.previous(), cutoff(c.home()));
+        LocalDate first = since.atZone(clock.zone()).toLocalDate();
+        if (first.isBefore(c.today().minusDays(30))) {
+            first = c.today().minusDays(30);
+        }
+        Set<String> visible = new HashSet<>();
+        List<HomeData.MeasureValue> now = new ArrayList<>();
+        for (HomeDefinition.Follow f : c.home().measures().follow()) {
+            MeasureSource s = HomeSources.find(sources, f.engine());
+            if (s != null && s.on()) {
+                List<HomeData.MeasureValue> v = s.values(c.person(), f.measure(), f.subjects(), c.today());
+                now.addAll(v);
+                v.forEach(x -> visible.add(x.subjectKind() + "|" + x.subject()));
+            }
+        }
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (LocalDate d = first; !d.isAfter(c.today()); d = d.plusDays(1)) {
+            for (HomeData.Event e : store.events(d, since)) {
+                if (c.home().measures().events().contains(e.kind()) && (e.subjectKind().equals("feed") || visible.contains(e.subjectKind() + "|" + e.subject()))) {
+                    out.add(row("AT", e.at().toString(), "KIND", e.kind(), "SUBJECT", e.subject(), "TEXT", e.text()));
+                }
+            }
+        }
+        LocalDate ref = first.isAfter(c.previous()) ? c.previous() : first;          // the snapshot the window starts from: the day's, else the nearest earlier
+        while (!store.hasSnapshot(ref) && ref.isAfter(c.today().minusDays(30))) {
+            ref = ref.minusDays(1);
+        }
+        Map<String, Double> then = new LinkedHashMap<>();
+        store.snapshot(ref).forEach(v -> then.put(v.subjectKind() + "|" + v.subject() + "|" + v.measure(), v.value()));
+        for (HomeData.MeasureValue v : now) {
+            Double was = then.get(v.subjectKind() + "|" + v.subject() + "|" + v.measure());
+            HomeDefinition.Follow f = c.home().measures().follow().stream().filter(x -> x.measure().equals(v.measure())).findFirst().orElse(null);
+            if (was == null || f == null) {
+                continue;
+            }
+            double diff = v.value() - was;
+            if (Math.abs(diff) > 0 && Math.abs(diff) >= f.minAbs() && (was == 0 || Math.abs(diff / was) >= f.minRel())) {
+                out.add(row("AT", clock.now().toString(), "KIND", "move", "SUBJECT", v.subject(), "TEXT",
+                        v.subject() + " " + v.measure() + " " + compact(was) + " to " + compact(v.value()) + " (" + (diff > 0 ? "+" : "") + compact(diff) + ")"));
+            }
+        }
+        out.sort(Comparator.comparing((Map<String, Object> m) -> String.valueOf(m.get("AT"))).reversed());
+        return out.size() > 50 ? new ArrayList<>(out.subList(0, 50)) : out;
     }
 
     /** The Home's own quick list (its measures file); TODO(R2): the person's most used mnemonics from their settings go first. */

@@ -38,6 +38,27 @@
     return link && link.kind && id ? drishti_url('/v/' + encodeURIComponent(link.kind) + '/' + encodeURIComponent(id)) : null;
   }
 
+  /* "View as": All, and one button per Home the person has (a Drishti Elements button group, one pressed); a choice is the person's own setting on the
+     server, and the Home is drawn again in place. Hidden for a person with one Home. */
+  var switcher = root.querySelector('[data-home-viewas]'), group = null;
+  function viewAs(next) {
+    var v = next.viewAs || { options: [] };
+    switcher.hidden = v.options.length < 2;
+    if (switcher.hidden) { return Promise.resolve(); }
+    return D.elements.load('drishti-inputs').then(function () {
+      var box = switcher.querySelector('[data-home-viewas-group]');
+      if (group && group.destroy) { group.destroy(); }
+      box.textContent = '';
+      group = new D.elements.inputs.ButtonGroup(box, {
+        label: 'View as', mode: 'single', value: v.value || '',
+        buttons: v.options.map(function (o) { return { label: o.label, data: { value: o.value }, attrs: { title: o.value ? 'Show the Home of ' + o.label : 'Show every Home you have' } }; })
+      });
+      group.on('change', function (d) {
+        send('viewas', (d && d.value) || '').then(function (n) { if (n) { data = n; paint(n.view); } });
+      });
+    });
+  }
+
   function paint(view) {
     root.setAttribute('data-layout', (view.provenance && view.provenance.layout) || 'calm');
     if (handle) { handle.dispose(); handle = null; }
@@ -72,10 +93,11 @@
     } else if (a === 'open') {
       if (typeof w.command === 'string' && w.command.trim()) { g.location.href = drishti_url('/go?q=' + encodeURIComponent(w.command.trim())); }
     } else {
-      send(a, w.card, w.keys).then(function (next) { if (next) { data = next; paint(next.view); } });
+      send(a, w.card, w.keys).then(function (next) { if (next) { data = next; viewAs(next); paint(next.view); } });
     }
   }
 
+  viewAs(data);
   paint(data.view).then(function () { send('visited'); });       /* one visit per half hour is kept: "last visit" in the strip */
   D.homeCards = { root: root, paint: paint };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -54,7 +54,7 @@ class RoleHomesTest {
 
     static final Map<String, List<String>> ROLES = Map.ofEntries(Map.entry("risk-manager", List.of("risk-manager")), Map.entry("trader", List.of("trader")),
             Map.entry("risk-officer", List.of("risk-officer")), Map.entry("credit-officer", List.of("credit-officer")),
-            Map.entry("operations", List.of("operations")), Map.entry("quant", List.of("quant")), Map.entry("economist", List.of("economist")));
+            Map.entry("operations", List.of("operations")), Map.entry("quant", List.of("quant")), Map.entry("economist", List.of("economist")), Map.entry("genomicist", List.of("genomicist")));
 
     @TempDir Path data;
 
@@ -70,13 +70,13 @@ class RoleHomesTest {
     void everyHomeFileLoads() {
         HomeCatalogue c = catalogue();
         assertEquals(Map.of(), c.faults());
-        assertEquals(Set.of("risk-manager", "trader", "risk-officer", "credit-officer", "operations", "quant", "economist"),
+        assertEquals(Set.of("risk-manager", "trader", "risk-officer", "credit-officer", "operations", "quant", "economist", "genomicist"),
                 c.all().stream().map(HomeDefinition::name).collect(java.util.stream.Collectors.toSet()));
     }
 
     @ParameterizedTest
     @CsvSource({"risk-manager,risk-manager", "trader,trader", "risk-officer,risk-officer", "credit-officer,credit-officer", "operations,operations",
-            "quant,quant", "economist,economist"})
+            "quant,quant", "economist,economist", "genomicist,genomicist"})
     void aRoleOpensItsHomeAndOnlyItsHome(String role, String home) {
         HomeCatalogue c = catalogue();
         List<HomeDefinition> offered = c.offered(new Principal("u", List.of(role)), false, m -> true, m -> true);
@@ -88,7 +88,7 @@ class RoleHomesTest {
     @Test
     void anAdministratorOpensEveryHomeAndAnUnknownRoleNone() {
         HomeCatalogue c = catalogue();
-        assertEquals(7, c.offered(new Principal("a", List.of("admin")), true, m -> true, m -> true).size());
+        assertEquals(8, c.offered(new Principal("a", List.of("admin")), true, m -> true, m -> true).size());
         assertTrue(c.offered(new Principal("x", List.of("viewer")), false, m -> true, m -> true).isEmpty());
     }
 
@@ -100,7 +100,7 @@ class RoleHomesTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"risk-manager", "trader", "risk-officer", "credit-officer", "operations", "quant", "economist"})
+    @CsvSource({"risk-manager", "trader", "risk-officer", "credit-officer", "operations", "quant", "economist", "genomicist"})
     void theSutraIsFragmentsOnlyAndReadsServedTables(String home) {
         HomeDefinition d = catalogue().find(home).orElseThrow();
         String text = d.sutraText();

@@ -32,7 +32,8 @@ import yaml
 
 MAX_PINS = 8
 SNOOZE_HOURS = 4
-KINDS = ("metric", "bars", "table")
+VISIT_MINUTES = 30                                           # one visit counts per half hour
+KINDS = ("metric", "bars", "table", "scatter")
 LAYOUTS = ("calm", "cockpit")
 CONFIG = Path(__file__).resolve().parent.parent / "config" / "home-cards.yaml"
 
@@ -51,6 +52,8 @@ class Card:
     name: str = ""                                           # bars: the name column, the value column, the limit column
     value: str = ""
     limit: str = ""
+    x: str = ""                                              # scatter: the x column (the y column is ``value``, the point's words ``name``, its colour group ``group``)
+    group: str = ""
     fmt: str = "compact"
     worse: str = "up"                                        # which way is bad news: up, down or none (the delta's tone)
     open: str = ""                                           # the command the card's "Open" runs
@@ -76,6 +79,7 @@ def _card(raw: dict, module: str) -> Card | None:
                  for c in raw.get("columns") or [] if isinstance(c, dict) and c.get("col"))
     return Card(id=str(raw["id"]), title=str(raw["title"]), module=module, kind=kind, table=str(raw.get("table") or ""), pick=dict(raw.get("pick") or {}),
                 columns=cols, name=str(raw.get("name") or ""), value=str(raw.get("value") or ""), limit=str(raw.get("limit") or ""),
+                x=str(raw.get("x") or ""), group=str(raw.get("group") or ""),
                 fmt=str(raw.get("fmt") or "compact"), worse=str(raw.get("worse") or "up"), open=str(raw.get("open") or ""),
                 explain=dict(raw.get("explain") or {}), rank={str(k): int(v) for k, v in (raw.get("rank") or {}).items()},
                 limit_rows=int(raw.get("rows") or 6), light=tuple(raw.get("light") or ()), always=bool(raw.get("always")), empty=str(raw.get("empty") or "Nothing to show yet"))
@@ -137,8 +141,9 @@ def clean(prefs) -> dict:
     p = prefs if isinstance(prefs, dict) else {}
     out = {k: [x for x in p.get(k) or [] if isinstance(x, str)] for k in ("pins", "hidden", "order")}
     out["snooze"] = {k: v for k, v in (p.get("snooze") or {}).items() if isinstance(k, str) and isinstance(v, str)}
-    if isinstance(p.get("lastVisit"), str):
-        out["lastVisit"] = p["lastVisit"]
+    for k in ("lastVisit", "prevVisit", "viewAs"):
+        if isinstance(p.get(k), str) and p[k]:
+            out[k] = p[k]
     return out
 
 
@@ -148,14 +153,22 @@ def apply(prefs: dict, action: str, card: str = "", now: datetime | None = None,
     p = clean(prefs)
     now = now or datetime.now(timezone.utc)
     if action == "reset":
-        return {"pins": [], "hidden": [], "order": [], "snooze": {}, **({"lastVisit": p["lastVisit"]} if "lastVisit" in p else {})}
+        return {"pins": [], "hidden": [], "order": [], "snooze": {}, **{k: p[k] for k in ("lastVisit", "prevVisit", "viewAs") if k in p}}
     if action == "snooze":
         until = (now + timedelta(hours=SNOOZE_HOURS)).strftime("%Y-%m-%dT%H:%M:%SZ")
         for k in keys or []:
             p["snooze"][k] = until
         return p
     if action == "visited":
+        if "lastVisit" in p:
+            p["prevVisit"] = p["lastVisit"]             # the digest of this visit is read against the visit before it
         p["lastVisit"] = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return p
+    if action == "viewas":                               # ``card`` is the Home to view as ("": all of the person's Homes); the route has checked it
+        if card:
+            p["viewAs"] = card
+        else:
+            p.pop("viewAs", None)
         return p
     if action == "pin":
         p["pins"] = [x for x in p["pins"] if x != card] + [card]
@@ -180,6 +193,30 @@ def apply(prefs: dict, action: str, card: str = "", now: datetime | None = None,
             else:
                 p["order"] = within
     return p
+
+
+def view_as(prefs: dict, homes: list[str]) -> str:
+    """The Home the person chose to view as, when they still have it (""; all of their Homes)."""
+    v = prefs.get("viewAs") or ""
+    return v if v in homes else ""
+
+
+def digest_window(prefs: dict, now: datetime) -> str | None:
+    """Where the "since your last visit" digest starts: the visit before this one while this visit is the one just recorded (a refresh or a
+    pin does not move the window), otherwise the last visit; ``None`` on a first visit (the Home's cut-off then)."""
+    last = _when(prefs.get("lastVisit"))
+    if last is None:
+        return None
+    if (now - last).total_seconds() < VISIT_MINUTES * 60:
+        return prefs.get("prevVisit")
+    return prefs["lastVisit"]
+
+
+def _when(text) -> datetime | None:
+    try:
+        return datetime.fromisoformat(str(text).replace("Z", "+00:00"))
+    except ValueError:
+        return None
 
 
 def awake(prefs: dict, key: str, now: datetime) -> bool:
@@ -299,6 +336,11 @@ def panel(card: Card, rows: list[dict], *, pinned: bool, first: bool, last: bool
         p["data"] = {"value": _cell(fmt(v, card.fmt), light, emphasis=True),
                      "delta": _cell(("+" if d > 0 else "") + fmt(d, card.fmt), tone) if isinstance(d, (int, float)) and d else None,
                      "unit": None, "caption": str(r.get("CAPTION") or "") or None}
+    elif card.kind == "scatter":                                # a small plot of the table's points (the Manhattan strip of the genomics Home)
+        pts = [r for r in rows[:card.limit_rows] if isinstance(r.get(card.x), (int, float)) and isinstance(r.get(card.value), (int, float))]
+        groups = sorted({str(r.get(card.group)) for r in pts if card.group and r.get(card.group) is not None})
+        p["data"] = {"points": [{"x": r[card.x], "y": r[card.value], "label": str(r.get(card.name) or ""), **({"group": str(r.get(card.group))} if card.group else {})}
+                                for r in pts], "groups": groups, "xLabel": "", "yLabel": "", "sized": False}
     elif card.kind == "bars":
         bars = []
         for r in rows[:card.limit_rows]:

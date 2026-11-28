@@ -1,0 +1,34 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# What the genomicist's Home follows (ROLE_HOME_SUTRAS 4): the genomics module's own measure source (engine genomics: SAMPLES, VARIANTS, HITS and
+# the variants and samples of each cohort), compared with the cut-off snapshot, so "new variants" are the move of VARIANTS since then.
+home: genomicist
+reference: { cut-off: "17:00", zone: site, day: previous-business-day }
+kpis:
+  - { label: Samples, engine: genomics, measure: SAMPLES, fmt: amount0, history: 30, open: "COHORT" }
+  - { label: Variants, engine: genomics, measure: VARIANTS, fmt: amount0, history: 30, open: "VARIANT" }
+  - { label: Genome-wide hits, engine: genomics, measure: HITS, fmt: amount0, history: 30, open: "GWAS RESPONSE" }
+follow:
+  - { measure: VARIANTS, engine: genomics, subjects: cohort, min-abs: 1, min-rel: 0 }
+  - { measure: SAMPLES, engine: genomics, subjects: cohort, min-abs: 1, min-rel: 0 }
+events: [ load ]
+exceptions:
+  - { when: load-failed, severity: high, text: "{subject} failed the load check", open: "LOADS" }
+  - { when: feed-late,   severity: low,  text: "{subject} is {minutes} minutes late", open: "FEEDS" }
+mnemonics:
+  - { mnemonic: "GENE", about: "A gene and its variants" }
+  - { mnemonic: "COHORT", about: "A cohort and its samples" }
+  - { mnemonic: "GWAS", about: "Association of a trait" }
+  - { mnemonic: "VARIANT", about: "A variant and its carriers" }

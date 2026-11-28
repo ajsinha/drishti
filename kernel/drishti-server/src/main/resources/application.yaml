@@ -1002,6 +1002,8 @@ drishti:
       quant: [quant]   # the quant's Home
       analyst: [quant]   # an analyst opens the quant's Home
       economist: [economist]   # the economist's Home
+      genomicist: [genomicist]   # the genomicist's Home (the genomics module)
+      geneticist: [genomicist]   # a geneticist opens the genomicist's Home
   trading:                           # the Trading landings' figures (the trading module's server part, /api/v1/trading/landing; LENSES.md › The design)
     people: {}                       # user: {trader: TRDR-…} or {desk: DESK-…, role: desk-head}: "my" scope, over the lens's trading.people (a name in both: this)
   explain:                           # About this page (docs/guides/RACHANA_REFERENCE.md): GET /api/v1/views/{kind}/{id}/explain

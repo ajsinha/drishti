@@ -130,9 +130,18 @@ public class HomeController {
 
     /** One home table's rows for the caller. */
     @GetMapping("/{home}/tables/{table}")
-    public Map<String, Object> table(@PathVariable String home, @PathVariable String table, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> table(@PathVariable String home, @PathVariable String table, @RequestParam(required = false) String since,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         HomeDefinition d = mine(home, p);
-        List<Map<String, Object>> rows = tables.rows(table, p, d)
+        java.time.Instant from = null;
+        if (since != null && !since.isBlank()) {
+            try {
+                from = java.time.Instant.parse(since);
+            } catch (java.time.format.DateTimeParseException e) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "since is a UTC time such as 2026-11-27T09:00:00Z");
+            }
+        }
+        List<Map<String, Object>> rows = tables.rows(table, p, d, from)
                 .orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no home table " + table));
         return Map.of("table", table, "rows", rows);
     }

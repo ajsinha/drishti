@@ -19,6 +19,8 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from urllib.parse import unquote
+
 from fastapi.testclient import TestClient
 
 CONSOLE = Path(__file__).resolve().parent.parent
@@ -63,6 +65,7 @@ class HomeBackend(FakeBackend):
         self.offered = {}                    # user -> [home names], the first the start Home
         self.mine = {}                       # user -> their settings as the server keeps them
         self.tables = {k: list(v) for k, v in TABLES.items()}
+        self.since = []                      # the "since" each home_digest read was asked with
 
     async def _send(self, method, path, ident=None, **kw):
         user = getattr(ident, "user", "")
@@ -72,6 +75,9 @@ class HomeBackend(FakeBackend):
                     "homes": [{"home": h, "title": h.replace("-", " ").title(), "description": "", "arrange": True, "start": i == 0} for i, h in enumerate(homes)]}
         if path.startswith("/homes/") and "/tables/" in path:
             home, table = path[len("/homes/"):].split("/tables/")
+            table, _q, since = table.partition("?since=")
+            if table == "home_digest":
+                self.since.append(unquote(since) or None)
             if home not in self.offered.get(user, []):
                 raise BackendError(404, "DRS-1001", "no Home " + home + " is offered to you")
             return {"table": table, "rows": self.tables.get(table, [])}
@@ -236,10 +242,14 @@ def test_pin_hide_and_move_are_the_persons_own_and_reach_no_one_else():
 def test_a_visit_is_recorded_once_per_half_hour_and_shown():
     app, fake = _app()
     c, _ = _in(app, "qa-risk")
-    assert "lastVisit" in _post(c, {"action": "visited"}) .text or True
+    _post(c, {"action": "visited"})
     first = fake.mine["qa-risk"]["homeCards"]["lastVisit"]
     assert _post(c, {"action": "visited"}).json() == {"kept": True} and fake.mine["qa-risk"]["homeCards"]["lastVisit"] == first
-    assert c.get("/api/home/cards").json()["view"]["strip"][-1]["label"] == "Last visit"
+    assert [x["label"] for x in c.get("/api/home/cards").json()["view"]["strip"]] == ["Business date", "Data"]        # a first visit has no earlier one to show
+    fake.mine["qa-risk"]["homeCards"] = {"lastVisit": "2026-11-20T09:00:00Z"}                                      # a visit long ago, then this one is recorded
+    _post(c, {"action": "visited"})
+    assert fake.mine["qa-risk"]["homeCards"]["prevVisit"] == "2026-11-20T09:00:00Z"
+    assert c.get("/api/home/cards").json()["view"]["strip"][-1] == {"label": "Last visit", "text": "2026-11-20 09:00:00 UTC"}
 
 
 # ---- the pieces ---------------------------------------------------------------------------------------------------------------------------
@@ -266,3 +276,132 @@ def test_the_shipped_banking_cards_and_common_cards_read_and_name_only_what_exis
     for c in cards:
         assert c.table.startswith("@") or c.table.startswith("home_"), c.id
         assert set(c.rank) - {"*"} <= homes, (c.id, set(c.rank) - homes)
+
+
+# ---- View as ---------------------------------------------------------------------------------------------------------------------------
+
+def test_view_as_offers_all_and_one_entry_per_home_the_person_has_and_limits_the_cards_to_it():
+    app, fake = _app()
+    both, _ = _in(app, "qa-both")
+    sw = both.get("/api/home/cards").json()["viewAs"]
+    assert sw["value"] == "" and [o["value"] for o in sw["options"]] == ["", "trader", "credit-officer"] and sw["options"][0]["label"] == "All"
+    assert _in(app, "qa-risk")[0].get("/api/home/cards").json()["viewAs"]["options"] == []                # one role: no switcher
+    got = _post(both, {"action": "viewas", "card": "credit-officer"}).json()
+    assert got["viewAs"]["value"] == "credit-officer" and got["cards"][0] == "exposure" and "desk-var" not in got["cards"]
+    assert fake.mine["qa-both"]["homeCards"]["viewAs"] == "credit-officer"                                  # remembered on the server, per person
+    assert both.get("/api/home/cards").json()["cards"][0] == "exposure"                                       # a new request, a new page: the same choice
+    assert "exposure" not in _post(both, {"action": "viewas", "card": "trader"}).json()["cards"]
+    assert "desk-var" in _post(both, {"action": "viewas", "card": ""}).json()["cards"]                        # All again
+
+
+def test_view_as_is_checked_on_the_server_and_one_persons_choice_reaches_no_one_else():
+    app, fake = _app()
+    risk, _r = _in(app, "qa-risk")
+    both, _b = _in(app, "qa-both")
+    assert _post(risk, {"action": "viewas", "card": "credit-officer"}).status_code == 400                    # not a Home this person has
+    assert "viewAs" not in fake.mine.get("qa-risk", {}).get("homeCards", {})
+    _post(both, {"action": "viewas", "card": "trader"})
+    assert "viewAs" not in fake.mine.get("qa-risk", {}).get("homeCards", {})
+    assert _post(risk, {"action": "reset"}).json()["viewAs"]["value"] == ""
+    fake.mine["qa-both"]["homeCards"]["viewAs"] = "risk-manager"                                              # a Home the person lost (or was never given): ignored
+    assert both.get("/api/home/cards").json()["viewAs"]["value"] == "" and hc.view_as({"viewAs": "x"}, ["a"]) == ""
+
+
+def test_the_home_page_carries_the_switcher_and_the_logo_leads_to_home():
+    app, _ = _app()
+    page = _in(app, "qa-both")[0].get("/home").text
+    assert "data-home-viewas" in page and 'class="tbar-brand" href="/home"' in page
+
+
+# ---- the genomics Home ----------------------------------------------------------------------------------------------------------------
+
+GENOMICS = [{"module": "genomics", "role_cards": [
+    {"id": "g-cohort", "title": "Cohort", "kind": "metric", "table": "home_kpis", "pick": {"LABEL": "Samples"}, "rank": {"genomicist": 100}},
+    {"id": "g-gwas", "title": "Top associations", "kind": "table", "table": "genomics_gwas_top", "columns": [{"label": "Gene", "col": "GENE"}],
+     "rank": {"genomicist": 90}}]}]
+G_TABLES = {"home_kpis": [{"LABEL": "Samples", "VALUE": 200.0, "DELTA": 4.0, "CAPTION": ""}], "genomics_gwas_top": [{"GENE": "HLXK7"}],
+            "genomics_needs": [{"WHAT": "VCF failed validation: run7.vcf", "DETAIL": "line 12: bad genotype"}]}
+G_NEEDS = [{"module": "genomics", "needs": [{"table": "genomics_needs", "what": "WHAT", "detail": "DETAIL", "tone": "bad", "open": "LOADS", "homes": ["genomicist"]}]}]
+
+
+def _genomics_app():
+    app, fake = _app()
+    fake.users["qa-gen"] = {**fake.users["qa-none"], "username": "qa-gen", "displayName": "Gia", "roles": ["genomicist"]}
+    fake.passwords["qa-gen"] = "qa-gen-pass-1"
+    fake.offered["qa-gen"] = ["genomicist"]
+    fake.offered["qa-bank-gen"] = []
+    fake.tables.update(G_TABLES)
+    fake.tables["home_kpis"] = KPIS + G_TABLES["home_kpis"]
+    app.state.module_parts.role_cards = lambda: BANKING + GENOMICS
+    app.state.module_parts.home_needs = lambda: G_NEEDS
+    return app, fake
+
+
+def test_genomics_cards_and_its_needs_you_item_appear_only_for_the_genomics_role():
+    app, fake = _genomics_app()
+    gen = _in(app, "qa-gen")[0].get("/api/home/cards").json()
+    assert gen["cards"][:2] == ["g-cohort", "g-gwas"] and "var" not in gen["cards"]
+    needs = next(p for p in gen["view"]["panels"] if p["id"] == "needs")
+    assert needs["data"]["rows"][0]["cells"][0]["text"] == "VCF failed validation: run7.vcf" and needs["data"]["rows"][0]["highlight"]
+    for user in ("qa-risk", "qa-trader", "qa-both", "qa-none"):
+        got = _in(app, user)[0].get("/api/home/cards").json()
+        assert not {"g-cohort", "g-gwas"} & set(got["cards"]) and "needs" not in [p["id"] for p in got["view"]["panels"]], user
+
+
+# ---- since your last visit -------------------------------------------------------------------------------------------------------------
+
+def test_the_digest_reads_since_the_last_visit_and_falls_back_to_the_cut_off_on_a_first_visit():
+    app, fake = _app()
+    fake.tables["home_digest"] = [{"AT": "2026-11-27T08:15:00Z", "KIND": "load", "TEXT": "genomics/variant 2026-11-27 loaded, 40 rows"}]
+    fake.raised_kept = {"a1": {"id": "a1", "owner": "qa-risk", "source": "alert", "rule": "r", "title": "VaR above 12M", "severity": "high", "stage": "raised",
+                               "raisedAt": "2026-11-27T09:00:00Z", "message": "", "link": ""},
+                        "a0": {"id": "a0", "owner": "qa-risk", "source": "alert", "rule": "r0", "title": "Old alert", "severity": "high", "stage": "raised",
+                               "raisedAt": "2026-11-19T09:00:00Z", "message": "", "link": ""}}
+    c, _ = _in(app, "qa-risk")
+    first = c.get("/api/home/cards").json()["view"]
+    d = next(p for p in first["panels"] if p["id"] == "digest")
+    assert fake.since[-1] is None and d["title"].startswith("Since yesterday")                               # a first visit: the Home's own cut-off
+    assert any("Rates VAR" in r["cells"][1]["text"] for r in d["data"]["rows"])                              # (the cut-off's biggest movers)
+    fake.mine["qa-risk"] = {"homeCards": {"lastVisit": "2026-11-26T18:00:00Z"}}                              # a visit long ago
+    later = c.get("/api/home/cards").json()["view"]
+    d = next(p for p in later["panels"] if p["id"] == "digest")
+    assert fake.since[-1] == "2026-11-26T18:00:00Z" and d["title"] == "Since your last visit, 2026-11-26 18:00:00 UTC"
+    texts = [r["cells"][1]["text"] for r in d["data"]["rows"]]
+    assert texts == ["Alert fired: VaR above 12M", "genomics/variant 2026-11-27 loaded, 40 rows"]            # newest first; the old alert is before the window
+    _post(c, {"action": "visited"})                                                                           # this visit is recorded: the window stays where it was
+    assert fake.mine["qa-risk"]["homeCards"]["prevVisit"] == "2026-11-26T18:00:00Z"
+    c.get("/api/home/cards")
+    assert fake.since[-1] == "2026-11-26T18:00:00Z"
+
+
+def test_the_visit_window_is_a_function_of_the_stored_visits():
+    now = datetime(2026, 11, 27, 20, 0, tzinfo=timezone.utc)
+    assert hc.digest_window({}, now) is None
+    assert hc.digest_window({"lastVisit": "2026-11-27T19:50:00Z"}, now) is None                                # just recorded, no earlier visit
+    assert hc.digest_window({"lastVisit": "2026-11-27T19:50:00Z", "prevVisit": "2026-11-26T10:00:00Z"}, now) == "2026-11-26T10:00:00Z"
+    assert hc.digest_window({"lastVisit": "2026-11-26T10:00:00Z", "prevVisit": "2026-11-25T10:00:00Z"}, now) == "2026-11-26T10:00:00Z"
+    assert hc.apply({"lastVisit": "a"}, "visited", now=now)["prevVisit"] == "a" and "viewAs" not in hc.apply({"viewAs": "x"}, "viewas", "")
+
+
+def test_the_shipped_genomics_cards_name_a_home_a_table_and_a_need_that_exist():
+    import yaml
+    plugin = yaml.safe_load((CONSOLE.parent / "modules" / "genomics" / "console" / "plugin.yaml").read_text(encoding="utf-8"))
+    cards = hc.catalogue([{"module": "genomics", "role_cards": plugin["home"]["role-cards"]}], hc.common_cards()[0])
+    assert {"genomics-cohort", "genomics-gwas", "genomics-clinvar", "genomics-loads"} <= {c.id for c in cards}
+    assert (CONSOLE.parent / "config" / "homes" / "genomics" / "genomicist.home.yaml").is_file()
+    java = "".join(f.read_text(encoding="utf-8") for f in (CONSOLE.parent / "modules" / "genomics" / "java").rglob("*.java"))
+    for c in cards:
+        if c.module == "genomics":
+            assert set(c.rank) <= {"genomicist"}, c.id
+            assert c.table in ("home_kpis", "home_loads") or f'"{c.table}"' in java, (c.id, c.table)
+    for n in plugin["home"]["needs"]:
+        assert f'"{n["table"]}"' in java and n["homes"] == ["genomicist"]
+
+
+def test_a_scatter_card_is_the_small_plot_of_a_tables_points():
+    card = hc.Card(id="map", title="Association map", module="genomics", kind="scatter", table="t", x="X", value="Y", name="GENE", group="CHROM", limit_rows=3,
+                   rank={"genomicist": 1})
+    rows = [{"X": 2307.0, "Y": 28.0, "GENE": "HLXK7", "CHROM": "7"}, {"X": 5000.0, "Y": 3.1, "GENE": "TP53", "CHROM": "17"}, {"X": None, "Y": 1, "GENE": "BAD", "CHROM": "1"}]
+    p = hc.panel(card, rows, pinned=False, first=True, last=True)
+    assert p["kind"] == "scatter" and p["data"]["groups"] == ["17", "7"]
+    assert p["data"]["points"][0] == {"x": 2307.0, "y": 28.0, "label": "HLXK7", "group": "7"} and len(p["data"]["points"]) == 2      # a row with no x is not a point
