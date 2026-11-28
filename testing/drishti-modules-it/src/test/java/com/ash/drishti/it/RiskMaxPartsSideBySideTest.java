@@ -57,7 +57,7 @@ class RiskMaxPartsSideBySideTest {
         RiskSideBySideTest.deleteTree(work);
         SideBySide.dropJars(Path.of(jars), work);
         Map<String, String> env = new LinkedHashMap<>();
-        env.put("DRISHTI_VAR_MAX_PARTS", "3");
+        env.put("DRISHTI_VAR_MAXPARTS", "3");                           // drishti.var.max-parts (relaxed binding: no underscore inside a key)
         String tier = System.getProperty("sbs.tier", "");
         if (!tier.isBlank()) {
             env.put("DRISHTI_VAR_TIER", tier);
@@ -91,7 +91,9 @@ class RiskMaxPartsSideBySideTest {
                         server.get(q + "&path=engine");
                     } catch (IllegalStateException e) {
                         assertThat(e.getMessage()).as(what).contains("path=in-tree");
-                        refused++;
+                        if (refused++ == 0) {
+                            System.out.println("first refused on the engine path: " + e.getMessage());
+                        }
                         continue;
                     }
                     JsonNode[] both = sbs.both(server, what, q, "canonical", "currency", "by", "var", "es", "sumStandalone", "sumComponent",

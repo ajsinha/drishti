@@ -652,10 +652,10 @@ public class VarEnginePath {
      */
     private java.util.Set<String> largestPositions(Principal p, ScopeResolver.Resolution res, LocalDate date, String currency, int total) {
         VarService svc = service.getIfAvailable();
-        if (svc == null || res.node() == null || total <= svc.props().maxParts()) {
+        if (svc == null || total <= svc.props().maxParts()) {
             return null;
         }
-        VarService.Scoped s = svc.scoped(p, "NODE:" + res.node(), date, currency);
+        VarService.Scoped s = svc.scoped(p, partScope(res), date, currency);
         com.ash.drishti.banking.compute.var.VarBook b = s.date().book();
         List<int[]> runs = VarPartTotals.positionRuns(b, s.set());
         if (runs.size() != total) {
@@ -1103,11 +1103,15 @@ public class VarEnginePath {
      */
     HostPositions hostPositions(Principal p, VarService svc, EngineScopeBook book, ScopeResolver.Resolution res, LocalDate date, String currency,
             boolean cut) {
-        if (res.node() == null) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the parts of a node for now; the parts of "
-                    + res.canonical() + " are positions, trades or terms: ask it in-tree (path=in-tree)");
+        if (res.node() == null && (res.trade() >= 0 || res.position() >= 0)) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the parts of a node or of an ad-hoc scope of positions for "
+                    + "now; the parts of " + res.canonical() + " are trades: ask it in-tree (path=in-tree)");
         }
-        VarService.Scoped s = svc.scoped(p, "NODE:" + res.node(), date, currency);
+        VarService.Scoped s = svc.scoped(p, partScope(res), date, currency);
+        if (res.node() == null && new VarSelection(svc).byTerms(p, s)) {   // an expression of two or more terms: its parts are the terms
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the parts of a node or of an ad-hoc scope of positions for "
+                    + "now; the parts of " + res.canonical() + " are its terms: ask it in-tree (path=in-tree)");
+        }
         com.ash.drishti.banking.compute.var.VarBook b = s.date().book();
         if (!s.view().seesPositions(s.set())) {
             return new HostPositions(List.of(), List.of());          // an aggregate-only viewer: no position level below this node
@@ -1142,13 +1146,18 @@ public class VarEnginePath {
         return new HostPositions(parts, rows);
     }
 
+    /** The in-tree scope text of a resolution whose parts are positions: a node's id, else its canonical form (an ad-hoc scope). */
+    private static String partScope(ScopeResolver.Resolution res) {
+        return res.node() != null ? "NODE:" + res.node() : res.canonical();
+    }
+
     /** A leaf node's position parts measured by the engine's {@code scope-contributions}, the rows shaped as the in-tree route's. */
     private Parts positionParts(Principal p, VarService svc, EngineScopeBook book, ScopeResolver.Resolution res, LocalDate date, String currency,
             boolean cut) {
         HostPositions hp = hostPositions(p, svc, book, res, date, currency, cut);
         Map<String, Object> params = params(dateWindow(), currency);
         params.put("rows", ordinals(res.set()));
-        params.put("node", res.node());
+        params.put("node", res.node() == null ? "" : res.node());
         List<Integer> all = new ArrayList<>();
         for (List<Integer> r : hp.rows()) {
             all.addAll(r);
