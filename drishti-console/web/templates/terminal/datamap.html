@@ -33,7 +33,7 @@
     <a class="emb-help" href="{{ BASE }}/help/cli-guide#205-the-data-map" aria-label="Help: the data map" title="Help: the data map">?</a></h1>
   <p class="text-muted-d dmap-lede">{{ m.packs }} pack{{ '' if m.packs == 1 else 's' }}, {{ m.kinds | length }} kinds, {{ m.joins | length }} joins{% if m.businessDate and m.businessDate != 'latest' %} on {{ m.businessDate }}{% endif %}.
     Click any kind to see what it holds, what it joins to and the command that opens it. Drawn from the packs' data contracts; counts and joins
-    are checked against the data.</p>
+    are checked against the data. Every table by its symbolic name, with where it is and who uses it: <a href="{{ BASE }}/help/table-catalogue">the table catalogue</a>.</p>
 
   <div class="dmap-bar">
     <div class="dmap-views" role="group" aria-label="View">

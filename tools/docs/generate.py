@@ -38,6 +38,7 @@ GENERATORS: list[tuple[str, list[str], list[str]]] = [
     ("docs/admin/CONFIGURATION.md", ["tools/settings_catalogue.py"], ["tools/settings_catalogue.py", "--check"]),
     ("docs/admin/UNDER_CONSTRUCTION.md", ["tools/under_construction.py"], ["tools/under_construction.py", "--check"]),
     ("docs/guides/COMMAND_CATALOG.md", ["tools/command_catalog.py"], ["tools/command_catalog.py", "--check"]),
+    ("docs/admin/TABLE_CATALOGUE.md (every table by symbolic name)", ["tools/docs/table_catalogue.py"], ["tools/docs/table_catalogue.py", "--check"]),
     ("docs/contracts/packs/*.md", ["tools/contracts.py", "docs"], ["tools/contracts.py", "docs", "--check"]),
     ("docs/contracts/CSV_FORMATS.md", ["tools/loaders/mrloader/kind_docs.py"], ["tools/loaders/mrloader/kind_docs.py", "--check"]),
     ("config/feeds/*.md", ["tools/loaders/common/feedreadme.py"], ["tools/loaders/common/feedreadme.py", "--check"]),

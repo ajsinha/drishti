@@ -56,6 +56,7 @@ references:
   - admin/CONFIGURATION.md
   - admin/BENCHMARK.md
   - admin/UNDER_CONSTRUCTION.md
+  - admin/TABLE_CATALOGUE.md
   - guides/CLI_REFERENCE.md
   - guides/COMMAND_CATALOG.md
   - guides/FUNCTIONS.md

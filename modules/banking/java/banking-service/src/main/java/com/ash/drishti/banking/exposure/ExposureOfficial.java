@@ -232,7 +232,7 @@ final class ExposureOfficial implements AutoCloseable {
             try {
                 long vc = publisher.publish(ExposurePublisher.CPTY, date, cptyRows);
                 long vn = nodeRows.isEmpty() ? -1 : publisher.publish(ExposurePublisher.NODES, date, nodeRows);
-                index.put("published", "risk-results/" + ExposurePublisher.CPTY + " (" + publisher.describe(vc) + ")"
+                index.put("published", com.ash.drishti.banking.official.OfficialSink.FOLDER + "/" + ExposurePublisher.CPTY + " (" + publisher.describe(vc) + ")"
                         + (vn < 0 ? "" : ", risk-results/" + ExposurePublisher.NODES + " (" + publisher.describe(vn) + ")"));
                 published.run();
             } catch (java.io.IOException | RuntimeException e) {

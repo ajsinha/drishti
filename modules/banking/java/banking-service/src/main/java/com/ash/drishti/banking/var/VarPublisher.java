@@ -39,7 +39,7 @@ final class VarPublisher {
 
     /** The contract version the rows carry (VAR_GUIDE.md section 23.4, the change table). */
     static final String CONTRACT_VERSION = "1.5";                   // 1.4: HORIZON and METHOD; 1.5: SVAR, SES and STRESS_SET_ID
-    static final String FOLDER = "risk-results";
+    static final String FOLDER = com.ash.drishti.banking.official.OfficialSink.FOLDER;
     static final String TABLE = "var-official";
 
     /** The published columns and their types, in order (VAR_GUIDE.md section 19; BUSINESS_DATE is the partition column business_date). */
@@ -108,8 +108,8 @@ final class VarPublisher {
 
     /** Where a commit's JSON Lines go on a local root: {@code <root>/risk-results/jsonl/var-official/<date>/var-official-v<version>.jsonl}. */
     Path jsonlFile(LocalDate date, long version) {
-        return com.ash.drishti.banking.official.OfficialSink.folder(sink.root()).resolve(FOLDER).resolve("jsonl").resolve(TABLE)
-                .resolve(date.toString()).resolve(TABLE + "-v" + version + ".jsonl");
+        return com.ash.drishti.banking.official.OfficialSink.folder(com.ash.drishti.api.resolution.TableCatalogue.join(sink.root(),
+                FOLDER + "/jsonl", TABLE)).resolve(date.toString()).resolve(TABLE + "-v" + version + ".jsonl");
     }
 
     private static List<Map<String, Object>> docs(LocalDate date, List<Map<String, Object>> rows) {

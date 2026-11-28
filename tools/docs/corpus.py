@@ -81,6 +81,7 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"docs/admin/BENCHMARK\.md", "keep", "B", "", ""),
     (r"docs/admin/CONFIGURATION\.md", "generate", "B", "", "tools/settings_catalogue.py"),
     (r"docs/admin/UNDER_CONSTRUCTION\.md", "generate", "B", "", "tools/under_construction.py"),
+    (r"docs/admin/TABLE_CATALOGUE\.md", "generate", "B", "", "tools/docs/table_catalogue.py"),
     (r"docs/architecture/(ACCESS_MODEL|DISTRIBUTIONS|DOMAIN_MODULES)\.md", "merge", "B", KM, ""),
     (r"docs/architecture/(ARCHITECTURE|DATA_ARCHITECTURE|KERNEL_AND_MODULES|LENSES|VIEWMODEL|TEST_HARNESS|THIN_CONSOLE_DESIGN"
      r"|FUNCTION_CATALOGUE|ENGINES_IN_DRISHTI|LIFECYCLE|ROLE_HOME_SUTRAS)\.md", "keep", "B", "", ""),
