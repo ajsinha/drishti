@@ -21763,6 +21763,48 @@ datasets:
   files:
   - pathway-gene.2026-11-16.jsonl.gz
   bytes: 4215
+- folder: genomics/variant
+  pack: genomics
+  kind: variant
+  connector: genomics-store
+  key: VARIANT_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the module's synthetic samples read by the genomics loader's readers (python3 tools/packgen/genomics_module/make.py)
+  documents: 120
+  files:
+  - variant.2026-11-16.jsonl.gz
+  bytes: 2912
+  lake: genomicslake
+  dates: last
+- folder: genomics/sample
+  pack: genomics
+  kind: sample
+  connector: genomics-store
+  key: SAMPLE_ID
+  snapshot: true
+  captured: '2026-11-16'
+  source: the module's synthetic samples read by the genomics loader's readers (python3 tools/packgen/genomics_module/make.py)
+  documents: 24
+  files:
+  - sample.2026-11-16.jsonl.gz
+  bytes: 262
+  lake: genomicslake
+  dates: last
+- folder: genomics/gene
+  pack: genomics
+  kind: gene
+  connector: genomics-store
+  key: GENE
+  snapshot: true
+  captured: '2026-11-16'
+  source: the module's synthetic samples read by the genomics loader's readers (python3 tools/packgen/genomics_module/make.py)
+  documents: 8
+  files:
+  - gene.2026-11-16.jsonl.gz
+  bytes: 512
+  lake: genomicslake
+  dates: last
 - folder: protein-engineering/protein
   pack: protein-engineering
   kind: protein

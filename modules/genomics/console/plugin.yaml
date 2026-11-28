@@ -30,7 +30,7 @@ routes:
   - {id: protein, path: "/proteins/{id}", page: showcase.html, function: PROTEIN, title: "Protein workbench"}
   - {id: designs, path: "/designs/{id}", page: showcase.html, function: DESIGNS, title: "Design campaign"}
 menus:                       # the module's own top menu (Genomics)
-  - {label: "Variants", route: variants, icon: list-ul, desc: "Every variant read from the VCF files"}
+  - {label: "Variants", route: variants, icon: list-ul, desc: "Every variant in the genomics lake"}
   - {label: "Genes", route: genes, icon: diagram-2, desc: "Genes and their variants along the protein"}
   - {label: "Cohorts", route: cohorts, icon: people, desc: "Cohorts, their samples and what they carry"}
   - {label: "Cohort showcase", route: board, icon: grid-1x2, desc: "The linked board: association, who carries what, the map of samples, the variants on the protein"}
@@ -99,7 +99,7 @@ home:
       open: LOADS
       always: true
       rank: {genomicist: 70}
-  needs:                     # what genomics adds to Needs you: a VCF that failed validation (table genomics_needs of the Home genomicist)
+  needs:                     # what genomics adds to Needs you: a genomics table with no rows (table genomics_needs of the Home genomicist)
     - {table: genomics_needs, what: WHAT, detail: DETAIL, tone: bad, open: LOADS, homes: [genomicist]}
 visuals:                     # the module's own visual types (the custom-visual SDK): kinds of drishti-chart's registry, from its library
                              # elements/<library>/<file>, served at /m/genomics/elements/<library>/<module version>/<file>; each is glue over a

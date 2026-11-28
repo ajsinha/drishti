@@ -128,9 +128,8 @@ shows its new significance from the next date on, and the older dates keep what 
 
 What the run does, in order: reads every file; checks every row against its contract (a row that fails is **rejected with its reason**, the
 rest go on); writes the day's files under `<data>/genomics/loads/<date>/` (`<kind>.<date>.jsonl.gz`, `<kind>.<date>.rejects.jsonl`,
-`manifest.json` with rows and SHA-256); loads them into `genomicslake` (`--load java`, the default, `python`, `inbox` or `none`); copies the
-VCFs and merges the genes into the folder the module's screens read, `<data>/modules/genomics/vcf/` (`--no-module` leaves it alone,
-`--module-folder DIR` names another); moves each file to `done/<date>/` in the drop folder, or to `rejected/` with a `<name>.why.txt`
+`manifest.json` with rows and SHA-256); loads them into `genomicslake` (`--load java`, the default, `python`, `inbox` or `none`): the tables
+the module's screens read, and the only place they read; moves each file to `done/<date>/` in the drop folder, or to `rejected/` with a `<name>.why.txt`
 when it could not be read at all.
 
 ### One day, several days, a day again
@@ -142,7 +141,7 @@ when it could not be read at all.
 | the same date again | put its files in the drop folder again (copy them back from `done/<date>/`) and run: the date's rows of each kind are replaced whole |
 | **add a file to a date** | drop **all** of that date's files again: a load replaces the date, it does not append to it. Or give the new file its own date |
 | the server loads, not you | `--load inbox` drops one tar and its `.ready` in `<data>/dataload/inbox` (`--inbox DIR` names another); the server loads it at its next cycle |
-| a scratch copy | `--lake-root DIR` (and `--out DIR`, `--no-module`): nothing real is touched |
+| a scratch copy | `--lake-root DIR` (and `--out DIR`): nothing real is touched |
 
 Several files of one date load together: two VCFs of a date are two sets of variants in one table; an id that appears in both keeps the
 later file's row (the run says so). A sample table row replaces the VCF's row of the same sample.
@@ -173,10 +172,9 @@ Linux     PY tools/drishti.py feed status                  Windows   py -3.13 to
 - **The lake**: `PY tools/drishti.py lake status --lake genomicslake` lists the tables, their dates and rows.
 - **Your files**: the closing line (`rejected=0 refused=0`), `<data>/genomics/loads/<date>/manifest.json` (each file's rows) and, when rows
   were rejected, `<kind>.<date>.rejects.jsonl` (one line each: the file, the row number, the reason, the row).
-- **In the product**: restart the server (or switch the genomics module off and on in Admin → Modules) and open **Genomics** in the menu
-  (Variants, Genes, Cohorts), or ask the API: `GET /api/v1/genomics/variants?gene=BRCA1`. Type `GENE TP53` in the command bar for the protein view.
-  The screens read the module's folder (`<data>/modules/genomics/vcf/`, filled by the run), not the lake: the lake is for queries, BI and
-  history.
+- **In the product**: open **Genomics** in the menu (Variants, Genes, Cohorts), or ask the API: `GET /api/v1/genomics/variants?gene=BRCA1`. Type
+  `GENE TP53` in the command bar for the protein view. The screens read the lake tables this run wrote (`genomics.variant`, `.sample`, `.gene`,
+  `.cohort`, through the genomics pack's connector), at most a minute after the load: there is no folder of the module's to fill, and no restart.
 
 ## Licences and rate limits
 
@@ -207,7 +205,7 @@ is reference data for research and engineering, and its classifications change.
 | `refused X: no #CHROM header line` / `a data line before the #CHROM header` | not a VCF, or a damaged one | check the file (`bcftools view -h`); a VCF needs its `#CHROM` line before the records |
 | exit 2 with `rejected=N` | N rows failed their contract; the good rows loaded | read `<kind>.<date>.rejects.jsonl`: `START: 'abc' is not integer` (fix the cell), `GENE is empty (the key of gene)` (give the row its key) |
 | `line N: not a VCF record` | a VCF line with fewer than 8 columns or a POS that is not a number | fix the line; the other records loaded |
-| the screens do not show the new VCF | the module reads its folder at start | restart the server, or switch the module off and on (Admin → Modules); check the file is in `<data>/modules/genomics/vcf/` |
+| the screens do not show the new VCF | the module reads the lake tables and looks again a minute after it found one empty | check the run's closing line (`variants=N loaded=N`) and `PY tools/drishti.py lake status --lake genomicslake`; the file must have gone through `genomics_run.py`, the module opens no VCF itself |
 | the run loaded, but part of a date is missing | a load replaces the whole date | drop all of the date's files together (see "a day again") |
 
 ## See also

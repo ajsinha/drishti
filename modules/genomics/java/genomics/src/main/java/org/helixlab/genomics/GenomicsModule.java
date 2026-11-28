@@ -23,15 +23,17 @@ import java.util.Map;
 
 /**
  * The module's entry point: the kernel starts and stops it; everything it needs comes through the kernel API. Started, it gives the
- * showcase its source: the kinds of the packs genomics-showcase and protein-engineering as rows through the kernel's bindings (never a connection).
+ * screens' data (variants, samples, genes, cohorts) and the showcase their source: the kinds of the packs genomics-showcase and protein-engineering as rows through the kernel's bindings (never a connection).
  */
 public class GenomicsModule implements DrishtiModule {
 
     private final ShowcaseData showcase;
     private final GenomicsHome home;
+    private final GenomicsData data;
 
     /** The kernel registers the entry in the module's Spring context, which gives it the showcase's tables and the Home's (ModuleConfig). */
-    public GenomicsModule(ShowcaseData showcase, GenomicsHome home) {
+    public GenomicsModule(GenomicsData data, ShowcaseData showcase, GenomicsHome home) {
+        this.data = data;
         this.showcase = showcase;
         this.home = home;
     }
@@ -51,6 +53,9 @@ public class GenomicsModule implements DrishtiModule {
                 sink.accept(row);
             }
         });
+        if (data != null) {
+            data.attach(rows);
+        }
         if (showcase != null) {
             showcase.attach(rows);
         }
@@ -61,6 +66,9 @@ public class GenomicsModule implements DrishtiModule {
 
     @Override
     public void stop() {
+        if (data != null) {
+            data.clear();
+        }
         if (showcase != null) {
             showcase.clear();
         }

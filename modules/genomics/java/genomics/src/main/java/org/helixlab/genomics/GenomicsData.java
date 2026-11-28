@@ -15,172 +15,190 @@
  */
 package org.helixlab.genomics;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
+import java.util.TreeSet;
 
 /**
- * What the module knows, read once and kept as one immutable snapshot (swapped whole on a reload, so two people never see half of one):
- * the variants and samples of every VCF file (the module's synthetic samples, {@code <module>/data/samples/*.vcf}, and a site's own files
- * in {@code <data>/modules/genomics/vcf/}, plain or gzipped), the genes (JSONL, {@code data/samples/gene.jsonl}) and the cohorts, computed
- * from the samples' {@code ##SAMPLE} lines.
+ * What the module knows, read from the lake and kept as one immutable snapshot (swapped whole on a reload, so two people never see half of
+ * one): the rows of the kinds {@code variant}, {@code sample}, {@code gene} and, when someone loaded them, {@code cohort} of the genomics pack,
+ * which a site binds to the genomics lake's tables ({@code genomics.variant} ... of {@code config/lakes/genomicslake.yaml}). Never a file and
+ * never a path: the files a person has (VCF, gene, sample and cohort tables) reach the lake through the genomics loader
+ * ({@code tools/loaders/genomics}). The first call reads the kinds; a read that found a kind empty is tried again after a minute (a lake still
+ * loading). The cohorts are computed from the samples and the variants they carry; a cohort row someone loaded adds to or replaces the
+ * computed one of its id.
  */
 public final class GenomicsData {
 
-    /** One read of every file. */
-    public record Snapshot(Map<String, Vcf.Variant> variants, Map<String, Vcf.Sample> samples, Map<String, Map<String, Object>> genes,
-            List<String> files, List<String> problems) {
+    public static final String VARIANT = "variant";
+    public static final String SAMPLE = "sample";
+    public static final String GENE = "gene";
+    public static final String COHORT = "cohort";
+    /** The kinds read, in order. */
+    public static final List<String> KINDS = List.of(VARIANT, SAMPLE, GENE, COHORT);
 
-        static final Snapshot EMPTY = new Snapshot(Map.of(), Map.of(), Map.of(), List.of(), List.of());
+    private static final long RETRY_MS = 60_000;
+
+    /** One read of the lake: each kind's rows by key, and the kinds that had none. */
+    public record Snapshot(Map<String, Map<String, Object>> variants, Map<String, Map<String, Object>> samples, Map<String, Map<String, Object>> genes,
+            Map<String, Map<String, Object>> cohortRows, List<String> missing, long readAt) {
+
+        static final Snapshot EMPTY = new Snapshot(Map.of(), Map.of(), Map.of(), Map.of(), List.of(VARIANT, SAMPLE, GENE), 0);
     }
 
-    private static final ObjectMapper JSON = new ObjectMapper();
+    private volatile ShowcaseData.Source source;
     private volatile Snapshot snapshot = Snapshot.EMPTY;
+    private volatile Map<String, Map<String, Object>> cohorts;
 
-    /** Reads every VCF and gene file under the folders (a missing folder holds nothing); the snapshot is replaced whole. */
-    public Snapshot load(List<Path> folders) {
-        Map<String, Vcf.Variant> variants = new TreeMap<>();
-        Map<String, Vcf.Sample> samples = new TreeMap<>();
-        Map<String, Map<String, Object>> genes = new TreeMap<>();
-        List<String> files = new ArrayList<>();
-        List<String> problems = new ArrayList<>();
-        for (Path folder : folders) {
-            if (folder == null || !Files.isDirectory(folder)) {
-                continue;
-            }
-            try (Stream<Path> s = Files.list(folder)) {
-                for (Path f : s.sorted(Comparator.comparing(Path::toString)).toList()) {
-                    String n = f.getFileName().toString();
-                    if (n.endsWith(".vcf") || n.endsWith(".vcf.gz")) {
-                        try (BufferedReader in = reader(f)) {
-                            Vcf.File v = Vcf.read(n, in);
-                            v.variants().forEach(x -> variants.put(x.id(), x));
-                            v.samples().forEach(x -> samples.put(x.id(), x));
-                            problems.addAll(v.problems());
-                            files.add(n);
-                        }
-                    } else if (n.equals("gene.jsonl") || n.equals("gene.jsonl.gz")) {
-                        try (BufferedReader in = reader(f)) {
-                            for (String line = in.readLine(); line != null; line = in.readLine()) {
-                                if (!line.isBlank()) {
-                                    JsonNode j = JSON.readTree(line);
-                                    Map<String, Object> row = JSON.convertValue(j, JSON.getTypeFactory().constructMapType(LinkedHashMap.class, String.class, Object.class));
-                                    genes.put(j.path("GENE").asText(), row);
-                                }
-                            }
-                            files.add(n);
-                        }
-                    }
+    /** Where the rows come from: the kernel's bindings once the module has started, a fixture in a test. */
+    public void attach(ShowcaseData.Source s) {
+        this.source = s;
+        this.snapshot = Snapshot.EMPTY;
+        this.cohorts = null;
+    }
+
+    /** Whether a source is attached. */
+    public boolean attached() {
+        return source != null;
+    }
+
+    /** The data now: read on first use, and again when a kind was empty a minute ago. */
+    public Snapshot now() {
+        Snapshot s = snapshot;
+        if (source != null && (s.readAt() == 0 || !s.missing().isEmpty() && System.currentTimeMillis() - s.readAt() > RETRY_MS)) {
+            synchronized (this) {
+                if (snapshot == s) {
+                    snapshot = read(source);
+                    cohorts = null;
                 }
-            } catch (IOException e) {
-                problems.add(folder.getFileName() + ": " + e.getMessage());
+                s = snapshot;
             }
         }
-        Snapshot s = new Snapshot(Map.copyOf(variants), Map.copyOf(samples), Map.copyOf(genes), List.copyOf(files), List.copyOf(problems));
-        snapshot = s;
         return s;
     }
 
-    /** The data as last read. */
-    public Snapshot now() {
+    /** Reads every kind again (the module's reload). */
+    public synchronized Snapshot reload() {
+        if (source != null) {
+            snapshot = read(source);
+            cohorts = null;
+        }
         return snapshot;
     }
 
     /** Forgets everything (the module stopping). */
     public void clear() {
+        source = null;
         snapshot = Snapshot.EMPTY;
+        cohorts = null;
+    }
+
+    private static Snapshot read(ShowcaseData.Source s) {
+        Map<String, Map<String, Map<String, Object>>> all = new LinkedHashMap<>();
+        List<String> missing = new ArrayList<>();
+        String[] keys = {"VARIANT_ID", "SAMPLE_ID", "GENE", "COHORT_ID"};
+        for (int i = 0; i < KINDS.size(); i++) {
+            Map<String, Map<String, Object>> rows = new TreeMap<>();
+            String key = keys[i];
+            try {
+                s.rows(KINDS.get(i), r -> {
+                    String id = ShowcaseData.str(r.get(key));
+                    if (!id.isEmpty()) {
+                        Map<String, Object> row = new LinkedHashMap<>(r);
+                        row.computeIfPresent("SAMPLES", (k, v) -> v instanceof List<?> ? v : List.of());
+                        rows.put(id, Collections.unmodifiableMap(row));
+                    }
+                });
+            } catch (RuntimeException e) {
+                rows.clear();                    // a kind that does not read is a kind with no rows: the screens say which is missing
+            }
+            if (rows.isEmpty() && !COHORT.equals(KINDS.get(i))) {
+                missing.add(KINDS.get(i));
+            }
+            all.put(KINDS.get(i), Collections.unmodifiableMap(rows));
+        }
+        return new Snapshot(all.get(VARIANT), all.get(SAMPLE), all.get(GENE), all.get(COHORT), List.copyOf(missing), System.currentTimeMillis());
     }
 
     // ---- the rows of each kind ----------------------------------------------------------------------------------------------------
 
+    /** The ids of the samples that carry a variant. */
+    public static List<String> carriers(Map<String, Object> variant) {
+        List<String> out = new ArrayList<>();
+        if (variant.get("SAMPLES") instanceof List<?> l) {
+            l.forEach(x -> out.add(String.valueOf(x)));
+        }
+        return out;
+    }
+
+    /** A variant's text field ("" for none). */
+    public static String text(Map<String, Object> row, String field) {
+        return ShowcaseData.str(row.get(field));
+    }
+
     /** A variant's row: VARIANT_ID, CHROM, POS, REF, ALT, QUAL, FILTER, GENE, CONSEQUENCE, IMPACT, PROTEIN_POS, AF, CARRIERS, SAMPLES. */
-    public static Map<String, Object> variantRow(Vcf.Variant v) {
-        Map<String, Object> r = new LinkedHashMap<>();
-        r.put("VARIANT_ID", v.id());
-        r.put("CHROM", v.chrom());
-        r.put("POS", v.pos());
-        r.put("REF", v.ref());
-        r.put("ALT", v.alt());
-        r.put("QUAL", v.qual());
-        r.put("FILTER", v.filter());
-        r.put("GENE", v.info().getOrDefault("GENE", ""));
-        r.put("CONSEQUENCE", v.info().getOrDefault("CSQ", ""));
-        r.put("IMPACT", v.info().getOrDefault("IMPACT", ""));
-        r.put("PROTEIN_POS", number(v.info().get("AAPOS")));
-        List<String> carriers = v.carriers();
-        r.put("CARRIERS", carriers.size());
-        r.put("AF", v.genotypes().isEmpty() ? null : Math.round(1e4 * carriers.size() / (double) v.genotypes().size()) / 1e4);
-        r.put("SAMPLES", carriers);
+    public static Map<String, Object> variantRow(Map<String, Object> v) {
+        Map<String, Object> r = new LinkedHashMap<>(v);
+        r.putIfAbsent("CARRIERS", carriers(v).size());
+        r.putIfAbsent("SAMPLES", carriers(v));
         return r;
     }
 
-    /** A sample's row: SAMPLE_ID, COHORT, SEX, POPULATION, VARIANTS (the variants it carries). */
-    public Map<String, Object> sampleRow(Vcf.Sample s) {
-        Map<String, Object> r = new LinkedHashMap<>();
-        r.put("SAMPLE_ID", s.id());
-        r.put("COHORT", s.meta().getOrDefault("COHORT", ""));
-        r.put("SEX", s.meta().getOrDefault("SEX", ""));
-        r.put("POPULATION", s.meta().getOrDefault("POPULATION", ""));
-        r.put("VARIANTS", snapshot.variants().values().stream().filter(v -> v.carriers().contains(s.id())).count());
-        return r;
-    }
-
-    /** A gene's row: the gene file's fields and VARIANTS (how many variants fall in it). */
+    /** A gene's row: the gene table's fields and VARIANTS (how many variants fall in it). */
     public Map<String, Object> geneRow(String gene) {
-        Map<String, Object> g = snapshot.genes().get(gene);
+        Snapshot s = now();
+        Map<String, Object> g = s.genes().get(gene);
         if (g == null) {
             return null;
         }
         Map<String, Object> r = new LinkedHashMap<>(g);
-        r.put("VARIANTS", snapshot.variants().values().stream().filter(v -> gene.equals(v.info().get("GENE"))).count());
+        r.put("VARIANTS", s.variants().values().stream().filter(v -> gene.equals(text(v, "GENE"))).count());
         return r;
     }
 
-    /** The cohorts, computed: COHORT_ID, SAMPLES, VARIANTS (carried by any of its samples), GENES (touched by those variants). */
+    /** The cohorts, computed: COHORT_ID, SAMPLES, MEMBERS, VARIANTS (carried by any of its samples), GENES (touched by those variants); a loaded cohort row wins. */
     public Map<String, Map<String, Object>> cohorts() {
+        Map<String, Map<String, Object>> done = cohorts;
+        if (done != null) {
+            return done;
+        }
+        Snapshot s = now();
         Map<String, List<String>> members = new TreeMap<>();
-        snapshot.samples().values().forEach(s -> members.computeIfAbsent(s.meta().getOrDefault("COHORT", "UNASSIGNED"), k -> new ArrayList<>()).add(s.id()));
-        Map<String, Map<String, Object>> out = new LinkedHashMap<>();
+        s.samples().values().forEach(x -> {
+            String c = text(x, "COHORT");
+            members.computeIfAbsent(c.isEmpty() ? "UNASSIGNED" : c, k -> new ArrayList<>()).add(text(x, "SAMPLE_ID"));
+        });
+        Map<String, Map<String, Object>> out = new TreeMap<>();
         members.forEach((c, ids) -> {
-            List<Vcf.Variant> carried = snapshot.variants().values().stream().filter(v -> v.carriers().stream().anyMatch(ids::contains)).toList();
+            List<Map<String, Object>> carried = s.variants().values().stream().filter(v -> carriers(v).stream().anyMatch(ids::contains)).toList();
             Map<String, Object> r = new LinkedHashMap<>();
             r.put("COHORT_ID", c);
             r.put("SAMPLES", ids.size());
             r.put("MEMBERS", List.copyOf(ids));
             r.put("VARIANTS", carried.size());
-            r.put("GENES", carried.stream().map(v -> v.info().getOrDefault("GENE", "")).filter(x -> !x.isEmpty()).distinct().sorted().toList());
+            r.put("GENES", List.copyOf(new TreeSet<>(carried.stream().map(v -> text(v, "GENE")).filter(x -> !x.isEmpty()).toList())));
             out.put(c, r);
         });
+        s.cohortRows().forEach((id, row) -> {
+            Map<String, Object> merged = new LinkedHashMap<>(out.getOrDefault(id, Map.of()));
+            row.forEach((k, v) -> {
+                if (v != null) {
+                    merged.put(k, v);
+                }
+            });
+            out.put(id, merged);
+        });
+        cohorts = out;
         return out;
     }
 
-    private static Integer number(String s) {
-        try {
-            return s == null ? null : Integer.valueOf(s);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    private static BufferedReader reader(Path f) throws IOException {
-        InputStream in = Files.newInputStream(f);
-        if (f.getFileName().toString().endsWith(".gz")) {
-            in = new GZIPInputStream(in);
-        }
-        return new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+    /** The variants by position (chromosome as text, then position). */
+    public static Comparator<Map<String, Object>> byPosition() {
+        return Comparator.<Map<String, Object>, String>comparing(v -> text(v, "CHROM")).thenComparingDouble(v -> ShowcaseData.num(v.get("POS")));
     }
 }

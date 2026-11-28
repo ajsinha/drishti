@@ -15,23 +15,23 @@
 -->
 # Genomics: the guide
 
-**What it does.** The module reads VCF files and answers three functions: `VARIANT HX-A001` (a variant, where it is, what it does and
+**What it does.** The module answers, from the lake's tables, three functions: `VARIANT HX-A001` (a variant, where it is, what it does and
 who carries it), `GENE TP53` (a gene's variants along its protein, drawn as a lollipop) and `COHORT COH-A` (a cohort's samples and the
 variants they carry). Its pages are under `/m/genomics/`; its menu is Genomics (Variants, Genes, Cohorts).
 
-**Where the data comes from.** The VCF reader (`genomics-vcf`, `VcfConnector`) is a connector extension of the kernel: the plugin API's
-`SourcePlugin`, connected by the kernel when the module loads and withdrawn when it goes. It reads:
+**Where the data comes from.** From the genomics lake (`genomicslake`), never from a file: the module's pages read the kinds `variant`,
+`sample`, `gene` and `cohort` of the genomics pack through the kernel's bindings (the pack's Delta connector `genomics-store`), which the
+lake file `config/lakes/genomicslake.yaml` ties to the tables `genomics.variant`, `genomics.sample`, `genomics.gene` and `genomics.cohort`.
+The module opens no VCF file and has no folder of its own to drop one in. Files go through the **genomics loader**
+(`tools/loaders/genomics`, guide: *Load your own genomics files*): it reads VCF 4.x files (plain or gzipped) and gene, sample and cohort
+tables from its inbox, checks them against the contracts and writes the lake tables. The demo data (`data/testdata/genomics`, the module's
+synthetic samples: 120 variants, 24 samples in two cohorts, eight genes) is built into the same tables by `drishti.py lake demo`.
 
-- the module's synthetic samples, `data/samples/*.vcf` and `data/samples/gene.jsonl` inside the package;
-- a site's own files, `<data folder>/modules/genomics/vcf/*.vcf` (or `.vcf.gz`) and `gene.jsonl` beside them.
-
-Each VCF record gives one `variant` per alternate allele; the INFO keys `GENE`, `CSQ`, `IMPACT` and `AAPOS` fill the gene, the
-consequence, the impact and the protein position. The sample columns give the `sample` kind, and each `##SAMPLE=<ID=..,Cohort=..>` line
-the sample's cohort. `gene` and `cohort` are computed from them (`GenomicsKinds`, a `KindProvider`).
-
-**Why the reader is in the module and not in `lib/`.** The site's `lib/` folder holds jars every part of the server may use (JDBC drivers,
-connectors any pack reads through). The VCF reader serves only this module's kinds and must go when the module goes: inside the module it
-is unloaded with it, leak-checked, and a removed module leaves nothing behind.
+Each VCF record gives one `variant` row per alternate allele; the INFO keys `GENE`, `CSQ`, `IMPACT` and `AAPOS` fill the gene, the
+consequence, the impact and the protein position. The sample columns give the `sample` rows, and each `##SAMPLE=<ID=..,Cohort=..>` line the
+sample's cohort. The cohorts are computed by the module from the samples and the variants they carry; a cohort table someone loaded adds to
+or replaces the computed cohort of its id. A kind with no rows is a page that says which table is not loaded, and the Home's Needs you says
+how to load it.
 
 **The visuals.** The module's library `drishti-genomics` (`elements/drishti-genomics/`, served at
 `/m/genomics/elements/drishti-genomics/<module version>/`) registers six kinds of drishti-chart. Each is glue: it maps the module's answers
@@ -93,7 +93,7 @@ in `showcase/status`, and asks nothing else.
 **How it is built.** `mvn verify` compiles the code, runs its tests, packs `target/dmod/genomics-0.1.0.dmod` and runs the conformance
 checks C1 to C14. See the [tutorial](#genomics-the-tutorial).
 
-**The showcase: two packs of invented data.** Besides the VCF reader the module carries two packs, `genomics-showcase` and
+**The showcase: two packs of invented data.** Besides the genomics pack the module carries two more packs, `genomics-showcase` and
 `protein-engineering`, that show Drishti outside finance: a cohort of 1,500 patients read against one invented gene (`HLXK7`), and the
 eight-round design campaign of the gene's enzyme (Helixase-7, 312 amino acids). 200,000 rows in 14 kinds, every one seeded and
 invented (no real gene, patient, organism or structure), written by `python3 tools/packgen/genomics_showcase/make.py`: the same seed
@@ -287,8 +287,8 @@ No real patient, organism, sequence or structure is used anywhere. Section 12 (Q
 3. **Open a variant.** Click a variant id in the grid (or type `VARIANT HX-A001`): where it is, its consequence and impact, and the
    samples that carry it.
 4. **Open a cohort.** Type `COHORT COH-A`: the variants its twelve samples carry.
-5. **Add your own VCF file.** Copy a VCF 4.x file into `<data folder>/modules/genomics/vcf/` and restart the server (or switch the module
-   off and on in Admin → Modules): its variants and samples join the synthetic ones.
+5. **Add your own VCF file.** Drop a VCF 4.x file in the genomics loader's inbox and run `python3 tools/loaders/genomics/genomics_run.py`: the
+   loader checks it and writes it into the genomics lake, and its variants and samples join the demo ones on the next read (a minute at most).
 6. **Use it in an expression.** Anywhere Rachana runs, `genomics_af_class(AF)` gives `rare`, `low` or `common`.
 
 Read the [guide](guide.md) for what each part is.

@@ -19,7 +19,7 @@ format: 1
 id: genomics
 version: 0.1.0
 title: Genomics
-about: Variants, genes, samples and cohorts read from VCF files by the module's own reader; synthetic samples; the variant lollipop visual; the
+about: Variants, genes, samples and cohorts read from the genomics lake (the loader puts your VCF files and tables there); synthetic samples; the variant lollipop visual; the
   showcase's two packs, genomics-showcase and protein-engineering (a seeded, invented cohort and protein campaign of 200,000 rows)
 domain: genomics
 publisher: {name: Helix Lab (a sample publisher), id: org.helixlab}
@@ -37,7 +37,7 @@ provides:
     genomics: [variant, sample, gene, cohort]
     genomics-showcase: [study-gene, study-sample, study-variant, variant-call, association, cnv-segment, pathway-gene]
     protein-engineering: [protein, residue, residue-contact, dms-score, design, design-mutation, design-round]
-packs: {folder: packs, list: [genomics-showcase, protein-engineering]}
+packs: {folder: packs, list: [genomics, genomics-showcase, protein-engineering]}
 api: {prefix: genomics}
 java: {jars: [genomics.jar], lib: [], entry: org.helixlab.genomics.GenomicsModule, spring: [org.helixlab.genomics.ModuleConfig]}
 console: {plugin: console/plugin.yaml, menus: [genomics]}

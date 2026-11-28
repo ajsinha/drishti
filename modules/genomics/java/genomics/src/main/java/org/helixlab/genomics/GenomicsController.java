@@ -17,7 +17,6 @@ package org.helixlab.genomics;
 
 import com.ash.drishti.kernel.api.module.ModuleApi;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,22 +45,22 @@ public class GenomicsController {
         List<String> members = cohort == null ? null : members(cohort);
         List<Map<String, Object>> rows = new ArrayList<>();
         data.now().variants().values().stream()
-                .filter(v -> gene == null || gene.equalsIgnoreCase(v.info().getOrDefault("GENE", "")))
-                .filter(v -> members == null || v.carriers().stream().anyMatch(members::contains))
-                .sorted(Comparator.comparing(Vcf.Variant::chrom).thenComparingLong(Vcf.Variant::pos))
+                .filter(v -> gene == null || gene.equalsIgnoreCase(GenomicsData.text(v, "GENE")))
+                .filter(v -> members == null || GenomicsData.carriers(v).stream().anyMatch(members::contains))
+                .sorted(GenomicsData.byPosition())
                 .forEach(v -> rows.add(GenomicsData.variantRow(v)));
         return Map.of("rows", rows, "count", rows.size());
     }
 
     @GetMapping("/variants/{id}")
     public ResponseEntity<Map<String, Object>> variant(@PathVariable("id") String id) {
-        Vcf.Variant v = data.now().variants().get(id);
+        Map<String, Object> v = data.now().variants().get(id);
         return v == null ? missing("variant", id) : ResponseEntity.ok(GenomicsData.variantRow(v));
     }
 
     @GetMapping("/genes")
     public Map<String, Object> genes() {
-        List<Map<String, Object>> rows = data.now().genes().keySet().stream().sorted().map(data::geneRow).toList();
+        List<Map<String, Object>> rows = data.now().genes().keySet().stream().map(data::geneRow).toList();
         return Map.of("rows", rows, "count", rows.size());
     }
 

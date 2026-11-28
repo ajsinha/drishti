@@ -16,7 +16,7 @@
 contract-format: 1
 kind: variant
 version: "1.0"
-binding-hint: served by the module's own VCF reader (genomics-vcf) from VCF 4.x files; one row per position and alternate allele
+binding-hint: read from the genomics lake (genomics.variant); one row per position and alternate allele, loaded from VCF 4.x files by the genomics loader (tools/loaders/genomics)
 fields:
   - {name: VARIANT_ID, type: string, key: true, means: "the VCF ID column, else CHROM-POS-REF-ALT"}
   - {name: CHROM, type: string}

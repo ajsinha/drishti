@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.kernel.api.home.HomeData;
 import com.ash.drishti.kernel.api.home.HomeTable;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.OptionalDouble;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
 /**
  * The genomicist's Home (GenomicsHome): the figures and the five home tables over the module's own sample files, a small association table of the
@@ -44,9 +42,14 @@ class GenomicsHomeTest {
         return m;
     }
 
-    static GenomicsHome home(Path folder, boolean feeds) {
+    static GenomicsHome home(boolean feeds) {
+        return home(feeds, true);
+    }
+
+    /** The home over the demo lake's rows (data/testdata/genomics, the tables genomics.variant, .sample, .gene), or over an empty genomics lake. */
+    static GenomicsHome home(boolean feeds, boolean genomicsLoaded) {
         GenomicsData data = new GenomicsData();
-        data.load(List.of(Path.of("../../data/samples"), folder));
+        data.attach(genomicsLoaded ? GenomicsDataTest.demoLake() : (kind, sink) -> false);
         ShowcaseData showcase = new ShowcaseData();
         List<Map<String, Object>> assoc = List.of(
                 row("TRAIT", "RESPONSE", "VARIANT_ID", "HX-1", "CHROM", "7", "POS", 92_703_082L, "GENE", "HLXK7", "NEG_LOG10_P", 28.04),
@@ -75,8 +78,8 @@ class GenomicsHomeTest {
     }
 
     @Test
-    void theFiguresAreCountsOfWhatIsLoadedAndTheCohortsAreSubjects(@TempDir Path tmp) {
-        GenomicsHome h = home(tmp, true);
+    void theFiguresAreCountsOfWhatIsLoadedAndTheCohortsAreSubjects() {
+        GenomicsHome h = home(true);
         var m = h.measures();
         assertThat(m.engine()).isEqualTo("genomics");
         assertThat(m.on()).isTrue();
@@ -88,8 +91,8 @@ class GenomicsHomeTest {
     }
 
     @Test
-    void theAssociationTablesRankTheStrongestPerGeneAndDrawOnePointPerBin(@TempDir Path tmp) {
-        GenomicsHome h = home(tmp, true);
+    void theAssociationTablesRankTheStrongestPerGeneAndDrawOnePointPerBin() {
+        GenomicsHome h = home(true);
         List<Map<String, Object>> top = h.gwasTop();
         assertThat(top).extracting(r -> r.get("GENE")).containsExactly("HLXK7", "HLXAA", "TP53");
         assertThat(top.get(0)).containsEntry("TRAIT", "RESPONSE").containsEntry("NEG_LOG10_P", 28.04);
@@ -100,39 +103,33 @@ class GenomicsHomeTest {
     }
 
     @Test
-    void clinvarShowsTheFollowedGenesOnlyAndALoadsTableSaysWhatIsNotLoaded(@TempDir Path tmp) {
-        GenomicsHome h = home(tmp, true);
+    void clinvarShowsTheFollowedGenesOnlyAndALoadsTableSaysWhatIsNotLoaded() {
+        GenomicsHome h = home(true);
         assertThat(h.followed()).contains("TP53");
         assertThat(h.clinvar()).extracting(r -> r.get("VARIANT_ID")).containsExactly("CV-9");
         assertThat(h.loads()).anySatisfy(r -> assertThat(r).containsEntry("SOURCE", "ClinVar").containsEntry("DATE", "2026-11-27").containsEntry("STATE", "loaded, 2 rows"))
                 .anySatisfy(r -> assertThat(r).containsEntry("SOURCE", "Ensembl").containsEntry("STATE", "not loaded"))
-                .anySatisfy(r -> assertThat(r).containsEntry("SOURCE", "Own file").containsEntry("WHAT", "cohort-a.vcf").containsEntry("STATE", "read"));
-        GenomicsHome none = home(tmp, false);
+                .anySatisfy(r -> assertThat(r).containsEntry("SOURCE", "Own files").containsEntry("WHAT", "variant").containsEntry("STATE", "loaded, 120 rows"))
+                .anySatisfy(r -> assertThat(r).containsEntry("SOURCE", "Own files").containsEntry("WHAT", "sample").containsEntry("STATE", "loaded, 24 rows"));
+        GenomicsHome none = home(false);
         assertThat(none.clinvar()).isEmpty();
         assertThat(none.loads()).anySatisfy(r -> assertThat(r).containsEntry("SOURCE", "ClinVar").containsEntry("STATE", "not loaded"));
     }
 
     @Test
-    void aVcfThatFailsValidationIsANeedsYouRowNamingTheFile(@TempDir Path tmp) throws Exception {
-        assertThat(home(tmp, false).needs()).isEmpty();
-        Files.writeString(tmp.resolve("run7.vcf"), """
-                ##fileformat=VCFv4.3
-                ##SAMPLE=<ID=S1,Cohort=C1>
-                #CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tS1
-                17\t100\trs1\tA\tG\t50\tPASS\tGENE=TP53\tGT\t0/1
-                bad line
-                also bad
-                """);
-        GenomicsHome h = home(tmp, false);
-        assertThat(h.needs()).hasSize(1);
-        assertThat(h.needs().get(0).get("WHAT")).isEqualTo("VCF failed validation: run7.vcf");
-        assertThat((String) h.needs().get(0).get("DETAIL")).startsWith("run7.vcf:").contains("and 1 more");
-        assertThat(h.loads()).anySatisfy(r -> assertThat(r).containsEntry("WHAT", "run7.vcf").containsEntry("STATE", "failed validation"));
+    void anEmptyGenomicsLakeIsANeedsYouRowPerTableAndALoadsRowThatSaysNotLoaded() {
+        assertThat(home(false).needs()).isEmpty();
+        GenomicsHome h = home(false, false);
+        assertThat(h.needs()).extracting(r -> r.get("WHAT")).containsExactly("No variant rows in the genomics lake", "No sample rows in the genomics lake",
+                "No gene rows in the genomics lake");
+        assertThat((String) h.needs().get(0).get("DETAIL")).contains("genomics_run.py");
+        assertThat(h.loads()).anySatisfy(r -> assertThat(r).containsEntry("WHAT", "variant").containsEntry("STATE", "not loaded"));
+        assertThat(h.measures().on()).isFalse();
     }
 
     @Test
-    void theTablesAreServedToTheGenomicistsHomeOnly(@TempDir Path tmp) {
-        List<GenomicsHome.Table> tables = home(tmp, true).tables();
+    void theTablesAreServedToTheGenomicistsHomeOnly() {
+        List<GenomicsHome.Table> tables = home(true).tables();
         assertThat(tables).extracting(HomeTable::name).containsExactly("genomics_gwas_top", "genomics_manhattan", "genomics_clinvar", "genomics_loads", "genomics_needs");
         assertThat(tables).allMatch(t -> t.homes().equals(List.of("genomicist")));
     }

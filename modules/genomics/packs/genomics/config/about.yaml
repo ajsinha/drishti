@@ -1,0 +1,64 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this page: what the genomics pack's kinds and fields mean (the README, the contracts and the About card read it).
+about: 1
+vocabulary: {}
+kinds:
+  variant:
+    title: Variant
+    about: '${$.VARIANT_ID} at ${$.CHROM}:${$.POS} in ${$.GENE}: ${$.CONSEQUENCE} (${$.IMPACT}).'
+    glossary:
+      VARIANT_ID:
+        term: Variant id
+        means: The VCF ID column, else CHROM-POS-REF-ALT; one row per position and alternate allele.
+      AF:
+        term: Allele frequency
+        means: The samples that carry it over the samples genotyped.
+  sample:
+    title: Sample
+    about: '${$.SAMPLE_ID} of cohort ${$.COHORT}, carrying ${$.VARIANTS} variants.'
+    glossary:
+      SAMPLE_ID:
+        term: Sample id
+        means: A sample column of a VCF file, or the key of a sample table row.
+  gene:
+    title: Gene
+    about: '${$.GENE} on chromosome ${$.CHROM}, a protein of ${$.PROTEIN_LENGTH} amino acids.'
+    glossary:
+      GENE:
+        term: Gene
+        means: The gene symbol.
+  cohort:
+    title: Cohort
+    about: '${$.COHORT_ID}: ${$.SAMPLES} samples carrying ${$.VARIANTS} variants.'
+    glossary:
+      COHORT_ID:
+        term: Cohort id
+        means: The cohort the samples name (##SAMPLE Cohort, or the sample table's COHORT).
+intro:
+  generator: tools/packgen/genomics_module/make.py
+  refresh: python3 tools/loaders/genomics/genomics_run.py
+  sources:
+  - name: Your own VCF files and gene, sample and cohort tables (the demo data is the module's synthetic samples)
+    licence: Yours (the demo data is proprietary and part of Drishti)
+    internal-only: false
+    used-for: variant, sample, gene, cohort
+  sections:
+    What it is: |-
+      The four kinds the genomics module's screens read: `variant`, `sample`, `gene` and `cohort`. They are the tables `genomics.variant`, `genomics.sample`, `genomics.gene` and `genomics.cohort` of the lake `genomicslake` (`config/lakes/genomicslake.yaml`), served by the Delta connector `genomics-store`. The module opens no VCF file: your files go through the genomics loader (`tools/loaders/genomics`) into the lake, and the module reads the lake.
+
+      The demo data is `data/testdata/genomics/<kind>/` (the module's synthetic samples: 120 variants, 24 samples in two cohorts, eight genes), written by `python3 tools/packgen/genomics_module/make.py` and built into `genomicslake` by `drishti.py lake demo`.
+    Refreshing the data: |-
+      Your own data: drop your VCF files and gene, sample or cohort tables in the loader's inbox and run `python3 tools/loaders/genomics/genomics_run.py` (the guide *Load your own genomics files*); the module reads the new rows at most a minute later. The demo data: `python3 tools/packgen/genomics_module/make.py` writes `data/testdata/genomics`, and `python3 tools/drishti.py lake demo` builds it into the lake.

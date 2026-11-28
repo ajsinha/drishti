@@ -27,18 +27,6 @@ public class ModuleConfig {
         return new GenomicsData();
     }
 
-    /** The VCF reader, a connector extension: the kinds variant and sample. */
-    @Bean
-    public VcfConnector vcfConnector(GenomicsData data) {
-        return new VcfConnector(data);
-    }
-
-    /** The kinds computed from them: gene and cohort. */
-    @Bean
-    public GenomicsKinds genomicsKinds(GenomicsData data) {
-        return new GenomicsKinds(data);
-    }
-
     /** The Rachana function genomics_af_class(af). */
     @Bean
     public GenomicsFunctions genomicsFunctions() {

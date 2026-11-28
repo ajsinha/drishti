@@ -39,7 +39,7 @@
 {{ elements.header("Cohorts", "Each cohort with its samples and the variants they carry") }}
 {{ elements.grid("cohorts", "Cohorts") }}
 {% else %}
-{{ elements.header("Variants", "Every variant read from the VCF files, by position") }}
+{{ elements.header("Variants", "Every variant in the genomics lake, by position") }}
 {{ elements.grid("variants", "Variants") }}
 {% endif %}
 {{ elements.notice("Synthetic data: every sample and variant here is made up.", tone="info") }}

@@ -151,7 +151,7 @@ class TestData(unittest.TestCase):
             self.assertTrue(days.get(self.dates[0]), ds["folder"])
         self.assertEqual({ds["pack"] for ds in self.m["datasets"]},
                          {"core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets",
-                          "us-equities", "gleif", "funds", "compute-demo", "genomics-showcase", "protein-engineering",
+                          "us-equities", "gleif", "funds", "compute-demo", "genomics", "genomics-showcase", "protein-engineering",
                           "central-banks", "national-statistics", "oecd", "world-development", "official-news", "gdelt-events"})
 
     def test_three_source_systems_of_5000_production_shaped_trades_amended_over_the_days(self):

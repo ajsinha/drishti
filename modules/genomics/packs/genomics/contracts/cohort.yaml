@@ -16,7 +16,7 @@
 contract-format: 1
 kind: cohort
 version: "1.0"
-binding-hint: computed by the module from the samples' cohorts (##SAMPLE Cohort) and the variants they carry
+binding-hint: read from the genomics lake (genomics.cohort) when someone loaded a cohort table; otherwise computed by the module from the samples' cohorts and the variants they carry
 fields:
   - {name: COHORT_ID, type: string, key: true}
   - {name: SAMPLES, type: integer}

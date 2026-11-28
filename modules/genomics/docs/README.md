@@ -6,7 +6,7 @@ module: genomics
 title: Genomics
 domain: genomics
 distributions: [drishti.genomics, drishti.all]
-summary: The genomics sample module, built from the Module SDK alone; a VCF reader, the kinds variant, sample, gene and cohort, the functions VARIANT, GENE and COHORT, and the variant lollipop visual.
+summary: The genomics sample module, built from the Module SDK alone; the kinds variant, sample, gene and cohort, the functions VARIANT, GENE and COHORT, and the variant lollipop visual.
 ---
 # Genomics
 
@@ -15,8 +15,8 @@ and the plugin API only, and it carries no finance: Drishti Genomics boots the k
 
 | Part | What |
 |---|---|
-| The VCF reader | `genomics-vcf`, a connector extension inside the module: reads VCF 4.x files (plain or gzipped) |
-| Kinds | `variant` and `sample` (from the VCF files), `gene` and `cohort` (computed) |
+| The data | the genomics lake's tables `genomics.variant`, `.sample`, `.gene`, `.cohort`, read through the genomics pack's connector; your VCF files and tables reach it through the genomics loader |
+| Kinds | `variant`, `sample`, `gene` and `cohort` (the cohorts computed from the samples unless loaded) |
 | Functions | `VARIANT <id>`, `GENE <symbol>`, `COHORT <id>`, `GWAS <trait>`, `PROTEIN <gene>`, `DESIGNS <gene>`; the Rachana function `genomics_af_class(af)` |
 | Pages | under `/m/genomics/`: variants, genes (with the lollipop), cohorts; the showcase: the linked board, its guided mode, the protein workbench |
 | Visuals | `genomics.lollipop`, `genomics.manhattan`, `genomics.oncoprint`, `protein.dms`, `protein.backbone`, `protein.landscape`: glue in the module's library `drishti-genomics` over drishti-chart's generic kinds |

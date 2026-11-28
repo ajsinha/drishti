@@ -15,7 +15,7 @@
 
 """The genomics loader (tools/loaders/genomics/): the clinvar and ensembl feeds against recorded responses (never the network), the readers
 of VCF and gene and sample tables, the row checks against the contracts, and your own files through genomics_run.py (an inbox of a tiny
-VCF, a gene CSV and a sample JSONL), loaded by the inbox route and written for the module's screens."""
+VCF, a gene CSV and a sample JSONL), loaded by the inbox route into the lake the module's screens read."""
 from __future__ import annotations
 
 import gzip
@@ -221,10 +221,10 @@ def test_a_name_decides_the_kind_and_the_date():
             GR.split_name(Path(bad))
 
 
-def test_the_inbox_run_loads_by_the_inbox_route_and_serves_the_module(tmp_path, data):
+def test_the_inbox_run_loads_by_the_inbox_route_into_the_lake(tmp_path, data):
     box = inbox_with(tmp_path, "trio_2026-11-26.vcf", "genes_2026-11-26.csv", "samples_2026-11-26.jsonl")
-    inbox, module = tmp_path / "dataload", tmp_path / "module"
-    code, logs = run_own("--from-dir", str(box), "--load", "inbox", "--inbox", str(inbox), "--module-folder", str(module))
+    inbox = tmp_path / "dataload"
+    code, logs = run_own("--from-dir", str(box), "--load", "inbox", "--inbox", str(inbox))
     assert code == GR.REJECTS, logs                       # the bad gene row and the sample row without an id are refused, the rest loaded
     out = data / "genomics" / "loads" / "2026-11-26"
     man = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
@@ -235,7 +235,7 @@ def test_the_inbox_run_loads_by_the_inbox_route_and_serves_the_module(tmp_path, 
     import yaml
     ready = yaml.safe_load(next(inbox.glob("*.ready")).read_text(encoding="utf-8"))
     assert ready["lake"] == "genomicslake" and ready["folders"] == {"variant": "genomics", "sample": "genomics", "gene": "genomics"}
-    assert (module / "trio_2026-11-26.vcf").is_file() and {json.loads(x)["GENE"] for x in (module / "gene.jsonl").read_text().splitlines()} == {"MLH1", "APC"}
+    assert not (data / "modules").exists()                    # nothing for the module's screens beside the lake: they read the lake tables
     assert sorted(p.name for p in (box / "done" / "2026-11-26").iterdir()) == sorted(["trio_2026-11-26.vcf", "genes_2026-11-26.csv", "samples_2026-11-26.jsonl"])
     kid = [json.loads(x) for x in gzip.open(out / "sample.2026-11-26.jsonl.gz", "rt")]
     assert next(s for s in kid if s["SAMPLE_ID"] == "KID")["VARIANTS"] == 9                    # the sample table's row replaced the VCF's
@@ -246,7 +246,7 @@ def test_a_second_run_of_the_same_date_replaces_the_date(tmp_path, data):
     box.mkdir()
     for _ in range(2):
         shutil.copyfile(FX / "trio_2026-11-26.vcf", box / "trio_2026-11-26.vcf")
-        code, logs = run_own("--from-dir", str(box), "--load", "none", "--no-module")
+        code, logs = run_own("--from-dir", str(box), "--load", "none")
         assert code == 0, logs
     rows_ = [json.loads(x) for x in gzip.open(data / "genomics" / "loads" / "2026-11-26" / "variant.2026-11-26.jsonl.gz", "rt")]
     assert len(rows_) == 4
@@ -257,7 +257,7 @@ def test_a_dry_run_changes_nothing_and_an_unreadable_file_goes_to_rejected(tmp_p
     (box / "junk.csv").write_text("a,b\n", encoding="utf-8")
     code, logs = run_own("--from-dir", str(box), "--dry-run")
     assert code == GR.REJECTS and (box / "trio_2026-11-26.vcf").is_file() and not (data / "genomics").exists()
-    code, logs = run_own("--from-dir", str(box), "--load", "none", "--no-module")
+    code, logs = run_own("--from-dir", str(box), "--load", "none")
     assert code == GR.REJECTS and "starts with gene, sample or cohort" in (box / "rejected" / "junk.csv.why.txt").read_text()
 
 
@@ -270,3 +270,24 @@ def test_an_empty_drop_folder_is_nothing_to_do(tmp_path):
 def test_a_lake_name_is_known_and_the_loader_names_no_path(tmp_path):
     text = (GEN / "genomics_run.py").read_text(encoding="utf-8")
     assert "/home/" not in text and "C:\\" not in text
+
+
+def test_the_screens_read_the_lake_through_the_packs_connector_and_no_module_folder():
+    """The module's screens answer from genomicslake: the pack's connector reads the four tables, the demo data is built into them, and nothing
+    of the module or the loader names the old <data>/modules/genomics/vcf folder."""
+    import yaml
+    root = G.ROOT
+    pack = yaml.safe_load((root / "modules" / "genomics" / "packs" / "genomics" / "pack.yaml").read_text(encoding="utf-8"))
+    lake = yaml.safe_load((root / "config" / "lakes" / "genomicslake.yaml").read_text(encoding="utf-8"))
+    conn = pack["connectors"]["genomics-store"]
+    assert conn["plugin"] == "delta" and conn["settings"]["lake"] == "genomicslake"
+    assert conn["settings"]["lake-tables"].split(",") == ["genomics." + k for k in G.KINDS] and set(conn["settings"]["lake-tables"].split(",")) <= set(lake["tables"])
+    assert pack["routes"] == {k: "genomics-store" for k in G.KINDS} and pack["kinds"] == list(G.KINDS)
+    assert "genomics" in yaml.safe_load((root / "modules" / "genomics" / "module.yaml").read_text(encoding="utf-8"))["packs"]["list"]
+    manifest = yaml.safe_load((root / "data" / "testdata" / "testdata.yaml").read_text(encoding="utf-8"))
+    mine = {d["kind"]: d for d in manifest["datasets"] if d["pack"] == "genomics"}
+    assert set(mine) == {"variant", "sample", "gene"} and all(d["lake"] == "genomicslake" and d["connector"] == "genomics-store" for d in mine.values())
+    assert {k: d["documents"] for k, d in mine.items()} == {"variant": 120, "sample": 24, "gene": 8}
+    for f in list((root / "modules" / "genomics" / "java").rglob("main/**/*.java")) + [p for p in (root / "tools" / "loaders" / "genomics").glob("*.py") if p.name == "genomics_run.py"]:
+        text = f.read_text(encoding="utf-8")
+        assert "modules/genomics/vcf" not in text and '"vcf"' not in text, f

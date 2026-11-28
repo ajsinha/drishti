@@ -16,7 +16,7 @@
 contract-format: 1
 kind: sample
 version: "1.0"
-binding-hint: served by the module's own VCF reader from each file's sample columns and their ##SAMPLE lines
+binding-hint: read from the genomics lake (genomics.sample); one row per sample column of a loaded VCF file or row of a sample table, by the genomics loader
 fields:
   - {name: SAMPLE_ID, type: string, key: true}
   - {name: COHORT, type: string, means: "##SAMPLE Cohort"}

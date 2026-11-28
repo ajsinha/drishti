@@ -710,7 +710,7 @@ line per table as it is written, then:
   lake writer: java (asked for); 4 datasets at a time
   reference/legal-entity: 240 rows over 60 days
   …
-Demo lake ready: /home/you/IdeaProjects/drishti-platform/drishti/data/delta/demo: 113 tables, 60 business days 2026-08-19 to 2026-11-13 (the test data's 2026-07-08 to 2026-09-30, moved to end on 2026-11-13), built in <s> s
+Demo lake ready: /home/you/IdeaProjects/drishti-platform/drishti/data/delta/demo: 116 tables, 60 business days 2026-08-19 to 2026-11-13 (the test data's 2026-07-08 to 2026-09-30, moved to end on 2026-11-13), built in <s> s
 Feeds: /home/you/IdeaProjects/drishti-platform/drishti/data/feeds/fixing.jsonl (the file connector's sample feed)
 Connector files:
   reference-store: already reads /home/you/IdeaProjects/drishti-platform/drishti/data/delta/demo (its template)

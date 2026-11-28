@@ -64,6 +64,10 @@ PACKS: dict[str, dict] = {
                           "keys": {"study-gene": "GENE", "study-sample": "SAMPLE_ID", "study-variant": "VARIANT_ID",
                                    "variant-call": "CALL_ID", "association": "ASSOC_ID", "cnv-segment": "SEGMENT_ID",
                                    "pathway-gene": "PATHWAY_GENE_ID"}},
+    # the genomics module's own tables (variant, sample, gene) from its synthetic sample files, in the genomics lake the genomics loader fills
+    "genomics": {"connector": "genomics-store", "lake": "genomicslake", "dates": "last", "captured": "2026-11-16",
+                 "source": "the module's synthetic samples read by the genomics loader's readers (python3 tools/packgen/genomics_module/make.py)",
+                 "keys": {"variant": "VARIANT_ID", "sample": "SAMPLE_ID", "gene": "GENE"}},
     "protein-engineering": {"connector": "protein-engineering-store", "captured": "2026-11-16",
                             "source": "the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py)",
                             "keys": {"protein": "PROTEIN", "residue": "RESIDUE_ID", "residue-contact": "CONTACT_ID",
@@ -306,7 +310,7 @@ def update_manifest(testdata: Path) -> None:
 #: how each snapshot is refreshed (the last column of data/testdata/README.md's table), for the packs that no feed names in PACKS
 REFRESH = {"us-equities": "python3 tools/drishti.py feed run us-equities --snapshot", "gleif": "python3 tools/drishti.py feed run gleif --snapshot",
            "funds": "python3 tools/drishti.py feed run funds --snapshot",
-           "genomics-showcase": "python3 tools/packgen/genomics_showcase/make.py", "protein-engineering": "python3 tools/packgen/genomics_showcase/make.py",
+           "genomics-showcase": "python3 tools/packgen/genomics_showcase/make.py", "genomics": "python3 tools/packgen/genomics_module/make.py", "protein-engineering": "python3 tools/packgen/genomics_showcase/make.py",
            "news-and-markets": "python3 tools/drishti.py testdata capture-market (quote, news); python3 modules/economy/packs/news-and-markets/tools/make_samples.py (lists)"}
 TABLE_BEGIN, TABLE_END = "<!-- BEGIN public-data table (tools/testdata/publicsnap.py) -->", "<!-- END public-data table -->"
 

@@ -1,0 +1,61 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Genomics · the genomics module's own pack: variants, samples, genes and cohorts. The module's screens (variants, genes with the lollipop, cohorts, the
+# Home's cards) read these four kinds through the connector below, from the genomics lake; the files a person has (VCF, gene, sample and cohort
+# tables) and the public feeds reach the lake through the genomics loader (tools/loaders/genomics), never through the module.
+pack: genomics
+domain: genomics
+version: 1.0.0
+code: GENOMICS
+title: Genomics
+description: >-
+  Variants (one row per position and alternate allele), the samples that carry them, the genes they fall in and the cohorts the samples belong
+  to. The rows come from the genomics lake (genomicslake): the loader reads your VCF files and gene, sample and cohort tables into it, and its
+  synthetic demo data (data/testdata/genomics) is built into it by lake demo.
+kinds: [variant, sample, gene, cohort]
+connectors:
+  genomics-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [variant, sample, gene, cohort]
+    settings:
+      lake: genomicslake
+      lake-tables: genomics.variant,genomics.sample,genomics.gene,genomics.cohort
+      mode.variant: effective
+      mode.sample: effective
+      mode.gene: effective
+      mode.cohort: effective
+lake:                  # the recommended entries of its lake tables (the shipped lake file holds the same)
+  tables:
+    genomics.variant:
+      id: VARIANT_ID
+      promote: [CHROM, POS, REF, ALT, GENE, IMPACT, CONSEQUENCE]
+      retention: 260
+    genomics.sample:
+      id: SAMPLE_ID
+      promote: [COHORT, SEX, POPULATION]
+      retention: 260
+    genomics.gene:
+      id: GENE
+      promote: [CHROM, START]
+      retention: 260
+    genomics.cohort:
+      id: COHORT_ID
+      retention: 260
+routes:                # the connector that answers each kind
+  variant: genomics-store
+  sample: genomics-store
+  gene: genomics-store
+  cohort: genomics-store

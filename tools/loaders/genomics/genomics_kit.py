@@ -19,10 +19,10 @@ clinvar.py and ensembl.py, and genomics_run.py for your own files, use it).
 
     contract(kind)                the kind's contract (modules/genomics/packs/genomics/contracts/<kind>.yaml): fields, types, key
     check_row(kind, row)          (the row with its values in the contract's types, None) or (None, the reason it is refused)
-    read_vcf(path)                (variant rows, sample rows) of a VCF 4.x file, plain or .gz, as the module's own reader reads it
+    read_vcf(path)                (variant rows, sample rows) of a VCF 4.x file, plain or .gz, the one VCF reader of the product
     read_table(path, kind)        the rows of a CSV or JSON Lines file (plain or .gz), cells turned into the contract's types
 
-The VCF rules are the module's (modules/genomics/java/.../Vcf.java, GenomicsData.java): one row per position and alternate allele; the id
+The VCF rules (the loader is the one VCF reader): one row per position and alternate allele; the id
 is the ID column, else CHROM-POS-REF-ALT (with several alternate alleles and an ID, ID-ALT); INFO GENE, CSQ, IMPACT and AAPOS fill GENE,
 CONSEQUENCE, IMPACT and PROTEIN_POS; a sample CARRIES the allele when its genotype calls it (0/1, 1|1, 1/2 for allele 2 ...); AF is the carriers
 over every sample column; the ##SAMPLE=<ID=..,Cohort=..,Sex=..,Population=..> lines describe the samples.
@@ -107,7 +107,7 @@ def check_row(kind: str, row: dict) -> tuple[dict | None, str | None]:
 
 
 def opener(path: Path):
-    """The file as text, gzip or plain (the name decides, as the module does)."""
+    """The file as text, gzip or plain (the name decides)."""
     p = Path(path)
     return io.TextIOWrapper(gzip.open(p, "rb"), encoding="utf-8", newline="") if p.name.lower().endswith(".gz") else open(p, encoding="utf-8", newline="")
 

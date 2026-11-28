@@ -16,7 +16,7 @@
 # Load your own genomics files every day
 
 Your VCF files (plain or gzipped) and gene, sample or cohort tables (CSV, TSV or JSON Lines), dropped in one folder and loaded by one command: it checks every row against the genomics contracts, loads `genomics/variant`, `genomics/sample`, `genomics/gene` and `genomics/cohort`
-into the lake **`genomicslake`** and fills the folder the module's screens read. The public sources (ClinVar, Ensembl) are separate: [ClinVar](load-clinvar.md) and [Ensembl](load-ensembl-genes.md).
+into the lake **`genomicslake`**, the tables the genomics module's screens read (the module opens no VCF file itself: the files go through the loader into the lake). The public sources (ClinVar, Ensembl) are separate: [ClinVar](load-clinvar.md) and [Ensembl](load-ensembl-genes.md).
 
 Run every command from the Drishti folder (the one that holds `tools`): `/opt/drishti` on Linux and `C:\drishti` on Windows in the examples. Nothing is installed for you and there is no virtual environment: use the Python you run Drishti with. Loading needs Java 21 and the server jar in `lib` (`drishti.py build jar`); converting needs neither. A date in an example is an example: use the business date of your file.
 
@@ -64,12 +64,10 @@ and the load:
   loaded gene 2026-11-26: 2 rows into lake genomicslake (java)
   loaded sample 2026-11-26: 3 rows into lake genomicslake (java)
   loaded variant 2026-11-26: 4 rows into lake genomicslake (java)
-  module: trio_2026-11-26.vcf -> <scratch>/data/modules/genomics/vcf
-  module: gene.jsonl -> <scratch>/data/modules/genomics/vcf
 2026-11-27T19:43:59-05:00 genomics rejects exit=2 files=6 variants=4 samples=3 genes=2 cohorts=0 rejected=2 refused=3 load=java loaded=9 seconds=11.7
 ```
 
-On a clean day the closing line reads `genomics ok exit=0 files=2 variants=60 samples=12 genes=8 cohorts=0 rejected=0 refused=0 load=java loaded=80 ...` (the shape from the loader README). The run reads every file, checks every row (a failing row is **rejected with its reason**, the rest go on), writes the day's files under `<data>/genomics/loads/<date>/` (`<kind>.<date>.jsonl.gz`, `<kind>.<date>.rejects.jsonl`, `manifest.json`), loads them, copies the VCFs and merges the genes into `<data>/modules/genomics/vcf/` (`--no-module` leaves that alone) and moves each file to `done/<date>/` in the drop folder, or to `rejected/` with a `<name>.why.txt` when it could not be read at all.
+On a clean day the closing line reads `genomics ok exit=0 files=2 variants=60 samples=12 genes=8 cohorts=0 rejected=0 refused=0 load=java loaded=80 ...` (the shape from the loader README). The run reads every file, checks every row (a failing row is **rejected with its reason**, the rest go on), writes the day's files under `<data>/genomics/loads/<date>/` (`<kind>.<date>.jsonl.gz`, `<kind>.<date>.rejects.jsonl`, `manifest.json`), loads them into the lake (the tables the module's screens read: they open no VCF file) and moves each file to `done/<date>/` in the drop folder, or to `rejected/` with a `<name>.why.txt` when it could not be read at all.
 
 ## Schedule it
 
@@ -109,7 +107,7 @@ The task's *Last Run Result* is the script's exit code. By hand: Task Scheduler 
 - **Several files of one date** load together: two VCFs of a date are two sets of variants in one table; an id in both keeps the later file's row (the run says so); a sample table row replaces the VCF's row of the same sample.
 - **Rejected rows** (exit 2): read `<data>/genomics/loads/<date>/<kind>.<date>.rejects.jsonl` (the file, the row number, the reason, the row), fix the source rows, drop the file again.
 - **Take a date out:** `python3.13 tools/drishti.py lake delete --lake genomicslake --table genomics/variant --date 2026-11-24 --dry-run`, then without `--dry-run`.
-- **The server loads, not you:** `--load inbox` drops one tar and its `.ready` in `<data>/dataload/inbox`. **A scratch copy:** `--lake-root DIR --out DIR --no-module`: nothing real is touched.
+- **The server loads, not you:** `--load inbox` drops one tar and its `.ready` in `<data>/dataload/inbox`. **A scratch copy:** `--lake-root DIR --out DIR`: nothing real is touched.
 - Exit codes: **0** ok, **1** failed, **2** rows rejected, **3** nothing was dropped.
 
 ## Check it loaded

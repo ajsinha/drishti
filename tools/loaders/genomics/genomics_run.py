@@ -20,7 +20,7 @@ loaded into the genomics lake by the kinds' names (variant, sample, gene, cohort
     python3 tools/loaders/genomics/genomics_run.py                           check, write the dated files, load into genomicslake (java)
     python3 tools/loaders/genomics/genomics_run.py trio.vcf.gz genes.csv --date 2026-11-26      named files instead of the drop folder
     python3 tools/loaders/genomics/genomics_run.py --load inbox              hand the day to the data inbox (the server loads it)
-    python3 tools/loaders/genomics/genomics_run.py --load none --no-module   write and check the files only
+    python3 tools/loaders/genomics/genomics_run.py --load none               write and check the files only
 
 Windows: py -3.13 tools\\loaders\\genomics\\genomics_run.py ... (the same arguments).
 
@@ -36,8 +36,8 @@ rejected/ with <name>.why.txt. Everything the run wrote is under <data>/genomics
 with each file's rows and SHA-256). All the files of one date load together and REPLACE that date's rows of each kind: to add a file to a
 date, drop all its files again. Exit: 0 ok, 1 failed, 2 written with rows rejected (the good rows loaded), 3 nothing to do.
 
-The module's screens read <data>/modules/genomics/vcf/ (docs/guide of the module): the run copies the VCFs there and merges the genes
-into its gene.jsonl; --no-module leaves that folder alone, --module-folder DIR names another.
+The module's screens read the lake tables this run writes (genomics.variant, .sample, .gene, .cohort) through the genomics pack's connector:
+there is no second folder for them.
 """
 from __future__ import annotations
 
@@ -157,36 +157,6 @@ def write_day(day: Day, out: Path) -> list[dict]:
     return files
 
 
-def to_module(day: Day, folder: Path) -> list[str]:
-    """What the module's screens read (<data>/modules/genomics/vcf/): the day's VCFs copied in, the genes merged into gene.jsonl."""
-    folder.mkdir(parents=True, exist_ok=True)
-    done = []
-    for src in day.sources:
-        if split_name(src)[0] == "vcf":
-            part = folder / (src.name + ".part")
-            shutil.copyfile(src, part)
-            part.replace(folder / src.name)
-            done.append(src.name)
-    if day.rows["gene"]:
-        target = folder / "gene.jsonl"
-        have = {}
-        if target.is_file():
-            for line in target.read_text(encoding="utf-8").splitlines():
-                if line.strip():
-                    try:
-                        g = json.loads(line)
-                        have[g.get("GENE")] = g
-                    except ValueError:
-                        pass
-        for name, row in day.rows["gene"].items():
-            have[name] = {k: v for k, v in row.items() if v is not None}
-        part = target.with_name("gene.jsonl.part")
-        part.write_text("".join(json.dumps(g, ensure_ascii=False) + "\n" for g in have.values()), encoding="utf-8")
-        part.replace(target)
-        done.append("gene.jsonl")
-    return done
-
-
 def collect(args) -> tuple[list[Path], Path | None]:
     if args.files:
         return [Path(f) for f in args.files], None
@@ -249,10 +219,6 @@ def run(args, log=print) -> int:
                 return FAILED
             if res["status"] == "rejects":
                 code = REJECTS
-        if not args.no_module:
-            folder_m = Path(args.module_folder) if args.module_folder else data_dir() / "modules" / "genomics" / "vcf"
-            for name in to_module(day, folder_m):
-                log(f"  module: {name} -> {folder_m}")
     if not args.dry_run:
         for f, why in bad:
             if folder is not None:
@@ -300,8 +266,6 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--server", help="tell this server the data landed (no server is told unless you name one)")
     p.add_argument("--token-file", help="the API token file for --server (never printed)")
     p.add_argument("--out", help="where the dated files are written (default <data>/genomics/loads)")
-    p.add_argument("--module-folder", help="the module's VCF folder (default <data>/modules/genomics/vcf)")
-    p.add_argument("--no-module", action="store_true", help="do not copy VCFs and genes to the module's folder")
     return p
 
 

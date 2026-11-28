@@ -37,6 +37,7 @@ data/testdata/
   official-news, gdelt-events/<kind>/                                   REAL public data, live-run snapshots, loaded into newslake
   us-equities/<kind>/           REAL public data: the index companies, their filings and financial facts (SEC EDGAR, Wikidata, GLEIF)
   gleif/<kind>/                 REAL public data: LEI records, ownership groups, relationships, countries, identifiers (GLEIF, CC0)
+  genomics/<kind>/              SYNTHETIC: the genomics module's own variants, samples and genes (its sample files as the genomics loader reads them), loaded into genomicslake
   genomics-showcase/<kind>/     SYNTHETIC: the genomics module's showcase, a cohort of 1,500 invented patients (100,000 rows, seeded)
   protein-engineering/<kind>/   SYNTHETIC: an invented protein, its scan and a design campaign (100,000 rows, seeded)
 ```
@@ -82,7 +83,7 @@ On Windows, offline, with your own ENDUR files: [How to QA in Windows Environmen
    `FIXINGS`, `PNL_SERIES`: its `DATE`, by the same number of business days), and so do the dates a market document holds a fixed
    number of business days from its date (an FX spot's value date `SPOT_DATE`, T+2; an IR curve's pillar `POINTS[].MATURITY`), so a price history has no missing days between the series
    and the stored days. A market document's `CHANGE_1D` is the day's move of its own price (`PRICE`, `LEVEL`, `MID`), and the fields quoted next to the price move with it ([below](#the-datasets)). Measured for sixty days on a fast machine: **943 s (about 15 minutes; up to half an hour on a laptop)**,
-   113 tables, about 3.4 GB on disk (the public packs' tables are built from their committed snapshots: [below](#public-data-every-public-packs-snapshot-one-table); since 2.9.2 the
+   116 tables, about 3.4 GB on disk (the public packs' tables are built from their committed snapshots: [below](#public-data-every-public-packs-snapshot-one-table); since 2.9.2 the
    country groups, SIC sectors, ownership groups and LEI countries are computed from them, not stored).
 4. **Start** the server and the console: the run configurations **Drishti: run server (demo)** (the samples off,
    `DRISHTI_DEMO_ENABLED=false`, so every page reads the lakes; with the samples on, a sample answers before the lake for an id both
@@ -378,6 +379,9 @@ and the docs (`tools/testdata/test_public_data_pattern.py` guards that nothing i
 | `genomics-showcase` | `association` | `genomics-showcase/association/association.2026-11-16.jsonl.gz` | 36,000 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
 | `genomics-showcase` | `cnv-segment` | `genomics-showcase/cnv-segment/cnv-segment.2026-11-16.jsonl.gz` | 3,000 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
 | `genomics-showcase` | `pathway-gene` | `genomics-showcase/pathway-gene/pathway-gene.2026-11-16.jsonl.gz` | 500 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
+| `genomics` | `variant` | `genomics/variant/variant.2026-11-16.jsonl.gz` | 120 | the module's synthetic samples read by the genomics loader's readers (python3 tools/packgen/genomics_module/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_module/make.py` |
+| `genomics` | `sample` | `genomics/sample/sample.2026-11-16.jsonl.gz` | 24 | the module's synthetic samples read by the genomics loader's readers (python3 tools/packgen/genomics_module/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_module/make.py` |
+| `genomics` | `gene` | `genomics/gene/gene.2026-11-16.jsonl.gz` | 8 | the module's synthetic samples read by the genomics loader's readers (python3 tools/packgen/genomics_module/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_module/make.py` |
 | `protein-engineering` | `protein` | `protein-engineering/protein/protein.2026-11-16.jsonl.gz` | 4 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
 | `protein-engineering` | `residue` | `protein-engineering/residue/residue.2026-11-16.jsonl.gz` | 1,196 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |
 | `protein-engineering` | `residue-contact` | `protein-engineering/residue-contact/residue-contact.2026-11-16.jsonl.gz` | 5,952 | the seeded synthetic generator (python3 tools/packgen/genomics_showcase/make.py) | 2026-11-16 | `python3 tools/packgen/genomics_showcase/make.py` |

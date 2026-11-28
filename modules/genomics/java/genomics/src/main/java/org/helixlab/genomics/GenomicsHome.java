@@ -193,8 +193,8 @@ public final class GenomicsHome {
     Set<String> followed() {
         Set<String> out = new TreeSet<>();
         data.now().variants().values().forEach(v -> {
-            String g = v.info().get("GENE");
-            if (g != null && !g.isEmpty()) {
+            String g = GenomicsData.text(v, "GENE");
+            if (!g.isEmpty()) {
                 out.add(g);
             }
         });
@@ -234,37 +234,32 @@ public final class GenomicsHome {
                 .map(r -> row("GENE", r.get("GENE"), "VARIANT_ID", r.get("VARIANT_ID"), "SIGNIFICANCE", r.get("SIGNIFICANCE"), "UPDATED", r.get("UPDATED"))).toList();
     }
 
-    /** The module's data loads: SOURCE, WHAT, DATE, STATE for each public feed (loaded, or not loaded) and each file of the person's own that was read. */
+    /** The module's data loads: SOURCE, WHAT, DATE, STATE for each public feed and each of the module's own tables (loaded with its rows, or not loaded). */
     public List<Map<String, Object>> loads() {
         List<Map<String, Object>> out = new ArrayList<>();
         Map<String, List<Map<String, Object>>> feeds = feedRows();
         for (Map.Entry<String, String> f : new TreeMap<>(FEEDS).entrySet()) {
-            List<Map<String, Object>> rows = feeds.getOrDefault(f.getKey(), List.of());
-            String date = rows.stream().map(r -> String.valueOf(r.get("BUSINESS_DATE"))).max(String::compareTo).orElse("");
-            out.add(row("SOURCE", f.getValue(), "WHAT", f.getKey(), "DATE", date, "STATE", rows.isEmpty() ? "not loaded" : "loaded, " + rows.size() + " rows"));
+            out.add(load(f.getValue(), f.getKey(), feeds.getOrDefault(f.getKey(), List.of())));
         }
-        Set<String> failed = new TreeSet<>(problems().keySet());
-        for (String file : data.now().files()) {
-            out.add(row("SOURCE", "Own file", "WHAT", file, "DATE", "", "STATE", failed.contains(file) ? "failed validation" : "read"));
-        }
+        GenomicsData.Snapshot s = data.now();
+        out.add(load("Own files", GenomicsData.VARIANT, s.variants().values()));
+        out.add(load("Own files", GenomicsData.SAMPLE, s.samples().values()));
+        out.add(load("Own files", GenomicsData.GENE, s.genes().values()));
         return out;
     }
 
-    /** The files that failed validation, each once: the file's name and its first problem. */
-    private Map<String, List<String>> problems() {
-        Map<String, List<String>> out = new TreeMap<>();
-        for (String p : data.now().problems()) {
-            int i = p.indexOf(':');
-            out.computeIfAbsent(i > 0 ? p.substring(0, i) : p, k -> new ArrayList<>()).add(p);
-        }
-        return out;
+    private static Map<String, Object> load(String source, String what, java.util.Collection<Map<String, Object>> rows) {
+        String date = rows.stream().map(r -> String.valueOf(r.get("BUSINESS_DATE"))).filter(d -> !d.equals("null")).max(String::compareTo).orElse("");
+        return row("SOURCE", source, "WHAT", what, "DATE", date, "STATE", rows.isEmpty() ? "not loaded" : "loaded, " + rows.size() + " rows");
     }
 
-    /** What needs the genomicist: WHAT and DETAIL of each VCF that failed validation. */
+    /** What needs the genomicist: WHAT and DETAIL of each of the module's own tables with no rows (the files go through the loader into the lake). */
     public List<Map<String, Object>> needs() {
         List<Map<String, Object>> out = new ArrayList<>();
-        problems().forEach((file, list) -> out.add(row("WHAT", "VCF failed validation: " + file, "DETAIL",
-                list.get(0) + (list.size() > 1 ? " (and " + (list.size() - 1) + " more)" : ""))));
+        for (String kind : data.now().missing()) {
+            out.add(row("WHAT", "No " + kind + " rows in the genomics lake", "DETAIL",
+                    "Drop your VCF, gene and sample files in the inbox and run tools/loaders/genomics/genomics_run.py (docs: load-genomics-files)"));
+        }
         return out;
     }
 
