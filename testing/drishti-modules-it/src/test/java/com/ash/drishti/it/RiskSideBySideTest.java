@@ -1060,6 +1060,46 @@ class RiskSideBySideTest {
         assertThat(asserted(sbs.bitDifferences)).as("raw bits that differ").isEmpty();
     }
 
+    /**
+     * The contributions of every scope kind that is not a node (R2 VaR leftovers): an ad-hoc scope or a basket whose parts are positions
+     * (its positions as row sets, the host's labels, sizes and order, as a leaf node's); expressions of two or more terms (parts are terms)
+     * and a single trade or position (parts are trades) are refused in words on the engine path and counted.
+     */
+    @Test
+    void theContributionsOfEveryScopeKindAreTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        int refused = 0;
+        List<String> base = List.of("BANK - DESK:RATES", "DESK:RATES + DESK:FX", "DIV:MARKETS - BOOK:COMM-1", "LE:LDN", "LE:NY - DESK:RATES",
+                "DESK:RATES & LE:NY", "PORT:PF-USD-RATES", "PORT:PF-EUR-ALL", "PORT:PF-SHORT-RISK", "PORT:PF-GOVT-BONDS", "PORT:PF-LISTED",
+                "PORT:PF-OPTIONS", "PORT:PF-FX-CROSSES", "PORT:PF-LARGE-LONGS", "PORT:PF-ASHA-UNWIND", "PORT:PF-NETTED-FLOW", "PORT:PF-HEDGE-PAIRS",
+                "PORT:PF-TOP-SECURITIES", "PORT:PF-COMM-BOOK-1", "PORT:PF-EUR-ALL - DESK:FX");
+        for (String date : List.of("2026-09-28", "2026-09-29", "2026-09-30")) {
+            List<String> scopes = new ArrayList<>(base);
+            scopes.addAll(adHoc(date));
+            for (String ccy : List.of("USD", "EUR")) {
+                for (String scope : scopes) {
+                    String what = date + "/" + ccy + " " + scope;
+                    String q = "/api/v1/risk/var/scope/contributions?scope=" + URLEncoder.encode(scope, StandardCharsets.UTF_8) + "&asOf=" + date
+                            + "&ccy=" + ccy + "&parametric=false";
+                    try {
+                        server.get(q + "&path=engine");
+                    } catch (IllegalStateException e) {
+                        assertThat(e.getMessage()).as(what).contains("path=in-tree");
+                        refused++;
+                        continue;
+                    }
+                    sbs.both(server, what, q + "&exact=true", "canonical", "currency", "by", "var", "es", "sumStandalone", "sumComponent",
+                            "diversification", "truncated", "total", "shown", "rows");
+                }
+            }
+        }
+        System.out.println("side by side, contributions of scope kinds (tier " + System.getProperty("sbs.tier", "mapped") + "): " + sbs.compared
+                + " answers on both paths, " + refused + " refused on the engine path (terms, trades); differences " + sbs.differences.size()
+                + "; first: " + sbs.differences.stream().limit(8).map(x -> x.substring(0, Math.min(400, x.length()))).toList());
+        assertThat(sbs.compared).as("answers compared").isGreaterThan(60);
+        assertThat(asserted(sbs.differences)).as("answers that differ").isEmpty();
+    }
+
     /** True when the date has a stress scenario set (the in-tree stressed headline of the firm answers). */
     private static boolean stressSet(String date) {
         try {

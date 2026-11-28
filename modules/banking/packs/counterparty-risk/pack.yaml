@@ -69,6 +69,9 @@ mnemonics:
   SIMM:
     kind: simm
     label: ISDA SIMM initial margin
+  SIMMP:
+    kind: simm-parameters
+    label: ISDA SIMM parameter files
   XRUN:
     kind: simulation-run
     label: Exposure simulation run

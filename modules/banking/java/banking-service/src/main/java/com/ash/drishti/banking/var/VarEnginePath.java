@@ -628,16 +628,45 @@ public class VarEnginePath {
             comp += (Double) r.remove("_comp");
             rows.add(r);
         }
+        int total = rows.size();
+        java.util.Set<String> kept = largestPositions(p, res, date, currency, total);
+        if (kept != null) {                                             // the rows are the largest max-parts; the sums are over all (as in-tree)
+            rows.removeIf(r -> !kept.contains(String.valueOf(r.get("key"))));
+        }
         rows.sort(java.util.Comparator.comparingDouble(r -> -((Number) r.get("componentVar")).doubleValue()));
         out.put("sumStandalone", VarViews.round(standalone));
         out.put("sumComponent", VarViews.round(comp));
         out.put("diversification", VarViews.round(standalone - parts.var()));
-        out.put("truncated", false);
-        out.put("total", rows.size());
+        out.put("truncated", kept != null);
+        out.put("total", total);
         out.put("shown", rows.size());
         out.put("rows", rows);
         out.put("path", "engine");
         return out;
+    }
+
+    /**
+     * The keys of a leaf node's positions the in-tree route keeps when it holds more than {@code max-parts} (the largest by gross size:
+     * market value, else PV, else quantity; the host's data, {@code VarViews.largest} over {@code VarViews.Sizer}); null when every
+     * position is shown (not a leaf, or no more than max-parts).
+     */
+    private java.util.Set<String> largestPositions(Principal p, ScopeResolver.Resolution res, LocalDate date, String currency, int total) {
+        VarService svc = service.getIfAvailable();
+        if (svc == null || total <= svc.props().maxParts()) {
+            return null;
+        }
+        VarService.Scoped s = svc.scoped(p, partScope(res), date, currency);
+        com.ash.drishti.banking.compute.var.VarBook b = s.date().book();
+        List<int[]> runs = VarPartTotals.positionRuns(b, s.set());
+        if (runs.size() != total) {
+            return null;                                                // not a leaf's positions (child nodes): nothing cut
+        }
+        VarViews.Sizer z = new VarViews.Sizer(b);
+        java.util.Set<String> keys = new java.util.HashSet<>();
+        for (int[] r : VarViews.largest(runs, svc.props().maxParts(), x -> z.position(s.set(), x[0]))) {
+            keys.add(VarViews.position(b, s.set(), r[0], false).key());
+        }
+        return keys;
     }
 
     /** A node's name as the in-tree book names it: the reference entity's name of its value (VAR_GUIDE 15.14), else the engine's name. */
@@ -1015,8 +1044,8 @@ public class VarEnginePath {
             throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the VaR service is not configured here: the parts are answered nowhere");
         }
         List<String> kids = res.node() == null ? List.of() : book.children.getOrDefault(res.node(), List.of());
-        if (kids.isEmpty()) {
-            return positionParts(p, svc, book, res, date, currency, true);
+        if (kids.isEmpty()) {                                           // every position measured; contributions keeps the largest max-parts
+            return positionParts(p, svc, book, res, date, currency, false);
         }
         Map<String, Object> params = params(dateWindow(), currency);
         params.put("rows", ordinals(res.set()));
@@ -1074,11 +1103,15 @@ public class VarEnginePath {
      */
     HostPositions hostPositions(Principal p, VarService svc, EngineScopeBook book, ScopeResolver.Resolution res, LocalDate date, String currency,
             boolean cut) {
-        if (res.node() == null) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the parts of a node for now; the parts of "
-                    + res.canonical() + " are positions, trades or terms: ask it in-tree (path=in-tree)");
+        if (res.node() == null && (res.trade() >= 0 || res.position() >= 0)) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the parts of a node or of an ad-hoc scope of positions for "
+                    + "now; the parts of " + res.canonical() + " are trades: ask it in-tree (path=in-tree)");
         }
-        VarService.Scoped s = svc.scoped(p, "NODE:" + res.node(), date, currency);
+        VarService.Scoped s = svc.scoped(p, partScope(res), date, currency);
+        if (res.node() == null && new VarSelection(svc).byTerms(p, s)) {   // an expression of two or more terms: its parts are the terms
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the parts of a node or of an ad-hoc scope of positions for "
+                    + "now; the parts of " + res.canonical() + " are its terms: ask it in-tree (path=in-tree)");
+        }
         com.ash.drishti.banking.compute.var.VarBook b = s.date().book();
         if (!s.view().seesPositions(s.set())) {
             return new HostPositions(List.of(), List.of());          // an aggregate-only viewer: no position level below this node
@@ -1113,13 +1146,18 @@ public class VarEnginePath {
         return new HostPositions(parts, rows);
     }
 
+    /** The in-tree scope text of a resolution whose parts are positions: a node's id, else its canonical form (an ad-hoc scope). */
+    private static String partScope(ScopeResolver.Resolution res) {
+        return res.node() != null ? "NODE:" + res.node() : res.canonical();
+    }
+
     /** A leaf node's position parts measured by the engine's {@code scope-contributions}, the rows shaped as the in-tree route's. */
     private Parts positionParts(Principal p, VarService svc, EngineScopeBook book, ScopeResolver.Resolution res, LocalDate date, String currency,
             boolean cut) {
         HostPositions hp = hostPositions(p, svc, book, res, date, currency, cut);
         Map<String, Object> params = params(dateWindow(), currency);
         params.put("rows", ordinals(res.set()));
-        params.put("node", res.node());
+        params.put("node", res.node() == null ? "" : res.node());
         List<Integer> all = new ArrayList<>();
         for (List<Integer> r : hp.rows()) {
             all.addAll(r);

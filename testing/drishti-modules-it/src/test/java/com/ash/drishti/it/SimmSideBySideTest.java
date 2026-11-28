@@ -46,7 +46,7 @@ class SimmSideBySideTest {
     static final String DATE = "2026-09-30";
     static final String ONLY = ExposureSideBySideTest.ONLY + ",market-risk/position-sensitivity,market-risk/risk-factor,counterparty-risk/simm-parameters"
             // the VaR book: the in-tree run takes the person's rows from the VaR scope members (the engine path does too)
-            + ",market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit,trades/murex,trades/endur";
+            + ",market-risk/scenario-pv,market-risk/fx-scenario,market-risk/scenario-set,market-risk/var-limit,trades/";
     /** Every key of the in-tree headline but its provenance (the host's words about what it read). */
     static final String[] FIELDS = {"SCOPE", "KIND", "ANALYTIC", "NETTING_SET", "COUNTERPARTY", "CSA", "BUSINESS_DATE", "SIMM_VERSION", "PARAMETER_SHA256",
         "CALCULATION_CURRENCY", "IM_COLLECT", "IM_POST", "COLLECT_REGIME", "POST_REGIME", "SIMM_COLLECT", "ADDON_COLLECT", "SIMM_POST", "ADDON_POST",
@@ -86,10 +86,17 @@ class SimmSideBySideTest {
     void theSimmOfEveryNettingSetIsTheSameOnBothPaths() throws Exception {
         SideBySide sbs = new SideBySide();
         List<String> sets = new ArrayList<>();
-        for (JsonNode n : rowsOf(server.get("/api/v1/risk/simm/netting-sets?asOf=" + DATE))) {
-            String id = n.path("NETTING_SET").asText(n.path("nettingSet").asText(""));
-            if (!id.isBlank()) {
-                sets.add(id);
+        // every netting set of the date (the exposure tree lists them all, with or without paths); the SIMM list itself shows only the
+        // sets whose trade ids are among the VaR members, which the sample's position-grain members are not (both paths ask the same)
+        JsonNode t = server.get("/api/v1/risk/exposure/tree?asOf=" + DATE);
+        for (JsonNode g : t.path("groups")) {
+            for (JsonNode cp : g.path("children")) {
+                for (JsonNode ns : cp.path("children")) {
+                    String sc = ns.path("scope").asText("");
+                    if (sc.startsWith("NSET:") && !sets.contains(sc.substring(5))) {
+                        sets.add(sc.substring(5));
+                    }
+                }
             }
         }
         int withFigures = 0;
@@ -127,6 +134,15 @@ class SimmSideBySideTest {
         assertThat(sbs.differences).as("SIMM answers that differ between in-tree and engine").isEmpty();
     }
 
+    static final String[] FIELDS_IN_ORDER = java.util.Arrays.stream(FIELDS).filter(f -> !f.equals("BY_RISK_CLASS")).toArray(String[]::new);
+
+    /** The rows by product class and risk class, each row's JSON (numbers as written: every double to the bit). */
+    private static java.util.TreeMap<String, String> sorted(JsonNode rows) {
+        java.util.TreeMap<String, String> out = new java.util.TreeMap<>();
+        rows.forEach(r -> out.put(r.path("PRODUCT_CLASS").asText() + "|" + r.path("RISK_CLASS").asText(), r.toString()));
+        return out;
+    }
+
     enum Outcome { FIGURES, BOTH_REFUSED, ENGINE_REFUSED }
 
     static final List<String> LAST = new ArrayList<>();
@@ -154,7 +170,11 @@ class SimmSideBySideTest {
             return Outcome.ENGINE_REFUSED;
         }
         assertThat(inTree.path("SCOPE").isMissingNode()).isFalse();
-        sbs.both(server, what, q, FIELDS);
+        JsonNode[] both = sbs.both(server, what, q, FIELDS_IN_ORDER);
+        // BY_RISK_CLASS: every row equal; the in-tree run lists the classes as its elements first name them, the engine path in SIMM's order
+        if (!sorted(both[0].path("BY_RISK_CLASS")).equals(sorted(both[1].path("BY_RISK_CLASS")))) {
+            sbs.differences.add(what + " BY_RISK_CLASS: " + SideBySide.first(both[0].path("BY_RISK_CLASS"), both[1].path("BY_RISK_CLASS")));
+        }
         return Outcome.FIGURES;
     }
 
@@ -162,14 +182,5 @@ class SimmSideBySideTest {
         String m = String.valueOf(e.getMessage());
         int sp = m.indexOf(' ');
         return sp > 0 ? m.substring(0, sp) : m;
-    }
-
-    private static Iterable<JsonNode> rowsOf(JsonNode a) {
-        for (String k : List.of("rows", "nettingSets", "items")) {
-            if (a.path(k).isArray()) {
-                return a.path(k);
-            }
-        }
-        return a.isArray() ? a : List.of();
     }
 }

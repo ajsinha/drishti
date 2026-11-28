@@ -52,6 +52,7 @@ public class SimmEnginePath {
     public static final String ENGINE = "ccr";
     static final String SETTING = "drishti.module.banking.simm.route";
     static final List<String> PRODUCT_CLASSES = List.of("RatesFX", "Credit", "Equity", "Commodity");
+    static final List<String> RISK_CLASSES = List.of("InterestRate", "CreditQ", "CreditNonQ", "Equity", "Commodity", "FX");
     static final List<String> OUTPUTS = List.of("simm", "simm-total", "simm-product", "simm-version");
 
     private final ObjectProvider<Engines> engines;
@@ -214,6 +215,9 @@ public class SimmEnginePath {
                     && r.get("RISK_CLASS").equals(y.get("RISK_CLASS"))).map(y -> num(y, "IM")).findFirst().orElse(null));
             rcs.add(x);
         }
+        // SIMM's order (product classes, then risk classes within each); the in-tree run lists them as its elements first name them
+        rcs.sort(java.util.Comparator.comparingInt((Map<String, Object> x) -> PRODUCT_CLASSES.indexOf(String.valueOf(x.get("PRODUCT_CLASS"))))
+                .thenComparingInt(x -> RISK_CLASSES.indexOf(String.valueOf(x.get("RISK_CLASS")))));
         m.put("BY_RISK_CLASS", rcs);
         m.put("TRADES", ((Number) tc.get("TRADES")).intValue());
         m.put("MISSING_TRADES", missing);

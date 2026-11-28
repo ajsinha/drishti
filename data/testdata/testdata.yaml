@@ -21515,6 +21515,18 @@ datasets:
   files:
   - risk-factor.2026-09-30.jsonl.gz
   bytes: 21745
+- folder: counterparty-risk/simm-parameters
+  pack: counterparty-risk
+  kind: simm-parameters
+  connector: collateral-store
+  key: VERSION
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 1
+  files:
+  - simm-parameters.2026-09-30.jsonl.gz
+  bytes: 3093
 - samples: modules/economy/packs/world-economy/samples
   pack: world-economy
   kind: economic-forecast

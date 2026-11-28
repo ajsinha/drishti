@@ -331,7 +331,24 @@ def files(testdata: Path) -> dict[Path, bytes]:
     """The files to write, relative to the test-data folder."""
     cob = cob_of(testdata)
     return {Path(PACK) / "position-sensitivity" / FF.plain_name("position-sensitivity", cob): gz_bytes(records(read_terms(testdata, cob), cob)),
-            Path(PACK) / "risk-factor" / FF.plain_name("risk-factor", cob): gz_bytes(dictionary_rows(cob))}
+            Path(PACK) / "risk-factor" / FF.plain_name("risk-factor", cob): gz_bytes(dictionary_rows(cob)),
+            Path("counterparty-risk") / "simm-parameters" / FF.plain_name("simm-parameters", cob): gz_bytes(simm_parameter_rows())}
+
+
+#: the TOY SIMM parameter file of the SIMM tests (round illustrative numbers, NOT ISDA's): the test data's simm-parameters row, which the
+#: ccr engine reads as a lake table (R2); a bank loads its own licensed files
+TOY_SIMM = ROOT / "modules" / "banking" / "java" / "banking-compute" / "src" / "test" / "resources" / "simm" / "simm-toy.yaml"
+
+
+def simm_parameter_rows() -> list[dict]:
+    """One row a SIMM version: VERSION, EFFECTIVE_FROM and TEXT, the file as delivered (its SHA-256 is every figure's provenance)."""
+    text = TOY_SIMM.read_text(encoding="utf-8")
+    meta = {}
+    for line in text.splitlines():
+        for k in ("version", "effective-from"):
+            if line.startswith(k + ":"):
+                meta.setdefault(k, line.split(":", 1)[1].split("#")[0].strip().strip('"'))
+    return [{"VERSION": meta["version"], "EFFECTIVE_FROM": meta["effective-from"], "TEXT": text}]
 
 
 def write(out: Path, testdata: Path | None = None) -> list[Path]:
@@ -348,7 +365,9 @@ def write(out: Path, testdata: Path | None = None) -> list[Path]:
 
 
 #: the testdata.yaml entry of each kind: its key (the lake's business key)
-KEYS = {"position-sensitivity": "SENSITIVITY_ID", "risk-factor": "RISK_FACTOR"}
+KEYS = {"position-sensitivity": "SENSITIVITY_ID", "risk-factor": "RISK_FACTOR", "simm-parameters": "VERSION"}
+#: the pack and connector of a kind not market-risk's
+OWNERS = {"simm-parameters": ("counterparty-risk", "collateral-store")}
 
 
 def datasets(out: Path, written: list[Path]) -> list[dict]:
@@ -359,7 +378,8 @@ def datasets(out: Path, written: list[Path]) -> list[dict]:
         cob = FF.days(f)[0]
         with gzip.open(f, "rt", encoding="utf-8") as fh:
             documents = sum(1 for _ in fh)
-        entries.append({"folder": f"{PACK}/{kind}", "pack": PACK, "kind": kind, "connector": "risk-store", "key": KEYS[kind],
+        pack, connector = OWNERS.get(kind, (PACK, "risk-store"))
+        entries.append({"folder": f"{pack}/{kind}", "pack": pack, "kind": kind, "connector": connector, "key": KEYS[kind],
                         "dated-by": "BUSINESS_DATE", "first-date": cob, "last-date": cob, "documents": documents, "files": [f.name],
                         "bytes": f.stat().st_size})
     return entries
