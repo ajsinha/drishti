@@ -414,6 +414,12 @@ files:
   - {path: 'testing/connectors/README.md', class: merge, lane: B}
   - {path: 'tools/dev/asset_prefix_docs.md', class: merge, lane: A}
   - {path: 'tools/elements-demo/README.md', class: note, lane: C}
+  - {path: 'tools/loaders/README.md', class: note, lane: C}
+  - {path: 'tools/loaders/common/README.md', class: note, lane: C}
+  - {path: 'tools/loaders/external/README.md', class: note, lane: C}
+  - {path: 'tools/loaders/genomics/README.md', class: note, lane: C}
+  - {path: 'tools/loaders/mrloader/README.md', class: note, lane: C}
+  - {path: 'tools/loaders/news/README.md', class: note, lane: C}
   - {path: 'tools/mrloader/README.md', class: merge, lane: A}
   - {path: 'tools/mrloader/docs/DAILY_RUNBOOK.md', class: merge, lane: A}
   - {path: 'tools/mrloader/docs/README.md', class: merge, lane: A}

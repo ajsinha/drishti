@@ -154,6 +154,7 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"testing/connectors/README\.md", "merge", "B", "docs/architecture/TEST_HARNESS.md", ""),
     (r"tools/dev/asset_prefix_docs\.md", "merge", "A", GL + "DEVELOPER_GUIDE.md", ""),
     (r"tools/elements-demo/README\.md", "note", "C", "", ""),
+    (r"tools/loaders/([^/]+/)?README\.md", "note", "C", "", ""),
     (r"tools/mrloader/(README|docs/README|docs/DAILY_RUNBOOK|samples/README)\.md", "merge", "A", BANK, ""),
     (r"tools/mrloader/docs/[^/]+\.md", "delete", "B", "", "tools/loaders/mrloader/kind_docs.py (one generated docs/contracts/CSV_FORMATS.md)"),
     (r"tools/packgen/.+\.intro\.md", "merge", "C", "", "the pack's config/about.yaml intro:"),
