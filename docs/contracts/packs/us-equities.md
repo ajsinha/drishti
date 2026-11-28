@@ -57,11 +57,11 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | `SEC_NAME` | text | required |  | The company's name as SEC EDGAR registers it (submissions name). | `Apple Inc.` |  |
 | `CIK` | text | required |  | The SEC Central Index Key, ten digits with leading zeros (text, never a number). | `0000320193` |  |
 | `OTHER_TICKERS` | text | optional |  | The company's other tickers on EDGAR (preferred shares, other classes), comma separated; empty when none. | `C-PN, C-PR` |  |
-| `EXCHANGE` | text | required |  | The exchanges EDGAR lists the company's securities on, comma separated (Nasdaq, NYSE ...). | `Nasdaq` |  |
-| `LISTING` | text | required |  | The listing market from the Nasdaq Trader symbol directory (for example Nasdaq Global Select Market). | `Nasdaq Global Select Market` |  |
-| `SIC` | text | required |  | The SEC Standard Industrial Classification code (four digits, text). | `3571` |  |
-| `SIC_DESCRIPTION` | text | required |  | The company's SIC industry in words, as EDGAR gives it (sicDescription). | `Electronic Computers` |  |
-| `DIVISION` | text | required |  | The letter of the SIC division the code falls in (A to J); empty when unclassified. | `D` |  |
+| `EXCHANGE` | text | optional |  | The exchanges EDGAR lists the company's securities on, comma separated (Nasdaq, NYSE ...). | `Nasdaq` |  |
+| `LISTING` | text | optional |  | The listing market from the Nasdaq Trader symbol directory (for example Nasdaq Global Select Market). | `Nasdaq Global Select Market` |  |
+| `SIC` | text | optional |  | The SEC Standard Industrial Classification code (four digits, text). | `3571` |  |
+| `SIC_DESCRIPTION` | text | optional |  | The company's SIC industry in words, as EDGAR gives it (sicDescription). | `Electronic Computers` |  |
+| `DIVISION` | text | optional |  | The letter of the SIC division the code falls in (A to J); empty when unclassified. | `D` |  |
 | `SECTOR` | text | required |  | The name of the SIC division (Manufacturing, Finance, Insurance and Real Estate ...), or Unclassified. | `Manufacturing` |  |
 | `STATE_OF_INCORPORATION` | text | optional |  | The state (or country) code of incorporation, as EDGAR gives it. | `CA` |  |
 | `FISCAL_YEAR_END` | text | optional |  | The fiscal year end as MM-DD (EDGAR fiscalYearEnd). | `09-26` |  |
@@ -70,14 +70,14 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | `BUSINESS_ADDRESS` | text | optional |  | The business address's city and state or country code, from EDGAR. | `CUPERTINO, CA` |  |
 | `FOUNDED` | date | optional |  | The date the company was founded (YYYY-MM-DD), from Wikidata. | `1976-04-01` |  |
 | `WEBSITE` | text | optional |  | The company's website: Wikidata's, else EDGAR's. | `https://apple.com/qa/` |  |
-| `PHONE` | text | required |  | The business phone number, from EDGAR. | `(408) 996-1010` |  |
+| `PHONE` | text | optional |  | The business phone number, from EDGAR. | `(408) 996-1010` |  |
 | `LEI` | text | optional |  | The company's Legal Entity Identifier (20 characters), from Wikidata or matched in GLEIF by legal name; empty when none was found. | `HWUPKR0MPOU8FGXBT394` |  |
 | `LEI_LEGAL_NAME` | text | optional |  | The legal name GLEIF registers for the LEI. | `Apple Inc.` |  |
 | `LEI_STATUS` | text | optional |  | The LEI's registration status in GLEIF (ISSUED, LAPSED, RETIRED, DUPLICATE ...). | `DUPLICATE`, `ISSUED`, `LAPSED`, `RETIRED` |  |
 | `LEI_SOURCE` | text | optional |  | How the LEI was found: from Wikidata (checked in GLEIF), matched in GLEIF by legal name, or Wikidata only. | `GLEIF, LEI from Wikidata`, `GLEIF, matched by legal name`, `Wikidata` |  |
 | `INDEXES` | record list | required |  | The indices and lists the company is in, one element each: INDEX (DJIA, NDX, SP500, BANKS-US …), NAME and SINCE; empty when it is in none. |  |  |
 | `INDEX_TEXT` | text | optional |  | The names of the indexes and lists the company is a member of, comma separated. | `Dow Jones Industrial Average, Nasdaq-100, S&P 500` |  |
-| `CURRENCY` | text | required |  | The currency the company reports its XBRL financials in (USD for most; a 40-F or 20-F filer may report in CAD, EUR, GBP). | `CAD`, `EUR`, `GBP`, `USD` |  |
+| `CURRENCY` | text | required |  | The currency the company reports its XBRL financials in (USD for most; a 40-F or 20-F filer may report in CAD, EUR, GBP). | `BRL`, `CAD`, `EUR`, `GBP`, `USD` |  |
 | `FISCAL_YEAR` | integer | optional |  | The latest fiscal year with figures: the year of REVENUE, NET_INCOME, ASSETS, LIABILITIES, EQUITY and EPS_DILUTED (an integer). | `2025` |  |
 | `REVENUE` | amount | optional | CURRENCY | Total revenue of FISCAL_YEAR (us-gaap Revenues, else RevenueFromContractWithCustomerExcludingAssessedTax, else net sales), in CURRENCY. | `416161000000` |  |
 | `NET_INCOME` | amount | optional | CURRENCY | Net income (loss) attributable to the company for FISCAL_YEAR (us-gaap NetIncomeLoss, else ProfitLoss), in CURRENCY; a loss negative. | `112010000000` |  |
@@ -85,7 +85,7 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | `LIABILITIES` | integer | optional | currency units of CURRENCY | Total liabilities at the latest fiscal year end (us-gaap Liabilities, else liabilities and equity less total equity). | `285508000000` |  |
 | `EQUITY` | integer | optional | CURRENCY | Stockholders' equity at the end of FISCAL_YEAR (us-gaap StockholdersEquity), in CURRENCY; a number, not a link. | `73733000000` | `equity` |
 | `EPS_DILUTED` | amount | optional | CURRENCY per share | Diluted earnings per share for FISCAL_YEAR (us-gaap EarningsPerShareDiluted, else basic), in CURRENCY per share. | `7.46` |  |
-| `SHARES_OUTSTANDING` | integer | optional | shares | Common shares outstanding on the cover of the latest annual report (dei EntityCommonStockSharesOutstanding). | `14776353000` |  |
+| `SHARES_OUTSTANDING` | amount | optional | shares | Common shares outstanding on the cover of the latest annual report (dei EntityCommonStockSharesOutstanding). | `14776353000` |  |
 | `FINANCIALS` | record list | required |  | The company's figures for each fiscal year, oldest first (up to ten), one element per year: YEAR, PERIOD_END, REVENUE, NET_INCOME, ASSETS, LIABILITIES, EQUITY and EPS_DILUTED, in CURRENCY. |  |  |
 | `FACTS` | record list | required |  | The company's financial facts, one element per concept: FACT (a FACT_ID of the financial-fact kind, <ticker>-<concept>) and LABEL. |  |  |
 | `FILINGS` | record list | required |  | The company's latest EDGAR filings, newest first (up to 20), one element each: ACCESSION, FORM, FILED, REPORT_DATE and DESCRIPTION. |  |  |
@@ -93,7 +93,7 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 | `FACT_IDS` | id list | required |  | The company's financial facts: FACT_IDs of the financial-fact kind (<ticker>-<concept>, ABT-REVENUE). |  | `financial-fact` |
 | `FILING_IDS` | id list | required |  | The company's latest filings: ACCESSION numbers of the filing kind. |  | `filing` |
 | `LATEST_FILING` | date | required |  | The filing date of the company's most recent filing (YYYY-MM-DD). | `2026-10-22` |  |
-| `SIC_SECTOR` | id | required |  | The company's SIC industry code (EDGAR sic, four digits as text): the id of the computed sic-sector kind. | `3571` | `sic-sector` |
+| `SIC_SECTOR` | id | optional |  | The company's SIC industry code (EDGAR sic, four digits as text): the id of the computed sic-sector kind. | `3571` | `sic-sector` |
 | `PRICE_HISTORY` | id | required |  | The id of the company's price history (PX-<TICKER>), a kind served live by the prices connector; no data is committed. | `PX-AAPL` |  |
 | `PROVENANCE` | record | required |  | Where the record comes from, one object: SOURCE (SEC EDGAR, Wikidata, GLEIF, Nasdaq Trader), RETRIEVED_AT (YYYY-MM-DD), LICENCE and URL. |  |  |
 | `ECONOMY` | id | optional |  | The company's home economy from its business address: ECON-USA for a US address, ECON-CAN or ECON-GBR for Canada or the UK; an id of the world-economy pack's economy kind; absent otherwise. | `ECON-USA` (pattern `^ECON-`) | `economy` |
@@ -103,8 +103,8 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `INDEX` | text | required |  | The index or list code (SP500, NDX, DJIA, BANKS-US, BANKS-UK, BANKS-CA). | `BANKS-CA`, `BANKS-UK`, `BANKS-US`, `DJIA`, `NDX`, `SP500` |  |
-| `NAME` | text | required |  | The index or list name. | `Canadian banks`, `Dow Jones Industrial Average`, `Major UK banks`, `Major US banks`, `Nasdaq-100`, `S&P 500` |  |
+| `INDEX` | text | required |  | The index or list code (SP500, NDX, DJIA, BANKS-US, BANKS-UK, BANKS-CA). | `BANKS-CA`, `BANKS-UK`, `BANKS-US`, `DJIA`, `NDX`, `R2000`, `SP500` |  |
+| `NAME` | text | required |  | The index or list name. | `Canadian banks`, `Dow Jones Industrial Average`, `Major UK banks`, `Major US banks`, `Nasdaq-100`, `Russell 2000`, `S&P 500` |  |
 | `SINCE` | date | optional |  | The date the company joined the index, from Wikidata, YYYY-MM-DD; empty when Wikidata gives none. | `1998-05-31` |  |
 
 **Nested `FINANCIALS[]`**
@@ -150,11 +150,11 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 
 **Validation**
 
-- required: fields `TICKER`, `NAME`, `SEC_NAME`, `CIK`, `EXCHANGE`, `LISTING`, `SIC`, `SIC_DESCRIPTION`, `DIVISION`, `SECTOR`, `PHONE`, `INDEXES`, `CURRENCY`, `FINANCIALS`, `FACTS`, `FILINGS`, `INDEX_IDS`, `FACT_IDS`, `FILING_IDS`, `LATEST_FILING`, `SIC_SECTOR`, `PRICE_HISTORY`, `PROVENANCE`
+- required: fields `TICKER`, `NAME`, `SEC_NAME`, `CIK`, `SECTOR`, `INDEXES`, `CURRENCY`, `FINANCIALS`, `FACTS`, `FILINGS`, `INDEX_IDS`, `FACT_IDS`, `FILING_IDS`, `LATEST_FILING`, `PRICE_HISTORY`, `PROVENANCE`
 - unique: key `TICKER`; per snapshot
 - enum: field LEI_STATUS; values `DUPLICATE`, `ISSUED`, `LAPSED`, `RETIRED`
 - enum: field LEI_SOURCE; values `GLEIF, LEI from Wikidata`, `GLEIF, matched by legal name`, `Wikidata`
-- enum: field CURRENCY; values `CAD`, `EUR`, `GBP`, `USD`
+- enum: field CURRENCY; values `BRL`, `CAD`, `EUR`, `GBP`, `USD`
 - link: field EQUITY; kind equity
 - link: field INDEX_IDS; kind index-membership
 - link: field FACT_IDS; kind financial-fact
@@ -162,8 +162,8 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 - link: field SIC_SECTOR; kind sic-sector
 - link: field ECONOMY; kind economy
 - link: field MARKET_WATCH; kind listed-company
-- enum: field INDEXES[].INDEX; values `BANKS-CA`, `BANKS-UK`, `BANKS-US`, `DJIA`, `NDX`, `SP500`
-- enum: field INDEXES[].NAME; values `Canadian banks`, `Dow Jones Industrial Average`, `Major UK banks`, `Major US banks`, `Nasdaq-100`, `S&P 500`
+- enum: field INDEXES[].INDEX; values `BANKS-CA`, `BANKS-UK`, `BANKS-US`, `DJIA`, `NDX`, `R2000`, `SP500`
+- enum: field INDEXES[].NAME; values `Canadian banks`, `Dow Jones Industrial Average`, `Major UK banks`, `Major US banks`, `Nasdaq-100`, `Russell 2000`, `S&P 500`
 - link: field FINANCIALS[].EQUITY; kind equity
 - enum: field FACTS[].LABEL; values `Diluted EPS`, `Net income`, `Revenue`, `Shares outstanding`, `Stockholders' equity`, `Total assets`, `Total liabilities`
 
@@ -346,9 +346,9 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 |---|---|---|---|---|---|---|
 | `TICKER` | text | required |  | The member's ticker (its us-company record's key). | `AAPL` |  |
 | `NAME` | text | required |  | The member's name as the pack shows it (Wikidata's label, else EDGAR's name). | `Apple Inc.` |  |
-| `SECTOR` | text | required |  | The name of the member's SIC division. | `Agriculture, Forestry and Fishing`, `Construction`, `Finance, Insurance and Real Estate`, `Manufacturing`, `Mining`, `Retail Trade`, `Services`, `Transportation, Communications, Electric, Gas and Sanitary Services`, `Wholesale Trade` |  |
-| `SIC` | text | required |  | The member's SEC SIC code. | `3571` |  |
-| `SIC_DESCRIPTION` | text | required |  | The SIC code's description, from EDGAR. | `Electronic Computers` |  |
+| `SECTOR` | text | required |  | The name of the member's SIC division. | `Agriculture, Forestry and Fishing`, `Construction`, `Finance, Insurance and Real Estate`, `Manufacturing`, `Mining`, `Retail Trade`, `Services`, `Transportation, Communications, Electric, Gas and Sanitary Services`, `Unclassified`, `Wholesale Trade` |  |
+| `SIC` | text | optional |  | The member's SEC SIC code. | `3571` |  |
+| `SIC_DESCRIPTION` | text | optional |  | The SIC code's description, from EDGAR. | `Electronic Computers` |  |
 | `EXCHANGE` | text | required |  | The exchanges the member is listed on. | `Nasdaq` |  |
 | `REVENUE` | amount | optional | currency units of ROWS[].CURRENCY | The member's revenue for its latest fiscal year. | `416161000000` |  |
 | `NET_INCOME` | amount | optional | currency units of ROWS[].CURRENCY | The member's net income for its latest fiscal year; a loss is negative. | `112010000000` |  |
@@ -369,7 +369,7 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 
 - required: fields `INDEX`, `NAME`, `MEMBERS`, `ROWS`, `PROVENANCE`
 - unique: key `INDEX`; per snapshot
-- enum: field ROWS[].SECTOR; values `Agriculture, Forestry and Fishing`, `Construction`, `Finance, Insurance and Real Estate`, `Manufacturing`, `Mining`, `Retail Trade`, `Services`, `Transportation, Communications, Electric, Gas and Sanitary Services`, `Wholesale Trade`
+- enum: field ROWS[].SECTOR; values `Agriculture, Forestry and Fishing`, `Construction`, `Finance, Insurance and Real Estate`, `Manufacturing`, `Mining`, `Retail Trade`, `Services`, `Transportation, Communications, Electric, Gas and Sanitary Services`, `Unclassified`, `Wholesale Trade`
 
 **Notes**
 

@@ -78,25 +78,22 @@ final class PackagedServer implements AutoCloseable {
     }
 
     /**
-     * The Python that builds the tests' lakes, found the way the drill finds its own: {@code -Ddrishti.python=<python>} when given, else the console
-     * environment {@code drishti-console/.venv} of this checkout. It must import {@code drishti_lake} (installed there, or the pinned wheel in
-     * {@code lib/wheels}, tools/lake/lakewheel.py); when it cannot, the test fails saying what to put where.
+     * The Python that builds the tests' lakes: the one Python Drishti runs its Python work with, {@code DRISHTI_PYTHON} (the environment the test
+     * run inherits). It must import {@code drishti_lake} (installed there, or the pinned wheel in {@code lib/wheels}, tools/lake/lakewheel.py); when
+     * it cannot, the test fails saying what to put where. No virtual environment is made or assumed.
      */
     static String lakePython() throws IOException, InterruptedException {
-        String given = System.getProperty("drishti.python", "").trim();
-        Path venv = REPO.resolve("drishti-console/.venv");
-        String py = !given.isEmpty() ? given : venv.resolve(System.getProperty("os.name").toLowerCase().contains("win") ? "Scripts/python.exe" : "bin/python").toString();
-        if (given.isEmpty() && !Files.isRegularFile(Path.of(py))) {
-            throw new IllegalStateException("the lake tests need a Python with drishti_lake: " + py + " does not exist. Create the console environment "
-                    + "(python3 -m venv drishti-console/.venv; drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt; the pinned wheel goes in lib/wheels, see lib/lake-wheel.pin) "
-                    + "or pass -Ddrishti.python=<a python that has it>");
+        String py = System.getenv().getOrDefault("DRISHTI_PYTHON", "").trim();
+        if (py.isEmpty() || !Files.isRegularFile(Path.of(py))) {
+            throw new IllegalStateException("the lake tests need a Python with drishti_lake: set DRISHTI_PYTHON to its path (now '" + py + "'); the pinned "
+                    + "wheel goes in lib/wheels, see lib/lake-wheel.pin");
         }
         Process p = new ProcessBuilder(py, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import lakewheel", REPO.resolve("tools/lake").toString())
                 .redirectErrorStream(true).start();
         String out = new String(p.getInputStream().readAllBytes());
         if (p.waitFor() != 0) {
             throw new IllegalStateException("the lake tests need a Python with drishti_lake, and " + py + " has none: " + out.strip()
-                    + "\nInstall drishti-console/requirements.txt into it, or put the pinned wheel in " + REPO.resolve("lib/wheels") + ", or pass -Ddrishti.python=<a python that has it>");
+                    + "\nInstall drishti-console/requirements.txt into it, or put the pinned wheel in " + REPO.resolve("lib/wheels") + ", or set DRISHTI_PYTHON to a python that has it");
         }
         return py;
     }

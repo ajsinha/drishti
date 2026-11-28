@@ -40,7 +40,7 @@ One country's World Development Indicators: the latest of each, the world map sh
 | Dated by | `snapshot` |
 | Cadence | daily (due: the world-development feed's schedule (30 6 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `development.development-profile`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-development/samples |
+| Test data | data/testdata/world-development/development-profile |
 
 **Fields**
 
@@ -184,7 +184,7 @@ One World Development Indicator of one country by year: the history, the latest 
 | Dated by | `snapshot` |
 | Cadence | daily (due: the world-development feed's schedule (30 6 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `development.development-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-development/samples |
+| Test data | data/testdata/world-development/development-series |
 
 **Fields**
 

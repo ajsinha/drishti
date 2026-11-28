@@ -88,15 +88,16 @@ nested:
     - Retail Trade
     - Services
     - Transportation, Communications, Electric, Gas and Sanitary Services
+    - Unclassified
     - Wholesale Trade
   - name: SIC
     type: text
-    presence: required
+    presence: optional
     description: 'The member''s SEC SIC code.'
     example: '3571'
   - name: SIC_DESCRIPTION
     type: text
-    presence: required
+    presence: optional
     description: 'The SIC code''s description, from EDGAR.'
     example: Electronic Computers
   - name: EXCHANGE
@@ -176,6 +177,7 @@ validation:
   - Retail Trade
   - Services
   - Transportation, Communications, Electric, Gas and Sanitary Services
+  - Unclassified
   - Wholesale Trade
 notes:
 - 'ROWS[].NET_MARGIN is not kept on the record: a member''s net margin is computed from its revenue and net income (docs/guides/bi/README.md,

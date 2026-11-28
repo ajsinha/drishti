@@ -53,7 +53,7 @@ def check():
         if not {"node_modules", ".git", "target", "vendor"} & set(f.relative_to(ROOT).parts) and f.parent not in allowed:
             errs.append(f"{f.relative_to(ROOT)}: a launcher file outside a project's run-configs/ (another IDE would pick it up)")
     for d in ROOT.rglob(".idea"):
-        if not {"node_modules", ".git", "target", "vendor", ".venv"} & set(d.relative_to(ROOT).parts):
+        if not {"node_modules", ".git", "target", "vendor", ".venv"} & set(d.relative_to(ROOT).parts):   # IGNORE pattern: a folder some other tool left
             errs.append(f"{d.relative_to(ROOT)}: no .idea in the source (launchers are run-configs/*.run.xml)")
     files = [(f, project, folder, types) for rc, project, folder, types in FOLDERS for f in (sorted(rc.glob("*.run.xml")) if rc.is_dir() else [])]
     for rc, _, _, _ in FOLDERS:

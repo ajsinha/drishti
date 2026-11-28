@@ -177,6 +177,10 @@ fields:
   presence: required
   description: 'When the snapshot was captured, ISO-8601 UTC.'
   example: '2026-10-18T03:24:33Z'
+- name: ANALYTICS
+  type: record
+  presence: required
+  description: 'The figures computed from HISTORY''s closes when the snapshot was captured (the yfinance plugin''s PriceAnalytics): one object.'
 nested:
   HISTORY[]:
   - name: DATE
@@ -214,6 +218,57 @@ nested:
     description: 'The bar''s traded volume.'
     unit: 'shares'
     example: 49147000.0
+  ANALYTICS:
+  - name: OBSERVATIONS
+    type: integer
+    presence: required
+    description: 'The daily closes the history holds.'
+    example: 251
+  - name: RETURN_1M
+    type: rate
+    presence: optional
+    description: 'close / close 21 trading days earlier - 1 (empty when the history is shorter).'
+    example: 0.042783
+  - name: RETURN_3M
+    type: rate
+    presence: optional
+    description: 'The same over 63 trading days.'
+    example: 0.121489
+  - name: RETURN_6M
+    type: rate
+    presence: optional
+    description: 'The same over 126 trading days.'
+    example: 0.148946
+  - name: RETURN_PERIOD
+    type: rate
+    presence: required
+    description: 'The last close over the first - 1.'
+    example: 0.285781
+  - name: VOLATILITY
+    type: rate
+    presence: required
+    description: 'The sample standard deviation of the daily log returns x sqrt(252).'
+    example: 0.250772
+  - name: MAX_DRAWDOWN
+    type: rate
+    presence: required
+    description: 'The largest fall from a running high to a later close, negative.'
+    example: -0.13823
+  - name: BENCHMARK
+    type: text
+    presence: optional
+    description: 'The symbol beta is measured against (the connector setting benchmark; empty when none, as in the snapshot).'
+    example: SPY
+  - name: BETA
+    type: amount
+    presence: optional
+    description: 'cov(daily log returns, the benchmark''s) / var(the benchmark''s), on their common dates; empty with fewer than 21 common closes.'
+    example: 1.12
+  - name: CORRELATION
+    type: rate
+    presence: optional
+    description: 'The correlation of the daily log returns with the benchmark''s.'
+    example: 0.83
   PROVENANCE:
   - name: FEED
     type: text
@@ -271,6 +326,7 @@ validation:
   - PROVENANCE
   - SNAPSHOT
   - SNAPSHOT_CAPTURED_AT
+  - ANALYTICS
 - rule: unique
   key:
   - QUOTE_ID

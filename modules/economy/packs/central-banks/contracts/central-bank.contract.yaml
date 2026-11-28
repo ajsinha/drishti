@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: centralbank.central-bank
   test-data:
-  - modules/economy/packs/central-banks/samples
+  - data/testdata/central-banks/central-bank
 fields:
 - name: BANK_ID
   type: id

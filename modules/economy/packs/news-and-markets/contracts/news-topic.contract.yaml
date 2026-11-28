@@ -36,7 +36,7 @@ cadence:
 binding-hint:
   lake-table: news.news-topic
   test-data:
-  - modules/economy/packs/news-and-markets/samples
+  - data/testdata/news-and-markets/news-topic
 fields:
 - name: TOPIC_ID
   type: id

@@ -40,7 +40,7 @@ One publisher of official news (a central bank, a regulator, a government): its 
 | Dated by | `snapshot` |
 | Cadence | daily (due: the official-news feed's schedule (0 23 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `officialnews.release-source`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/official-news/samples |
+| Test data | data/testdata/official-news/release-source |
 
 **Fields**
 
@@ -184,7 +184,7 @@ One official press release: its title, publisher, date, summary and the link to 
 | Dated by | `snapshot` |
 | Cadence | daily (due: the official-news feed's schedule (0 23 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `officialnews.press-release`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/official-news/samples |
+| Test data | data/testdata/official-news/press-release |
 
 **Fields**
 

@@ -39,7 +39,7 @@ One Statistics Canada series by vector: the latest value, the change on the peri
 | Dated by | `snapshot` |
 | Cadence | daily (due: the national-statistics feed's schedule (0 14 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `statistics.statistics-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/national-statistics/samples |
+| Test data | data/testdata/national-statistics/statistics-series |
 
 **Fields**
 

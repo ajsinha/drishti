@@ -40,7 +40,7 @@ One OECD member: the latest leading indicator, unemployment, inflation and growt
 | Dated by | `snapshot` |
 | Cadence | daily (due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `oecd.oecd-country`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/oecd/samples |
+| Test data | data/testdata/oecd/oecd-country |
 
 **Fields**
 
@@ -170,7 +170,7 @@ One OECD measure of one member by period: the history, the latest value and the 
 | Dated by | `snapshot` |
 | Cadence | daily (due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `oecd.oecd-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/oecd/samples |
+| Test data | data/testdata/oecd/oecd-series |
 
 **Fields**
 

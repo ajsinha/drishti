@@ -965,7 +965,9 @@ def drift(contract: dict, packs_dir: Path = PACKS, testdata: Path = TESTDATA) ->
         if seen is not None:
             out += [f"{(path + '.') if path else ''}{n} is in the data but not in the contract" for n in seen if n not in names]
             for n in seen:
-                if n in links and n in names and not next(f for f in fs if f["name"] == n).get("link") and links[n] != kind:
+                # a number (a rate, an amount) is never the id of a kind: a name it shares with a link field of the pack graph is a coincidence
+                if n in links and n in names and not next(f for f in fs if f["name"] == n).get("link") and links[n] != kind \
+                        and next(f for f in fs if f["name"] == n)["type"] not in NUMBER:
                     out.append(f"{(path + '.') if path else ''}{n} links to {links[n]} in the pack graph but not in the contract")
     return out
 

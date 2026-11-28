@@ -108,7 +108,7 @@ class DeployAwsTest(unittest.TestCase):
         for w in WRAPPERS:
             py = w.parent / (w.stem.replace("-", "_") + ".py")
             ps1 = w.with_suffix(".ps1")
-            for f in (w, py, ps1, w.parent / "README.md"):
+            for f in (w, py, ps1):             # the tools' READMEs are parts of the deployment guides (docs consolidation)
                 self.assertTrue(f.is_file(), f)
                 self.assertIn("Copyright (c) 2026 Ashutosh Sinha", f.read_text(encoding="utf-8")[:800], f)
             self.assertEqual(subprocess.run(["bash", "-n", str(w)]).returncode, 0, w)

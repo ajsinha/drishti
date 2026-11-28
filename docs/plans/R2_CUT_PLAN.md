@@ -127,7 +127,7 @@ view types. The first route switched end to end is the VaR headline (`GET /api/v
    doubles, which `VarGoldenMatrixTest` holds exactly, or the recorder's). `RiskSideBySideTest` is the pattern: one packaged server
    with the Risk JARs dropped into `lib/engines` (`SideBySide.dropJars`, `-Ddrishti.risk.jars=<folder>`), its own lake, every golden
    scope of every case; differences and raw-bit differences must both be empty. Run:
-   `./mvnw -o verify -pl testing/drishti-modules-it -Dtest=RiskSideBySideTest -Ddrishti.risk.jars=<folder> -Ddrishti.python=<python with drishti_lake>`.
+   `DRISHTI_PYTHON=<python with drishti_lake> ./mvnw -o verify -pl testing/drishti-modules-it -Dtest=RiskSideBySideTest -Ddrishti.risk.jars=<folder>`.
 5. **Switch.** When the family's side by side is green, its default becomes `engine` in the module's engine file, in the same
    commit as the guide's line, and the coverage row below is ticked with the commit.
 

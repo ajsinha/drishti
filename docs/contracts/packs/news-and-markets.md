@@ -24,7 +24,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [TOPIC](#topic-news-topic-news-topic) | `news-topic` | fundamental | active | 9 | 6 |
 | [NEWS](#news-headlines-news) | `news` | fundamental | active | 14 | 3 |
 | [CO](#co-listed-company-listed-company) | `listed-company` | fundamental | active | 12 | 6 |
-| [QUOTE](#quote-quote-and-price-history-quote) | `quote` | fundamental | active | 26 | 5 |
+| [QUOTE](#quote-quote-and-price-history-quote) | `quote` | fundamental | active | 27 | 5 |
 
 ## TOPIC: News topic (`news-topic`)
 
@@ -42,7 +42,7 @@ A topic and the news about it: headlines (newest first) with their publishers an
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `news.news-topic`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/news-and-markets/samples |
+| Test data | data/testdata/news-and-markets/news-topic |
 
 **Fields**
 
@@ -129,7 +129,7 @@ The headlines for one name, as the news connector computed them: newest first, f
 | `EDITION` | text | required |  | The Google News edition the headlines come from: language and country (en-US, de-DE, ja-JP). | `de-DE`, `en-US`, `ja-JP` |  |
 | `RELEVANCE_FILTER` | text | required |  | on when headlines not about ENTITY were dropped (the pipeline's relevance step), off for the ~all record. | `off`, `on` |  |
 | `COUNT` | integer | required |  | How many headlines ITEMS holds: at most the news connector's max-items setting (15 in the snapshot). | `15` |  |
-| `FETCHED_AT` | text | required |  | When the headlines were fetched, as text: date and time in UTC, and in the snapshot "(snapshot captured <date>)". | `2026-10-18 03:25 UTC (snapshot captured 2026-10-18)`, `2026-10-18 03:26 UTC (snapshot captured 2026-10-18)`, `2026-10-18 03:27 UTC (snapshot captured 2026-10-18)` |  |
+| `FETCHED_AT` | text | required |  | When the headlines were fetched, as text: date and time in UTC, and in the snapshot "(snapshot captured <date>)". | `2026-10-18 03:25 UTC (snapshot captured 2026-10-18)` |  |
 | `ITEMS` | record list | required |  | The headlines, newest first, one element each: PUBLISHED, SOURCE (the publisher), TITLE and LINK. |  |  |
 | `BY_SOURCE` | record list | required |  | How many of the headlines each publisher wrote, one element per publisher: SOURCE and COUNT. |  |  |
 | `PIPELINE` | record list | required |  | What each step of the news pipeline did, one element per step in order (relevance, duplicates …): STEP, KEPT and DROPPED (headline counts). |  |  |
@@ -168,7 +168,7 @@ The headlines for one name, as the news connector computed them: newest first, f
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `FEED` | text | required |  | The feed the headlines came from (Google News RSS). | `Google News RSS (news.google.com)` |  |
-| `FETCHED` | text | required |  | When the connector fetched the feed, as text (YYYY-MM-DD HH:MM UTC). | `2026-10-18 03:25 UTC`, `2026-10-18 03:26 UTC`, `2026-10-18 03:27 UTC` |  |
+| `FETCHED` | text | required |  | When the connector fetched the feed, as text (YYYY-MM-DD HH:MM UTC). | `2026-10-18 03:25 UTC` |  |
 | `CACHED_FOR` | text | required |  | How long the connector caches a fetch (its cache TTL), as text. | `3600 s` |  |
 | `TERMS` | text | required |  | The terms the headlines may be shown under. | `Headlines and links belong to their publishers; shown for i…` |  |
 | `SNAPSHOT` | text | required |  | Says the document is served from the committed snapshot in the demo lake, not live. | `Snapshot captured 2026-10-18 03:24 UTC from Google News; se…` |  |
@@ -184,10 +184,8 @@ The headlines for one name, as the news connector computed them: newest first, f
 - enum: field EDITION; values `de-DE`, `en-US`, `ja-JP`
 - enum: field RELEVANCE_FILTER; values `off`, `on`
 - range: field COUNT; min 0
-- enum: field FETCHED_AT; values `2026-10-18 03:25 UTC (snapshot captured 2026-10-18)`, `2026-10-18 03:26 UTC (snapshot captured 2026-10-18)`, `2026-10-18 03:27 UTC (snapshot captured 2026-10-18)`
 - range: field BY_SOURCE[].COUNT; min 0
 - enum: field PIPELINE[].STEP; values `duplicates`, `limit`, `relevance`
-- enum: field PROVENANCE.FETCHED; values `2026-10-18 03:25 UTC`, `2026-10-18 03:26 UTC`, `2026-10-18 03:27 UTC`
 
 **Notes**
 
@@ -290,7 +288,7 @@ A listed company: its live quote and price history (yfinance connector) and its 
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `news.listed-company`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/news-and-markets/samples |
+| Test data | data/testdata/news-and-markets/listed-company |
 
 **Fields**
 
@@ -405,6 +403,7 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 | `PROVENANCE` | record | required |  | Where the quote comes from, one object: FEED (Yahoo Finance's public chart endpoint), FETCHED (ISO-8601 UTC), CACHED_FOR, TERMS and SNAPSHOT. |  |  |
 | `SNAPSHOT` | text | required |  | Says the document is a committed snapshot: when it was captured and from where (tools/testdata/capture_market.py). | `Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance` |  |
 | `SNAPSHOT_CAPTURED_AT` | timestamp | required |  | When the snapshot was captured, ISO-8601 UTC. | `2026-10-18T03:24:33Z` |  |
+| `ANALYTICS` | record | required |  | The figures computed from HISTORY's closes when the snapshot was captured (the yfinance plugin's PriceAnalytics): one object. |  |  |
 
 **Nested `HISTORY[]`**
 
@@ -416,6 +415,21 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 | `LOW` | amount | required | currency units of CURRENCY | The bar's lowest price. | `247.27000427246094` |  |
 | `CLOSE` | amount | required | currency units of CURRENCY | The bar's closing price. | `252.2899932861328` |  |
 | `VOLUME` | amount | required | shares | The bar's traded volume. | `49147000.0` |  |
+
+**Nested `ANALYTICS`**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `OBSERVATIONS` | integer | required |  | The daily closes the history holds. | `251` |  |
+| `RETURN_1M` | rate | optional |  | close / close 21 trading days earlier - 1 (empty when the history is shorter). | `0.042783` |  |
+| `RETURN_3M` | rate | optional |  | The same over 63 trading days. | `0.121489` |  |
+| `RETURN_6M` | rate | optional |  | The same over 126 trading days. | `0.148946` |  |
+| `RETURN_PERIOD` | rate | required |  | The last close over the first - 1. | `0.285781` |  |
+| `VOLATILITY` | rate | required |  | The sample standard deviation of the daily log returns x sqrt(252). | `0.250772` |  |
+| `MAX_DRAWDOWN` | rate | required |  | The largest fall from a running high to a later close, negative. | `-0.13823` |  |
+| `BENCHMARK` | text | optional |  | The symbol beta is measured against (the connector setting benchmark; empty when none, as in the snapshot). | `SPY` |  |
+| `BETA` | amount | optional |  | cov(daily log returns, the benchmark's) / var(the benchmark's), on their common dates; empty with fewer than 21 common closes. | `1.12` |  |
+| `CORRELATION` | rate | optional |  | The correlation of the daily log returns with the benchmark's. | `0.83` |  |
 
 **Nested `PROVENANCE`**
 
@@ -431,7 +445,7 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 
 **Validation**
 
-- required: fields `QUOTE_ID`, `SYMBOL`, `NAME`, `EXCHANGE`, `CURRENCY`, `INSTRUMENT_TYPE`, `PRICE`, `PREVIOUS_CLOSE`, `CHANGE`, `CHANGE_PCT`, `DAY_LOW`, `DAY_HIGH`, `FIFTY_TWO_WEEK_LOW`, `FIFTY_TWO_WEEK_HIGH`, `VOLUME`, `MARKET_STATE`, `AS_OF`, `HISTORY`, `DAY_RANGE`, `FIFTY_TWO_WEEK_RANGE`, `HISTORY_RANGE`, `INTERVAL`, `PROVENANCE`, `SNAPSHOT`, `SNAPSHOT_CAPTURED_AT`
+- required: fields `QUOTE_ID`, `SYMBOL`, `NAME`, `EXCHANGE`, `CURRENCY`, `INSTRUMENT_TYPE`, `PRICE`, `PREVIOUS_CLOSE`, `CHANGE`, `CHANGE_PCT`, `DAY_LOW`, `DAY_HIGH`, `FIFTY_TWO_WEEK_LOW`, `FIFTY_TWO_WEEK_HIGH`, `VOLUME`, `MARKET_STATE`, `AS_OF`, `HISTORY`, `DAY_RANGE`, `FIFTY_TWO_WEEK_RANGE`, `HISTORY_RANGE`, `INTERVAL`, `PROVENANCE`, `SNAPSHOT`, `SNAPSHOT_CAPTURED_AT`, `ANALYTICS`
 - unique: key `QUOTE_ID`; per snapshot
 - pattern: field QUOTE_ID; pattern ^QUOTE-
 - link: field QUOTE_ID; kind quote

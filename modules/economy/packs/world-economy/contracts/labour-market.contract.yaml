@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: macro.labour-market
   test-data:
-  - modules/economy/packs/world-economy/samples
+  - data/testdata/world-economy/labour-market
 fields:
 - name: LABOUR_ID
   type: id

@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: macro.fiscal-position
   test-data:
-  - modules/economy/packs/world-economy/samples
+  - data/testdata/world-economy/fiscal-position
 fields:
 - name: FISCAL_ID
   type: id

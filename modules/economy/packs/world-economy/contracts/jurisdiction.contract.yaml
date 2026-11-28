@@ -37,7 +37,7 @@ cadence:
 binding-hint:
   lake-table: civic.jurisdiction
   test-data:
-  - modules/economy/packs/world-economy/samples
+  - data/testdata/world-economy/jurisdiction
 fields:
 - name: JURISDICTION_ID
   type: id

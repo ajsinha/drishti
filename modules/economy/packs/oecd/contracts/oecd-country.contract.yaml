@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: oecd.oecd-country
   test-data:
-  - modules/economy/packs/oecd/samples
+  - data/testdata/oecd/oecd-country
 fields:
 - name: COUNTRY_ID
   type: id

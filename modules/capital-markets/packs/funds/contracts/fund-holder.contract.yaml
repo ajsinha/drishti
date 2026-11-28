@@ -87,7 +87,7 @@ fields:
   description: 'The shares the funds hold together. Source: computed from N-PORT BALANCE.'
   example: 2809918580.0
 - name: SHARES_OUTSTANDING
-  type: integer
+  type: amount
   presence: optional
   unit: shares
   description: 'The company''s shares outstanding (10-K cover). Source: us-equities us-company.SHARES_OUTSTANDING (SEC XBRL dei).'

@@ -845,7 +845,7 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 | `ETFS` | integer | required | funds | How many of them are ETFs. Source: computed. | `26` |  |
 | `TOTAL_VALUE` | amount | required | USD | The value the funds hold together. Source: computed from N-PORT CURRENCY_VALUE. | `831040821744.0` |  |
 | `TOTAL_SHARES` | amount | required | shares | The shares the funds hold together. Source: computed from N-PORT BALANCE. | `2809918580.0` |  |
-| `SHARES_OUTSTANDING` | integer | optional | shares | The company's shares outstanding (10-K cover). Source: us-equities us-company.SHARES_OUTSTANDING (SEC XBRL dei). | `14776353000` |  |
+| `SHARES_OUTSTANDING` | amount | optional | shares | The company's shares outstanding (10-K cover). Source: us-equities us-company.SHARES_OUTSTANDING (SEC XBRL dei). | `14776353000` |  |
 | `PCT_OF_SHARES` | rate | optional | % | Shares held over shares outstanding; empty where the filed count cannot be compared. Source: computed. | `19.016` |  |
 | `AVG_WEIGHT` | rate | required | % of net assets | Its average weight in the funds holding it. Source: computed. | `5.425` |  |
 | `MAX_WEIGHT` | rate | required | % of net assets | Its largest weight in a fund. Source: computed. | `14.5683` |  |

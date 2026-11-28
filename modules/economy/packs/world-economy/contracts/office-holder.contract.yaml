@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: civic.office-holder
   test-data:
-  - modules/economy/packs/world-economy/samples
+  - data/testdata/world-economy/office-holder
 fields:
 - name: OFFICE_ID
   type: id

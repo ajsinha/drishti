@@ -47,7 +47,7 @@ binding-hint:
   - YEAR
   - SOURCE
   test-data:
-  - modules/economy/packs/world-economy/samples
+  - data/testdata/world-economy/region-economy
 fields:
 - name: REGION_ID
   type: id

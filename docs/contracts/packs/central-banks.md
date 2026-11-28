@@ -40,7 +40,7 @@ One central bank: its policy rate, the last move, the rate's history and the mar
 | Dated by | `snapshot` |
 | Cadence | daily (due: the central-banks feed's schedule (15 22 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `centralbank.central-bank`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/central-banks/samples |
+| Test data | data/testdata/central-banks/central-bank |
 
 **Fields**
 
@@ -185,7 +185,7 @@ One central-bank or market series from FRED or the Bank of Canada: the history, 
 | Dated by | `snapshot` |
 | Cadence | daily (due: the central-banks feed's schedule (15 22 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date) |
 | Binding hint | lake table `centralbank.rate-series`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/central-banks/samples |
+| Test data | data/testdata/central-banks/rate-series |
 
 **Fields**
 

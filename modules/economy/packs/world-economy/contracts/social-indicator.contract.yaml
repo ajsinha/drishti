@@ -36,7 +36,7 @@ cadence:
 binding-hint:
   lake-table: civic.social-indicator
   test-data:
-  - modules/economy/packs/world-economy/samples
+  - data/testdata/world-economy/social-indicator
 fields:
 - name: INDICATOR_ID
   type: id
@@ -175,10 +175,6 @@ nested:
     presence: required
     description: The named dataset and its vintage (the release the numbers come from).
     example: World Development Indicators (updated 2026-10-08)
-    enum:
-    - Human Development Index time series (2025 report)
-    - World Development Indicators (updated 2026-10-08)
-    - Worldwide Governance Indicators (updated 2026-09-25)
   - name: RETRIEVED_AT
     type: date
     presence: required
@@ -298,12 +294,6 @@ validation:
   - 'UNDP, Human Development Report: composite indices time series'
   - World Bank, World Development Indicators
   - World Bank, Worldwide Governance Indicators
-- rule: enum
-  field: PROVENANCE.DATASET
-  values:
-  - Human Development Index time series (2025 report)
-  - World Development Indicators (updated 2026-10-08)
-  - Worldwide Governance Indicators (updated 2026-09-25)
 - rule: enum
   field: PROVENANCE.LICENCE
   values:

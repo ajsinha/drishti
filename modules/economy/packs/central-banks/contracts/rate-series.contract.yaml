@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: centralbank.rate-series
   test-data:
-  - modules/economy/packs/central-banks/samples
+  - data/testdata/central-banks/rate-series
 fields:
 - name: SERIES_ID
   type: id

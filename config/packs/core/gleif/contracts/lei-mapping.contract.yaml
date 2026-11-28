@@ -82,10 +82,6 @@ fields:
   presence: required
   description: The GLEIF mapping file the pair was read from (isin-lei-…, LEI-BIC-…, LEI-MIC-….zip), which dates it.
   example: LEI-BIC-20260925.zip
-  enum:
-  - LEI-BIC-20260925.zip
-  - LEI-MIC-20261012.zip
-  - isin-lei-20261024T071512.zip
 - name: ISIN_COUNT
   type: integer
   presence: optional
@@ -122,12 +118,6 @@ validation:
 - rule: link
   field: LEI_GROUP
   kind: lei-group
-- rule: enum
-  field: MAPPING_FILE
-  values:
-  - LEI-BIC-20260925.zip
-  - LEI-MIC-20261012.zip
-  - isin-lei-20261024T071512.zip
 - rule: range
   field: ISIN_COUNT
   min: 0

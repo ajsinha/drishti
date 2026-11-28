@@ -75,27 +75,27 @@ fields:
   example: C-PN, C-PR
 - name: EXCHANGE
   type: text
-  presence: required
+  presence: optional
   description: 'The exchanges EDGAR lists the company''s securities on, comma separated (Nasdaq, NYSE ...).'
   example: Nasdaq
 - name: LISTING
   type: text
-  presence: required
+  presence: optional
   description: 'The listing market from the Nasdaq Trader symbol directory (for example Nasdaq Global Select Market).'
   example: Nasdaq Global Select Market
 - name: SIC
   type: text
-  presence: required
+  presence: optional
   description: 'The SEC Standard Industrial Classification code (four digits, text).'
   example: '3571'
 - name: SIC_DESCRIPTION
   type: text
-  presence: required
+  presence: optional
   description: The company's SIC industry in words, as EDGAR gives it (sicDescription).
   example: Electronic Computers
 - name: DIVISION
   type: text
-  presence: required
+  presence: optional
   description: 'The letter of the SIC division the code falls in (A to J); empty when unclassified.'
   example: D
 - name: SECTOR
@@ -140,7 +140,7 @@ fields:
   example: https://apple.com/qa/
 - name: PHONE
   type: text
-  presence: required
+  presence: optional
   description: 'The business phone number, from EDGAR.'
   example: (408) 996-1010
 - name: LEI
@@ -187,6 +187,7 @@ fields:
   description: 'The currency the company reports its XBRL financials in (USD for most; a 40-F or 20-F filer may report in CAD, EUR, GBP).'
   example: USD
   enum:
+  - BRL
   - CAD
   - EUR
   - GBP
@@ -234,7 +235,7 @@ fields:
   description: Diluted earnings per share for FISCAL_YEAR (us-gaap EarningsPerShareDiluted, else basic), in CURRENCY per share.
   example: 7.46
 - name: SHARES_OUTSTANDING
-  type: integer
+  type: amount
   presence: optional
   description: 'Common shares outstanding on the cover of the latest annual report (dei EntityCommonStockSharesOutstanding).'
   unit: 'shares'
@@ -273,7 +274,7 @@ fields:
   example: '2026-10-22'
 - name: SIC_SECTOR
   type: id
-  presence: required
+  presence: optional
   description: 'The company''s SIC industry code (EDGAR sic, four digits as text): the id of the computed sic-sector kind.'
   example: '3571'
   link: sic-sector
@@ -313,6 +314,7 @@ nested:
     - BANKS-US
     - DJIA
     - NDX
+    - R2000
     - SP500
   - name: NAME
     type: text
@@ -325,6 +327,7 @@ nested:
     - Major UK banks
     - Major US banks
     - Nasdaq-100
+    - Russell 2000
     - S&P 500
   - name: SINCE
     type: date
@@ -469,13 +472,7 @@ validation:
   - NAME
   - SEC_NAME
   - CIK
-  - EXCHANGE
-  - LISTING
-  - SIC
-  - SIC_DESCRIPTION
-  - DIVISION
   - SECTOR
-  - PHONE
   - INDEXES
   - CURRENCY
   - FINANCIALS
@@ -485,7 +482,6 @@ validation:
   - FACT_IDS
   - FILING_IDS
   - LATEST_FILING
-  - SIC_SECTOR
   - PRICE_HISTORY
   - PROVENANCE
 - rule: unique
@@ -508,6 +504,7 @@ validation:
 - rule: enum
   field: CURRENCY
   values:
+  - BRL
   - CAD
   - EUR
   - GBP
@@ -541,6 +538,7 @@ validation:
   - BANKS-US
   - DJIA
   - NDX
+  - R2000
   - SP500
 - rule: enum
   field: INDEXES[].NAME
@@ -550,6 +548,7 @@ validation:
   - Major UK banks
   - Major US banks
   - Nasdaq-100
+  - Russell 2000
   - S&P 500
 - rule: link
   field: FINANCIALS[].EQUITY

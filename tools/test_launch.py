@@ -394,10 +394,10 @@ def test_build_jar_is_clean_package_never_install():
 
 
 def test_the_shell_twins_are_gone():
-    """No dual machinery, no shell (LAUNCHER_REVIEW.md D8): bin/ holds only its README; the drain is drishti.py node and the server's own
+    """No dual machinery, no shell (LAUNCHER_REVIEW.md D8): bin/ holds nothing (its README is part of docs/guides/OPERATIONS_GUIDE.md); the drain is drishti.py node and the server's own
     drain on a stop. The one shell script left in tools/ is tools/drill.sh, the internal test drill."""
     tracked = subprocess.run(["git", "ls-files", "bin"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
-    assert sorted(tracked) == ["docs/guides/OPERATIONS_GUIDE.md"]   # what git holds: a leftover __pycache__ is not a shell twin
+    assert tracked == []   # what git holds: a leftover __pycache__ is not a shell twin
     assert not (ROOT / "tools" / "windows").exists() and not (ROOT / "tools" / "rolling-upgrade.sh").exists()
 
 

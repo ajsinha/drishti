@@ -52,7 +52,7 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.economy`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `NAME`, `ISO3`, `REGION_NAME`, `INCOME_NAME`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `GROWTH`, `INFLATION`, `UNEMPLOYMENT`, `POPULATION_M` |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/economy |
 
 **Fields**
 
@@ -244,7 +244,7 @@ One headline statistic of one economy: the series, the latest value, the change 
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.macro-indicator`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/macro-indicator |
 
 **Fields**
 
@@ -381,7 +381,7 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.economic-forecast`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/economic-forecast |
 
 **Fields**
 
@@ -524,7 +524,7 @@ Unemployment, participation, youth and female labour, and employment and output 
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.labour-market`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/labour-market |
 
 **Fields**
 
@@ -660,7 +660,7 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.fiscal-position`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/fiscal-position |
 
 **Fields**
 
@@ -880,7 +880,7 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `macro.region-economy`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
 | Columns | `ISO3`, `COUNTRY_NAME`, `REGION_CODE`, `NAME`, `POPULATION`, `GDP_USD_BN`, `GDP_PER_CAPITA`, `YEAR`, `SOURCE` |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/region-economy |
 
 **Fields**
 
@@ -993,7 +993,7 @@ A country: government type, capital, legislature and seats by party, office hold
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.jurisdiction`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/jurisdiction |
 
 **Fields**
 
@@ -1213,7 +1213,7 @@ A political party that won seats in the lower chamber at the most recent electio
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.party`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/party |
 
 **Fields**
 
@@ -1328,7 +1328,7 @@ The chief of state or head of government of a country as the CIA World Factbook 
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.office-holder`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/office-holder |
 
 **Fields**
 
@@ -1444,7 +1444,7 @@ The most recent election to a chamber or to the executive, with the system, term
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.election`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/election |
 
 **Fields**
 
@@ -1586,7 +1586,7 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.region`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/region |
 
 **Fields**
 
@@ -1738,7 +1738,7 @@ A social or governance statistic of one country over time, with the regional com
 | Dated by | `snapshot` |
 | Cadence | static (due: to be confirmed) |
 | Binding hint | lake table `civic.social-indicator`; the site binds it (`config/bindings.yaml`, Admin → Data bindings) |
-| Test data | modules/economy/packs/world-economy/samples |
+| Test data | data/testdata/world-economy/social-indicator |
 
 **Fields**
 
@@ -1781,7 +1781,7 @@ A social or governance statistic of one country over time, with the regional com
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `SOURCE` | text | required |  | The organisation or organisations whose published data this view shows. | `UNDP, Human Development Report: composite indices time series`, `World Bank, World Development Indicators`, `World Bank, Worldwide Governance Indicators` |  |
-| `DATASET` | text | required |  | The named dataset and its vintage (the release the numbers come from). | `Human Development Index time series (2025 report)`, `World Development Indicators (updated 2026-10-08)`, `Worldwide Governance Indicators (updated 2026-09-25)` |  |
+| `DATASET` | text | required |  | The named dataset and its vintage (the release the numbers come from). | `World Development Indicators (updated 2026-10-08)` |  |
 | `RETRIEVED_AT` | date | required |  | The date the data was downloaded by tools/realdata. | `2026-10-10` |  |
 | `LICENCE` | text | required |  | The terms under which the source allows reuse; attribution is required. | `CC BY 3.0 IGO`, `CC BY 4.0` |  |
 | `ATTRIBUTION` | text | required |  | The credit line to repeat when the data is shown or republished. | `The World Bank: World Development Indicators (CC BY 4.0).`, `The World Bank: Worldwide Governance Indicators (CC BY 4.0).`, `UNDP, Human Development Report 2025 data (CC BY 3.0 IGO).` |  |
@@ -1808,7 +1808,6 @@ A social or governance statistic of one country over time, with the regional com
 - enum: field REGION_NAME; values `East Asia & Pacific`, `Europe & Central Asia`, `Latin America & Caribbean`, `Middle East, North Africa, Afghanistan & Pakistan`, `North America`, `South Asia`, `Sub-Saharan Africa`
 - link: field JURISDICTION; kind jurisdiction
 - enum: field PROVENANCE.SOURCE; values `UNDP, Human Development Report: composite indices time series`, `World Bank, World Development Indicators`, `World Bank, Worldwide Governance Indicators`
-- enum: field PROVENANCE.DATASET; values `Human Development Index time series (2025 report)`, `World Development Indicators (updated 2026-10-08)`, `Worldwide Governance Indicators (updated 2026-09-25)`
 - enum: field PROVENANCE.LICENCE; values `CC BY 3.0 IGO`, `CC BY 4.0`
 - enum: field PROVENANCE.ATTRIBUTION; values `The World Bank: World Development Indicators (CC BY 4.0).`, `The World Bank: Worldwide Governance Indicators (CC BY 4.0).`, `UNDP, Human Development Report 2025 data (CC BY 3.0 IGO).`
 - enum: field PROVENANCE.URL; values `https://databank.worldbank.org/source/world-development-indicators`, `https://hdr.undp.org/data-center/documentation-and-downloads`, `https://www.worldbank.org/en/publication/worldwide-governance-indicators`

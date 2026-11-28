@@ -533,7 +533,7 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 | `ENTITY_NAME` | text | required |  | The legal name of that entity, as in its GLEIF record. | `WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION` |  |
 | `COUNTRY` | text | required |  | The legal address country of the entity the identifier maps to (ISO 3166 alpha-2). | `US` |  |
 | `LEI_GROUP` | id | required |  | The entity's ownership group: the LEI of its ultimate parent, the id of the computed lei-group kind. | `06BTX5UWZD0GQ5N5Y745` | `lei-group` |
-| `MAPPING_FILE` | text | required |  | The GLEIF mapping file the pair was read from (isin-lei-…, LEI-BIC-…, LEI-MIC-….zip), which dates it. | `LEI-BIC-20260925.zip`, `LEI-MIC-20261012.zip`, `isin-lei-20261024T071512.zip` |  |
+| `MAPPING_FILE` | text | required |  | The GLEIF mapping file the pair was read from (isin-lei-…, LEI-BIC-…, LEI-MIC-….zip), which dates it. | `LEI-BIC-20260925.zip` |  |
 | `ISIN_COUNT` | integer | optional |  | ISINs of the issuer | `909` |  |
 
 **Links:** `ENTITY_LEI` → `lei-entity`, `LEI_GROUP` → `lei-group`.
@@ -545,7 +545,6 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 - enum: field TYPE; values `BIC`, `ISIN`, `MIC`
 - link: field ENTITY_LEI; kind lei-entity
 - link: field LEI_GROUP; kind lei-group
-- enum: field MAPPING_FILE; values `LEI-BIC-20260925.zip`, `LEI-MIC-20261012.zip`, `isin-lei-20261024T071512.zip`
 - range: field ISIN_COUNT; min 0
 
 **To review (3)**

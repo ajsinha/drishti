@@ -158,7 +158,7 @@ def test_a_daily_loader_readme_has_the_operators_sections_and_both_operating_sys
         assert s in text, f"tools/loaders/{folder}/README.md: section {s!r}"
     assert "daily routine" in text.lower()
     assert "py -3.13" in text and "python3" in text, f"tools/loaders/{folder}/README.md: commands for Windows (py -3.13) and Linux (python3)"
-    assert ".venv" not in text, "no virtual environment, ever"
+    assert ".venv" not in text, "no virtual environment, ever"   # IGNORE pattern: this assertion only keeps the folder name out of the readmes
 
 
 def test_every_feed_is_named_in_the_external_or_the_news_readme():

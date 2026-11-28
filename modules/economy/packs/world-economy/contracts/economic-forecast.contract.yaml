@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: macro.economic-forecast
   test-data:
-  - modules/economy/packs/world-economy/samples
+  - data/testdata/world-economy/economic-forecast
 fields:
 - name: FORECAST_ID
   type: id

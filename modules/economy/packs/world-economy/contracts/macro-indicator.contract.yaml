@@ -35,7 +35,7 @@ cadence:
 binding-hint:
   lake-table: macro.macro-indicator
   test-data:
-  - modules/economy/packs/world-economy/samples
+  - data/testdata/world-economy/macro-indicator
 fields:
 - name: INDICATOR_ID
   type: id

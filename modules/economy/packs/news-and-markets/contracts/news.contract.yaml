@@ -79,10 +79,6 @@ fields:
   presence: required
   description: 'When the headlines were fetched, as text: date and time in UTC, and in the snapshot "(snapshot captured <date>)".'
   example: 2026-10-18 03:25 UTC (snapshot captured 2026-10-18)
-  enum:
-  - 2026-10-18 03:25 UTC (snapshot captured 2026-10-18)
-  - 2026-10-18 03:26 UTC (snapshot captured 2026-10-18)
-  - 2026-10-18 03:27 UTC (snapshot captured 2026-10-18)
 - name: ITEMS
   type: record list
   presence: required
@@ -182,10 +178,6 @@ nested:
     presence: required
     description: 'When the connector fetched the feed, as text (YYYY-MM-DD HH:MM UTC).'
     example: 2026-10-18 03:25 UTC
-    enum:
-    - 2026-10-18 03:25 UTC
-    - 2026-10-18 03:26 UTC
-    - 2026-10-18 03:27 UTC
   - name: CACHED_FOR
     type: text
     presence: required
@@ -245,12 +237,6 @@ validation:
 - rule: range
   field: COUNT
   min: 0
-- rule: enum
-  field: FETCHED_AT
-  values:
-  - 2026-10-18 03:25 UTC (snapshot captured 2026-10-18)
-  - 2026-10-18 03:26 UTC (snapshot captured 2026-10-18)
-  - 2026-10-18 03:27 UTC (snapshot captured 2026-10-18)
 - rule: range
   field: BY_SOURCE[].COUNT
   min: 0
@@ -260,12 +246,6 @@ validation:
   - duplicates
   - limit
   - relevance
-- rule: enum
-  field: PROVENANCE.FETCHED
-  values:
-  - 2026-10-18 03:25 UTC
-  - 2026-10-18 03:26 UTC
-  - 2026-10-18 03:27 UTC
 notes:
 - 'Several source systems: the connector news and news-store each serve this kind from a table of their own with the same layout; the storage
   above is the first one''s.'
