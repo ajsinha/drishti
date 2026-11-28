@@ -32,7 +32,7 @@ public final class TableCatalogue {
     /** How a location was found: the lake file's own {@code uri:} for the table, or the lake's layout. */
     public static final String CONFIGURED = "configured";
     /** The location is the lake's root and the table's path ({@code <root>/<domain>/<folder>}). */
-    public static final String BY_CONVENTION = "by convention";
+    public static final String BY_CONVENTION = "fallback";
 
     private TableCatalogue() {
     }

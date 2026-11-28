@@ -117,6 +117,17 @@ final class VectorLake {
 
     /** The lines loaded into {@code <root>/risk/pnl-vector} by Drishti Lake's one loader ({@code source.format: loader-rows}), each date replaced. */
     static void loadLines(Path tmp, Path root, String engine, List<String> lines) throws Exception {
+        loadLinesAt(tmp, root + "/risk/" + KIND, engine, lines);
+    }
+
+    /** The positions loaded into the Iceberg table at exactly {@code table} (any folder, any depth: a bank's own location). */
+    static void loadIcebergAt(Path tmp, Path table, String engine, Map<LocalDate, List<Pos>> days) throws Exception {
+        List<String> lines = new ArrayList<>();
+        days.forEach((day, ps) -> ps.forEach(p -> lines.add(line(p, day, null))));
+        loadLinesAt(tmp, table.toString(), engine, lines);
+    }
+
+    static void loadLinesAt(Path tmp, String table, String engine, List<String> lines) throws Exception {
         Path in = Files.createTempDirectory(tmp, "rows");
         Map<String, List<String>> byDate = new java.util.TreeMap<>();
         for (String l : lines) {

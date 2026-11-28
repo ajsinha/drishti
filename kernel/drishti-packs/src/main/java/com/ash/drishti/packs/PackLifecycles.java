@@ -264,6 +264,30 @@ public final class PackLifecycles {
         return done;
     }
 
+    /**
+     * The pack switch's effect here (docs/plans/MODULE_RATIONALISATION.md, gap G1): switched off, the pack is suspended (its gate closes and the
+     * connectors only it uses stop pulling); switched on, it is resumed. One state, not two: Admin's switch and the lifecycle's suspend are the
+     * same thing for a running pack. A pack that is not in the matching state (never started here, already suspended) is left as it is.
+     *
+     * @return the packs whose state changed
+     */
+    public synchronized List<String> follow(String pack, boolean enabled, String actor) {
+        LifecycleMachine m = machines.get(pack);
+        if (m == null) {
+            return List.of();
+        }
+        if (!enabled && m.state() == LifecycleState.RUNNING) {          // this pack only: a pack that extends it has its own switch
+            m.transition(Transition.SUSPEND, actor, () -> suspendedParts.put(pack, List.copyOf(actions().suspendParts(pack, actor))));
+            return List.of(pack);
+        }
+        if (enabled && m.state() == LifecycleState.SUSPENDED) {
+            m.transition(Transition.RESUME, actor, () -> actions().resumeParts(pack, suspendedParts.getOrDefault(pack, List.of()), actor));
+            suspendedParts.remove(pack);
+            return List.of(pack);
+        }
+        return List.of();
+    }
+
     /** {@code resume}: the pack first (its connectors pull again, the gate opens), then the packs its suspend suspended with it. */
     public synchronized List<String> resume(String pack, String actor) {
         LifecycleMachine self = machines.get(pack);

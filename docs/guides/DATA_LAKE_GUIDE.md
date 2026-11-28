@@ -229,8 +229,10 @@ tables:
 
 One resolver makes the location, `TableCatalogue` (Java) and `lakeconfig.locate` (the Python tools); a guard test fails a main source that
 joins a root, a namespace and a table itself. **Admin → Lakes** shows each table's resolved location, format, contract and whether it was
-configured or by convention. [Every table of the reference installation](../admin/TABLE_CATALOGUE.md), with what it holds and who uses it,
-is generated from the lake files by `drishti.py docs generate`. A table's name never follows a module or pack: reorganising modules moves
+configured (its own `uri:`; `${lake.root}/...` anchors it to the lake's root) or a fallback (the lake's layout puts it: `<root>/<domain>/<table>`).
+Every table of the reference installation is configured; the production profile refuses a fallback, and `drishti.py lake entries` writes the
+explicit entries for a lake that still has some. [Every table of the reference installation](../admin/TABLE_CATALOGUE.md), with what it holds,
+who uses it and how a bank binds its own external lake, is generated from the lake files by `drishti.py docs generate`. A table's name never follows a module or pack: reorganising modules moves
 no data.
 
 ### 2.3 Partitions: business date first, then as few as possible

@@ -242,12 +242,22 @@ public final class PackAccess {
                 throw new DrishtiException(ErrorCode.BAD_REQUEST, "'" + pack + "' is needed by " + needs + "; switch those off first");
             }
             states.set(pack, false, actor, reason);
+            follow(pack, false, actor);
             return;
         }
         for (String p : closure(pack)) {
             if (!states.enabled(p) || p.equals(pack)) {
                 states.set(p, true, actor, reason);
+                follow(p, true, actor);
             }
+        }
+    }
+
+    /** The switch also stops (or restarts) the pack's own connectors and gate: one switch, one state (the lifecycle's suspend and resume). */
+    private void follow(String pack, boolean on, String actor) {
+        com.ash.drishti.packs.PackLifecycles l = lifecycles;
+        if (l != null) {
+            l.follow(pack, on, actor);
         }
     }
 

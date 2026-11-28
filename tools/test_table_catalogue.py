@@ -37,7 +37,7 @@ def test_every_table_of_every_lake_file_is_listed():
 def test_a_table_with_a_uri_is_configured_and_one_without_is_by_convention():
     lake = {"lake": "bank", "format": "delta", "root": "s3://bank-lake/curated"}
     assert T.location(lake, "trading.trade_murex", {"uri": "s3://fo-data/mx/trades_v7"}) == ("s3://fo-data/mx/trades_v7", "delta", "configured")
-    assert T.location(lake, "trading.trade", {}) == ("s3://bank-lake/curated/trading/trade", "delta", "by convention")
+    assert T.location(lake, "trading.trade", {}) == ("s3://bank-lake/curated/trading/trade", "delta", "fallback")
     assert T.location(lake, "risk.pnl", {"path": "/mnt/mart/pnl", "format": "iceberg"}) == ("/mnt/mart/pnl", "iceberg", "configured")
 
 

@@ -22,27 +22,39 @@ root: ${lake.data.dir:${drishti.data.dir}}/delta/genomicslake
 defaults: {load-mode: replace}
 tables:
   genomics.variant:
+    uri: "${lake.root}/genomics/variant"
+    format: delta
     id: VARIANT_ID
     promote: [CHROM, POS, REF, ALT, GENE, IMPACT, CONSEQUENCE]
     retention: 260
   genomics.clinvar-variant:         # the clinvar feed's variants (config/feeds/clinvar.yaml); the module's Home reads them by this name
+    uri: "${lake.root}/genomics/clinvar-variant"
+    format: delta
     kind: variant
     id: VARIANT_ID
     promote: [CHROM, POS, REF, ALT, GENE, IMPACT, CONSEQUENCE]
     retention: 260
   genomics.ensembl-gene:            # the ensembl feed's genes (config/feeds/ensembl.yaml)
+    uri: "${lake.root}/genomics/ensembl-gene"
+    format: delta
     kind: gene
     id: GENE
     promote: [CHROM, START]
     retention: 260
   genomics.gene:
+    uri: "${lake.root}/genomics/gene"
+    format: delta
     id: GENE
     promote: [CHROM, START]
     retention: 260
   genomics.sample:
+    uri: "${lake.root}/genomics/sample"
+    format: delta
     id: SAMPLE_ID
     promote: [COHORT, SEX, POPULATION]
     retention: 260
   genomics.cohort:
+    uri: "${lake.root}/genomics/cohort"
+    format: delta
     id: COHORT_ID
     retention: 260

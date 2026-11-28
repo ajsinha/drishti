@@ -22,13 +22,14 @@
 {% for l in lake_files.lakes or [] %}
 <details class="lk-files" {% if loop.first %}open{% endif %}>
   <summary><strong>{{ l.lake }}</strong> · {{ l.format }} · <span class="mono">{{ l.root }}</span>{% if l['in-memory'] %} · held in memory{% endif %} ·
-    {{ l.tables | length }} table{{ '' if l.tables | length == 1 else 's' }}</summary>
+    {{ l.tables | length }} table{{ '' if l.tables | length == 1 else 's' }}
+    {% set fb = l.tables | rejectattr('how', 'equalto', 'configured') | list | length %}· <span data-table-how>{{ l.tables | length - fb }} configured{% if fb %}, <b>{{ fb }} fallback</b>{% endif %}</span></summary>
   <div class="tbl-wrap"><table class="tbl adm-tbl lk-files-tables">
     <caption class="visually-hidden">The tables of lake {{ l.lake }}: symbolic name, resolved location, format, contract, partitions, promoted columns, vectors and load mode</caption>
     <thead><tr><th scope="col">Table (symbolic name)</th><th scope="col">Kind</th><th scope="col">Resolved location</th><th scope="col">Format</th><th scope="col">Contract</th><th scope="col">Resolved by</th><th scope="col">Partitioned by</th><th scope="col">Promoted</th>
       <th scope="col">Vectors</th><th scope="col">Id</th><th scope="col">Loads</th></tr></thead>
     <tbody>{% for t in l.tables %}<tr>
-      <td class="mono">{{ t.name }}</td><td>{{ t.kind }}</td><td class="mono" data-table-location>{{ t.location }}</td><td>{{ t.format }}</td><td class="mono">{{ t.contract or t.kind }}</td><td>{{ t.how }}</td><td class="mono">{{ t['partition-columns'] | join(', ') }}</td>
+      <td class="mono">{{ t.name }}</td><td>{{ t.kind }}</td><td class="mono" data-table-location>{{ t.location }}</td><td>{{ t.format }}</td><td class="mono">{{ t.contract or t.kind }}</td><td data-table-resolved-by="{{ t.how }}">{{ t.how }}</td><td class="mono">{{ t['partition-columns'] | join(', ') }}</td>
       <td title="{{ t.promote | join(', ') }}">{{ t.promote | length }}</td><td class="mono">{{ t.vectors | join(', ') }}</td><td class="mono">{{ t.id or '' }}</td>
       <td>{{ 'append (each batch once)' if t['load-mode'] == 'append' else 'replace each date' }}</td></tr>{% else %}<tr><td colspan="11" class="text-muted-d">No table yet: a pack's recommended entry is copied here the first time a writer meets its kind.</td></tr>{% endfor %}</tbody>
   </table></div>

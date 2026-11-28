@@ -159,6 +159,21 @@ class PackLifecyclesTest {
     }
 
     @Test
+    void thePackSwitchStopsTheConnectorsOnlyThePackUsesAndSwitchingOnResumesThem() {
+        assertThat(lc.follow("desk-views", false, "admin")).containsExactly("desk-views");
+        assertThat(lc.state("desk-views")).isEqualTo(LifecycleState.SUSPENDED);
+        assertThat(lc.follow("desk-views", false, "admin")).as("already off: unchanged").isEmpty();
+        assertThat(lc.follow("market-risk", false, "admin")).containsExactly("market-risk");
+        assertThat(actions.connectorState).as("scenario-lake only market-risk uses; ref-lake core uses too").containsExactly(Map.entry("scenario-lake", "SUSPENDED"));
+        assertThatThrownBy(() -> lc.requireServing("var-result")).isInstanceOf(ComponentSuspended.class);
+        assertThat(lc.follow("market-risk", true, "admin")).containsExactly("market-risk");
+        assertThat(actions.connectorState).containsEntry("scenario-lake", "RUNNING");
+        lc.requireServing("var-result");
+        assertThat(lc.state("desk-views")).as("a pack that extends it keeps its own switch").isEqualTo(LifecycleState.SUSPENDED);
+        assertThat(lc.follow("not-a-pack", false, "admin")).isEmpty();
+    }
+
+    @Test
     void illegalTransitionsAreRefusedAndChangeNothing() {
         assertThatThrownBy(() -> lc.resume("core", "ops")).isInstanceOf(LifecycleRefused.class).hasMessageContaining("is running");
         assertThatThrownBy(() -> lc.start("core", "ops")).isInstanceOf(LifecycleRefused.class);

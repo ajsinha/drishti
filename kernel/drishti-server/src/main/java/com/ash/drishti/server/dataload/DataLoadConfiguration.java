@@ -79,11 +79,11 @@ public class DataLoadConfiguration {
     public DataInbox dataInbox(DataLoadSettings settings, ObjectProvider<LoadService> loads, ObjectProvider<AdmissionGate> gate,
             ObjectProvider<NetService> net, ObjectProvider<BusinessDates> dates, ObjectProvider<PeerCalls> peers,
             ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources, Environment env,
-            ObjectProvider<com.ash.drishti.registry.AccessRegistry> access) {
+            ObjectProvider<com.ash.drishti.registry.AccessRegistry> access, ObjectProvider<com.ash.drishti.server.security.PackAccess> packAccess) {
         BusinessDates bd = dates.getIfAvailable();
         ZoneId zone = bd == null ? ZoneId.systemDefault() : bd.zone();
         String node = node(net.getIfAvailable());
-        return new DataInbox(settings, node, Clock.systemUTC(), zone, packs(loads, sources, moduleRules(env, access)), new LoaderProcess(settings),
+        return new DataInbox(settings, node, Clock.systemUTC(), zone, packs(loads, sources, moduleRules(env, access, packAccess)), new LoaderProcess(settings),
                 signal(loads, new LoadForwarding(peers.getIfAvailable()), LoadForwarding.node(node)), busy(gate));
     }
 
@@ -102,9 +102,10 @@ public class DataLoadConfiguration {
     @Bean
     public ReadyDesk readyDesk(DataLoadSettings settings, DataInbox inbox, Environment env, ObjectProvider<LoadService> loads,
             ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources, ObjectProvider<NetService> net, ObjectProvider<ReadyRule> rules,
-            ObjectProvider<com.ash.drishti.registry.AccessRegistry> access) {
+            ObjectProvider<com.ash.drishti.registry.AccessRegistry> access,
+            ObjectProvider<com.ash.drishti.server.security.PackAccess> packAccess) {
         ReadyDesk.Settings upload = Binder.get(env).bind("drishti.dataload.upload", ReadyDesk.Settings.class).orElseGet(ReadyDesk.Settings::defaults);
-        return new ReadyDesk(settings, upload, inbox, packs(loads, sources, moduleRules(env, access)), Clock.systemUTC(), node(net.getIfAvailable()), rules.orderedStream().toList());
+        return new ReadyDesk(settings, upload, inbox, packs(loads, sources, moduleRules(env, access, packAccess)), Clock.systemUTC(), node(net.getIfAvailable()), rules.orderedStream().toList());
     }
 
     @Bean
@@ -131,7 +132,8 @@ public class DataLoadConfiguration {
      * module's folder, or the rules inline), read at each cycle so that switching a module off or on changes the rules at once. The
      * module's folder is the one the module boot gave it, through the resolution.
      */
-    static Supplier<java.util.List<Routes.ModuleRules>> moduleRules(Environment env, ObjectProvider<com.ash.drishti.registry.AccessRegistry> access) {
+    static Supplier<java.util.List<Routes.ModuleRules>> moduleRules(Environment env, ObjectProvider<com.ash.drishti.registry.AccessRegistry> access,
+            ObjectProvider<com.ash.drishti.server.security.PackAccess> packAccess) {
         return () -> {
             // the resolution's modules that are on, each in the folder the module boot gave it;
             // a rules file that cannot be read is a problem of the resolution (Health, DRS-1048), never a silent empty list
@@ -139,13 +141,32 @@ public class DataLoadConfiguration {
             com.ash.drishti.api.resolution.ConfigResolution r = com.ash.drishti.packs.PackPaths.resolution(env);   // the current one: a switch rebuilds it
             com.fasterxml.jackson.dataformat.yaml.YAMLMapper yaml = new com.fasterxml.jackson.dataformat.yaml.YAMLMapper();
             java.util.Map<String, java.util.List<java.util.Map<String, Object>>> byModule = new java.util.LinkedHashMap<>();
-            for (com.ash.drishti.api.resolution.ModuleTemplates.Rule rule : r.rules()) {
+            com.ash.drishti.server.security.PackAccess packs = packAccess.getIfAvailable();
+            for (com.ash.drishti.api.resolution.ModuleTemplates.Rule rule : followPackSwitch(r.rules(), packs == null ? null : packs::installed, packs == null ? null : packs::isEnabled)) {
                 byModule.computeIfAbsent(rule.module(), k -> new java.util.ArrayList<>()).add(rule.rule());
             }
             byModule.forEach((id, rules) -> out.add(new Routes.ModuleRules(id,
                     yaml.valueToTree(java.util.Map.of("dataload", java.util.Map.of("rules", rules))))));
             return out;
         };
+    }
+
+    /**
+     * The rules a pack switch leaves: a rule that names a {@code pack:} which is installed here and switched off (Admin → Packs) is not
+     * matched, so its files stay in the inbox, unloaded (docs/plans/MODULE_RATIONALISATION.md, gap G3). A rule of no pack, or of a pack this
+     * server does not know, stays.
+     */
+    static java.util.List<com.ash.drishti.api.resolution.ModuleTemplates.Rule> followPackSwitch(
+            java.util.List<com.ash.drishti.api.resolution.ModuleTemplates.Rule> rules, Supplier<java.util.List<String>> installed,
+            java.util.function.Predicate<String> enabled) {
+        if (installed == null || enabled == null) {
+            return rules;
+        }
+        java.util.List<String> known = installed.get();
+        return rules.stream().filter(rule -> {
+            Object pack = rule.rule().get("pack");
+            return pack == null || !known.contains(String.valueOf(pack)) || enabled.test(String.valueOf(pack));
+        }).toList();
     }
 
     /** The loaded packs by name: the folder whose pack.yaml the loader reads, and the kinds; the lakes the connectors read. */

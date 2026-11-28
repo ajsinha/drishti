@@ -203,14 +203,41 @@ def location(lake: dict, name: str, entry: dict | None) -> tuple[str, str, str]:
     fmt = reference(fmt)
     uri = e.get("uri") or (e.get("path") if str(e.get("path", "")).startswith("/") or "://" in str(e.get("path", "")) else None)
     if uri:
-        return reference(uri), fmt, "configured"
+        return reference(str(uri).replace("${lake.root}", str(lake.get("root") or ""))), fmt, "configured"
     domain, tbl = name.split(".", 1)
     path = e.get("path") or f"{domain}/{tbl}"
     root = reference(lake.get("root") or "")
     cat = lake.get("catalog") or {}
     if not root and isinstance(cat, dict) and cat.get("type"):
         return f"catalog {cat['type']}: {path.replace('/', '.')}", fmt, "configured"
-    return f"{root.rstrip('/')}/{path}", fmt, "by convention"
+    return f"{root.rstrip('/')}/{path}", fmt, "fallback"
+
+
+RECIPE = [
+    "## Binding a bank's external lake",
+    "",
+    "A bank's lake keeps its own layout: its tables sit at paths and depths Drishti does not control, in Delta or Iceberg. Nothing of",
+    "Drishti's layout is assumed; the lake file binds each symbolic name to where the table is. For each table:",
+    "",
+    "1. Copy `config/lakes.examples/other/customer-lake.yaml` to `config/lakes/<lake>.yaml` (the site folder in production). Set `format:` to",
+    "   the lake's usual format; the `root:` is only the default for a table with no `uri:`.",
+    "2. Under `tables:` give each symbolic name (`<domain>.<table>`, for example `trading.trade`) its entry: `uri:` the table's real location",
+    "   (`s3://fo-data/mx/trades_v7`, `/mnt/mart/risk/scenario_pv`, an absolute path or URI, nothing joined to it), `format:` (`delta` or",
+    "   `iceberg`) when it differs from the lake's, and `contract:` the kind's contract (`trade@1`) the table is read by. `${lake.root}/...`",
+    "   anchors a uri to the lake's root when the tables do follow it.",
+    "3. A kind that several tables hold is one entry per table (`trading.trade_murex` with `kind: trade`), a connector names the entry with",
+    "   `lake-tables:`.",
+    "4. Run `python3 tools/drishti.py lake check`: it compares each table on a local disk with its entry (format, partition columns, promoted",
+    "   columns present) and names every mismatch; a table on an object store is reported as not checked from here. **Admin → Lakes** shows",
+    "   each table's resolved location, format, contract and whether it is *configured* or a *fallback*.",
+    "5. `python3 tools/drishti.py lake entries` lists (and with `--write` writes) an explicit entry for every table that is still a fallback,",
+    "   from where the layout puts it today: the reference installation was made explicit this way once.",
+    "",
+    "Under the production profile a table that is a fallback is refused at start (rule T1 of the production standard): every table the server",
+    "reads is resolved explicitly, by its own `uri:`. The server reads a bank's external tables, and the tools read and write them, by the",
+    "symbolic name alone; the tests `ExternalLakeTest` (server) and `test_external_lake.py` (tools) bind a lake of arbitrary folders this way.",
+    "",
+]
 
 
 def render() -> str:
@@ -218,6 +245,7 @@ def render() -> str:
     cs = contracts()
     us = users(ls)
     n = sum(len(d.get("tables") or {}) for d in ls)
+    configured = sum(1 for d in ls for t, e in (d.get("tables") or {}).items() if location(d, t, e or {})[2] == "configured")
     out = [
         "<!--",
         "  Project Drishti · Any data. Any domain. One grammar.",
@@ -234,11 +262,12 @@ def render() -> str:
         "file of each installation says where that name is: per table, `uri:` (an absolute path or URI, nothing joined to it), `format:` (delta,",
         "iceberg or files) and `contract:`. A table with no `uri:` sits at `<root>/<domain>/<table>`, the layout Drishti gives its own lakes. A",
         "bank's external lake needs only its path and schema in its lake file; no folder layout of Drishti's is assumed. **Admin → Lakes** shows",
-        "each table's resolved location and whether it was configured or by convention. The locations below are the reference installation's",
+        "each table's resolved location and whether it was configured or a fallback. The locations below are the reference installation's",
         "(`<data>` is the data folder); a table is not owned by a pack or a module, which only declare the names they read.",
         "",
-        f"{n} tables in {len(ls)} lakes.",
+        f"{n} tables in {len(ls)} lakes: {configured} configured (an explicit `uri:`), {n - configured} fallback (the lake's layout puts them).",
         "",
+        *RECIPE,
     ]
     for d in ls:
         tables = d.get("tables") or {}
