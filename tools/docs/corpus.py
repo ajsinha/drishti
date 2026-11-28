@@ -79,6 +79,7 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"docs/(DEPLOYMENT_AND_QA_GUIDE|QUICKSTART_DEVELOPERS|README)\.md", "keep", "A", "", ""),
     (r"docs/PRODUCTION_DEPLOYMENT\.md", "merge", "A", GL + "OPERATIONS_GUIDE.md", ""),
     (r"docs/admin/BENCHMARK\.md", "keep", "B", "", ""),
+    (r"docs/admin/PRODUCTION_STANDARD\.md", "keep", "B", "", ""),
     (r"docs/admin/CONFIGURATION\.md", "generate", "B", "", "tools/settings_catalogue.py"),
     (r"docs/admin/UNDER_CONSTRUCTION\.md", "generate", "B", "", "tools/under_construction.py"),
     (r"docs/architecture/(ACCESS_MODEL|DISTRIBUTIONS|DOMAIN_MODULES)\.md", "merge", "B", KM, ""),

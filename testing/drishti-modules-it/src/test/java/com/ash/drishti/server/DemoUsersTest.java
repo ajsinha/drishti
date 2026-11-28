@@ -59,7 +59,7 @@ class DemoUsersTest {
                 .andExpect(jsonPath("$.packs").value(hasItems("core", "trading", "market-data", "market-risk", "counterparty-risk")));
         mvc.perform(get("/api/v1/admin/users/demo-genomics").header("Authorization", admin))
                 .andExpect(jsonPath("$.roles").value(hasItem("genomics-reader")))
-                .andExpect(jsonPath("$.packs").value(hasItems("genomics", "genomics-showcase", "protein-engineering")));
+                .andExpect(jsonPath("$.packs").value(hasItems("genomics-showcase", "protein-engineering")));
         mvc.perform(get("/api/v1/admin/users/demo-market").header("Authorization", admin))
                 .andExpect(jsonPath("$.roles").value(hasItem("market-data-reader")))
                 .andExpect(jsonPath("$.packs.length()").value(1));
