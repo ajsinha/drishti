@@ -137,6 +137,14 @@ def data_dir() -> pathlib.Path:
 _OVERRIDE: str = ""
 
 
+def loader_work_dir() -> pathlib.Path:
+    """The folder a loader stages in: <data>/tmp/loaders (made on demand), never the system temp folder (often memory-backed and
+    outside the data folder)."""
+    d = data_dir() / "tmp" / "loaders"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
 def data_named() -> bool:
     """Whether a data folder was named at all (--data-dir, the settings file or DRISHTI_DATA_DIR) rather than this checkout's default."""
     import javacmd

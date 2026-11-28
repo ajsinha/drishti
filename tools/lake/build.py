@@ -614,7 +614,8 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
     staging = None
     if remote_root:
         import tempfile
-        staging = pathlib.Path(tempfile.mkdtemp(prefix="drishti-build-")) / summary["run"]
+        import lakeconfig
+        staging = pathlib.Path(tempfile.mkdtemp(prefix="drishti-build-", dir=lakeconfig.loader_work_dir())) / summary["run"]
     elif lake:
         table_path = pathlib.Path(summary["table"])
         old = lake / STATE / "staging" / f"{table_path.parent.name}--{table_path.name}"
@@ -742,10 +743,11 @@ def _go_java(a, p, as_of, lake, table, summary, prog, started, say, staging, rem
     """The whole build by the parallel lake loader (tools/lake/javaload.py): this run holds the lock and keeps the run log."""
     import tempfile
     import javaload
+    import lakeconfig
     summary["engine"], summary["engineWhy"] = "java-loader", why
     scratch = None
     if staging is None:                                    # a dry run without --lake: a scratch folder for the loader's files
-        scratch = pathlib.Path(tempfile.mkdtemp(prefix="drishti-build-"))
+        scratch = pathlib.Path(tempfile.mkdtemp(prefix="drishti-build-", dir=lakeconfig.loader_work_dir()))
         staging = scratch / summary["run"]
     target = str(remote_root or lake or staging / "dry-run-lake")
     prog.update(force=True, phase="loading", engine="java-loader")
