@@ -138,8 +138,8 @@ def render(spec: FB.FeedSpec) -> str:
         if ex:
             out += ["", "One row (JSON Lines: one object a line; the values are the contract's examples):", "", "```json",
                     json.dumps(ex, ensure_ascii=False), "```"]
-        out += ["", f"The contract: `{_where(ds.pack)}/contracts/{contract_file(ds.pack, ds.kind).name}` "
-                f"([{ds.pack}](../../docs/contracts/packs/{ds.pack}.md)).", ""]
+        out += ["", f"The contract: `{_where(ds.pack)}/contracts/{contract_file(ds.pack, ds.kind).name}`"
+                + (f" ([{ds.pack}](../../docs/contracts/packs/{ds.pack}.md))." if (ROOT / "docs" / "contracts" / "packs" / f"{ds.pack}.md").is_file() else ""), ""]
     return "\n".join(out).rstrip("\n") + "\n"
 
 

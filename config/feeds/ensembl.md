@@ -48,4 +48,4 @@ One gene of the panel: chromosome, start, end, strand, biotype, protein length o
 | `DOMAINS` | list |  | protein domains: NAME, FROM, TO |
 | `VARIANTS` | integer |  |  |
 
-The contract: `modules/genomics/packs/genomics/contracts/gene.yaml` ([genomics](../../docs/contracts/packs/genomics.md)).
+The contract: `modules/genomics/packs/genomics/contracts/gene.yaml`

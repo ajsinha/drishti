@@ -57,4 +57,4 @@ One variant of the panel: GRCh38 position and alleles, gene, consequence, impact
 | `AF` | number |  | CARRIERS over the samples genotyped |
 | `SAMPLES` | list |  | the carriers' sample ids |
 
-The contract: `modules/genomics/packs/genomics/contracts/variant.yaml` ([genomics](../../docs/contracts/packs/genomics.md)).
+The contract: `modules/genomics/packs/genomics/contracts/variant.yaml`
