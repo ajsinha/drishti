@@ -495,11 +495,11 @@ kernel with it alone ([KERNEL_AND_MODULES.md section 20.4](../architecture/KERNE
 
 1. **Generated.** `mvn archetype:generate -DarchetypeArtifactId=drishti-module-archetype -DgroupId=org.helixlab -DartifactId=genomics
    -Dpackage=org.helixlab.genomics -Ddomain=genomics` (the first commit of the module is the archetype's output, unchanged).
-2. **The VCF reader** (`VcfConnector`, a `SourcePlugin`): reads `data/samples/*.vcf` inside the package and `<data>/modules/genomics/vcf/`
-   (plain or gzipped VCF 4.x); one `variant` per alternate allele, the samples and their `##SAMPLE` cohorts (`Vcf`, `GenomicsData`, one
-   immutable snapshot).
-3. **The kinds** `gene` and `cohort` (`GenomicsKinds`, a `KindProvider`), computed from the variants and `gene.jsonl`; the contracts in
-   `packs/genomics/contracts/`.
+2. **The data from the lake** (`GenomicsData`, one immutable snapshot): the kinds `variant`, `sample`, `gene` and `cohort` of the module's
+   `genomics` pack, read through the kernel's bindings (the pack's Delta connector `genomics-store` over the lake `genomicslake`); the module
+   opens no file. VCF files reach the lake through the genomics loader (`tools/loaders/genomics`), one variant row per alternate allele.
+3. **The cohorts**, computed by the module from the samples and the variants they carry (a loaded cohort row adds to or replaces one); the
+   contracts in `packs/genomics/contracts/`.
 4. **The API** (`GenomicsController`, `@ModuleApi("genomics")`): `/api/v1/genomics/variants`, `/genes/{id}`, `/cohorts/{id}`; the Rachana
    function `genomics_af_class(af)`.
 5. **One page folder**, `console/pages/explorer.html`, for the six routes (`VARIANT`, `GENE`, `COHORT` and their lists), drawn with the
@@ -2711,7 +2711,7 @@ Drishti finds plugins with the JDK's `ServiceLoader` (`PluginDiscovery` in `dris
 2. Make the jar visible: put it in the server's **lib folder** (`drishti.lib.path`, default `<home>/lib/ext`). Every jar there
    is loaded at start into one lib class loader under the kernel's (it never replaces a kernel class); a jar added needs no rebuild,
    only a restart. A shipped plugin is a Maven dependency of `drishti-server` instead. A connector that only one module's kinds use
-   ships **inside that module** (the genomics module's VCF reader, section 1.8): it goes with the module.
+   ships **inside that module**: it goes with the module.
 
 A plugin whose name no connector uses and that is not listed under `plugins` starts with empty settings, and, if it
 needs one, stays idle (see below). `GET /api/v1/sources` lists the running connectors; the failures are under
@@ -3238,7 +3238,7 @@ work that uses it is kept, marked *needs module freight*, and comes back with it
 |---|---|---|
 | to read a new kind of **store, protocol or file format** that any pack or module may use (a database, a broker, a vendor's files) | a **plugin**, in a jar | it knows no domain; the site makes as many connectors of it as it needs, each a file |
 | to bring a domain's **kinds, computations, functions, API, pages and Help** | a **module** (section 12.1) | it reads its data through bindings and connectors it never names |
-| a reader that **only one module's kinds** use (a format no one else reads) | a plugin **inside that module** | it arrives, starts and leaves with the module: the genomics module's VCF reader ([section 1.9](#19-the-genomics-sample-step-by-step)) |
+| a reader that **only one module's kinds** use (a format no one else reads) | a plugin **inside that module** | it arrives, starts and leaves with the module (a format that is not data in a lake; the files of a lake are loaded by a loader, as the genomics sample's VCF files are, [section 1.9](#19-the-genomics-sample-step-by-step)) |
 | a library several connectors or modules share (a JDBC driver) | neither: put the jar in `lib/` | one class loader for everyone |
 
 **1. Start from the shipped pattern.** Each shipped plugin is `plugins/drishti-plugin-<name>/`: a `pom.xml` depending on `drishti-api`,

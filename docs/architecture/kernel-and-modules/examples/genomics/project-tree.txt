@@ -14,7 +14,7 @@ modules/genomics/
 ├── java/
 │   └── genomics/                               the Maven project (parent drishti-module-parent)              → java/genomics.jar
 │       ├── pom.xml                             drishti-module-maven-plugin: validate, assemble (source: the module folder), conformance
-│       ├── src/main/java/org/helixlab/genomics/   GenomicsModule, ModuleConfig, VcfConnector, GenomicsKinds, GenomicsController ...
+│       ├── src/main/java/org/helixlab/genomics/   GenomicsModule, ModuleConfig, GenomicsData, GenomicsController ...
 │       ├── src/test/java/org/helixlab/genomics/   VcfTest, the module's own tests
 │       └── target/dmod/genomics-0.1.0.dmod     the build's output (git-ignored)
 └── pom.xml                                     aggregates java/genomics (built by the root pom)                never packed

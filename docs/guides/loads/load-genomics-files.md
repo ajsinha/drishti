@@ -127,7 +127,7 @@ tables (3):
 lock: free
 ```
 
-(Real output of the run above; the gene table also holds the Ensembl run's 3 rows of 2026-11-27.) Also: the closing line (`rejected=0 refused=0`), `<data>/genomics/loads/<date>/manifest.json` (each file's rows and SHA-256) and, in the product, **Genomics** in the menu (Variants, Genes, Cohorts) after the module is switched off and on in Admin → Modules, or `GET /api/v1/genomics/variants?gene=BRCA1`. The screens read the module's folder (`<data>/modules/genomics/vcf/`, filled by the run), the lake is for queries, BI and history.
+(Real output of the run above; the gene table also holds the Ensembl run's 3 rows of 2026-11-27.) Also: the closing line (`rejected=0 refused=0`), `<data>/genomics/loads/<date>/manifest.json` (each file's rows and SHA-256) and, in the product, **Genomics** in the menu (Variants, Genes, Cohorts) within a minute of the load (no restart, no folder to fill), or `GET /api/v1/genomics/variants?gene=BRCA1`. The screens read the lake tables this run wrote; the files you drop reach them only through this loader.
 
 ## Reference
 

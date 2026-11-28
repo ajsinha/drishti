@@ -3090,13 +3090,13 @@ next to banking, mostly content: kinds, Sutras, pages), the public-data refresh 
 
 ### 20.4 Drishti Genomics (sample)
 
-A module built from the Module SDK alone: a VCF reader as a kernel connector extension; kinds `variant`, `gene`, `sample`, `cohort`;
+A module built from the Module SDK alone: kinds `variant`, `gene`, `sample`, `cohort` read from the genomics lake through its pack's connector (the loader puts VCF files there);
 commands VAR-free (`VARIANT`, `GENE`, `COHORT`); one page folder; synthetic data. Purpose: the release's proof that the kernel boots and
 is useful with no finance at all. Not for the owner's demos.
 
 **As built (wave 3).** `modules/genomics` (publisher Helix Lab, a sample third party) is made from the archetype and finished by hand
-([DEVELOPER_GUIDE.md section 1.9](../guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step)): the VCF reader is a `SourcePlugin`
-inside the module (it serves only the module's kinds and must go with it, so not the lib folder); `gene` and `cohort` are computed;
+([DEVELOPER_GUIDE.md section 1.9](../guides/DEVELOPER_GUIDE.md#19-the-genomics-sample-step-by-step)): the screens read the lake
+tables through the genomics pack's connector (the module opens no file; the genomics loader writes the lake); the cohorts are computed;
 `GENE TP53` draws the module's own visual, `genomics.lollipop`, a kind of drishti-chart's registry. Its `.dmod` passes C1 to C14. The file
 takes **none of the kernel's packs** (`kernel-packs: []`: no counterparty, book or desk) and offers one lens, **Research**
 (`config/lenses/genomics/research.yaml`); the module's words are its commands. `GenomicsDistributionServerTest` boots it on the thin

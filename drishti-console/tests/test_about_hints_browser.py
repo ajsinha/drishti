@@ -27,7 +27,7 @@ from wb_live import ROOT, _stack
 @pytest.fixture(scope="module")
 def live_console(tmp_path_factory):
     """The console in front of a real server with the packs whose about text this tests (the default stack enables others). The variant
-    pages are the example genomics pack's (examples/packs, a fixture): the genomics module, which serves variant from its own VCF reader, is off
+    pages are the example genomics pack's (examples/packs, a fixture): the genomics module, which reads variant from the genomics lake, is off
     (as in ExplainAboutTest), or it would answer variant first and hold none of these records."""
     yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": "market-risk,genomics", "DRISHTI_PACKS_EXTRA_DIRS": str(ROOT / "examples" / "packs"),
                                          "DRISHTI_MODULES_GENOMICS_ENABLED": "false"})
