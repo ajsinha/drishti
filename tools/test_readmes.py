@@ -140,7 +140,7 @@ def test_a_pack_readme_has_its_intro_in_the_packs_about_yaml():
 # ------------------------------------------------------------------------------------------------ the loaders' READMEs
 
 LOADERS = ROOT / "tools" / "loaders"
-DAILY = ("mrloader", "external", "news")          # the loaders run every day: the full set of sections, Windows and Linux commands
+DAILY = ("mrloader", "external", "news", "genomics")          # the loaders run every day: the full set of sections, Windows and Linux commands
 SECTIONS = ("## What it loads", "## Prerequisites", "## How to check it worked", "## When something goes wrong")
 
 
@@ -162,13 +162,13 @@ def test_a_daily_loader_readme_has_the_operators_sections_and_both_operating_sys
 
 
 def test_every_feed_is_named_in_the_external_or_the_news_readme():
-    text = (LOADERS / "external" / "README.md").read_text(encoding="utf-8") + (LOADERS / "news" / "README.md").read_text(encoding="utf-8")
+    text = "".join((LOADERS / f / "README.md").read_text(encoding="utf-8") for f in ("external", "news", "genomics"))
     for f in sorted((ROOT / "config" / "feeds").glob("*.yaml")):
-        assert f"`{f.stem}`" in text, f"config/feeds/{f.name}: name the feed in tools/loaders/external/README.md or tools/loaders/news/README.md"
+        assert f"`{f.stem}`" in text, f"config/feeds/{f.name}: name the feed in the README of its loader (external, news or genomics)"
 
 
 def test_every_runnable_script_of_a_loader_is_named_in_its_readme():
-    for folder in ("mrloader", "external", "news"):
+    for folder in ("mrloader", "external", "news", "genomics"):
         text = (LOADERS / folder / "README.md").read_text(encoding="utf-8")
         for py in sorted((LOADERS / folder).glob("*.py")):
             body = py.read_text(encoding="utf-8")
