@@ -155,7 +155,7 @@ A listed company and the funds holding it.
 | `ETFS` | integer | required | How many of them are ETFs. Source: computed. |
 | `TOTAL_VALUE` | amount | required | The value the funds hold together. Source: computed from N-PORT CURRENCY_VALUE. |
 | `TOTAL_SHARES` | amount | required | The shares the funds hold together. Source: computed from N-PORT BALANCE. |
-| `SHARES_OUTSTANDING` | integer | optional | The company's shares outstanding (10-K cover). Source: us-equities us-company.SHARES_OUTSTANDING (SEC XBRL dei). |
+| `SHARES_OUTSTANDING` | amount | optional | The company's shares outstanding (10-K cover). Source: us-equities us-company.SHARES_OUTSTANDING (SEC XBRL dei). |
 | `PCT_OF_SHARES` | rate | optional | Shares held over shares outstanding; empty where the filed count cannot be compared. Source: computed. |
 | `AVG_WEIGHT` | rate | required | Its average weight in the funds holding it. Source: computed. |
 | `MAX_WEIGHT` | rate | required | Its largest weight in a fund. Source: computed. |

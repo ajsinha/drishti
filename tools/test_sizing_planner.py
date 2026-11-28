@@ -200,6 +200,8 @@ class SizingPlannerTest(unittest.TestCase):
         files = {str(p.relative_to(sp.TEMPLATE_OUT)).replace("\\", "/"): re.sub(r"<!--.*?-->\s*", "", p.read_text(encoding="utf-8"), flags=re.S)
                  for p in sp.TEMPLATE_OUT.rglob("*") if p.is_file()}
         meta = json.loads(files.pop("template.json"))
+        by_source = {v: k for k, v in meta["files"].items()}          # a part kept under a visible source name (_rels/root.rels.xml) is the workbook's _rels/.rels
+        files = {by_source.get(name, name): text for name, text in files.items()}
         self.assertEqual(sorted(files), sorted(meta["parts"]))
         self.assertEqual(set(meta["inputs"]), {i["name"] for i in sp.PLAN["inputs"]})
         self.assertIn("{{PRODUCT}}", files["docProps/core.xml"])

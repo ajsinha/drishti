@@ -68,6 +68,7 @@ A listed company's quote and daily history.
 | `PROVENANCE` | record | required | Where the quote comes from, one object: FEED (Yahoo Finance's public chart endpoint), FETCHED (ISO-8601 UTC), CACHED_FOR, TERMS and SNAPSHOT. |
 | `SNAPSHOT` | text | required | Says the document is a committed snapshot: when it was captured and from where (tools/testdata/capture_market.py). |
 | `SNAPSHOT_CAPTURED_AT` | timestamp | required | When the snapshot was captured, ISO-8601 UTC. |
+| `ANALYTICS` | record | required | The figures computed from HISTORY's closes when the snapshot was captured (the yfinance plugin's PriceAnalytics): one object. |
 
 One row (JSON Lines: one object a line; the values are the contract's examples):
 

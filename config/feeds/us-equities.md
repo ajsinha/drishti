@@ -47,11 +47,11 @@ A listed company: CIK, ticker, LEI, SIC, headquarters.
 | `SEC_NAME` | text | required | The company's name as SEC EDGAR registers it (submissions name). |
 | `CIK` | text | required | The SEC Central Index Key, ten digits with leading zeros (text, never a number). |
 | `OTHER_TICKERS` | text | optional | The company's other tickers on EDGAR (preferred shares, other classes), comma separated; empty when none. |
-| `EXCHANGE` | text | required | The exchanges EDGAR lists the company's securities on, comma separated (Nasdaq, NYSE ...). |
-| `LISTING` | text | required | The listing market from the Nasdaq Trader symbol directory (for example Nasdaq Global Select Market). |
-| `SIC` | text | required | The SEC Standard Industrial Classification code (four digits, text). |
-| `SIC_DESCRIPTION` | text | required | The company's SIC industry in words, as EDGAR gives it (sicDescription). |
-| `DIVISION` | text | required | The letter of the SIC division the code falls in (A to J); empty when unclassified. |
+| `EXCHANGE` | text | optional | The exchanges EDGAR lists the company's securities on, comma separated (Nasdaq, NYSE ...). |
+| `LISTING` | text | optional | The listing market from the Nasdaq Trader symbol directory (for example Nasdaq Global Select Market). |
+| `SIC` | text | optional | The SEC Standard Industrial Classification code (four digits, text). |
+| `SIC_DESCRIPTION` | text | optional | The company's SIC industry in words, as EDGAR gives it (sicDescription). |
+| `DIVISION` | text | optional | The letter of the SIC division the code falls in (A to J); empty when unclassified. |
 | `SECTOR` | text | required | The name of the SIC division (Manufacturing, Finance, Insurance and Real Estate ...), or Unclassified. |
 | `STATE_OF_INCORPORATION` | text | optional | The state (or country) code of incorporation, as EDGAR gives it. |
 | `FISCAL_YEAR_END` | text | optional | The fiscal year end as MM-DD (EDGAR fiscalYearEnd). |
@@ -60,7 +60,7 @@ A listed company: CIK, ticker, LEI, SIC, headquarters.
 | `BUSINESS_ADDRESS` | text | optional | The business address's city and state or country code, from EDGAR. |
 | `FOUNDED` | date | optional | The date the company was founded (YYYY-MM-DD), from Wikidata. |
 | `WEBSITE` | text | optional | The company's website: Wikidata's, else EDGAR's. |
-| `PHONE` | text | required | The business phone number, from EDGAR. |
+| `PHONE` | text | optional | The business phone number, from EDGAR. |
 | `LEI` | text | optional | The company's Legal Entity Identifier (20 characters), from Wikidata or matched in GLEIF by legal name; empty when none was found. |
 | `LEI_LEGAL_NAME` | text | optional | The legal name GLEIF registers for the LEI. |
 | `LEI_STATUS` | text | optional | The LEI's registration status in GLEIF (ISSUED, LAPSED, RETIRED, DUPLICATE ...). |
@@ -75,7 +75,7 @@ A listed company: CIK, ticker, LEI, SIC, headquarters.
 | `LIABILITIES` | integer | optional | Total liabilities at the latest fiscal year end (us-gaap Liabilities, else liabilities and equity less total equity). |
 | `EQUITY` | integer | optional | Stockholders' equity at the end of FISCAL_YEAR (us-gaap StockholdersEquity), in CURRENCY; a number, not a link. |
 | `EPS_DILUTED` | amount | optional | Diluted earnings per share for FISCAL_YEAR (us-gaap EarningsPerShareDiluted, else basic), in CURRENCY per share. |
-| `SHARES_OUTSTANDING` | integer | optional | Common shares outstanding on the cover of the latest annual report (dei EntityCommonStockSharesOutstanding). |
+| `SHARES_OUTSTANDING` | amount | optional | Common shares outstanding on the cover of the latest annual report (dei EntityCommonStockSharesOutstanding). |
 | `FINANCIALS` | record list | required | The company's figures for each fiscal year, oldest first (up to ten), one element per year: YEAR, PERIOD_END, REVENUE, NET_INCOME, ASSETS, LIABILITIES, EQUITY and EPS_DILUTED, in CURRENCY. |
 | `FACTS` | record list | required | The company's financial facts, one element per concept: FACT (a FACT_ID of the financial-fact kind, <ticker>-<concept>) and LABEL. |
 | `FILINGS` | record list | required | The company's latest EDGAR filings, newest first (up to 20), one element each: ACCESSION, FORM, FILED, REPORT_DATE and DESCRIPTION. |
@@ -83,7 +83,7 @@ A listed company: CIK, ticker, LEI, SIC, headquarters.
 | `FACT_IDS` | id list | required | The company's financial facts: FACT_IDs of the financial-fact kind (<ticker>-<concept>, ABT-REVENUE). |
 | `FILING_IDS` | id list | required | The company's latest filings: ACCESSION numbers of the filing kind. |
 | `LATEST_FILING` | date | required | The filing date of the company's most recent filing (YYYY-MM-DD). |
-| `SIC_SECTOR` | id | required | The company's SIC industry code (EDGAR sic, four digits as text): the id of the computed sic-sector kind. |
+| `SIC_SECTOR` | id | optional | The company's SIC industry code (EDGAR sic, four digits as text): the id of the computed sic-sector kind. |
 | `PRICE_HISTORY` | id | required | The id of the company's price history (PX-<TICKER>), a kind served live by the prices connector; no data is committed. |
 | `PROVENANCE` | record | required | Where the record comes from, one object: SOURCE (SEC EDGAR, Wikidata, GLEIF, Nasdaq Trader), RETRIEVED_AT (YYYY-MM-DD), LICENCE and URL. |
 | `ECONOMY` | id | optional | The company's home economy from its business address: ECON-USA for a US address, ECON-CAN or ECON-GBR for Canada or the UK; an id of the world-economy pack's economy kind; absent otherwise. |
