@@ -98,7 +98,7 @@ def stack(tmp_path_factory):
     # business date the console asks for today and within the file connector's lookback (lookback-days, 10), never a fixed date that ages out
     day = tmp / "macro" / (datetime.date.today() - datetime.timedelta(days=5)).isoformat()
     day.mkdir(parents=True)
-    shutil.copy(ROOT / "modules/economy/packs/world-economy/samples/economy.jsonl", day / "economy.jsonl")
+    shutil.copy(ROOT / "modules/external-data/packs/world-economy/samples/economy.jsonl", day / "economy.jsonl")
     (work / "config" / "connectors").mkdir(parents=True)
     (work / "config" / "connectors" / "macro-store.yaml").write_text(MACRO_STORE.format(root=tmp / "macro"))
     env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config/packs"), DRISHTI_PACKS="world-economy", DRISHTI_BI_DIR=str(work / "config/bi"),

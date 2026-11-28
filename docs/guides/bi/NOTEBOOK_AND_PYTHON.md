@@ -1673,4 +1673,4 @@ A book's page asks both engines for the sum of its strips' paths: the Python eng
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../../config/packs/core/compute-demo/README.md#data-contracts) and [*Data retrieval*](../../../config/packs/core/compute-demo/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../../examples/packs/compute-demo/README.md#data-contracts) and [*Data retrieval*](../../../examples/packs/compute-demo/README.md#data-retrieval).

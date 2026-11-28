@@ -17,7 +17,7 @@
 
 # Data contracts of the core pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [config/packs/core/core/README.md](../../../config/packs/core/core/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/reference-data/packs/core/README.md](../../../modules/reference-data/packs/core/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -38,7 +38,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 
 |  |  |
 |---|---|
-| Contract | [counterparty.contract.yaml](../../../config/packs/core/core/contracts/counterparty.contract.yaml) · version 1.1 |
+| Contract | [counterparty.contract.yaml](../../../modules/reference-data/packs/core/contracts/counterparty.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | counterparty-master |
@@ -230,7 +230,7 @@ Economic group of related counterparties (obligor group).
 
 |  |  |
 |---|---|
-| Contract | [counterparty-group.contract.yaml](../../../config/packs/core/core/contracts/counterparty-group.contract.yaml) · version 1.1 |
+| Contract | [counterparty-group.contract.yaml](../../../modules/reference-data/packs/core/contracts/counterparty-group.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | counterparty-master |
@@ -306,7 +306,7 @@ Issuer of bonds and reference entity for CDS.
 
 |  |  |
 |---|---|
-| Contract | [issuer.contract.yaml](../../../config/packs/core/core/contracts/issuer.contract.yaml) · version 1.0 |
+| Contract | [issuer.contract.yaml](../../../modules/reference-data/packs/core/contracts/issuer.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | counterparty-master |
@@ -397,7 +397,7 @@ A clearing house with its default fund and margin model.
 
 |  |  |
 |---|---|
-| Contract | [ccp.contract.yaml](../../../config/packs/core/core/contracts/ccp.contract.yaml) · version 1.0 |
+| Contract | [ccp.contract.yaml](../../../modules/reference-data/packs/core/contracts/ccp.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | clearing-system |
@@ -472,7 +472,7 @@ The bank's own booking entity.
 
 |  |  |
 |---|---|
-| Contract | [legal-entity.contract.yaml](../../../config/packs/core/core/contracts/legal-entity.contract.yaml) · version 1.1 |
+| Contract | [legal-entity.contract.yaml](../../../modules/reference-data/packs/core/contracts/legal-entity.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | entity-master |
@@ -588,7 +588,7 @@ A trading book: owner desk, trades and risk.
 
 |  |  |
 |---|---|
-| Contract | [book.contract.yaml](../../../config/packs/core/core/contracts/book.contract.yaml) · version 1.1 |
+| Contract | [book.contract.yaml](../../../modules/reference-data/packs/core/contracts/book.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | org-master |
@@ -709,7 +709,7 @@ A trading desk: books, limits and risk results.
 
 |  |  |
 |---|---|
-| Contract | [desk.contract.yaml](../../../config/packs/core/core/contracts/desk.contract.yaml) · version 1.1 |
+| Contract | [desk.contract.yaml](../../../modules/reference-data/packs/core/contracts/desk.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | org-master |
@@ -835,7 +835,7 @@ A trader and their books.
 
 |  |  |
 |---|---|
-| Contract | [trader.contract.yaml](../../../config/packs/core/core/contracts/trader.contract.yaml) · version 1.0 |
+| Contract | [trader.contract.yaml](../../../modules/reference-data/packs/core/contracts/trader.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | org-master |
@@ -917,7 +917,7 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 
 |  |  |
 |---|---|
-| Contract | [calendar.contract.yaml](../../../config/packs/core/core/contracts/calendar.contract.yaml) · version 1.0 |
+| Contract | [calendar.contract.yaml](../../../modules/reference-data/packs/core/contracts/calendar.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | reference-master |
@@ -1013,7 +1013,7 @@ An account at a CCP holding cleared trades and margin.
 
 |  |  |
 |---|---|
-| Contract | [clearing-account.contract.yaml](../../../config/packs/core/core/contracts/clearing-account.contract.yaml) · version 1.0 |
+| Contract | [clearing-account.contract.yaml](../../../modules/reference-data/packs/core/contracts/clearing-account.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | clearing-system |

@@ -18,7 +18,7 @@ A pack with a generator gets its README from that generator (tools/packgen/banki
 tools/packgen/us_equities/make.py); this script writes the README of a pack without one, and checks any pack. Both render the same
 text: pack.yaml, the samples, the Sutras and config/about.yaml (its glossary and its hand-written `intro:`).
 
-    python3 tools/packgen/readme.py news-and-markets          write modules/economy/packs/news-and-markets/README.md
+    python3 tools/packgen/readme.py news-and-markets          write modules/news-and-events/packs/news-and-markets/README.md
     python3 tools/packgen/readme.py --all --check             fail when a pack's README is missing, stale or breaks the standard
     python3 tools/packgen/readme.py my-pack --packs DIR       a pack in another folder (its intro is looked up the same way)
 """

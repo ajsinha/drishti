@@ -258,7 +258,7 @@ routes:
   trade: trade-endur                          # a single read asks trade-endur first, then the other union members
 ```
 
-Reference data that changes rarely is `effective` (`config/packs/core/core/pack.yaml`):
+Reference data that changes rarely is `effective` (`modules/reference-data/packs/core/pack.yaml`):
 
 ```yaml
   reference-store:

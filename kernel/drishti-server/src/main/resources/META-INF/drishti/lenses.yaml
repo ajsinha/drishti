@@ -17,8 +17,8 @@
 lenses:
   - id: world
     title: World
-    modules: [economy]                 # the World edition also opens us-equities and funds: capital markets' functions, on while that module is
-    home: economy:world_landing.html   # the economy module's page (modules/economy/console/)
+    modules: [external-data]
+    home: external-data:world_landing.html   # the external-data module's page (modules/external-data/console/)
     functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE, USEQ, IDX, SIC, EDGAR, FILING,
       FACT, PXH, LEI, LEIG, LEIR, LEIC, LEIM, FUND, HELD, TRACK,
       PRESS, PREL, GDELT]               # the public sector's free news (official press releases, GDELT world events)
@@ -31,7 +31,7 @@ lenses:
   # the economy module's Public sector lens: development indicators, central banks, national statistics, the OECD, official news, world events
   - id: markets                          # Drishti Finance's markets desk (config/lenses/capitalmarkets/markets.yaml): no risk number
     title: Markets
-    modules: [capitalmarkets]
+    modules: [external-data]
     functions: [USEQ, USEQS, IDX, SIC, EDGAR, FILING, FACT, PXH, LEI, LEIG, LEIR, LEIC, LEIM, FUND, FUNDS, HELD, TRACK,
       MKT, CRV, REPO, IRV, CPV, FIX, INF, INFC, FX, FXF, FXV, CDS, BND, EQ, EQX, DIV, EQV, CMD, CMDC, CMDV, CORR, CORRC, EQB]
     cards:                               # Home's "Markets" cards: each opens its command; one whose function is off is not shown
@@ -43,7 +43,7 @@ lenses:
     chips: [USEQ MSFT, SIC 3674, FUND QQQ, EQ EQ-AAPL, FX FX-EURUSD, CDS where SPREAD_5Y > 100]
   - id: publicsector
     title: Public sector
-    modules: [economy]
+    modules: [external-data]
     functions: [WDI, WDIS, CBANK, CBSER, NSTAT, OECD, OECDS, PRESS, PREL, GDELT]
     menus: [views, bi, admin, help]   # the top menus by id
     cards:                            # Home's quick cards: each opens its command; one whose function is off is not shown

@@ -99,7 +99,7 @@ PACKS: dict[str, dict] = {
                                "office-holder": "OFFICE_ID", "election": "ELECTION_ID", "region": "REGION_ID", "social-indicator": "INDICATOR_ID"}},
     # the news-and-markets pack's lists of what the capture asks for (the twenty companies, the fifteen topics); its quotes and headlines are
     # captured by tools/testdata/capture_market.py
-    "news-and-markets": {"connector": "news-store", "dates": "last", "strip-meta": True, "captured": "2026-11-27", "source": "the pack's own lists (modules/economy/packs/news-and-markets/README.md)",
+    "news-and-markets": {"connector": "news-store", "dates": "last", "strip-meta": True, "captured": "2026-11-27", "source": "the pack's own lists (modules/news-and-events/packs/news-and-markets/README.md)",
                          "keys": {"listed-company": "COMPANY_ID", "news-topic": "TOPIC_ID"}},
 }
 #: a pack with "part-bytes" has each kind's snapshot cut into parts of about that many compressed bytes, so no member is large; a kind
@@ -307,7 +307,7 @@ def update_manifest(testdata: Path) -> None:
 REFRESH = {"us-equities": "python3 tools/drishti.py feed run us-equities --snapshot", "gleif": "python3 tools/drishti.py feed run gleif --snapshot",
            "funds": "python3 tools/drishti.py feed run funds --snapshot",
            "genomics-showcase": "python3 tools/packgen/genomics_showcase/make.py", "protein-engineering": "python3 tools/packgen/genomics_showcase/make.py",
-           "news-and-markets": "python3 tools/drishti.py testdata capture-market (quote, news); python3 modules/economy/packs/news-and-markets/tools/make_samples.py (lists)"}
+           "news-and-markets": "python3 tools/drishti.py testdata capture-market (quote, news); python3 modules/news-and-events/packs/news-and-markets/tools/make_samples.py (lists)"}
 TABLE_BEGIN, TABLE_END = "<!-- BEGIN public-data table (tools/testdata/publicsnap.py) -->", "<!-- END public-data table -->"
 
 

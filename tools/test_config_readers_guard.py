@@ -85,7 +85,7 @@ def _chain(node: ast.AST) -> list:
 
 
 def _pathlike(s: str) -> bool:
-    """A path text below a configuration folder (``config/packs/core/gleif``, ``config/connectors/x.yaml``) or the site's rules file."""
+    """A path text below a configuration folder (``modules/reference-data/packs/gleif``, ``config/connectors/x.yaml``) or the site's rules file."""
     s = s.strip()
     return " " not in s and ("config/dataload.yaml" in s or any(f"{t}/" in s and not s.endswith(f"{t}/") for t in TEXTS[:2]))
 

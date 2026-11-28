@@ -3238,11 +3238,11 @@ wrote, comments included; then it reloads. A `name@version` already defined by a
 | `modules/banking/packs/trading/sutras/endur/endur-comswap.v1.sutra.yaml` | `TRD 1000001`, `TRD 1000003` | sub types as `when:` panels (`fixed-float`, `basis`) |
 | `modules/banking/packs/trading/sutras/common/*.v1.block.yaml` | (used by every trade Sutra) | blocks with parameters; tabs holding panels; a tree of cash flows and resets; timeline; payment ladder |
 | `modules/banking/packs/trading/sutras/pages/counterparty-trades.v1.sutra.yaml` | `/v/counterparty-trades/CP-NORTHPLAINS` | metric tiles, a donut, ladders over many trades |
-| `config/packs/core/core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml` | `CPTY CP-MERIDIAN-RE` | table with totals, kv, graph |
+| `modules/reference-data/packs/core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml` | `CPTY CP-MERIDIAN-RE` | table with totals, kv, graph |
 | `modules/banking/packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with a limit, four controls, `on-select`, Pivot, automatic id links |
 | `modules/market-data/packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
 | `modules/banking/packs/market-risk/sutras/market-risk/system-basket.v1.sutra.yaml` | `PORT PF-RATES-DESK` | the engine's figures on a page, a P&L distribution, ranked bars, Pivot |
-| `modules/economy/packs/world-economy/sutras/economics/economy.v1.sutra.yaml` | `ECON ECON-AUS` | map with a shade and a link |
+| `modules/external-data/packs/world-economy/sutras/economics/economy.v1.sutra.yaml` | `ECON ECON-AUS` | map with a shade and a link |
 | `docs/guides/examples/*.sutra.yaml` | Help → Examples | twelve self-contained examples with their own small documents, every kind |
 
 For a guided, step-by-step introduction, see [BUILD_GUIDE.md](BUILD_GUIDE.md#11-what-a-sutra-is-and-when-one-applies). For how inference fills what a Sutra
@@ -6646,7 +6646,7 @@ The Sutra always wins. Inference only fills in:
 - the `kv` body of a `tabs` panel whose body states no columns (the fields of the first element);
 - labels nobody wrote: `bind: "@.payDate"` with no `label` reads **Pay date**.
 
-**Example (real).** The counterparty Sutra in `config/packs/core/core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml`
+**Example (real).** The counterparty Sutra in `modules/reference-data/packs/core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml`
 declares its KYC panel without columns:
 
 ```yaml

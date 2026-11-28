@@ -21515,11 +21515,11 @@ datasets:
   files:
   - risk-factor.2026-09-30.jsonl.gz
   bytes: 21745
-- samples: config/packs/core/compute-demo/samples
+- samples: examples/packs/compute-demo/samples
   pack: compute-demo
   kind: path-book
   connector: compute-demo-store
-- samples: config/packs/core/compute-demo/samples
+- samples: examples/packs/compute-demo/samples
   pack: compute-demo
   kind: path-strip
   connector: compute-demo-store
@@ -22176,7 +22176,7 @@ datasets:
   key: COMPANY_ID
   snapshot: true
   captured: '2026-11-27'
-  source: the pack's own lists (modules/economy/packs/news-and-markets/README.md)
+  source: the pack's own lists (modules/news-and-events/packs/news-and-markets/README.md)
   documents: 20
   files:
   - listed-company.2026-11-27.jsonl.gz
@@ -22189,7 +22189,7 @@ datasets:
   key: TOPIC_ID
   snapshot: true
   captured: '2026-11-27'
-  source: the pack's own lists (modules/economy/packs/news-and-markets/README.md)
+  source: the pack's own lists (modules/news-and-events/packs/news-and-markets/README.md)
   documents: 15
   files:
   - news-topic.2026-11-27.jsonl.gz

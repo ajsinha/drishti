@@ -18,10 +18,10 @@
 moved:
   - {from: 'bin/README.md', to: 'docs/guides/OPERATIONS_GUIDE.md', how: merge}
   - {from: 'compute/drishti-compute/README.md', to: 'docs/guides/DEVELOPER_GUIDE.md', how: merge}
-  - {from: 'config/packs/core/compute-demo/guides/compute-demo.md', to: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md', how: merge}
-  - {from: 'config/packs/core/core/guides/banking-data-model.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
-  - {from: 'config/packs/core/core/guides/core.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
-  - {from: 'config/packs/core/gleif/guides/gleif.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'examples/packs/compute-demo/guides/compute-demo.md', to: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md', how: merge}
+  - {from: 'modules/reference-data/packs/core/guides/banking-data-model.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/reference-data/packs/core/guides/core.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/reference-data/packs/gleif/guides/gleif.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
   - {from: 'data/dataload/README.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'data/dataload/failed/README.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'data/dataload/inbox/README.md', to: '', how: delete, note: 'deleted outright'}
@@ -150,16 +150,16 @@ moved:
   - {from: 'modules/banking/packs/market-risk/guides/market-risk.md', to: 'docs/guides/VAR_GUIDE.md', how: merge}
   - {from: 'modules/banking/packs/trading/guides/trading-products.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
   - {from: 'modules/banking/packs/trading/guides/trading.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/capital-markets/packs/funds/guides/funds.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/capital-markets/packs/us-equities/guides/us-equities.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/economy/packs/central-banks/guides/central-banks.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/economy/packs/gdelt-events/guides/gdelt-events.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/economy/packs/national-statistics/guides/national-statistics.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/economy/packs/news-and-markets/guides/news-and-markets.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/economy/packs/oecd/guides/oecd.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/economy/packs/official-news/guides/official-news.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/economy/packs/world-development/guides/world-development.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/economy/packs/world-economy/guides/world-economy.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/external-data/packs/funds/guides/funds.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/external-data/packs/us-equities/guides/us-equities.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/external-data/packs/central-banks/guides/central-banks.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/news-and-events/packs/gdelt-events/guides/gdelt-events.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/external-data/packs/national-statistics/guides/national-statistics.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/news-and-events/packs/news-and-markets/guides/news-and-markets.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/external-data/packs/oecd/guides/oecd.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/news-and-events/packs/official-news/guides/official-news.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/external-data/packs/world-development/guides/world-development.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/external-data/packs/world-economy/guides/world-economy.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
   - {from: 'modules/genomics/docs/tutorial.md', to: 'modules/genomics/docs/guide.md', how: merge}
   - {from: 'modules/genomics/packs/genomics-showcase/guides/genomics-showcase.md', to: 'modules/genomics/docs/guide.md', how: merge}
   - {from: 'modules/genomics/packs/protein-engineering/guides/protein-engineering.md', to: 'modules/genomics/docs/guide.md', how: merge}
@@ -227,22 +227,22 @@ moved:
   - {from: 'help:sharing-and-discussion', to: 'help:user-guide#sharing-and-discussion', how: merge, note: 'Help slug'}
   - {from: 'help:data-samples', to: 'help:docs-contracts-readme', how: merge, note: 'Help slug'}
   - {from: 'drishti-console/web/guides/developer.md', to: 'docs/guides/API_REFERENCE.md', how: merge, note: 'section Developer: API references; help.yaml developer: doc + section'}
-  - {from: 'config/packs/core/compute-demo/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'config/packs/core/core/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'config/packs/core/gleif/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'examples/packs/compute-demo/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/reference-data/packs/core/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/reference-data/packs/gleif/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
   - {from: 'modules/banking/packs/counterparty-risk/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
   - {from: 'modules/banking/packs/market-risk/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
   - {from: 'modules/banking/packs/trading/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'modules/capital-markets/packs/funds/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'modules/capital-markets/packs/us-equities/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'modules/economy/packs/central-banks/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'modules/economy/packs/gdelt-events/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'modules/economy/packs/national-statistics/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'modules/economy/packs/news-and-markets/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'modules/economy/packs/oecd/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'modules/economy/packs/official-news/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'modules/economy/packs/world-development/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
-  - {from: 'modules/economy/packs/world-economy/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/external-data/packs/funds/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/external-data/packs/us-equities/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/external-data/packs/central-banks/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/news-and-events/packs/gdelt-events/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/external-data/packs/national-statistics/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/news-and-events/packs/news-and-markets/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/external-data/packs/oecd/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/news-and-events/packs/official-news/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/external-data/packs/world-development/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
+  - {from: 'modules/external-data/packs/world-economy/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
   - {from: 'modules/genomics/packs/genomics-showcase/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
   - {from: 'modules/genomics/packs/protein-engineering/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}
   - {from: 'modules/market-data/packs/market-data/config/help.yaml', to: '', how: delete, note: 'the pack guide entry went with the guide (Help shows the generated README)'}

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The documentation's feature register (docs/architecture/TEST_HARNESS.md section 10): every major feature of the product with its ONE guide
-# and its ONE tutorial (paths under docs/), its domain module (core, banking, capitalmarkets, economy), the lenses whose Help shows it
+# and its ONE tutorial (paths under docs/), its domain module (core, banking, external-data, news-and-events, reference-data), the lenses whose Help shows it
 # (all: every lens) and the line budgets of both. drishti-console/tests/test_docs_gates.py holds the files to it:
 #   - every guide and tutorial named here exists, and every guide under docs/guides/ and tutorial under docs/tutorials/ is named here
 #     once (or is a reference: references:);
@@ -36,7 +36,7 @@ features:
   - { id: R4, name: SIMM, domain: banking, lenses: [risk], guide: guides/SIMM_GUIDE.md, budget: 800, tutorial: none }
   - { id: R6, name: "The bank's data", domain: banking, lenses: [risk, trading, market], guide: guides/BANK_DATA_GUIDE.md, budget: 1200, tutorial: none }
   # World and public data
-  - { id: W1, name: "World and public data", domain: capitalmarkets, lenses: [world], guide: guides/WORLD_DATA_GUIDE.md, budget: 3500, tutorial: none }
+  - { id: W1, name: "World and public data", domain: external-data, lenses: [world], guide: guides/WORLD_DATA_GUIDE.md, budget: 3500, tutorial: none }
   # Data in and out, build (core)
   - { id: B1, name: Connect, domain: core, lenses: all, guide: guides/DATA_GUIDE.md, budget: 1000, tutorial: tutorials/15-connect-your-data.md, tutorial-budget: 300 }
   - { id: B1b, name: Data lake and data load, domain: core, lenses: all, guide: guides/DATA_LAKE_GUIDE.md, budget: 1100, tutorial: tutorials/16-load-your-own-data-into-a-new-lake.md, tutorial-parts: [tutorials/13-one-file-per-lake.md, tutorials/14-load-files-with-the-data-inbox.md, tutorials/18-news-held-in-memory.md, tutorials/23-the-risk-lake-on-iceberg.md], tutorial-budget: 1500 }

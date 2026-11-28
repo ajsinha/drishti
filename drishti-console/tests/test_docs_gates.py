@@ -93,7 +93,7 @@ def test_every_feature_has_one_guide_and_one_tutorial_and_they_exist():
                         assert (DOCS / part).is_file(), f"{f['id']}: tutorial part {part} does not exist"
             else:
                 assert v == "none" and key == "tutorial" or v.startswith("after "), f"{f['id']}: {key}: {v!r} (a path, or 'after <release>')"
-        assert f.get("domain") in {"core", "banking", "capitalmarkets", "economy"}, f["id"]
+        assert f.get("domain") in {"core", "banking", "external-data", "news-and-events", "reference-data"}, f["id"]
     guides = [f["guide"] for f in FEATURES if _written(f.get("guide"))]
     tutorials = [q for f in FEATURES for q in _tutorials(f)]
     assert len(tutorials) == len(set(tutorials))

@@ -48,7 +48,7 @@ def test_java_the_map_does_not_narrow_selects_every_console_test():
 
 
 def test_a_module_file_without_maven_runs_the_modules_tests_on_the_packages():
-    plan = affected.classify(["modules/economy/packs/world-economy/pack.yaml"])
+    plan = affected.classify(["modules/external-data/packs/world-economy/pack.yaml"])
     assert {"testing/drishti-modules-it", "packaging/dist"} <= plan.modules and not plan.everything
     assert plan.all_console and plan.all_tools
 

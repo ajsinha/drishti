@@ -147,7 +147,7 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"modules/banking/packs/counterparty-risk/guides/[^/]+\.md", "merge", "A", GL + "EXPOSURE_GUIDE.md", ""),
     (r"modules/banking/packs/market-risk/guides/[^/]+\.md", "merge", "A", GL + "VAR_GUIDE.md", ""),
     (r"modules/(banking/packs/trading|market-data/packs/market-data)/guides/[^/]+\.md", "merge", "A", BANK, ""),
-    (r"modules/(capital-markets|economy)/packs/[^/]+/guides/[^/]+\.md", "merge", "A", WORLD, ""),
+    (r"modules/(external-data|news-and-events)/packs/[^/]+/guides/[^/]+\.md", "merge", "A", WORLD, ""),
     (r"modules/genomics/docs/guide\.md", "keep", "A", "", ""),
     (r"modules/genomics/docs/tutorial\.md", "merge", "A", GEN, ""),
     (r"modules/genomics/packs/[^/]+/guides/[^/]+\.md", "merge", "A", GEN, ""),

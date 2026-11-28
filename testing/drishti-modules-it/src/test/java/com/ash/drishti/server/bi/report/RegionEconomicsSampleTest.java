@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 class RegionEconomicsSampleTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Path SAMPLES = Path.of(TestRoots.repo(), "modules", "economy", "packs", "world-economy", "samples");          // region-economy.jsonl
+    private static final Path SAMPLES = Path.of(TestRoots.repo(), "modules", "external-data", "packs", "world-economy", "samples");          // region-economy.jsonl
     private static final Path SHAPES = elements().resolve(Path.of("vendor", "echarts", "maps", "regions"));
 
     /** The one vendored Drishti Elements release tree (drishti-console/core/elements_pin.py: exactly one version folder). */

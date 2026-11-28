@@ -50,7 +50,7 @@ class PackagedEconomyServesNonImfTest {
     }
 
     private static String firstSocial() throws Exception {
-        try (var lines = java.nio.file.Files.lines(java.nio.file.Path.of(com.ash.lake.tck.TestRoots.repo(), "modules", "economy", "packs", "world-economy", "samples", "catalog.jsonl"))) {
+        try (var lines = java.nio.file.Files.lines(java.nio.file.Path.of(com.ash.lake.tck.TestRoots.repo(), "modules", "external-data", "packs", "world-economy", "samples", "catalog.jsonl"))) {
             return lines.filter(l -> l.contains("\"kind\":\"social-indicator\"")).findFirst().map(l -> l.replaceAll(".*\"id\":\"([^\"]+)\".*", "$1")).orElseThrow();
         }
     }

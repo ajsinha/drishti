@@ -58,7 +58,7 @@ The bank's own legal entities, one row each: name, LEI, jurisdiction and regulat
 
 The bank's own booking entity.
 
-- **Contract:** `config/packs/core/core/contracts/legal-entity.contract.yaml` (pack `core`, class `fundamental`), key `ENTITY_ID`.
+- **Contract:** `modules/reference-data/packs/core/contracts/legal-entity.contract.yaml` (pack `core`, class `fundamental`), key `ENTITY_ID`.
 - **Mapping:** `tools/loaders/mrloader/kinds/legal-entity.yaml` (source `canonical`); wave 1 of the CSV loaders.
 - **Grain:** One row per bank legal entity per business date, keyed by ENTITY_ID.
 
@@ -149,7 +149,7 @@ The bank's desks, one row each: name, head, the legal entity it books in and its
 
 A trading desk: books, limits and risk results.
 
-- **Contract:** `config/packs/core/core/contracts/desk.contract.yaml` (pack `core`, class `fundamental`), key `DESK_ID`.
+- **Contract:** `modules/reference-data/packs/core/contracts/desk.contract.yaml` (pack `core`, class `fundamental`), key `DESK_ID`.
 - **Mapping:** `tools/loaders/mrloader/kinds/desk.yaml` (source `canonical`); wave 1 of the CSV loaders.
 - **Grain:** One row per desk per business date, keyed by DESK_ID.
 
@@ -240,7 +240,7 @@ The bank's books (booking portfolios), one row each: name, desk and classificati
 
 A trading book: owner desk, trades and risk.
 
-- **Contract:** `config/packs/core/core/contracts/book.contract.yaml` (pack `core`, class `fundamental`), key `BOOK_ID`.
+- **Contract:** `modules/reference-data/packs/core/contracts/book.contract.yaml` (pack `core`, class `fundamental`), key `BOOK_ID`.
 - **Mapping:** `tools/loaders/mrloader/kinds/book.yaml` (source `canonical`); wave 1 of the CSV loaders.
 - **Grain:** One row per book per business date, keyed by BOOK_ID.
 
@@ -345,7 +345,7 @@ The counterparty groups (ultimate parents), one row each: name and the group's o
 
 Economic group of related counterparties (obligor group).
 
-- **Contract:** `config/packs/core/core/contracts/counterparty-group.contract.yaml` (pack `core`, class `fundamental`), key `GROUP_ID`.
+- **Contract:** `modules/reference-data/packs/core/contracts/counterparty-group.contract.yaml` (pack `core`, class `fundamental`), key `GROUP_ID`.
 - **Mapping:** `tools/loaders/mrloader/kinds/counterparty-group.yaml` (source `canonical`); wave 2 of the CSV loaders.
 - **Grain:** One row per counterparty group per business date, keyed by GROUP_ID.
 
@@ -429,7 +429,7 @@ The bank's counterparties, one row each, from the client master: names, ratings,
 
 A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, country of risk and parent group.
 
-- **Contract:** `config/packs/core/core/contracts/counterparty.contract.yaml` (pack `core`, class `fundamental`), key `COUNTERPARTY_ID`.
+- **Contract:** `modules/reference-data/packs/core/contracts/counterparty.contract.yaml` (pack `core`, class `fundamental`), key `COUNTERPARTY_ID`.
 - **Mapping:** `tools/loaders/mrloader/kinds/counterparty.yaml` (source `canonical`); wave 2 of the CSV loaders.
 - **Grain:** One row per counterparty per business date, keyed by COUNTERPARTY_ID.
 

@@ -138,7 +138,7 @@ class Guide:
     engine: str = ""                  # help.yaml engine: the compute engine the guide is about; hidden while it runs nowhere (ADMIN_GUIDE.md)
     pair: str = ""                    # help.yaml pair: the tutorial drawn beside this guide on its section's page
     group: str = ""                   # the group of its section it sits in (help.yaml groups[].title)
-    domain: str = ""                  # help.yaml domain: the domain module the page belongs to (banking, capitalmarkets, economy); core when not said
+    domain: str = ""                  # help.yaml domain: the domain module the page belongs to (banking, external-data, news-and-events, reference-data); core when not said
     parent: str = ""                  # a subpage of a guide folder: the slug of the folder's index page (help.yaml children:); it has no row of its own
     children: tuple = ()              # a guide folder's index page: its subpages in order (help.yaml children:); the folder counts as one page
     section: str = ""                 # help.yaml section: the page is that one section (a heading's words) of its doc:, not the whole document

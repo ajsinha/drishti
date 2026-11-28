@@ -523,7 +523,7 @@ On the committed data (gleif 2026-10-25, us-equities 2026-10-24, world-economy's
 Six of its settings, all generic:
 
 ```yaml
-# modules/economy/packs/world-economy/pack.yaml (written by tools/packgen/economics/make.py)
+# modules/external-data/packs/world-economy/pack.yaml (written by tools/packgen/economics/make.py)
 macro-groupings:
   plugin: derived
   kinds: [country-group]
@@ -671,23 +671,23 @@ These are the inputs; every grouping and analytic is computed from them when ask
 GLEIF's legal entities: `LEI_GROUP`, `DIRECT_PARENT`, `LEI_COUNTRY`, `RENEWAL_LATE`, `REGISTRATION_STATUS` and `GLEIF_GROUP_SIZE` make
 the ownership groups (LEIG) and the country pages (LEIC).
 
-- **Data contract:** [`lei-entity`](../../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity) (LEI), key `LEI`; 43 fields, 16 required; the file [`lei-entity.contract.yaml`](../../../config/packs/core/gleif/contracts/lei-entity.contract.yaml).
+- **Data contract:** [`lei-entity`](../../contracts/packs/gleif.md#lei-lei-legal-entity-lei-entity) (LEI), key `LEI`; 43 fields, 16 required; the file [`lei-entity.contract.yaml`](../../../modules/reference-data/packs/gleif/contracts/lei-entity.contract.yaml).
 - **Example:** [a real record of the test data](../../contracts/packs/gleif.md#example-gleif-lei-entity) (files `data/testdata/gleif/lei-entity/lei-entity.*.jsonl.gz`).
 
 ### 25.3 `us-company`: the US companies
 
 SEC EDGAR's companies: `SIC` makes the sectors (SIC); the financials (`REVENUE`, `NET_INCOME`, `FINANCIALS[]`) make the USEQ ratios.
 
-- **Data contract:** [`us-company`](../../contracts/packs/us-equities.md#useq-us-company-us-company) (USEQ), key `TICKER`; 46 fields, 16 required; the file [`us-company.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/us-company.contract.yaml).
+- **Data contract:** [`us-company`](../../contracts/packs/us-equities.md#useq-us-company-us-company) (USEQ), key `TICKER`; 46 fields, 16 required; the file [`us-company.contract.yaml`](../../../modules/external-data/packs/us-equities/contracts/us-company.contract.yaml).
 - **Example:** [a real record of the test data](../../contracts/packs/us-equities.md#example-us-equities-us-company) (files `data/testdata/us-equities/us-company/us-company.*.jsonl.gz`).
 
 ### 25.4 `economy`: the economies
 
 `REGION_GROUP`, `INCOME_GROUP`, `GDP_USD_BN`, `POPULATION_M`, `GROWTH`, `INFLATION`, `YEAR` and `GDP_PATH`: the country groups (ECG).
 
-- **Data contract:** [`economy`](../../contracts/packs/world-economy.md#econ-economy-economy) (ECON), key `ECONOMY_ID`; 28 fields, 16 required; the file [`economy.contract.yaml`](../../../modules/economy/packs/world-economy/contracts/economy.contract.yaml).
+- **Data contract:** [`economy`](../../contracts/packs/world-economy.md#econ-economy-economy) (ECON), key `ECONOMY_ID`; 28 fields, 16 required; the file [`economy.contract.yaml`](../../../modules/external-data/packs/world-economy/contracts/economy.contract.yaml).
 - **Example:** no sample in the demo data (`data/testdata`); the world-economy pack ships its public data with the pack
-(`modules/economy/packs/world-economy/samples/`).
+(`modules/external-data/packs/world-economy/samples/`).
 
 ### 25.5 `correlation-matrix`: the correlation sets
 
@@ -721,21 +721,21 @@ A currency pair's quote and history: FX factors in a correlation set.
 
 One reported figure of one company with its `HISTORY[]`: the FACT page's changes.
 
-- **Data contract:** [`financial-fact`](../../contracts/packs/us-equities.md#fact-financial-fact-financial-fact) (FACT), key `FACT_ID`; 12 fields, 12 required; the file [`financial-fact.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/financial-fact.contract.yaml).
+- **Data contract:** [`financial-fact`](../../contracts/packs/us-equities.md#fact-financial-fact-financial-fact) (FACT), key `FACT_ID`; 12 fields, 12 required; the file [`financial-fact.contract.yaml`](../../../modules/external-data/packs/us-equities/contracts/financial-fact.contract.yaml).
 - **Example:** [a real record of the test data](../../contracts/packs/us-equities.md#example-us-equities-financial-fact) (files `data/testdata/us-equities/financial-fact/financial-fact.*.jsonl.gz`).
 
 ### 25.10 `index-membership`: the index members
 
 An index's members (`ROWS[]`): the IDX page's totals.
 
-- **Data contract:** [`index-membership`](../../contracts/packs/us-equities.md#idx-index-members-index-membership) (IDX), key `INDEX`; 5 fields, 5 required; the file [`index-membership.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/index-membership.contract.yaml).
+- **Data contract:** [`index-membership`](../../contracts/packs/us-equities.md#idx-index-members-index-membership) (IDX), key `INDEX`; 5 fields, 5 required; the file [`index-membership.contract.yaml`](../../../modules/external-data/packs/us-equities/contracts/index-membership.contract.yaml).
 - **Example:** [a real record of the test data](../../contracts/packs/us-equities.md#example-us-equities-index-membership) (files `data/testdata/us-equities/index-membership/index-membership.*.jsonl.gz`).
 
 ### 25.11 `price-history`: live price history
 
 A ticker's daily prices, read live when PXH opens: the returns, volatility and beta of the PXH analytics.
 
-- **Data contract:** [`price-history`](../../contracts/packs/us-equities.md#pxh-price-history-live-internal-use-only-price-history) (PXH), key none; 13 fields, 0 required; the file [`price-history.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/price-history.contract.yaml).
+- **Data contract:** [`price-history`](../../contracts/packs/us-equities.md#pxh-price-history-live-internal-use-only-price-history) (PXH), key none; 13 fields, 0 required; the file [`price-history.contract.yaml`](../../../modules/external-data/packs/us-equities/contracts/price-history.contract.yaml).
 - **Example:** none in the demo data; read live from Yahoo Finance's public chart endpoint (internal use only), off as shipped.
 <!-- guide-data:end -->
 
@@ -809,7 +809,7 @@ Members (a click opens one beside)  (table, members, F3)
   ...
 ```
 
-**In YAML.** The page is a derived connector of the gleif pack, `config/packs/core/gleif/pack.yaml`:
+**In YAML.** The page is a derived connector of the gleif pack, `modules/reference-data/packs/gleif/pack.yaml`:
 
 ```yaml
 gleif-groupings:
@@ -951,7 +951,7 @@ Key figures
   Not in USD  1 not summed
 ```
 
-**In YAML.** `modules/capital-markets/packs/us-equities/pack.yaml`, the connector `us-equities-groupings`:
+**In YAML.** `modules/external-data/packs/us-equities/pack.yaml`, the connector `us-equities-groupings`:
 
 ```yaml
     sic-sector:
@@ -1002,7 +1002,7 @@ Key figures
 ```
 
 **In YAML.** No connector: the company page's strip computes the ratios from the record's facts,
-`modules/capital-markets/packs/us-equities/sutras/us-company.v1.sutra.yaml`:
+`modules/external-data/packs/us-equities/sutras/us-company.v1.sutra.yaml`:
 
 ```yaml
   - { label: Net margin, bind: "$.REVENUE ? $.NET_INCOME / $.REVENUE * 100 : null", fmt: margin1, tone: sign }
@@ -1045,7 +1045,7 @@ Key figures
   Inflation (median)    3.10%
 ```
 
-**In YAML.** `modules/economy/packs/world-economy/pack.yaml`, the connector `macro-groupings` (written by `tools/packgen/economics/make.py`):
+**In YAML.** `modules/external-data/packs/world-economy/pack.yaml`, the connector `macro-groupings` (written by `tools/packgen/economics/make.py`):
 
 ```yaml
     country-group:
@@ -1202,7 +1202,7 @@ $ drishti.py view get price-history/PX-AAPL
 drishti: the server said 404 DRS-1001: DRS-1001 no source holds price-history/PX-AAPL (asked file; us-equities-prices, which kind 'price-history' is routed to, is disabled)
 ```
 
-**In YAML.** The prices and their analytics come from one live connector, off until a site turns it on (`modules/capital-markets/packs/us-equities/pack.yaml`):
+**In YAML.** The prices and their analytics come from one live connector, off until a site turns it on (`modules/external-data/packs/us-equities/pack.yaml`):
 
 ```yaml
   us-equities-prices:

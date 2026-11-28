@@ -6334,7 +6334,7 @@ One file per data feed: the source, its datasets and the lake they load, the sch
 | `history.first-run-days` | integer | `30` |  | drishti.py feed (each run) | the first run without data/datafeeds/&lt;feed&gt;/state.json pulls this many days (--since overrides) | live |  | admin |
 | `datasets.<dataset>` | map | `{pack: gleif, kind: lei-entity, key: LEI, description: "one legal entity: nam...` |  | drishti.py feed (each run) | one dataset: pack and kind (required), table (default the kind), key (the id field), dated (run or source), description | live |  | admin |
 | `options.args` | list | `[]` |  | drishti.py feed (each run) | arguments given to the source before the command line's (e.g. \[--scope, "NAME:allianz,CAP:200"]) | live |  | admin |
-| `snapshot.note` | string | `refreshes config/packs/core/gleif (samples, guide) and data/testdata/gleif, a...` |  | drishti.py feed (each run) | a line for the docs | live |  | admin |
+| `snapshot.note` | string | `refreshes modules/reference-data/packs/gleif (samples, guide) and data/testdata/gleif, a...` |  | drishti.py feed (each run) | a line for the docs | live |  | admin |
 
 ### Report definitions: `config/reports/banking/`
 

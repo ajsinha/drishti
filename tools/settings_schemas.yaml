@@ -68,7 +68,7 @@ schemas:
       - { key: "menus[].id", type: string, meaning: "The menu's id (what an edition's menus.<id> names)" }
       - { key: "menus[].label", type: string, meaning: "Its name in the top bar" }
       - { key: "menus[].icon", type: string, meaning: "Its Bootstrap icon name" }
-      - { key: "menus[].domain", type: string, default: core, meaning: "The domain module the menu belongs to (banking, economy; core when not said): the domain split moves its entries" }
+      - { key: "menus[].domain", type: string, default: core, meaning: "The domain module the menu belongs to (banking, external-data; core when not said): the domain split moves its entries" }
       - { key: "menus[].also", type: list, default: "[]", meaning: "Items listed in other menus that this menu's strip also draws, by id (the Admin tabs' BI settings and My account, the BI rail's Pivot and Build home), without listing them twice" }
       - { key: "menus[].personal", type: boolean, default: "false", meaning: "The person's own menu (My account): never drawn as a top menu" }
       - { key: "menus[].subject", type: boolean, default: "false", meaning: "A lens's subject menu (Curves, Economies ...): drawn only where an edition's menus.top names it" }
@@ -144,7 +144,7 @@ schemas:
       - { key: "sections[].groups[].guides[].children[].doc", type: string, meaning: "A repository document under docs/ rendered as it is" }
       - { key: "sections[].groups[].guides[].children[].icon", type: string, meaning: "Its icon" }
       - { key: "sections[].groups[].guides[].children[].summary", type: string, meaning: "The row's summary, also searched" }
-      - { key: "sections[].groups[].guides[].domain", type: string, default: core, meaning: "The domain module the page belongs to (core, banking, capitalmarkets, economy): while it is off for the person the page is not listed, searched or served" }
+      - { key: "sections[].groups[].guides[].domain", type: string, default: core, meaning: "The domain module the page belongs to (core, banking, external-data, news-and-events, reference-data): while it is off for the person the page is not listed, searched or served" }
       - { key: "sections[].groups[].guides[].lenses", type: list, default: none, meaning: "The lenses that show the page (none: every lens; the full product shows every page)" }
       - { key: knowledge, type: map, default: shipped, meaning: "\"What does this mean?\" beside a data page: screen or kind -> the Knowledge page or glossary entry that explains it" }
       - { key: "knowledge.<name>", type: string, meaning: "One screen or kind and its Knowledge target" }
@@ -336,7 +336,7 @@ schemas:
       - { key: pack, type: string, meaning: "Required: the pack's name, equal to its folder's name (else the pack is refused)" }
       - { key: version, type: string, default: "0", meaning: "X.Y.Z, shown in About, Admin -> Health and Admin -> Packs and checked by deploys and the registry" }
       - { key: code, type: string, default: none, meaning: "The pack's short code: typed alone it opens the pack's overview (/p/<pack>); must not equal a mnemonic" }
-      - { key: domain, type: string, default: core, meaning: "The domain it serves (core, banking, economy, capitalmarkets): a pack of a domain loads only while a module of that domain is on (docs/architecture/KERNEL_AND_MODULES.md)" }
+      - { key: domain, type: string, default: core, meaning: "The domain it serves (core, banking, external-data, news-and-events, reference-data): a pack of a domain loads only while a module of that domain is on (docs/architecture/KERNEL_AND_MODULES.md)" }
       - { key: title, type: string, default: "the pack's name", meaning: "Its name in menus, help and admin pages" }
       - { key: description, type: string, default: "", meaning: "One paragraph for About and the help centre" }
       - { key: sample, type: boolean, default: "false", meaning: "A demonstration pack: drishti.packs.samples can hide it from business users" }

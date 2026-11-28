@@ -86,7 +86,7 @@ index-funds      TRACK <index>          the funds tracking SP500, NDX or DJIA (I
 ```
 
 The links are the contract link columns of `modules/capital-markets/packs/us-equities/contracts/`, `modules/capital-markets/packs/funds/contracts/` and
-`config/packs/core/gleif/contracts/`. The us-equities and funds packs are **off by default**: add `us-equities,gleif,funds` to
+`modules/reference-data/packs/gleif/contracts/`. The us-equities and funds packs are **off by default**: add `us-equities,gleif,funds` to
 `DRISHTI_PACKS` ([Funds and ETFs guide](../guides/WORLD_DATA_GUIDE.md#1-turning-the-pack-on)).
 
 **How a holding finds its company.** A fund files each holding with an issuer name, a CUSIP, often an ISIN and an issuer LEI, rarely a
@@ -271,7 +271,7 @@ jurisdiction       JUR JUR-<ISO3>            government, capital, population, le
    │  ELECTIONS, LAST_ELECTION ─► election ELEC     PARTIES ─► party PARTY     SOCIAL_INDICATORS ─► social-indicator SOCI
 ```
 
-The links are the contract link columns of `modules/economy/packs/world-economy/contracts/` and `config/packs/core/core/contracts/counterparty.contract.yaml`
+The links are the contract link columns of `modules/economy/packs/world-economy/contracts/` and `modules/reference-data/packs/core/contracts/counterparty.contract.yaml`
 (`ECONOMY → economy`). Companies link the same way: a listed company's and a US company's `ECONOMY` is its home economy.
 
 **Id conventions.** Economies use the ISO 3166 three-letter code: `ECON-GBR`, `FCST-GBR-WEO`, `FISC-GBR`, `JUR-GBR`. Country groups

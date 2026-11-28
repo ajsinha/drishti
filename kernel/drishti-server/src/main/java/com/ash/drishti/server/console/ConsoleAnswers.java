@@ -197,7 +197,7 @@ public class ConsoleAnswers {
         }
         String n = named.strip();
         if (n.contains("/") || n.contains("\\") || n.endsWith(".yaml")) {
-            throw new IllegalArgumentException("a console names a distribution by name (risk, finance, genomics, all), never by a path");
+            throw new IllegalArgumentException("a console names a distribution by name (risk, finance, public-sector, genomics, all), never by a path");
         }
         String key = inputs() + "|" + n;
         Built b = namedAnswers.get(n);

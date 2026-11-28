@@ -17,7 +17,7 @@
 
 # Data contracts of the us-equities pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/capital-markets/packs/us-equities/README.md](../../../modules/capital-markets/packs/us-equities/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/external-data/packs/us-equities/README.md](../../../modules/external-data/packs/us-equities/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -35,7 +35,7 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 
 |  |  |
 |---|---|
-| Contract | [us-company.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/us-company.contract.yaml) · version 1.0 |
+| Contract | [us-company.contract.yaml](../../../modules/external-data/packs/us-equities/contracts/us-company.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
@@ -317,7 +317,7 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 
 |  |  |
 |---|---|
-| Contract | [index-membership.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/index-membership.contract.yaml) · version 1.1 |
+| Contract | [index-membership.contract.yaml](../../../modules/external-data/packs/us-equities/contracts/index-membership.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC EDGAR (with the tracking ETFs' Form N-PORT), Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
@@ -444,7 +444,7 @@ A sector by its SIC code, computed from the companies when asked: its companies 
 
 |  |  |
 |---|---|
-| Contract | [sic-sector.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/sic-sector.contract.yaml) · version 1.0 |
+| Contract | [sic-sector.contract.yaml](../../../modules/external-data/packs/us-equities/contracts/sic-sector.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector us-equities-groupings over the kind us-company |
@@ -509,7 +509,7 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 
 |  |  |
 |---|---|
-| Contract | [filing-feed.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/filing-feed.contract.yaml) · version 1.0 |
+| Contract | [filing-feed.contract.yaml](../../../modules/external-data/packs/us-equities/contracts/filing-feed.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
@@ -646,7 +646,7 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 
 |  |  |
 |---|---|
-| Contract | [filing.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/filing.contract.yaml) · version 1.1 |
+| Contract | [filing.contract.yaml](../../../modules/external-data/packs/us-equities/contracts/filing.contract.yaml) · version 1.1 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
@@ -750,7 +750,7 @@ One financial concept of one company (revenue, net income, assets...) over up to
 
 |  |  |
 |---|---|
-| Contract | [financial-fact.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/financial-fact.contract.yaml) · version 1.0 |
+| Contract | [financial-fact.contract.yaml](../../../modules/external-data/packs/us-equities/contracts/financial-fact.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities) |
@@ -861,7 +861,7 @@ A company's quote and a year of daily prices, read live by the us-equities-price
 
 |  |  |
 |---|---|
-| Contract | [price-history.contract.yaml](../../../modules/capital-markets/packs/us-equities/contracts/price-history.contract.yaml) · version 1.0 |
+| Contract | [price-history.contract.yaml](../../../modules/external-data/packs/us-equities/contracts/price-history.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Yahoo Finance (us-equities-prices connector, yfinance plugin) |

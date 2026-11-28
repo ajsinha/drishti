@@ -1,0 +1,63 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# What the packer brings in from the repository (paths from this folder) and what it trims from the module's own folder, so each file keeps
+# one home: `trim` strips a pack of what a module does not carry (tests, tools; never its samples, the records a read falls back to when no lake
+# is built, so an install answers what the source tree answers; its connector templates travel
+# with it, the read-only templates the site's connector files are merged over), `copy` brings in the lens and the tutorial. This list itself is not packed.
+trim:
+- path: packs/world-economy
+  leave-out:
+  - tests
+  - tools
+- path: packs/world-development
+  leave-out:
+  - tests
+  - tools
+- path: packs/central-banks
+  leave-out:
+  - tests
+  - tools
+- path: packs/national-statistics
+  leave-out:
+  - tests
+  - tools
+- path: packs/oecd
+  leave-out:
+  - tests
+  - tools
+- path: packs/us-equities
+  leave-out:
+  - tests
+  - tools
+- path: packs/funds
+  leave-out:
+  - tests
+  - tools
+restricted:
+- path: packs/world-economy/samples/economic-forecast.jsonl
+  reason: IMF World Economic Outlook data, internal demos only; never shipped
+- path: packs/world-economy/samples/economy.jsonl
+  reason: IMF World Economic Outlook data, internal demos only; never shipped
+- path: packs/world-economy/samples/fiscal-position.jsonl
+  reason: IMF World Economic Outlook data, internal demos only; never shipped
+- path: packs/world-economy/samples/macro-indicator.jsonl
+  reason: IMF World Economic Outlook data, internal demos only; never shipped
+copy:
+- from: ../../config/lenses/external-data/world.yaml
+  to: lenses/world.yaml
+- from: ../../config/lenses/external-data/markets.yaml
+  to: lenses/markets.yaml
+- from: ../../docs/guides/WORLD_DATA_GUIDE.md
+  to: guides/WORLD_DATA_GUIDE.md

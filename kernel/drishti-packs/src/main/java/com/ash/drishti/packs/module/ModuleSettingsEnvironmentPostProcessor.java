@@ -57,6 +57,9 @@ public final class ModuleSettingsEnvironmentPostProcessor implements Environment
         for (ModuleSettingsSchema s : schemas.values()) {
             retired.addAll(s.retiredLines(check::whereSet));
         }
+        String modulesDir = env.getProperty("drishti.modules.dir");   // the site's module switch files (config/modules unless set)
+        retired.addAll(RetiredModules.lines(com.ash.drishti.api.Roots.anchored(modulesDir == null || modulesDir.isBlank() ? com.ash.drishti.api.Roots.config("modules") : modulesDir.strip()),
+                check::whereSet));
         RetiredNames.refuse(retired);
         Map<String, Object> info = new LinkedHashMap<>();
         info.put(INFO + ".modules", String.join(",", schemas.keySet()));

@@ -17,7 +17,7 @@
 
 # Data contracts of the gdelt-events pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/economy/packs/gdelt-events/README.md](../../../modules/economy/packs/gdelt-events/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/news-and-events/packs/gdelt-events/README.md](../../../modules/news-and-events/packs/gdelt-events/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -29,7 +29,7 @@ What the world's news reported about one country yesterday (GDELT): events, tone
 
 |  |  |
 |---|---|
-| Contract | [event-country.contract.yaml](../../../modules/economy/packs/gdelt-events/contracts/event-country.contract.yaml) · version 1.0 |
+| Contract | [event-country.contract.yaml](../../../modules/news-and-events/packs/gdelt-events/contracts/event-country.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: The GDELT Project, pulled by the gdelt-events feed (config/feeds/gdelt-events.yaml, tools/loaders/(external\|news)/) |

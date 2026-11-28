@@ -193,7 +193,7 @@ that offer Calc hold `calc`: `trader`, `market-risk` and `credit-risk`; the role
 role has `layout`, and so has every role you define in Admin → Roles unless you untick *Customise layouts*. A pack declares one like this:
 
 ```yaml
-# modules/economy/packs/world-economy/pack.yaml
+# modules/external-data/packs/world-economy/pack.yaml
 roles:
   economist:
     kinds: [economy, macro-indicator, economic-forecast, labour-market, fiscal-position, country-group, ...]

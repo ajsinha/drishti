@@ -17,7 +17,7 @@
 
 # Data contracts of the world-economy pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/economy/packs/world-economy/README.md](../../../modules/economy/packs/world-economy/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/external-data/packs/world-economy/README.md](../../../modules/external-data/packs/world-economy/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -41,7 +41,7 @@ An economy: output, growth, prices, jobs, debt and external balance, and output 
 
 |  |  |
 |---|---|
-| Contract | [economy.contract.yaml](../../../modules/economy/packs/world-economy/contracts/economy.contract.yaml) · version 1.0 |
+| Contract | [economy.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/economy.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper); CIA, The World Factbook (factbook.json mirror, CC0) |
@@ -234,7 +234,7 @@ One headline statistic of one economy: the series, the latest value, the change 
 
 |  |  |
 |---|---|
-| Contract | [macro-indicator.contract.yaml](../../../modules/economy/packs/world-economy/contracts/macro-indicator.contract.yaml) · version 1.0 |
+| Contract | [macro-indicator.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/macro-indicator.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators |
@@ -371,7 +371,7 @@ The IMF World Economic Outlook: growth, inflation, unemployment, external balanc
 
 |  |  |
 |---|---|
-| Contract | [economic-forecast.contract.yaml](../../../modules/economy/packs/world-economy/contracts/economic-forecast.contract.yaml) · version 1.0 |
+| Contract | [economic-forecast.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/economic-forecast.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: International Monetary Fund, World Economic Outlook (DataMapper) |
@@ -514,7 +514,7 @@ Unemployment, participation, youth and female labour, and employment and output 
 
 |  |  |
 |---|---|
-| Contract | [labour-market.contract.yaml](../../../modules/economy/packs/world-economy/contracts/labour-market.contract.yaml) · version 1.0 |
+| Contract | [labour-market.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/labour-market.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators |
@@ -650,7 +650,7 @@ Government debt and net lending (IMF) with revenue, expense and military spendin
 
 |  |  |
 |---|---|
-| Contract | [fiscal-position.contract.yaml](../../../modules/economy/packs/world-economy/contracts/fiscal-position.contract.yaml) · version 1.0 |
+| Contract | [fiscal-position.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/fiscal-position.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators; International Monetary Fund, World Economic Outlook (DataMapper) |
@@ -795,7 +795,7 @@ A World Bank region or income group (or the world), computed from its member eco
 
 |  |  |
 |---|---|
-| Contract | [country-group.contract.yaml](../../../modules/economy/packs/world-economy/contracts/country-group.contract.yaml) · version 1.0 |
+| Contract | [country-group.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/country-group.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the derived connector macro-groupings over the kind economy |
@@ -869,7 +869,7 @@ A state or territory (ISO 3166-2): population, GDP and GDP per head.
 
 |  |  |
 |---|---|
-| Contract | [region-economy.contract.yaml](../../../modules/economy/packs/world-economy/contracts/region-economy.contract.yaml) · version 1.0 |
+| Contract | [region-economy.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/region-economy.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Illustrative, rounded from public figures (US Census Bureau Vintage 2023 population estimates and BEA state GDP 2023, current dollars); not for reporting, Illustrative, rounded from public figures (ABS Australian Demographic Statistics, December 2023, and ABS Australian National Accounts: State Accounts 2022-23, in US dollars at a rounded rate); not for reporting |
@@ -983,7 +983,7 @@ A country: government type, capital, legislature and seats by party, office hold
 
 |  |  |
 |---|---|
-| Contract | [jurisdiction.contract.yaml](../../../modules/economy/packs/world-economy/contracts/jurisdiction.contract.yaml) · version 1.0 |
+| Contract | [jurisdiction.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/jurisdiction.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: CIA, The World Factbook (factbook.json mirror, CC0); World Bank, World Development Indicators; World Bank, Worldwide Governance Indicators; UNDP, Human Development Report: composite indices time series |
@@ -1203,7 +1203,7 @@ A political party that won seats in the lower chamber at the most recent electio
 
 |  |  |
 |---|---|
-| Contract | [party.contract.yaml](../../../modules/economy/packs/world-economy/contracts/party.contract.yaml) · version 1.0 |
+| Contract | [party.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/party.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: CIA, The World Factbook (factbook.json mirror, CC0) |
@@ -1318,7 +1318,7 @@ The chief of state or head of government of a country as the CIA World Factbook 
 
 |  |  |
 |---|---|
-| Contract | [office-holder.contract.yaml](../../../modules/economy/packs/world-economy/contracts/office-holder.contract.yaml) · version 1.0 |
+| Contract | [office-holder.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/office-holder.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: CIA, The World Factbook (factbook.json mirror, CC0) |
@@ -1434,7 +1434,7 @@ The most recent election to a chamber or to the executive, with the system, term
 
 |  |  |
 |---|---|
-| Contract | [election.contract.yaml](../../../modules/economy/packs/world-economy/contracts/election.contract.yaml) · version 1.0 |
+| Contract | [election.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/election.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: CIA, The World Factbook (factbook.json mirror, CC0) |
@@ -1576,7 +1576,7 @@ A World Bank region: its countries, population, life expectancy, women in parlia
 
 |  |  |
 |---|---|
-| Contract | [region.contract.yaml](../../../modules/economy/packs/world-economy/contracts/region.contract.yaml) · version 1.0 |
+| Contract | [region.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/region.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators; CIA, The World Factbook (factbook.json mirror, CC0) |
@@ -1728,7 +1728,7 @@ A social or governance statistic of one country over time, with the regional com
 
 |  |  |
 |---|---|
-| Contract | [social-indicator.contract.yaml](../../../modules/economy/packs/world-economy/contracts/social-indicator.contract.yaml) · version 1.0 |
+| Contract | [social-indicator.contract.yaml](../../../modules/external-data/packs/world-economy/contracts/social-indicator.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators, World Bank, Worldwide Governance Indicators |

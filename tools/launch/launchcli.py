@@ -56,7 +56,7 @@ def add_options(p: argparse.ArgumentParser, verb: str, what: str) -> None:
     for flag, kw in common:
         p.add_argument(flag, **kw)
     p.add_argument("--demo", action="store_true", help="the demo profile, config/profiles/demo.ini (the offline demo on the lakes; the same file the IDE's demo launcher names), with DEVELOPMENT secrets and the drishti-dev-admin account: NOT FOR PRODUCTION")
-    p.add_argument("--distribution", metavar="NAME", help="risk, finance, genomics, all, or a file path (DRISHTI_DISTRIBUTION); docs/architecture/KERNEL_AND_MODULES.md")
+    p.add_argument("--distribution", metavar="NAME", help="risk, finance, public-sector, genomics, all, or a file path (DRISHTI_DISTRIBUTION); docs/architecture/KERNEL_AND_MODULES.md")
     p.add_argument("--background", action="store_true", help="detach: log and pid file under the data folder (logs/, run/)")
     if what == "server":
         p.add_argument("--port", type=int, help="the server's port (default server.port of the settings files, else DRISHTI_PORT, else 18480)")

@@ -292,7 +292,7 @@ def main(argv: list[str], extra: list[str] | None = None, cap: int | None = None
     p = argparse.ArgumentParser(description="Build the gleif pack from the fetched cache (no network).")
     p.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
     p.add_argument("--check", action="store_true")
-    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default config/packs/core/gleif; "
+    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default modules/reference-data/packs/gleif; "
                                                "drishti.py feed run gleif points a widened build at the data folder)")
     p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed "
                                                   "pack; beside a widened build's pack folder otherwise)")

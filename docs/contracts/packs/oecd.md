@@ -17,7 +17,7 @@
 
 # Data contracts of the oecd pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/economy/packs/oecd/README.md](../../../modules/economy/packs/oecd/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/external-data/packs/oecd/README.md](../../../modules/external-data/packs/oecd/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -30,7 +30,7 @@ One OECD member: the latest leading indicator, unemployment, inflation and growt
 
 |  |  |
 |---|---|
-| Contract | [oecd-country.contract.yaml](../../../modules/economy/packs/oecd/contracts/oecd-country.contract.yaml) · version 1.0 |
+| Contract | [oecd-country.contract.yaml](../../../modules/external-data/packs/oecd/contracts/oecd-country.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/loaders/(external\|news)/) |
@@ -160,7 +160,7 @@ One OECD measure of one member by period: the history, the latest value and the 
 
 |  |  |
 |---|---|
-| Contract | [oecd-series.contract.yaml](../../../modules/economy/packs/oecd/contracts/oecd-series.contract.yaml) · version 1.0 |
+| Contract | [oecd-series.contract.yaml](../../../modules/external-data/packs/oecd/contracts/oecd-series.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/loaders/(external\|news)/) |

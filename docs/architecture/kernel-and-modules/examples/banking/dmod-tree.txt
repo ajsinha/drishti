@@ -20,7 +20,7 @@ banking-3.0.0.dmod                                         a zip; module.yaml st
 ├── data/
 │   └── needs.yaml                                         kinds it reads / subscribes to / writes (see data/needs.yaml)
 ├── packs/
-│   ├── banking-reference/                                 counterparty, legal-entity, book, desk, trader … <- config/packs/core/core (question Q1)
+│   ├── banking-reference/                                 counterparty, legal-entity, book, desk, trader … <- modules/reference-data/packs/core (question Q1)
 │   ├── trading/                                           <- modules/banking/packs/trading
 │   │   ├── pack.yaml  README.md
 │   │   ├── contracts/trade.contract.yaml …                storage: replaced by binding-hint: (no connector)

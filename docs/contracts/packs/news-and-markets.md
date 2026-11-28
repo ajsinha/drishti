@@ -17,7 +17,7 @@
 
 # Data contracts of the news-and-markets pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/economy/packs/news-and-markets/README.md](../../../modules/economy/packs/news-and-markets/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/news-and-events/packs/news-and-markets/README.md](../../../modules/news-and-events/packs/news-and-markets/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -32,7 +32,7 @@ A topic and the news about it: headlines (newest first) with their publishers an
 
 |  |  |
 |---|---|
-| Contract | [news-topic.contract.yaml](../../../modules/economy/packs/news-and-markets/contracts/news-topic.contract.yaml) · version 1.0 |
+| Contract | [news-topic.contract.yaml](../../../modules/news-and-events/packs/news-and-markets/contracts/news-topic.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | reference |
@@ -107,7 +107,7 @@ The headlines for one name, as the news connector computed them: newest first, f
 
 |  |  |
 |---|---|
-| Contract | [news.contract.yaml](../../../modules/economy/packs/news-and-markets/contracts/news.contract.yaml) · version 1.0 |
+| Contract | [news.contract.yaml](../../../modules/news-and-events/packs/news-and-markets/contracts/news.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Google News (news connector) |
@@ -278,7 +278,7 @@ A listed company: its live quote and price history (yfinance connector) and its 
 
 |  |  |
 |---|---|
-| Contract | [listed-company.contract.yaml](../../../modules/economy/packs/news-and-markets/contracts/listed-company.contract.yaml) · version 1.0 |
+| Contract | [listed-company.contract.yaml](../../../modules/news-and-events/packs/news-and-markets/contracts/listed-company.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | reference |
@@ -361,7 +361,7 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 
 |  |  |
 |---|---|
-| Contract | [quote.contract.yaml](../../../modules/economy/packs/news-and-markets/contracts/quote.contract.yaml) · version 1.0 |
+| Contract | [quote.contract.yaml](../../../modules/news-and-events/packs/news-and-markets/contracts/quote.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Yahoo Finance (yfinance connector) |

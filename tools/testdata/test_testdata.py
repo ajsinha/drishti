@@ -283,7 +283,7 @@ class TestData(unittest.TestCase):
         self.assertEqual(set(snaps), {"quote", "news"})
         sys.path.insert(0, str(ROOT / "tools" / "testdata"))
         import capture_market as CM
-        want = CM.targets(ROOT / "modules" / "economy" / "packs" / "news-and-markets")
+        want = CM.targets(ROOT / "modules" / "news-and-events" / "packs" / "news-and-markets")
         for kind, ds in snaps.items():
             self.assertEqual((ds["pack"], ds["connector"]), ("news-and-markets", "news-store"))
             docs = {d[ds["key"]]: d for d in lines(TD / ds["folder"])}

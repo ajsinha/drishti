@@ -131,7 +131,7 @@ engine, when, the result's hash.
 
 ![The same book once computed: both engines agree](img/t23/computed-panels.jpg)
 
-**What the screen says** (`config/packs/core/compute-demo/sutras/path-book.v1.sutra.yaml`):
+**What the screen says** (`examples/packs/compute-demo/sutras/path-book.v1.sutra.yaml`):
 
 ```yaml
 controls:

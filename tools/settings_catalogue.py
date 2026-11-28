@@ -106,7 +106,7 @@ AREAS = [
          "([ADMIN_GUIDE.md](../guides/ADMIN_GUIDE.md#21-compute-engines-on-or-off), [ARCHITECTURE.md](../architecture/ARCHITECTURE.md#27-compute-engines)). "
          "The old switch names are listed last: a site that sets one stops the server at start, which names the new key."),
     Area("modules", "Modules: `config/modules/*.yaml`",
-         "One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of "
+         "One file per module (banking, external-data, news-and-events), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of "
          "its own (banking) its name, so a server without the jar knows it and leaves it off as not installed; the module's manifest ships in its jar and the access registry reads both ([KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md), "
          "[OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module "
          "is on when installed, licensed and enabled; a change takes effect at the next start."),

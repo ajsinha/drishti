@@ -462,7 +462,7 @@ def start_console(stack: dict, c: dict) -> bool:
     servers = ",".join(f"http://{host}:{by_name[s]['port']}" for s in (c.get("servers") or [stack["nodes"][0]["name"]]))
     args = ["--server", servers, "--port", str(port), "--data-dir", str(at.data), "--env-file", str(at.secrets), "--background"]
     if c.get("distribution"):
-        args += ["--distribution", str(c["distribution"])]              # risk, finance, genomics, all, or a file (KERNEL_AND_MODULES.md)
+        args += ["--distribution", str(c["distribution"])]              # risk, finance, public-sector, genomics, all, or a file (KERNEL_AND_MODULES.md)
     if proc != CONSOLE:
         args += ["--name", proc[len(CONSOLE) + 1:]]
     settings = settings_for(stack)

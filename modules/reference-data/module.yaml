@@ -1,0 +1,84 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# The reference-data module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 4; docs/plans/MODULE_RATIONALISATION.md): content only, no code.
+# The kernel keeps no domain pack: the core and gleif packs are this module's.
+format: 1
+id: reference-data
+version: 1.0.0
+title: Reference data
+about: The parties and organisation every domain builds on (counterparties, issuers, books, desks, traders, calendars) and the GLEIF legal entities
+domain: reference-data
+origin: first-party
+publisher:
+  id: drishti
+  name: Ashutosh Sinha
+licence:
+  feature: reference-data
+kernel: '>=0.2 <1.0'
+rachana: '>=1.0'
+contracts: '>=1.0'
+plugin-api: '>=2.0'
+elements: '>=3.3 <4'
+provides:
+  kinds:
+    core:
+    - counterparty
+    - counterparty-group
+    - issuer
+    - ccp
+    - legal-entity
+    - book
+    - desk
+    - trader
+    - calendar
+    - clearing-account
+    gleif:
+    - lei-entity
+    - lei-group
+    - lei-relationship
+    - lei-country
+    - lei-mapping
+packs:
+  folder: packs
+  list:
+  - core
+  - gleif
+  off-by-default:
+  - gleif
+data:
+  needs: data/needs.yaml
+functions:
+- CORE
+- CPTY
+- GRP
+- ISS
+- CCP
+- LE
+- BOOK
+- DESK
+- TRDR
+- CAL
+- CLR
+- GLEIF
+- LEI
+- LEIG
+- LEIR
+- LEIC
+- LEIM
+docs:
+  readme: docs/README.md
+  domains:
+  - reference-data
+resources:
+  memory-mb: 32

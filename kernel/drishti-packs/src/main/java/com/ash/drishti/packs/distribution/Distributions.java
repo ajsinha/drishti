@@ -93,7 +93,7 @@ public final class Distributions {
         }
         String shortName = n.startsWith("drishti.") ? n.substring("drishti.".length()) : n;
         if (!SHORT.matcher(shortName).matches()) {
-            throw new IllegalStateException("distribution '" + n + "' is not a distribution name (risk, finance, genomics, all) or a file path");
+            throw new IllegalStateException("distribution '" + n + "' is not a distribution name (risk, finance, public-sector, genomics, all) or a file path");
         }
         return dir.resolve("drishti." + shortName + ".yaml");
     }
@@ -158,7 +158,7 @@ public final class Distributions {
     public static Distribution read(Path file, Path kernelFile, com.ash.drishti.api.resolution.ModuleHomes homes, Path packsDir) {
         if (!Files.isRegularFile(file)) {
             throw new IllegalStateException("no distribution file " + file.toAbsolutePath().normalize() + " (set " + DIR
-                    + " / DRISHTI_DISTRIBUTIONS_DIR to the folder of the distribution files, or name one of: risk, finance, genomics, all)");
+                    + " / DRISHTI_DISTRIBUTIONS_DIR to the folder of the distribution files, or name one of: risk, finance, public-sector, genomics, all)");
         }
         JsonNode spec = tree(file);
         JsonNode kernel = Files.isRegularFile(kernelFile) ? tree(kernelFile).path("kernel") : YAML.createObjectNode();

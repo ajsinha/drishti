@@ -91,7 +91,7 @@ python3 tools/drishti.py lake demo                    # every table; or: python3
 On Windows, `py -3.13 tools\drishti.py start server --demo` loads the public-data packs including `funds`, and
 `py -3.13 tools\build_demo_lakes.py --only funds` builds its three tables. The demo cluster (`deploy/stack/stack.yaml`) loads it on
 every node. Type `FUNDS` and press Enter: the pack's overview lists its three commands with their counts (what the pack holds is in
-[the funds pack README](../../modules/capital-markets/packs/funds/README.md)).
+[the funds pack README](../../modules/external-data/packs/funds/README.md)).
 
 The pack's data is served by its Delta connector `funds-store` from the lake, never by the demo connector: a server with
 `DRISHTI_DEMO_ENABLED=false` opens every page.
@@ -249,9 +249,9 @@ Funds tracking the S&P 500, by net assets (a fund opens its page)  (table, track
 
 ## Part II · The data contracts
 
-The contracts are `modules/capital-markets/packs/funds/contracts/<kind>.contract.yaml` (checked by `python3 tools/contracts.py check`, published as
+The contracts are `modules/external-data/packs/funds/contracts/<kind>.contract.yaml` (checked by `python3 tools/contracts.py check`, published as
 [docs/contracts/packs/funds.md](../contracts/packs/funds.md)); each column's meaning is the pack's glossary,
-`modules/capital-markets/packs/funds/config/about.yaml`, written by `tools/packgen/funds/make.py` from `tools/packgen/funds/fundsglossary.py`. Every column's
+`modules/external-data/packs/funds/config/about.yaml`, written by `tools/packgen/funds/make.py` from `tools/packgen/funds/fundsglossary.py`. Every column's
 type, key, meaning (with its unit) and source is the contract; a real record of the snapshot with every field explained is the kind's
 example on [docs/contracts/packs/funds.md](../contracts/packs/funds.md). The sources are the SEC data sets' tables and columns:
 **N-PORT** `FUND_REPORTED_INFO`, `FUND_REPORTED_HOLDING`, `IDENTIFIERS`, `MONTHLY_TOTAL_RETURN`, the derivative tables of part C.11;
@@ -260,28 +260,28 @@ in `num.tsv`.
 
 ### 8. fund
 
-One document per fund, keyed by `TICKER` (command `FUND`); the count is in [the funds pack README](../../modules/capital-markets/packs/funds/README.md); stored as the Delta table `<root>/funds/fund/` with the
+One document per fund, keyed by `TICKER` (command `FUND`); the count is in [the funds pack README](../../modules/external-data/packs/funds/README.md); stored as the Delta table `<root>/funds/fund/` with the
 promoted columns `TICKER, NAME, TYPE, TICKERS, ADVISER, INDEX_ID, NET_ASSETS, EXPENSE_RATIO, HOLDING_COUNT, REPORT_DATE, RANK` (the
 search form and the type-ahead read them; the type-ahead also `NAME` and `TICKERS`). Links: a holding's `COMPANY` to `USEQ`
 (us-company), `FUND` to another `FUND`, `LEI`, `ADVISER_LEI`, `CUSTODIAN_LEI` and a counterparty's `CPTY_LEI` to `LEI` (gleif's
 lei-entity), `INDEX_ID` to `IDX` (index-membership).
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund.contract.yaml), published as [FUND: `fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund); a real record of the test data with every field explained is its [example](../contracts/packs/funds.md#example-funds-fund).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund.contract.yaml`](../../modules/external-data/packs/funds/contracts/fund.contract.yaml), published as [FUND: `fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund); a real record of the test data with every field explained is its [example](../contracts/packs/funds.md#example-funds-fund).
 
 ### 9. fund-holder
 
-One document per us-equities company held by at least one fund, keyed by the company's `TICKER` (command `HELD`); the count is in [the funds pack README](../../modules/capital-markets/packs/funds/README.md). Built
+One document per us-equities company held by at least one fund, keyed by the company's `TICKER` (command `HELD`); the count is in [the funds pack README](../../modules/external-data/packs/funds/README.md). Built
 from every holding of every fund (not only those a fund page keeps): a holding is the company when its ticker is the company's, else
 (an equity) when its CUSIP is one some fund filed with the company's ticker, its issuer LEI is the company's, or its issuer name is the
 company's (legal suffixes and punctuation aside).
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund-holder.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund-holder.contract.yaml), published as [HELD: `fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder); a real record of the test data with every field explained is its [example](../contracts/packs/funds.md#example-funds-fund-holder).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`fund-holder.contract.yaml`](../../modules/external-data/packs/funds/contracts/fund-holder.contract.yaml), published as [HELD: `fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder); a real record of the test data with every field explained is its [example](../contracts/packs/funds.md#example-funds-fund-holder).
 
 ### 10. index-funds
 
 One document per us-equities index that at least one fund tracks, keyed by `INDEX` (command `TRACK`): SP500, NDX, DJIA.
 
-**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`index-funds.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/index-funds.contract.yaml), published as [TRACK: `index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds); a real record of the test data with every field explained is its [example](../contracts/packs/funds.md#example-funds-index-funds).
+**Fields and example.** Every field (its type, whether it is required, its unit, its meaning and the checks on it) is the kind's data contract, [`index-funds.contract.yaml`](../../modules/external-data/packs/funds/contracts/index-funds.contract.yaml), published as [TRACK: `index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds); a real record of the test data with every field explained is its [example](../contracts/packs/funds.md#example-funds-index-funds).
 
 ### 11. Validation and conventions
 
@@ -400,7 +400,7 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q2_nport.zip
     https://www.sec.gov/files/dera/data/form-n-port-data-sets/2026q1_nport.zip
   ...
-  then: tools/packgen/funds/make.py -> modules/capital-markets/packs/funds and data/testdata; then make.py --check
+  then: tools/packgen/funds/make.py -> modules/external-data/packs/funds and data/testdata; then make.py --check
 ```
 
 A quarterly source tries the newest quarters first and takes the published ones (N-PORT one, N-CEN and the summaries four); a quarter
@@ -451,21 +451,21 @@ Each dataset: what it is for, whether it is required and where its sample lives,
 
 One document per fund: its identity, share classes, fees, returns and its holdings, the FUND page and the Look-through holdings tab.
 
-- **Data contract:** [`fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund) (FUND), key `TICKER`; 88 fields, 60 required; the file [`fund.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund.contract.yaml).
+- **Data contract:** [`fund`](../contracts/packs/funds.md#fund-fund-or-etf-fund) (FUND), key `TICKER`; 88 fields, 60 required; the file [`fund.contract.yaml`](../../modules/external-data/packs/funds/contracts/fund.contract.yaml).
 - **Example:** [a real record of the test data](../contracts/packs/funds.md#example-funds-fund) (files `data/testdata/funds/fund/fund.tar`).
 
 ### 18.3 `fund-holder`: who holds a company
 
 One row per held company: the funds that hold it and how much, read by HELD and the company page's Held by funds panel.
 
-- **Data contract:** [`fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder) (HELD), key `TICKER`; 16 fields, 14 required; the file [`fund-holder.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund-holder.contract.yaml).
+- **Data contract:** [`fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder) (HELD), key `TICKER`; 16 fields, 14 required; the file [`fund-holder.contract.yaml`](../../modules/external-data/packs/funds/contracts/fund-holder.contract.yaml).
 - **Example:** [a real record of the test data](../contracts/packs/funds.md#example-funds-fund-holder) (files `data/testdata/funds/fund-holder/fund-holder.tar`).
 
 ### 18.4 `index-funds`: funds tracking an index
 
 One row per index: the funds that track it, read by TRACK and the index page.
 
-- **Data contract:** [`index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds) (TRACK), key `INDEX`; 8 fields, 8 required; the file [`index-funds.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/index-funds.contract.yaml).
+- **Data contract:** [`index-funds`](../contracts/packs/funds.md#track-funds-tracking-an-index-index-funds) (TRACK), key `INDEX`; 8 fields, 8 required; the file [`index-funds.contract.yaml`](../../modules/external-data/packs/funds/contracts/index-funds.contract.yaml).
 - **Example:** [a real record of the test data](../contracts/packs/funds.md#example-funds-index-funds) (files `data/testdata/funds/index-funds/index-funds.*.jsonl.gz`).
 <!-- guide-data:end -->
 
@@ -645,7 +645,7 @@ generator writes its files where they live (the samples and guide, `data/testdat
 (section 9) is written into the repository only with `--internal-ok`.
 
 ```bash
-python3 tools/drishti.py feed run gleif --snapshot          # config/packs/core/gleif (samples, guide) and data/testdata/gleif
+python3 tools/drishti.py feed run gleif --snapshot          # modules/reference-data/packs/gleif (samples, guide) and data/testdata/gleif
 python3 tools/drishti.py lake demo                          # then rebuild the demo lake from it
 ```
 
@@ -849,7 +849,7 @@ datasets:                              # each: the rows' pack and kind, and the 
 options:                               # free settings the feed's class reads with run.option(name); --set NAME=VALUE overrides
   args: []
 snapshot:                              # optional: what --snapshot does (args for the source; a note)
-  note: refreshes config/packs/core/gleif and data/testdata/gleif
+  note: refreshes modules/reference-data/packs/gleif and data/testdata/gleif
 ```
 
 | Dataset key | Means |
@@ -941,7 +941,7 @@ A source whose terms do not allow redistribution is never written into a committ
 `--internal-ok` (with `--snapshot`); without it the feed refuses (exit 2) and explains why in words:
 
 ```text
-refused: .../modules/economy/packs/world-economy is a committed folder of the repository, and these sources may not be redistributed:
+refused: .../modules/external-data/packs/world-economy is a committed folder of the repository, and these sources may not be redistributed:
   - IMF World Economic Outlook (DataMapper): the IMF's terms allow reuse with attribution, but commercial reuse needs the IMF's permission; ...
 Write them to the data folder instead (leave out --out, or point it outside the repository), or pass --internal-ok
 if the result stays inside your organisation (internal demos only).
@@ -1071,7 +1071,7 @@ python3 tools/drishti.py feed run world-economy --snapshot --internal-ok --offli
 
 Where it writes:
 
-- With `--internal-ok` (and no widening): the committed `tools/realdata/dataset/`, `modules/economy/packs/world-economy/`,
+- With `--internal-ok` (and no widening): the committed `tools/realdata/dataset/`, `modules/external-data/packs/world-economy/`,
   `tools/packgen/world/about.yaml` and the generated tables of this page's world-economy section (`tools/realdata/realdata.py docs`). Commit the result.
 - Otherwise: `<data>/datafeeds/sources/world-economy/` with `sources.yaml` (what this build used), `dataset/`, `packs/world-economy/`
   and `about/`. Serve that pack with `DRISHTI_PACKS_DIR` or copy what you need.
@@ -1343,7 +1343,7 @@ python3 tools/realdata/realdata.py all --refresh      # download again, normalis
 python3 tools/realdata/realdata.py check              # clean when everything committed matches
 python3 tools/packgen/world/make.py --check           # clean when the pack matches the dataset
 python3 tools/packgen/politics/make.py --check
-python3 tools/drishti.py pack check modules/economy/packs/world-economy modules/economy/packs/world-economy
+python3 tools/drishti.py pack check modules/external-data/packs/world-economy modules/external-data/packs/world-economy
 python3 -m pytest tools/realdata/tests
 ```
 
@@ -1364,7 +1364,7 @@ name; unmatched profiles are listed in `meta.json` (`factbookUnmatched`: depende
 pack tests are one to five real countries per kind (India, the United States, Brazil, Nigeria, Japan) with `expect.yaml` (`noErrors`, `nonEmpty`, help coverage 100%); which ones is in `tools/realdata/pack_tests.yaml`.
 
 ```
-$ python3 tools/drishti.py pack check modules/economy/packs/world-economy modules/economy/packs/world-economy
+$ python3 tools/drishti.py pack check modules/external-data/packs/world-economy modules/external-data/packs/world-economy
 == economics: sutra lint: exit 0
 == economics: sutra test: exit 0
      economy: help coverage 8/8 (100%)
@@ -1381,7 +1381,7 @@ The pictures are made by `tools/docs/shots/realdata.py` (`python3 tools/docs/scr
 
 #### news-and-markets
 
-**Sources:** `quote` and `news`, both **internal only** (section 19.11). The topics and listed companies are hand-written reference data (`modules/economy/packs/news-and-markets/tools/make_samples.py`), committed as `data/testdata/news-and-markets/{news-topic,listed-company}` and built into the lake by `drishti.py lake demo`.
+**Sources:** `quote` and `news`, both **internal only** (section 19.11). The topics and listed companies are hand-written reference data (`modules/news-and-events/packs/news-and-markets/tools/make_samples.py`), committed as `data/testdata/news-and-markets/{news-topic,listed-company}` and built into the lake by `drishti.py lake demo`.
 
 `drishti.py feed run news-and-markets` wraps `tools/testdata/capture_market.py` (also `drishti.py testdata capture-market`): the
 documents come through Drishti's own live connectors, so they have exactly the shape the Sutras read. It starts a scratch server
@@ -1488,7 +1488,7 @@ python3 tools/drishti.py feed run us-equities --snapshot -- prices --server http
   `<data>/datafeeds/sources/us-equities/testdata/us-equities/<kind>/`, checked with `make.py --check --pack`. Its cache is
   `scoped/<hash>` inside the cache, seeded from the plain cache less what the scope changes (submissions for `FILINGS`, facts for
   `YEARS` and `CONCEPT`, the Wikidata members for `INDEX`). `--into-pack` writes a widened build over the committed pack, on
-  purpose only; without it `--out modules/capital-markets/packs/us-equities` with a scope is refused.
+  purpose only; without it `--out modules/external-data/packs/us-equities` with a scope is refused.
 - **Prices are internal only.** The pack ships no prices; the `prices` source reads `price-history/PX-<ticker>` through the
   pack's `us-equities-prices` connector of a running server where you switched it on (`DRISHTI_US_EQUITIES_PRICES_ENABLED=true`,
   `--server`, `--token-file`, `--delay` at least 2 s, `--limit N`). It is the feed `yahoo-prices` (internal only, off as shipped) and writes
@@ -1548,7 +1548,7 @@ python3 tools/drishti.py feed run gleif --snapshot -- golden golden-lei api mapp
 - **A widened build goes to the data folder**: `<data>/datafeeds/sources/gleif/packs/gleif`, a whole pack (the hand-written manifest,
   Sutras and help copied, reference samples and guide generated), with its snapshot in `<data>/datafeeds/sources/gleif/testdata/gleif/`,
   checked with `make.py --check --pack`. `--into-pack` writes it over the
-  committed pack, on purpose only (never with `golden-lei`); without it `--out config/packs/core/gleif` with a scope is refused.
+  committed pack, on purpose only (never with `golden-lei`); without it `--out modules/reference-data/packs/gleif` with a scope is refused.
 
 **Check it:** `make.py --check` (run by the feed); `LEI 8I5DZWZKVSZI1NUHU748 <GO>` opens an entity, `LEIG ALL <GO>` every group.
 **Offline:** `feed run gleif --snapshot --offline` reproduces the committed data from the cache byte for byte.
@@ -1566,7 +1566,7 @@ one at a time.
 a quarter) and stay in `<data>/datafeeds/sources/cache/funds`, never in git; a file younger than `--max-age` hours (a week by default) is
 reused. **Where `--snapshot` writes:** the committed snapshot, gzipped JSON Lines under `data/testdata/funds/<kind>/` (the fund kind
 in parts of about 1.2 MB, 5.5 MB in all), listed in `data/testdata/testdata.yaml` and served from the demo lake by the pack's Delta
-connector `funds-store`; `samples/`, the README, the guide and the glossary (`config/about.yaml`) of `modules/capital-markets/packs/funds`. Rebuild
+connector `funds-store`; `samples/`, the README, the guide and the glossary (`config/about.yaml`) of `modules/external-data/packs/funds`. Rebuild
 the demo lake after it: `python3 tools/drishti.py lake demo`. A plain `feed run funds` loads the same kinds into `capitalmarket`.
 
 ```bash
@@ -1902,7 +1902,7 @@ You should see six `feed ok` lines and six green rows in Admin → Data loads �
 
 ![WDI WDI-CAN: Canada's development profile, its indicators and the world map by GDP per head](../tutorials/img/t46/03-wdi-canada.jpg)
 
-The screens are Sutras of the packs (`modules/economy/packs/world-development/sutras/development-profile.v1.sutra.yaml` and its
+The screens are Sutras of the packs (`modules/external-data/packs/world-development/sutras/development-profile.v1.sutra.yaml` and its
 neighbours), built from the UI kit; what each pack's kinds hold is in its contract page, for example
 [world-development.md](../contracts/packs/world-development.md). The screens are described in section 20.3.
 
@@ -2034,7 +2034,7 @@ important banks, other large banks, insurers, asset managers and market infrastr
 The pack is **off by default**: add it to the packs a server loads, `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif`
 (it needs no other pack; with `us-equities` on, a company and its LEI record link both ways).
 
-![The entity page: JPMorgan Chase & Co. with a child opened beside its children table](../../config/packs/core/gleif/guides/images/gleif-entity.jpg)
+![The entity page: JPMorgan Chase & Co. with a child opened beside its children table](../../modules/reference-data/packs/gleif/guides/images/gleif-entity.jpg)
 
 ### What you can open
 
@@ -2133,7 +2133,7 @@ The picture above is made by `tools/packgen/gleif/shot.py` (its own scratch serv
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../config/packs/core/gleif/README.md#data-contracts) and [*Data retrieval*](../../config/packs/core/gleif/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/reference-data/packs/gleif/README.md#data-contracts) and [*Data retrieval*](../../modules/reference-data/packs/gleif/README.md#data-retrieval).
 
 ## The funds pack
 
@@ -2147,7 +2147,7 @@ No prices or NAV history. The full guide, with the data contract of every kind a
 The pack is **off by default**: add it to the packs a server loads, after `us-equities` (its holdings link to the companies there):
 `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds`.
 
-![The FUND page: Invesco QQQ's fact sheet, its look-through and its index tabs](../../modules/capital-markets/packs/funds/guides/images/funds-fund.jpg)
+![The FUND page: Invesco QQQ's fact sheet, its look-through and its index tabs](../../modules/external-data/packs/funds/guides/images/funds-fund.jpg)
 
 ### What you can open
 
@@ -2206,7 +2206,7 @@ python3 tools/packgen/funds/make.py --check              # no network: the pack 
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/capital-markets/packs/funds/README.md#data-contracts) and [*Data retrieval*](../../modules/capital-markets/packs/funds/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/external-data/packs/funds/README.md#data-contracts) and [*Data retrieval*](../../modules/external-data/packs/funds/README.md#data-retrieval).
 
 ## The us-equities pack
 
@@ -2217,7 +2217,7 @@ Everything here is published data, not samples, retrieved on 2026-11-27; prices 
 The pack is **off by default**: add it to the packs a server loads, `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities`
 (it needs no other pack; with `world-economy` and `news-and-markets` on, its companies link to them).
 
-![The company page: Apple Inc., with its latest filing opened beside the filings](../../modules/capital-markets/packs/us-equities/guides/images/us-equities-company.jpg)
+![The company page: Apple Inc., with its latest filing opened beside the filings](../../modules/external-data/packs/us-equities/guides/images/us-equities-company.jpg)
 
 ### What you can open
 
@@ -2325,7 +2325,7 @@ above is made by `tools/packgen/us_equities/shot.py` (its own scratch server and
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/capital-markets/packs/us-equities/README.md#data-contracts) and [*Data retrieval*](../../modules/capital-markets/packs/us-equities/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/external-data/packs/us-equities/README.md#data-contracts) and [*Data retrieval*](../../modules/external-data/packs/us-equities/README.md#data-retrieval).
 
 ## The central-banks pack
 
@@ -2347,7 +2347,7 @@ domain, the lens, the feeds and their licences: the [Public sector guide](WORLD_
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/economy/packs/central-banks/README.md#data-contracts) and [*Data retrieval*](../../modules/economy/packs/central-banks/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/external-data/packs/central-banks/README.md#data-contracts) and [*Data retrieval*](../../modules/external-data/packs/central-banks/README.md#data-retrieval).
 
 ## The gdelt-events pack
 
@@ -2367,7 +2367,7 @@ feed keeps 30 days of aggregates (`config/feeds/gdelt-events.yaml`). The domain,
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/economy/packs/gdelt-events/README.md#data-contracts) and [*Data retrieval*](../../modules/economy/packs/gdelt-events/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/news-and-events/packs/gdelt-events/README.md#data-contracts) and [*Data retrieval*](../../modules/news-and-events/packs/gdelt-events/README.md#data-retrieval).
 
 ## The national-statistics pack
 
@@ -2386,7 +2386,7 @@ pack. The domain, the lens, the feeds and their licences: the [Public sector gui
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/economy/packs/national-statistics/README.md#data-contracts) and [*Data retrieval*](../../modules/economy/packs/national-statistics/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/external-data/packs/national-statistics/README.md#data-contracts) and [*Data retrieval*](../../modules/external-data/packs/national-statistics/README.md#data-retrieval).
 
 ## The news-and-markets pack (sample)
 
@@ -2434,7 +2434,7 @@ While the connector is off the headline panels are empty and say `waiting for NE
 
 #### Changing it
 
-- **Topics:** edit the list in `tools/make_samples.py` and run `python3 modules/economy/packs/news-and-markets/tools/make_samples.py`; it rewrites `samples/` and the
+- **Topics:** edit the list in `tools/make_samples.py` and run `python3 modules/news-and-events/packs/news-and-markets/tools/make_samples.py`; it rewrites `samples/` and the
   alias block of the connector template in `pack.yaml`. The connector file `config/connectors/news.yaml` is written once from the template and is yours
   after that; add `aliases.<Name_with_underscores>` lines to it for new topics.
 - **Filters:** `relevance`, `allow-sources`, `deny-sources`, `max-items`, `cache-ttl-seconds` and the rest in the connector file; see [NEWS.md](../connectors/types/news/README.md#settings).
@@ -2452,7 +2452,7 @@ is code rather than a store. See [Domain packs](BUILD_GUIDE.md#31-the-packs-that
 A sample pack: twenty well-known listed companies, each with a **quote and a price chart** computed on demand by the
 [yfinance connector](../connectors/types/yfinance/README.md) and the **news about the company** computed on demand by the
 [news connector](../connectors/types/news/README.md). The company list (ticker, name, other names,
-exchange, sector, country) is static reference data in `samples/listed-company.jsonl`, written by `modules/economy/packs/news-and-markets/tools/make_samples.py`.
+exchange, sector, country) is static reference data in `samples/listed-company.jsonl`, written by `modules/news-and-events/packs/news-and-markets/tools/make_samples.py`.
 
 !!! warning "Internal demonstrations only; off until you turn it on"
     Yahoo's chart endpoint is **unofficial** and its terms restrict its use: do not use this pack in production or redistribute what it shows. Both connectors are
@@ -2507,7 +2507,7 @@ ticker is simply not found.
 
 #### Changing it
 
-- **Companies:** edit the list in `modules/economy/packs/news-and-markets/tools/make_samples.py` and run it (it also rewrites the aliases of the news connector template).
+- **Companies:** edit the list in `modules/news-and-events/packs/news-and-markets/tools/make_samples.py` and run it (it also rewrites the aliases of the news connector template).
 - **History:** `range` and `interval` in `config/connectors/yfinance.yaml` (for example `1y` and `1wk`); caching and retries in the same file; see [YFINANCE.md](../connectors/types/yfinance/README.md#settings).
 - **Percent format:** the pack defines `pc2` (a value already in percent, with a sign and ` %`).
 
@@ -2519,7 +2519,7 @@ This is a sample pack of the kind `drishti.packs.samples` can hide from business
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/economy/packs/news-and-markets/README.md#data-contracts) and [*Data retrieval*](../../modules/economy/packs/news-and-markets/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/news-and-events/packs/news-and-markets/README.md#data-contracts) and [*Data retrieval*](../../modules/news-and-events/packs/news-and-markets/README.md#data-retrieval).
 
 ## The oecd pack
 
@@ -2538,7 +2538,7 @@ unit (the Data Explorer's "Developer API" button gives both). The domain, the le
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/economy/packs/oecd/README.md#data-contracts) and [*Data retrieval*](../../modules/economy/packs/oecd/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/external-data/packs/oecd/README.md#data-contracts) and [*Data retrieval*](../../modules/external-data/packs/oecd/README.md#data-retrieval).
 
 ## The official-news pack
 
@@ -2561,7 +2561,7 @@ the organisation, and Export data refuses them. The domain, the lens, the feeds 
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/economy/packs/official-news/README.md#data-contracts) and [*Data retrieval*](../../modules/economy/packs/official-news/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/news-and-events/packs/official-news/README.md#data-contracts) and [*Data retrieval*](../../modules/news-and-events/packs/official-news/README.md#data-retrieval).
 
 ## The world-development pack
 
@@ -2582,7 +2582,7 @@ feeds and their licences: the [Public sector guide](WORLD_DATA_GUIDE.md).
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/economy/packs/world-development/README.md#data-contracts) and [*Data retrieval*](../../modules/economy/packs/world-development/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/external-data/packs/world-development/README.md#data-contracts) and [*Data retrieval*](../../modules/external-data/packs/world-development/README.md#data-retrieval).
 
 ## World economy pack
 
@@ -2748,4 +2748,4 @@ Role `analyst`: kinds `jurisdiction`, `party`, `office-holder`, `election`, `reg
 
 ### Data retrieval
 
-Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/economy/packs/world-economy/README.md#data-contracts) and [*Data retrieval*](../../modules/economy/packs/world-economy/README.md#data-retrieval).
+Every kind's data contract and example, where its data comes from (an external source and its feed, a generator, or a Drishti engine), how it reaches the lake and how to check it are generated into the pack's README: [*Data contracts*](../../modules/external-data/packs/world-economy/README.md#data-contracts) and [*Data retrieval*](../../modules/external-data/packs/world-economy/README.md#data-retrieval).

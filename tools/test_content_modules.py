@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The product's modules as packages: every module folder without a server part (capital-markets, economy, the source-* modules) is packed
+"""The product's modules as packages: every module folder without a server part (external-data, news-and-events, the source-* modules) is packed
 by the one packager and goes through the conformance checks C1-C14 (both ModuleCli of the server jar, when the jar is built:
 python tools/drishti.py build jar); their manifests say what they require; a module with a server part is not packed without
 its jar; and every module under modules/ with a java: block is in the set packaging/dist ships (or is listed here as not shipped, with the reason).
@@ -36,7 +36,7 @@ import modulesbuild  # noqa: E402
 from procs import LaunchError  # noqa: E402
 
 MODULES = ROOT / "modules"
-CONTENT = ["capital-markets", "economy", "source-calypso", "source-endur", "source-ici", "source-murex", "source-swapone", "source-wss"]
+CONTENT = ["external-data", "news-and-events", "source-calypso", "source-endur", "source-ici", "source-murex", "source-swapone", "source-wss"]
 
 # a module with a java: block that packaging/dist does NOT pack: the reason (none today: every one is shipped)
 NOT_SHIPPED: dict[str, str] = {}
@@ -101,7 +101,7 @@ def shipped_requirements(mid: str, tmp: Path) -> list[str]:
     """The packages of the modules this one requires (packed beside it): a module with code is built by packaging/dist, so its package is that build's."""
     out = []
     for req in required(mid):
-        stems = {req, req.replace("-", "")}                  # a package is named by its id, hyphens left out (capitalmarkets-1.0.0.dmod)
+        stems = {req, req.replace("-", "")}                  # a package is named by its id, hyphens left out (externaldata-1.0.0.dmod)
         built = sorted(f for d in (ROOT / "modules", ROOT / "packaging/dist/target/dmod") for st in stems for f in d.glob(f"{st}-[0-9]*.dmod"))
         if (MODULES / req / "module.yaml").is_file() and manifest(req).get("java") is None:
             out.append(str(pack_module(MODULES / req, tmp / "requires")))
@@ -112,7 +112,7 @@ def shipped_requirements(mid: str, tmp: Path) -> list[str]:
     return out
 
 
-@pytest.mark.parametrize("mid", ["capital-markets", "economy"])
+@pytest.mark.parametrize("mid", ["external-data", "news-and-events"])
 def test_a_content_module_carries_its_content_and_no_code(mid, tmp_path):
     dmod = pack_module(MODULES / mid, tmp_path)
     with zipfile.ZipFile(dmod) as z:
@@ -128,7 +128,7 @@ def test_a_content_module_carries_its_content_and_no_code(mid, tmp_path):
     assert not restricted & set(names), sorted(restricted & set(names))
     for r in restricted:
         assert (MODULES / mid / r).is_file(), r
-    if mid == "economy":
+    if mid == "external-data":
         assert restricted == {f"packs/world-economy/samples/{n}.jsonl" for n in ("economic-forecast", "economy", "fiscal-position", "macro-indicator")}
         shipped = {Path(n).name for n in names if n.startswith("packs/world-economy/samples/")}
         assert {"jurisdiction.jsonl", "region.jsonl", "region-economy.jsonl", "election.jsonl", "party.jsonl", "office-holder.jsonl",
@@ -155,8 +155,8 @@ def test_banking_is_not_a_carrier_of_the_market_data_pack():
     assert "market-data" not in str(banking.get("packs"))
     assert banking.get("origin") == "first-party"
     assert "market-data" in str(manifest("market-data").get("packs"))
-    for mid in ("capital-markets", "economy"):
-        assert required(mid) == ["market-data"]
+    assert required("news-and-events") == ["market-data"]
+    assert required("external-data") == ["reference-data"]           # the kernel only, and the LEI link of us-equities (optional)
 
 
 def test_every_module_with_a_java_block_is_shipped_or_listed_as_not_shipped_with_a_reason():

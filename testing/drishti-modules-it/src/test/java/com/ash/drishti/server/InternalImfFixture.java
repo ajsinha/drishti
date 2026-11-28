@@ -45,7 +45,7 @@ final class InternalImfFixture {
 
     /** Gives the server a file connector holding (its file: {@code testing/connectors/internal-imf-fixture}; the tests name that folder as their connectors-dir) the IMF samples, routed for {@link #KINDS}. */
     static void register(DynamicPropertyRegistry r) throws IOException {
-        Path samples = Path.of(TestRoots.repo(), "modules", "economy", "packs", "world-economy", "samples");
+        Path samples = Path.of(TestRoots.repo(), "modules", "external-data", "packs", "world-economy", "samples");
         Path day = TestRun.root().resolve(CONNECTOR);
         Files.createDirectories(day);
         List<String> catalogue = Files.readAllLines(samples.resolve("catalog.jsonl"), StandardCharsets.UTF_8);

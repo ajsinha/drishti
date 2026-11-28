@@ -52,4 +52,4 @@ datasets:
 options:
   args: []
 snapshot:
-  note: refreshes modules/capital-markets/packs/us-equities (samples, guide) and data/testdata/us-equities
+  note: refreshes modules/external-data/packs/us-equities (samples, guide) and data/testdata/us-equities

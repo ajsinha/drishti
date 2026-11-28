@@ -17,7 +17,7 @@
 
 # Data contracts of the official-news pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/economy/packs/official-news/README.md](../../../modules/economy/packs/official-news/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/news-and-events/packs/official-news/README.md](../../../modules/news-and-events/packs/official-news/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -30,7 +30,7 @@ One publisher of official news (a central bank, a regulator, a government): its 
 
 |  |  |
 |---|---|
-| Contract | [release-source.contract.yaml](../../../modules/economy/packs/official-news/contracts/release-source.contract.yaml) · version 1.0 |
+| Contract | [release-source.contract.yaml](../../../modules/news-and-events/packs/official-news/contracts/release-source.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Federal Reserve Board; European Central Bank; Bank of Canada; Bank of England; US Securities and Exchange Commission; OSFI; US Federal Register; Canada Gazette, Part II; Canada Gazette, Part I, pulled by the official-news feed (config/feeds/official-news.yaml, tools/loaders/(external\|news)/) |
@@ -174,7 +174,7 @@ One official press release: its title, publisher, date, summary and the link to 
 
 |  |  |
 |---|---|
-| Contract | [press-release.contract.yaml](../../../modules/economy/packs/official-news/contracts/press-release.contract.yaml) · version 1.0 |
+| Contract | [press-release.contract.yaml](../../../modules/news-and-events/packs/official-news/contracts/press-release.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: Federal Reserve Board; European Central Bank; Bank of Canada; Bank of England; US Securities and Exchange Commission; OSFI; US Federal Register; Canada Gazette, Part II; Canada Gazette, Part I, pulled by the official-news feed (config/feeds/official-news.yaml, tools/loaders/(external\|news)/) |

@@ -29,7 +29,7 @@
   <name>drishti-modules</name>
   <description>The product's first-party modules as packages (docs/architecture/KERNEL_AND_MODULES.md section 3.3, KERNEL_AND_MODULES.md): all twelve
     modules (banking with its code and its kernel-internals allowance, stamped with the kernel build of this build; market-data, trading and
-    genomics with their jars; capital-markets, economy and the six source-system modules from their folders), each packed by the one packer
+    genomics with their jars; external-data, news-and-events and the six source-system modules from their folders), each packed by the one packer
     (ModuleCli module pack, Java) into target/dmod/ID-VERSION.dmod, and first-party.yaml (their ids and hash-list hashes).
     Banking, market-data, trading and genomics (the modules with a server part) go through the fourteen conformance checks (ModuleCli verify) as part of the build.
     Nothing here goes into the server jar: at package the packages are installed into the modules folder (drishti.home.modules, default
@@ -131,23 +131,23 @@
             </configuration>
           </execution>
           <execution>
-            <id>pack-capital-markets</id>
+            <id>pack-external-data</id>
             <phase>process-classes</phase>
             <goals><goal>java</goal></goals>
             <configuration>
               <arguments>
-                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/capital-markets</argument>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/external-data</argument>
                 <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
               </arguments>
             </configuration>
           </execution>
           <execution>
-            <id>pack-economy</id>
+            <id>pack-news-and-events</id>
             <phase>process-classes</phase>
             <goals><goal>java</goal></goals>
             <configuration>
               <arguments>
-                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/economy</argument>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/news-and-events</argument>
                 <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
               </arguments>
             </configuration>

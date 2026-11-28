@@ -23,7 +23,7 @@
 #           sees it greyed instead); Help is documentation, open to anyone who can open Help, whatever an engine's opens: (its catalogue entry) says;
 #   pair:   the tutorial drawn beside a guide on its row (the tutorial is a page of the same group);
 #   roles:  only people with one of these roles (or an administrator) see the page: hidden from the sections and search, 404 at its address.
-#   domain: the domain module the page belongs to (core, banking, capitalmarkets, economy; config/docs-features.yaml agrees): while that
+#   domain: the domain module the page belongs to (core, banking, external-data, news-and-events, reference-data; config/docs-features.yaml agrees): while that
 #           module is off for the person the page is not listed, searched or served (a module's own Help file: its pages are its own);
 # A group's words: the command words shown beside its title.
 # Every other document under docs/ (and the top-level *.md) is reachable unlisted at a slug made from its path
@@ -129,7 +129,7 @@ sections:
       - title: "World and public data"
         words: [FUND, WDI]
         guides:
-          - { slug: world-data-guide, domain: capitalmarkets, doc: guides/WORLD_DATA_GUIDE.md, title: "World and public data", icon: globe2, summary: "The public data of the world packs, each part a guide with its tutorial: funds and ETFs from SEC data (FUND, HELD, TRACK), every external feed with its licence and refresh script (drishti.py feed), and the public sector (WDI, CBANK, NSTAT, OECD, PRESS, GDELT): the screens, the packs, the daily feeds and what is internal only." }
+          - { slug: world-data-guide, domain: external-data, doc: guides/WORLD_DATA_GUIDE.md, title: "World and public data", icon: globe2, summary: "The public data of the world packs, each part a guide with its tutorial: funds and ETFs from SEC data (FUND, HELD, TRACK), every external feed with its licence and refresh script (drishti.py feed), and the public sector (WDI, CBANK, NSTAT, OECD, PRESS, GDELT): the screens, the packs, the daily feeds and what is internal only." }
   - id: data
     groups:
       - title: "Loads and lakes"

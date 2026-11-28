@@ -1,0 +1,230 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# The external-data module's manifest (docs/architecture/KERNEL_AND_MODULES.md section 4; docs/plans/MODULE_RATIONALISATION.md): content only, no code.
+# The distribution files list it by id, and their visibility filter reads this file: its packs, functions, menus and Help.
+format: 1
+id: external-data
+version: 1.0.0
+title: External data
+about: 'Public data of the world: economies and forecasts, elections and governments, development indicators, central banks, national statistics,
+  the OECD, US listed companies (SEC EDGAR) and the largest US funds and ETFs; the World and Markets lenses'
+domain: external-data
+origin: first-party
+publisher:
+  id: drishti
+  name: Ashutosh Sinha
+licence:
+  feature: external-data
+kernel: '>=0.2 <1.0'
+rachana: '>=1.0'
+contracts: '>=1.0'
+plugin-api: '>=2.0'
+elements: '>=3.3 <4'
+requires:
+  optional:
+    reference-data: '>=1.0 <2'
+provides:
+  kinds:
+    world-economy:
+    - economy
+    - macro-indicator
+    - economic-forecast
+    - labour-market
+    - fiscal-position
+    - country-group
+    - region-economy
+    - jurisdiction
+    - party
+    - office-holder
+    - election
+    - region
+    - social-indicator
+    world-development:
+    - development-profile
+    - development-series
+    national-statistics:
+    - statistics-series
+    oecd:
+    - oecd-country
+    - oecd-series
+    central-banks:
+    - central-bank
+    - rate-series
+    funds:
+    - fund
+    - fund-holder
+    - index-funds
+    us-equities:
+    - us-company
+    - index-membership
+    - sic-sector
+    - filing-feed
+    - filing
+    - financial-fact
+    - price-history
+packs:
+  folder: packs
+  list:
+  - world-economy
+  - world-development
+  - national-statistics
+  - oecd
+  - central-banks
+  - funds
+  - us-equities
+  off-by-default:
+  - world-development
+  - central-banks
+  - national-statistics
+  - oecd
+  - us-equities
+  - funds
+data:
+  needs: data/needs.yaml
+console:
+  plugin: console/plugin.yaml
+  menus:
+  - id: markets
+    columns:
+    - title: News and quotes
+      items:
+      - id: idx
+        cmd: IDX
+        icon: list-ol
+        label: Indices
+        desc: Index membership
+        requires:
+        - cmd:IDX
+  - id: economies
+    domain: external-data
+    label: Economies
+    icon: globe2
+    subject: true
+    columns:
+    - title: Economies
+      items:
+      - id: econ
+        fill: ECON
+        icon: flag
+        label: A country
+        desc: Type the country's code after the word (ECON CAN)
+        requires:
+        - cmd:ECON
+      - id: macro
+        cmd: MACRO
+        icon: graph-up
+        label: Indicators
+        desc: Every indicator of every economy
+        requires:
+        - cmd:MACRO
+      - id: fcst
+        cmd: FCST
+        icon: binoculars
+        label: IMF forecasts
+        desc: The IMF's forecasts by economy
+        requires:
+        - cmd:FCST
+      - id: rege
+        cmd: REGE
+        icon: map
+        label: Regions
+        desc: Sub-national regions and their figures
+        requires:
+        - cmd:REGE
+  - id: companies
+    domain: banking
+    label: Companies
+    icon: building
+    subject: true
+    columns:
+    - title: Companies
+      items:
+      - id: useq
+        cmd: USEQ
+        icon: building
+        label: US equities
+        desc: US listed companies, their sector and figures
+        requires:
+        - cmd:USEQ
+      - id: edgar
+        cmd: EDGAR
+        icon: file-earmark-text
+        label: Filings
+        desc: The filings feed of US companies
+        requires:
+        - cmd:EDGAR
+      - id: leic
+        cmd: LEIC
+        icon: globe
+        label: Legal entities
+        desc: Legal entities by country (LEI)
+        requires:
+        - cmd:LEIC
+      - id: fund
+        cmd: FUND
+        icon: pie-chart
+        label: Funds and ETFs
+        desc: Funds and ETFs and what they hold
+        requires:
+        - cmd:FUND
+functions:
+- WRLD
+- ECON
+- MACRO
+- FCST
+- LABR
+- FISC
+- ECG
+- REGE
+- JUR
+- PARTY
+- OFFC
+- ELEC
+- REGN
+- SOCI
+- WDEV
+- WDI
+- WDIS
+- CBNK
+- CBANK
+- CBSER
+- STCAN
+- NSTAT
+- OECDP
+- OECD
+- OECDS
+- USEQS
+- USEQ
+- IDX
+- SIC
+- EDGAR
+- FILING
+- FACT
+- PXH
+- FUNDS
+- FUND
+- HELD
+- TRACK
+lenses: lenses/world.yaml
+docs:
+  readme: docs/README.md
+  help: docs/help.yaml
+  domains:
+  - external-data
+  guides:
+  - guides/WORLD_DATA_GUIDE.md
+  tutorials:
+  - guides/WORLD_DATA_GUIDE.md
+resources:
+  memory-mb: 64

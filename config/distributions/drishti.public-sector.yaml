@@ -1,0 +1,56 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Drishti Public Sector (docs/architecture/KERNEL_AND_MODULES.md section 20; docs/plans/MODULE_RATIONALISATION.md): analysts of governments, statistical
+# offices, central banks and the OECD. "What are economies and governments doing, and what do they say?" The external-data and news-and-events
+# modules, nothing else: no risk number, no market data, no reference data.
+format: 1
+distribution: drishti.public-sector
+version: 1.0.0
+kernel: ">=2.9.11 <2.10"
+
+brand:
+  product: Drishti Public Sector
+  product_native: दृष्टि
+  tagline: Economies, governments and their statistics. One grammar.
+  owner: Ashutosh Sinha
+  copyright: Copyright © 2026 Ashutosh Sinha. All rights reserved. Proprietary and confidential.
+  notice: Unauthorised copying, use or distribution is prohibited.
+  logo: ""
+  favicon: ""
+  about: ""
+  support: { email: "", url: "" }
+
+theme: { tokens: light, mode: light, density: comfortable }   # slate and teal, light, comfortable
+
+modules:
+  - { id: external-data,   required: true }
+  - { id: news-and-events, required: true }
+
+lenses:
+  offered: [world, publicsector]
+  default: world
+
+menus:
+  top: [views, domains, create, admin, help]
+  placeholder: "ECON CAN, WDI WDI-CAN, CBANK CBANK-BOC, NEWS rates, PRESS PRESS-FED …  then <GO>"
+
+home:
+  cards: [ECON CAN, WDI WDI-CAN, CBANK CBANK-BOC, NEWS rates]
+
+features: { internal-only-data: off }      # IMF data stays internal-only, as today
+
+docs: { title: Drishti Public Sector Help }
+demo: { ships: true, enabled: true }
+locale: { language: en }

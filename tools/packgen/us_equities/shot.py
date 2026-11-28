@@ -34,7 +34,7 @@ ROOT = Path(__file__).resolve().parents[3]
 PACKS = "core,world-economy,news-and-markets,us-equities"
 SERVER_PORT = int(os.environ.get("DRISHTI_SHOTS_SERVER_PORT", 18742))
 CONSOLE_PORT = int(os.environ.get("DRISHTI_SHOTS_CONSOLE_PORT", 18743))
-OUT = ROOT / "modules" / "capital-markets" / "packs" / "us-equities" / "guides" / "images"
+OUT = ROOT / "modules" / "external-data" / "packs" / "us-equities" / "guides" / "images"
 
 
 def start_servers(work: Path) -> list:

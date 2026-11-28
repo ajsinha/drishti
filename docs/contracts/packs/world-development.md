@@ -17,7 +17,7 @@
 
 # Data contracts of the world-development pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/economy/packs/world-development/README.md](../../../modules/economy/packs/world-development/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/external-data/packs/world-development/README.md](../../../modules/external-data/packs/world-development/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -30,7 +30,7 @@ One country's World Development Indicators: the latest of each, the world map sh
 
 |  |  |
 |---|---|
-| Contract | [development-profile.contract.yaml](../../../modules/economy/packs/world-development/contracts/development-profile.contract.yaml) · version 1.0 |
+| Contract | [development-profile.contract.yaml](../../../modules/external-data/packs/world-development/contracts/development-profile.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/loaders/(external\|news)/) |
@@ -174,7 +174,7 @@ One World Development Indicator of one country by year: the history, the latest 
 
 |  |  |
 |---|---|
-| Contract | [development-series.contract.yaml](../../../modules/economy/packs/world-development/contracts/development-series.contract.yaml) · version 1.0 |
+| Contract | [development-series.contract.yaml](../../../modules/external-data/packs/world-development/contracts/development-series.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: World Bank, World Development Indicators, pulled by the world-development feed (config/feeds/world-development.yaml, tools/loaders/(external\|news)/) |

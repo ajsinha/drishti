@@ -41,7 +41,7 @@ cases:
     modules/trading/module.yaml: "id: trading\npacks: {folder: packs, list: [trading]}"
     modules/trading/packs/trading/pack.yaml: "pack: trading"
     modules/economy/module.yaml: "id: economy\npacks: {folder: packs, list: [world-economy]}"
-    modules/economy/packs/world-economy/pack.yaml: "pack: world-economy"
+    modules/external-data/packs/world-economy/pack.yaml: "pack: world-economy"
   active: [economy]
   packs: {core: kernel, world-economy: "module:economy"}
   off: {trading: trading}
@@ -60,7 +60,7 @@ cases:
 - name: a module's folder name is not its id
   tree:
     modules/capital-markets/module.yaml: "id: capitalmarkets\npacks: {folder: packs, list: [funds]}"
-    modules/capital-markets/packs/funds/pack.yaml: "pack: funds"
+    modules/external-data/packs/funds/pack.yaml: "pack: funds"
   active: [capitalmarkets]
   packs: {funds: "module:capitalmarkets"}
   problems: []

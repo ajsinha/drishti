@@ -43,7 +43,7 @@ import fetch as F  # noqa: E402
 sys.path.insert(0, str(ROOT / "tools" / "testdata"))
 import publicsnap as SNAP  # noqa: E402  (the standard data pattern: data/testdata/<pack>/<kind>/)
 
-PACK = ROOT / "modules" / "capital-markets" / "packs" / "us-equities"
+PACK = ROOT / "modules" / "external-data" / "packs" / "us-equities"
 DEFAULT_CACHE = ROOT / "data" / "cache" / "us-equities"
 INDEX_NAMES = {"DJIA": "Dow Jones Industrial Average", "NDX": "Nasdaq-100", "SP500": "S&P 500", "R2000": "Russell 2000",
                **{c: n for c, (n, _t) in F.LISTS.items()}}
@@ -400,14 +400,14 @@ def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description="Build the us-equities pack from the fetched cache (no network).")
     p.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
     p.add_argument("--check", action="store_true")
-    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default modules/capital-markets/packs/us-equities; "
+    p.add_argument("--pack", type=Path, help="the pack folder to write or check (default modules/external-data/packs/us-equities; "
                                                "drishti.py feed run us-equities points a widened build at the data folder)")
     p.add_argument("--testdata", type=Path, help="the test data folder the snapshot goes to (default data/testdata for the committed "
                                                   "pack; beside a widened build's pack folder otherwise)")
     a = p.parse_args(argv)
     global PACK
-    PACK = a.pack.resolve() if a.pack else ROOT / "modules" / "capital-markets" / "packs" / "us-equities"
-    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "modules" / "capital-markets" / "packs" / "us-equities")
+    PACK = a.pack.resolve() if a.pack else ROOT / "modules" / "external-data" / "packs" / "us-equities"
+    testdata = a.testdata.resolve() if a.testdata else SNAP.default_testdata(PACK, ROOT / "modules" / "external-data" / "packs" / "us-equities")
     if a.cache.joinpath("wikidata.json").is_file():
         docs = build(a.cache)
     elif a.check:

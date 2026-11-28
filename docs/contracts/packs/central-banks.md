@@ -17,7 +17,7 @@
 
 # Data contracts of the central-banks pack
 
-One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/economy/packs/central-banks/README.md](../../../modules/economy/packs/central-banks/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
+One section per command of the pack: the shape of its data, how it is stored and checked, and what a person still has to confirm. The rules every contract shares are in [the contracts README](../README.md); the index of every command is [packs/README.md](README.md). The pack's README, [modules/external-data/packs/central-banks/README.md](../../../modules/external-data/packs/central-banks/README.md), links each kind here and to its example (tools/packgen/common/guide_data.py) next to where each kind's data comes from (*Data retrieval*).
 
 | Command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
@@ -30,7 +30,7 @@ One central bank: its policy rate, the last move, the rate's history and the mar
 
 |  |  |
 |---|---|
-| Contract | [central-bank.contract.yaml](../../../modules/economy/packs/central-banks/contracts/central-bank.contract.yaml) · version 1.0 |
+| Contract | [central-bank.contract.yaml](../../../modules/external-data/packs/central-banks/contracts/central-bank.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/loaders/(external\|news)/) |
@@ -175,7 +175,7 @@ One central-bank or market series from FRED or the Bank of Canada: the history, 
 
 |  |  |
 |---|---|
-| Contract | [rate-series.contract.yaml](../../../modules/economy/packs/central-banks/contracts/rate-series.contract.yaml) · version 1.0 |
+| Contract | [rate-series.contract.yaml](../../../modules/external-data/packs/central-banks/contracts/rate-series.contract.yaml) · version 1.0 |
 | Class | fundamental |
 | Status | active |
 | Source | public data: FRED, Federal Reserve Bank of St. Louis; Bank of Canada, pulled by the central-banks feed (config/feeds/central-banks.yaml, tools/loaders/(external\|news)/) |
