@@ -13,12 +13,120 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # config/lakes/risklake.yaml: the risklake lake, for the bank's own risk data (trades, positions, scenario PVs, hierarchies) (docs/guides/DATA_LAKE_GUIDE.md section 2). Its tables live in
-# <data>/delta/risklake/<domain>/<table>; the folder is kept in git with only its README.md, and nothing loaded into it is ever committed.
+# <data>/delta/risklake/<domain>/<table>; set-up makes the folder, and nothing loaded into it is ever committed.
 # Add a table's entry here before its first load to choose its layout (partition-by after business_date, promote, sort-by, file sizes,
-# retention, maintenance); a load into a table with no entry copies its pack's recommended entry here first. Connectors read this lake
+# retention, maintenance); a load into a table with no entry is refused, naming the entry to add. Connectors read this lake
 # with lake: risklake.
 lake: risklake
 format: delta
 root: ${lake.data.dir:${drishti.data.dir}}/delta/risklake
 defaults: {load-mode: replace}
-tables: {}
+# the tables the bank-data loaders write (tools/loaders/mrloader: the PVF files and the CSV kinds), each with its pack's recommended layout
+tables:
+  reference.legal-entity:
+    id: ENTITY_ID
+  reference.desk:
+    id: DESK_ID
+  reference.book:
+    id: BOOK_ID
+  reference.counterparty-group:
+    id: GROUP_ID
+  reference.counterparty:
+    id: COUNTERPARTY_ID
+  legal.agreement:
+    id: AGREEMENT_ID
+  legal.csa:
+    id: CSA_ID
+  credit.netting-set:
+    id: NETTING_SET_ID
+  credit.credit-limit:
+    id: LIMIT_ID
+  collateral.collateral-balance:
+    id: BALANCE_ID
+  risk.risk-factor:
+    promote: [RISK_FACTOR, FACTOR_TYPE, RISK_CLASS, QUALIFIER, TENOR, FRTB_BUCKET, SIMM_RISK_CLASS, SIMM_BUCKET]
+    id: RISK_FACTOR
+    date: BUSINESS_DATE
+  risk.var-limit:
+    promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
+    id: LIMIT_ID
+    date: BUSINESS_DATE
+  risk.position-sensitivity:
+    promote: [SENSITIVITY_ID, GRAIN, POSITION_ID, TRADE_ID, SOURCE_SYSTEM, BATCH_ID, STATUS, DESK, TT_BOOK, PRODUCT_TYPE, CURRENCY]
+    id: SENSITIVITY_ID
+    date: BUSINESS_DATE
+  risk.trade-valuation:
+    promote: [VALUATION_ID, TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_GROUP, PORTFOLIO, DESK, COUNTERPARTY, NETTING_SET, TRADER_ID, BUY_SELL_CODE, TRADE_STATUS, CURRENCY, NOTIONAL, MTM, MTM_CURRENCY, PNL_1D, DV01, TRADE_DATE, MATURITY_DATE, VALUATION_DATE]
+    sort-by: [id]
+    file-rows: 250000
+    row-group-rows: 1000
+    id: VALUATION_ID
+  risk.desk-pnl:
+    promote: [DESK_PNL_ID, DESK_ID, LEGAL_ENTITY, ACTUAL_PNL, HYPOTHETICAL_PNL, FEES_AND_COMMISSIONS, CURRENCY, SOURCE, AS_OF]
+    id: DESK_PNL_ID
+    date: BUSINESS_DATE
+  risk.scenario-set:
+    id: SCENARIO_SET_ID
+    date: BUSINESS_DATE
+  risk.fx-scenario:
+    promote: [CURRENCY, RATE, SCENARIO_SET_ID]
+    id: FX_SCENARIO_ID
+    date: BUSINESS_DATE
+  risk.scenario-pv:
+    promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, BASE_PV, VALUATION_DATE, BASE_VALUATION_DATE, TAGS, TRADE_STATUS, MATURITY_DATE, STATUS, SCENARIO_SET_ID, BATCH_ID, RUN_KIND, COMPUTED_AT, TRADE_IDS, TRADE_CURRENCY]
+    vectors: [SCENARIO_PV]
+    id: SCENARIO_PV_ID
+    date: BUSINESS_DATE
+    partition-by: [SCENARIO_SET_ID, GRAIN]
+    sort-by: [LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, POSITION_ID, TRADE_ID]
+    compression: zstd
+    vector-compression: zstd
+    file-size-mb: 256
+    row-group-mb: 16
+    time-travel: 30d
+    maintenance: {checkpoint: true, compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trade_endur:
+    kind: trade
+    partition-by: [PRODUCT_TYPE]
+    promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
+      TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID, NOTIONAL, INDEX_NAME]
+    sort-by: [id]
+    file-rows: 250000
+    row-group-rows: 1000
+    id: TRADE_ID
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trade_calypso:
+    kind: trade
+    partition-by: [PRODUCT_GROUP]
+    promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
+      TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID, NOTIONAL, INDEX_NAME]
+    sort-by: [id]
+    file-rows: 250000
+    row-group-rows: 1000
+    id: TRADE_ID
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trade_murex:
+    kind: trade
+    partition-by: [PRODUCT_GROUP]
+    promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
+      TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID, NOTIONAL, INDEX_NAME]
+    sort-by: [id]
+    file-rows: 250000
+    row-group-rows: 1000
+    id: TRADE_ID
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trade_wss:
+    kind: trade
+    promote: [SOURCE_SYSTEM]
+    sort-by: [id]
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trade_swapone:
+    kind: trade
+    promote: [SOURCE_SYSTEM]
+    sort-by: [id]
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}
+  trading.trade_ici:
+    kind: trade
+    promote: [SOURCE_SYSTEM]
+    sort-by: [id]
+    maintenance: {compaction: true, target-file-mb: 256, vacuum: 7d}

@@ -78,7 +78,7 @@ from that name, so a date can be loaded again (it replaces that date as a whole)
    | Lake | Use it for | Folder |
    |---|---|---|
    | `demo` | the shipped demo (60 synthetic days). The server reads it as it is. Your first try only | `data/delta/demo/` |
-   | `risklake` | **your real files**. Ships empty | `data/delta/risklake/` |
+   | `risklake` | **your real files**. Ships with the tables the loaders write, and no data | `data/delta/risklake/` |
 
    `risklake` is read by nothing until you point the market-risk connectors at it. Write `config/connectors/risk-store.yaml` with only
    what changes (Admin → Connectors writes the same file), then restart the server:

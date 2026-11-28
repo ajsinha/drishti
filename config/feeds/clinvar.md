@@ -40,4 +40,21 @@ Pack `genomics`, kind `variant`, table `variant`, key `VARIANT_ID`; files `data/
 
 One variant of the panel: GRCh38 position and alleles, gene, consequence, impact, ClinVar significance, review status and conditions.
 
-No contract yet: `config/packs/genomics/contracts/variant.contract.yaml` (`drishti.py contract bootstrap variant`).
+| Field | Type | Presence | Meaning |
+|---|---|---|---|
+| `VARIANT_ID` | string |  | the VCF ID column, else CHROM-POS-REF-ALT |
+| `CHROM` | string |  |  |
+| `POS` | integer |  | 1-based position on the chromosome (GRCh38) |
+| `REF` | string |  |  |
+| `ALT` | string |  |  |
+| `QUAL` | number |  |  |
+| `FILTER` | string |  |  |
+| `GENE` | string |  | INFO GENE |
+| `CONSEQUENCE` | string |  | INFO CSQ (missense_variant, stop_gained ...) |
+| `IMPACT` | string |  | INFO IMPACT: HIGH, MODERATE or LOW |
+| `PROTEIN_POS` | integer |  | INFO AAPOS: the amino acid position (the lollipop's x) |
+| `CARRIERS` | integer |  | samples with a non-reference genotype |
+| `AF` | number |  | CARRIERS over the samples genotyped |
+| `SAMPLES` | list |  | the carriers' sample ids |
+
+The contract: `modules/genomics/packs/genomics/contracts/variant.yaml` ([genomics](../../docs/contracts/packs/genomics.md)).

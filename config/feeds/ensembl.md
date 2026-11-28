@@ -39,4 +39,13 @@ Pack `genomics`, kind `gene`, table `gene`, key `GENE`; files `data/datafeeds/en
 
 One gene of the panel: chromosome, start, end, strand, biotype, protein length of the canonical transcript.
 
-No contract yet: `config/packs/genomics/contracts/gene.contract.yaml` (`drishti.py contract bootstrap gene`).
+| Field | Type | Presence | Meaning |
+|---|---|---|---|
+| `GENE` | string |  | the HGNC symbol |
+| `CHROM` | string |  |  |
+| `START` | integer |  |  |
+| `PROTEIN_LENGTH` | integer |  | amino acids (the lollipop's axis) |
+| `DOMAINS` | list |  | protein domains: NAME, FROM, TO |
+| `VARIANTS` | integer |  |  |
+
+The contract: `modules/genomics/packs/genomics/contracts/gene.yaml` ([genomics](../../docs/contracts/packs/genomics.md)).

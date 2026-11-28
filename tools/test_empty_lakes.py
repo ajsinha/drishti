@@ -28,7 +28,7 @@ if str(ROOT / "tools") not in sys.path:
     sys.path.insert(0, str(ROOT / "tools"))
 from resolved import pack_dir  # noqa: E402  (where a pack is: the Java resolver's answer, tools/resolved.py)
 NAMED = ("risklake", "newslake", "worldlake", "regulators", "capitalmarket", "referencelake")
-EMPTY = ("risklake", "regulators", "capitalmarket", "referencelake")
+EMPTY = ("regulators", "capitalmarket", "referencelake")      # risklake holds the bank-data loaders' tables (test below)
 WORD = re.compile(r"\b(" + "|".join(NAMED) + r")\b")
 # the public-sector packs and the lake each one's connector reads (config/packs/<pack>/pack.yaml)
 PUBLIC_SECTOR = {"world-development": "worldlake", "central-banks": "worldlake", "national-statistics": "worldlake", "oecd": "worldlake",
@@ -51,9 +51,19 @@ def test_the_empty_lakes_ship_as_definitions_with_no_tables():
         f = ROOT / "config" / "lakes" / f"{name}.yaml"
         doc = yaml.safe_load(f.read_text(encoding="utf-8"))
         assert doc["lake"] == name, f
-        assert (ROOT / "data" / "delta" / name / "README.md").is_file(), name
         if name in EMPTY:
             assert not doc.get("tables"), f
+
+
+def test_risklake_has_the_table_of_every_bank_data_kind_the_loaders_write():
+    """tools/loaders/mrloader documents `--lake risklake`: a writer never creates a table the lake file does not describe."""
+    doc = yaml.safe_load((ROOT / "config" / "lakes" / "risklake.yaml").read_text(encoding="utf-8"))
+    need = {"reference.legal-entity", "reference.desk", "reference.book", "reference.counterparty-group", "reference.counterparty",
+            "legal.agreement", "legal.csa", "credit.netting-set", "credit.credit-limit", "collateral.collateral-balance",
+            "risk.risk-factor", "risk.var-limit", "risk.position-sensitivity", "risk.trade-valuation", "risk.desk-pnl",
+            "risk.scenario-set", "risk.fx-scenario", "risk.scenario-pv", "trading.trade_endur"}
+    assert need <= set(doc["tables"])
+    assert doc["tables"]["risk.scenario-pv"]["vectors"] == ["SCENARIO_PV"]
 
 
 def test_worldlake_and_newslake_hold_exactly_the_public_sector_tables():

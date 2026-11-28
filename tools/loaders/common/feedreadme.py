@@ -51,15 +51,27 @@ HEADER = """<!--
 """
 
 
+def _folder(pack: str) -> Path:
+    """A pack's folder: the resolver's, else modules/<module>/packs/<pack> (a pack of contracts only, genomics, has no pack.yaml to resolve by)."""
+    d = FB.K.pack_dir(pack)
+    return d if d.exists() else next(iter(sorted(ROOT.glob(f"modules/*/packs/{pack}"))), d)
+
+
 def _where(pack: str) -> str:
     """A pack's folder as the repository names it: modules/<module>/packs/<pack>."""
-    d = FB.K.pack_dir(pack)
+    d = _folder(pack)
     return d.relative_to(ROOT).as_posix() if d.is_relative_to(ROOT) else d.as_posix()
+
+
+def contract_file(pack: str, kind: str) -> Path:
+    """The kind's contract file: <kind>.contract.yaml, or <kind>.yaml (the genomics module's contracts, generator source: the module's own)."""
+    folder = _folder(pack) / "contracts"
+    return next((f for f in (folder / f"{kind}.contract.yaml", folder / f"{kind}.yaml") if f.is_file()), folder / f"{kind}.contract.yaml")
 
 
 def contract(pack: str, kind: str) -> dict:
     import yaml
-    f = FB.K.pack_dir(pack) / "contracts" / f"{kind}.contract.yaml"
+    f = contract_file(pack, kind)
     return (yaml.safe_load(f.read_text(encoding="utf-8")) or {}) if f.is_file() else {}
 
 
@@ -121,12 +133,12 @@ def render(spec: FB.FeedSpec) -> str:
             out += [f"No contract yet: `{_where(ds.pack)}/contracts/{ds.kind}.contract.yaml` (`drishti.py contract bootstrap {ds.kind}`).", ""]
             continue
         out += ["| Field | Type | Presence | Meaning |", "|---|---|---|---|"]
-        out += [f"| `{f['name']}` | {_cell(f.get('type'))} | {_cell(f.get('presence'))} | {_cell(f.get('description'))} |" for f in fields]
+        out += [f"| `{f['name']}` | {_cell(f.get('type'))} | {_cell(f.get('presence'))} | {_cell(f.get('description') or f.get('means'))} |" for f in fields]
         ex = example(c)
         if ex:
             out += ["", "One row (JSON Lines: one object a line; the values are the contract's examples):", "", "```json",
                     json.dumps(ex, ensure_ascii=False), "```"]
-        out += ["", f"The contract: `{_where(ds.pack)}/contracts/{ds.kind}.contract.yaml` "
+        out += ["", f"The contract: `{_where(ds.pack)}/contracts/{contract_file(ds.pack, ds.kind).name}` "
                 f"([{ds.pack}](../../docs/contracts/packs/{ds.pack}.md)).", ""]
     return "\n".join(out).rstrip("\n") + "\n"
 

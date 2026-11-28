@@ -49,7 +49,7 @@ All the scripts of this folder:
    PVF scripts need Polars and NumPy: `PY -m pip install -r drishti-console/requirements-polars.txt`
    (Windows `py -3.13 -m pip install -r drishti-console\requirements-polars.txt`). Converting needs no Java and no server.
 2. A server jar for the packs and contracts, and Java 21 to load: `PY tools/drishti.py build jar` puts it in `lib/`.
-3. **Point the connectors at your lake.** `risklake` ships empty and nothing reads it until you write `config/connectors/risk-store.yaml`
+3. **Point the connectors at your lake.** `risklake` ships with the tables the loaders write (no data) and nothing reads it until you write `config/connectors/risk-store.yaml`
    (or use Admin → Connectors), then restart the server:
 
    ```yaml
