@@ -19,15 +19,15 @@
 drishti:
   engines:
     ccr:
-      enabled: true
-      changed: { by: "", at: "", reason: "" }
+      enabled: true   # run the counterparty engine on this node (Admin -> Engines); false: gone everywhere
+      changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
       inputs:
-        simulation-run: { kinds: [ simulation-run ] }
-        exposure-path: { kinds: [ exposure-path ] }
-        netting-set: { kinds: [ netting-set ] }
+        simulation-run: { kinds: [ simulation-run ] }   # the kind the simulation runs are read from
+        exposure-path: { kinds: [ exposure-path ] }   # the kind the simulated exposure paths are read from
+        netting-set: { kinds: [ netting-set ] }   # the kind the netting sets are read from
         csa: { kinds: [ csa ], as-of: on-or-before }   # a reference kind: each CSA as last loaded on or before the date (in-tree reads it so)
-        collateral-balance: { kinds: [ collateral-balance ] }
-        trade-valuation: { kinds: [ trade-valuation ] }
-        credit-limit: { kinds: [ credit-limit ] }
+        collateral-balance: { kinds: [ collateral-balance ] }   # the kind the collateral balances are read from
+        trade-valuation: { kinds: [ trade-valuation ] }   # the kind the trade valuations are read from (the market-risk pack)
+        credit-limit: { kinds: [ credit-limit ] }   # the kind the credit limits are read from
       access:
-        visibility: row-rules
+        visibility: row-rules   # who sees which rows: row-rules (the row rules of the person)

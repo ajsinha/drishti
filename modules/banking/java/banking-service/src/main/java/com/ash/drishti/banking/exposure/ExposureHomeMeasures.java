@@ -48,6 +48,11 @@ final class ExposureHomeMeasures implements MeasureSource {
     }
 
     @Override
+    public List<LimitTable> limitTables() {
+        return List.of(new LimitTable("home_exposure", "EXPOSURE", "counterparty", "CPTY"));
+    }
+
+    @Override
     public boolean on() {
         return svc.running();
     }

@@ -466,6 +466,11 @@ def engine_rows() -> tuple[list[Row], list[str]]:
             problems.append(f"{k} is in both application.yaml and config/engines/{e['file']}: an engine's key lives in its file only")
         rows += yaml_rows("engines", [f], "server (each node its own)", "restart", None,   # grouped by key, as the server area (stable anchors)
                           collapse=COLLAPSE["server"])
+    for name in sorted(hosted):                          # a hosted engine's file is in the area too: every key of every file of config/engines
+        f = ENGINES_DIR / name
+        for k in sorted(_flat_keys(yaml.safe_load(f.read_text(encoding="utf-8"))) & app_keys):
+            problems.append(f"{k} is in both application.yaml and config/engines/{name}: an engine's key lives in its file only")
+        rows += yaml_rows("engines", [f], "server (each node its own)", "restart", None, collapse=COLLAPSE["server"])
     for e in catalogue:
         for alias in e.get("retired") or []:
             rows.append(Row("engines", "Old names (refused at start)", "kernel/drishti-server/src/main/resources/engines/catalogue.yaml", alias, "boolean",

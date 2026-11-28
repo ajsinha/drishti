@@ -58,6 +58,11 @@ final class VarHomeMeasures implements MeasureSource {
     }
 
     @Override
+    public List<LimitTable> limitTables() {
+        return List.of(new LimitTable("home_desk_limits", "VAR", "desk", "DESK"));
+    }
+
+    @Override
     public boolean on() {
         return svc.running();
     }

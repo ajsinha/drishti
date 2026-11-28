@@ -88,7 +88,7 @@ public class EngineHostConfiguration {
         }
         AuditLog log = audit.getIfAvailable();
         HostedEngine.Auditor auditor = log == null ? null : log::record;
-        Outputs outputs = new Outputs(new LakeOutputStore(env::resolveRequiredPlaceholders, env.getProperty("drishti.engine-lib.store-format", "delta")));
+        Outputs outputs = new Outputs(new LakeOutputStore(env::resolveRequiredPlaceholders, env.getRequiredProperty("drishti.engine-lib.store-format")));
         EngineHost.Ports ports = new EngineHost.Ports(new RouterKindData(router, Duration.ofSeconds(env.getProperty("drishti.engine-lib.read-seconds",
                 Long.class, 60L))), KindContracts.of(manifests), PackUses.of(manifests), new ElWhere(), outputs, auditor, VISIBILITY_RULES,
                 env::resolvePlaceholders, id -> catalogue.get(id).isPresent() || registry.getIfAvailable() != null && registry.getIfAvailable().known(id),

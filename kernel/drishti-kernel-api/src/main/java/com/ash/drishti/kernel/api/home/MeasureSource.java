@@ -43,6 +43,18 @@ public interface MeasureSource {
     /** A followed measure for every subject of the kind the person may see. */
     List<HomeData.MeasureValue> values(Principal p, String measure, String subjectKind, LocalDate date);
 
+    /**
+     * The limits tables this engine serves a Home (the table's name, the measure and subject kind it reads, the column that names the subject; the
+     * value column is the measure's own name). The kernel serves a table of this name from {@link #limits}; none by default.
+     */
+    default List<LimitTable> limitTables() {
+        return List.of();
+    }
+
+    /** One use-bar table an engine serves (see {@link #limitTables}). */
+    record LimitTable(String table, String measure, String subjectKind, String nameColumn) {
+    }
+
     /** A measure against its limits by subject (the use-bar tables); the limit is null where there is none. */
     List<HomeData.LimitRow> limits(Principal p, String measure, String subjectKind, LocalDate date);
 

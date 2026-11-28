@@ -152,6 +152,10 @@ class RoleHomesTest {
             return "var";
         }
 
+        public List<LimitTable> limitTables() {
+            return List.of(new LimitTable("home_desk_limits", "VAR", "desk", "DESK"));
+        }
+
         public boolean on() {
             return on;
         }

@@ -84,19 +84,17 @@ public final class HomeTables {
             case "home_kpi_history" -> Optional.of(history(c));
             case "home_exceptions" -> Optional.of(exceptions(c));
             case "home_changes" -> Optional.of(changes(c));
-            case "home_desk_limits" -> Optional.of(limits(c, "var", "VAR", "desk", "DESK", "VAR"));
-            case "home_exposure" -> Optional.of(limits(c, "exposure", "EXPOSURE", "counterparty", "CPTY", "EXPOSURE"));
             case "home_stress" -> Optional.of(List.of());      // TODO(R2): computed stress results (computed-risk-measures rule), no engine view yet
             case "home_mnemonics" -> Optional.of(mnemonics(c));
             case "home_loads" -> Optional.of(loads());
             case "home_calendar", "home_news" -> Optional.of(List.of());   // TODO(R2): the economy module's calendar and headline feeds
             // TODO(R2): each is served by the module that owns the data (a HomeTable bean): the edit module's held changes, the model-run ledger,
-            // the banking module's margin calls (the collateral engine) and backtest (the VaR history: banking VarHomeBacktest, done), the economy
+            // the risk module's margin calls (the collateral engine) and backtest (the VaR history: its VarHomeBacktest, done), the economy
             // module's indicators; until then the panel shows its own empty words
             case "home_held_changes", "home_model_runs", "home_margin_calls", "home_backtest", "home_indicators", "home_indicator_history", "home_positions",
                 "home_pnl_days", "home_market_tiles" ->
                 Optional.of(List.of());
-            default -> Optional.empty();
+            default -> limitTable(c, table);
         };
     }
 
@@ -149,9 +147,20 @@ public final class HomeTables {
         return out;
     }
 
-    private List<Map<String, Object>> limits(HomeTable.Context c, String engine, String measure, String kind, String nameCol, String valueCol) {
-        MeasureSource s = sources.get(engine);
-        if (s == null || !s.on()) {
+    /** A use-bar table an engine declares ({@link MeasureSource#limitTables}); a named table of an engine that is absent answers no rows. */
+    private Optional<List<Map<String, Object>>> limitTable(HomeTable.Context c, String table) {
+        for (MeasureSource s : sources.values()) {
+            for (MeasureSource.LimitTable t : s.limitTables()) {
+                if (t.table().equals(table)) {
+                    return Optional.of(limits(c, s, t.measure(), t.subjectKind(), t.nameColumn(), t.measure()));
+                }
+            }
+        }
+        return BUILT_IN.contains(table) ? Optional.of(List.of()) : Optional.empty();
+    }
+
+    private List<Map<String, Object>> limits(HomeTable.Context c, MeasureSource s, String measure, String kind, String nameCol, String valueCol) {
+        if (!s.on()) {
             return List.of();
         }
         Map<String, Double> was = new LinkedHashMap<>();

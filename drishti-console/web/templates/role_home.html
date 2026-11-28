@@ -19,9 +19,9 @@
     <h1>{{ home.title }}</h1>
     {% if picker %}
     <label class="role-home-pick">Home
-      <select data-role-home-pick aria-label="Choose your Home">
+      <drishti-select data-role-home-pick name="home" label="Choose your Home">
         {% for h in homes %}<option value="{{ h.home }}"{% if h.home == home.home %} selected{% endif %}>{{ h.title }}</option>{% endfor %}
-      </select>
+      </drishti-select>
     </label>
     {% endif %}
     {% if home.arrange %}<button type="button" class="btn btn-sm" data-role-home-arrange aria-pressed="false">Arrange my Home</button>{% endif %}

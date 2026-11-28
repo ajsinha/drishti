@@ -19,27 +19,27 @@
 drishti:
   engines:
     market-risk:
-      enabled: true
-      changed: { by: "", at: "", reason: "" }
+      enabled: true   # run the market-risk engine on this node (Admin -> Engines); false: gone everywhere
+      changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
       inputs:
-        scenario-pv: { kinds: [ scenario-pv ] }
-        pnl-vector: { kinds: [ pnl-vector ] }
-        scenario-set: { kinds: [ scenario-set ] }
-        fx-scenario: { kinds: [ fx-scenario ] }
-        var-limit: { kinds: [ var-limit ] }
-        var-history: { kinds: [ var-official ] }
-        desk-pnl: { kinds: [ desk-pnl ] }
-        pnl-history: { kinds: [ pnl-history ] }
-        risk-factor: { kinds: [ risk-factor ] }
+        scenario-pv: { kinds: [ scenario-pv ] }   # the kind the scenario PVs are read from
+        pnl-vector: { kinds: [ pnl-vector ] }   # the kind the P&L vectors are read from
+        scenario-set: { kinds: [ scenario-set ] }   # the kind the scenario sets are read from
+        fx-scenario: { kinds: [ fx-scenario ] }   # the kind the FX scenarios are read from
+        var-limit: { kinds: [ var-limit ] }   # the kind the VaR limits are read from
+        var-history: { kinds: [ var-official ] }   # the kind the official VaR history is read from
+        desk-pnl: { kinds: [ desk-pnl ] }   # the kind the desk P&L is read from
+        pnl-history: { kinds: [ pnl-history ] }   # the kind the P&L history is read from
+        risk-factor: { kinds: [ risk-factor ] }   # the kind the risk factors are read from
       options:
-        hierarchies:
+        hierarchies:   # the hierarchies a VaR is cut by: id, title, levels (promoted columns), root and id rule
           - { id: MGMT, title: Management, levels: "DIVISION > DESK > TT_BOOK", level-names: "division > desk > book", ids: leaf,
               root-id: BANK, root-name: Drishti Bank }
           - { id: LEGAL, title: Legal entities, levels: "LEGAL_ENTITY > DESK > TT_BOOK", level-names: "legal-entity > desk > book", ids: path,
               root-id: BANK, root-name: Drishti Bank }
           - { id: LL, title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL }
-        live-statuses: [ NEW, VALIDATED, AMENDED ]
-        position-rules:
+        live-statuses: [ NEW, VALIDATED, AMENDED ]   # the trade statuses that count as live positions
+        position-rules:   # how trades roll into positions: the groups and types of each rule and the key a position is told apart by
           - { name: securities, groups: [ Fixed income ], types: [ EQ_CASH, WARRANT, CONVERTIBLE_BOND, INFL_LINKED_BOND, T_BILL, COMMERCIAL_PAPER, CERT_DEPOSIT ],
               key: [ SECURITY_ID, ISIN, TICKER ] }
           - { name: listed, types: [ BOND_FUTURE, STIR_FUTURE, STIR_FUT_OPT, EQ_FUTURE_SINGLE, EQ_INDEX_FUTURE, EQ_OPTION_LISTED, EQ_INDEX_OPTION, CMD_FUTURE,
@@ -48,4 +48,4 @@ drishti:
       snapshot: { hot: 1 }               # one business date's session kept open (its books released when another date is asked)
       limits: { memory-mb: 768 }         # the books of one date: every window and currency asked of it
       access:
-        visibility: row-rules
+        visibility: row-rules   # who sees which rows: row-rules (the row rules of the person)

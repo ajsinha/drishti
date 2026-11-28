@@ -30,7 +30,7 @@ import java.util.function.Function;
  * The one dependency graph of the runtime's parts (docs/architecture/LIFECYCLE.md section 5), built from what each part already declares:
  * a pack's {@code extends:} (its parent packs), its connectors ({@code connectors:} and {@code routes:}) and its {@code uses.engines}
  * (engine specification section 10.1); a module's packs ({@code packs.list}) and the connectors it brings. Nodes are written
- * {@code <type>:<name>} ({@code pack:market-risk}, {@code connector:var-engine}, {@code engine:var}, {@code module:banking}).
+ * {@code <type>:<name>} ({@code pack:<pack>}, {@code connector:<connector>}, {@code engine:<engine>}, {@code module:<module>}).
  *
  * <p>From it, and only from it, the kernel takes: the start order (dependencies first), the cascades of suspend and shutdown (dependants
  * first), the health roll-up, cycle detection and missing dependencies. The rules (LIFECYCLE.md section 5.2):
