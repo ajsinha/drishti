@@ -15,9 +15,10 @@
 
 # Data contract of the simm-parameters kind: docs/contracts/README.md section 16.
 kind: simm-parameters
+mnemonic: SIMMP
 pack: counterparty-risk
 version: '1.0'
-class: reference
+class: input
 status: active
 title: ISDA SIMM parameter files
 description: The bank's licensed ISDA SIMM parameter files, one row a version, the file as delivered; the ccr engine reads them as a lake table (R2), never from a host folder.
@@ -27,8 +28,8 @@ key:
 - VERSION
 dated-by: business_date
 cadence:
-  frequency: when ISDA publishes a version (about twice a year)
-  due: before the version's effective date
+  frequency: on change
+  due: before the version's effective date (ISDA publishes a version about twice a year)
 binding-hint:
   lake-table: collateral.simm-parameters
   test-data:
@@ -59,3 +60,5 @@ validation:
   per: business_date
 notes:
 - 'The test data holds the TOY file of the SIMM tests (round illustrative numbers, NOT ISDA''s): it proves the formulas, never a margin. A bank loads its own licensed files.'
+review:
+- 'source: name the system that delivers the licensed files (the bank''s ISDA SIMM licence) and who loads a new version.'

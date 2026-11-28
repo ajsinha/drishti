@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-131 contracts, 399 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+132 contracts, 400 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -48,6 +48,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `COLL` | `collateral-balance` | [counterparty-risk](counterparty-risk.md#coll-collateral-balance-collateral-balance) | fundamental | active |  | 5 |
 | `MC` | `margin-call` | [counterparty-risk](counterparty-risk.md#mc-margin-call-margin-call) | fundamental | active |  | 6 |
 | `SIMM` | `simm` | [counterparty-risk](counterparty-risk.md#simm-isda-simm-initial-margin-simm) | fundamental | active |  | 4 |
+| `SIMMP` | `simm-parameters` | [counterparty-risk](counterparty-risk.md#simmp-isda-simm-parameter-files-simm-parameters) | input | active |  | 1 |
 | `XRUN` | `simulation-run` | [counterparty-risk](counterparty-risk.md#xrun-exposure-simulation-run-simulation-run) | input | active |  | 3 |
 | `XPATH` | `exposure-path` | [counterparty-risk](counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | input | active |  | 6 |
 | `EXP` | `exposure-result` | [counterparty-risk](counterparty-risk.md#exp-exposure-profile-of-a-scope-computed-exposure-result) | computed | active |  | 0 |
