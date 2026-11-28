@@ -678,7 +678,7 @@ the ownership groups (LEIG) and the country pages (LEIC).
 
 SEC EDGAR's companies: `SIC` makes the sectors (SIC); the financials (`REVENUE`, `NET_INCOME`, `FINANCIALS[]`) make the USEQ ratios.
 
-- **Data contract:** [`us-company`](../../contracts/packs/us-equities.md#useq-us-company-us-company) (USEQ), key `TICKER`; 46 fields, 23 required; the file [`us-company.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/us-company.contract.yaml).
+- **Data contract:** [`us-company`](../../contracts/packs/us-equities.md#useq-us-company-us-company) (USEQ), key `TICKER`; 46 fields, 16 required; the file [`us-company.contract.yaml`](../../../modules/capital-markets/packs/us-equities/contracts/us-company.contract.yaml).
 - **Example:** [a real record of the test data](../../contracts/packs/us-equities.md#example-us-equities-us-company) (files `data/testdata/us-equities/us-company/us-company.*.jsonl.gz`).
 
 ### 25.4 `economy`: the economies
