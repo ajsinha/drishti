@@ -89,7 +89,8 @@ def console_effective(settings, config_dir: Path, environ: dict | None = None, s
     ``edition`` (the edition's presets) or ``default`` (application.yaml as shipped)."""
     environ = os.environ if environ is None else environ
     raw = _flat(_read(config_dir / "application.yaml"))
-    local = _flat(_read(config_dir / "application.local.yaml"))
+    from core.config import local_file
+    local = _flat(_read(local_file(config_dir)))
     layers = getattr(settings, "_layers", {}) or {}
     out: dict[str, dict] = {}
     for key, bundled in raw.items():

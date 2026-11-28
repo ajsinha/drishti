@@ -24,7 +24,7 @@ almost everything here; it is all under **Admin** in the top bar. Every setting 
 ## Contents
 
 1. [Signing in and out](#1-signing-in-and-out)
-2. [Your first ten minutes: add a person](#2-your-first-ten-minutes-add-a-person)
+2. [Your first ten minutes: add a person](#2-your-first-ten-minutes-add-a-person), with [three demo users](#27-three-demo-users)
 3. [Roles](#3-roles)
 4. [Packs per user](#4-packs-per-user)
 5. [Single sign-on (OpenID Connect)](#5-single-sign-on-openid-connect)
@@ -85,9 +85,19 @@ On a fresh installation the server creates one account the first time it starts:
 |---|---|---|
 | `drishti-dev-admin` | `drishti-dev-admin123` | `admin` |
 
+The demo profile (`drishti.profile=demo`, which `start all --demo` uses) also creates three demo users on that first start
+([section 2.7](#27-three-demo-users)):
+
+| User | Password | Role |
+|---|---|---|
+| `drishti-dev-risk` | `drishti-dev-risk123` | `risk-trading` |
+| `drishti-dev-genomics` | `drishti-dev-genomics123` | `genomics-reader` |
+| `drishti-dev-market` | `drishti-dev-market123` | `market-data-reader` |
+
 Open the console (for example `http://localhost:17480`), click **Sign in** and use those details. Until you change the password, every
-admin page shows a red warning: *The development admin still has its default password.* In production set `DRISHTI_SEED_ADMIN=false` so
-no development admin is ever created ([section 10](#10-rules-drishti-enforces)).
+admin page shows a red warning naming every account that still has a published password (the development admin, the demo users). Under
+the production profile (`drishti.profile=production`) none of them is ever created and a start that would create them is refused
+([the production standard](../admin/PRODUCTION_STANDARD.md#1-the-production-profile), [section 10](#10-rules-drishti-enforces)).
 
 ### 2.2 Change that password
 
@@ -140,6 +150,43 @@ Sign out and sign in as `priya`. Then:
 
 Back as the admin, open **Admin → Audit log**. You should see, newest first, `login` (priya), `user-created` (priya) and `role-created`
 (credit-analyst), each with who did it and when. Type `priya` in the filter to see only what concerns her.
+
+### 2.7 Three demo users
+
+The demo profile creates these three users for you; on any other installation make them by hand with the steps below. Each sees one
+slice of the product: trades and risk, genomics, or market data. Access has two parts and a user needs both: a **role** says which kinds
+of data they may open, and **packs** say which domains appear for them at all. Opening a kind needs a role that allows it **and** the pack
+that holds it.
+
+| User | Sees | Role | Packs |
+|---|---|---|---|
+| `drishti-dev-risk` | trades, market data, VaR and ES, exposure, limits | `risk-trading` | `core`, `trading`, `market-data`, `market-risk`, `counterparty-risk` |
+| `drishti-dev-genomics` | genomics only | `genomics-reader` | `genomics`, `genomics-showcase`, `protein-engineering` |
+| `drishti-dev-market` | market data only | `market-data-reader` | `market-data` |
+
+**By hand.** Sign in as an administrator. **Admin → Roles → New role**, once per role: fill in the name and description, click the pack
+buttons of the table under **Add every kind of a pack** (this fills *Kinds it opens*), leave the powers unticked (`drishti-dev-risk`'s role may
+have `bi` for pivots and reports) and click **Save**; you should see *Created <name>*. Never tick *Opens every kind*. Then **Admin → Users
+→ New user**, once per user: the user name, the display name, tick the role, tick exactly the packs of the table (an empty list means *no*
+packs; a user never given a list sees the default packs), an initial password of at least 10 characters with letters and digits, and
+**Save**. The demo profile does the same on the first start and gives each user the password in the table of [section 2.1](#21-sign-in-as-the-development-admin);
+until a password is changed, Admin shows the red default-password warning, so never run the demo profile in production.
+
+**Check each one.** Sign out and sign in as each user (a private window is quickest):
+
+| As | Try | Expect |
+|---|---|---|
+| `drishti-dev-risk` | `VAR BANK <GO>`, `TRD T-1 <GO>`, a curve | all open; the pack switcher lists its five packs; the risk manager's Home first |
+| `drishti-dev-risk` | `GENE HLXK7 <GO>` | refused: *may not open gene entities* |
+| `drishti-dev-genomics` | `/m/genomics/showcase`, `GENE HLXK7 <GO>` | open |
+| `drishti-dev-genomics` | `VAR BANK <GO>`, `TRD T-1 <GO>` | refused; risk menus absent |
+| `drishti-dev-market` | a curve or an FX rate | opens |
+| `drishti-dev-market` | `TRD T-1 <GO>`, `VAR BANK <GO>` | refused; links to trades show greyed out with the reason |
+
+A refusal shows that something exists without showing its content, by design. Back as the administrator, **Admin → Audit log** lists
+`role-created` and `user-created` for each, then each user's `login`; filter by `demo-` to see only these. To remove access later,
+untick a role or pack on the user or **Disable** the user (nothing is deleted). With single sign-on, map the bank's groups to roles
+instead ([section 5](#5-single-sign-on-openid-connect)).
 
 The same steps from a script are in [section 11](#11-the-users-and-roles-api).
 
@@ -593,7 +640,8 @@ restore the database from a backup.
 | Unknown users | answered like a wrong password, in the same time | — |
 | Forced password change | off; an admin can tick it per user. Until it is done the console answers only the account page, the change and sign-out (other pages lead back to *My account*; console API calls `403 DRS-6010`) | `force-password-change-on-create`, `force-password-change-on-reset` |
 | Sessions follow the user | each console sign-in is a session the server keeps; the console checks it, the user's roles and enabled flag per request (reusing an answer for the console's `auth.recheck_seconds`, 10). Disabling, deleting or resetting the password of a user signs them out everywhere (enabling them again does not bring a session back); a role change applies within those seconds, at once on every worker process of the console you used. Sign-out ends the session on the server | console `auth.recheck_seconds` |
-| Development admin | created when the database has no users | `seed-admin` (`DRISHTI_SEED_ADMIN=false` in production), `seed-username`, `seed-password`, `seed-roles` |
+| Development admin | created when the database has no users; never under the production profile, which refuses the built-in name and password | `seed-admin` (off by default in production), `seed-username`, `seed-password`, `seed-roles` |
+| Demo users | `drishti-dev-risk`, `drishti-dev-genomics`, `drishti-dev-market`, created beside the development admin under the demo profile only | `seed-demo-users` |
 | Last admin | there is always one enabled admin: it cannot be disabled, demoted or deleted | — |
 | Self-protection | nobody can disable or delete their own account | — |
 | Database | SQLite file | `database-url` (`DRISHTI_IDENTITY_DB_URL`), `database-user`, `database-password`, `database-pool-size` (unset: `drishti.db.pool.size`, 20, on PostgreSQL; 8 on SQLite) |

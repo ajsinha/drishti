@@ -33,7 +33,7 @@ public record McpProperties(Boolean enabled, String dir, String watch, Long poll
 
     public McpProperties {
         enabled = enabled != null && enabled;
-        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.Roots.config("mcp") : dir.strip();
+        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.Roots.site("mcp") : dir.strip();
         watch = watch == null || watch.isBlank() ? "auto" : watch.strip();
         pollMs = pollMs == null || pollMs <= 0 ? 5000 : pollMs;
         audit = audit == null || audit;

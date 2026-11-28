@@ -115,6 +115,7 @@ public final class BindingsFile {
 
     /** Writes {@code b}, keeping the previous file as {@code bindings.yaml.bak}. */
     public void write(Bindings b) {
+        com.ash.drishti.api.Roots.guardWrite(file);      // never into the release folder
         lock.lock();
         try {
             Files.createDirectories(file.toAbsolutePath().getParent());

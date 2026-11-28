@@ -22,6 +22,9 @@
 </nav>
 {% if status and status.defaultAdminPasswordInUse %}
 <p class="adm-warn" role="alert"><i class="bi bi-shield-exclamation" aria-hidden="true"></i>
-  The development admin <b class="mono">drishti-dev-admin</b> still has its default password. Change it now
-  (sign in as it and use <a href="{{ BASE }}/account">My account</a>), and turn off seeding in production (<span class="mono">DRISHTI_SEED_ADMIN=false</span>).</p>
+  {% set names = status.defaultPasswordUsers or ['drishti-dev-admin'] %}
+  {% if names|length == 1 %}The account{% else %}The accounts{% endif %}
+  {% for n in names %}<b class="mono">{{ n }}</b>{% if not loop.last %}, {% endif %}{% endfor %}
+  still {% if names|length == 1 %}has{% else %}have{% endif %} the default password published in the guides. Change {% if names|length == 1 %}it{% else %}them{% endif %} now
+  (sign in as the account and use <a href="{{ BASE }}/account">My account</a>), and never run this profile in production (the production profile creates none).</p>
 {% endif %}

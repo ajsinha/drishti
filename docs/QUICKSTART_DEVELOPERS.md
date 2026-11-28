@@ -192,7 +192,7 @@ pack (built for Python 3.13) into `%USERPROFILE%\drishti-wheels` (`~/drishti-whe
 | 3. The demo lake (about 15 minutes, 3.4 GB) | `py -3.13 tools\drishti.py lake demo --engine java` | `python3 tools/drishti.py lake demo --engine java` |
 | 4. Start the server and the console | `py -3.13 tools\drishti.py start all --demo` | `python3 tools/drishti.py start all --demo` |
 | ... see them, stop them | `py -3.13 tools\drishti.py status`, `py -3.13 tools\drishti.py stop all` | `python3 tools/drishti.py status`, `python3 tools/drishti.py stop all` |
-| 5. Use it | open `http://localhost:17480`, sign in as `drishti-dev-admin` / `drishti-dev-admin123`, type `VAR BANK` and press Enter | the same |
+| 5. Use it | open `http://localhost:17480`, sign in as `drishti-dev-admin` / `drishti-dev-admin123` (the demo profile also made `drishti-dev-risk` / `drishti-dev-risk123`, `drishti-dev-genomics` / `drishti-dev-genomics123` and `drishti-dev-market` / `drishti-dev-market123`, each seeing only its packs), type `VAR BANK` and press Enter | the same |
 | ... or prove it on the command line | `py -3.13 tools\drishti.py doctor --acceptance` | `python3 tools/drishti.py doctor --acceptance` |
 
 **You should see** in step 2 `[  ok] libraries`, `drishti.python=<this Python>`, "Drishti is ready." and, as the last next step,
@@ -219,7 +219,7 @@ On Windows (`cmd` or PowerShell; Java and Python only) the same commands run as 
 
 **You should see** `server: up on http://<this machine's address>:18480` and `console: up on http://<this machine's address>:17480`, with a
 warning that the demo's **development** secrets are in use (fine on your machine, never on a shared one). Open the console's address,
-sign in as `drishti-dev-admin` (password `drishti-dev-admin123`), type `TRD 1000001` and press Enter: an ENDUR commodity swap with its
+sign in as `drishti-dev-admin` (password `drishti-dev-admin123`; the three demo users are in [the production standard, section 1.3](admin/PRODUCTION_STANDARD.md#13-the-demo-profile), and every one of these accounts shows a red warning in Admin until its password is changed, never in production), type `TRD 1000001` and press Enter: an ENDUR commodity swap with its
 legs and cash flows. `VAR BANK` answers the bank's value at risk.
 
 To watch a program's output, start each in the foreground in its own terminal instead (`Ctrl+C` stops it):

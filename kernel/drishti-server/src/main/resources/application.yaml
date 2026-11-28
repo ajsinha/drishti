@@ -40,28 +40,28 @@ spring:
     import:
       # the engines' own files (docs/guides/ADMIN_GUIDE.md section 3): the jar's copy, then the site's, which wins key by key
       - optional:classpath:engines/var.yaml   # the banking module's (its jar): absent when the module is not installed
-      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.config.dir:${drishti.home}/config}/engines}/var.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.site.dir:${drishti.config.dir:${drishti.home}/config}}/engines}/var.yaml
       - optional:classpath:engines/exposure.yaml   # the banking module's (its jar): absent when the module is not installed
-      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.config.dir:${drishti.home}/config}/engines}/exposure.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.site.dir:${drishti.config.dir:${drishti.home}/config}}/engines}/exposure.yaml
       - optional:classpath:engines/sensitivities.yaml   # the banking module's (its jar): absent when the module is not installed
-      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.config.dir:${drishti.home}/config}/engines}/sensitivities.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.site.dir:${drishti.config.dir:${drishti.home}/config}}/engines}/sensitivities.yaml
       - optional:classpath:engines/frtb-sa.yaml   # the banking module's (its jar): absent when the module is not installed
-      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.config.dir:${drishti.home}/config}/engines}/frtb-sa.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.site.dir:${drishti.config.dir:${drishti.home}/config}}/engines}/frtb-sa.yaml
       - optional:classpath:engines/simm.yaml   # the banking module's (its jar): absent when the module is not installed
-      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.config.dir:${drishti.home}/config}/engines}/simm.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.site.dir:${drishti.config.dir:${drishti.home}/config}}/engines}/simm.yaml
       - optional:classpath:engines/mr-cube.yaml   # the banking module's (its jar): absent when the module is not installed
-      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.config.dir:${drishti.home}/config}/engines}/mr-cube.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.site.dir:${drishti.config.dir:${drishti.home}/config}}/engines}/mr-cube.yaml
       - classpath:engines/pivot.yaml
-      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.config.dir:${drishti.home}/config}/engines}/pivot.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.site.dir:${drishti.config.dir:${drishti.home}/config}}/engines}/pivot.yaml
       - classpath:engines/memory-lake.yaml
-      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.config.dir:${drishti.home}/config}/engines}/memory-lake.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.site.dir:${drishti.config.dir:${drishti.home}/config}}/engines}/memory-lake.yaml
       - classpath:engines/dataload.yaml
-      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.config.dir:${drishti.home}/config}/engines}/dataload.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.site.dir:${drishti.config.dir:${drishti.home}/config}}/engines}/dataload.yaml
       - classpath:engines/flight.yaml
-      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.config.dir:${drishti.home}/config}/engines}/flight.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.site.dir:${drishti.config.dir:${drishti.home}/config}}/engines}/flight.yaml
       - classpath:engines/openblas.yaml
-      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.config.dir:${drishti.home}/config}/engines}/openblas.yaml
-      - optional:file:${drishti.home}/application.local.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:${drishti.site.dir:${drishti.config.dir:${drishti.home}/config}}/engines}/openblas.yaml
+      - optional:file:${drishti.site.dir:${drishti.home}}/application.local.yaml
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
       - optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir}/packs/added.yaml}
 
@@ -136,6 +136,11 @@ management:
           include: readinessState,nodeReadiness
 
 drishti:
+  # The profile (docs/admin/PRODUCTION_STANDARD.md): production (safe defaults; the start is refused while anything unsafe is set), demo (the
+  # development administrator and three demo users, never on a shared server), or blank: development, today's open defaults.
+  profile: ${DRISHTI_PROFILE:}
+  production:
+    tls: ${DRISHTI_PRODUCTION_TLS:}   # production only: proxy (a proxy in front ends TLS) or blank with server.ssl enabled; plain HTTP stated nowhere is refused
   # The distribution (docs/architecture/KERNEL_AND_MODULES.md): risk, finance, genomics or all, or the path of a site's own file; it names
   # config/distributions/drishti.<name>.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank:
   # Drishti All, exactly as before. Also --distribution=<name> on the command line (drishti.py start server --distribution <name>).
@@ -198,11 +203,11 @@ drishti:
       gemm-min-sets: 32              # a 1,024-row tile of many-scope sums is one dgemm when at least this many sets share it (tuned on one machine: BENCHMARK.md section 17)
       gemm-min-density: 0.25         # ...and at least this share of its (set, row) pairs are members; sparser tiles are added in Java
   engines:                           # compute engines on or off per node, each with its own file (docs/guides/ADMIN_GUIDE.md; Admin -> Engines)
-    dir: ${DRISHTI_ENGINES_DIR:${drishti.config.dir}/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
+    dir: ${DRISHTI_ENGINES_DIR:${drishti.site.dir}/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
     drain: 30s                       # an engine turned off live: requests in flight finish within this, then are cancelled
     watch-seconds: 5                 # how often the engine files are compared with what was read (an edit by hand takes effect as from the page)
   modules:                           # the modules (docs/architecture/KERNEL_AND_MODULES.md; POST /api/v1/admin/modules): each on when installed, licensed and enabled
-    dir: ${DRISHTI_MODULES_DIR:${drishti.config.dir}/modules}   # the folder of the modules' switches (config/modules/<id>.yaml: enabled), written by POST /api/v1/admin/modules; drishti.modules.<id>.enabled (DRISHTI_MODULES_<ID>_ENABLED) wins over a file
+    dir: ${DRISHTI_MODULES_DIR:${drishti.site.dir}/modules}   # the folder of the modules' switches (config/modules/<id>.yaml: enabled), written by POST /api/v1/admin/modules; drishti.modules.<id>.enabled (DRISHTI_MODULES_<ID>_ENABLED) wins over a file
     watch-seconds: 5                 # how often the module and access files are compared with what was read (a change to a module takes effect at the next start; lenses and the licence at once)
     dev: ${DRISHTI_MODULES_DEV:false}   # development mode: the module source folders of the modules folder (drishti.modules.home) load without a .dmod, unverified; refused in a cluster and under the prod or production profile
   overrides:                         # site overrides of module files (docs/architecture/KERNEL_AND_MODULES.md section 18.10): a file at <module>/<path> in an override folder replaces the module's file at that path
@@ -212,14 +217,14 @@ drishti:
   engine-lib:                        # engine JARs built outside Drishti (docs/architecture/ENGINES_IN_DRISHTI.md; Admin -> Engines): read at start, each in its own class loader
     path: ${DRISHTI_ENGINE_LIB_PATH:${drishti.home}/lib/engines}   # the engine lib folder, kept on an upgrade; adding, replacing or removing a JAR takes effect at the next start; an engine JAR in lib/ext is not loaded from there
     trust: ${DRISHTI_ENGINE_LIB_TRUST:folder}   # folder (a JAR in the folder may run) or pinned (also engine.version and engine.sha384 in its engine file and the kit's certificate beside the JAR)
-    licence: ${DRISHTI_ENGINE_LIB_LICENCE:${drishti.config.dir}/licence.yaml}   # the products this installation may run (licence.products); no file: every product (development); an engine whose product is not listed is blocked (ENG-1014)
+    licence: ${DRISHTI_ENGINE_LIB_LICENCE:${drishti.site.dir}/licence.yaml}   # the products this installation may run (licence.products); no file: every product (development); an engine whose product is not listed is blocked (ENG-1014)
     poll-seconds: 10                 # how often the engines' health and stats are polled and their inputs' data versions looked at
     read-seconds: 60                 # the longest one input read through the router may take
     store-format: delta              # the lake format a stored output (outputs.<name>.store) is written in: delta or iceberg
   launcher:                          # the Python launcher's stop (docs/DEPLOYMENT_AND_QA_GUIDE.md section 7.1; POST /launcher/stop)
     stop-key: ${DRISHTI_STOP_KEY:}   # the key `drishti.py start server` makes and keeps in the pid file; `stop server` sends it straight from this machine (loopback, no proxy header) to stop gracefully on every OS; empty: every call refused (403); never logged
   access:                            # the access model's files (docs/architecture/KERNEL_AND_MODULES.md): the access registry reads them, nothing else does
-    dir: ${DRISHTI_ACCESS_DIR:${drishti.config.dir}/access}     # licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed
+    dir: ${DRISHTI_ACCESS_DIR:${drishti.site.dir}/access}     # licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed
   metrics:                           # the platform metrics and alerts (docs/guides/OPERATIONS_GUIDE.md section 13.6; CLUSTER_GUIDE.md 8.3, 8.5)
     enabled: ${DRISHTI_METRICS_ENABLED:true}  # export the platform gauges (caches, memory budget, disk, sources, feeds, loads) on /actuator/prometheus and evaluate the alert rules
     sample-interval: 15s             # how often the gauges are sampled and the alert rules evaluated
@@ -274,7 +279,7 @@ drishti:
     # Drishti*net (docs/guides/OPERATIONS_GUIDE.md): several servers as one. OFF unless <dir>/node.yaml says enabled: true; without the folder
     # this server is a single server exactly as before. Everything else (this node, its seed peers, gossip timings, routing,
     # nodes per role) is in the files of that folder, managed like connector files (Admin -> Cluster, drishti.py net), never here.
-    dir: ${DRISHTI_NET_DIR:${drishti.config.dir}/net}     # created on first write; ready-made files in config/net.examples/
+    dir: ${DRISHTI_NET_DIR:${drishti.site.dir}/net}     # created on first write; ready-made files in config/net.examples/
     watch: ${DRISHTI_NET_WATCH:auto}         # auto (file events, polling as a fallback) | poll | off
     poll: 5s  # how often the folder is looked at when polling (and, with file events, at least this often anyway)
   node:
@@ -298,7 +303,7 @@ drishti:
     routes: {}  # kind -> plugin or connector that serves it (packs add theirs: trade: trade-endur)
     plugins:
       demo:
-        enabled: ${DRISHTI_DEMO_ENABLED:true}  # run the demo source (the packs' sample data)
+        enabled: ${DRISHTI_DEMO_ENABLED:${drishti.defaults.open:true}}  # run the demo source (the packs' sample data)
       file:
         enabled: true  # run the bundled file source (JSON Lines under its root)
         settings:
@@ -339,7 +344,7 @@ drishti:
     #   <connectors-dir>/<name>.yaml     the file name is the connector's logical name; packs refer to it by that name.
     # The folder is watched: a changed file restarts only that connector, a new file starts one, a deleted file stops it.
     # See docs/guides/DATA_GUIDE.md section 9 and Admin -> Connectors. Ready-made files: config/connectors.examples/.
-    connectors-dir: ${DRISHTI_CONNECTORS_DIR:${drishti.config.dir}/connectors}   # created on first write
+    connectors-dir: ${DRISHTI_CONNECTORS_DIR:${drishti.site.dir}/connectors}   # created on first write
     connectors-watch: auto                  # auto (file events, polling as a fallback) | poll | off
     connectors-poll: 5s                     # how often the files are looked at (also the safety net beside file events)
     connectors-drain: 3s                    # a connector being restarted or stopped stays open this long so reads in flight finish
@@ -375,7 +380,7 @@ drishti:
     cache-mb: 256                           # heap for cached answers (keyed by the data's version), one budget for every caller
   security:
     # Off for local development. Production: enabled: true and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console).
-    enabled: ${DRISHTI_SECURITY_ENABLED:false}
+    enabled: ${DRISHTI_SECURITY_ENABLED:${drishti.defaults.secure:false}}
     secret: ${DRISHTI_TOKEN_SECRET:}  # the token signing secret (at least 32 bytes), shared with the console; from the environment only
     registered-users-only: true      # a signed token is refused when its user was deleted or disabled (false: trust the token alone)
     clock-skew: 30s  # clock difference tolerated when checking a token's expiry
@@ -765,7 +770,7 @@ drishti:
     # packs: {initial: 2s}           # drishti.retry.<area>.<key> overrides any of these for one area: packs, connectors, ai, mcp
   ai:                                # LLM provider layer (docs/guides/ADMIN_GUIDE.md): OFF by default, the ONE switch of all AI (MCP, Ask, BI hooks); not in this release's console
     enabled: ${DRISHTI_AI_ENABLED:false}  # turn on the LLM provider layer: provider files in drishti.ai.dir are read and models become callable
-    dir: ${DRISHTI_AI_DIR:${drishti.config.dir}/ai}        # one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names
+    dir: ${DRISHTI_AI_DIR:${drishti.site.dir}/ai}        # one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names
     watch: auto                      # auto | poll | off: how edits to the folder are noticed (live reload, like connectors)
     poll-ms: 5000  # how often the folder is looked at, in milliseconds (polling, and the safety net beside file events)
     default-model: ${DRISHTI_AI_DEFAULT_MODEL:}   # provider/model, or a model name only one provider has; used when a call names none
@@ -780,7 +785,7 @@ drishti:
       # BI hooks use the features bi-draft, bi-ask and bi-explain (docs/guides/bi/README.md), e.g. "[bi-ask]": {roles: [analyst], per-user-per-minute: 10}
   mcp:                               # MCP client (docs/guides/ADMIN_GUIDE.md): OFF by default
     enabled: ${DRISHTI_MCP_ENABLED:false}  # turn on the MCP client (also needs drishti.ai.enabled): server files in drishti.mcp.dir are read and their tools become callable
-    dir: ${DRISHTI_MCP_DIR:${drishti.config.dir}/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
+    dir: ${DRISHTI_MCP_DIR:${drishti.site.dir}/mcp}      # one YAML per MCP server: transport, url, headers as ${ENV}, allowed-tools
     watch: auto  # auto | poll | off: how edits to the folder are noticed (live reload)
     poll-ms: 5000  # how often the folder is looked at, in milliseconds
     audit: true  # one access-log row per tool call
@@ -901,7 +906,7 @@ drishti:
     max-snippet-chars: 50000         # a saved snippet's code (each user keeps at most 50 snippets)
   bi:
     enabled: true                    # Rupaka phase 1 (shell and catalogue): false answers DRS-9006 and the console hides the BI menu
-    dir: ${DRISHTI_BI_DIR:${drishti.config.dir}/bi}   # Rupaka files: datasets/, reports/, boards/, notebooks/, python/ (config/bi/README.md); never inside a pack
+    dir: ${DRISHTI_BI_DIR:${drishti.site.dir}/bi}   # Rupaka files: datasets/, reports/, boards/, notebooks/, python/ (config/bi/README.md); never inside a pack
     watch: auto                      # watch the BI folder: auto (file events + polling), poll, off. Files added, changed or deleted are picked up live; a bad file keeps its last good version
     folder-refresh: 5s               # the polling interval (with watch: off, how long a read is reused)
     workspace-creation: authors      # who creates shared workspaces: authors (bi-author), stewards (bi-steward), admins (bi-admin); Admin, BI settings changes it at run time
@@ -1001,6 +1006,7 @@ drishti:
       operations: [operations]   # the operations Home
       quant: [quant]   # the quant's Home
       analyst: [quant]   # an analyst opens the quant's Home
+      risk-trading: [risk-manager, trader]   # the demo user drishti-dev-risk (demo profile): the risk manager's Home first, the trader's second
       economist: [economist]   # the economist's Home
   trading:                           # the Trading landings' figures (the trading module's server part, /api/v1/trading/landing; LENSES.md › The design)
     people: {}                       # user: {trader: TRDR-…} or {desk: DESK-…, role: desk-head}: "my" scope, over the lens's trading.people (a name in both: this)
@@ -1052,12 +1058,15 @@ drishti:
     force-password-change-on-reset: ${DRISHTI_FORCE_PW_CHANGE_ON_RESET:false}
     # On first start with no users, create a development admin. Change its password at once;
     # the console warns until you do. Turn off (DRISHTI_SEED_ADMIN=false) for production.
-    seed-admin: ${DRISHTI_SEED_ADMIN:true}
+    seed-admin: ${DRISHTI_SEED_ADMIN:${drishti.defaults.open:true}}
     # With DRISHTI_SEED_USERNAME / DRISHTI_SEED_PASSWORD set (deploy/docker/compose.yaml requires both) it is the first
     # administrator you chose, not the development admin.
     seed-username: ${DRISHTI_SEED_USERNAME:drishti-dev-admin}
     # the first administrator's password; only this built-in default shows the default password warning
     seed-password: ${DRISHTI_SEED_PASSWORD:drishti-dev-admin123}
+    # Under the demo profile three demo users (drishti-dev-risk, drishti-dev-genomics, drishti-dev-market) are created beside the development admin, with the same
+    # empty-store rule and the same default-password warning. true: also outside the demo profile; false: not even there. Never in production.
+    seed-demo-users: ${DRISHTI_SEED_DEMO_USERS:}
     seed-roles: [admin]  # the first administrator's roles
     seed-display-name: Drishti dev admin  # the name shown for the first administrator
   rachana:
@@ -1247,7 +1256,7 @@ drishti:
 springdoc:
   api-docs:
     path: /api/docs  # the OpenAPI description
-    enabled: ${DRISHTI_API_DOCS:true}      # set explicitly, so a start does not warn that they are on by default
+    enabled: ${DRISHTI_API_DOCS:${drishti.defaults.open:true}}      # set explicitly, so a start does not warn that they are on by default
   swagger-ui:
     path: /api/docs/ui  # the OpenAPI UI
-    enabled: ${DRISHTI_API_DOCS:true}  # serve the OpenAPI UI (false: the description only)
+    enabled: ${DRISHTI_API_DOCS:${drishti.defaults.open:true}}  # serve the OpenAPI UI (false: the description only)

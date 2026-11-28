@@ -36,8 +36,8 @@ public final class AccessRegistries {
      * @param loader   where the modules' shipped manifests are looked for (the server's class loader)
      */
     public static EmbeddedAccessRegistry embedded(Function<String, String> property, ClassLoader loader) {
-        String modules = orDefault(property.apply("drishti.modules.dir"), com.ash.drishti.api.Roots.config("modules"));
-        String access = orDefault(property.apply("drishti.access.dir"), com.ash.drishti.api.Roots.config("access"));
+        String modules = orDefault(property.apply("drishti.modules.dir"), com.ash.drishti.api.Roots.site("modules"));
+        String access = orDefault(property.apply("drishti.access.dir"), com.ash.drishti.api.Roots.site("access"));
         Function<String, Boolean> overrides = id -> {
             String v = property.apply("drishti.modules." + id + ".enabled");
             if (v == null || v.isBlank()) {
@@ -48,7 +48,7 @@ public final class AccessRegistries {
         };
         // the module boot's result (the launch publishes it): each module's manifest is read from its folder
         com.ash.drishti.api.resolution.ModuleHomes booted = com.ash.drishti.api.resolution.ModuleHomes.of(property).orElse(null);
-        return new EmbeddedAccessRegistry(new YamlAccessStore(com.ash.drishti.api.Roots.anchored(modules), com.ash.drishti.api.Roots.anchored(access), loader,
+        return new EmbeddedAccessRegistry(new YamlAccessStore(com.ash.drishti.api.Roots.anchored(com.ash.drishti.api.Roots.config("modules")), com.ash.drishti.api.Roots.anchored(modules), com.ash.drishti.api.Roots.anchored(access), loader,
                 () -> booted), overrides, Clock.systemUTC());
     }
 

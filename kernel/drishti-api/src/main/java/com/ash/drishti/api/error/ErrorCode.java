@@ -92,6 +92,11 @@ public enum ErrorCode {
      * caches are kept. 503: the component is here and comes back unchanged.
      */
     COMPONENT_SUSPENDED("DRS-1037", 503),
+    /**
+     * A site file or an Admin change would be written inside the release folder, which is never written (docs/admin/PRODUCTION_STANDARD.md,
+     * "Site configuration"): site files and Admin changes go to the site folder ({@code drishti.site.dir}). Nothing was written.
+     */
+    RELEASE_FOLDER_READ_ONLY("DRS-1038", 409),
     /** The Sutra text could not be parsed. */
     SUTRA_PARSE("DRS-2001", 422),
     /** The Sutra parsed but is not valid (a rule of its kind is broken). */

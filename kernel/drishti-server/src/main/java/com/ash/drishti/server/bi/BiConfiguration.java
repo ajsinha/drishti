@@ -44,6 +44,7 @@ public class BiConfiguration {
     @Bean(initMethod = "start", destroyMethod = "close")
     public BiFolder biFolder(BiProperties props, org.springframework.core.env.Environment env) {
         return new BiFolder(props.dir(), env.getProperty("drishti.tables.root", com.ash.drishti.api.Roots.config("tables")), props.folderRefresh(), props.watch())
+                .withDefaults(java.nio.file.Path.of(com.ash.drishti.api.Roots.config("bi")), null)    // the release's shipped BI files, read first, never written
                 .withDomains(com.ash.drishti.server.modules.DomainFolders.on(env));
     }
 

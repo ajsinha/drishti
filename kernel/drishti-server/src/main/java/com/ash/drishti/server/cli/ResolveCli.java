@@ -108,7 +108,7 @@ public final class ResolveCli {
         if (connectors == null) {
             String given = System.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", ""));
             connectors = !given.isBlank() ? com.ash.drishti.api.Roots.anchored(given)
-                    : root != null ? root.resolve("config/connectors") : com.ash.drishti.api.Roots.anchored(com.ash.drishti.api.Roots.config("connectors"));
+                    : root != null ? root.resolve("config/connectors") : com.ash.drishti.api.Roots.anchored(com.ash.drishti.api.Roots.site("connectors"));
         }
         try {
             ObjectMapper json = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);

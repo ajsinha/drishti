@@ -41,7 +41,7 @@ public record BiProperties(Boolean enabled, String dir, String watch, Duration f
 
     public BiProperties {
         enabled = enabled == null || enabled;
-        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.Roots.config("bi") : dir;
+        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.Roots.site("bi") : dir;
         watch = watch == null || watch.isBlank() ? "auto" : watch.strip().toLowerCase(java.util.Locale.ROOT);
         folderRefresh = folderRefresh == null || folderRefresh.isNegative() ? Duration.ofSeconds(5) : folderRefresh;
         workspaceCreation = workspaceCreation == null || workspaceCreation.isBlank() ? "authors" : workspaceCreation;

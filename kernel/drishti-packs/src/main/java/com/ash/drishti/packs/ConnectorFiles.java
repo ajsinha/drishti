@@ -476,6 +476,7 @@ public final class ConnectorFiles {
     /** Writes the text atomically, keeping the previous text in the history; creates the folder on first write. */
     public void write(String name, String text) {
         Path f = file(name);
+        com.ash.drishti.api.Roots.guardWrite(f);      // never into the release folder
         try {
             Files.createDirectories(dir);
             backup(name);

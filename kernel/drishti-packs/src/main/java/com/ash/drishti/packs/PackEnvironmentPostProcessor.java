@@ -96,7 +96,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
                     "edition {0} is allow-only: not loading {1} (named by DRISHTI_PACKS, drishti.packs.enabled or Admin -> Packs)", edition.name(), notInEdition);
             names.removeAll(notInEdition);
         }
-        String connDir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", com.ash.drishti.api.Roots.config("connectors")));
+        String connDir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", com.ash.drishti.api.Roots.site("connectors")));
         ConnectorFiles files = new ConnectorFiles(com.ash.drishti.api.Roots.anchored(connDir), com.ash.drishti.api.Roots.anchored(PackPaths.dataDir(env)).resolve("connectors"));
         PackLoader loader = new PackLoader(files);
         // where every pack is: the one resolution (KERNEL_AND_MODULES.md section 18), installed for every reader of this process

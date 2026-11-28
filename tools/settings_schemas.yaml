@@ -474,6 +474,7 @@ schemas:
 # Environment variables no settings file above names: read by the packs' manifests, the example connector files, the code or the tools.
 # by: server, console, packs, tools.
 env:
+  - { name: DRISHTI_SITE_DIR, by: console, default: "<config> (the developer layout)", sets: "the site folder (drishti.site.dir)", meaning: "The folder of every site file and every Admin change (production: /etc/drishti); the release folder is never written. The console reads its own approved settings from <site>/console/application.local.yaml (core/config.py local_file); unset: drishti-console/config/application.local.yaml. Set by the settings file key drishti.site.dir, which the console shares with the server" }
   - { name: DRISHTI_ENGINE_JAR, by: tools, default: "(none)", sets: "the sample engine's JAR the drop-in drill uses", meaning: "A built sample engine JAR for the drop-in drill (tools/drillkit/dropin.py); unset: drishti-engine is cloned at the pinned ref and built" }
   - { name: DRISHTI_ENGINE_REPO, by: tools, default: "the pinned engine repository", sets: "where the drop-in drill reads drishti-engine", meaning: "A local clone of drishti-engine the drop-in drill reads instead of GitHub (tools/drillkit/dropin.py)" }
   - { name: DRISHTI_DRILL_TMP, by: tools, default: "<home>/data/tmp", sets: "the drop-in drill's temporary folder", meaning: "The folder the drop-in drill works in (tools/drillkit/dropin.py); removed when the drill ends" }

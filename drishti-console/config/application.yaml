@@ -15,6 +15,11 @@
 # Drishti console configuration.
 # Precedence (low -> high): this file, config/application.local.yaml (git-ignored),
 # environment variables (DRISHTI_CONSOLE__SERVER__PORT=17481), --server.port=17481 arguments.
+# The profile (docs/admin/PRODUCTION_STANDARD.md): production refuses to start with sign-in off, a weak secret, an insecure cookie or the console
+# on the network without a proxy that ends TLS; demo and blank (development) are never refused. The server reads the same name (drishti.profile).
+profile: ${DRISHTI_PROFILE:}
+production:
+  tls: ${DRISHTI_PRODUCTION_TLS:}          # production only: proxy = a reverse proxy ends TLS in front of this console (needed to bind beyond 127.0.0.1)
 server:
   host: ${DRISHTI_CONSOLE_HOST:0.0.0.0}      # every interface, so other machines (and phones) can open it; 127.0.0.1 = this machine only
   port: ${DRISHTI_CONSOLE_PORT:17480}  # the console's HTTP port

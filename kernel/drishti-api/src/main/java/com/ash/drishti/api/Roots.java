@@ -32,8 +32,12 @@ public final class Roots {
     public static final String HOME = "drishti.home";
     /** Its environment variable. */
     public static final String HOME_ENV = "DRISHTI_HOME";
-    /** The configuration folder. */
+    /** The configuration folder: the release's shipped defaults (read-only in production). */
     public static final String CONFIG = "drishti.config.dir";
+    /** The site folder: every file the site owns and every Admin write (connector overrides, engine switches, module switches, licences, ...). */
+    public static final String SITE = "drishti.site.dir";
+    /** Its environment variable. */
+    public static final String SITE_ENV = "DRISHTI_SITE_DIR";
 
     private Roots() {
     }
@@ -67,6 +71,83 @@ public final class Roots {
         return base(CONFIG, "DRISHTI_CONFIG_DIR", "config").resolve(sub).normalize().toString();
     }
 
+    /**
+     * The site folder: {@code drishti.site.dir} ({@code DRISHTI_SITE_DIR}), else the configuration folder (the developer and demo layout: one
+     * folder holds the defaults and the site's files). In production it is named ({@code /etc/drishti}) and the release is never written.
+     */
+    public static String site() {
+        return sitePath().toString();
+    }
+
+    /** A path under the site folder, e.g. {@code site("connectors")}: where a site file is read and where Admin writes it. */
+    public static String site(String sub) {
+        return sitePath().resolve(sub).normalize().toString();
+    }
+
+    /** Whether the site folder is named and is not the configuration folder (production, or any install whose release is kept read-only). */
+    public static boolean siteIsSeparate() {
+        String v = setting(SITE, SITE_ENV);
+        if (v == null) {
+            return false;
+        }
+        try {
+            return !anchored(v).equals(base(CONFIG, "DRISHTI_CONFIG_DIR", "config"));
+        } catch (IllegalStateException noHome) {
+            return Path.of(v).isAbsolute();         // no install folder named (a tool, a test): the site folder alone is known
+        }
+    }
+
+    /**
+     * The one check before a site file is written: a write under the release (the install folder) that is neither the site folder nor the
+     * data folder is refused with the way out, when the site folder is a separate one. The release's own files are its configuration folder and the files straight under the install folder. Refused when the release is immutable, the message
+     * names the setting; allowed everywhere else (the developer layout, where the site folder is the configuration folder).
+     *
+     * @param target the file or folder about to be written
+     * @throws ReleaseFolderWriteException when the write would land in the release folder
+     */
+    public static void guardWrite(Path target) {
+        if (target == null || !siteIsSeparate()) {
+            return;
+        }
+        Path t = target.toAbsolutePath().normalize();
+        Path home;
+        Path config;
+        try {
+            home = home();
+            config = base(CONFIG, "DRISHTI_CONFIG_DIR", "config");
+        } catch (IllegalStateException noHome) {
+            return;                                  // no release folder is known: nothing to protect
+        }
+        // the release's own files: its configuration folder and the files straight under the install folder (not the data folder, which may sit anywhere)
+        boolean inRelease = t.startsWith(config) || (t.getParent() != null && t.getParent().equals(home));
+        if (inRelease && !t.startsWith(sitePath())) {
+            throw new ReleaseFolderWriteException("refused: " + t + " is inside the release folder " + home + ", which is never written: site files and Admin changes go to the"
+                    + " site folder " + sitePath() + " (" + SITE + ") and the data folder");
+        }
+    }
+
+    /** A write that would land in the release folder (see {@link #guardWrite}). */
+    public static final class ReleaseFolderWriteException extends com.ash.drishti.api.error.DrishtiException {
+        private static final long serialVersionUID = 1L;
+
+        ReleaseFolderWriteException(String message) {
+            super(com.ash.drishti.api.error.ErrorCode.RELEASE_FOLDER_READ_ONLY, message);
+        }
+    }
+
+    private static Path sitePath() {
+        String v = setting(SITE, SITE_ENV);
+        return v == null ? base(CONFIG, "DRISHTI_CONFIG_DIR", "config") : anchored(v);
+    }
+
+    /**
+     * The server's own local overrides ({@code application.local.yaml}, written by an approved Admin -> Configuration change): in the site folder
+     * when it is a separate one, else in the install folder (the developer layout).
+     */
+    public static Path localFile() {
+        return siteIsSeparate() ? sitePath().resolve("application.local.yaml") : home().resolve("application.local.yaml");
+    }
+
     /** The data folder. */
     public static String data() {
         return base(DataDir.PROPERTY, DataDir.ENV, "data").toString();
@@ -91,7 +172,7 @@ public final class Roots {
      */
     public static Path connectors() {
         String v = setting("drishti.sources.connectors-dir", "DRISHTI_CONNECTORS_DIR");
-        return v == null ? Path.of(config("connectors")) : anchored(v);
+        return v == null ? Path.of(site("connectors")) : anchored(v);
     }
 
     /** A value as an absolute path: as given when absolute, else under the install folder (never the working folder). */

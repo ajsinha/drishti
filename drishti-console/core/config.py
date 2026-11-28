@@ -147,10 +147,21 @@ def _read_settings_file(named: str) -> dict[str, str]:
 
 #: the keys the console shares with the server in a settings file (a profile): each fills its environment variable when that is unset, so
 #: the console and the server started on the same files agree (the data folder, the install, the distribution)
-SHARED = {"drishti.home": "DRISHTI_HOME", "drishti.data.dir": "DRISHTI_DATA_DIR", "drishti.distribution": "DRISHTI_DISTRIBUTION"}
+SHARED = {"drishti.home": "DRISHTI_HOME", "drishti.data.dir": "DRISHTI_DATA_DIR", "drishti.distribution": "DRISHTI_DISTRIBUTION",
+          "drishti.site.dir": "DRISHTI_SITE_DIR"}
 #: the launch roots among them: the settings file BEATS the environment (the Java order, LaunchRoots; the tools' settingsfile.apply_roots),
 #: so a stale DRISHTI_HOME / DRISHTI_DATA_DIR of an old setx never sends the console to another folder; the old value is warned about
 ROOT_KEYS = ("drishti.home", "drishti.data.dir")
+
+
+def local_file(config_dir: Path) -> Path:
+    """The console's own site file (``application.local.yaml``), the ONE place it is read and written: ``<site>/console/application.local.yaml``
+    when the install names a site folder (``drishti.site.dir`` / ``DRISHTI_SITE_DIR``: production, the release folder is never written), else
+    ``<console>/config/application.local.yaml`` (the developer layout, where the site folder is the configuration folder)."""
+    site = (os.environ.get("DRISHTI_SITE_DIR") or "").strip()
+    if site:
+        return Path(site) / "console" / "application.local.yaml"
+    return Path(config_dir) / "application.local.yaml"
 
 
 def _shared(named: str) -> dict[str, Any]:
@@ -175,7 +186,14 @@ def _shared(named: str) -> dict[str, Any]:
         elif not old:
             os.environ[var] = value
     url = settings_ini.server_url(entries)
-    return {"backend": {"url": url}} if url and not (os.environ.get("DRISHTI_BACKEND_URL") or "").strip() else {}
+    out: dict[str, Any] = {"backend": {"url": url}} if url and not (os.environ.get("DRISHTI_BACKEND_URL") or "").strip() else {}
+    profile = str(entries.get("drishti.profile") or "").strip()      # the one profile name of the server and the console (production.py)
+    if profile and not (os.environ.get("DRISHTI_PROFILE") or "").strip():
+        out["profile"] = profile
+    tls = str(entries.get("drishti.production.tls") or "").strip()
+    if tls and not (os.environ.get("DRISHTI_PRODUCTION_TLS") or "").strip():
+        out.setdefault("production", {})["tls"] = tls
+    return out
 
 
 def load_settings(config_dir: Path, argv: list[str] | None = None) -> Settings:
@@ -190,8 +208,7 @@ def load_settings(config_dir: Path, argv: list[str] | None = None) -> Settings:
         raise SystemExit(settings_ini.fail(e)) from None
     shared =_shared(settings_path) if settings_path else {}
     files: list[dict[str, Any]] = []
-    for name in ("application.yaml", "application.local.yaml"):
-        path = config_dir / name
+    for path in (config_dir / "application.yaml", local_file(config_dir)):
         files.append(_interpolate(yaml.safe_load(path.read_text(encoding="utf-8")) or {}) if path.exists() else {})
     base, over = files
     if settings_path:                       # --settings /abs/drishti.ini: the file's keys sit below the environment and the command line

@@ -438,6 +438,7 @@ public final class PlacementService {
     }
 
     private void write(Placement p) {
+        com.ash.drishti.api.Roots.guardWrite(file);      // never into the release folder
         try {
             Files.createDirectories(file.toAbsolutePath().getParent());
             if (Files.isRegularFile(file)) {
