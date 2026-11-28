@@ -47,10 +47,23 @@ final class VarFigures implements ViewAugmenter {
     private static final int TOP = 10;
     private final VarService svc;
     private final VarViews views;
+    /** R2: the market-risk engine's path, asked for the desk and legal-entity pages when {@code var.consumers.route} is engine. */
+    private final VarEnginePath engine;
 
-    VarFigures(VarService svc, VarViews views) {
+    VarFigures(VarService svc, VarViews views, VarEnginePath engine) {
         this.svc = svc;
         this.views = views;
+        this.engine = engine;
+    }
+
+    /**
+     * Whether the page's figures are the engine's: the consumers' family switch, for the desk and legal-entity pages (node scopes: the
+     * headline proven equal on every node, RiskSideBySideTest). TODO(R2): the position and portfolio pages stay in-tree until the engine
+     * answers a scope's parts by trade and by position (its contributions are a node's child nodes or a leaf's positions) and a row-set
+     * scope's figures on the mapped tier to the bit (MC-12's float32 view).
+     */
+    private boolean viaEngine(String kind) {
+        return engine != null && engine.consumers() && (kind.equals("desk") || kind.equals(LEGAL_ENTITY));
     }
 
     VarService service() {
@@ -97,8 +110,8 @@ final class VarFigures implements ViewAugmenter {
         return p.isPresent() ? p : Viewer.current().map(v -> new Principal(v.user(), v.roles()));
     }
 
-    private Map<String, Object> head(Principal p, String scope, LocalDate date) {
-        Map<String, Object> h = views.headline(p, scope, date);
+    private Map<String, Object> head(Principal p, String scope, LocalDate date, boolean viaEngine) {
+        Map<String, Object> h = viaEngine ? engineHeadline(p, scope, date) : views.headline(p, scope, date);
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("STATUS", "ok");
         m.put("SCOPE", h.get("canonical"));
@@ -111,6 +124,16 @@ final class VarFigures implements ViewAugmenter {
         m.put("LIMIT_USE", h.get("limitUse"));
         m.put("NOTE", "computed by the VaR engine as you opened the page (" + h.get("businessDate") + "); VAR " + h.get("canonical") + " <GO>");
         return m;
+    }
+
+    /** The headline's fields a page shows, from the engine: its figures, Drishti's resolver's canonical scope, the offered lens. */
+    private Map<String, Object> engineHeadline(Principal p, String scope, LocalDate date) {
+        Map<String, Object> h = new LinkedHashMap<>(engine.headline(p, scope, date, null, (String) null));
+        h.put("canonical", engine.canonical(p, scope, date));
+        h.put("businessDate", h.get("asOf"));
+        h.put("confidence", svc.props().defaultLens().confidence());
+        h.put("esConfidence", svc.props().defaultLens().esConfidence());
+        return h;
     }
 
     private List<Long> pnl(Principal p, String scope, LocalDate date) {
@@ -135,7 +158,7 @@ final class VarFigures implements ViewAugmenter {
 
     private Map<String, Object> position(Principal p, String id, LocalDate date) {
         String scope = "POS:" + id;
-        Map<String, Object> m = head(p, scope, date);
+        Map<String, Object> m = head(p, scope, date, false);
         List<Map<String, Object>> trades = new ArrayList<>();
         for (Map<String, Object> r : rows(p, scope, date, "trade")) {
             trades.add(row("TRADE_ID", r, "standaloneVar", "componentVar"));
@@ -161,7 +184,7 @@ final class VarFigures implements ViewAugmenter {
 
     private Map<String, Object> portfolio(Principal p, String id, LocalDate date) {
         String scope = "PORT:" + id;
-        Map<String, Object> m = head(p, scope, date);
+        Map<String, Object> m = head(p, scope, date, false);
         List<Map<String, Object>> positions = new ArrayList<>();
         for (Map<String, Object> r : rows(p, scope, date, "position")) {
             Map<String, Object> x = row("POSITION_ID", r, "standaloneVar", "componentVar");
@@ -192,7 +215,7 @@ final class VarFigures implements ViewAugmenter {
     }
 
     private Map<String, Object> desk(Principal p, String id, LocalDate date) {
-        return head(p, "DESK:" + id, date);
+        return head(p, "DESK:" + id, date, viaEngine("desk"));
     }
 
     /**
@@ -200,7 +223,8 @@ final class VarFigures implements ViewAugmenter {
      * PNL, MTM, TRADES): the record stores no VaR since 2.9.2. A book the engine cannot answer for keeps its row with no VAR.
      */
     private Map<String, Object> legalEntity(Principal p, String id, DataNode.Obj doc, LocalDate date) {
-        Map<String, Object> m = head(p, "LE:" + id, date);
+        boolean viaEngine = viaEngine(LEGAL_ENTITY);
+        Map<String, Object> m = head(p, "LE:" + id, date, viaEngine);
         List<Map<String, Object>> books = new ArrayList<>();
         DataNode rows = doc.get("BOOKS");
         for (int i = 0; i < rows.size(); i++) {
@@ -210,7 +234,8 @@ final class VarFigures implements ViewAugmenter {
             Map<String, Object> b = new LinkedHashMap<>();
             r.forEach((k, v) -> b.put(String.valueOf(k), v));
             try {
-                b.put("VAR", views.headline(p, "BOOK:" + r.get("BOOK"), date).get("var"));
+                b.put("VAR", (viaEngine ? engine.headline(p, "BOOK:" + r.get("BOOK"), date, null, (String) null)
+                        : views.headline(p, "BOOK:" + r.get("BOOK"), date)).get("var"));
             } catch (DrishtiException | IllegalArgumentException e) {
                 b.put("VAR", null);
             }

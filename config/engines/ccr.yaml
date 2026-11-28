@@ -29,5 +29,11 @@ drishti:
         collateral-balance: { kinds: [ collateral-balance ] }   # the kind the collateral balances are read from
         trade-valuation: { kinds: [ trade-valuation ] }   # the kind the trade valuations are read from (the market-risk pack)
         credit-limit: { kinds: [ credit-limit ] }   # the kind the credit limits are read from
+        credit-limit-bucket: { kinds: [ credit-limit ], as-of: on-or-before, field: BUCKETS }   # each limit's tenor buckets: the items of its BUCKETS list, under its LIMIT_ID
+      options:
+        # the netting-set matrices as the exposure tier keeps them (drishti.ccr.exposure.tier): mapped = float32 rows as the hot file, so the two paths agree to the bit
+        vector-tier: ${drishti.ccr.exposure.tier:${DRISHTI_EXPOSURE_TIER:mapped}}
+      snapshot: { hot: 1 }               # one business date's session kept open (its books released when another date is asked)
+      limits: { memory-mb: 768, request-seconds: 300 }   # one date's paths and the book built from them for each visibility asked; the first ask of a date reads its paths
       access:
         visibility: row-rules   # who sees which rows: row-rules (the row rules of the person)

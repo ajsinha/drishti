@@ -101,9 +101,22 @@ final class ExposurePreDeal {
         }
     }
 
+    /** The what-if a check reads: in-tree ({@link ExposureWhatIf}, unaudited) or the engine path's (R2, {@link ExposureEnginePath#whatIf}). */
+    interface WhatIfs {
+        Map<String, Object> whatIf(Principal p, Map<String, Object> request, LocalDate date);
+    }
+
     /** One check, as the asker (audited). */
     Map<String, Object> check(Principal p, Map<String, Object> body, LocalDate date) {
         return check(p, body, date, true);
+    }
+
+    /**
+     * One check whose what-if is another's (R2: the engine path's proxy and supplied-MtM checks read the ccr engine's what-if; the counterparty's
+     * netting sets seen, the limit, the run's flags and the decision rule stay this check's), audited.
+     */
+    Map<String, Object> check(Principal p, Map<String, Object> body, LocalDate date, WhatIfs w) {
+        return check(p, body, date, true, w);
     }
 
     /**
@@ -111,6 +124,10 @@ final class ExposurePreDeal {
      * same request, the same numbers: the check itself was audited when it was made).
      */
     Map<String, Object> check(Principal p, Map<String, Object> body, LocalDate date, boolean audit) {
+        return check(p, body, date, audit, (pp, req, d) -> whatIf.whatIf(pp, req, d, false));
+    }
+
+    private Map<String, Object> check(Principal p, Map<String, Object> body, LocalDate date, boolean audit, WhatIfs whatIfs) {
         ExposurePreDealCommand cmd = ExposurePreDealCommand.of(body);
         String checkId = "PDC-" + UUID.randomUUID().toString().substring(0, 13).toUpperCase(Locale.ROOT);
         String scope = "CPTY:" + cmd.counterparty();
@@ -242,7 +259,7 @@ final class ExposurePreDeal {
         req.put("method", method);
         req.put("q", q);
         req.put("candidates", List.of(cand));
-        Map<String, Object> w = whatIf.whatIf(p, req, d.date(), false);
+        Map<String, Object> w = whatIfs.whatIf(p, req, d.date());
 
         // the decision
         if (limit == null) {
@@ -303,7 +320,10 @@ final class ExposurePreDeal {
             fl.addAll(wf);
         }
         out.put("flags", fl);
-        out.put("engine", "exposure (Java)");
+        out.put("engine", w.get("path") != null ? "ccr (Drishti Risk)" : "exposure (Java)");
+        if (w.get("path") != null) {
+            out.put("path", w.get("path"));
+        }
         if (audit) {
             svc.audit(p, "ccr-predeal", base, "check=" + checkId + " decision=" + decision + " method=" + method + " command=\"" + cmd.text() + "\""
                 + (lim == null ? " limit=none" : " limit=" + limit.id() + " after=" + Math.round(num(lim.get("after"))) + " use=" + pct(num(lim.get("useAfter")))));

@@ -116,7 +116,7 @@ final class Fixtures {
     }
 
     /** Kinds held in arrays; counts the column reads. */
-    static final class Kinds implements KindData {
+    static class Kinds implements KindData {
         final Map<String, ColumnSet> sets = new TreeMap<>();
         final Map<String, String> stamps = new HashMap<>();
         final AtomicInteger reads = new AtomicInteger();

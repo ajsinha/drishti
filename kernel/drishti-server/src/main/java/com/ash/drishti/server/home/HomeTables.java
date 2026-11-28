@@ -158,7 +158,7 @@ public final class HomeTables {
 
     /** A use-bar table an engine declares ({@link MeasureSource#limitTables}); a named table of an engine that is absent answers no rows. */
     private Optional<List<Map<String, Object>>> limitTable(HomeTable.Context c, String table) {
-        for (MeasureSource s : sources.values()) {
+        for (MeasureSource s : HomeSources.all(sources)) {
             for (MeasureSource.LimitTable t : s.limitTables()) {
                 if (t.table().equals(table)) {
                     return Optional.of(limits(c, s, t.measure(), t.subjectKind(), t.nameColumn(), t.measure()));

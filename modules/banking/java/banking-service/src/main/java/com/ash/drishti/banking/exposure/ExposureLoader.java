@@ -181,6 +181,23 @@ final class ExposureLoader {
                 versions, List.of());
     }
 
+    /**
+     * A date's reference alone (R2: the engine path's tree reads no paths): the run the date answers with, its grid, every netting set the
+     * reference data knows with its CSA terms and data-quality flags, the counterparties' names, the groups and the credit limits; the date
+     * as an {@link ExposureDate} without a book. Nothing of the exposure paths is read.
+     */
+    ExposureReference reference(LocalDate date) {
+        AsOf asOf = AsOf.of(date);
+        DataNode run = run(date, documents(props.kinds().run(), asOf));
+        Reference ref = reference(date, asOf, run);
+        ExposureDate d = new ExposureDate(date, null, ref.known, ref.names, ref.groups, ref.limits, version(date), java.time.Instant.now(), 0, Map.of(),
+                Map.of(), List.of());
+        return new ExposureReference(d, text(run, "RUN_ID"), grid(date, run), Map.copyOf(ref.terms), Map.copyOf(ref.flags));
+    }
+
+    /** A date's reference without its paths: the date (no book), its run, grid, each known netting set's CSA terms and data-quality flags. */
+    record ExposureReference(ExposureDate date, String runId, ExposureGrid grid, Map<String, CsaTerms> terms, Map<String, List<String>> flags) {}
+
     /** Streams the run's rows into a new book, then writes its hot file (or keeps it on the heap). */
     private ExposureBook build(LocalDate date, AsOf asOf, DataNode run, Reference ref, String digest) {
         ExposureGrid grid = grid(date, run);
@@ -414,17 +431,7 @@ final class ExposureLoader {
                 r.names.put(e.getKey(), n);
             }
         }
-        for (Map.Entry<String, DataNode> e : documents(k.group(), asOf).entrySet()) {
-            List<String> ms = new ArrayList<>();
-            DataNode m = e.getValue().get("MEMBERS");
-            for (int i = 0; i < m.size(); i++) {
-                String id = text(m.get(i), "ID");
-                if (id != null) {
-                    ms.add(id);
-                }
-            }
-            r.groups.put(e.getKey(), ms);
-        }
+        r.groups.putAll(groups(asOf));
         for (Map.Entry<String, DataNode> e : documents(k.limit(), asOf).entrySet()) {     // the approved limit of the credit-limit record (LIM is parked)
             DataNode l = e.getValue();
             String cp = text(l, "COUNTERPARTY");
@@ -444,6 +451,26 @@ final class ExposureLoader {
             }
         }
         return r;
+    }
+
+    /**
+     * The date's connected groups and their member counterparties, read alone (no run, no book): the reference the loaded date keeps, and
+     * what the engine path passes the {@code ccr} engine for a {@code GROUP:} scope (R2).
+     */
+    Map<String, List<String>> groups(AsOf asOf) {
+        Map<String, List<String>> out = new LinkedHashMap<>();
+        for (Map.Entry<String, DataNode> e : documents(props.kinds().group(), asOf).entrySet()) {
+            List<String> ms = new ArrayList<>();
+            DataNode m = e.getValue().get("MEMBERS");
+            for (int i = 0; i < m.size(); i++) {
+                String id = text(m.get(i), "ID");
+                if (id != null) {
+                    ms.add(id);
+                }
+            }
+            out.put(e.getKey(), ms);
+        }
+        return out;
     }
 
     /**

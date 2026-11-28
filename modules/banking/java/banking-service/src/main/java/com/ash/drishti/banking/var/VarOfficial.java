@@ -485,6 +485,9 @@ final class VarOfficial implements AutoCloseable {
         r.put("SVAR", f.get("svar"));                                   // stressed VaR and ES on the date's stress set (null: none)
         r.put("SES", f.get("ses"));
         r.put("STRESS_SET_ID", f.get("stressSet"));
+        Map.Entry<?, ?> other = f.get("varAt") instanceof Map<?, ?> m && !m.isEmpty() ? m.entrySet().iterator().next() : null;
+        r.put("BACKTEST_CONFIDENCE", other == null ? null : Double.valueOf(String.valueOf(other.getKey())));   // contract 1.6: the backtest's
+        r.put("BACKTEST_VAR", other == null ? null : other.getValue());                                   // other confidence and its VaR
         r.put("SCENARIO_SET_ID", d.book().scenarioSet());
         r.put("SCENARIO_WINDOW", (long) d.book().width());             // the newest N scenarios used (drishti.module.banking.var.window)
         r.put("STANDALONE_SUM", f.get("sumStandalone"));

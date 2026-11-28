@@ -38,7 +38,7 @@ import java.util.Map;
 final class VarPublisher {
 
     /** The contract version the rows carry (VAR_GUIDE.md section 23.4, the change table). */
-    static final String CONTRACT_VERSION = "1.5";                   // 1.4: HORIZON and METHOD; 1.5: SVAR, SES and STRESS_SET_ID
+    static final String CONTRACT_VERSION = "1.6";                   // 1.4: HORIZON and METHOD; 1.5: SVAR, SES and STRESS_SET_ID; 1.6: BACKTEST_*
     static final String FOLDER = com.ash.drishti.banking.official.OfficialSink.FOLDER;
     static final String TABLE = "var-official";
 
@@ -88,6 +88,8 @@ final class VarPublisher {
         c.put("SVAR", "double");                                       // stressed VaR and ES on the date's stress set (null: none)
         c.put("SES", "double");
         c.put("STRESS_SET_ID", "string");
+        c.put("BACKTEST_CONFIDENCE", "double");                        // 1.6: the backtest's other confidence (0.975) and the VaR at it
+        c.put("BACKTEST_VAR", "double");
         return java.util.Collections.unmodifiableMap(c);
     }
 

@@ -170,12 +170,54 @@ public class VarController {
     private Map<String, Object> headlineAnswer(String scope, String ccy, String window, Double confidence, Double esConfidence, String horizon,
             String method, Double esq, String set, AsOf asOf, Boolean parametric, boolean matured, String path, Principal p) {
         if (enginePath.engine(path)) {                                 // R2: the market-risk engine through the host (VarEnginePath)
-            if (confidence != null || esConfidence != null || horizon != null || method != null || esq != null || set != null
-                    || parametric != null || matured) {
-                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the headline on the offered lens for now; "
-                        + "a lens, parametric or matured items are answered in-tree (path=in-tree)");
+            if (esConfidence != null || matured || confidence != null && (window != null || !offered(confidence))) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the headline at an offered confidence (the lens) "
+                        + "for now; a confidence outside the offered lists (an override), es-confidence or matured items are answered in-tree "
+                        + "(path=in-tree)");
             }
-            return enginePath.headline(p, scope(scope), date(asOf), ccy, window);
+            com.ash.drishti.banking.compute.var.VarLens l = lens(horizon, method, confidence, esq, set);   // lane G part 6: the offered confidences
+            if (l != null && !l.equals(svc.props().defaultLens())) {         // a horizon or the stress set (VAR_GUIDE 18.6, 18.8)
+                if (set != null && VarProperties.stressed(set(set)) && ccy != null && !ccy.isBlank() && !"USD".equalsIgnoreCase(ccy.trim())) {
+                    throw new DrishtiException(ErrorCode.BAD_REQUEST, "stressed VaR is answered in USD, the stress set's own currency (asked: "
+                            + ccy.trim().toUpperCase(java.util.Locale.ROOT) + ")");
+                }
+                if (window != null) {
+                    throw new DrishtiException(ErrorCode.BAD_REQUEST, "window recomputes the normal set's 1-day VaR; a horizon or the stress "
+                            + "set takes the offered window");
+                }
+                Map<String, Object> h = enginePath.headline(p, scope(scope), date(asOf), l.stressed() ? "USD" : ccy, l);
+                if (!Boolean.FALSE.equals(parametric) && h.get("node") instanceof String node && pOn()) {   // the node's block through the lens
+                    if (!"lens".equals(views.parametric().props().horizonRule())) {
+                        throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path fits the lens's own vector (horizon-rule lens); "
+                                + "drishti.var.parametric.horizon-rule is " + views.parametric().props().horizonRule() + " here: ask it in-tree "
+                                + "(path=in-tree) or with parametric=false");
+                    }
+                    VarEnginePath.Parametric x = enginePath.parametric(p, date(asOf), (String) h.get("currency"), l, views.parametric().props()
+                            .settings()).get(node);
+                    if (x != null) {
+                        h = new LinkedHashMap<>(h);
+                        h.put("parametric", views.parametric().headline(x.figures(), l, enginePath.nodeName(p, date(asOf), (String) h.get("currency"),
+                                node), x.set(), x.lastDay(), (Double) h.get("varExact"), (Double) h.get("esExact"), x.k()));
+                    }
+                }
+                return parametric(h, parametric);
+            }
+            Map<String, Object> h = enginePath.headline(p, scope(scope), date(asOf), ccy, window);
+            if (!Boolean.FALSE.equals(parametric) && h.get("node") instanceof String node && pOn()) {   // a node's block from node-pvar
+                // as in-tree: the block is the date's (its configured window, whatever window the headline recomputes on), beside the
+                // date's historical VaR and ES
+                Map<String, Object> official = window == null ? h : enginePath.headline(p, scope(scope), date(asOf), ccy, (String) null);
+                VarEnginePath.Parametric x = enginePath.parametric(p, date(asOf), (String) h.get("currency"), enginePath.window(null),
+                        svc.props().defaultLens().confidence(), svc.props().defaultLens().esConfidence(), views.parametric().props().settings())
+                        .get(node);
+                if (x != null) {
+                    h = new LinkedHashMap<>(h);
+                    h.put("parametric", views.parametric().headline(x.figures(), svc.props().defaultLens(),
+                            enginePath.nodeName(p, date(asOf), (String) h.get("currency"), node), x.set(), x.lastDay(),
+                            (Double) official.get("varExact"), (Double) official.get("esExact"), x.k()));
+                }
+            }
+            return parametric(h, parametric);
         }
         Map<String, Object> h = headline(scope, ccy, window, confidence, esConfidence, horizon, method, esq, set, asOf, p);
         if (matured) {                                                  // the matured-items switch (VAR_GUIDE.md, "Matured items"): this answer only
@@ -212,7 +254,10 @@ public class VarController {
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestParam(required = false) Boolean parametric, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return parametric(views.headline(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq, set)), parametric);
+        Map<String, Object> h = new LinkedHashMap<>(views.headline(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq, set)));
+        h.remove("varExact");                                           // the raw doubles: on GET /scope?exact=true only
+        h.remove("esExact");
+        return parametric(h, parametric);
     }
 
     /**
@@ -246,12 +291,63 @@ public class VarController {
         return out;
     }
 
+    /** True when parametric VaR is on here (drishti.var.parametric.enabled): the engine path adds its block from node-pvar. */
+    private boolean pOn() {
+        return views.parametric() != null && views.parametric().enabled();
+    }
+
+    /** The engine path answers without the parametric columns for now: refused in words unless they are off or not asked for. */
+    private void parametricOff(Boolean parametric, String what) {
+        if (!Boolean.FALSE.equals(parametric) && views.parametric() != null && views.parametric().enabled()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers " + what + " without the parametric figures for now: "
+                    + "ask parametric=false, or in-tree (path=in-tree)");
+        }
+    }
+
     @GetMapping("/scope/path")
     public Map<String, Object> path(@RequestParam String scope, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "0") int size,
             @RequestParam(required = false) String ccy, @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matured,
+            @RequestParam(name = "path", required = false) String route, @RequestParam(defaultValue = "false") boolean exact,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(route)) {                                // R2: the market-risk engine's scope-path (VarEnginePath.path)
+            if (confidence != null || horizon != null || method != null || esq != null || set != null || matured) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the P&L path on the offered lens for now; "
+                        + "a lens or matured items are answered in-tree (path=in-tree)");
+            }
+            String node = !Boolean.FALSE.equals(parametric) && pOn() ? enginePath.node(p, scope(scope), date(asOf), ccy) : null;
+            if (node == null) {
+                parametricOff(parametric, "the P&L path of a scope that is not a node");
+            }
+            Map<String, Object> answer = enginePath.path(p, scope(scope), date(asOf), page, size, ccy);
+            double[] edges = (double[]) answer.remove("edgesExact");
+            if (node != null) {                                        // the normal curve over the histogram from node-pvar, shaped as in-tree
+                VarEnginePath.Parametric x = enginePath.parametric(p, date(asOf), (String) answer.get("currency"), enginePath.window(null),
+                        svc.props().defaultLens().confidence(), svc.props().defaultLens().esConfidence(), views.parametric().props().settings())
+                        .get(node);
+                if (x != null) {
+                    double var = (Double) answer.get("varExact");
+                    Map<String, Object> block = views.parametric().path(views.parametric().headline(x.figures(), svc.props().defaultLens(),
+                            enginePath.nodeName(p, date(asOf), (String) answer.get("currency"), node), x.set(), x.lastDay(), var,
+                            (Double) answer.get("esExact"), x.k()), x.figures(), edges, var);
+                    Map<String, Object> a2 = new LinkedHashMap<>();
+                    answer.forEach((k, v) -> {
+                        a2.put(k, v);
+                        if (k.equals("histogram")) {
+                            a2.put("parametric", block);              // where the in-tree answer has it
+                        }
+                    });
+                    answer = a2;
+                }
+            }
+            answer = parametric(answer, parametric);
+            if (!exact) {
+                answer.remove("varExact");
+                answer.remove("esExact");
+            }
+            return answer;
+        }
         return parametric(views.path(p, scope(scope), date(asOf), page, size, ccy, lens(horizon, method, confidence, esq, set), matured), parametric);
     }
 
@@ -266,7 +362,15 @@ public class VarController {
     public Map<String, Object> history(@RequestParam String scope, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(name = "path", required = false) String route, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(route)) {                                // R2: the market-risk engine's scope-backtest (VarEnginePath.history)
+            if (confidence != null || horizon != null || method != null || esq != null || set != null) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the history on the offered lens for now; a lens "
+                        + "is answered in-tree (path=in-tree)");
+            }
+            com.ash.drishti.banking.compute.var.VarLens l = svc.props().defaultLens();
+            return enginePath.history(p, scope(scope), date(asOf), ccy, n -> views.lensNote(l, n, null));
+        }
         return views.history(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq, set));
     }
 
@@ -279,8 +383,34 @@ public class VarController {
             @RequestParam(required = false) String scenario, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
-            @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matrix, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matrix,
+            @RequestParam(name = "path", required = false) String route, @RequestParam(defaultValue = "false") boolean exact,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p,
             @org.springframework.web.bind.annotation.RequestHeader(value = org.springframework.http.HttpHeaders.ACCEPT, required = false) String accept) {
+        if (enginePath.engine(route)) {                                // R2: the market-risk engine's scope-contributions
+            if (confidence != null || horizon != null || method != null || esq != null || set != null
+                    || scenario != null && !scenario.isBlank() || by != null && !by.isBlank() && !by.equals("child") && !by.equals("node")) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers a node's child nodes on the offered lens for now; "
+                        + "a lens, a scenario or other parts (by) are answered in-tree (path=in-tree)");
+            }
+            if (matrix && Boolean.FALSE.equals(parametric)) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "matrix=true is parametric: it cannot be asked with parametric=false");
+            }
+            String node = (matrix || !Boolean.FALSE.equals(parametric)) && pOn() ? enginePath.node(p, scope(scope), date(asOf), ccy) : null;
+            if (node == null) {
+                parametricOff(matrix ? Boolean.TRUE : parametric, "the contributions of a scope that is not a node");
+            }
+            Map<String, Object> answer = enginePath.contributions(p, scope(scope), date(asOf), ccy);
+            if (node != null) {
+                answer = parametricParts(p, answer, node, date(asOf), accept != null && accept.contains("arrow"), matrix ? scope(scope) : null, ccy);
+            }
+            answer = parametric(answer, matrix ? Boolean.TRUE : parametric);
+            if (!exact) {
+                answer.remove("varExact");
+                answer.remove("esExact");
+            }
+            return ArrowAnswers.negotiate(accept, answer, "records", "rows");
+        }
         if (matrix && Boolean.FALSE.equals(parametric)) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "matrix=true is parametric: it cannot be asked with parametric=false");
         }
@@ -301,6 +431,72 @@ public class VarController {
     }
 
     /**
+     * The contributions' parametric columns on the engine path (decision 6.6 (4)): each child's component from {@code node-pvar-components}
+     * and the node's figures from {@code node-pvar}, shaped by {@code VarParametric} as in-tree (each row's columns first, the totals block
+     * after the rows; Arrow leaves the tooltips' lines to JSON).
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parametricParts(Principal p, Map<String, Object> answer, String node, java.time.LocalDate date, boolean arrow,
+            String matrixOf, String ccy) {
+        String currency = (String) answer.get("currency");
+        VarEnginePath.Parametric x = enginePath.parametric(p, date, currency, enginePath.window(null), svc.props().defaultLens().confidence(),
+                svc.props().defaultLens().esConfidence(), views.parametric().props().settings()).get(node);
+        if (x == null) {
+            return answer;
+        }
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) answer.getOrDefault("rows", List.of());
+        // a leaf node's parts are positions (lane G part 6): their components from scope-pcomponents, with the host's sizes
+        boolean positions = !rows.isEmpty() && "position".equals(rows.get(0).get("kind"));
+        Map<String, VarEnginePath.PositionComponent> pos = positions ? enginePath.pPositionComponents(p, date, currency, node) : Map.of();
+        var comps = positions ? Map.<String, com.ash.drishti.banking.compute.var.ParametricVar.Component>of()
+                : enginePath.pComponents(p, date, currency, node);
+        String label = enginePath.nodeName(p, date, currency, node);
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        double pComp = 0;
+        double pAlone = 0;
+        for (Map<String, Object> r : rows) {
+            String key = String.valueOf(r.get("key"));
+            var pc = positions ? (pos.get(key) == null ? null : pos.get(key).component()) : comps.get(key);
+            double size = positions && pos.get(key) != null ? pos.get(key).size() : Double.NaN;
+            if (pc == null) {
+                throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine market-risk has no parametric component of " + r.get("key")
+                        + " in " + node + ": ask it in-tree (path=in-tree)");
+            }
+            Map<String, Object> m = new LinkedHashMap<>(views.parametric().row(pc, x.figures(), size, String.valueOf(r.get("label")), label,
+                    true, rows.size()));
+            if (arrow) {
+                m.remove("describe");
+            }
+            m.putAll(r);
+            out.add(m);
+            pComp += pc.componentVar();
+            pAlone += pc.standaloneVar();
+        }
+        Map<String, Object> a = new LinkedHashMap<>();
+        answer.forEach((k, v) -> {
+            a.put(k, k.equals("rows") ? out : v);
+        });
+        Map<String, Object> totals = views.parametric().totals(x.figures(), pComp, pAlone, true);
+        if (matrixOf != null) {                                        // the parts' matrix from scope-pmatrix (decision 6.6 (4))
+            if (rows.size() < 2) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "matrix=true needs a scope with parts (" + label + " has " + rows.size() + ")");
+            }
+            VarEnginePath.PMatrix pm = enginePath.pMatrix(p, matrixOf, date, ccy, views.parametric().matrixMaxParts());
+            totals.put("matrix", views.parametric().matrix(pm.keys(), pm.labels(), pm.cm(), pm.truncated(), x.figures().fit().sigma(),
+                    pm.engine()));
+        }
+        Map<String, Object> b = new LinkedHashMap<>();
+        a.forEach((k, v) -> {
+            b.put(k, v);
+            if (k.equals("rows")) {
+                b.put("parametric", totals);                           // where the in-tree answer has it
+            }
+        });
+        return b;
+    }
+
+    /**
+     * The same scope in every listed reporting currency    /**
      * The same scope in every listed reporting currency (the explorer's "In other currencies" tab, VAR_GUIDE.md section 15.11): each
      * currency's VaR and ES from the scope's per-trade-currency totals, that VaR in {@code ccy} at today's rate and the difference.
      */
@@ -337,12 +533,20 @@ public class VarController {
     /** A pre-deal what-if: {@code {scope, items: [{copyOf, factor, label}]}}, computed by the Java VaR engine (VarWhatIf). */
     @PostMapping("/what-if")
     public Map<String, Object> whatIf(@RequestBody Map<String, Object> body, @RequestParam(required = false) String ccy, AsOf asOf,
+            @RequestParam(name = "path", required = false) String route, @RequestParam(defaultValue = "false") boolean exact,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, svc.props().kinds().vector());
         Map<String, Object> b = body;
         if (ccy != null && !body.containsKey("ccy")) {
             b = new LinkedHashMap<>(body);
             b.put("ccy", ccy);
+        }
+        if (enginePath.engine(route)) {                                // R2: the market-risk engine's what-if (VarEnginePath.whatIf)
+            Map<String, Object> answer = enginePath.whatIf(p, b, date(asOf));
+            if (!exact) {
+                answer.remove("varExact");
+            }
+            return answer;
         }
         return whatIf.whatIf(p, b, date(asOf));
     }
@@ -352,7 +556,38 @@ public class VarController {
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matured,
-            @RequestParam(required = false) String within, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String within, @RequestParam(name = "path", required = false) String route,
+            @RequestParam(defaultValue = "false") boolean exact, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(route)) {                                // R2: the market-risk engine's node-var (VarEnginePath.tree)
+            if (confidence != null || horizon != null || method != null || esq != null || set != null || matured
+                    || within != null && !within.isBlank()) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the tree on the offered lens for now; a lens, "
+                        + "matured items or a basket's own tree (within) are answered in-tree (path=in-tree)");
+            }
+            Map<String, Object> answer = enginePath.tree(p, hierarchy, date(asOf), ccy);
+            if (!Boolean.FALSE.equals(parametric) && pOn() && answer.get("nodes") instanceof List<?> rows) {   // each node's cell from node-pvar
+                Map<String, VarEnginePath.Parametric> pv = enginePath.parametric(p, date(asOf), (String) answer.get("currency"),
+                        enginePath.window(null), svc.props().defaultLens().confidence(), svc.props().defaultLens().esConfidence(),
+                        views.parametric().props().settings());
+                for (Object o : rows) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> n = (Map<String, Object>) o;
+                    VarEnginePath.Parametric x = pv.get(String.valueOf(n.get("id")));
+                    if (x != null) {
+                        n.put("parametric", views.parametric().treeCell(x.figures(), svc.props().defaultLens(), String.valueOf(n.get("name")),
+                                (Double) n.get("varExact"), (Double) n.get("esExact")));
+                    }
+                }
+            }
+            answer = parametric(answer, parametric);
+            if (!exact && answer.get("nodes") instanceof List<?> nodes) {
+                for (Object n : nodes) {
+                    ((Map<?, ?>) n).remove("varExact");
+                    ((Map<?, ?>) n).remove("esExact");
+                }
+            }
+            return answer;
+        }
         com.ash.drishti.banking.compute.var.VarLens l = lens(horizon, method, confidence, esq, set);
         return parametric(within == null || within.isBlank() ? views.tree(p, hierarchy, date(asOf), ccy, l, matured)
                 : views.treeWithin(p, within.trim(), hierarchy, date(asOf), ccy, l, matured), parametric);
@@ -550,12 +785,13 @@ public class VarController {
     @PostMapping("/captures")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> capture(@RequestBody Map<String, Object> body, @RequestParam(required = false) String ccy, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(name = "path", required = false) String route, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         Object c = body.get("ccy") != null ? body.get("ccy") : ccy;
         com.ash.drishti.banking.compute.var.VarLens l = lens(str(body.get("horizon")), str(body.get("method")), num(body.get("confidence")),
                 num(body.get("esConfidence")), str(body.get("set")));
+        boolean engine = enginePath.engine(route != null ? route : str(body.get("path")));   // R2 (6.6 (6)): the figures from the engine
         return captures.capture(p, scope((String) body.get("scope")), date(asOf), body.get("note") == null ? null : String.valueOf(body.get("note")),
-                c == null ? null : String.valueOf(c), l);
+                c == null ? null : String.valueOf(c), l, engine ? captureEngine() : null);
     }
 
     private static String str(Object o) {
@@ -607,8 +843,17 @@ public class VarController {
     /** Two captures side by side ({@code a}, {@code b}), or a capture and now ({@code b=now}). */
     @GetMapping("/compare")
     public Map<String, Object> compare(@RequestParam String a, @RequestParam(required = false) String b,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(name = "path", required = false) String route, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, svc.props().kinds().vector());
-        return captures.compare(p, a, b);
+        return captures.compare(p, a, b, enginePath.engine(route) ? captureEngine() : null);
+    }
+
+    /** A capture's figures on the engine path: the contributions with their parametric columns as {@code GET /scope/contributions} gives them. */
+    private VarCaptures.Engine captureEngine() {
+        return new VarCaptures.Engine(enginePath, (p, scope, date, ccy) -> {
+            String node = pOn() ? enginePath.node(p, scope, date, ccy) : null;
+            Map<String, Object> answer = enginePath.contributions(p, scope, date, ccy);
+            return node == null ? answer : parametricParts(p, answer, node, date, false, null, ccy);
+        });
     }
 }

@@ -207,6 +207,7 @@ final class PackagedServer implements AutoCloseable {
         env.put("DRISHTI_VAR_SCENARIO_WINDOW", "all");                                  // the whole scenario set (509 in the test data), not the 250-day default
         env.put("DRISHTI_VAR_HOT_DIR", work.resolve("var-hot").toString());
         env.put("DRISHTI_VAR_OFFICIAL_ROOT", work.resolve("var-official").toString());
+        env.put("LAKE_VAR_OFFICIAL_ROOT", work.resolve("var-official").toString());     // its reader (var-results: BI, the engine's var-history) reads where it publishes
         env.put("DRISHTI_CCR_EXPOSURE_OFFICIAL_ROOT", work.resolve("ccr-official").toString());
         overrides.forEach((k, v) -> {
             if (v == null || v.isEmpty()) {
@@ -251,8 +252,32 @@ final class PackagedServer implements AutoCloseable {
     JsonNode get(String pathAndQuery) throws IOException, InterruptedException {
         HttpResponse<String> r = http.send(HttpRequest.newBuilder(URI.create(base + pathAndQuery)).timeout(Duration.ofMinutes(5)).build(),
                 HttpResponse.BodyHandlers.ofString());
+        for (int i = 0; i < 6 && r.statusCode() == 503 && r.body().contains("DRS-9502"); i++) {   // a date that cannot be opened just yet: as asked, again
+            Thread.sleep(15_000);
+            r = http.send(HttpRequest.newBuilder(URI.create(base + pathAndQuery)).timeout(Duration.ofMinutes(5)).build(), HttpResponse.BodyHandlers.ofString());
+        }
         if (r.statusCode() != 200) {
             throw new IllegalStateException(r.statusCode() + " for " + pathAndQuery + ": " + r.body().substring(0, Math.min(300, r.body().length())));
+        }
+        return JSON.readTree(r.body());
+    }
+
+    /** One POST of a JSON body; an answer that is not 200 is an error naming the request. */
+    JsonNode post(String pathAndQuery, String json) throws IOException, InterruptedException {
+        HttpResponse<String> r = http.send(HttpRequest.newBuilder(URI.create(base + pathAndQuery)).timeout(Duration.ofMinutes(5))
+                .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(json)).build(), HttpResponse.BodyHandlers.ofString());
+        if (r.statusCode() != 200) {
+            throw new IllegalStateException(r.statusCode() + " for POST " + pathAndQuery + ": " + r.body().substring(0, Math.min(300, r.body().length())));
+        }
+        return JSON.readTree(r.body());
+    }
+
+    /** One POST of a JSON body that creates something; an answer that is not 201 is an error naming the request. */
+    JsonNode created(String pathAndQuery, String json) throws IOException, InterruptedException {
+        HttpResponse<String> r = http.send(HttpRequest.newBuilder(URI.create(base + pathAndQuery)).timeout(Duration.ofMinutes(5))
+                .header("Content-Type", "application/json").POST(HttpRequest.BodyPublishers.ofString(json)).build(), HttpResponse.BodyHandlers.ofString());
+        if (r.statusCode() != 201) {
+            throw new IllegalStateException(r.statusCode() + " for POST " + pathAndQuery + ": " + r.body().substring(0, Math.min(300, r.body().length())));
         }
         return JSON.readTree(r.body());
     }

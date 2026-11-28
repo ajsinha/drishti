@@ -38,17 +38,21 @@ import java.util.Set;
  * {@code EXPOSURE_ENGINE}: {@code STATUS} ({@code ok}; {@code no-paths} when the date's run does not cover the netting set or any of the
  * counterparty's; {@code unavailable} with the reason), the scope, the date and run, {@code CE}, {@code EPE}, {@code EEPE},
  * {@code PEAK_EE}, {@code PEAK_PFE} and its date, {@code PROFILE} (tenor, EE, PFE 95 and 99) and a {@code NOTE} saying how it was made,
- * never stale stored numbers.
+ * never stale stored numbers. R2: behind the exposure family's switch ({@code exposure.route}) the figures come from Drishti Risk's
+ * {@code ccr} engine ({@link ExposureEnginePath#figures}: the run's id and paths, the scope's figures and profile at the default and at
+ * 99%, its flags), the same page; proven equal in {@code ExposureHomesSideBySideTest}.
  */
 final class ExposureFigures implements ViewAugmenter {
 
     static final String FIELD = "EXPOSURE_ENGINE";
     private final ExposureService svc;
     private final ExposureViews views;
+    private final ExposureEnginePath engine;
 
-    ExposureFigures(ExposureService svc, ExposureViews views) {
+    ExposureFigures(ExposureService svc, ExposureViews views, ExposureEnginePath engine) {
         this.svc = svc;
         this.views = views;
+        this.engine = engine;
     }
 
     @Override
@@ -58,7 +62,8 @@ final class ExposureFigures implements ViewAugmenter {
 
     @Override
     public EntityDocument augment(EntityDocument doc, AsOf asOf) {
-        if (!(doc.data() instanceof DataNode.Obj o) || doc.deleted() || !svc.running()) {
+        boolean onEngine = engine != null && engine.engine(null);     // R2: the exposure family's switch (exposure.route)
+        if (!(doc.data() instanceof DataNode.Obj o) || doc.deleted() || !(onEngine ? engine.running() : svc.running())) {
             return doc;
         }
         String scope = (doc.ref().kind().equals(svc.props().kinds().nettingSet()) ? "NSET:" : "CPTY:") + doc.ref().id();
@@ -72,7 +77,8 @@ final class ExposureFigures implements ViewAugmenter {
             figures = note("unavailable", scope, "the exposure figures are computed for a signed-in viewer");
         } else {
             try {
-                figures = figures(who.get(), scope, date);
+                figures = figures(onEngine ? engine.figures(who.get(), scope, date) : views.scope(who.get(), scope, date,
+                        ExposureService.Ask.of(svc.props(), null, null, null, null)));
             } catch (DrishtiException e) {
                 String why = String.valueOf(e.getMessage()).replaceFirst("^DRS-\\d{4} ", "");
                 boolean none = e.errorCode() == ErrorCode.ENTITY_NOT_FOUND && why.startsWith("no exposure paths for");
@@ -100,9 +106,8 @@ final class ExposureFigures implements ViewAugmenter {
         return p.isPresent() ? p : Viewer.current().map(v -> new Principal(v.user(), v.roles()));
     }
 
-    private Map<String, Object> figures(Principal p, String scope, LocalDate date) {
-        ExposureService.Ask ask = ExposureService.Ask.of(svc.props(), null, null, null, null);
-        Map<String, Object> h = views.scope(p, scope, date, ask);
+    /** The page's figures from a scope answer (the in-tree route's, or the engine path's {@link ExposureEnginePath#figures}: the same keys). */
+    private static Map<String, Object> figures(Map<String, Object> h) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("STATUS", "ok");
         m.put("SCOPE", h.get("canonical"));

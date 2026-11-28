@@ -104,7 +104,7 @@ public class ExposureConfiguration {
 
     @Bean(destroyMethod = "close")
     ExposureOfficial exposureOfficial(ExposureService svc, ExposureProperties props, ObjectProvider<LoadService> loads,
-            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources) {
+            ObjectProvider<com.ash.drishti.engine.source.SourceRegistry> sources, ObjectProvider<ExposureEnginePath> enginePath) {
         var off = props.official();                                      // a folder or s3://, Delta (the default) or Iceberg (2.9.5)
         ExposureOfficial o = new ExposureOfficial(svc, new ExposurePublisher(com.ash.drishti.banking.official.OfficialSink.of(off.format(),
                 off.root(), off.storage(), off.retentionYears(),
@@ -115,13 +115,14 @@ public class ExposureConfiguration {
             l.onDeleted(r -> o.onDeleted(r.kind(), r.businessDate()));     // a date deleted from the lake: dropped, never captured
         }
         o.onPublished(() -> sources.ifAvailable(r -> r.retryFailingFor(ExposurePublisher.CPTY)));   // the exposure-results connector
+        o.engine(enginePath::getIfAvailable);                           // R2: the record's figures from the ccr engine when exposure.route says so
         return o;
     }
 
     /** The exposure figures views show (the kernel collects every ViewAugmenter: its own context's beans, a module's through the bridge). */
     @Bean
-    ExposureFigures exposureFigures(ExposureService svc, ExposureViews views) {
-        return new ExposureFigures(svc, views);
+    ExposureFigures exposureFigures(ExposureService svc, ExposureViews views, ExposureEnginePath engine) {
+        return new ExposureFigures(svc, views, engine);
     }
 
     /** A trade page's Risk links: its exposure. */

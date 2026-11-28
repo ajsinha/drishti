@@ -66,6 +66,15 @@ public record RegulatoryProperties(String fiscalYearEnd, String pnlKind, Backtes
             return exceptions <= green ? "green" : exceptions <= amber ? "amber" : "red";
         }
 
+        /**
+         * The zone of a count over {@code days} tested days (owner decision 2026-11-27, R2_CUT_PLAN 6.6): fewer than 250 days, the Basel
+         * traffic light scaled to the days ({@code Backtest.light}: green 0 to round(4 x days/250), amber to round(9 x days/250)), as the
+         * market-risk engine's backtest, whatever the window; 250 days or more, the configured counts.
+         */
+        public String zone(int exceptions, int days) {
+            return days < 250 ? com.ash.drishti.banking.compute.var.Backtest.light(exceptions, days) : zone(exceptions);
+        }
+
         /** The capital multiplier of a count (the table's last value for that many or more). */
         public double multiplier(int exceptions) {
             return multipliers.get(Math.min(Math.max(exceptions, 0), multipliers.size() - 1));

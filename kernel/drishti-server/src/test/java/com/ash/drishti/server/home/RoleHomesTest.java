@@ -145,7 +145,7 @@ class RoleHomesTest {
     }
 
     /** A fake engine: desk VaR with a limit, and a KPI. */
-    static final class FakeVar implements MeasureSource {
+    static class FakeVar implements MeasureSource {
         boolean on = true;
 
         public String engine() {
@@ -211,6 +211,49 @@ class RoleHomesTest {
         assertTrue(t.rows("home_kpis", p, d).orElseThrow().isEmpty());
         assertTrue(t.rows("home_exceptions", p, d).orElseThrow().isEmpty());
         assertTrue(t.rows("home_desk_limits", p, d).orElseThrow().isEmpty());
+    }
+
+    /** A loaded module's MeasureSource and HomeTable reach the Homes through the bridge's live collection (a product bug before: the panels were empty). */
+    @Test
+    void aLoadedModulesSourceAndTableAreReadLive() {
+        HomeStore store = new HomeStore(data, 30);
+        HomeTables t = tables(new FakeVar() {
+            public String engine() {
+                return "other";
+            }
+        }, store);
+        HomeDefinition d = catalogue().find("risk-manager").orElseThrow();
+        Principal p = new Principal("u", List.of("risk-manager"));
+        assertTrue(t.rows("home_kpis", p, d).orElseThrow().isEmpty(), "no source of the engine var yet");
+        Runnable w1 = com.ash.drishti.common.Extensions.add(MeasureSource.class, "test-module", new FakeVar());
+        Runnable w2 = com.ash.drishti.common.Extensions.add(com.ash.drishti.kernel.api.home.HomeTable.class, "test-module", new com.ash.drishti.kernel.api.home.HomeTable() {
+            public String name() {
+                return "home_test_live";
+            }
+
+            public List<Map<String, Object>> rows(Context c) {
+                return List.of(Map.of("X", 1));
+            }
+        });
+        try {
+            assertEquals(1, t.rows("home_kpis", p, d).orElseThrow().size(), "the module's source answers");
+            assertEquals(1, t.rows("home_test_live", p, d).orElseThrow().size(), "the module's table answers");
+            assertTrue(t.names().contains("home_test_live"));
+        } finally {
+            w1.run();
+            w2.run();
+        }
+        assertTrue(t.rows("home_kpis", p, d).orElseThrow().isEmpty(), "withdrawn with the module");
+    }
+
+    /** The homes folder may be a symlink (a packaged server links each committed config part): it is walked, no setting needed. */
+    @Test
+    void aSymlinkedHomesFolderIsWalked() throws IOException {
+        Path link = data.resolve("homes-link");
+        Files.createSymbolicLink(link, homes());
+        HomeCatalogue c = new HomeCatalogue(new HomeProperties(true, link.toString(), data.toString(), ROLES, "17:00", 30));
+        assertEquals(Map.of(), c.faults());
+        assertEquals(7, c.all().size());
     }
 
     @Test

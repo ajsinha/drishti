@@ -111,6 +111,8 @@ class VarOfficialBiTest {
             r.put("POSITION_COUNT", 8L);
             r.put("EXCEPTIONS_250", 0L);
             r.put("TRAFFIC_LIGHT", "green");
+            r.put("BACKTEST_CONFIDENCE", 0.975);               // contract 1.6: the backtest's other confidence and the VaR at it
+            r.put("BACKTEST_VAR", var * 0.8);
             out.add(r);
         }
         return out;
@@ -170,15 +172,21 @@ class VarOfficialBiTest {
         assertThat(line.path("rows").get(0).get(1).asDouble()).isEqualTo(100.0);
         assertThat(line.path("rows").get(1).get(1).asDouble()).as("the bank over two dates is each date's own VaR, not a sum").isEqualTo(120.0);
         // 2.9.7: the horizon, its method and the confidences as fields and measures (official records are 1-day)
-        String body = "{\"mq\":1,\"model\":\"market-risk-var@1\",\"select\":{\"fields\":[\"nodes.HORIZON\",\"nodes.METHOD\"],\"measures\":[\"VaR confidence\","
+        String body = "{\"mq\":1,\"model\":\"market-risk-var@1\",\"select\":{\"fields\":[\"nodes.HORIZON\",\"nodes.METHOD\",\"nodes.BACKTEST_CONFIDENCE\"],\"measures\":[\"VaR confidence\","
                 + "\"ES confidence\",\"Bank VaR\"]},\"time\":{\"as-of\":\"" + d + "\"}}";
         String answer = mvc.perform(post("/api/v1/bi/mq").contentType(MediaType.APPLICATION_JSON).content(body)).andReturn().getResponse().getContentAsString();
         JsonNode lens = json.readTree(answer);
         assertThat(lens.path("rows")).as(answer).hasSize(1);
         assertThat(lens.path("rows").get(0).get(0).asText()).isEqualTo("1D");
         assertThat(lens.path("rows").get(0).get(1).isNull()).as(answer).isTrue();
-        assertThat(lens.path("rows").get(0).get(2).asDouble()).isEqualTo(0.99);
-        assertThat(lens.path("rows").get(0).get(3).asDouble()).isEqualTo(0.975);
-        assertThat(lens.path("rows").get(0).get(4).asDouble()).isEqualTo(120.0);
+        assertThat(lens.path("rows").get(0).get(2).asDouble()).as("the backtest's other confidence (contract 1.6)").isEqualTo(0.975);
+        assertThat(lens.path("rows").get(0).get(3).asDouble()).isEqualTo(0.99);
+        assertThat(lens.path("rows").get(0).get(4).asDouble()).isEqualTo(0.975);
+        assertThat(lens.path("rows").get(0).get(5).asDouble()).isEqualTo(120.0);
+        // the bank's BACKTEST_VAR on the first date: the table scans its columns (the lake promotes them), so every date is read
+        String bt = "{\"mq\":1,\"model\":\"market-risk-var@1\",\"select\":{\"fields\":[\"nodes.NODE_ID\",\"nodes.BACKTEST_VAR\"]},"
+                + "\"where\":[{\"field\":\"nodes.NODE_ID\",\"op\":\"eq\",\"value\":\"MGMT~BANK\"}],\"time\":{\"as-of\":\"" + D1 + "\"}}";
+        String btAnswer = mvc.perform(post("/api/v1/bi/mq").contentType(MediaType.APPLICATION_JSON).content(bt)).andReturn().getResponse().getContentAsString();
+        assertThat(json.readTree(btAnswer).path("rows").get(0).get(1).asDouble()).as(btAnswer).isEqualTo(80.0);
     }
 }

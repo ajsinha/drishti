@@ -206,8 +206,68 @@ final class VarBacktesting {
 
     // ------------------------------------------------------------------------------------------------------------- the answer
 
+    /**
+     * A backtest as the market-risk engine answered it ({@code backtest} and {@code backtest-days} over the published records, R2): each
+     * node's tested days at the first confidence with the VaR of the day before at every confidence, and per node and confidence the
+     * engine's row (the exceptions, the count, the zone, the multiplier, Kupiec's and Christoffersen's tests). The days left out and why
+     * are said here, from the official records and the desk P&amp;L's delivery (words, never a figure).
+     */
+    record Engine(Map<String, List<DayRow>> days, Map<String, Map<Double, Map<String, Object>>> tests) {
+
+        Map<String, Object> test(String node, double q) {
+            for (Map.Entry<Double, Map<String, Object>> e : tests.getOrDefault(node, Map.of()).entrySet()) {
+                if (Math.abs(e.getKey() - q) < 1e-9) {
+                    return e.getValue();
+                }
+            }
+            return null;
+        }
+
+        /** The engine's counts at a confidence as {@link #counts} gives them: actual, hypothetical, risk-theoretical, days (none tested: -1). */
+        int[] counts(String node, double q) {
+            Map<String, Object> t = test(node, q);
+            return t == null || whole(t.get("DAYS")) == 0 ? new int[] {-1, -1, -1, 0} : new int[] {whole(t.get("EXCEPTIONS_ACTUAL")), whole(t.get("EXCEPTIONS_HYPOTHETICAL")),
+                    whole(t.get("EXCEPTIONS_RTPL")), whole(t.get("DAYS"))};
+        }
+
+        private static int whole(Object o) {
+            return ((Number) o).intValue();
+        }
+    }
+
+    /** The days of the span the engine did not test, with why (as {@link #series} says it in-tree). */
+    private List<Map<String, Object>> untested(Reach r, LocalDate upTo, List<DayRow> tested) {
+        Set<LocalDate> done = new java.util.HashSet<>();
+        tested.forEach(d -> done.add(d.date()));
+        List<LocalDate> dates = new ArrayList<>(store.dates().headSet(upTo, true));
+        LocalDate first = tested.isEmpty() ? null : tested.get(0).date();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (int i = Math.max(1, dates.size() - (props.backtesting().window() + 30)); i < dates.size(); i++) {
+            LocalDate d = dates.get(i);
+            if (done.contains(d) || first != null && d.isBefore(first)) {
+                continue;
+            }
+            LocalDate prior = dates.get(i - 1);
+            if (figures(store.index(prior).orElse(null), r.node()) == null) {
+                out.add(why(d, "the node has no official record on " + prior));
+            } else {
+                VarDeskPnl.Day day = pnl.day(d);
+                out.add(why(d, day.read() ? "no " + pnl.kind() + " row of the node's desks on " + d : "no connector serves " + pnl.kind()));
+            }
+        }
+        return out;
+    }
+
     /** The backtest of a node up to a date (null: the newest official date), with its parts (every desk below it) when asked. */
     Map<String, Object> answer(String node, LocalDate upTo, boolean withParts) {
+        return answer(node, upTo, withParts, null);
+    }
+
+    /**
+     * {@link #answer(String, LocalDate, boolean)} with the figures from the engine ({@code engine} given the newest official date to the
+     * asked one; null: in-tree): the shape, the words and the rule are the same.
+     */
+    Map<String, Object> answer(String node, LocalDate upTo, boolean withParts, java.util.function.Function<LocalDate, Engine> engine) {
         LocalDate last = upTo == null ? (store.dates().isEmpty() ? null : store.dates().last()) : store.dates().floor(upTo);
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("node", node);
@@ -223,18 +283,19 @@ final class VarBacktesting {
             out.put("note", "the node " + node + " is not in the official record of " + last);
             return out;
         }
-        out.putAll(one(r, last, true));
+        Engine e = engine == null ? null : engine.apply(last);
+        out.putAll(one(r, last, true, e));
         if (withParts) {
             List<Map<String, Object>> parts = new ArrayList<>();
             parts.add(summary(r, out));
             @SuppressWarnings("unchecked")
             Map<String, Map<String, Object>> nodes = (Map<String, Map<String, Object>>) rec.get("nodes");
-            List<String> desks = nodes.entrySet().stream().filter(e -> "desk".equals(e.getValue().get("level")) && !e.getKey().equals(node)
-                    && r.desks().contains(tail(e.getKey())) && e.getKey().startsWith(r.hierarchy() + "~")).map(Map.Entry::getKey).toList();
+            List<String> desks = nodes.entrySet().stream().filter(x -> "desk".equals(x.getValue().get("level")) && !x.getKey().equals(node)
+                    && r.desks().contains(tail(x.getKey())) && x.getKey().startsWith(r.hierarchy() + "~")).map(Map.Entry::getKey).toList();
             List<Map<String, Object>> rows = new ArrayList<>();
             for (String d : desks) {
                 Reach dr = reach(rec, d);
-                rows.add(summary(dr, one(dr, last, false)));
+                rows.add(summary(dr, one(dr, last, false, e)));
             }
             rows.sort((a, b) -> Double.compare(VarOfficialStore.num(b.get("var")), VarOfficialStore.num(a.get("var"))));
             parts.addAll(rows);
@@ -257,7 +318,7 @@ final class VarBacktesting {
         return m;
     }
 
-    private Map<String, Object> one(Reach r, LocalDate last, boolean detail) {
+    private Map<String, Object> one(Reach r, LocalDate last, boolean detail, Engine e) {
         Map<String, Object> out = new LinkedHashMap<>();
         RegulatoryProperties.Backtesting bt = props.backtesting();
         List<Double> qs = bt.confidences();
@@ -272,7 +333,8 @@ final class VarBacktesting {
             out.put("note", "the desk P&L is kept by desk: a backtest is of the bank, a desk, or a node made of whole desks");
             return out;
         }
-        Series s = series(r, last);
+        Series s = e == null ? series(r, last) : new Series(e.days().getOrDefault(r.node(), List.of()), untested(r, last,
+                e.days().getOrDefault(r.node(), List.of())), 0);
         out.put("applicable", true);
         out.put("window", bt.window());
         out.put("days", s.days().size());
@@ -280,7 +342,7 @@ final class VarBacktesting {
         out.put("to", last.toString());
         List<Map<String, Object>> counts = new ArrayList<>();
         for (int k = 0; k < qs.size(); k++) {
-            int[] c = counts(s, k);
+            int[] c = e == null ? counts(s, k) : e.counts(r.node(), qs.get(k));
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("confidence", qs.get(k));
             m.put("expected", Math.round(c[3] * (1 - qs.get(k)) * 100) / 100.0);
@@ -291,17 +353,18 @@ final class VarBacktesting {
             if (c[0] < 0) {
                 m.put("note", "the official records of these days carry no VaR at " + VarLens.pct(qs.get(k)));
             } else if (k == 0) {
-                m.put("actualZone", bt.zone(c[0]));
-                m.put("hypotheticalZone", bt.zone(c[1]));
+                m.put("actualZone", bt.zone(c[0], c[3]));
+                m.put("hypotheticalZone", bt.zone(c[1], c[3]));
             }
             counts.add(m);
         }
         out.put("counts", counts);
-        int[] c0 = counts(s, 0);
-        int n = c0[0] < 0 ? 0 : counted(c0);
+        int[] c0 = e == null ? counts(s, 0) : e.counts(r.node(), qs.get(0));
+        Map<String, Object> t0 = e == null ? null : e.test(r.node(), qs.get(0));
+        int n = c0[0] < 0 ? 0 : t0 != null ? ((Number) t0.get("COUNTED")).intValue() : counted(c0);
         out.put("counted", n);
-        out.put("zone", c0[0] < 0 ? null : bt.zone(n));
-        out.put("multiplier", c0[0] < 0 ? null : bt.multiplier(n));
+        out.put("zone", c0[0] < 0 ? null : t0 != null ? t0.get("ZONE") : bt.zone(n, c0[3]));
+        out.put("multiplier", c0[0] < 0 ? null : t0 != null ? ((Number) t0.get("MULTIPLIER")).doubleValue() : bt.multiplier(n));
         out.put("full", s.days().size() >= bt.window());
         if (s.days().size() < bt.window()) {
             out.put("short", s.days().size() + " of " + bt.window() + " business days tested: not yet a regulatory zone");
@@ -329,12 +392,19 @@ final class VarBacktesting {
             pnlA[i + 1] = s.days().get(i).actual();
             varA[i] = s.days().get(i).var()[0];
         }
-        Backtest b = Backtest.of(pnlA, varA, qs.get(0));
         Map<String, Object> tests = new LinkedHashMap<>();
-        tests.put("kupiecLr", round4(b.kupiecLr()));
-        tests.put("kupiecP", round4(b.kupiecPValue()));
-        tests.put("christoffersenLr", round4(b.christoffersenLr()));
-        tests.put("christoffersenP", round4(b.christoffersenPValue()));
+        if (e == null) {
+            Backtest b = Backtest.of(pnlA, varA, qs.get(0));
+            tests.put("kupiecLr", round4(b.kupiecLr()));
+            tests.put("kupiecP", round4(b.kupiecPValue()));
+            tests.put("christoffersenLr", round4(b.christoffersenLr()));
+            tests.put("christoffersenP", round4(b.christoffersenPValue()));
+        } else {                                                         // the engine's (within relative 1e-12: the platform's log and exp)
+            tests.put("kupiecLr", round4(t0 == null ? Double.NaN : VarOfficialStore.num(t0.get("KUPIEC_LR"))));
+            tests.put("kupiecP", round4(t0 == null ? Double.NaN : VarOfficialStore.num(t0.get("KUPIEC_P"))));
+            tests.put("christoffersenLr", round4(t0 == null ? Double.NaN : VarOfficialStore.num(t0.get("CHRISTOFFERSEN_LR"))));
+            tests.put("christoffersenP", round4(t0 == null ? Double.NaN : VarOfficialStore.num(t0.get("CHRISTOFFERSEN_P"))));
+        }
         out.put("tests", tests);
         List<Map<String, Object>> rows = new ArrayList<>();
         List<Map<String, Object>> exceptions = new ArrayList<>();
@@ -361,11 +431,11 @@ final class VarBacktesting {
             }
             rows.add(row);
             if (ea || eh) {
-                Map<String, Object> e = new LinkedHashMap<>(row);
-                e.put("which", ea && eh ? "both" : ea ? "actual" : "hypothetical");
-                e.put("excess", Math.round(Math.min(d.actual(), d.hypo()) + d.var()[0]));
-                e.put("drivers", drivers(r, d.date()));
-                exceptions.add(e);
+                Map<String, Object> x = new LinkedHashMap<>(row);
+                x.put("which", ea && eh ? "both" : ea ? "actual" : "hypothetical");
+                x.put("excess", Math.round(Math.min(d.actual(), d.hypo()) + d.var()[0]));
+                x.put("drivers", drivers(r, d.date()));             // the desks behind the loss: the desk P&L's own rows, words
+                exceptions.add(x);
             }
         }
         out.put("rows", rows);

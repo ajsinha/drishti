@@ -148,6 +148,15 @@ final class VarViews {
      */
     Map<String, Object> lensNote(VarService.Scoped s) {
         VarLens l = lens(s);
+        Map<String, Object> m = lensNote(l, s.oneDay().length, l.method() == VarLens.Method.SUM ? s.vector().length : null);
+        if (l.stressed()) {
+            m.put("stressSet", stressSetNote(s.date()));
+        }
+        return m;
+    }
+
+    /** The same of a lens over {@code scenarios} 1-day scenarios ({@code windows}: the 10-day sums' count, or null); no stress set note. */
+    Map<String, Object> lensNote(VarLens l, int scenarios, Integer windows) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("horizon", l.horizon());
         m.put("method", l.methodName());
@@ -155,13 +164,10 @@ final class VarViews {
         m.put("confidence", l.confidence());
         m.put("esConfidence", l.esConfidence());
         m.put("default", l.equals(svc.props().defaultLens()));
-        m.put("scenarios", s.oneDay().length);
-        m.put("windows", l.method() == VarLens.Method.SUM ? s.vector().length : null);
-        m.put("describe", l.describe(s.oneDay().length));
+        m.put("scenarios", scenarios);
+        m.put("windows", windows);
+        m.put("describe", l.describe(scenarios));
         m.put("set", l.set());                                         // NORMAL or STRESSED (VAR_GUIDE.md section 18.8)
-        if (l.stressed()) {
-            m.put("stressSet", stressSetNote(s.date()));
-        }
         return m;
     }
 
@@ -294,6 +300,8 @@ final class VarViews {
         out.put("asOfNotice", asOfNotice(s.date()));                 // the date asked had no P&L load: said, never silent
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));
+        out.put("varExact", s.measures().var());                       // the unrounded figures (served on exact=true only: R2's side by side)
+        out.put("esExact", s.measures().es());
         out.put("k", s.measures().k());
         out.put("esCount", s.measures().esCount());
         out.put("scenarios", s.vector().length);
@@ -357,12 +365,7 @@ final class VarViews {
         Map<String, Object> hist = history(s);
         out.put("backtest", hist.get("backtest"));
         out.put("ancestors", ancestors(b, s.res().node(), s));
-        Map<String, Object> pv = provenance(s);
-        Map<String, Object> matured = VarMaturedView.of(s, svc.tradeIdsMasked(p));
-        if (matured != null) {
-            pv.put("matured", matured);
-        }
-        out.put("provenance", pv);
+        out.put("provenance", provenance(p, s));
         svc.audit(p, "var-view", s, null);
         return out;
     }
@@ -432,6 +435,16 @@ final class VarViews {
     }
 
     /** How the number was built: the members, the data, the method, the engine, the viewer's view, the time (from the result's stamp). */
+    /** A scope's provenance as the headline gives it (with its matured items): host facts, the same on both paths (a capture keeps it). */
+    Map<String, Object> provenance(Principal p, VarService.Scoped s) {
+        Map<String, Object> pv = provenance(s);
+        Map<String, Object> matured = VarMaturedView.of(s, svc.tradeIdsMasked(p));
+        if (matured != null) {
+            pv.put("matured", matured);
+        }
+        return pv;
+    }
+
     private Map<String, Object> provenance(VarService.Scoped s) {
         VarBook b = s.date().book();
         VarProperties pr = svc.props();
@@ -824,18 +837,28 @@ final class VarViews {
     }
 
     Part position(VarBook b, OrdinalSet set, int pi) {
+        return position(b, set, pi, true);
+    }
+
+    /**
+     * A position part of the scope; {@code withVector} false: its key, scope, label, size and attributes only (the vector null), the
+     * host's own data the engine path labels the engine's figures with (R2: the parts' figures come from the engine).
+     */
+    static Part position(VarBook b, OrdinalSet set, int pi, boolean withVector) {
         boolean whole = b.positionWithin(pi, set);
         double[] v;
         double qty;
         Columns pc = b.positions();
         if (whole) {
-            v = b.positionVector(pi);
+            v = withVector ? b.positionVector(pi) : null;
             qty = pc.number("QUANTITY", pi);
         } else {                                                     // part of a position: the trades of it the scope holds
-            double[] acc = new double[b.width()];
+            double[] acc = withVector ? new double[b.width()] : null;
             double[] q = {0};
             b.forEachPositionMemberIn(pi, set, o -> {
-                b.store().addInto(acc, o);
+                if (acc != null) {
+                    b.store().addInto(acc, o);
+                }
                 q[0] += nz(b.trades().number("QUANTITY", o));
             });
             v = acc;
@@ -1368,7 +1391,7 @@ final class VarViews {
         return m;
     }
 
-    private static Map<String, Object> historyRow(LocalDate d, double var, double es, double pnl, boolean exception) {
+    static Map<String, Object> historyRow(LocalDate d, double var, double es, double pnl, boolean exception) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("date", d.toString());
         m.put("var", round(var));

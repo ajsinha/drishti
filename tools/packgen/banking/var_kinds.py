@@ -114,7 +114,8 @@ CONNECTORS = {
         "settings": {"root": _OFFICIAL_ROOT, "domain": "risk-results",
                      "layout": {"var-official": {"columns": ["HIERARCHY", "NODE_ID", "NODE_NAME", "PARENT_ID", "LEVEL", "CAPTURE_ID",
                                                              "RESULT_VERSION", "VAR", "ES", "LIMIT", "LIMIT_USE", "DIVERSIFICATION", "HYPO_PNL",
-                                                             "EXCEPTIONS_250", "TRAFFIC_LIGHT", "CONFIDENCE", "ES_CONFIDENCE"]}}},
+                                                             "EXCEPTIONS_250", "TRAFFIC_LIGHT", "CONFIDENCE", "ES_CONFIDENCE",
+                                                             "BACKTEST_CONFIDENCE", "BACKTEST_VAR"]}}},
     },
     "var-positions": {"plugin": "var-positions", "enabled": "${DRISHTI_VAR_ENABLED:true}", "kinds": ["position"]},
     # the system baskets of the basket store (VAR_GUIDE.md section 5.7), served for their page (PORT <id>) and list (PORT <GO>)

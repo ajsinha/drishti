@@ -202,7 +202,20 @@ public final class VarParametric {
         int max = props.matrixMaxParts();
         boolean truncated = keys.size() > max;
         List<double[]> vs = truncated ? vectors.subList(0, max) : vectors;
-        double[][][] cm = ParametricVar.matrix(vs, props.settings(), Blas.get());
+        return matrix(keys, labels, ParametricVar.matrix(vs, props.settings(), Blas.get()), truncated, sigma, Blas.get().name());
+    }
+
+    /** The most parts a matrix shows (drishti.var.parametric.matrix-max-parts): the first ones, in the parts' order. */
+    public int matrixMaxParts() {
+        return props.matrixMaxParts();
+    }
+
+    /**
+     * The matrix block from a computed {covariance, correlation} of the first parts ({@code truncated}: more parts than shown), its
+     * {@code engine} the linear algebra that computed it: the shape of the in-tree matrix and of the engine path's ({@code scope-pmatrix}).
+     */
+    public Map<String, Object> matrix(List<String> keys, List<String> labels, double[][][] cm, boolean truncated, double sigma, String engine) {
+        int max = props.matrixMaxParts();
         double check = 0;
         for (double[] row : cm[0]) {
             for (double x : row) {
@@ -217,7 +230,7 @@ public final class VarParametric {
         m.put("truncated", truncated);
         m.put("sigmaCheck", truncated ? null : Math.sqrt(Math.max(0, check)));
         m.put("sigma", sigma);
-        m.put("engine", Blas.get().name());
+        m.put("engine", engine);
         return m;
     }
 

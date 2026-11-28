@@ -18,6 +18,7 @@ package com.ash.drishti.banking.var;
 import com.ash.drishti.api.error.DrishtiException;
 import com.ash.drishti.api.error.ErrorCode;
 import com.ash.drishti.identity.content.ContentDocs;
+import com.ash.drishti.kernel.api.security.Principal;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -43,12 +44,45 @@ final class VarReports {
     private final VarPeriodStats stats;
     private final VarBacktesting backtesting;
     private final RegulatoryProperties props;
+    /** R2: the market-risk engine's path; a run asks it when {@code var.consumers.route} is engine (null: in-tree only). */
+    private final VarEnginePath engine;
+    private final int stressWeeks;
 
-    VarReports(VarOfficialStore store, VarPeriodStats stats, VarBacktesting backtesting, RegulatoryProperties props) {
+    VarReports(VarOfficialStore store, VarPeriodStats stats, VarBacktesting backtesting, RegulatoryProperties props, VarEnginePath engine,
+            int stressWeeks) {
         this.store = store;
         this.stats = stats;
         this.backtesting = backtesting;
         this.props = props;
+        this.engine = engine;
+        this.stressWeeks = stressWeeks;
+    }
+
+    private boolean viaEngine() {
+        return engine != null && engine.consumers();
+    }
+
+    /**
+     * A node's period statistics for a run: in-tree ({@link VarPeriodStats#stats}) or, on the consumers' engine path, the engine's
+     * {@code official-statistics} through the route proven equal to in-tree ({@link VarEnginePath#statistics}, RiskSideBySideTest), its
+     * {@code path} marker left out so the run is the same document on both paths.
+     */
+    private Map<String, Object> stats(Principal who, String node, String measure, VarPeriodStats.Period p) {
+        if (!viaEngine()) {
+            return stats.stats(node, measure, p);
+        }
+        Map<String, Object> m = new LinkedHashMap<>(engine.statistics(who, node, measure, p, props.averageDays(), stressWeeks));
+        m.remove("path");
+        return m;
+    }
+
+    /** A node's backtest to a date for a run: in-tree, or the engine's backtest and backtest-days (the backtesting route's own path). */
+    private Map<String, Object> backtest(Principal who, String node, LocalDate upTo) {
+        if (!viaEngine()) {
+            return backtesting.answer(node, upTo, false);
+        }
+        return backtesting.answer(node, upTo, false, last -> engine.backtesting(who, last, backtesting, props.backtesting().confidences(),
+                props.backtesting().window()));
     }
 
     ContentDocs docs() {
@@ -120,10 +154,15 @@ final class VarReports {
     }
 
     /** Generates and freezes the next run of a report for a period. */
-    Map<String, Object> generate(String report, String periodText, String who) {
+    Map<String, Object> generate(String report, String periodText, Principal person) {
+        String who = person.user();
         VarReportDefinition d = definition(report);
         VarPeriodStats.Period p = period(d, periodText);
-        Map<String, Object> run = d.type().equals("backtesting-chart") ? chart(d, p) : table(d, p);
+        Map<String, Object> run = d.type().equals("backtesting-chart") ? chart(person, d, p) : table(person, d, p);
+        if (viaEngine()) {                                        // the consumers' family switch: said once per run
+            org.slf4j.LoggerFactory.getLogger(VarReports.class).info("regulatory VaR report {} for {}: figures from the market-risk engine "
+                    + "(var.consumers.route engine)", report, p.name());
+        }
         List<Map<String, Object>> checks = checks(d, p, run);
         run.put("checks", checks);
         run.put("checksSummary", summary(checks));
@@ -166,15 +205,15 @@ final class VarReports {
 
     // ------------------------------------------------------------------------------------------------------------- var-table
 
-    private Map<String, Object> table(VarReportDefinition d, VarPeriodStats.Period p) {
+    private Map<String, Object> table(Principal who, VarReportDefinition d, VarPeriodStats.Period p) {
         Map<String, Object> run = head(d, p);
         VarPeriodStats.Period prior = VarPeriodStats.priorYear(p, props.yearEnd());
         Map<String, Map<String, Object>> st = new LinkedHashMap<>();
         Map<String, Map<String, Object>> pr = new LinkedHashMap<>();
         for (VarReportDefinition.Row r : d.rows()) {
             if (r.node() != null) {
-                st.put(r.node(), stats.stats(r.node(), d.measure(), p));
-                pr.put(r.node(), stats.stats(r.node(), d.measure(), prior));
+                st.put(r.node(), stats(who, r.node(), d.measure(), p));
+                pr.put(r.node(), stats(who, r.node(), d.measure(), prior));
             }
         }
         String total = d.totalNode();
@@ -243,7 +282,7 @@ final class VarReports {
             rows.add(row);
         }
         run.put("rows", rows);
-        run.put("facts", facts(d, p, rows, ts));
+        run.put("facts", facts(who, d, p, rows, ts));
         run.put("footnotes", List.of("n/m: not meaningful (high and low fall on different days per row, so no diversification is computed for them).",
                 "Period statistics over " + ts.get("records") + " official records (" + p.from() + " to " + p.to() + ")"
                         + (((List<?>) ts.getOrDefault("missing", List.of())).isEmpty() ? "; none missing." : "; missing: " + ts.get("missing") + "."),
@@ -321,7 +360,7 @@ final class VarReports {
     }
 
     /** The narrative's facts, pre-filled: the person writes the text. */
-    private Map<String, Object> facts(VarReportDefinition d, VarPeriodStats.Period p, List<Map<String, Object>> rows, Map<String, Object> ts) {
+    private Map<String, Object> facts(Principal who, VarReportDefinition d, VarPeriodStats.Period p, List<Map<String, Object>> rows, Map<String, Object> ts) {
         Map<String, Object> f = new LinkedHashMap<>();
         f.put("average", ts.get("average"));
         f.put("periodEnd", ts.get("periodEnd"));
@@ -342,7 +381,7 @@ final class VarReports {
         f.put("largestMovement", driver == null ? null : Map.of("row", driver, "movement", most));
         Object pe = ts.get("periodEnd");
         if (pe instanceof Map<?, ?> m) {
-            Map<String, Object> bt = backtesting.answer(d.totalNode(), LocalDate.parse(String.valueOf(m.get("date"))), false);
+            Map<String, Object> bt = backtest(who, d.totalNode(), LocalDate.parse(String.valueOf(m.get("date"))));
             f.put("backtesting", btFacts(bt));
         }
         StringBuilder text = new StringBuilder();
@@ -395,7 +434,7 @@ final class VarReports {
     // ------------------------------------------------------------------------------------------------------------- the chart
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> chart(VarReportDefinition d, VarPeriodStats.Period p) {
+    private Map<String, Object> chart(Principal who, VarReportDefinition d, VarPeriodStats.Period p) {
         Map<String, Object> run = head(d, p);
         LocalDate newest = store.dates().isEmpty() ? null : store.dates().floor(p.to());
         if (newest == null || newest.isBefore(p.from())) {
@@ -406,7 +445,7 @@ final class VarReports {
             run.put("previewNote", p.name() + " closes " + p.to() + ": the chart runs to the newest official record, " + newest
                     + "; the run of record is made on the period end");
         }
-        Map<String, Object> bt = backtesting.answer(d.node(), newest, false);
+        Map<String, Object> bt = backtest(who, d.node(), newest);
         bt.remove("parts");
         run.put("node", d.node());
         run.put("backtest", bt);

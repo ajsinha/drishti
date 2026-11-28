@@ -51,6 +51,11 @@ final class RouterKindData implements KindData {
     }
 
     @Override
+    public Optional<java.util.NavigableSet<LocalDate>> dates(String kind) {
+        return router.heldDates(kind);
+    }
+
+    @Override
     public Optional<LocalDate> latest(String kind) {
         return router.latestDate(kind);
     }

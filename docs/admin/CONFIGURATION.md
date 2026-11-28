@@ -3015,7 +3015,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 364 |
+| [Environment variable index](#environment-variable-index) | 367 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -4088,7 +4088,9 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.module.banking.var.es-confidence` | number | `0.975` | `DRISHTI_VAR_ES_CONFIDENCE` | server (each node its own) | expected shortfall's | restart |  | everyday |
 | `drishti.module.banking.var.ten-day-method` | string | `sqrt10` | `DRISHTI_VAR_TEN_DAY_METHOD` | server (each node its own) | 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days) | restart |  | admin |
 | `drishti.module.banking.var.window` | integer | `250` | `DRISHTI_VAR_SCENARIO_WINDOW` | server (each node its own) | the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo) | restart |  | everyday |
+| `drishti.module.banking.var.reporting-currency` | string | `USD` | `DRISHTI_VAR_REPORTING_CURRENCY` | server (each node its own) | the reporting currency a request that names none is answered in (owner 2026-11-27): the book is converted to it first, then every figure computed; USD as shipped, set per installation (CAD ...) | restart |  | admin |
 | `drishti.module.banking.var.route` | string | `in-tree` | `DRISHTI_VAR_ROUTE` | server (each node its own) | R2 (docs/plans/R2\_CUT\_PLAN.md): in-tree, or engine (the VaR routes asked of Drishti Risk's market-risk engine through the host); a request may name its own (path=; the setting is not called path: a key ending in .path is a folder) | restart |  | admin |
+| `drishti.module.banking.var.consumers.route` | string | `in-tree` | `DRISHTI_VAR_CONSUMERS_ROUTE` | server (each node its own) | R2: in-tree, or engine, for what reads VaR figures inside Drishti (the role Homes now): asked of the market-risk engine through the host by output name; no per-request path | restart |  | admin |
 | `drishti.module.banking.var.rank-rule` | string | `kth-worst` |  | server (each node its own) | kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated | restart |  | admin |
 | `drishti.module.banking.var.threads` | integer | `0` | `DRISHTI_VAR_THREADS` | server (each node its own) | cores the vector sums use (0: every core) | restart |  | expert |
 | `drishti.module.banking.var.hot-dates` | integer | `10` | `DRISHTI_VAR_HOT_DATES` | server (each node its own) | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay | restart |  | admin |
@@ -4097,6 +4099,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.module.banking.var.system-baskets.seed` | boolean | `true` | `DRISHTI_VAR_SYSTEM_BASKETS_SEED`, `DRISHTI_DEMO_ENABLED` | server (each node its own) | import a loaded pack's seed (market-risk: seeds/system-baskets.yaml) once into an empty system scope at start | restart |  | admin |
 | `drishti.module.banking.exposure.limit-confidence` | number | `0.95` |  | server (each node its own) | the PFE credit limits are set on; the default q of an answer | restart |  | everyday |
 | `drishti.module.banking.exposure.rank-rule` | string | `kth` |  | server (each node its own) | kth (the ceil(P q)-th smallest exposure) or interpolated | restart |  | admin |
+| `drishti.module.banking.exposure.route` | string | `in-tree` | `DRISHTI_EXPOSURE_ROUTE` | server (each node its own) | R2 (docs/plans/R2\_CUT\_PLAN.md): in-tree, or engine (the exposure routes asked of Drishti Risk's ccr engine through the host); a request may name its own (path=; the setting is not called path: a key ending in .path is a folder) | restart |  | admin |
 | `drishti.module.banking.sensitivities.cache-minutes` | integer | `10` |  | server (each node its own) | how long a date's sensitivities stay in memory after they are read | restart |  | expert |
 | `drishti.module.banking.frtb.parameters-dir` | string | `<module:banking>/packs/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  | admin |
 | `drishti.module.banking.simm.parameters-dir` | string | `<config>/simm` | `DRISHTI_SIMM_PARAMETERS` | server (each node its own) | the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed) | restart |  | admin |
@@ -6614,6 +6617,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_EXPOSURE_OFFICIAL` | `drishti.ccr.exposure.official.enabled` (engine) | `true` | engine | capture every netting set, counterparty, group and hierarchy node when a date's run is complete |
 | `DRISHTI_EXPOSURE_OFFICIAL_FORMAT` | `drishti.ccr.exposure.official.format` (engine) | `delta` | engine | delta or iceberg; BI's exposure-results connector follows it |
 | `DRISHTI_EXPOSURE_OPEN_HEAP_MB` | `drishti.ccr.exposure.open-heap-mb` (engine) | `0` | engine | the byte safety net over the open dates' heap (0: automatic, as VaR's); over it the least recently used dates leave |
+| `DRISHTI_EXPOSURE_ROUTE` | `drishti.module.banking.exposure.route` (engine) | `in-tree` | engine | R2 (docs/plans/R2\_CUT\_PLAN.md): in-tree, or engine (the exposure routes asked of Drishti Risk's ccr engine through the host); a request may name its own (path=; the setting is not called path: a key ending in .path is a folder) |
 | `DRISHTI_EXPOSURE_TIER` | `drishti.ccr.exposure.tier` (engine) | `mapped` | engine | mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap |
 | `DRISHTI_EXPOSURE_VERSION_CHECK` | `drishti.ccr.exposure.version-check` (engine) | `30s` | engine | an open date compares its lake version this often; moved: reloaded in the background (0: off) |
 | `DRISHTI_EXTERNAL_LIB` | `external_lib` | empty | console | base of the external library folder (blank: external\_lib in the repository root); &lt;base&gt;/python is importable, &lt;base&gt;/java is the server's |
@@ -6821,6 +6825,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_US_EQUITIES_BENCHMARK` | us-equities benchmark | `SPY` | packs | The index an equity's beta is measured against |
 | `DRISHTI_US_EQUITIES_PRICES_ENABLED` | us-equities-prices enabled | `false` | packs | The us-equities pack's live prices (internal use only) |
 | `DRISHTI_VAR_CONFIDENCE` | `drishti.module.banking.var.confidence` (engine) | `0.99` | engine | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)) |
+| `DRISHTI_VAR_CONSUMERS_ROUTE` | `drishti.module.banking.var.consumers.route` (engine) | `in-tree` | engine | R2: in-tree, or engine, for what reads VaR figures inside Drishti (the role Homes now): asked of the market-risk engine through the host by output name; no per-request path |
 | `DRISHTI_VAR_CURRENCIES` | `drishti.var.currencies` (engine) | `USD,EUR,CAD,JPY,GBP` | engine | reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask |
 | `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | `drishti.var.currency-retention-dates` (engine) | `5` | engine | newest business dates whose listed currencies are built ahead and kept on disk |
 | `DRISHTI_VAR_ENABLED` | `drishti.engines.var.enabled` (engine) | `true` | engine | run the VaR engine on this node: /api/v1/var, VAR, SMAT, PLAY VAR, regulatory VaR (live) |
@@ -6844,6 +6849,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_VAR_PV_STREAM` | pv-updates enabled | `false` | packs | Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches |
 | `DRISHTI_VAR_PV_TOPIC` | pv-updates topic | `drishti.risk.pv-updates` | packs | Its topic: JSON Lines of scenario-pv or pnl-vector records per message |
 | `DRISHTI_VAR_READ_THREADS` | `drishti.var.read.threads` (engine) | `0` | engine | files (or runs of row groups) decoded at once for one load, delivered in file order (0: half the cores, at most 8; 1: on the load's own thread) |
+| `DRISHTI_VAR_REPORTING_CURRENCY` | `drishti.module.banking.var.reporting-currency` (engine) | `USD` | engine | the reporting currency a request that names none is answered in (owner 2026-11-27): the book is converted to it first, then every figure computed; USD as shipped, set per installation (CAD ...) |
 | `DRISHTI_VAR_ROOT_NAME` | `drishti.module.banking.var.root-name` (engine) | empty | engine | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy's root.name (else its title) |
 | `DRISHTI_VAR_ROUTE` | `drishti.module.banking.var.route` (engine) | `in-tree` | engine | R2 (docs/plans/R2\_CUT\_PLAN.md): in-tree, or engine (the VaR routes asked of Drishti Risk's market-risk engine through the host); a request may name its own (path=; the setting is not called path: a key ending in .path is a folder) |
 | `DRISHTI_VAR_SCENARIO_WINDOW` | `drishti.module.banking.var.window` (engine) | `250` | engine | the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo) |

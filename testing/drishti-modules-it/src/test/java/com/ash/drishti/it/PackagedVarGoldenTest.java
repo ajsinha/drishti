@@ -55,6 +55,24 @@ class PackagedVarGoldenTest {
             + "trades/murex,trades/endur";
     static final Path FOLDER = Path.of(System.getProperty("drishti.g14.dir")).toAbsolutePath();
 
+    /**
+     * The answers re-recorded for the server on packages by the owner's decision of 2026-11-27 (R2_CUT_PLAN 6.6 (2), convert first: a
+     * request in another currency sums the book converted to it, trade by trade, not the per-currency totals). The golden file is the
+     * converted book of the flat test ({@code VarGoldenMatrixTest}, heap rows) and stays as recorded; the server's converted book is built
+     * from its mapped tier's rows (float32 on disk, MC-12), so these nine EUR answers move by two units (whole units; golden before, the
+     * server's after). Every USD answer and every other EUR answer is still the golden's.
+     */
+    static final Map<String, Long> RE_RECORDED = Map.of(
+            "2026-09-28/250/EUR NODE:LEGAL~LE-NY ES", 187_143_627L,                 // golden 187,143,625
+            "2026-09-28/250/EUR NODE:LEGAL~LE-NY/DESK-CREDIT ES", 258_116_071L,     // golden 258,116,069
+            "2026-09-28/250/EUR NODE:LL~LL-0005 VaR", 166_163_954L,                 // golden 166,163,956
+            "2026-09-28/250/EUR NODE:MGMT~DESK-CREDIT ES", 258_116_071L,            // golden 258,116,069
+            "2026-09-28/250/EUR PORT:PF-CREDIT-DESK ES", 258_116_071L,              // golden 258,116,069
+            "2026-09-28/250/EUR PORT:PF-LE-NY ES", 187_143_627L,                    // golden 187,143,625
+            "2026-09-29/250/EUR NODE:LL~LL-0005 VaR", 165_676_373L,                 // golden 165,676,375
+            "2026-09-30/250/EUR NODE:LEGAL~LE-NY ES", 185_400_217L,                 // golden 185,400,215
+            "2026-09-30/250/EUR PORT:PF-LE-NY ES", 185_400_217L);                   // golden 185,400,215
+
     static PackagedServer server;
     static JsonNode golden;
 
@@ -107,8 +125,8 @@ class PackagedVarGoldenTest {
                 + "&window=" + window);
         String what = c + " " + scope;
         same(wrong, what + " members", w.get("members").asLong(), got.path("trades").asLong());
-        withinOne(wrong, what + " VaR", Math.round(w.get("var").asDouble()), got.path("var").asLong());
-        withinOne(wrong, what + " ES", Math.round(w.get("es").asDouble()), got.path("es").asLong());
+        withinOne(wrong, what + " VaR", RE_RECORDED.getOrDefault(what + " VaR", Math.round(w.get("var").asDouble())), got.path("var").asLong());
+        withinOne(wrong, what + " ES", RE_RECORDED.getOrDefault(what + " ES", Math.round(w.get("es").asDouble())), got.path("es").asLong());
         if (ccy.equals("USD") && window.equals("509")) {                      // limits are in USD, and a limit is the 509-day VaR's
             JsonNode limit = w.get("limit");
             same(wrong, what + " limit", limit == null || limit.isNull() ? null : Math.round(limit.asDouble()), got.path("limit").isNull() ? null : got.path("limit").asLong());
