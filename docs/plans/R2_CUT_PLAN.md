@@ -364,6 +364,28 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
    on the capture). `GET /compare?b=now&path=engine` reads now from the engine. A lens other than the offered one and a scope whose
    parts are positions or terms are refused in words on the engine path (captured in-tree).
 
+### Status, R2 SIMM and VaR leftovers (2026-11-28 05:4x, branch `r2/exposure-routes`; drishti-risk `r2/exposure-routes` c341cc3)
+
+R2 split by the owner (2026-11-28): this lane owns SIMM on the engine and the VaR leftovers; the remaining consumers, the zero-copy
+handover, the speed check and the R2 gate brief are lane B's (`r2/consumers-speed`).
+
+- **SIMM on the engine path** (`drishti.module.banking.simm.route`, `DRISHTI_SIMM_ROUTE`, default `in-tree`; Appendix A row): every SIMM
+  input is a lake table known by its kind and bound in `config/engines/ccr.yaml` (`sensitivity-element` = the items of
+  `position-sensitivity`'s SENSITIVITIES, `risk-factor`, `fx-spot`, `simm-parameters`). The licensed parameter files are the new kind
+  `simm-parameters` of the counterparty-risk pack (command SIMMP, contract checked, lake table `collateral.simm-parameters` declared in
+  `config/lakes/demo.yaml` and the pack's lake block in today's form: the table catalogue of `i8/catalogue` (TableCatalogue, lake-file uri
+  entries) is not in this branch yet, so the symbolic name resolves by today's lake files). Test data: the TOY file as one dated row
+  (`data/testdata/counterparty-risk/simm-parameters/simm-parameters.2026-09-30.jsonl.gz`, written by `make_sensitivity_data.py`, listed in
+  `testdata.yaml`). The in-tree path still reads its host folder (`parameters-dir`) until the default flips. drishti-risk: param
+  `simm-members` (the host's records of a scope) and outputs `simm-product`, `simm-version`; `CcrRecordedIT` green (tolerance unchanged);
+  `CcrKitIT`'s coverage finding now also names the two new outputs (the SIMM outputs had no kit case before either).
+- **Proof**: `SimmSideBySideTest`: 76 netting sets x 3 switch sets + 2 analytic scopes = **230 answers, every field equal, both tiers**.
+- **VaR leftovers done**: the override (`confidence` outside the offered lists, `es-confidence`, `window`): 1,572 answers, 3,144 raw bits
+  (mapped tier); a leaf over `max-parts` (the largest by the host's gross size, sums over all: `RiskMaxPartsSideBySideTest`, run pending
+  after the repository move); contributions of an ad-hoc scope of positions (`theContributionsOfEveryScopeKindAreTheSameOnBothPaths`, run
+  pending). **Not done**: matured items, `within` trees, captures through a lens, the parts of an expression of terms.
+- Defaults unchanged; nothing removed from in-tree; no tolerance loosened.
+
 ### Status, exposure part 3 (2026-11-27 20:4x, branch `r2/exposure-routes`; drishti-risk `r2/exposure-routes` 4f904f6)
 
 - **New on the engine path (behind `exposure.route`, default `in-tree` unchanged; Appendix A rows)**: (1) the what-if, both methods
