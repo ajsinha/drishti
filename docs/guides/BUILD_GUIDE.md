@@ -3005,7 +3005,7 @@ Preview it against another counterparty (`CP-NORTHPLAINS`): the same layout serv
 
 ## 13. Rachana-EL step by step
 
-Every `bind`, `rows`, `where` and `highlight` is a Rachana-EL expression. The step-by-step build-up (paths, `@` and `#index`, filters and projection, functions, formats and tones, conditions) is [Rachana, Writing Sutras, 13. Rachana-EL, step by step](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#13-rachana-el-step-by-step), on a small order document. In Drishti the document to try it on is the Murex swap `MX-20000001`: look at it with `curl -s -H "$AUTH" $DRISHTI/entities/trade/MX-20000001/raw | python3 -m json.tool` (its shape is in [section 6.1](#61-the-shape-of-the-document)). Every function is in [FUNCTIONS.md](FUNCTIONS.md) and the [reference](RACHANA_REFERENCE.md#functions).
+Every `bind`, `rows`, `where` and `highlight` is a Rachana-EL expression. The step-by-step build-up (paths, `@` and `#index`, filters and projection, functions, formats and tones, conditions) is [Rachana, Writing Sutras, 13. Rachana-EL, step by step](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#13-rachana-el-step-by-step), on a small order document. In Drishti the document to try it on is the Murex swap `MX-20000001`: look at it with `curl -s -H "$AUTH" $DRISHTI/entities/trade/MX-20000001/raw | python3 -m json.tool` (its shape is in [section 6.1](#61-the-shape-of-the-document)). Every function is in [FUNCTIONS.md](FUNCTIONS.md) and the [reference](RACHANA_REFERENCE.md#functions).
 
 ## 14. A trade view, built step by step
 
@@ -3224,7 +3224,7 @@ when it is not true the panel is left out, with no empty box. The shipped `endur
 
 ### 14.7 Placing panels: `layout:` and phones
 
-Without `layout:` panels flow (main column, `area: right` column, `span` and `height`); to place them yourself draw the screen as named areas, or group panels in folding sections, and give each heavy panel a phone tier: [Rachana, Writing Sutras, 9. Layout: placing panels](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#9-layout-placing-panels). `sutra lint` checks it (`DRS-2059`); the Drishti side is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections) and [section 32](#32-designing-for-phones).
+Without `layout:` panels flow (main column, `area: right` column, `span` and `height`); to place them yourself draw the screen as named areas, or group panels in folding sections, and give each heavy panel a phone tier: [Rachana, Writing Sutras, 9. Layout: placing panels](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#9-layout-placing-panels). `sutra lint` checks it (`DRS-2059`); the Drishti side is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections) and [section 32](#32-designing-for-phones).
 
 Put the blocks of 14.2 to 14.6 under one `panels:` and you have a complete trade view. The [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated)
 is the same layout with every line commented, and `modules/banking/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses,
@@ -3641,7 +3641,7 @@ You rarely need to write these by hand: the **Sutra designer** ([section 25](#25
 
 ## 21. Expandable row groups: pivot `by` lists and tree tables
 
-Two opt-in features let rows hold rows: a **pivot** with a `by` list (nested groups with subtotals) and a **tree table** (`children`); `expand` sets how many levels open first. How to write them, with an example of each: [Rachana, Panel kinds, Row groups](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#row-groups-pivot-by-lists-and-tree-tables). In Drishti, when each level is a different thing use `levels`
+Two opt-in features let rows hold rows: a **pivot** with a `by` list (nested groups with subtotals) and a **tree table** (`children`); `expand` sets how many levels open first. How to write them, with an example of each: [Rachana, Panel kinds, Row groups](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#row-groups-pivot-by-lists-and-tree-tables). In Drishti, when each level is a different thing use `levels`
 ([section 9.6](#96-drill-down-leg--cash-flow--resets), [levels](RACHANA_REFERENCE.md#levels-drill-down-level-by-level)); runnable versions: [pivot-row-groups](examples/README.md#pivot-row-groups) and [tree-table](examples/README.md#tree-table). Do not confuse the **`pivot` panel kind** with the **`pivot:` option** that gives a table a user-driven Pivot.
 
 ## 22. Dates, live data, imperfect data and controls
@@ -3693,7 +3693,7 @@ panels:
     value: MTM
 ```
 
-Declaring controls, reading `ctl.<id>` in `where`, `limit`, `rows` and `title`, the value of each kind and `on-select` (a click on a bar or row sets a control): [Rachana, Writing Sutras, 10. Controls](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#10-controls-letting-the-reader-choose). A reference to a control the Sutra does not declare is `DRS-2036`; a default that does not fit the kind is `DRS-2039`.
+Declaring controls, reading `ctl.<id>` in `where`, `limit`, `rows` and `title`, the value of each kind and `on-select` (a click on a bar or row sets a control): [Rachana, Writing Sutras, 10. Controls](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#10-controls-letting-the-reader-choose). A reference to a control the Sutra does not declare is `DRS-2036`; a default that does not fit the kind is `DRS-2039`.
 
 **Try it.** Open `NSET NS-MERIDIAN-RE-NY <GO>`: the table reads *Member trades (343 of 343)* with a net of `+99,704,064`; choose *Asset class Rates* and set
 the slider to 250m, and the title gains `· Rates`. From the command line, with the values in the address:
@@ -4096,7 +4096,7 @@ masked is not offered, and a carried value that is masked makes the hint say *Hi
 
 ### 28.5 The expressions
 
-Rules and hints use a small expression language, the same in the browser and on the server: [Rachana, Writing Sutras, 11. Forms, the rule language](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#11-forms-letting-people-edit-records). A rule that reads a lookup's carried value is checked in the browser only; the server checks it again when it writes.
+Rules and hints use a small expression language, the same in the browser and on the server: [Rachana, Writing Sutras, 11. Forms, the rule language](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#11-forms-letting-people-edit-records). A rule that reads a lookup's carried value is checked in the browser only; the server checks it again when it writes.
 
 ### 28.6 Checking a form
 
@@ -4995,7 +4995,7 @@ On a phone a page does not get every panel. Each panel has a **phone tier**, set
 
 ### 32.1 Phone tiers: must, glance, more, desk
 
-The four tiers (`must`, `glance`, `more`, `desk`), the compact options and the kind defaults: [Rachana, Writing Sutras, Phone tiers](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#phone-tiers).
+The four tiers (`must`, `glance`, `more`, `desk`), the compact options and the kind defaults: [Rachana, Writing Sutras, Phone tiers](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#phone-tiers).
 
 - A page always has a **must** panel: with none configured, its first panel is must.
 - A **tablet** (640 to 1000 px) keeps the page's layout less the desk panels, which wait under *More on this page*. A **desktop** is unchanged, and *Show

@@ -44,8 +44,8 @@ front (section 8). For sign-in, edits and approvals use the [Rachana server](IN_
 | Python | 3.13 recommended; the package accepts 3.10 or later |
 | Flask 3 or later, or FastAPI 0.110 or later with uvicorn | extras `flask`, `fastapi` of the package; uvicorn you install yourself |
 | the `drishti_rachana` package | **not on a public index**: install it from a checkout (below) or from a wheel you built |
-| the runtime bundle `rachana.runtime.js` | the browser needs it to compile the Sutra. It is **built, not committed** (git-ignored): see "Build the runtime bundle" |
-| Java | **not needed to run your app.** JDK 21 (and Node 20 for the checks) is needed once, to build the runtime bundle with `tools/js/build_js.py`; a wheel that carries the bundle needs no Java. The Java compiler and server are only for the [Rachana server](IN_YOUR_APP.md#the-rachana-server) |
+| the runtime bundle `rachana.runtime.js` | the browser needs it to compile the Sutra. It is **committed** in `python/src/drishti_rachana/bundle/` (with `rachana.tools.js` for the `rachana` command), so a zip of the platform needs no build: see "Rebuild the runtime bundle" |
+| Java | **not needed to run your app.** JDK 21 (and Node 20 for the checks) is needed only to rebuild the runtime bundle with `tools/js/build_js.py`. The Java compiler and server are only for the [Rachana server](IN_YOUR_APP.md#the-rachana-server) |
 | Node | not needed to run your app |
 
 Optional extras of the package: `arrow` (Arrow IPC rows), `polars`, `v8` (compile and lint in Python: `python -m drishti_rachana lint`; it
@@ -59,7 +59,8 @@ Rachana never makes a virtual environment or installs anything for you: use the 
 python3 -m pip install -e 'python[flask,fastapi]' uvicorn
 ```
 
-On Windows use `py -3.13 -m pip install -e "python[flask,fastapi]" uvicorn`.
+On Windows use `py -3.13 -m pip install -e "python[flask,fastapi]" uvicorn`. (For the `live-orders` example,
+`pip install -r examples/live-orders/requirements.txt` does the same.)
 
 An editable install reads the assets from the checkout's `js/` folder. For a wheel (a deployment that is not a checkout): build the
 bundle first, then `python -m build python/`; the wheel then carries the element, Elements 3.3.1, Arrow JS and the bundle as package
@@ -67,15 +68,16 @@ data (`pyproject.toml`: `force-include`). *The wheel build was not run for this 
 
 You can also run without installing: `PYTHONPATH=python/src python -m uvicorn ...` (this is what the checked-in IDE launchers do).
 
-#### Build the runtime bundle
+#### Rebuild the runtime bundle
+
+The bundle is committed, so there is nothing to build to run an app. Rebuild it only after a change to the Java core:
 
 ```bash
-python3 tools/js/build_js.py            # JDK 21 and Node 20; writes js/packages/rachana/dist/ and the package's bundle/ folder
+python3 tools/js/build_js.py            # JDK 21 and Node 20; writes js/packages/rachana/dist/ and the package's bundle/ folder (commit the result)
 ```
 
-Without it, everything below works except the painted page: `/dash/static/rachana/rachana.runtime.js` answers 404 and the board stays
-empty. (In the run for this guide the data, Sutra, Elements and change routes were checked with `curl`; the bundle was not built, so the
-painted page was not looked at in a browser. The painting check is `examples/live-orders/paint_check.py`, section 9.)
+If `rachana.runtime.js` is missing from your copy, the page says so (instead of staying blank) and the console shows a 404 for
+`/dash/static/rachana/rachana.runtime.js`: restore the file (unzip again, or `git checkout python/src/drishti_rachana/bundle`).
 
 ### 4. A minimal FastAPI app, step by step
 
@@ -223,7 +225,7 @@ an update row may carry only the changed columns (the example's updates carry `o
 | Make it | `rachana build` (Node CLI) | this guide | [Server](IN_YOUR_APP.md#the-rachana-server) |
 
 Static mode: `cd examples/static-sales && rachana build` writes `site/` (one page per Sutra; the page answers the Data Protocol itself from
-the table files). Details in [static-sales](../examples/README.md#static-sales) and
+the table files). Details in [static-sales](../examples/static-sales/README.md) and
 [Command line and SDKs](IN_YOUR_APP.md#command-line-and-sdks). The static CLI and the server were **not** run for this guide. Both need the compiler bundles
 (and the server a JDK 21 and its jar).
 
@@ -240,30 +242,15 @@ them. Do not bind a data-bearing app to a public address without it.
 ### 9. Run the `live-orders` example (both ways)
 
 `examples/live-orders` is the same board in both frameworks: `orders_seed.csv` (40 synthetic orders), `gen_orders.py` (the data source:
-`OrderBook`, standard library only), `orders.sutra.yaml`, `flask_app.py`, `fastapi_app.py`. From the repository root, with the environment
-of section 3 and the bundle of section 3 built:
-
-```bash
-cd examples/live-orders
-python3 flask_app.py                     # Flask:   http://127.0.0.1:5000/dash/
-python3 -m uvicorn fastapi_app:app                 # FastAPI: http://127.0.0.1:8000/dash/   (add --port <n> if 8000 is taken)
-```
-
-Run here: both commands started with an editable install in a throwaway environment, `/dash/` answered 200 on both, the
-assets answered 200, and `/dash/data/changes?table=orders` streamed `rdp.orders` messages (`add`, `update`, `remove`). Without the
-install, set `PYTHONPATH=<repo>/python/src` and use `python -m uvicorn`.
+`OrderBook`, standard library only), `orders.sutra.yaml`, `flask_app.py`, `fastapi_app.py`. The install, the exact commands for
+Windows and Linux, what you should see, how to stop and the troubleshooting are in its README:
+[examples/live-orders/README.md](../examples/live-orders/README.md).
 
 **The IDE launchers.** In PyCharm (open the repository root, choose a Python interpreter that has the extras): the run
-configurations **Rachana: run live-orders (FastAPI)** and **Rachana: run live-orders (Flask)**, in the group **PyCharm-rachana-run**
-(files `run-configs/Rachana run live-orders (FastAPI).run.xml` and `... (Flask).run.xml`). They set `PYTHONPATH` to `python/src`,
-the working directory to `examples/live-orders`, and run `uvicorn fastapi_app:app --port 8000` or the Flask script; open
-`http://127.0.0.1:8000/dash/` (FastAPI) or `http://127.0.0.1:5000/dash/` (Flask). The interpreter needs `fastapi` and `uvicorn`, or
-`flask`.
+configurations **Rachana: run live-orders (FastAPI)** and **Rachana: run live-orders (Flask)**, in the group **PyCharm-rachana-run**.
+They set `PYTHONPATH` to `python/src` and the working directory to `examples/live-orders`.
 
-**What you should see** (from `orders.sutra.yaml` and the example's own painting check): open `/dash/` and choose **orders**. Four tiles
-(Open orders, Open value, Shipped, Rejected), a bar chart of order value by status, and a grid of the order book. Every quarter second
-or so a status changes, an order arrives or a finished one leaves, and the tiles, bars and grid change in place with no reload. The
-orders and statuses are fictional. The same table over the command line:
+The same table over the command line (from a running app):
 
 ```text
 $ curl -s http://127.0.0.1:8000/dash/data/tables
@@ -274,15 +261,13 @@ event: msg
 data: {"t": "msg", "topic": "rdp.orders", ..., "seq": 1, "data": {"table": "orders", "update": [{"order_id": "O-1013", "status": "Shipped"}]}}
 ```
 
-The epoch (`008b`) differs on each start. Stop with Ctrl+C (or, from another terminal, by the process id). To check that the board paints in Chromium,
-changes while open and logs no console error: `python3 examples/live-orders/paint_check.py` (flask and playwright installed in your Python)
-(needs the runtime bundle; *not run for this guide*).
+The epoch (`008b`) differs on each start.
 
 ### 10. Troubleshooting
 
 | You see | Cause and fix |
 |---|---|
-| the page is blank; the browser console shows 404 for `rachana.runtime.js` | the runtime bundle is not built: `python3 tools/js/build_js.py` (JDK 21), then restart; a wheel must be built after it |
+| the page says the runtime bundle is missing, or is blank with a 404 for `rachana.runtime.js` | `python/src/drishti_rachana/bundle/rachana.runtime.js` is missing from your copy: unzip again or `git checkout` it; to rebuild: `python3 tools/js/build_js.py` (JDK 21) |
 | `ModuleNotFoundError: drishti_rachana` | not installed in this interpreter: `pip install -e 'python[flask,fastapi]'` from the repository root, or set `PYTHONPATH` to `python/src` |
 | `ModuleNotFoundError: flask` or `fastapi` | the extra is missing: install it (`flask`, `fastapi` and `uvicorn`) into the interpreter the launcher uses |
 | `/dash/` lists no Sutra | `sutras=` points at a folder without `*.sutra.yaml` files below it, or the file name does not end in `.sutra.yaml`; the page name is the file name without the suffix |
@@ -292,7 +277,7 @@ changes while open and logs no console error: `python3 examples/live-orders/pain
 | behind a reverse proxy the changes arrive in bursts | disable response buffering for the `/data/changes` path (a general proxy setting) |
 | a sum shows 0 or the wrong figure | the function returned numbers as text; convert them (the CSV reader gives strings, as `read()` above does) |
 | `406` on a rows request for Arrow | `pyarrow` is not installed, or the table does not declare `arrow` in its schema |
-| port already in use | pick another with `--port` (uvicorn), `app.run(port=...)` (Flask) |
+| port already in use | pick another with `--port` (uvicorn), `app.run(port=...)` (Flask; `live-orders`: `python flask_app.py 5001`) |
 | a Sutra problem you cannot read | `python -m drishti_rachana lint <folder>` (extra `v8`) or `rachana lint`; the problem codes are in [Language](WRITING_SUTRAS.md#the-rachana-language-level-12) |
 
 ## The Rachana server
@@ -315,7 +300,7 @@ valid). `serve --port 0` takes any free port. The same commands from Node: `rach
 `--jar` or `RACHANA_SERVER_JAR`. In the IDE: the launchers **Rachana server serve (server-demo)**, **check** and **hash-password**
 ([DEVELOPING.md](DEVELOPING.md#build-and-run-in-the-ide)).
 
-The example [examples/server-demo](../examples/README.md#server-demo) serves on `http://127.0.0.1:8090/` (user `dev`, password
+The example [examples/server-demo](../examples/server-demo/README.md) serves on `http://127.0.0.1:8090/` (user `dev`, password
 `dev-only-pass`, development only).
 
 ### 2. The configuration file
@@ -679,7 +664,7 @@ r.check(open("examples/static-sales/overview.sutra.yaml").read())    # {'ok': Tr
 r.evaluate("$.a * 2", record={"a": 21})                              # {'value': 42, 'type': 'number', 'text': '42', 'reads': ['$.a']}
 ```
 
-A whole live app in about thirty lines: [examples/live-orders](../examples/README.md#live-orders) (Flask and FastAPI), walked through
+A whole live app in about thirty lines: [examples/live-orders](../examples/live-orders/README.md) (Flask and FastAPI), walked through
 in the tutorial [A live board in Flask](TUTORIAL.md#part-4-a-live-board-in-flask).
 
 ### Java

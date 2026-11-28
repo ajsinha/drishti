@@ -121,15 +121,15 @@ by sending 300 bytes); `rachana describe` (an outline under 2 KB: ids, kinds, wh
 data, args, controls and state, expect id-addressed paths or a snapshot) and painted snapshots; a rule engine for moving a file between
 levels with `--check` for a build; `status: draft | active | deprecated`, `replaces:` and `rachana diff a b` in words for release notes.
 
-## 3. The generic Rachana MCP server and the evaluation harness
+## 3. The MCP tools and the evaluation harness
 
 Generative UI is built on Rachana, not inside it: the language has no AI key and the compiler calls no model. The GenUI kit ships with
 Rachana 1.1.0, not in this release line; this is what it still has to deliver beyond the first tools.
 
-- A **generic MCP server** (`rachana mcp`, the `drishti-rachana-mcp` package, currently a placeholder) over stdio and streamable HTTP:
-  tools `data_to_table`, `sutra_examples`, `validate_sutra`, `render_dashboard`, plus `describe_table` and `update_dashboard`, resources
-  for the prompt kit and an MCP prompt carrying the system block. A per-session table store; a local loopback page or a self-contained
-  HTML file as the render.
+- The kit's **MCP tools ship only as a sajhamcpserver plugin** (`tools/sajha/`: `search_fragments`, `get_fragment`, `check_sutra`,
+  `publish_ui`; owner decision, 2026-11-28). There is no standalone Rachana MCP server and no `drishti-rachana-mcp` package: the
+  governed tool catalogue is the one host, and what is still to build (`describe_table`, `update_dashboard`, resources for the prompt kit,
+  an MCP prompt carrying the system block) is added to that plugin.
 - A **prompt kit** generated from the specification so it can never describe a language the compiler does not accept: a grammar card
   (about 1,500 tokens), one card per panel kind, a function list, reviewed examples by intent (each one a conformance case), a system
   block, a fix guide and the JSON Schema for structured output; every snippet in every card is compiled by a test.

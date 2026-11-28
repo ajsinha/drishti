@@ -17,7 +17,7 @@ static site that any web server can serve. About 20 minutes. Guides behind each 
 | Node 20 or later | `node --version` |
 | Python 3 | `python3 --version` |
 
-From the repository root, build the bundles once (a few minutes; they land in `js/packages/rachana/dist/`):
+The bundles are committed (`python/src/drishti_rachana/bundle/`), and the `rachana` command uses them when `dist/` is not built, so this step is optional: build them from the repository root (a few minutes; they land in `js/packages/rachana/dist/`) after a change to the Java core:
 
 ```bash
 python3 tools/js/build_js.py
@@ -155,7 +155,7 @@ Open `http://127.0.0.1:8000/overview.html`. The `site/` folder holds `overview.h
 
 - Serve the same screens with sign-in, databases and live updates: [Edit a live table with approvals](TUTORIAL.md#part-3-edit-a-live-table-with-approvals).
 - Package your own fragments: [Build and use a library](TUTORIAL.md#part-2-build-and-use-a-library).
-- The finished three-page example with every kind of `data:` entry: [examples/static-sales](../examples/README.md#static-sales).
+- The finished three-page example with every kind of `data:` entry: [examples/static-sales](../examples/static-sales/README.md).
 
 ## Part 2: build and use a library
 
@@ -572,12 +572,13 @@ arrive, with no front-end code. The same app under FastAPI is beside it. Guides:
 
 ### Prepare your environment (part 4)
 
-Python 3.10 or later, JDK 21 and Node 20 (only to build the bundle once). From the repository root:
+Python 3.10 or later (3.13 recommended); no Java and no Node (the runtime bundle is committed). From the repository root, into the Python you choose:
 
 ```bash
-python3 tools/js/build_js.py                     # the compiler bundle, also copied into the Python package
-pip install -e 'python[v8,flask]'                # add fastapi for the FastAPI app
+pip install -r examples/live-orders/requirements.txt     # the package, Flask, FastAPI, uvicorn; Windows: py -3.13 -m pip ...
 ```
+
+The run steps for Windows and Linux, and the troubleshooting, are in [examples/live-orders/README.md](../examples/live-orders/README.md).
 
 In PyCharm: open the folder
 `python/` and use the checked-in run configurations (`run-configs/`, the `Rachana: run live-orders` launchers).
@@ -635,7 +636,7 @@ app.register_blueprint(rachana, url_prefix="/dash")
 ### Step 3: run it
 
 ```bash
-cd examples/live-orders && python flask_app.py
+cd examples/live-orders && python flask_app.py          # Windows: cd examples\live-orders, then py -3.13 flask_app.py
 ```
 
 **In the UI:** open `http://127.0.0.1:5000/dash/`, then **orders**: orders arrive, statuses move, and the tiles and grid change
@@ -659,8 +660,7 @@ The epoch differs on each start. Stop with Ctrl+C.
 ### Step 4: the same under FastAPI
 
 ```bash
-pip install -e 'python[fastapi]'
-cd examples/live-orders && uvicorn fastapi_app:app
+cd examples/live-orders && python -m uvicorn fastapi_app:app
 ```
 
 `RachanaRouter` takes the same `@table` and `@live` decorators; open `http://127.0.0.1:8000/dash/`.

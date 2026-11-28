@@ -18,7 +18,7 @@
 products:
   rachana:
     repo: drishti-rachana
-    tag: v1.0.1-ide4
+    tag: v1.1.1
     files: [docs/WRITING_SUTRAS.md, docs/PANEL_KINDS.md, docs/IN_YOUR_APP.md, docs/TUTORIAL.md, docs/ROADMAP.md, spec/1/SPEC.md]
   elements:
     repo: drishti-elements

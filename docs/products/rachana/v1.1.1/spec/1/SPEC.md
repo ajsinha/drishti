@@ -81,7 +81,7 @@ panels:
 | `version` | today yes | integer 1..2³¹−1 | `1` (1.1) | `name@version` identifies a Sutra | optional: planned (D11) |
 | `profiles` | | list of text | `[core]` | profiles the file needs; the checker verifies the claim (`RCH-2061`, `RCH-2062`) | planned |
 | `description`, `notes` | | text | | prose for people; never used to build the view (`RCH-2012` if not text) | today |
-| `doc` | | mapping | | docstring: `summary`, `params`, `emits`, `examples`, `since` (`RCH-2055`) | today |
+| `doc` | | mapping | | the doc block (2.9): `summary`, `description`, `category`, `tags`, `use-when`, `avoid-when`, `data`, `example`, `see-also`, `keywords` (`RCH-2055` missing, `RCH-2093` thin) | today; GenUI fields 2026-11-22 |
 | `title` | | mapping `{pill?, id, with?}`; text (1.1) | the name | heading (Translation 2.2) | text form planned (D11) |
 | `strip` | | list (≤ 8) of `{label?, bind, fmt?, tone?, emphasis?}` | `[]` | headline figures | today |
 | `controls` | | list (≤ 12) | `[]` | what the reader sets; read as `ctl.<id>` | today |
@@ -426,7 +426,53 @@ number's sign, none for 0, empty or non-numbers), `status` (→ `bad` for text c
    control fires `change` only (any other trigger `RCH-2023`). Carried as `ControlView.on` (contract 1.2); a host runs
    them with `ScreenWire.change`. Below level 1.2 `on` in a control is `RCH-2011`.
 
-### 2.9 Function keys, control kinds and format files [reference tables]
+### 2.9 The doc block [GenUI fields 2026-11-22]
+
+Every Sutra, fragment and block carries a `doc:` block: **data the compiler checks**, not a comment. People, component browsers, the
+generated library pages, the GenUI catalogue and AI agents read it, and nothing else describes a fragment: a catalogue built from
+anything else (comments, READMEs) is not conforming. Its JSON Schema is `$defs/doc` of [sutra.schema.json](sutra.schema.json); a
+parameter, a slot, a column, an event and a panel take `$defs/docOf`: one line, or a whole doc block whose `summary` is its line.
+
+```yaml
+doc:
+  summary: One limit - the amount used against it, with a warning band and, when given, the recent history.
+  description: >-
+    Give the amount used and the limit. The gauge shows the share used and a word says within the limit, near it or over it.
+  category: limits
+  tags: [limit, utilisation, gauge]
+  use-when:
+    - "One limit deserves its own panel: amount used against the limit, with recent history."
+  avoid-when:
+    - "Many limits at once: use finance/limit-table."
+  data:
+    table: history
+    in-words: "Two numbers (used and limit) and optionally one row per day of history: date and amount used."
+    sample-row: { date: "2026-11-20", used: 1850000 }
+  example: { use: finance/limit-gauge@1, with: { used: "$.lim.USED_USD", limit: "$.lim.LIMIT_USD" } }
+  see-also: [finance/limit-table, finance/limit-band]
+  keywords: [limit, utilisation, gauge, headroom, breach]
+```
+
+| Key | Type | Fragment, block | Sutra | Rule |
+|---|---|---|---|---|
+| `summary` | text | required | required | one line, four words or more, at most 120 characters |
+| `description` | text | required | required | what it shows and how, 40 characters or more |
+| `category` | text | required | required | the group it is listed under (a category of its library) |
+| `tags` | list of text | | | the library index's words |
+| `use-when` | list of text | required | required | sentences of four words or more: when it is the right choice |
+| `avoid-when` | list of text | required | required | sentences: when not, each naming what to use instead |
+| `data` | `{table?, in-words, sample-row}` | required | when written | the rows in words (one row per what, which columns); one **synthetic** sample row in the fragment's own column names, with every required column of the parameter `table` names |
+| `example` | `{use, with}` | required | when written | a minimal use of it: every required parameter, declared parameters only |
+| `see-also` | list of `library/name[@major]` | required (one or more) | when written | related fragments |
+| `keywords` | list of text | three or more | three or more | what a user would type to find it |
+| `intents`, `params`, `emits`, `expects`, `examples`, `since`, `uses` | | | | the earlier docstring keys (`RCH-2055`), still read |
+
+Any other key is a problem. **`RCH-2093`** reports a missing or thin block field by field, each problem placed at its node with
+its JSON Pointer (`/doc/use-when/0`). It is not part of a compile (a compile's warnings are recorded by the conformance cases): a
+host runs it where docs matter, a library's quality gate (LIBRARIES 15.2, LG3) fails on any of its problems, and the GenUI kit's
+catalogue reports them. Sample rows are synthetic: a doc block never carries real data.
+
+### 2.10 Function keys, control kinds and format files [reference tables]
 
 These tables restate, for authors, rules the implementation applies; where one differs from a section above, the section above rules.
 
@@ -1191,7 +1237,7 @@ Core keeps the reference's numbers with the prefix `RCH-` (decision D8; Drishti 
 | `RCH-2048`..`2059` | reuse, docstring, wiring, forms, layout | `2048` fragment not found, `2055` docstring, `2056` children depth, `2057` event or source read, `2058` form, `2059` layout |
 | `RCH-2060`..`2069` | profiles | `2060` key, kind or function of a profile not loaded, `2061` profile claimed but unused, `2062` unknown profile |
 | `RCH-2070`..`2079` | data | `2070` unknown table, `2071` unknown column (`expected`), `2072` key missing for a live table, `2073` source shape, a data name that is not a field name, or a name clash, `2074` not push-down-able over a server table |
-| `RCH-2090`..`2099` | deprecation, style (warnings) | `2090` deprecated spelling, `2091` a sign before a `**` power without parentheses (level 1.1, checked mode: `-x ** n` is `-(x ** n)`; EL1-2; `-x ^ n` does not compile), `2092` a declared name a later level reserves (the local one wins; 2.7) |
+| `RCH-2090`..`2099` | deprecation, style (warnings) | `2090` deprecated spelling, `2091` a sign before a `**` power without parentheses (level 1.1, checked mode: `-x ** n` is `-(x ** n)`; EL1-2; `-x ^ n` does not compile), `2092` a declared name a later level reserves (the local one wins; 2.7), `2093` a doc block missing or too thin (2.9; an error in a library's gate) |
 | `RCH-2110`..`2119` | libraries and typed fragments (since 1.2) | `2110` library not found, `2111` not in the lock or another major, `2112` invalid library, `2113` integrity, `2114` unknown parameter or slot, `2115` required parameter missing, `2116` wrong type or constraint, `2117` reads outside its scope, `2118` slot content; `2119` reserved (a library needs a profile or level the host lacks); `2120` advisory (warning): a column mapping the fragment never reads (L-21) |
 | `RCH-2080`..`2089` | live table declarations (`<name>.live.yaml`) | `2080` `edit` needs a key and a `version` column, `2081` a column that cannot be edited (the key, the version, `changed-by`, `changed-at`) or an edit field that binds none, `2082` a heavy column where a list needs it (key, order, grouping, narrowing), `2083` retention; `2084`..`2089` reserved |
 | `RCH-2101`, `2102` | expressions | `2101` does not compile (syntax, unknown function, arity, literal check, limits); `2102` evaluation error |

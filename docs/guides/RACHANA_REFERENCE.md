@@ -621,6 +621,13 @@ another major than it pins, or bytes other than the pinned hash are refused. Ref
 | `DRS-2112` | the library is not valid (a file type it may not carry, a bad manifest or fragment) |
 | `DRS-2113` | the library's bytes are not the pinned ones, or two folders hold the same library with different contents |
 
+**Panel keys on the core fragments (core 1.1.0).** `core/data-table` takes the optional parameters `key` (a function key), `code` (the
+mnemonic tag at the right of the header), `empty` (the words for no rows), `when`, `span` and `where` (a row condition written as a
+lambda: `where: "lambda r: r.AMT_USD > 0"`); `core/record-card` takes `title`, `key`, `code`, `when` and `span` and needs no name in its
+record, so with a `title` it is the plain record view of a `kv` panel; `core/tabbed-views` is a `tabs` panel over a list (`each`, a
+`tab-title` lambda, `layout`, and the panels every tab holds in its `body` slot, `@` being the tab's record). A key a use leaves out is
+left out of the panel. A use also carries `source:` and `waits:` itself, on every panel it brings.
+
 The workbench palette lists each library fragment as `core/record-card@1` with the summary of its `doc:` (`GET /api/v1/ui-kit`,
 `libraryFragments`; `GET /api/v1/sutras/library` lists them beside the kit's).
 
@@ -779,15 +786,15 @@ An entry of `panels:` may also be `{ use: <block>[@<version>], with: { <param>: 
 ### Layout: the grid, areas, split, tabs, sections
 
 The layout grid (`areas`, `columns`, `split`, `tabs`, `sections`, `sticky`, `user-can-arrange`, `phone`, `tablet`), what each key means and what is checked
-(`DRS-2059` here, `RCH-2059` in Rachana): [Rachana, Writing Sutras, 9. Layout: placing panels](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#9-layout-placing-panels) and, for the phone tiers,
-[Phone tiers](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#phone-tiers). What a reader changes (the split, what is folded, panel moves and widths) is kept by the server per reader and
+(`DRS-2059` here, `RCH-2059` in Rachana): [Rachana, Writing Sutras, 9. Layout: placing panels](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#9-layout-placing-panels) and, for the phone tiers,
+[Phone tiers](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#phone-tiers). What a reader changes (the split, what is folded, panel moves and widths) is kept by the server per reader and
 Sutra (`/api/v1/me/arrange/<sutra>`) and never written into the Sutra; *Reset layout* forgets it. A screen with `layout:` does not offer layout
 mode (Alt+L): the grid replaces it. The design and the build of the grid are in
 [Sutra Next: fragments, events, children, sources, layout and forms](#sutra-next-fragments-events-children-sources-layout-and-forms), its section 13.
 
 ### Keys every panel takes
 
-What `id`, `kind`, `title`, `code`, `order`, `section`, `collapsible`, `span`, `height`, `body`, `panels` and `description` mean, with their checks: the specification, [SPEC 2.3, "What the common panel keys mean"](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/SPEC.md#23-panels). Drishti adds and explains the keys below.
+What `id`, `kind`, `title`, `code`, `order`, `section`, `collapsible`, `span`, `height`, `body`, `panels` and `description` mean, with their checks: the specification, [SPEC 2.3, "What the common panel keys mean"](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/SPEC.md#23-panels). Drishti adds and explains the keys below.
 
 | Key | Required | Default | Meaning |
 |---|---|---|---|
@@ -855,7 +862,7 @@ new kind: [Panels: the twenty-two kinds, and developing a new one](#panels-the-t
 | [`metric`](#metric) | `value` | `label`, `fmt`, `tone`, `delta`, `deltaFmt`, `deltaTone`, `unit`, `caption` | a big-number KPI tile with its change | no |
 | [`map`](#map) | | `highlight`, `region`, `link`, `shade`, `fmt`, `unit` | the world with a country highlighted, shaded and clickable; or one country's regions | no |
 
-Which option values are expressions, field names or plain values, kind by kind: [Rachana, Panel kinds](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#expressions-field-names-and-plain-values).
+Which option values are expressions, field names or plain values, kind by kind: [Rachana, Panel kinds](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#expressions-field-names-and-plain-values).
 
 **Field names.** On `line`, `area` and `hbar` a field name is matched exactly as the document writes it: `x: TENOR`, `label: ID`,
 `value: NET_MTM`; `id` does not find `ID`, and an `@` expression there finds nothing (no error, no points). The defaults (`tenor`,
@@ -877,7 +884,7 @@ Labelled values, one per field: the terms of a trade, an identifier block, any o
 
 ![A kv panel](img/panels/kind-kv.jpg)
 
-- **Use it when, not when, key options and every option of `kv`:** [Rachana, Panel kinds, `kv`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#kv).
+- **Use it when, not when, key options and every option of `kv`:** [Rachana, Panel kinds, `kv`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#kv).
 - **Empty when** every cell is blank or a dash.
 - **Masked:** the cell reads `•••` with no tone and no link.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -914,7 +921,7 @@ A `kv` panel when it is empty, error, masked, phone, dark:
 
 **The keys of `kv`.**
 
-Every option of `kv` and what it means is in [Rachana, Panel kinds, `kv`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#kv); what Drishti adds or does differently:
+Every option of `kv` and what it means is in [Rachana, Panel kinds, `kv`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#kv); what Drishti adds or does differently:
 
 Without `columns` but with `rows`, inference lists every scalar field of the object (up to 16), labelled in words, and a nested object
 that has a `name` shows that name. Without either, the panel is empty.
@@ -945,7 +952,7 @@ A list of similar rows. The server formats each cell; a total row adds the `tota
 
 ![A table panel](img/panels/kind-table.jpg)
 
-- **Use it when, not when, key options and every option of `table`:** [Rachana, Panel kinds, `table`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#table).
+- **Use it when, not when, key options and every option of `table`:** [Rachana, Panel kinds, `table`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#table).
 - **Empty when** there are no rows (and an object in `rows` is one row, a text is none).
 - **Masked:** a masked cell reads `•••`; a column with a masked value is never added up, its total reads `•••`.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -984,7 +991,7 @@ A `table` panel when it is empty, error, masked, phone, dark:
 
 **The keys of `table`.**
 
-Every option of `table` and what it means is in [Rachana, Panel kinds, `table`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#table); what Drishti adds or does differently:
+Every option of `table` and what it means is in [Rachana, Panel kinds, `table`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#table); what Drishti adds or does differently:
 
 | Option | Required | Default | Meaning |
 |---|---|---|---|
@@ -1092,7 +1099,7 @@ One tab for each element of a list, whatever the count: the fields of a body pan
 
 ![A tabs panel](img/panels/kind-tabs.jpg)
 
-- **Use it when, not when, key options and every option of `tabs`:** [Rachana, Panel kinds, `tabs`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#tabs).
+- **Use it when, not when, key options and every option of `tabs`:** [Rachana, Panel kinds, `tabs`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#tabs).
 - **Empty when** there are no elements, or every tab is blank (no field with a value and no panel with data).
 - **Masked:** a masked cell in a tab, or in a panel inside it, reads `•••`.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1148,7 +1155,7 @@ A deep trade: a tab per leg, each with the leg's terms and its cashflows as a tr
 
 **The keys of `tabs`.**
 
-Every option of `tabs` and what it means is in [Rachana, Panel kinds, `tabs`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#tabs); what Drishti adds or does differently:
+Every option of `tabs` and what it means is in [Rachana, Panel kinds, `tabs`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#tabs); what Drishti adds or does differently:
 
 | Option | Required | Default | Meaning |
 |---|---|---|---|
@@ -1319,7 +1326,7 @@ Points along an axis: a curve by tenor, P&L by date. With `source` the points ar
 
 ![A line panel](img/panels/kind-line.jpg)
 
-- **Use it when, not when, key options and every option of `line`:** [Rachana, Panel kinds, `line`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#line).
+- **Use it when, not when, key options and every option of `line`:** [Rachana, Panel kinds, `line`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#line).
 - **Inside a tab:** a line (or area, or timeline) may sit in a tab and read the tab's element with `@`: each leg of a deal, side by side with `layout: columns`, draws its own notional profile (`rows: "@.CASH_FLOWS"`, `x: START_DATE`, `y: NOTIONAL`, `step: true`) and fixings (`rows: "flatten(@.CASH_FLOWS[*].RESETS)"`). Every option and its values: [reference](#line).
 - **Empty when** there are no x values, or no finite number.
 - **Masked:** a masked number is not drawn: a line over a masked measure comes out empty.
@@ -1344,7 +1351,7 @@ A `line` panel when it is empty, error, phone:
 
 **The keys of `line`.**
 
-Every option of `line` and what it means is in [Rachana, Panel kinds, `line`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#line); what Drishti adds or does differently:
+Every option of `line` and what it means is in [Rachana, Panel kinds, `line`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#line); what Drishti adds or does differently:
 
 With a `source`, the linked entity is fetched (same sources, same business date) and `rows` is evaluated against **its** document. The
 series is named after the panel title. When `source` names an entity that has not arrived within the link budget, the panel shows *No
@@ -1377,7 +1384,7 @@ Several bands over one axis against a limit: an exposure profile (EE, PFE 95) un
 
 ![A area panel](img/panels/kind-area.jpg)
 
-- **Use it when, not when, key options and every option of `area`:** [Rachana, Panel kinds, `area`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#area).
+- **Use it when, not when, key options and every option of `area`:** [Rachana, Panel kinds, `area`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#area).
 - **Empty when** there are no x values, or no finite number in any series.
 - **Masked:** masked numbers are not drawn.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1395,7 +1402,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `area`.**
 
-Every option of `area` and what it means is in [Rachana, Panel kinds, `area`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#area); Drishti adds nothing to them.
+Every option of `area` and what it means is in [Rachana, Panel kinds, `area`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#area); Drishti adds nothing to them.
 
 ```yaml
   - id: exposure
@@ -1421,7 +1428,7 @@ Horizontal bars for a few labelled amounts, scaled to the largest absolute value
 
 ![A hbar panel](img/panels/kind-hbar.jpg)
 
-- **Use it when, not when, key options and every option of `hbar`:** [Rachana, Panel kinds, `hbar`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#hbar).
+- **Use it when, not when, key options and every option of `hbar`:** [Rachana, Panel kinds, `hbar`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#hbar).
 - **Grouped rows:** `rows: "group($.TRADES, 'PRODUCT_TYPE', 'NOTIONAL')"` sums a field by another (Rachana-EL `group`), so a payment ladder (`group($.EVENTS, 'EVENT_DATE', 'AMOUNT')`), payments by month (`..., 'month'`) or a maturity ladder (`group($.TRADES, 'MATURITY_DATE', 'NOTIONAL', 'year')`) needs no field of its own in the data.
 - **Empty when** there is no bar with a finite number.
 - **Masked:** a masked amount reads `•••` and has no bar.
@@ -1438,7 +1445,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `hbar`.**
 
-Every option of `hbar` and what it means is in [Rachana, Panel kinds, `hbar`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#hbar); Drishti adds nothing to them.
+Every option of `hbar` and what it means is in [Rachana, Panel kinds, `hbar`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#hbar); Drishti adds nothing to them.
 
 ```yaml
   - id: by-product
@@ -1463,7 +1470,7 @@ A table that shows every row and lights the one that matters: a coupon schedule 
 
 ![A ladder panel](img/panels/kind-ladder.jpg)
 
-- **Use it when, not when, key options and every option of `ladder`:** [Rachana, Panel kinds, `ladder`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#ladder).
+- **Use it when, not when, key options and every option of `ladder`:** [Rachana, Panel kinds, `ladder`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#ladder).
 - **Empty when** there are no rows.
 - **Masked:** as `table`: `•••`, never added up.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1489,7 +1496,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `ladder`.**
 
-Every option of `ladder` and what it means is in [Rachana, Panel kinds, `ladder`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#ladder); what Drishti adds or does differently:
+Every option of `ladder` and what it means is in [Rachana, Panel kinds, `ladder`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#ladder); what Drishti adds or does differently:
 
 | Option | Required | Default | Meaning |
 |---|---|---|---|
@@ -1556,7 +1563,7 @@ Statuses and flags, each coloured by what it says. Drawn like `kv`; the colour a
 
 ![A status panel](img/panels/kind-status.jpg)
 
-- **Use it when, not when, key options and every option of `status`:** [Rachana, Panel kinds, `status`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#status).
+- **Use it when, not when, key options and every option of `status`:** [Rachana, Panel kinds, `status`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#status).
 - **Empty when** every cell is blank or a dash.
 - **Masked:** the cell reads `•••` with no tone, so a masked state is never coloured.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1579,7 +1586,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `status`.**
 
-Every option of `status` and what it means is in [Rachana, Panel kinds, `status`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#status); Drishti adds nothing to them.
+Every option of `status` and what it means is in [Rachana, Panel kinds, `status`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#status); Drishti adds nothing to them.
 
 ```yaml
   - id: operations
@@ -1635,7 +1642,7 @@ A note for the reader. Text may hold `${...}` templates over the document, so it
 
 ![A markdown panel](img/panels/kind-markdown.jpg)
 
-- **Use it when, not when, key options and every option of `markdown`:** [Rachana, Panel kinds, `markdown`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#markdown).
+- **Use it when, not when, key options and every option of `markdown`:** [Rachana, Panel kinds, `markdown`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#markdown).
 - **Empty when** the text is blank.
 - **Masked:** a masked value inside `${...}` reads `•••`.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1655,7 +1662,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `markdown`.**
 
-Every option of `markdown` and what it means is in [Rachana, Panel kinds, `markdown`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#markdown); Drishti adds nothing to them.
+Every option of `markdown` and what it means is in [Rachana, Panel kinds, `markdown`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#markdown); Drishti adds nothing to them.
 
 ```yaml
   - id: notes
@@ -1675,7 +1682,7 @@ One number against a maximum, as a filled bar with its percentage.
 
 ![A gauge panel](img/panels/kind-gauge.jpg)
 
-- **Use it when, not when, key options and every option of `gauge`:** [Rachana, Panel kinds, `gauge`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#gauge).
+- **Use it when, not when, key options and every option of `gauge`:** [Rachana, Panel kinds, `gauge`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#gauge).
 - **Empty when** the value is not a number.
 - **Masked:** the bar is empty and the text reads `•••` (so is the panel).
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1691,7 +1698,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `gauge`.**
 
-Every option of `gauge` and what it means is in [Rachana, Panel kinds, `gauge`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#gauge); what Drishti adds or does differently:
+Every option of `gauge` and what it means is in [Rachana, Panel kinds, `gauge`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#gauge); what Drishti adds or does differently:
 
 | Option | Required | Default | Meaning |
 |---|---|---|---|
@@ -1716,7 +1723,7 @@ A grid of values over two axes already in the document: a volatility smile by ex
 
 ![A surface panel](img/panels/kind-surface.jpg)
 
-- **Use it when, not when, key options and every option of `surface`:** [Rachana, Panel kinds, `surface`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#surface).
+- **Use it when, not when, key options and every option of `surface`:** [Rachana, Panel kinds, `surface`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#surface).
 - **Empty when** there is no finite cell.
 - **Masked:** masked cells are not drawn.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1733,7 +1740,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `surface`.**
 
-Every option of `surface` and what it means is in [Rachana, Panel kinds, `surface`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#surface); Drishti adds nothing to them.
+Every option of `surface` and what it means is in [Rachana, Panel kinds, `surface`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#surface); Drishti adds nothing to them.
 
 ```yaml
   - id: surface
@@ -1760,7 +1767,7 @@ Ordered signed steps as floating bars: opening level, moves, closing level (P&L 
 
 ![A waterfall panel](img/panels/kind-waterfall.jpg)
 
-- **Use it when, not when, key options and every option of `waterfall`:** [Rachana, Panel kinds, `waterfall`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#waterfall).
+- **Use it when, not when, key options and every option of `waterfall`:** [Rachana, Panel kinds, `waterfall`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#waterfall).
 - **Empty when** there is no step with a number.
 - **Masked:** a masked step is skipped and never added to the running total; the closing total reads `•••`.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1777,7 +1784,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `waterfall`.**
 
-Every option of `waterfall` and what it means is in [Rachana, Panel kinds, `waterfall`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#waterfall); Drishti adds nothing to them.
+Every option of `waterfall` and what it means is in [Rachana, Panel kinds, `waterfall`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#waterfall); Drishti adds nothing to them.
 
 ```yaml
   - id: explain
@@ -1803,7 +1810,7 @@ The distribution of many numbers, binned on the server, with optional marker lin
 
 ![A histogram panel](img/panels/kind-histogram.jpg)
 
-- **Use it when, not when, key options and every option of `histogram`:** [Rachana, Panel kinds, `histogram`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#histogram).
+- **Use it when, not when, key options and every option of `histogram`:** [Rachana, Panel kinds, `histogram`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#histogram).
 - **Empty when** there is no number to bin.
 - **Masked:** masked numbers are not binned.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1820,7 +1827,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `histogram`.**
 
-Every option of `histogram` and what it means is in [Rachana, Panel kinds, `histogram`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#histogram); Drishti adds nothing to them.
+Every option of `histogram` and what it means is in [Rachana, Panel kinds, `histogram`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#histogram); Drishti adds nothing to them.
 
 ```yaml
   - id: scenarios
@@ -1846,7 +1853,7 @@ Two measures per row as points (risk against return), optionally sized and group
 
 ![A scatter panel](img/panels/kind-scatter.jpg)
 
-- **Use it when, not when, key options and every option of `scatter`:** [Rachana, Panel kinds, `scatter`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#scatter).
+- **Use it when, not when, key options and every option of `scatter`:** [Rachana, Panel kinds, `scatter`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#scatter).
 - **Empty when** there is no row with both measures.
 - **Masked:** a masked measure is not drawn; a masked group still shows.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1863,7 +1870,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `scatter`.**
 
-Every option of `scatter` and what it means is in [Rachana, Panel kinds, `scatter`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#scatter); what Drishti adds or does differently:
+Every option of `scatter` and what it means is in [Rachana, Panel kinds, `scatter`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#scatter); what Drishti adds or does differently:
 
 | Option | Required | Default | Meaning |
 |---|---|---|---|
@@ -1885,7 +1892,7 @@ Open, high, low and close by date, with optional volume bars; up days and down d
 
 ![A candlestick panel](img/panels/kind-candlestick.jpg)
 
-- **Use it when, not when, key options and every option of `candlestick`:** [Rachana, Panel kinds, `candlestick`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#candlestick).
+- **Use it when, not when, key options and every option of `candlestick`:** [Rachana, Panel kinds, `candlestick`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#candlestick).
 - **Empty when** there is no bar with all four prices.
 - **Masked:** masked prices are not drawn.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1901,7 +1908,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `candlestick`.**
 
-Every option of `candlestick` and what it means is in [Rachana, Panel kinds, `candlestick`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#candlestick); what Drishti adds or does differently:
+Every option of `candlestick` and what it means is in [Rachana, Panel kinds, `candlestick`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#candlestick); what Drishti adds or does differently:
 
 | Option | Required | Default | Meaning |
 |---|---|---|---|
@@ -1919,7 +1926,7 @@ Entities and the relations between them (a legal-entity hierarchy); a node that 
 
 ![A graph panel](img/panels/kind-graph.jpg)
 
-- **Use it when, not when, key options and every option of `graph`:** [Rachana, Panel kinds, `graph`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#graph).
+- **Use it when, not when, key options and every option of `graph`:** [Rachana, Panel kinds, `graph`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#graph).
 - **Empty when** there is no node with an id.
 - **Masked:** a masked label shows the mask.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1935,7 +1942,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `graph`.**
 
-Every option of `graph` and what it means is in [Rachana, Panel kinds, `graph`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#graph); what Drishti adds or does differently:
+Every option of `graph` and what it means is in [Rachana, Panel kinds, `graph`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#graph); what Drishti adds or does differently:
 
 Nodes and the edges between them. Each node needs an `id`; a node whose id a pack recognises (or that names its `kind`) is a link. The
 node whose id is the viewed entity is ringed. Nodes and edges read `id`, `kind`, `from`, `to` and `label` in lower case or UPPER_SNAKE.
@@ -1962,7 +1969,7 @@ Dated events in order, each with a status tone and a short description, sorted b
 
 ![A timeline panel](img/panels/kind-timeline.jpg)
 
-- **Use it when, not when, key options and every option of `timeline`:** [Rachana, Panel kinds, `timeline`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#timeline).
+- **Use it when, not when, key options and every option of `timeline`:** [Rachana, Panel kinds, `timeline`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#timeline).
 - **Empty when** there is no event with a date or a label.
 - **Masked:** a masked detail reads `•••`.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -1978,7 +1985,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `timeline`.**
 
-Every option of `timeline` and what it means is in [Rachana, Panel kinds, `timeline`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#timeline); what Drishti adds or does differently:
+Every option of `timeline` and what it means is in [Rachana, Panel kinds, `timeline`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#timeline); what Drishti adds or does differently:
 
 Dated events, sorted by date on the server (ISO dates and timestamps sort as written), drawn as a vertical list.
 
@@ -2007,7 +2014,7 @@ A two-dimensional aggregate of the rows: one row group per `by` field value (a l
 
 ![A pivot panel](img/panels/kind-pivot.jpg)
 
-- **Use it when, not when, key options and every option of `pivot`:** [Rachana, Panel kinds, `pivot`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#pivot).
+- **Use it when, not when, key options and every option of `pivot`:** [Rachana, Panel kinds, `pivot`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#pivot).
 - **Empty when** there is no row with a number (or no row at all, for a count).
 - **Masked:** the groups stay, every value and total reads `•••`, nothing is added up.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -2026,7 +2033,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 **The keys of `pivot`.**
 
-Every option of `pivot` and what it means is in [Rachana, Panel kinds, `pivot`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#pivot); what Drishti adds or does differently:
+Every option of `pivot` and what it means is in [Rachana, Panel kinds, `pivot`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#pivot); what Drishti adds or does differently:
 
 > This is the **`pivot` panel kind**: a fixed grid the Sutra defines, written `kind: pivot`. For a table that lets the user pivot its own
 > rows, see the [`pivot:` option](#pivot-pivot-on-a-table-or-ladder) of `table` and `ladder`.
@@ -2051,7 +2058,7 @@ One big headline figure, a KPI tile: the value formatted and toned, with an opti
 
 ![A metric panel](img/panels/kind-metric.jpg)
 
-- **Use it when, not when, key options and every option of `metric`:** [Rachana, Panel kinds, `metric`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#metric).
+- **Use it when, not when, key options and every option of `metric`:** [Rachana, Panel kinds, `metric`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#metric).
 - **Empty when** the value is missing or not shown (a dash); a missing `delta` is simply not drawn, never an error.
 - **Masked:** the figure and the change read `•••` with no tone.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
@@ -2084,7 +2091,7 @@ A tile is built end to end in [Panels: the twenty-two kinds, and developing a ne
 
 **The keys of `metric`.**
 
-Every option of `metric` and what it means is in [Rachana, Panel kinds, `metric`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#metric); what Drishti adds or does differently:
+Every option of `metric` and what it means is in [Rachana, Panel kinds, `metric`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#metric); what Drishti adds or does differently:
 
 | Option | Required | Default | Meaning |
 |---|---|---|---|
@@ -2112,7 +2119,7 @@ The world with a country highlighted, shaded by a figure and clickable; or, with
 
 ![A map panel](img/panels/kind-map.jpg)
 
-- **Use it when, not when, key options and every option of `map`:** [Rachana, Panel kinds, `map`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#map).
+- **Use it when, not when, key options and every option of `map`:** [Rachana, Panel kinds, `map`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#map).
 - **Empty when** `region` names no country the shapes know; a world map is never empty.
 - **Masked:** a masked `highlight` highlights nothing, a masked shade field shades nothing and the panel says so; which countries have a page is not secret.
 - **No access:** a `link` or `shade` of a kind the user may not open lists nothing and says *no access to <kind>*.
@@ -2130,7 +2137,7 @@ The world-economy pack's `jurisdiction` Sutra and the world-economy pack's `econ
 
 **The keys of `map`.**
 
-Every option of `map` and what it means is in [Rachana, Panel kinds, `map`](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#map); what Drishti adds or does differently:
+Every option of `map` and what it means is in [Rachana, Panel kinds, `map`](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#map); what Drishti adds or does differently:
 
 A map of the world with a country highlighted, shaded by a figure and clickable, or of one country's regions. It reads the document for
 the place to show (`highlight`, `region`) and, across a whole kind, for which countries have a page (`link`) and what shades them
@@ -2251,14 +2258,14 @@ those of the business date 2026-10-16):
 
 ### The keys of a control
 
-The keys, their meaning and their checks (`DRS-2034` to `DRS-2039`): [Rachana, SPEC 2.9, control keys](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/SPEC.md#29-function-keys-control-kinds-and-format-files-reference-tables) and
-[Writing Sutras, 10. Controls](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#10-controls-letting-the-reader-choose). In Drishti, `options` also takes `{ kind: counterparty }`: the ids of that entity kind
+The keys, their meaning and their checks (`DRS-2034` to `DRS-2039`): [Rachana, SPEC 2.9, control keys](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/SPEC.md#29-function-keys-control-kinds-and-format-files-reference-tables) and
+[Writing Sutras, 10. Controls](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#10-controls-letting-the-reader-choose). In Drishti, `options` also takes `{ kind: counterparty }`: the ids of that entity kind
 the sources list (at most 500, and only when the reader may open the kind). More than 500 are cut and the control says so (`truncated`).
 
 ### The kinds, and what `ctl.<id>` holds
 
-The eleven kinds and what `ctl.<id>` holds for each: [Rachana, SPEC 2.9](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/SPEC.md#29-function-keys-control-kinds-and-format-files-reference-tables) and
-[Writing Sutras, 10. Controls](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#10-controls-letting-the-reader-choose). The slider and the relative dates are read in Drishti on the **business date of the request**
+The eleven kinds and what `ctl.<id>` holds for each: [Rachana, SPEC 2.9](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/SPEC.md#29-function-keys-control-kinds-and-format-files-reference-tables) and
+[Writing Sutras, 10. Controls](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#10-controls-letting-the-reader-choose). The slider and the relative dates are read in Drishti on the **business date of the request**
 (today, or the date picked in the top bar) and the server's business calendar (`drishti.business-date.calendar`; not a calendar per pack). Keys on a slider handle in the console: `←` `↓` and `→` `↑` move one step, `PageDown` and `PageUp` ten, `Home` and `End` to the ends (for two handles, to the other handle); a press or drag on the track or a handle moves the nearest one (a drag follows the pointer and settles on release). Each handle is `role="slider"` with `aria-valuemin`, `aria-valuemax`, `aria-valuenow`, `aria-valuetext` and a label (*Notional at least*, or *… from* and *… to*); the handles are 44 px on a touch screen.
 The shipped `netting-set` Sutra of the counterparty-risk pack uses a slider as a notional threshold on its member trades:
 
@@ -2274,7 +2281,7 @@ panels:
 
 ### Reading a control
 
-A control is read as `ctl.<id>` in a panel's `rows`, `where`, `limit` and `title`, in a column or strip `bind` and in a control's own `options`, `min` and `max`; the panel options `where`, `limit` and `on-select` exist for controls ([Rachana, Writing Sutras, 10. Controls](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#10-controls-letting-the-reader-choose); a reference to a control the Sutra does not declare is `DRS-2036`). For a dropdown with an *(all)* entry write `(ctl.asset == '' || @.ASSET_CLASS == ctl.asset)`, as the shipped `netting-set` Sutra does:
+A control is read as `ctl.<id>` in a panel's `rows`, `where`, `limit` and `title`, in a column or strip `bind` and in a control's own `options`, `min` and `max`; the panel options `where`, `limit` and `on-select` exist for controls ([Rachana, Writing Sutras, 10. Controls](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#10-controls-letting-the-reader-choose); a reference to a control the Sutra does not declare is `DRS-2036`). For a dropdown with an *(all)* entry write `(ctl.asset == '' || @.ASSET_CLASS == ctl.asset)`, as the shipped `netting-set` Sutra does:
 
 ```yaml
 controls:
@@ -2334,7 +2341,7 @@ made before this was kept, is unchanged. The values are not copied data: they on
 
 Not to be confused with the pack search form below: a panel's `form:` lets people edit the records the panel shows, or start new ones, and keeps what they type as **drafts**; with `save:` it also submits them as change requests (write-back). A use carries it to the one panel it brings. The worked guide is [ADMIN_GUIDE.md › 28 Write-back and approvals](ADMIN_GUIDE.md#28-write-back-and-approvals-switch-on-and-run); the design is Sutra Next: fragments, events, children, sources, layout and forms, its section 10.
 
-The keys of a form and of a field, the field types, the rule language and what is checked (`DRS-2058`, `RCH-2058` in Rachana): [Rachana, Writing Sutras, 11. Forms](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#11-forms-letting-people-edit-records). Drishti adds these:
+The keys of a form and of a field, the field types, the rule language and what is checked (`DRS-2058`, `RCH-2058` in Rachana): [Rachana, Writing Sutras, 11. Forms](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#11-forms-letting-people-edit-records). Drishti adds these:
 
 | Key | Meaning |
 |---|---|
@@ -2409,7 +2416,7 @@ A problem is reported against the key, for example
 
 ## Function keys
 
-Function keys come from a panel's `key:` and from the top-level `keys:` mapping ([Rachana, SPEC 2.9](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/SPEC.md#29-function-keys-control-kinds-and-format-files-reference-tables)); in the console a panel key scrolls to the panel and flashes it. The key bar shows the panel title cut at the first ` · ` or ` (` (`Cash flows · leg 1` → `Cash flows`).
+Function keys come from a panel's `key:` and from the top-level `keys:` mapping ([Rachana, SPEC 2.9](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/SPEC.md#29-function-keys-control-kinds-and-format-files-reference-tables)); in the console a panel key scrolls to the panel and flashes it. The key bar shows the panel title cut at the first ` · ` or ` (` (`Cash flows · leg 1` → `Cash flows`).
 
 ```yaml
 keys:
@@ -2463,7 +2470,7 @@ An unknown format name is not an error: the value is shown as plain text.
 
 ### Core formats
 
-The Core format names, their definitions and what each prints: [formats.yaml](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/formats.yaml) and [Rachana, SPEC 2.9, Core formats at work](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/SPEC.md#29-function-keys-control-kinds-and-format-files-reference-tables).
+The Core format names, their definitions and what each prints: [formats.yaml](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/formats.yaml) and [Rachana, SPEC 2.9, Core formats at work](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/SPEC.md#29-function-keys-control-kinds-and-format-files-reference-tables).
 
 ### Formats added by the packs
 
@@ -2482,7 +2489,7 @@ The Core format names, their definitions and what each prints: [formats.yaml](ht
 
 A format file has one `formats:` mapping. Keys of a format:
 
-The keys of a format (`type`, `decimals`, `grouping`, `sign`, `scale`, `suffix`, `pattern`): [Rachana, SPEC 2.9, format files](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/SPEC.md#29-function-keys-control-kinds-and-format-files-reference-tables).
+The keys of a format (`type`, `decimals`, `grouping`, `sign`, `scale`, `suffix`, `pattern`): [Rachana, SPEC 2.9, format files](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/SPEC.md#29-function-keys-control-kinds-and-format-files-reference-tables).
 
 A pack adds formats in `modules/<module>/packs/<pack>/config/formats.yaml`, as the trading pack does:
 
@@ -2500,11 +2507,11 @@ packs change (an edit of a pack's `config/formats.yaml` is picked up within the 
 
 ## Tones
 
-The tones, their colour classes and the `status` words are in [Rachana, SPEC 2.6](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/SPEC.md#26-formats-and-tones). The console always pairs colour with a sign or glyph. Totals use their column's tone; `hbar` without `tone` colours by sign.
+The tones, their colour classes and the `status` words are in [Rachana, SPEC 2.6](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/SPEC.md#26-formats-and-tones). The console always pairs colour with a sign or glyph. Totals use their column's tone; `hbar` without `tone` colours by sign.
 
 ## Totals, limits and "more"
 
-The effect of `total: true`, `totalLabel`, `limit` and `moreLabel`: [Rachana, Panel kinds, Totals, limits and "more"](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#totals-limits-and-more).
+The effect of `total: true`, `totalLabel`, `limit` and `moreLabel`: [Rachana, Panel kinds, Totals, limits and "more"](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#totals-limits-and-more).
 
 ## Rachana-EL expressions
 
@@ -2581,7 +2588,7 @@ So `!$.a == true` means `(!$.a) == true`, and `$.a + $.b * 2` means `$.a + ($.b 
 
 ### Values and truthiness
 
-The kinds of value (empty, boolean, number, text, list, object, link) and their truthiness: [Rachana, SPEC 4.2](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/SPEC.md#42-values). An extract's empty text `""` is a text, not empty: `nonblank(...)` treats it as missing, nothing else does.
+The kinds of value (empty, boolean, number, text, list, object, link) and their truthiness: [Rachana, SPEC 4.2](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/SPEC.md#42-values). An extract's empty text `""` is a text, not empty: `nonblank(...)` treats it as missing, nothing else does.
 
 ### Evaluation rules
 
@@ -2902,7 +2909,7 @@ So an analyst coming from Excel, SAS or MATLAB rarely misses a function, Rachana
 added and why). Each function's arguments, rules and an example are in the catalogue's sections 1 to 9; the generated list is
 [FUNCTIONS.md](FUNCTIONS.md).
 
-The Core families (math, information and choice, text, dates, MATLAB's list functions, distributions, finance on given flows) and their Excel, SAS and MATLAB equivalents: [Rachana, SPEC 5.12](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/SPEC.md#512-equivalents-in-excel-sas-and-matlab-informative). The engine's list functions, which Drishti's pivot engine supplies, are these:
+The Core families (math, information and choice, text, dates, MATLAB's list functions, distributions, finance on given flows) and their Excel, SAS and MATLAB equivalents: [Rachana, SPEC 5.12](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/SPEC.md#512-equivalents-in-excel-sas-and-matlab-informative). The engine's list functions, which Drishti's pivot engine supplies, are these:
 
 | Family | Functions | Example on the demo trade |
 |---|---|---|
@@ -2994,11 +3001,11 @@ Against `MX-20000001` (the business date 2026-10-16 where it matters):
 
 ### Templates
 
-A template is text with `${expression}` parts: [Rachana, SPEC 4.11](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/SPEC.md#411-templates); an unclosed `${` is `DRS-2101`. Templates are used for panel titles, `title.pill`, `markdown.text`, a metric's `caption` and alert messages. Labels (`label:`) are plain text, not templates.
+A template is text with `${expression}` parts: [Rachana, SPEC 4.11](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/SPEC.md#411-templates); an unclosed `${` is `DRS-2101`. Templates are used for panel titles, `title.pill`, `markdown.text`, a metric's `caption` and alert messages. Labels (`label:`) are plain text, not templates.
 
 ### Grammar
 
-The grammar is [rachana-el.ebnf](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/rachana-el.ebnf) (the specification's EBNF); the Drishti-only parts are the names `ctl`, `@acc` inside `reduce` and the engine functions' named arguments ([Named arguments](#named-arguments)).
+The grammar is [rachana-el.ebnf](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/rachana-el.ebnf) (the specification's EBNF); the Drishti-only parts are the names `ctl`, `@acc` inside `reduce` and the engine functions' named arguments ([Named arguments](#named-arguments)).
 
 ### Size limits
 
@@ -3132,7 +3139,7 @@ without a server, from `drishti.py sutra lint`.
 
 ## Recipes
 
-The general recipes (a table with a filter, totals and "more"; tabs per element; a ladder with the next row lit; a strip that reads well; a donut of shares; panels for one sub type with `when:`) are in [Rachana, Writing Sutras, 12. Recipes](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#12-recipes). These two use Drishti's packs.
+The general recipes (a table with a filter, totals and "more"; tabs per element; a ladder with the next row lit; a strip that reads well; a donut of shares; panels for one sub type with `when:`) are in [Rachana, Writing Sutras, 12. Recipes](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#12-recipes). These two use Drishti's packs.
 
 ### A chart from another entity's curve
 
@@ -3262,11 +3269,11 @@ A cell whose text is a web address (`https://...` or `http://...`, no spaces) is
 
 ### Choosing a kind
 
-The data-shape to panel-kind table: [Rachana, Panel kinds, Choosing a kind](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#choosing-a-kind). The workbench chooser (Build, Add panel, or the palette) offers the same kinds with one line each, and **auto-design** and the field-drop menu rank them for your data; see [Screen designer and the Build workbench](#screen-designer-and-the-build-workbench).
+The data-shape to panel-kind table: [Rachana, Panel kinds, Choosing a kind](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#choosing-a-kind). The workbench chooser (Build, Add panel, or the palette) offers the same kinds with one line each, and **auto-design** and the field-drop menu rank them for your data; see [Screen designer and the Build workbench](#screen-designer-and-the-build-workbench).
 
 ### How a panel behaves
 
-Each kind below says what is special to it. These hold for all of them. Empty panels, a broken panel and masked values: [Rachana, Panel kinds, How a panel behaves](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#how-a-panel-behaves). In the console:
+Each kind below says what is special to it. These hold for all of them. Empty panels, a broken panel and masked values: [Rachana, Panel kinds, How a panel behaves](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#how-a-panel-behaves). In the console:
 
 - **Masked.** A user whose roles mask a field sees `•••` where its value would be, never a tone or a link, and a masked number is never added up, charted or used for a total. See the [field masks](INTEGRATION_GUIDE.md#field-masks).
 - **No access.** A panel with `source:` that names an entity of a kind the user may not open is not fetched: it shows *No access to curve* (the kind it names) with a lock and holds none of that entity's values. Every kind but `links` and `provenance` takes `source`.
@@ -4138,7 +4145,7 @@ For the broader recipes (a new REST endpoint, source plugin, pack, configuration
 
 ## Sutra Next: fragments, events, children, sources, layout and forms
 
-The design and the Drishti implementation of fragments, events, children, sources, layout and forms. The general parts of the language (fragments, events, children, layout, forms) are in [Rachana, Writing Sutras](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#the-rachana-language-level-12); this chapter keeps what is Drishti: the UI kit, sources over packs, lint, security, dynamic screens.
+The design and the Drishti implementation of fragments, events, children, sources, layout and forms. The general parts of the language (fragments, events, children, layout, forms) are in [Rachana, Writing Sutras](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#the-rachana-language-level-12); this chapter keeps what is Drishti: the UI kit, sources over packs, lint, security, dynamic screens.
 
 ### 1. Principles
 
@@ -4754,7 +4761,7 @@ panels:
 
 ### 13. Layout: placing panels
 
-Placement is optional and in grid units: the `layout:` keys, the grid, areas, split, tabs, sections, the responsive rules and what is checked are in [Rachana, Writing Sutras, 9. Layout: placing panels](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#9-layout-placing-panels). What is Drishti's:
+Placement is optional and in grid units: the `layout:` keys, the grid, areas, split, tabs, sections, the responsive rules and what is checked are in [Rachana, Writing Sutras, 9. Layout: placing panels](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#9-layout-placing-panels). What is Drishti's:
 
 **Implementation.** `layout:` is read by `LayoutReader` into `ScreenLayout` (rachana) and checked against the panels (`DRS-2059`);
 the view model carries it (`ViewModel.layout`: the layout's keys and each top-level panel's `place`: area, order, section,
@@ -4778,7 +4785,7 @@ collapsible; `ScreenGrid`), and the console draws it (`core/screen_grid.py`, `te
 
 #### Phone: what goes to a phone
 
-The tiers `must`, `glance`, `more` and `desk`, the `phone:` block, the compact options and the kind defaults: [Rachana, Writing Sutras, Phone tiers](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/WRITING_SUTRAS.md#phone-tiers). The page a phone gets in Drishti ([MOBILE_DISPLAY.md](BUILD_GUIDE.md#32-designing-for-phones), [USER_GUIDE.md, On a phone](USER_GUIDE.md#on-a-phone)):
+The tiers `must`, `glance`, `more` and `desk`, the `phone:` block, the compact options and the kind defaults: [Rachana, Writing Sutras, Phone tiers](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/WRITING_SUTRAS.md#phone-tiers). The page a phone gets in Drishti ([MOBILE_DISPLAY.md](BUILD_GUIDE.md#32-designing-for-phones), [USER_GUIDE.md, On a phone](USER_GUIDE.md#on-a-phone)):
 
 - **The site and the edition** set and cap tiers over every Sutra (`ui.phone` in the console's configuration, `phone:` in an edition
   file); a cap (`max: glance`) wins. A page always has a must panel: with none, the first panel is.

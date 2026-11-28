@@ -24,7 +24,7 @@ on one machine or a cluster. Drishti never invents a number: it shows what its s
 plain JavaScript libraries for a grid with a pivot, charts, maps, forms and live tables. Together they give BI-style dashboards and
 reports, and they make GenUI safe: an AI assistant writes a Sutra through MCP tools, Rachana checks and compiles it, Elements draws it,
 with no generated code to trust. The same parts work outside Drishti: Rachana and Elements in your own Flask or FastAPI application
-([IN_YOUR_APP](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/IN_YOUR_APP.md#rachana-and-elements-in-your-own-flask-or-fastapi-application); the GenUI kit ships with Rachana 1.1, planned for the platform),
+([IN_YOUR_APP](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/IN_YOUR_APP.md#rachana-and-elements-in-your-own-flask-or-fastapi-application); the GenUI kit ships with Rachana 1.1, planned for the platform),
 Lake as a Delta and Iceberg library in Java or Python, Tools as shared Java utilities.
 
 Everything specific to a field comes as a **module**: its data shapes, measures, screens and rules. Banking risk, capital markets,

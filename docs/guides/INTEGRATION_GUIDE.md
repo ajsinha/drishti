@@ -854,10 +854,10 @@ This guide is Drishti's side: how a page of yours embeds a Drishti view. Using t
 that has no Drishti server at all, and GenUI (an assistant composing a screen through tools; streaming a screen to the page is planned), are the products' own guides, and they are the one
 home of those subjects:
 
-- [Rachana and Elements in your own app](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/IN_YOUR_APP.md#rachana-and-elements-in-your-own-flask-or-fastapi-application): the
+- [Rachana and Elements in your own app](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/IN_YOUR_APP.md#rachana-and-elements-in-your-own-flask-or-fastapi-application): the
   renderer and the libraries, from one import to a screen of your own, with no copy of them here.
 - GenUI (a screen an assistant composes and checks through tools): the GenUI kit ships with Rachana 1.1 (planned for the platform), and Rachana's
-  [ROADMAP.md](https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/ROADMAP.md) lists what is planned.
+  [ROADMAP.md](https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/ROADMAP.md) lists what is planned.
 
 Drishti uses the same renderer (section 1.6) and the same libraries (section 1.13); what Drishti adds is the server's views, its sign-in
 (section 1.4) and its data.

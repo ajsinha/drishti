@@ -61,24 +61,27 @@ def targets() -> list[tuple[str, str, str, Path]]:
     return [(name, p["tag"], f, OUT / name / p["tag"] / f) for name, p in pins().items() for f in p["files"]]
 
 
-def run(check: bool, out=sys.stdout) -> int:
+def run(check: bool, out=sys.stdout, refs: dict[str, str] | None = None) -> int:
+    """``refs`` names, per product, the commit-ish the documents are read from instead of the pinned tag (a branch before its tag exists)."""
+    refs = refs or {}
     bad: list[str] = []
     for name, p in pins().items():
         clone = clone_of(p["repo"])
-        have = clone is not None and subprocess.run(["git", "-C", str(clone), "rev-parse", "-q", "--verify", f"{p['tag']}^{{commit}}"],
+        ref = refs.get(name, p["tag"])
+        have = clone is not None and subprocess.run(["git", "-C", str(clone), "rev-parse", "-q", "--verify", f"{ref}^{{commit}}"],
                                                      capture_output=True).returncode == 0
         if not have:
             print(f"  {name}: no clone with tag {p['tag']} beside this repository: the committed copy is used as it is", file=out)
         for f in p["files"]:
             dest = OUT / name / p["tag"] / f
             if have:
-                data = show(clone, p["tag"], f)
+                data = show(clone, ref, f)
                 if data is None:
-                    bad.append(f"{name} {p['tag']}: {f} is not in the tag")
+                    bad.append(f"{name} {ref}: {f} is not there")
                     continue
                 if check:
                     if not dest.is_file() or dest.read_bytes() != data:
-                        bad.append(f"{dest.relative_to(ROOT)} differs from {p['repo']}@{p['tag']}:{f}")
+                        bad.append(f"{dest.relative_to(ROOT)} differs from {p['repo']}@{ref}:{f}")
                 else:
                     dest.parent.mkdir(parents=True, exist_ok=True)
                     dest.write_bytes(data)
@@ -110,7 +113,10 @@ def run(check: bool, out=sys.stdout) -> int:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--check", action="store_true")
-    return run(ap.parse_args(argv).check)
+    ap.add_argument("--ref", action="append", default=[], metavar="PRODUCT=REF",
+                    help="read a product's documents from this commit-ish (a branch) instead of its pinned tag, until the tag exists")
+    a = ap.parse_args(argv)
+    return run(a.check, refs=dict(r.split("=", 1) for r in a.ref))
 
 
 if __name__ == "__main__":

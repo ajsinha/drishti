@@ -319,12 +319,12 @@ files:
   - {path: 'docs/products/elements/v3.3.2-ide3/docs/EVENTS.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
   - {path: 'docs/products/elements/v3.3.2-ide3/docs/USING.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
   - {path: 'docs/products/elements/v3.3.2-ide3/docs/VIEWS.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
-  - {path: 'docs/products/rachana/v1.0.1-ide4/docs/IN_YOUR_APP.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
-  - {path: 'docs/products/rachana/v1.0.1-ide4/docs/PANEL_KINDS.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
-  - {path: 'docs/products/rachana/v1.0.1-ide4/docs/ROADMAP.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
-  - {path: 'docs/products/rachana/v1.0.1-ide4/docs/TUTORIAL.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
-  - {path: 'docs/products/rachana/v1.0.1-ide4/docs/WRITING_SUTRAS.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
-  - {path: 'docs/products/rachana/v1.0.1-ide4/spec/1/SPEC.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.1.1/docs/IN_YOUR_APP.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.1.1/docs/PANEL_KINDS.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.1.1/docs/ROADMAP.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.1.1/docs/TUTORIAL.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.1.1/docs/WRITING_SUTRAS.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
+  - {path: 'docs/products/rachana/v1.1.1/spec/1/SPEC.md', class: generate, lane: A, tool: 'tools/docs/product_docs.py'}
   - {path: 'docs/strategy/BI_AND_POWER_BI.md', class: merge, lane: A}
   - {path: 'docs/strategy/COMPETITIVE_ANALYSIS.md', class: keep, lane: A}
   - {path: 'docs/strategy/COMPETITIVE_LANDSCAPE.md', class: merge, lane: A}

@@ -40,24 +40,24 @@ def _bundled():
 
 
 def test_a_github_link_to_a_bundled_document_opens_the_local_page(lib):
-    assert lib.product_link("https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/PANEL_KINDS.md#waterfall") \
+    assert lib.product_link("https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/PANEL_KINDS.md#waterfall") \
         == "/help/rachana-panel-kinds#waterfall"
-    assert lib.product_link("https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/spec/1/SPEC.md") == "/help/rachana-spec"
+    assert lib.product_link("https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/spec/1/SPEC.md") == "/help/rachana-spec"
     assert lib.product_link("https://github.com/drishti-platform/drishti-elements/blob/v3.3.2-ide3/docs/USING.md#x") == "/help/elements-using#x"
 
 
 def test_a_link_to_anything_else_is_left_alone(lib):
     for href in ("https://github.com/drishti-platform/drishti-rachana/blob/v1.0.0/docs/PANEL_KINDS.md",         # another tag
-                 "https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/docs/DEVELOPING.md",    # not bundled
+                 "https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/docs/DEVELOPING.md",    # not bundled
                  "https://github.com/drishti-platform/drishti-lake/blob/v0.9.1-ide3/docs/X.md",              # another product
                  "https://example.com/blob/v1/docs/USING.md", "/help/user-guide"):
         assert lib.product_link(href) is None, href
 
 
 def test_a_relative_link_that_leaves_a_copy_goes_to_github_at_the_pinned_tag(lib):
-    source = DOCS / "products" / "rachana" / "v1.0.1-ide4" / "docs" / "TUTORIAL.md"
+    source = DOCS / "products" / "rachana" / "v1.1.1" / "docs" / "TUTORIAL.md"
     link = lib._link(source, re.search(r'<a href="([^"]*)"([^>]*)>(.*?)</a>', '<a href="../examples/README.md#static-sales">x</a>'))
-    assert 'href="https://github.com/drishti-platform/drishti-rachana/blob/v1.0.1-ide4/examples/README.md#static-sales"' in link
+    assert 'href="https://github.com/drishti-platform/drishti-rachana/blob/v1.1.1/examples/README.md#static-sales"' in link
     inside = lib._link(source, re.search(r'<a href="([^"]*)"([^>]*)>(.*?)</a>', '<a href="IN_YOUR_APP.md#4-editing">x</a>'))
     assert 'href="/help/rachana-in-your-app#4-editing"' in inside
 
