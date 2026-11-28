@@ -36,7 +36,7 @@ Daily: `python3 tools/drishti.py feed schedule --cron` (or `--systemd`, `--windo
 
 ### variant
 
-Pack `genomics`, kind `variant`, table `variant`, key `VARIANT_ID`; files `data/datafeeds/clinvar/<date>/variant.<date>.jsonl.gz`, each row under the run's business date.
+Pack `genomics`, kind `variant`, table `clinvar-variant`, key `VARIANT_ID`; files `data/datafeeds/clinvar/<date>/clinvar-variant.<date>.jsonl.gz`, each row under the run's business date.
 
 One variant of the panel: GRCh38 position and alleles, gene, consequence, impact, ClinVar significance, review status and conditions.
 
