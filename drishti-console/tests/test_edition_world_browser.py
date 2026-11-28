@@ -72,7 +72,7 @@ FUNDS = [("VTI", {"NAME": "Vanguard Total Stock Market Index Fund", "TYPE": "Mut
          ("SPY", {"NAME": "SPDR S&P 500 ETF Trust", "TYPE": "ETF", "NET_ASSETS": 7.1e11, "HOLDING_COUNT": 503, "INDEX_ID": "SP500"}),
          ("QQQ", {"NAME": "Invesco QQQ Trust", "TYPE": "ETF", "NET_ASSETS": 3.9e11, "HOLDING_COUNT": 101, "INDEX_ID": "NDX"})]
 TRACK = [("SP500", {"INDEX": "SP500", "NAME": "S&P 500"}), ("NDX", {"INDEX": "NDX", "NAME": "Nasdaq-100"})]
-COUNTS = {"ECON": 213, "USEQ": 586, "LEI": 9937, "LEIG": 591, "FUND": 200, "FILING": 11691, "TOPIC": 15}
+COUNTS = {"ECON": 213, "USEQ": 2508, "LEI": 10207, "LEIG": 591, "FUND": 200, "FILING": 49987, "TOPIC": 15}
 
 
 class WorldBackend(FakeBackend):
@@ -167,7 +167,7 @@ def test_each_world_landing_fills_from_the_packs_and_fits(browser, world_console
             assert page.locator("#wlCmd").is_visible()
             assert page.locator(".wl-chip", has_text="ECON USA").count() == 1
             page.wait_for_function("() => document.querySelector('[data-wl-count=LEI]').textContent === '9,937'")
-            assert page.locator("[data-wl-count=USEQ]").inner_text() == "586"
+            assert page.locator("[data-wl-count=USEQ]").inner_text() == "2508"
             recents = page.locator("[data-wl-recents]").inner_text()
             assert "ECON CAN" in recents and "FUND SPY" in recents   # a lens arranges, never hides: every command opened is recent
         else:

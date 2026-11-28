@@ -224,9 +224,9 @@ Fields, from 1 sample document:
 | `NAME` | string | `Current reports` | Forms |
 | `FORM` | string | `8-K` | The form type |
 | `FILINGS` | integer | `300` | Filings |
-| `COMPANIES` | integer | `209` | Companies |
+| `COMPANIES` | integer | `275` | Companies |
 | `LATEST` | date | `2026-11-27` | Latest |
-| `EARLIEST` | date | `2026-11-09` | Earliest shown |
+| `EARLIEST` | date | `2026-11-20` | Earliest shown |
 | `ROWS` | list of objects |  | The filings |
 | `BY` | list of objects |  | Filings by form |
 | `BY_TITLE` | string | `Filings by company` | Filings by company |
@@ -244,25 +244,25 @@ Nested structures:
 
 **SEC filing** · mnemonic `FILING` · read through connector `us-equities-store`.
 
-**Id:** field `ACCESSION`; pattern `^[0-9]{10}-[0-9]{2}-[0-9]{6}$`; for example `0001104659-26-127273`.
+**Id:** field `ACCESSION`; pattern `^[0-9]{10}-[0-9]{2}-[0-9]{6}$`; for example `0001104659-26-129066`.
 
 Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `ACCESSION` | string | `0001104659-26-127273` | SEC accession number |
-| `COMPANY` | string | `ABT` | Company; link to `us-company` |
-| `COMPANY_NAME` | string | `Abbott Laboratories` | The company's name |
+| `ACCESSION` | string | `0001104659-26-129066` | SEC accession number |
+| `COMPANY` | string | `AIR` | Company; link to `us-company` |
+| `COMPANY_NAME` | string | `Aar Corp` | The company's name |
 | `FORM` | string | `8-K` | Form |
 | `FORM_NAME` | string | `Current report` | What it is |
-| `FILED` | date | `2026-11-16` | Filed |
-| `REPORT_DATE` | date | `2026-11-11` | Report date |
-| `PRIMARY_DOCUMENT` | string | `tm2629582d1_8k.htm` | File name of the primary document on EDGAR |
+| `FILED` | date | `2026-11-17` | Filed |
+| `REPORT_DATE` | date | `2026-11-17` | Report date |
+| `PRIMARY_DOCUMENT` | string | `tm2629863d1_8k.htm` | File name of the primary document on EDGAR |
 | `DOCUMENT_DESCRIPTION` | string | `FORM 8-K` | EDGAR's description of the document |
-| `SIZE_KB` | integer | `238` | Size of the filing (KB) |
+| `SIZE_KB` | integer | `1584` | Size of the filing (KB) |
 | `ITEMS` | list of objects |  | Items reported (8-K) |
-| `ITEMS_TEXT` | string | `5.02` | The items, as text |
-| `PATH` | string | `1800/000110465926127273` | EDGAR archive path (CIK/accession without dashes) |
+| `ITEMS_TEXT` | string | `1.01, 2.03, 9.01` | The items, as text |
+| `PATH` | string | `1750/000110465926129066` | EDGAR archive path (CIK/accession without dashes) |
 
 Nested structures:
 
@@ -276,22 +276,22 @@ Links: `COMPANY` → `us-company`.
 
 **Financial fact** · mnemonic `FACT` · read through connector `us-equities-store`.
 
-**Id:** field `FACT_ID`; for example `ABT-REVENUE`.
+**Id:** field `FACT_ID`; for example `AIR-REVENUE`.
 
 Fields, from 2 sample documents:
 
 | Field | Type | Example | Description |
 |---|---|---|---|
-| `FACT_ID` | string | `ABT-REVENUE` | Ticker and concept |
-| `COMPANY` | string | `ABT` | Company; link to `us-company` |
-| `COMPANY_NAME` | string | `Abbott Laboratories` | The company's name |
-| `CIK` | string | `0000001800` | SEC Central Index Key |
+| `FACT_ID` | string | `AIR-REVENUE` | Ticker and concept |
+| `COMPANY` | string | `AIR` | Company; link to `us-company` |
+| `COMPANY_NAME` | string | `Aar Corp` | The company's name |
+| `CIK` | string | `0000001750` | SEC Central Index Key |
 | `CONCEPT` | string | `REVENUE` | Concept |
 | `LABEL` | string | `Revenue` | Concept |
 | `UNIT` | string | `USD` | Unit |
-| `XBRL_TAG` | string | `RevenueFromContractWithCustomerExcluding…` | XBRL tags read |
-| `LATEST` | integer | `44328000000` | Latest |
-| `LATEST_YEAR` | integer | `2025` | Fiscal year |
+| `XBRL_TAG` | string | `RevenueFromContractWithCustomerIncluding…` | XBRL tags read |
+| `LATEST` | integer | `3308000000` | Latest |
+| `LATEST_YEAR` | integer | `2026` | Fiscal year |
 | `YEARS` | integer | `10` | Years |
 | `HISTORY` | list of objects |  | Values by fiscal year |
 

@@ -20,7 +20,7 @@ On Linux write `python3`; on Windows `py -3.13` and `\` in paths. `PY` below sta
 |---|---|---|---|---|---|---|
 | `gleif` | GLEIF legal entities, ownership, BIC/ISIN/MIC mappings | `referencelake` | `lei-entity`, `lei-relationship`, `lei-mapping` | daily 05:30 | none | CC0, redistributable |
 | `funds` | US funds and ETFs: SEC N-PORT holdings, N-CEN, risk/return, tickers, GLEIF fund links | `capitalmarket` | `fund`, `fund-holder`, `index-funds` | daily 06:15 | none | public domain |
-| `us-equities` | about 480 US companies: Wikidata, SEC EDGAR filings and XBRL facts, index membership, Nasdaq symbols | `capitalmarket` | `us-company`, `index-membership`, `filing-feed`, `filing`, `financial-fact` | daily 07:00 | none | public domain / CC0 |
+| `us-equities` | about 2,500 US companies (the Dow, S&P 500, Nasdaq-100 and Russell 2000 members, and banks): Wikidata, SEC EDGAR filings and XBRL facts, index membership from the tracking ETFs, Nasdaq symbols | `capitalmarket` | `us-company`, `index-membership`, `filing-feed`, `filing`, `financial-fact` | daily 07:00 | none | public domain / CC0 |
 | `yahoo-prices` | daily prices through the us-equities-prices connector | `capitalmarket` | `price-history` | weekdays 22:30, **off as shipped** | `DRISHTI_TOKEN` if the server is secured | **internal only** (Yahoo terms) |
 | `market-data` | ECB FX, US Treasury par curve, SOFR, euro short-term rate | `capitalmarket` | `fx-spot`, `ir-curve`, `rate-fixing` | weekdays 18:30 | none | free reuse with attribution |
 | `central-banks` | FRED and Bank of Canada series | `worldlake` | `central-bank`, `rate-series` | weekdays 18:15 | `DRISHTI_FRED_API_KEY` (optional) | attribution |
@@ -164,6 +164,26 @@ Each feed file records its licence; `feed list` shows it and every dated `manife
   `DRISHTI_US_EQUITIES_PRICES_ENABLED`) on purpose for an internal installation.
 - `--snapshot` (refresh the committed demo data in `data/testdata/<pack>/`) refuses internal-only data unless `--internal-ok`.
 - Everything else is redistributable with the attribution each feed's page gives.
+
+## The committed demo data (`--snapshot`)
+
+The data of a pack is never kept in the pack. Each feed that fills a pack also keeps **the latest data of a live run** as that pack's committed
+demo data, `data/testdata/<pack>/<kind>/<kind>.<date>.jsonl.gz` (gzipped JSON Lines, dated by the day it was retrieved, listed in
+`data/testdata/testdata.yaml`). `python3 tools/drishti.py lake demo` builds it into the lake the pack's connector reads, so a clean
+checkout works offline; `data/testdata/README.md` has the one table of every file, its rows, source, date and refresh command.
+
+| Feed | Refresh the committed data | Lake the demo build writes | Notes |
+|---|---|---|---|
+| `central-banks` | `feed run central-banks --snapshot` | `worldlake` | needs `DRISHTI_FRED_API_KEY` for the Federal Reserve series; without it the snapshot holds the Bank of Canada's only (the run's log says so) |
+| `national-statistics` | `feed run national-statistics --snapshot` | `worldlake` | |
+| `oecd` | `feed run oecd --snapshot` | `worldlake` | |
+| `world-development` | `feed run world-development --snapshot` | `worldlake` | about 1.5 MB: 217 country profiles and their indicator series |
+| `world-economy` | `feed run world-economy --snapshot --internal-ok` | demo lake (`macro`, `civic`) | **internal demos only** (IMF data); also rewrites `tools/realdata/dataset` and the pack's tests |
+| `gleif`, `funds`, `us-equities` | `feed run <feed> --snapshot` | demo lake | `us-equities` reads the index members from the funds cache: refresh `funds` first; its universe is the Dow 30, the S&P 500, the Nasdaq-100, the Russell 2000 (IWM) and the US, Canadian and UK banks |
+
+A snapshot run pulls the feed's whole selection (never "what is new since the last run"), writes the files into `data/testdata`, and
+rebuilds the pack's reference samples (a few documents of each kind, for its README) and README. Nothing is served from a pack's `samples/`.
+`python3 -m pytest tools/testdata/test_public_data_pattern.py` guards the pattern.
 
 ## Tests
 

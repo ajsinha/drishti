@@ -211,8 +211,8 @@ Fields, from 1 sample document:
 | `ETFS` | integer | `26` | How many of them are ETFs. Source: computed. (funds) |
 | `TOTAL_VALUE` | number | `831040821744.0` | The value the funds hold together. Source: computed from N-PORT CURRENCY_VALUE. (USD) |
 | `TOTAL_SHARES` | number | `2809918580.0` | The shares the funds hold together. Source: computed from N-PORT BALANCE. (shares) |
-| `SHARES_OUTSTANDING` | integer | `14776353000` | The company's shares outstanding (10-K cover). Source: us-equities us-company.SHARES_OUTSTANDING (SEC XBRL dei). (shares) |
-| `PCT_OF_SHARES` | number | `19.016` | Shares held by the funds over shares outstanding (percent) |
+| `SHARES_OUTSTANDING` | integer | `14532182000` | The company's shares outstanding (10-K cover). Source: us-equities us-company.SHARES_OUTSTANDING (SEC XBRL dei). (shares) |
+| `PCT_OF_SHARES` | number | `19.336` | Shares held by the funds over shares outstanding (percent) |
 | `AVG_WEIGHT` | number | `5.425` | Its average weight in the funds holding it. Source: computed. (% of net assets) |
 | `MAX_WEIGHT` | number | `14.5683` | Its largest weight in a fund. Source: computed. (% of net assets) |
 | `TOP_HOLDER` | string | `VTI` | The fund holding the most, by value. Source: computed. |

@@ -80,6 +80,15 @@ The exit codes and the general table are in [external/README.md](../external/REA
 - **Public domain:** the Fed, the SEC and the Federal Register.
 - The licence and the `internal-only` flag of each source are in its feed file, in every dated `manifest.json` and in `feed list`.
 
+## The committed demo data (`--snapshot`)
+
+`feed run official-news --snapshot` and `feed run gdelt-events --snapshot` keep the latest data of a live run as the packs' committed demo
+data, `data/testdata/official-news/<kind>/` and `data/testdata/gdelt-events/<kind>/` (dated gzipped JSON Lines, listed in `data/testdata/testdata.yaml`);
+`drishti.py lake demo` writes them into `newslake`, which the packs' connectors read. The `news-and-markets` quotes and headlines
+are captured by `drishti.py testdata capture-market` (internal use only, Yahoo and Google News terms), its lists of companies and topics
+by `modules/economy/packs/news-and-markets/tools/make_samples.py`. `data/testdata/README.md` has the table of every file, its rows,
+source, date and refresh command.
+
 ## Rate limits and caches
 
 `pause` seconds between requests (1 to 2), three retries (2, 4, 8 s, or the server's `Retry-After`). Downloads are cached `cache-hours`

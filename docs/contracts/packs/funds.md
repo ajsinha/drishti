@@ -543,8 +543,8 @@ A real record, the most complete of the first rows (the one with the most non-em
   "LARGEST_PCT": 7.514237,
   "WITH_LEI": 494,
   "EQUITY_PCT": 99.749,
-  "US_COMPANY_PCT": 99.397,
-  "US_COMPANIES": 495,
+  "US_COMPANY_PCT": 99.341,
+  "US_COMPANIES": 494,
   "BY_ASSET": [
     {
       "KEY": "EC",
@@ -604,9 +604,9 @@ A real record, the most complete of the first rows (the one with the most non-em
     {
       "KEY": "Manufacturing",
       "LABEL": "Manufacturing",
-      "PCT": 52.494,
-      "VALUE": 877288695603.0,
-      "COUNT": 202
+      "PCT": 52.437,
+      "VALUE": 876337855309.0,
+      "COUNT": 201
     },
     {
       "KEY": "Services",
@@ -764,53 +764,53 @@ A real record, the most complete of the first rows (the one with the most non-em
     "INDEX_NAME": "S&P 500",
     "BASIS": "tracks",
     "WEIGHTING": "market capitalisation computed from SEC data",
-    "MEMBERS": 495,
-    "MEMBERS_WEIGHTED": 454,
+    "MEMBERS": 494,
+    "MEMBERS_WEIGHTED": 453,
     "MEMBERS_NOT_WEIGHTED": "ABNB, ACN, AOS, APP, ASST, BF-B, BKNG, BRK-B, CME, COIN, CRWD, CVNA, DASH, DDOG, DELL, EL, ERIE, EXPE, FOXA, GOOGL, HONA, HOOD, HRL, IBKR, LEN, MA, META, MKC, NWSA, PKG, PLTR, RL, SPG, STZ, TAP, TKO, TSN, TTD, UHS, XOM, XYZ",
-    "MEMBERS_HELD": 493,
-    "FUND_IN_INDEX_PCT": 99.35,
-    "NOT_IN_INDEX_PCT": 0.65,
-    "ACTIVE_SHARE": 5.29,
+    "MEMBERS_HELD": 492,
+    "FUND_IN_INDEX_PCT": 99.3,
+    "NOT_IN_INDEX_PCT": 0.7,
+    "ACTIVE_SHARE": 5.24,
     "LARGEST_DIFF_COMPANY": "AMZN",
     "LARGEST_DIFF_NAME": "Amazon",
-    "LARGEST_DIFF": -0.772,
+    "LARGEST_DIFF": -0.781,
     "AS_OF": "2026-06-30",
     "ROWS": [
       {
         "COMPANY": "NVDA",
         "NAME": "Nvidia",
         "SECTOR": "Manufacturing",
-        "FUND_PCT": 8.761,
-        "INDEX_PCT": 8.379,
-        "DIFF": 0.382
+        "FUND_PCT": 8.767,
+        "INDEX_PCT": 8.399,
+        "DIFF": 0.368
       },
       {
         "COMPANY": "AAPL",
         "NAME": "Apple Inc.",
         "SECTOR": "Manufacturing",
-        "FUND_PCT": 7.683,
-        "INDEX_PCT": 7.84,
-        "DIFF": -0.157
+        "FUND_PCT": 7.688,
+        "INDEX_PCT": 7.729,
+        "DIFF": -0.041
       },
       "… 23 more elements of the same shape"
     ],
     "SECTORS": [
       {
         "SECTOR": "Manufacturing",
-        "FUND_PCT": 59.56,
-        "INDEX_PCT": 57.66,
-        "TILT": 1.9
+        "FUND_PCT": 59.53,
+        "INDEX_PCT": 57.59,
+        "TILT": 1.94
       },
       {
         "SECTOR": "Finance, Insurance and Real Estate",
-        "FUND_PCT": 11.92,
-        "INDEX_PCT": 12.15,
-        "TILT": -0.23
+        "FUND_PCT": 11.93,
+        "INDEX_PCT": 12.18,
+        "TILT": -0.25
       },
       "… 7 more elements of the same shape"
     ]
   },
-  "ACTIVE_SHARE": 5.29
+  "ACTIVE_SHARE": 5.24
 }
 ```
 
@@ -1062,7 +1062,7 @@ A real record, the most complete of the first rows (the one with the most non-em
       "NET_ASSETS": 490103179942.0,
       "EXPENSE_RATIO": 0.18,
       "MEMBERS_HELD": 98,
-      "ACTIVE_SHARE": 11.21,
+      "ACTIVE_SHARE": 11.2,
       "REPORT_DATE": "2026-06-30",
       "IS_ETF": true
     },
@@ -1073,7 +1073,7 @@ A real record, the most complete of the first rows (the one with the most non-em
       "NET_ASSETS": 97151481157.0,
       "EXPENSE_RATIO": 0.15,
       "MEMBERS_HELD": 93,
-      "ACTIVE_SHARE": 8.73,
+      "ACTIVE_SHARE": 8.7,
       "REPORT_DATE": "2026-05-31",
       "IS_ETF": true
     }

@@ -21555,10 +21555,10 @@ datasets:
   snapshot: true
   captured: '2026-11-27'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
-  documents: 586
+  documents: 2508
   files:
   - us-company.2026-11-27.jsonl.gz
-  bytes: 491688
+  bytes: 1985573
 - folder: us-equities/index-membership
   pack: us-equities
   kind: index-membership
@@ -21570,7 +21570,7 @@ datasets:
   documents: 7
   files:
   - index-membership.2026-11-27.jsonl.gz
-  bytes: 26083
+  bytes: 92070
 - folder: us-equities/filing-feed
   pack: us-equities
   kind: filing-feed
@@ -21582,7 +21582,7 @@ datasets:
   documents: 6
   files:
   - filing-feed.2026-11-27.jsonl.gz
-  bytes: 21542
+  bytes: 32211
 - folder: us-equities/filing
   pack: us-equities
   kind: filing
@@ -21591,10 +21591,10 @@ datasets:
   snapshot: true
   captured: '2026-11-27'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
-  documents: 11686
+  documents: 49987
   files:
   - filing.2026-11-27.jsonl.gz
-  bytes: 319893
+  bytes: 1422799
 - folder: us-equities/financial-fact
   pack: us-equities
   kind: financial-fact
@@ -21603,10 +21603,10 @@ datasets:
   snapshot: true
   captured: '2026-11-27'
   source: SEC EDGAR, Nasdaq Trader, GLEIF and Wikidata (drishti.py feed run us-equities)
-  documents: 4026
+  documents: 16813
   files:
   - financial-fact.2026-11-27.jsonl.gz
-  bytes: 418699
+  bytes: 1654478
 - folder: gleif/lei-entity
   pack: gleif
   kind: lei-entity
@@ -21654,7 +21654,7 @@ datasets:
   documents: 200
   files:
   - fund.tar
-  bytes: 5027840
+  bytes: 5058560
 - folder: funds/fund-holder
   pack: funds
   kind: fund-holder
@@ -21663,10 +21663,10 @@ datasets:
   snapshot: true
   captured: '2026-11-27'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)
-  documents: 586
+  documents: 2454
   files:
-  - fund-holder.2026-11-27.jsonl.gz
-  bytes: 682851
+  - fund-holder.tar
+  bytes: 1495040
 - folder: funds/index-funds
   pack: funds
   kind: index-funds
@@ -21675,10 +21675,10 @@ datasets:
   snapshot: true
   captured: '2026-11-27'
   source: SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (drishti.py feed run funds)
-  documents: 3
+  documents: 4
   files:
   - index-funds.2026-11-27.jsonl.gz
-  bytes: 1096
+  bytes: 1164
 - folder: genomics-showcase/study-gene
   pack: genomics-showcase
   kind: study-gene

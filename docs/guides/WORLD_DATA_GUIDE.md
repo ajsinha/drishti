@@ -459,7 +459,6 @@ One document per fund: its identity, share classes, fees, returns and its holdin
 One row per held company: the funds that hold it and how much, read by HELD and the company page's Held by funds panel.
 
 - **Data contract:** [`fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder) (HELD), key `TICKER`; 16 fields, 14 required; the file [`fund-holder.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund-holder.contract.yaml).
-- **Example:** [a real record of the test data](../contracts/packs/funds.md#example-funds-fund-holder) (files `data/testdata/funds/fund-holder/fund-holder.*.jsonl.gz`).
 
 ### 18.4 `index-funds`: funds tracking an index
 
@@ -1102,7 +1101,7 @@ removed). It is not marked `sample: true`. (It was two packs, `economics` and `p
 the two halves keep their names below.)
 
 The data is fetched and normalised by a repeatable tool, `tools/realdata/`, and committed to git as a small normalised dataset (`tools/realdata/dataset/`, 2.4 MB) plus the
-generated pack documents. The raw downloads are cached outside the repository and are never committed.
+generated pack documents. The pack's data is its committed snapshot, `data/testdata/world-economy/<kind>/` (listed in `data/testdata/testdata.yaml`; `python3 tools/drishti.py feed run world-economy --snapshot --internal-ok` refreshes it from a live run), built into the lake by `drishti.py lake demo` and read by the pack's Delta connectors `macro-store` and `civic-store`; its `samples/` keep a few reference documents only. The raw downloads are cached outside the repository and are never committed.
 
 > **Licence note: IMF data is for internal demonstration only.** The IMF World Economic Outlook data in this pack (the [`economic-forecast`](../contracts/packs/world-economy.md#example-world-economy-economic-forecast) ([contract](../contracts/packs/world-economy.md#fcst-economic-forecast-economic-forecast)) documents, and the
 > `debt` and `net_lending` series that feed each economy's debt ratio and fiscal position) is kept for **internal demos only**. The IMF's terms allow reuse with
@@ -1381,7 +1380,7 @@ The pictures are made by `tools/docs/shots/realdata.py` (`python3 tools/docs/scr
 
 #### news-and-markets
 
-**Sources:** `quote` and `news`, both **internal only** (section 19.11). The topics and listed companies are hand-written reference data (`modules/economy/packs/news-and-markets/tools/make_samples.py`).
+**Sources:** `quote` and `news`, both **internal only** (section 19.11). The topics and listed companies are hand-written reference data (`modules/economy/packs/news-and-markets/tools/make_samples.py`), committed as `data/testdata/news-and-markets/{news-topic,listed-company}` and built into the lake by `drishti.py lake demo`.
 
 `drishti.py feed run news-and-markets` wraps `tools/testdata/capture_market.py` (also `drishti.py testdata capture-market`): the
 documents come through Drishti's own live connectors, so they have exactly the shape the Sutras read. It starts a scratch server
@@ -1738,9 +1737,13 @@ address and `INTERNAL_ONLY`. Each pack's README (`config/packs/<pack>/README.md`
 
 **One record.** Each kind's example (a real record, every field explained) is its section on the data-sample pages, linked from the table above; the fields are its contract.
 
-The packs' `samples/` keep a few documents (from the feeds' recorded fixtures, `python3 tools/packgen/publicsector/make.py`) for the
-renderer's tests; they are never served beside the lake: demo and real data never mix
-([DATA_LAKE_GUIDE.md section 6](DATA_LAKE_GUIDE.md)).
+The data of the six packs is their committed snapshot, `data/testdata/<pack>/<kind>/<kind>.<date>.jsonl.gz`, written from a live run by
+`python3 tools/drishti.py feed run <feed> --snapshot` (the latest data, small selection) and listed in `data/testdata/testdata.yaml` with the lake
+it goes to: `drishti.py lake demo` loads it into `worldlake` or `newslake`, once, under the newest business date, and the packs' Delta connectors
+read it (`mode.<kind>: effective`: the newest load on or before the day asked). Each pack's README says where its data comes from and how to refresh
+it; `data/testdata/README.md` has the one table of every file. The packs' `samples/` keep a few reference documents for the README and the
+renderer's tests; they are never served ([DATA_LAKE_GUIDE.md section 6](DATA_LAKE_GUIDE.md)). `central-banks` needs `DRISHTI_FRED_API_KEY`
+for the Federal Reserve series; without it the snapshot holds the Bank of Canada's only.
 
 ### 20.5 The feeds
 
@@ -2162,7 +2165,7 @@ With `us-equities` on, a company page (`USEQ AAPL`) has the tabs **Held by funds
 | Kind | Documents | What one holds |
 |---|---|---|
 | `fund` | 200 | identity and share classes, census facts, fees and returns, flows, concentration, holdings by asset type, issuer type, country and SIC division, derivatives and counterparties, the 600 largest holdings (with the totals of the rest), the fund against its index |
-| `fund-holder` | 586 | one us-equities company: every fund that holds it, its weight, value and shares in each |
+| `fund-holder` | 2,454 | one us-equities company: every fund that holds it, its weight, value and shares in each |
 | `index-funds` | 3 | one us-equities index: the funds that track it, with net assets, expense ratio and active share |
 
 Holdings kept: 73,577 of 411,796 (a fund keeps its 600 largest; the reverse look-through counts every one). Funds by type: Mutual fund 117, ETF 50, Mutual fund with an ETF share class 31, ETF (unit investment trust) 2.
@@ -2206,9 +2209,9 @@ Every kind's data contract and example, where its data comes from (an external s
 
 ## The us-equities pack
 
-Public data on the companies of the **Dow Jones Industrial Average, the Nasdaq-100 and the S&P 500**: 586 companies with their
+Public data on the companies of the **Dow Jones Industrial Average, the Nasdaq-100, the S&P 500 and the Russell 2000**: 2,508 companies with their
 SEC filings, ten years of annual financials from their XBRL filings, their LEI, their SIC sector and the indexes they belong to.
-Everything here is published data, not samples, retrieved on 2026-10-24; prices are not included (see *Prices: internal use only*).
+Everything here is published data, not samples, retrieved on 2026-11-27; prices are not included (see *Prices: internal use only*).
 
 The pack is **off by default**: add it to the packs a server loads, `DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities`
 (it needs no other pack; with `world-economy` and `news-and-markets` on, its companies link to them).
@@ -2233,12 +2236,12 @@ The concepts are `REVENUE`, `NET-INCOME`, `ASSETS`, `LIABILITIES`, `EQUITY`, `EP
 
 | Kind | Documents | What one holds |
 |---|---|---|
-| [`us-company`](../contracts/packs/us-equities.md#example-us-equities-us-company) ([contract](../contracts/packs/us-equities.md#useq-us-company-us-company)) | 586 | CIK, ticker, exchange and listing market, SIC with its description and division, state of incorporation, fiscal year end, LEI, headquarters, founded, website, index memberships, the latest year's figures, ten years of financials, the latest 20 filings |
-| [`index-membership`](../contracts/packs/us-equities.md#example-us-equities-index-membership) ([contract](../contracts/packs/us-equities.md#idx-index-members-index-membership)) | 6 | the members of the S&P 500, Nasdaq-100, Dow and Russell 2000 as their tracking ETF (SPY, QQQ, DIA, IWM) reports holding them, and the bank lists, with their sector and latest revenue; members by sector |
-| `sic-sector` | computed (194 codes and `ALL`) | the companies of one SIC code ranked by revenue; `ALL` lists every code. Computed from the companies when asked by the derived connector `us-equities-groupings`: nothing is stored |
+| [`us-company`](../contracts/packs/us-equities.md#example-us-equities-us-company) ([contract](../contracts/packs/us-equities.md#useq-us-company-us-company)) | 2,508 | CIK, ticker, exchange and listing market, SIC with its description and division, state of incorporation, fiscal year end, LEI, headquarters, founded, website, index memberships, the latest year's figures, ten years of financials, the latest 20 filings |
+| [`index-membership`](../contracts/packs/us-equities.md#example-us-equities-index-membership) ([contract](../contracts/packs/us-equities.md#idx-index-members-index-membership)) | 7 | the members of the S&P 500, Nasdaq-100, Dow and Russell 2000 as their tracking ETF (SPY, QQQ, DIA, IWM) reports holding them, and the bank lists, with their sector and latest revenue; members by sector |
+| `sic-sector` | computed (342 codes and `ALL`) | the companies of one SIC code ranked by revenue; `ALL` lists every code. Computed from the companies when asked by the derived connector `us-equities-groupings`: nothing is stored |
 | [`filing-feed`](../contracts/packs/us-equities.md#example-us-equities-filing-feed) ([contract](../contracts/packs/us-equities.md#edgar-edgar-filings-browser-filing-feed)) | 6 | the latest 300 filings of the companies, all forms or one |
-| `filing` | 11,691 | one filing: form, filing and report dates, document, 8-K items, links to the document and its EDGAR index |
-| [`financial-fact`](../contracts/packs/us-equities.md#example-us-equities-financial-fact) ([contract](../contracts/packs/us-equities.md#fact-financial-fact-financial-fact)) | 4,026 | one concept of one company: up to ten annual values with the change, the XBRL tag and the filing each came from |
+| `filing` | 49,987 | one filing: form, filing and report dates, document, 8-K items, links to the document and its EDGAR index |
+| [`financial-fact`](../contracts/packs/us-equities.md#example-us-equities-financial-fact) ([contract](../contracts/packs/us-equities.md#fact-financial-fact-financial-fact)) | 16,813 | one concept of one company: up to ten annual values with the change, the XBRL tag and the filing each came from |
 | `price-history` | live only | the quote, a year of daily prices and the analytics computed from them when read (returns, volatility, drawdown, beta against the benchmark), from the price connector when a site switches it on; nothing is stored |
 
 Members per index or list: Dow Jones Industrial Average 30, Nasdaq-100 99, S&P 500 495, Major US banks 39, Canadian banks 6, Major UK banks 4. The bank lists (BANKS-US, BANKS-CA, BANKS-UK) are kept by Drishti (`LISTS` in
@@ -2393,8 +2396,8 @@ links to its own headlines (`newsId`), so `CPTY CP-NORTHBRIDGE` shows a *Headlin
 ### News
 
 A sample pack: fifteen topics (central banks, countries, companies and themes), and for each the news about it, **computed when you open the page**
-by the [news connector](../connectors/types/news/README.md) from Google News. The topic list is static reference data in `samples/news-topic.jsonl`
-(written by `tools/make_samples.py`); the headlines are live.
+by the [news connector](../connectors/types/news/README.md) from Google News. The topic list is static reference data in `data/testdata/news-and-markets/news-topic`
+(written by `tools/make_samples.py`, built into the lake by `lake demo`); the headlines are live.
 
 !!! warning "Off until you turn it on, and names leave your network when you do"
     The connector is disabled as shipped. Turn it on with `DRISHTI_NEWS_ENABLED=true` (or Admin, Connectors, `news`). From then on the name of every topic

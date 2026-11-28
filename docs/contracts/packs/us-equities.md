@@ -590,36 +590,36 @@ A real record, the most complete of the first rows (the one with the most non-em
   "FEED": "10-K",
   "NAME": "Annual reports",
   "FORM": "10-K",
-  "FILINGS": 24,
-  "COMPANIES": 24,
-  "LATEST": "2026-11-24",
-  "EARLIEST": "2026-08-05",
+  "FILINGS": 144,
+  "COMPANIES": 143,
+  "LATEST": "2026-11-27",
+  "EARLIEST": "2025-07-29",
   "ROWS": [
     {
-      "ACCESSION": "0001140859-26-000044",
-      "FILED": "2026-11-24",
-      "COMPANY": "COR",
-      "COMPANY_NAME": "Cencora",
+      "ACCESSION": "0000913760-26-000049",
+      "FILED": "2026-11-27",
+      "COMPANY": "SNEX",
+      "COMPANY_NAME": "StoneX Group Inc.",
       "FORM": "10-K",
       "DESCRIPTION": "Annual report"
     },
     {
-      "ACCESSION": "0000720005-26-000086",
-      "FILED": "2026-11-24",
-      "COMPANY": "RJF",
-      "COMPANY_NAME": "Raymond James Financial",
+      "ACCESSION": "0000907471-26-000063",
+      "FILED": "2026-11-27",
+      "COMPANY": "CASH",
+      "COMPANY_NAME": "Pathward Financial, Inc.",
       "FORM": "10-K",
       "DESCRIPTION": "Annual report"
     },
-    "… 22 more elements of the same shape"
+    "… 142 more elements of the same shape"
   ],
   "BY": [
     {
-      "LABEL": "AAPL",
-      "VALUE": 1
+      "LABEL": "VALU",
+      "VALUE": 2
     },
     {
-      "LABEL": "ADI",
+      "LABEL": "AAPL",
       "VALUE": 1
     },
     "… 13 more elements of the same shape"
@@ -709,24 +709,32 @@ A real record, the most complete of the first rows (the one with the most non-em
 
 ```json
 {
-  "ACCESSION": "0001104659-26-127273",
-  "COMPANY": "ABT",
-  "COMPANY_NAME": "Abbott Laboratories",
+  "ACCESSION": "0001104659-26-129066",
+  "COMPANY": "AIR",
+  "COMPANY_NAME": "Aar Corp",
   "FORM": "8-K",
   "FORM_NAME": "Current report",
-  "FILED": "2026-11-16",
-  "REPORT_DATE": "2026-11-11",
-  "PRIMARY_DOCUMENT": "tm2629582d1_8k.htm",
+  "FILED": "2026-11-17",
+  "REPORT_DATE": "2026-11-17",
+  "PRIMARY_DOCUMENT": "tm2629863d1_8k.htm",
   "DOCUMENT_DESCRIPTION": "FORM 8-K",
-  "SIZE_KB": 238,
+  "SIZE_KB": 1584,
   "ITEMS": [
     {
-      "ITEM": "5.02",
-      "DESCRIPTION": "Departure or appointment of directors or officers; compensation"
+      "ITEM": "1.01",
+      "DESCRIPTION": "Entry into a material definitive agreement"
+    },
+    {
+      "ITEM": "2.03",
+      "DESCRIPTION": "Creation of a direct financial obligation"
+    },
+    {
+      "ITEM": "9.01",
+      "DESCRIPTION": "Financial statements and exhibits"
     }
   ],
-  "ITEMS_TEXT": "5.02",
-  "PATH": "1800/000110465926127273",
+  "ITEMS_TEXT": "1.01, 2.03, 9.01",
+  "PATH": "1750/000110465926129066",
   "_meta": {
     "source": "sec-edgar",
     "dataset": "submissions (recent filings)",
@@ -810,31 +818,31 @@ A real record, the most complete of the first rows (the one with the most non-em
 
 ```json
 {
-  "FACT_ID": "ABT-REVENUE",
-  "COMPANY": "ABT",
-  "COMPANY_NAME": "Abbott Laboratories",
-  "CIK": "0000001800",
+  "FACT_ID": "AIR-REVENUE",
+  "COMPANY": "AIR",
+  "COMPANY_NAME": "Aar Corp",
+  "CIK": "0000001750",
   "CONCEPT": "REVENUE",
   "LABEL": "Revenue",
   "UNIT": "USD",
-  "XBRL_TAG": "RevenueFromContractWithCustomerExcludingAssessedTax",
-  "LATEST": 44328000000,
-  "LATEST_YEAR": 2025,
+  "XBRL_TAG": "RevenueFromContractWithCustomerIncludingAssessedTax, SalesRevenueNet",
+  "LATEST": 3308000000,
+  "LATEST_YEAR": 2026,
   "YEARS": 10,
   "HISTORY": [
     {
-      "YEAR": 2016,
-      "PERIOD_END": "2016-12-31",
-      "VALUE": 20853000000,
-      "FILED": "2019-02-22",
-      "ACCESSION": "0001047469-19-000624"
+      "YEAR": 2017,
+      "PERIOD_END": "2017-05-31",
+      "VALUE": 1590800000,
+      "FILED": "2018-07-11",
+      "ACCESSION": "0001047469-18-004978"
     },
     {
-      "YEAR": 2017,
-      "PERIOD_END": "2017-12-31",
-      "VALUE": 27390000000,
-      "FILED": "2020-02-21",
-      "ACCESSION": "0001104659-20-023904"
+      "YEAR": 2018,
+      "PERIOD_END": "2018-05-31",
+      "VALUE": 1748300000,
+      "FILED": "2018-07-11",
+      "ACCESSION": "0001047469-18-004978"
     },
     "… 8 more elements of the same shape"
   ],

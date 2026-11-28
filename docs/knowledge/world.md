@@ -101,18 +101,18 @@ where it has one, else its oldest class; any class's ticker opens it (`FUND VFIA
 
 ### Companies, funds and ETFs: a worked example on the demo data
 
-The committed public snapshots: us-equities retrieved 2026-10-24 (**586 companies**, 194 SIC codes in 9 divisions, 531 with an LEI; the index members as SPY, QQQ and DIA reported holding them);
-funds retrieved 2026-10-26 (the **200 largest US mutual funds and ETFs**, 24,593bn USD of net assets: 117 mutual funds, 50 ETFs, 31
+The committed public snapshots: us-equities retrieved 2026-11-27 (**2,508 companies**, 342 SIC codes in 9 divisions, 1,427 with an LEI; the index members as SPY, QQQ, DIA and IWM reported holding them: the Dow, the S&P 500, the Nasdaq-100 and the Russell 2000);
+funds retrieved 2026-11-27 (the **200 largest US mutual funds and ETFs**, 24,593bn USD of net assets: 117 mutual funds, 50 ETFs, 31
 mutual funds with an ETF share class, 2 unit investment trusts; N-PORT reports dated 2026-05-31 to 2026-07-31); GLEIF retrieved
-2026-10-25 (9,937 legal entities). These records are not dated by business date: every date reads the same snapshot.
+2026-11-27 (10,207 legal entities). These records are not dated by business date: every date reads the same snapshot.
 
 **One company, five identifiers.** `USEQ AAPL <GO>` is *Apple Inc.*: ticker AAPL, CIK `0000320193`, SIC 3571 (Electronic Computers),
-division D (Manufacturing), LEI `HWUPKR0MPOU8FGXBT394`, member of the Dow, the Nasdaq-100 and the S&P 500, 14,776,353,000 shares
-outstanding, revenue 416.2bn USD in fiscal 2025. Its LEI opens the GLEIF record and its ownership group (`LEIG HWUPKR0MPOU8FGXBT394`,
-21 entities). Its industry: `SIC 3674 <GO>` has the 20 semiconductor companies, NVIDIA first by revenue (215.9bn), then Micron
-(133.2bn) and Broadcom (63.9bn). By division the 586 companies are D Manufacturing 234, H Finance, Insurance and Real Estate 132, I
-Services 87, E Transportation, Communications and Utilities 66, G Retail Trade 33, B Mining 13, F Wholesale 11, C Construction 9 and A
-Agriculture 1.
+division D (Manufacturing), LEI `HWUPKR0MPOU8FGXBT394`, member of the Dow, the Nasdaq-100 and the S&P 500, 14,532,182,000 shares
+outstanding, revenue 478.8bn USD in fiscal 2026. Its LEI opens the GLEIF record and its ownership group (`LEIG HWUPKR0MPOU8FGXBT394`,
+21 entities). Its industry: `SIC 3674 <GO>` has the 55 semiconductor companies, NVIDIA first by revenue (215.9bn), then Micron
+(133.2bn) and Broadcom (63.9bn). By division the 2,508 companies are D Manufacturing 994, H Finance, Insurance and Real Estate 620, I
+Services 396, E Transportation, Communications and Utilities 187, G Retail Trade 116, B Mining 105, F Wholesale 45, C Construction 37 and A
+Agriculture 7.
 
 **Share classes, twice.** `USEQ GOOGL <GO>` is *Alphabet Inc.*, CIK `0001652044`, SIC 7370 (division I, Services), with other tickers
 GOOG, GOOGM and GOOGN. In `FUND VOO`'s holdings Alphabet appears twice: class A 3.25% and class C 2.59% of net assets, together 5.84%,
