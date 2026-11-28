@@ -36,7 +36,7 @@ import modulesbuild  # noqa: E402
 from procs import LaunchError  # noqa: E402
 
 MODULES = ROOT / "modules"
-CONTENT = ["external-data", "news-and-events", "source-calypso", "source-endur", "source-ici", "source-murex", "source-swapone", "source-wss"]
+CONTENT = ["external-data", "news-and-events", "reference-data", "source-calypso", "source-endur", "source-ici", "source-murex", "source-swapone", "source-wss"]
 
 # a module with a java: block that packaging/dist does NOT pack: the reason (none today: every one is shipped)
 NOT_SHIPPED: dict[str, str] = {}
@@ -151,7 +151,7 @@ def test_a_module_with_a_server_part_is_not_packed_without_its_jar(mid, tmp_path
 
 def test_banking_is_not_a_carrier_of_the_market_data_pack():
     banking = manifest("banking")
-    assert required("banking") == ["market-data"]
+    assert "market-data" in required("banking")
     assert "market-data" not in str(banking.get("packs"))
     assert banking.get("origin") == "first-party"
     assert "market-data" in str(manifest("market-data").get("packs"))

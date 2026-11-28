@@ -33,8 +33,8 @@ from resolved import duplicates, manifests, pack_dir, pack_dirs  # noqa: E402
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
-#: the kernel's own reference packs: no module owns them, they stay in config/packs/core
-KERNEL_PACKS = {"core", "gleif", "compute-demo"}
+#: the kernel keeps no domain pack: core and gleif are the reference-data module's, compute-demo is an example
+KERNEL_PACKS: set[str] = set()
 REPO = R.repository()
 OWNED = [(m.id, m.folder / name, name) for m in REPO.modules.values() if m.folder is not None for name in m.packs]
 

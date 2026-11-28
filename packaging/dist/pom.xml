@@ -153,6 +153,17 @@
             </configuration>
           </execution>
           <execution>
+            <id>pack-reference-data</id>
+            <phase>process-classes</phase>
+            <goals><goal>java</goal></goals>
+            <configuration>
+              <arguments>
+                <argument>module</argument><argument>pack</argument><argument>${drishti.repo}/modules/reference-data</argument>
+                <argument>--out</argument><argument>${drishti.dmods}</argument><argument>--kernel-jar</argument><argument>${drishti.kernel.jar}</argument>
+              </arguments>
+            </configuration>
+          </execution>
+          <execution>
             <id>pack-source-calypso</id>
             <phase>process-classes</phase>
             <goals><goal>java</goal></goals>
