@@ -49,21 +49,24 @@ final class VarFigures implements ViewAugmenter {
     private final VarViews views;
     /** R2: the market-risk engine's path, asked for the desk and legal-entity pages when {@code var.consumers.route} is engine. */
     private final VarEnginePath engine;
+    /** R2: the parts by trade and by position and the P&amp;L series of the position and portfolio pages, from the engine. */
+    private final VarEngineParts parts;
 
     VarFigures(VarService svc, VarViews views, VarEnginePath engine) {
         this.svc = svc;
         this.views = views;
         this.engine = engine;
+        this.parts = engine == null ? null : new VarEngineParts(svc, engine);
     }
 
     /**
      * Whether the page's figures are the engine's: the consumers' family switch, for the desk and legal-entity pages (node scopes: the
-     * headline proven equal on every node, RiskSideBySideTest). TODO(R2): the position and portfolio pages stay in-tree until the engine
-     * answers a scope's parts by trade and by position (its contributions are a node's child nodes or a leaf's positions) and a row-set
-     * scope's figures on the mapped tier to the bit (MC-12's float32 view).
+     * headline proven equal on every node, RiskSideBySideTest) and the position and portfolio pages (R2 lane B: the headline of the row
+     * set, its parts by trade or by position measured by the engine's {@code scope-contributions} over the host's own parts, its P&amp;L
+     * series from {@code scope-path}; ConsumersSideBySideTest).
      */
     private boolean viaEngine(String kind) {
-        return engine != null && engine.consumers() && (kind.equals("desk") || kind.equals(LEGAL_ENTITY));
+        return engine != null && engine.consumers();
     }
 
     VarService service() {
@@ -111,7 +114,11 @@ final class VarFigures implements ViewAugmenter {
     }
 
     private Map<String, Object> head(Principal p, String scope, LocalDate date, boolean viaEngine) {
-        Map<String, Object> h = viaEngine ? engineHeadline(p, scope, date) : views.headline(p, scope, date);
+        return head(p, scope, date, viaEngine, null);
+    }
+
+    private Map<String, Object> head(Principal p, String scope, LocalDate date, boolean viaEngine, String ccy) {
+        Map<String, Object> h = viaEngine ? engineHeadline(p, scope, date, ccy) : views.headline(p, scope, date);
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("STATUS", "ok");
         m.put("SCOPE", h.get("canonical"));
@@ -127,8 +134,8 @@ final class VarFigures implements ViewAugmenter {
     }
 
     /** The headline's fields a page shows, from the engine: its figures, Drishti's resolver's canonical scope, the offered lens. */
-    private Map<String, Object> engineHeadline(Principal p, String scope, LocalDate date) {
-        Map<String, Object> h = new LinkedHashMap<>(engine.headline(p, scope, date, null, (String) null));
+    private Map<String, Object> engineHeadline(Principal p, String scope, LocalDate date, String ccy) {
+        Map<String, Object> h = new LinkedHashMap<>(engine.headline(p, scope, date, ccy, (String) null));
         h.put("canonical", engine.canonical(p, scope, date));
         h.put("businessDate", h.get("asOf"));
         h.put("confidence", svc.props().defaultLens().confidence());
@@ -136,7 +143,10 @@ final class VarFigures implements ViewAugmenter {
         return h;
     }
 
-    private List<Long> pnl(Principal p, String scope, LocalDate date) {
+    private List<Long> pnl(Principal p, String scope, LocalDate date, boolean viaEngine) {
+        if (viaEngine) {
+            return parts.series(p, scope, date);
+        }
         Object s = views.path(p, scope, date, 0, 1).get("series");
         List<Long> out = new ArrayList<>();
         if (s instanceof long[] a) {
@@ -148,8 +158,11 @@ final class VarFigures implements ViewAugmenter {
     }
 
     @SuppressWarnings("unchecked")
-    private List<Map<String, Object>> rows(Principal p, String scope, LocalDate date, String by) {
+    private List<Map<String, Object>> rows(Principal p, String scope, LocalDate date, String by, boolean viaEngine) {
         try {
+            if (viaEngine) {
+                return parts.rows(p, scope, date, by);
+            }
             return (List<Map<String, Object>>) views.contributions(p, scope, date, by, null).getOrDefault("rows", List.of());
         } catch (DrishtiException e) {
             return List.of();                                            // an aggregate-only viewer: no positions or trades
@@ -158,9 +171,10 @@ final class VarFigures implements ViewAugmenter {
 
     private Map<String, Object> position(Principal p, String id, LocalDate date) {
         String scope = "POS:" + id;
-        Map<String, Object> m = head(p, scope, date, false);
+        boolean viaEngine = viaEngine(svc.props().kinds().position());
+        Map<String, Object> m = head(p, scope, date, viaEngine, VarDate.USD);
         List<Map<String, Object>> trades = new ArrayList<>();
-        for (Map<String, Object> r : rows(p, scope, date, "trade")) {
+        for (Map<String, Object> r : rows(p, scope, date, "trade", viaEngine)) {
             trades.add(row("TRADE_ID", r, "standaloneVar", "componentVar"));
         }
         trades.sort(Comparator.comparing(r -> String.valueOf(r.get("TRADE_ID"))));
@@ -169,24 +183,26 @@ final class VarFigures implements ViewAugmenter {
         if (s.res().position() >= 0) {
             String book = s.date().book().positions().text("TT_BOOK", s.res().position());
             String bookScope = "BOOK:" + book;
-            Map<String, Object> bh = views.headline(p, bookScope, date);
+            Map<String, Object> bh = viaEngine ? engine.headline(p, bookScope, date, VarDate.USD, (String) null)
+                    : views.headline(p, bookScope, date);
             m.put("BOOK_VAR", bh.get("var"));
-            for (Map<String, Object> r : rows(p, bookScope, date, "position")) {
+            for (Map<String, Object> r : rows(p, bookScope, date, "position", viaEngine)) {
                 if (s.date().book().positionId(s.res().position()).equals(r.get("key"))) {
                     m.put("COMPONENT_VAR", r.get("componentVar"));
                     m.put("PCT_OF_BOOK_VAR", r.get("pct"));
                 }
             }
         }
-        m.put("PNL", pnl(p, scope, date));
+        m.put("PNL", pnl(p, scope, date, viaEngine));
         return m;
     }
 
     private Map<String, Object> portfolio(Principal p, String id, LocalDate date) {
         String scope = "PORT:" + id;
-        Map<String, Object> m = head(p, scope, date, false);
+        boolean viaEngine = viaEngine(svc.props().kinds().systemBasket());
+        Map<String, Object> m = head(p, scope, date, viaEngine, VarDate.USD);
         List<Map<String, Object>> positions = new ArrayList<>();
-        for (Map<String, Object> r : rows(p, scope, date, "position")) {
+        for (Map<String, Object> r : rows(p, scope, date, "position", viaEngine)) {
             Map<String, Object> x = row("POSITION_ID", r, "standaloneVar", "componentVar");
             x.put("INSTRUMENT", r.get("instrument"));
             x.put("DIRECTION", r.get("direction"));
@@ -210,7 +226,7 @@ final class VarFigures implements ViewAugmenter {
         m.put("BY_PRODUCT", by(positions, "PRODUCT_TYPE"));
         m.put("BY_CURRENCY", by(positions, "CURRENCY"));
         m.put("BY_DIRECTION", by(positions, "DIRECTION"));
-        m.put("PNL", pnl(p, scope, date));
+        m.put("PNL", pnl(p, scope, date, viaEngine));
         return m;
     }
 

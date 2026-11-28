@@ -908,6 +908,11 @@ final class VarViews {
     }
 
     static Part trade(VarBook b, int o) {
+        return trade(b, o, true);
+    }
+
+    /** A trade part; {@code withVector} false: its key, scope, label, size and attributes only (the engine path's labels, R2). */
+    static Part trade(VarBook b, int o, boolean withVector) {
         Columns tc = b.trades();
         double q = nz(tc.number("QUANTITY", o));
         Map<String, Object> a = new LinkedHashMap<>();
@@ -924,9 +929,11 @@ final class VarViews {
         String id = b.tradeId(o);
         if (b.supplied(o)) {                                            // a supplied position (position grain): listed as the position it is
             a.put("note", "supplied whole by its source system: a position, no trades of its own");
-            return new Part(id, "POS:" + id, id, "position", b.tradeVector(o), nz(tc.number("PV", o)) == 0 ? Double.NaN : tc.number("PV", o), a);
+            return new Part(id, "POS:" + id, id, "position", withVector ? b.tradeVector(o) : null,
+                    nz(tc.number("PV", o)) == 0 ? Double.NaN : tc.number("PV", o), a);
         }
-        return new Part(id, "TRD:" + id, id, "trade", b.tradeVector(o), nz(tc.number("PV", o)) == 0 ? Double.NaN : tc.number("PV", o), a);
+        return new Part(id, "TRD:" + id, id, "trade", withVector ? b.tradeVector(o) : null,
+                nz(tc.number("PV", o)) == 0 ? Double.NaN : tc.number("PV", o), a);
     }
 
     // ------------------------------------------------------------------------------------------------------------------- contributions

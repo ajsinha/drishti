@@ -1322,7 +1322,7 @@ public class VarEnginePath {
         return out;
     }
 
-    private static double num(Object o) {
+    static double num(Object o) {
         return o instanceof Number n ? n.doubleValue() : Double.NaN;
     }
 
@@ -1339,13 +1339,13 @@ public class VarEnginePath {
         return m;
     }
 
-    private static List<Integer> ordinals(com.ash.drishti.compute.vector.OrdinalSet set) {
+    static List<Integer> ordinals(com.ash.drishti.compute.vector.OrdinalSet set) {
         List<Integer> rows = new ArrayList<>(set.size());
         set.forEach(rows::add);
         return rows;
     }
 
-    private static double[] doubles(Object list) {
+    static double[] doubles(Object list) {
         if (list instanceof double[] d) {
             return d;
         }
@@ -1577,7 +1577,7 @@ public class VarEnginePath {
                 limit);
     }
 
-    private static Map<String, Object> params(int window, String currency) {
+    static Map<String, Object> params(int window, String currency) {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("window", window);
         params.put("currency", currency);
@@ -1668,7 +1668,7 @@ public class VarEnginePath {
         };
     }
 
-    private Map<String, Object> ask(Principal p, List<String> outputs, Map<String, Object> params, Map<String, String> snapshot) {
+    Map<String, Object> ask(Principal p, List<String> outputs, Map<String, Object> params, Map<String, String> snapshot) {
         Engines e = engines.getIfAvailable();
         if (e == null || !e.running(ENGINE)) {
             throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the engine " + ENGINE + " is not running here (drishti-risk-market in "
@@ -1715,7 +1715,7 @@ public class VarEnginePath {
     }
 
     @SuppressWarnings("unchecked")
-    private static String missing(Map<String, Object> a) {
+    static String missing(Map<String, Object> a) {
         List<Object> m = (List<Object>) a.getOrDefault("missing", List.of());
         return m.isEmpty() ? "" : " (not found: " + m + ")";
     }

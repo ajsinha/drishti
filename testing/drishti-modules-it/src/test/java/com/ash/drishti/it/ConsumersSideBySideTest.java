@@ -35,7 +35,9 @@ import org.junit.jupiter.api.Test;
  * after the official records of the three dates are captured and published. Now: the regulatory VaR report runs (every report of the
  * reports folder for its current period: the table's period statistics, its facts' backtest, the backtesting chart) and the VaR figures
  * of the desk and legal-entity pages (VarFigures' {@code VAR_ENGINE}: the headline, and each of an entity's books' VaR), the whole page
- * as the view answers it (its figures as the page renders them: the bits are RiskSideBySideTest's, the node headline). Every field equal,
+ * as the view answers it (its figures as the page renders them: the bits are RiskSideBySideTest's, the node headline), and (R2 lane B) the
+ * system-basket and position pages (the headline of the row set, its parts by position or by trade with the engine's components, the
+ * position's book VaR and component, the P&amp;L series): every system basket of the seed and three member positions of each. Every field equal,
  * every number to the bit, but the clocks (a run's {@code frozenAt}, a view's {@code fetchedAt} and {@code timings}) and each server's
  * own folder in the texts (written {@code <server>}). Skipped when no folder of Risk JARs is given (-Ddrishti.risk.jars).
  */
@@ -68,7 +70,7 @@ class ConsumersSideBySideTest {
         assertThat(inTree.size() - refused).as("answers compared").isGreaterThan(0);
         long pages = inTree.entrySet().stream().filter(e -> !e.getKey().startsWith("report ") && figures(e.getValue()) > 0).count();
         int items = inTree.entrySet().stream().filter(e -> !e.getKey().startsWith("report ")).mapToInt(e -> figures(e.getValue())).sum();
-        System.out.println("side by side, desk and legal-entity pages: " + pages + " with the engine's VaR figures, " + items + " items shown");
+        System.out.println("side by side, desk, legal-entity, system-basket and position pages: " + pages + " with the engine's VaR figures, " + items + " items shown");
         assertThat(pages).as("desk and legal-entity pages with VaR figures compared").isEqualTo(inTree.size() - 2L);
         assertThat(differences).as("consumer answers that differ between in-tree and engine").isEmpty();
     }
@@ -97,7 +99,15 @@ class ConsumersSideBySideTest {
         Path work = FOLDER.resolve("server-" + path);
         RiskSideBySideTest.deleteTree(work);
         SideBySide.dropJars(Path.of(jars), work);
-        PackagedServer server = PackagedServer.start(work, lake, "2026-09-30", Map.of("DRISHTI_VAR_CONSUMERS_ROUTE", path));
+        Map<String, String> env = new LinkedHashMap<>();
+        env.put("DRISHTI_VAR_CONSUMERS_ROUTE", path);
+        if (RiskSideBySideTest.HEAP) {                                 // -Dsbs.tier=heap: float64 rows on both paths
+            env.put("DRISHTI_VAR_TIER", "heap");
+            env.put("DRISHTI_VAR_MEMORY_MB", "900");
+            env.put("DRISHTI_VAR_OPEN_HEAP_MB", "700");
+        }
+        env.put("DRISHTI_VAR_ZERO_COPY", System.getProperty("sbs.zero-copy", "off"));   // -Dsbs.zero-copy=on: the host's rows handed over in place
+        PackagedServer server = PackagedServer.start(work, lake, "2026-09-30", env);
         try {
             RiskSideBySideTest.captureThreeDates(server);
             if (path.equals("engine")) {                              // the engine answers once its day is read: wait for it, once
@@ -117,8 +127,9 @@ class ConsumersSideBySideTest {
                 String id = r.path("report").asText();
                 out.put("report " + id, run(server, "/api/v1/risk/var/reports/" + id + "/runs", work.toString()));
             }
-            for (String kind : List.of("desk", "legal-entity")) {   // the pages' VaR figures (VarFigures, VAR_ENGINE), every desk and entity
-                for (String id : ids(kind)) {
+            // the pages' VaR figures (VarFigures, VAR_ENGINE): every desk and entity, every system basket, and three positions of each
+            for (String kind : List.of("desk", "legal-entity", "system-basket", "position")) {
+                for (String id : kind.startsWith("system") || kind.equals("position") ? seeded(kind) : ids(kind)) {
                     JsonNode v;
                     try {
                         v = server.get("/api/v1/views/" + kind + "/" + id + "?asOf=2026-09-30");
@@ -147,6 +158,31 @@ class ConsumersSideBySideTest {
             for (String line = r.readLine(); line != null; line = r.readLine()) {
                 JsonNode n = PackagedServer.JSON.readTree(line);
                 out.add(n.path(kind.equals("desk") ? "DESK_ID" : "ENTITY_ID").asText());
+            }
+        }
+        return out;
+    }
+
+    /**
+     * The system baskets of the seed the server imports (market-risk seeds/system-baskets.yaml) and the first three member positions
+     * of each (unique, in the file's order).
+     */
+    private static List<String> seeded(String kind) throws IOException {
+        List<String> out = new ArrayList<>();
+        int taken = 0;
+        for (String line : Files.readAllLines(PackagedServer.REPO.resolve("modules/banking/packs/market-risk/seeds/system-baskets.yaml"))) {
+            String t = line.trim();
+            if (t.startsWith("- id: ")) {
+                taken = 0;
+                if (kind.equals("system-basket")) {
+                    out.add(t.substring(6).trim());
+                }
+            } else if (kind.equals("position") && t.startsWith("- position: ") && taken < 3) {
+                String id = t.substring(12).trim();
+                taken++;
+                if (!out.contains(id)) {
+                    out.add(id);
+                }
             }
         }
         return out;
