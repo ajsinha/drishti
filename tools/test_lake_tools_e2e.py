@@ -41,6 +41,7 @@ D1, D2, D3 = "2026-10-05", "2026-10-06", "2026-10-07"
 
 def _jar() -> str:
     found = sorted(glob.glob(str(HOME / "kernel" / "drishti-server" / "target" / "drishti-server-*-exec.jar")), key=os.path.getmtime)
+    found = found or sorted(glob.glob(str(HOME / "lib" / "drishti-server-*-exec.jar")), key=os.path.getmtime)      # `drishti.py build jar` puts it in lib/
     found = [j for j in found if not j.endswith("-sources.jar")]
     assert found, "the server's exec jar is not built: run ./mvnw package first"
     return found[-1]
