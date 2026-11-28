@@ -175,79 +175,78 @@ A real record, the most complete of the first rows (the one with the most non-em
 
 ```json
 {
-  "LEI": "29DX7H14B9S6O3FD6V18",
-  "NAME": "COSTCO WHOLESALE CORPORATION",
+  "LEI": "254900DP080RU6OK2553",
+  "NAME": "GE VERNOVA INC.",
   "OTHER_NAMES": [
     {
-      "NAME": "Costco Companies Inc",
+      "NAME": "GE VERNOVA LLC",
       "TYPE": "previous legal name"
     }
   ],
-  "LEGAL_FORM": "Profit Corporation",
-  "JURISDICTION": "US-WA",
+  "LEGAL_FORM": "Corporation",
+  "JURISDICTION": "US-DE",
   "LEI_COUNTRY": "US",
   "COUNTRY_NAME": "United States of America (the)",
-  "LEGAL_ADDRESS": "C/O JOHN SULLIVAN, 999 LAKE DR, 98027-8990 ISSAQUAH, US-WA, US",
-  "LEGAL_CITY": "ISSAQUAH",
-  "HQ_ADDRESS": "C/O John Sullivan, 999 Lake Drive, 98027 Issaquah, US-WA, US",
-  "REGISTERED_AS": "601 024 674",
+  "LEGAL_ADDRESS": "C/O THE CORPORATION TRUST COMPANY, CORPORATION TRUST CENTER 1209 ORANGE ST, 19801 WILMINGTON, US-DE, US",
+  "LEGAL_CITY": "WILMINGTON",
+  "HQ_ADDRESS": "58 CHARLES STREET, 02141 CAMBRIDGE, US",
+  "REGISTERED_AS": "7246830",
   "ENTITY_STATUS": "ACTIVE",
-  "CREATED": "1987-05-11",
-  "REGISTRATION_STATUS": "ISSUED",
-  "INITIAL_REGISTRATION": "2012-06-06",
-  "LAST_UPDATE": "2025-11-24",
-  "NEXT_RENEWAL": "2026-12-21",
-  "RENEWAL_LATE": false,
-  "MANAGING_LOU": "EQS Group GmbH",
-  "BICS": "COWOUS6IXXX",
+  "CREATED": "2023-02-28",
+  "REGISTRATION_STATUS": "LAPSED",
+  "INITIAL_REGISTRATION": "2024-02-01",
+  "LAST_UPDATE": "2026-10-26",
+  "NEXT_RENEWAL": "2026-09-30",
+  "RENEWAL": "Late: renewal was due 2026-09-30 (lapsed)",
+  "RENEWAL_LATE": true,
+  "MANAGING_LOU": "London Stock Exchange LEI Limited",
+  "BICS": "GENEUS33XXX",
   "BIC_COUNT": 1,
-  "ISIN_COUNT": 5,
-  "OPENCORPORATES": "us_wa/601024674",
-  "LEI_GROUP": "29DX7H14B9S6O3FD6V18",
+  "ISIN_COUNT": 4,
+  "OPENCORPORATES": "us_de/7246830",
+  "LEI_GROUP": "254900DP080RU6OK2553",
   "PARENT_EXCEPTIONS": [
     {
       "LEVEL": "Direct parent",
-      "REASON": "NO_KNOWN_PERSON",
-      "MEANING": "No known person controls it (shares widely held)"
+      "REASON": "NON_CONSOLIDATING",
+      "MEANING": "The parent does not consolidate it (no consolidated accounts that include it)"
     },
     {
       "LEVEL": "Ultimate parent",
-      "REASON": "NO_KNOWN_PERSON",
-      "MEANING": "No known person controls it (shares widely held)"
+      "REASON": "NON_CONSOLIDATING",
+      "MEANING": "The parent does not consolidate it (no consolidated accounts that include it)"
     }
   ],
   "CHILDREN": [
     {
-      "LEI": "5493006ZNNV3BSMHNN80",
-      "NAME": "COSTCO WHOLESALE INTERNATIONAL, INC.",
-      "COUNTRY": "US",
-      "KIDS": 7
+      "LEI": "549300LZ0QBESK1K8A10",
+      "NAME": "GE POWER INDIA LIMITED",
+      "COUNTRY": "IN"
     },
     {
-      "LEI": "549300FOSJF54CS8VZ05",
-      "NAME": "코스트코 코리아",
-      "COUNTRY": "KR"
-    },
-    "… 10 more elements of the same shape"
+      "LEI": "549300NMRD6VZDFLN355",
+      "NAME": "GE VERNOVA T&D INDIA LIMITED",
+      "COUNTRY": "IN"
+    }
   ],
-  "CHILD_COUNT": 12,
-  "DIRECT_CHILDREN_GLEIF": 12,
-  "ULTIMATE_CHILDREN_GLEIF": 28,
-  "GLEIF_GROUP_SIZE": 29,
+  "CHILD_COUNT": 2,
+  "DIRECT_CHILDREN_GLEIF": 2,
+  "ULTIMATE_CHILDREN_GLEIF": 3,
+  "GLEIF_GROUP_SIZE": 4,
   "MAPPING_IDS": [
-    "COWOUS6IXXX",
-    "US22160K1051",
-    "US22160KAM71",
-    "… 3 more strings"
+    "GENEUS33XXX",
+    "US36828A1016",
+    "US36828AAA97",
+    "… 2 more strings"
   ],
   "SEGMENT": "US equities",
-  "US_COMPANY": "COST",
-  "US_COMPANY_NAME": "Costco",
+  "US_COMPANY": "GEV",
+  "US_COMPANY_NAME": "GE Vernova Inc.",
   "PROVENANCE": {
     "SOURCE": "GLEIF, the Global Legal Entity Identifier Foundation (LEI records, golden copy level 2, mapping files)",
-    "RETRIEVED_AT": "2026-10-25",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "CC0 1.0 (GLEIF's terms: free of charge, no restriction; attribution appreciated)",
-    "URL": "https://search.gleif.org/#/record/29DX7H14B9S6O3FD6V18"
+    "URL": "https://search.gleif.org/#/record/254900DP080RU6OK2553"
   }
 }
 ```
@@ -568,7 +567,7 @@ A real record, the most complete of the first rows (the one with the most non-em
   "ENTITY_NAME": "WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION",
   "COUNTRY": "US",
   "LEI_GROUP": "06BTX5UWZD0GQ5N5Y745",
-  "ISIN_COUNT": 909,
-  "MAPPING_FILE": "isin-lei-20261024T071512.zip"
+  "ISIN_COUNT": 906,
+  "MAPPING_FILE": "isin-lei-20261127T081510.zip"
 }
 ```

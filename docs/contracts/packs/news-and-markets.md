@@ -211,71 +211,71 @@ A real record, the most complete of the first rows (the one with the most non-em
 
 ```json
 {
-  "NEWS_ID": "NEWS-Alphabet",
-  "ENTITY": "Alphabet",
+  "NEWS_ID": "NEWS-Amazon",
+  "ENTITY": "Amazon",
   "ALIASES": [
-    "Google",
-    "GOOGL"
+    "AMZN",
+    "AWS"
   ],
   "EDITION": "en-US",
   "RELEVANCE_FILTER": "on",
   "COUNT": 15,
-  "FETCHED_AT": "2026-10-18 03:25 UTC (snapshot captured 2026-10-18)",
+  "FETCHED_AT": "2026-11-27 22:35 UTC (snapshot captured 2026-11-27)",
   "ITEMS": [
     {
-      "PUBLISHED": "2026-10-18 01:37 UTC",
-      "SOURCE": "Simply Wall Street",
-      "TITLE": "Alphabet (GOOGL) Plans Toronto Robotaxi Service By 2028",
-      "LINK": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOWF9ZUUxETmlWdDF5VS1QVjZFbU5YUWp4bGlRTmpSWTJzTUtkZ0hSR3Ntcmt1R0JZVU45VkNXU0hHYk9TQXU0dERzeENqQ0FBY3JKbk45VmMzN01sWHg3MllVQ1JIamViNnFzUlZUbVNneGVCeG80WGtzZVhKampYOUptTWJIUTVRTmFwU0laczNUcXRLYnExYnlyX0ZFTkQ2R0ZFcTFmVGJGMjNkU1Q2NlprRF9NTWppRkHSAb8BQVVfeXFMTUdQaUJxbkkwMzNEbGFIVXRXN3lud0ZWbDVfczV6eEhST1ptaWhFQTVHVGdqUF9Pc0FnTlhvZGpBT1FaeHdoRUhBcUlSMmVucU1qSjB2c2JiMWx6X1hicFlHTUVCUEJJX1kwTHlVa0FvY082ZS1kMDRTV1gtQXpabXl0aXNGYjU3anl6TDNaXzlmQThRR1hOMm5tY2lSTkhwZl82cGd6Y1pBRkNTTGRTeGpCUUxJM3Z6b213bGhmRDA?oc=5",
-      "SNIPPET": ""
+      "PUBLISHED": "2026-11-27 22:30 UTC",
+      "SOURCE": "CNN",
+      "TITLE": "I found the 98 best Amazon Black Friday deals on AirPods, Bissell vacuums and more",
+      "LINK": "https://news.google.com/rss/articles/CBMifEFVX3lxTE1pNlk1MDh6Yk9xakoxUXhuVWt5alRvYlhKelQxLWxrcFI0Vk05Z0dlSG9wZmZhWEVTWjNOOExXdzNjUHJGM1dwblJtWWQ3VXhpZnFLVHkyQmJiR21pMGVpNzFyNm1ya0t1bXBuY21oc01LUGp5dnEtcF94eHQ?oc=5",
+      "SNIPPET": "CNN Amazon Black Friday deals: Live updates on the best discounts from Apple, Yeti, Ninja, Ring, KitchenAid and more during the biggest sale of the year Yahoo Amazon Black Friday Is Live, and We’re Hand-Picking the Best Deals, From $5 TODAY.com"
     },
     {
-      "PUBLISHED": "2026-10-18 00:03 UTC",
-      "SOURCE": "TradingKey",
-      "TITLE": "Alphabet Stock Price Forecast: Can Expanding Access to Gemini 4 Argon Help Its Stock Recover?",
-      "LINK": "https://news.google.com/rss/articles/CBMi7AFBVV95cUxNcG1EUWVvaFpxcDgwRzNNZzRRb2tJTlMzSWVmYjJEb0UwSUZYNy1Dc3pSZmRvdTF0UnRkZHZoNDlLSHFPWWhDVDRmeWUzV25HNWRmLUg3Q3h5Nkh5N3ZmY0ZDZldqZmVxdThnc3BKQmdGbVBENDhhelk0cXlEVlZWT19lNk01eTllOWRCTnRqRDI0TkJidEQyRkhIaUR2eE5kX2prYXdwWXFRaWpNQmF6NEZwODdhWjVJSnNqQ0xnSlVQV1pSWVN2OThxLW5SR2ZwOVVHZlNNWURrREgxQnVVVGpwcmI4VUJseDJLVA?oc=5",
+      "PUBLISHED": "2026-11-27 22:24 UTC",
+      "SOURCE": "NJ.com",
+      "TITLE": "This blowout brush started the trend and it’s $38 for Black Friday at Amazon",
+      "LINK": "https://news.google.com/rss/articles/CBMivgFBVV95cUxQMUY1eENLV0FFbzV0WWlYdGhBUXNTVkdqdGNiNGRJZ3hSaktpS2VacGZWZ3huNUw2S24wd2o3VXBnVkFYZGQxbWY4dC1iOFhSMXNTeHJDNDhEV3MtVXpnUHRlb0MzX19ocW9ib0Ztb1NOSTJwLVFXR2c1YUE0YW4yZ1NyN0tyWDVNS25QSFB6czl3SlIxbDJpS0pQMks1TlVubmhIODJ0Ry1WR3Z3NHR5SEt4UU1KcnJ3UUthNEhn0gHSAUFVX3lxTE1KUmx3emRzMmlrZVZkcVNmYXM4dmZsVzJFRmg2VFJBdmlMYmJVV0pPMnM3UUNtdlpENGZFWHBmMk1udldMWDdpVG92cFBYSXUySkVTM3N2ZEw4LUliRGxzUUhkQ2hZRmJlbm9Kd3RsN3FYd01kT3l1VEc5Y25ZWTJEa3FqTTFjYmk1VFFDMkRjd3FKTmNWX05TWG5JZDdpOGo1ekJHUEJ3bHRfUGRWd3R1eFk5MndXaHhaazdza3JjNW9OUlBjUk1ieXJoYlRYN2Y1QQ?oc=5",
       "SNIPPET": ""
     },
     "… 13 more elements of the same shape"
   ],
   "BY_SOURCE": [
     {
-      "SOURCE": "The Motley Fool",
-      "COUNT": 3
+      "COUNT": 2,
+      "SOURCE": "Yahoo"
     },
     {
-      "SOURCE": "Benzinga",
-      "COUNT": 2
+      "COUNT": 1,
+      "SOURCE": "CNN"
     },
-    "… 10 more elements of the same shape"
+    "… 12 more elements of the same shape"
   ],
   "PIPELINE": [
     {
-      "DROPPED": 4,
-      "KEPT": 96,
-      "STEP": "relevance"
+      "STEP": "relevance",
+      "DROPPED": 6,
+      "KEPT": 94
     },
     {
+      "STEP": "duplicates",
       "DROPPED": 0,
-      "KEPT": 96,
-      "STEP": "duplicates"
+      "KEPT": 94
     },
     {
-      "DROPPED": 81,
-      "KEPT": 15,
-      "STEP": "limit"
+      "STEP": "limit",
+      "DROPPED": 79,
+      "KEPT": 15
     }
   ],
   "FETCHED": 100,
   "PROVENANCE": {
     "FEED": "Google News RSS (news.google.com)",
-    "FETCHED": "2026-10-18 03:25 UTC",
+    "FETCHED": "2026-11-27 22:35 UTC",
     "CACHED_FOR": "3600 s",
     "TERMS": "Headlines and links belong to their publishers; shown for information",
-    "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Google News; served from the demo lake (news-store), not live; the data belongs to its providers, shown for demonstration"
+    "SNAPSHOT": "Snapshot captured 2026-11-27 22:34 UTC from Google News; served from the demo lake (news-store), not live; the data belongs to its providers, shown for demonstration"
   },
-  "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Google News",
-  "SNAPSHOT_CAPTURED_AT": "2026-10-18T03:24:33Z"
+  "SNAPSHOT": "Snapshot captured 2026-11-27 22:34 UTC from Google News",
+  "SNAPSHOT_CAPTURED_AT": "2026-11-27T22:34:37Z"
 }
 ```
 
@@ -472,49 +472,61 @@ A real record, the most complete of the first rows (the one with the most non-em
   "EXCHANGE": "NasdaqGS",
   "CURRENCY": "USD",
   "INSTRUMENT_TYPE": "EQUITY",
-  "PRICE": 343.46,
-  "PREVIOUS_CLOSE": 342.0,
-  "CHANGE": 1.4599999999999795,
-  "CHANGE_PCT": 0.4269005847953157,
-  "DAY_LOW": 340.46,
-  "DAY_HIGH": 347.82,
+  "PRICE": 358.54,
+  "PREVIOUS_CLOSE": 355.5799865722656,
+  "CHANGE": 2.9600134277343955,
+  "CHANGE_PCT": 0.832446577285874,
+  "DAY_LOW": 355.64,
+  "DAY_HIGH": 359.5,
   "FIFTY_TWO_WEEK_LOW": 243.42,
-  "FIFTY_TWO_WEEK_HIGH": 348.15,
-  "VOLUME": 59852690.0,
+  "FIFTY_TWO_WEEK_HIGH": 360.83,
+  "VOLUME": 22683910.0,
   "MARKET_CAP": null,
   "MARKET_STATE": "CLOSED",
-  "AS_OF": "2026-10-16 16:00 America/New_York (snapshot captured 2026-10-18)",
+  "AS_OF": "2026-11-27 13:00 America/New_York (snapshot captured 2026-11-27)",
   "HISTORY": [
     {
-      "DATE": "2025-10-17",
-      "OPEN": 248.02000427246094,
-      "HIGH": 253.3800048828125,
-      "LOW": 247.27000427246094,
-      "CLOSE": 252.2899932861328,
-      "VOLUME": 49147000.0
+      "DATE": "2025-11-28",
+      "OPEN": 277.260009765625,
+      "HIGH": 279.0,
+      "LOW": 275.989990234375,
+      "CLOSE": 278.8500061035156,
+      "VOLUME": 20135600.0
     },
     {
-      "DATE": "2025-10-20",
-      "OPEN": 255.88999938964844,
-      "HIGH": 264.3800048828125,
-      "LOW": 255.6300048828125,
-      "CLOSE": 262.239990234375,
-      "VOLUME": 90483000.0
+      "DATE": "2025-12-01",
+      "OPEN": 278.010009765625,
+      "HIGH": 283.4200134277344,
+      "LOW": 276.1400146484375,
+      "CLOSE": 283.1000061035156,
+      "VOLUME": 46587700.0
     },
     "… 249 more elements of the same shape"
   ],
-  "DAY_RANGE": "340.46 – 347.82",
-  "FIFTY_TWO_WEEK_RANGE": "243.42 – 348.15",
+  "DAY_RANGE": "355.64 – 359.50",
+  "FIFTY_TWO_WEEK_RANGE": "243.42 – 360.83",
   "HISTORY_RANGE": "1y",
   "INTERVAL": "1d",
+  "ANALYTICS": {
+    "OBSERVATIONS": 251,
+    "RETURN_1M": 0.042783,
+    "RETURN_3M": 0.121489,
+    "RETURN_6M": 0.148946,
+    "RETURN_PERIOD": 0.285781,
+    "VOLATILITY": 0.250772,
+    "MAX_DRAWDOWN": -0.13823,
+    "BENCHMARK": "",
+    "BETA": null,
+    "CORRELATION": null
+  },
   "PROVENANCE": {
     "FEED": "Yahoo Finance public chart endpoint (unofficial)",
-    "FETCHED": "2026-10-18T03:24:33.511628799Z",
+    "FETCHED": "2026-11-27T22:34:37.501331967Z",
     "CACHED_FOR": "3600 s",
     "TERMS": "Sample and internal demonstration use only; not for production or redistribution",
-    "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance; served from the demo lake (news-store), not live; the data belongs to its providers, shown for demonstration"
+    "SNAPSHOT": "Snapshot captured 2026-11-27 22:34 UTC from Yahoo Finance; served from the demo lake (news-store), not live; the data belongs to its providers, shown for demonstration"
   },
-  "SNAPSHOT": "Snapshot captured 2026-10-18 03:24 UTC from Yahoo Finance",
-  "SNAPSHOT_CAPTURED_AT": "2026-10-18T03:24:33Z"
+  "SNAPSHOT": "Snapshot captured 2026-11-27 22:34 UTC from Yahoo Finance",
+  "SNAPSHOT_CAPTURED_AT": "2026-11-27T22:34:37Z"
 }
 ```

@@ -261,16 +261,16 @@ A real record, the most complete of the first rows (the one with the most non-em
   ],
   "FILINGS": [
     {
-      "ACCESSION": "0000011544-26-000046",
-      "FORM": "8-K",
-      "FILED": "2026-10-19",
-      "REPORT_DATE": "2026-10-19",
-      "DESCRIPTION": "Current report"
+      "ACCESSION": "0000899140-26-001373",
+      "FORM": "13F-HR",
+      "FILED": "2026-11-16",
+      "REPORT_DATE": "2026-09-30",
+      "DESCRIPTION": "Institutional holdings report"
     },
     {
-      "ACCESSION": "0001628280-26-060471",
+      "ACCESSION": "0001628280-26-072437",
       "FORM": "SCHEDULE 13G/A",
-      "FILED": "2026-09-03",
+      "FILED": "2026-11-09",
       "REPORT_DATE": "",
       "DESCRIPTION": "SCHEDULE 13G/A"
     },
@@ -286,24 +286,24 @@ A real record, the most complete of the first rows (the one with the most non-em
     "… 4 more strings"
   ],
   "FILING_IDS": [
-    "0000011544-26-000046",
-    "0001628280-26-060471",
-    "0000899140-26-000967",
+    "0000899140-26-001373",
+    "0001628280-26-072437",
+    "0001628280-26-072436",
     "… 17 more strings"
   ],
-  "LATEST_FILING": "2026-10-19",
+  "LATEST_FILING": "2026-11-16",
   "SIC_SECTOR": "6331",
   "PRICE_HISTORY": "PX-WRB",
   "PROVENANCE": {
     "SOURCE": "U.S. Securities and Exchange Commission, EDGAR (submissions, XBRL company facts); Wikidata; GLEIF; Nasdaq Trader symbol directory",
-    "RETRIEVED_AT": "2026-10-24",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "Public domain (SEC EDGAR); CC0 1.0 (Wikidata, GLEIF)",
     "URL": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000011544"
   },
   "_meta": {
     "source": "sec-edgar",
     "dataset": "submissions, companyfacts, Wikidata, GLEIF",
-    "retrievedAt": "2026-10-24",
+    "retrievedAt": "2026-11-27",
     "licence": "public domain; CC0",
     "generation": 1
   },
@@ -392,7 +392,7 @@ A real record, the most complete of the first rows (the one with the most non-em
 {
   "INDEX": "SP500",
   "NAME": "S&P 500",
-  "MEMBERS": 495,
+  "MEMBERS": 494,
   "ROWS": [
     {
       "TICKER": "A",
@@ -414,25 +414,25 @@ A real record, the most complete of the first rows (the one with the most non-em
       "SIC": "3571",
       "SIC_DESCRIPTION": "Electronic Computers",
       "EXCHANGE": "Nasdaq",
-      "REVENUE": 416161000000,
-      "NET_INCOME": 112010000000,
+      "REVENUE": 478834000000,
+      "NET_INCOME": 132175000000,
       "CURRENCY": "USD",
-      "FISCAL_YEAR": 2025,
+      "FISCAL_YEAR": 2026,
       "SINCE": ""
     },
-    "… 493 more elements of the same shape"
+    "… 492 more elements of the same shape"
   ],
   "PROVENANCE": {
     "SOURCE": "SEC Form N-PORT of SPY (State Street(R) SPDR(R) S&P 500(R) ETF Trust), the stocks it reported holding on 2026-06-30 (filed 2026-08-28, accession 0001410368-26-089410); SEC EDGAR (company data); Wikidata (the date a member joined)",
     "LICENCE": "Public domain (SEC EDGAR); CC0 1.0 (Wikidata)",
-    "NOTE": "Membership as the tracking fund holds it on its report date. Index weights and levels are proprietary to their index providers and are not included. Held then, no longer listed by the SEC: AvalonBay Communities Inc, Electronic Arts Inc, Equity Residential, Paramount Skydance Corp, Warner Bros Discovery Inc.",
-    "RETRIEVED_AT": "2026-10-24"
+    "NOTE": "Membership as the tracking fund holds it on its report date. Index weights and levels are proprietary to their index providers and are not included. Held then, no longer listed by the SEC: AvalonBay Communities Inc, Electronic Arts Inc, Equity Residential, Kenvue Inc, Paramount Skydance Corp, Warner Bros Discovery Inc.",
+    "RETRIEVED_AT": "2026-11-27"
   },
   "_meta": {
     "source": "sec-nport",
     "dataset": "holdings of SPY (Form N-PORT)",
     "licence": "public domain",
-    "retrievedAt": "2026-10-24",
+    "retrievedAt": "2026-11-27",
     "generation": 1
   }
 }
@@ -590,50 +590,50 @@ A real record, the most complete of the first rows (the one with the most non-em
   "FEED": "10-K",
   "NAME": "Annual reports",
   "FORM": "10-K",
-  "FILINGS": 13,
-  "COMPANIES": 13,
-  "LATEST": "2026-10-23",
+  "FILINGS": 24,
+  "COMPANIES": 24,
+  "LATEST": "2026-11-24",
   "EARLIEST": "2026-08-05",
   "ROWS": [
     {
-      "ACCESSION": "0001628280-26-067038",
-      "FILED": "2026-10-23",
-      "COMPANY": "JBL",
-      "COMPANY_NAME": "Jabil",
+      "ACCESSION": "0001140859-26-000044",
+      "FILED": "2026-11-24",
+      "COMPANY": "COR",
+      "COMPANY_NAME": "Cencora",
       "FORM": "10-K",
       "DESCRIPTION": "Annual report"
     },
     {
-      "ACCESSION": "0001628280-26-066391",
-      "FILED": "2026-10-20",
-      "COMPANY": "FDS",
-      "COMPANY_NAME": "Factset Research Systems Inc",
+      "ACCESSION": "0000720005-26-000086",
+      "FILED": "2026-11-24",
+      "COMPANY": "RJF",
+      "COMPANY_NAME": "Raymond James Financial",
       "FORM": "10-K",
       "DESCRIPTION": "Annual report"
     },
-    "… 11 more elements of the same shape"
+    "… 22 more elements of the same shape"
   ],
   "BY": [
     {
-      "LABEL": "ACN",
+      "LABEL": "AAPL",
       "VALUE": 1
     },
     {
-      "LABEL": "COST",
+      "LABEL": "ADI",
       "VALUE": 1
     },
-    "… 11 more elements of the same shape"
+    "… 13 more elements of the same shape"
   ],
   "BY_TITLE": "Filings by company",
   "PROVENANCE": {
     "SOURCE": "U.S. Securities and Exchange Commission, EDGAR (submissions: the latest filings of each company covered)",
-    "RETRIEVED_AT": "2026-10-24",
+    "RETRIEVED_AT": "2026-11-27",
     "LICENCE": "Public domain (U.S. Government work); SEC EDGAR fair access policy (descriptive User-Agent, at most 10 requests a second)"
   },
   "_meta": {
     "source": "sec-edgar",
     "dataset": "submissions (recent filings)",
-    "retrievedAt": "2026-10-24",
+    "retrievedAt": "2026-11-27",
     "licence": "public domain",
     "generation": 1
   }
@@ -709,32 +709,28 @@ A real record, the most complete of the first rows (the one with the most non-em
 
 ```json
 {
-  "ACCESSION": "0001104659-26-117587",
+  "ACCESSION": "0001104659-26-127273",
   "COMPANY": "ABT",
   "COMPANY_NAME": "Abbott Laboratories",
   "FORM": "8-K",
   "FORM_NAME": "Current report",
-  "FILED": "2026-10-21",
-  "REPORT_DATE": "2026-10-21",
-  "PRIMARY_DOCUMENT": "tm2627971d1_8k.htm",
+  "FILED": "2026-11-16",
+  "REPORT_DATE": "2026-11-11",
+  "PRIMARY_DOCUMENT": "tm2629582d1_8k.htm",
   "DOCUMENT_DESCRIPTION": "FORM 8-K",
-  "SIZE_KB": 278,
+  "SIZE_KB": 238,
   "ITEMS": [
     {
-      "ITEM": "8.01",
-      "DESCRIPTION": "Other events"
-    },
-    {
-      "ITEM": "9.01",
-      "DESCRIPTION": "Financial statements and exhibits"
+      "ITEM": "5.02",
+      "DESCRIPTION": "Departure or appointment of directors or officers; compensation"
     }
   ],
-  "ITEMS_TEXT": "8.01, 9.01",
-  "PATH": "1800/000110465926117587",
+  "ITEMS_TEXT": "5.02",
+  "PATH": "1800/000110465926127273",
   "_meta": {
     "source": "sec-edgar",
     "dataset": "submissions (recent filings)",
-    "retrievedAt": "2026-10-24",
+    "retrievedAt": "2026-11-27",
     "generation": 1
   }
 }
@@ -845,7 +841,7 @@ A real record, the most complete of the first rows (the one with the most non-em
   "_meta": {
     "source": "sec-edgar",
     "dataset": "XBRL companyfacts (10-K)",
-    "retrievedAt": "2026-10-24",
+    "retrievedAt": "2026-11-27",
     "generation": 1
   }
 }

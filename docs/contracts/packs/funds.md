@@ -725,13 +725,13 @@ A real record, the most complete of the first rows (the one with the most non-em
   "PROVENANCE": {
     "SOURCE": "U.S. Securities and Exchange Commission: Form N-PORT, Form N-CEN and prospectus risk/return summary data sets; mutual fund ticker file",
     "LICENCE": "Public domain (U.S. Government work); SEC fair access policy (descriptive User-Agent, at most 10 requests a second)",
-    "RETRIEVED_AT": "2026-10-26",
+    "RETRIEVED_AT": "2026-11-27",
     "NOTE": "Holdings, flows and returns as the fund filed them on Form N-PORT for 2026-06-30; census facts from its newest Form N-CEN; fees and calendar-year returns from its newest prospectus risk/return summary. No prices or NAV history."
   },
   "_meta": {
     "source": "sec-nport",
     "dataset": "funds",
-    "retrievedAt": "2026-10-26",
+    "retrievedAt": "2026-11-27",
     "generation": 1
   },
   "MOST_HELD_COMPANY": "NVDA",
@@ -958,13 +958,13 @@ A real record, the most complete of the first rows (the one with the most non-em
   "PROVENANCE": {
     "SOURCE": "U.S. Securities and Exchange Commission: Form N-PORT, Form N-CEN and prospectus risk/return summary data sets; mutual fund ticker file",
     "LICENCE": "Public domain (U.S. Government work); SEC fair access policy (descriptive User-Agent, at most 10 requests a second)",
-    "RETRIEVED_AT": "2026-10-26",
+    "RETRIEVED_AT": "2026-11-27",
     "NOTE": "Every holding of the pack's funds in this company (Form N-PORT), each fund as of its own report date."
   },
   "_meta": {
     "source": "sec-nport",
     "dataset": "funds",
-    "retrievedAt": "2026-10-26",
+    "retrievedAt": "2026-11-27",
     "generation": 1
   }
 }
@@ -1081,13 +1081,13 @@ A real record, the most complete of the first rows (the one with the most non-em
   "PROVENANCE": {
     "SOURCE": "U.S. Securities and Exchange Commission: Form N-PORT, Form N-CEN and prospectus risk/return summary data sets; mutual fund ticker file",
     "LICENCE": "Public domain (U.S. Government work); SEC fair access policy (descriptive User-Agent, at most 10 requests a second)",
-    "RETRIEVED_AT": "2026-10-26",
+    "RETRIEVED_AT": "2026-11-27",
     "NOTE": "The pack's funds whose name names this index (N-CEN says whether a fund is an index fund, not which index); index weights are not public."
   },
   "_meta": {
     "source": "sec-nport",
     "dataset": "funds",
-    "retrievedAt": "2026-10-26",
+    "retrievedAt": "2026-11-27",
     "generation": 1
   }
 }
