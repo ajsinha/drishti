@@ -50,13 +50,6 @@ files:
   - {path: 'config/feeds/world-development.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
   - {path: 'config/feeds/world-economy.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
   - {path: 'config/feeds/yahoo-prices.md', class: generate, lane: C, tool: 'tools/loaders/common/feedreadme.py'}
-  - {path: 'examples/packs/compute-demo/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
-  - {path: 'examples/packs/compute-demo/guides/compute-demo.md', class: merge, lane: A}
-  - {path: 'modules/reference-data/packs/core/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
-  - {path: 'modules/reference-data/packs/core/guides/banking-data-model.md', class: merge, lane: A}
-  - {path: 'modules/reference-data/packs/core/guides/core.md', class: merge, lane: A}
-  - {path: 'modules/reference-data/packs/gleif/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
-  - {path: 'modules/reference-data/packs/gleif/guides/gleif.md', class: merge, lane: A}
   - {path: 'data/dataload/README.md', class: delete, lane: C}
   - {path: 'data/dataload/failed/README.md', class: delete, lane: C}
   - {path: 'data/dataload/inbox/README.md', class: delete, lane: C}
@@ -365,6 +358,8 @@ files:
   - {path: 'drishti-sdk/drishti-module-archetype/src/main/resources/archetype-resources/docs/tutorial.md', class: notdoc, lane: C}
   - {path: 'examples/clients/README.md', class: note, lane: C}
   - {path: 'examples/packs/climate-risk/guides/climate-risk.md', class: delete, lane: C}
+  - {path: 'examples/packs/compute-demo/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
+  - {path: 'examples/packs/compute-demo/guides/compute-demo.md', class: merge, lane: A}
   - {path: 'examples/packs/finance/guides/getting-started.md', class: notdoc, lane: C}
   - {path: 'examples/packs/finance/guides/write-your-first-sutra.md', class: delete, lane: C}
   - {path: 'examples/packs/genomics/guides/genomics.md', class: delete, lane: C}
@@ -383,24 +378,17 @@ files:
   - {path: 'modules/banking/packs/trading/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
   - {path: 'modules/banking/packs/trading/guides/trading-products.md', class: merge, lane: A}
   - {path: 'modules/banking/packs/trading/guides/trading.md', class: merge, lane: A}
-  - {path: 'modules/capital-markets/docs/README.md', class: generate, lane: C, tool: 'tools/packgen (module manifest)'}
-  - {path: 'modules/external-data/packs/funds/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
-  - {path: 'modules/external-data/packs/funds/guides/funds.md', class: merge, lane: A}
-  - {path: 'modules/external-data/packs/us-equities/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
-  - {path: 'modules/external-data/packs/us-equities/guides/us-equities.md', class: merge, lane: A}
-  - {path: 'modules/economy/docs/README.md', class: generate, lane: C, tool: 'tools/packgen (module manifest)'}
+  - {path: 'modules/external-data/docs/README.md', class: generate, lane: C, tool: 'tools/packgen (module manifest)'}
   - {path: 'modules/external-data/packs/central-banks/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
   - {path: 'modules/external-data/packs/central-banks/guides/central-banks.md', class: merge, lane: A}
-  - {path: 'modules/news-and-events/packs/gdelt-events/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
-  - {path: 'modules/news-and-events/packs/gdelt-events/guides/gdelt-events.md', class: merge, lane: A}
+  - {path: 'modules/external-data/packs/funds/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
+  - {path: 'modules/external-data/packs/funds/guides/funds.md', class: merge, lane: A}
   - {path: 'modules/external-data/packs/national-statistics/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
   - {path: 'modules/external-data/packs/national-statistics/guides/national-statistics.md', class: merge, lane: A}
-  - {path: 'modules/news-and-events/packs/news-and-markets/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
-  - {path: 'modules/news-and-events/packs/news-and-markets/guides/news-and-markets.md', class: merge, lane: A}
   - {path: 'modules/external-data/packs/oecd/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
   - {path: 'modules/external-data/packs/oecd/guides/oecd.md', class: merge, lane: A}
-  - {path: 'modules/news-and-events/packs/official-news/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
-  - {path: 'modules/news-and-events/packs/official-news/guides/official-news.md', class: merge, lane: A}
+  - {path: 'modules/external-data/packs/us-equities/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
+  - {path: 'modules/external-data/packs/us-equities/guides/us-equities.md', class: merge, lane: A}
   - {path: 'modules/external-data/packs/world-development/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
   - {path: 'modules/external-data/packs/world-development/guides/world-development.md', class: merge, lane: A}
   - {path: 'modules/external-data/packs/world-economy/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
@@ -416,6 +404,19 @@ files:
   - {path: 'modules/market-data/packs/market-data/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
   - {path: 'modules/market-data/packs/market-data/guides/market-data-catalogue.md', class: merge, lane: A}
   - {path: 'modules/market-data/packs/market-data/guides/market-data.md', class: merge, lane: A}
+  - {path: 'modules/news-and-events/docs/README.md', class: generate, lane: C, tool: 'tools/packgen (module manifest)'}
+  - {path: 'modules/news-and-events/packs/gdelt-events/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
+  - {path: 'modules/news-and-events/packs/gdelt-events/guides/gdelt-events.md', class: merge, lane: A}
+  - {path: 'modules/news-and-events/packs/news-and-markets/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
+  - {path: 'modules/news-and-events/packs/news-and-markets/guides/news-and-markets.md', class: merge, lane: A}
+  - {path: 'modules/news-and-events/packs/official-news/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
+  - {path: 'modules/news-and-events/packs/official-news/guides/official-news.md', class: merge, lane: A}
+  - {path: 'modules/reference-data/docs/README.md', class: generate, lane: C, tool: 'tools/packgen (module manifest)'}
+  - {path: 'modules/reference-data/packs/core/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
+  - {path: 'modules/reference-data/packs/core/guides/banking-data-model.md', class: merge, lane: A}
+  - {path: 'modules/reference-data/packs/core/guides/core.md', class: merge, lane: A}
+  - {path: 'modules/reference-data/packs/gleif/README.md', class: generate, lane: C, tool: 'tools/packgen/readme.py'}
+  - {path: 'modules/reference-data/packs/gleif/guides/gleif.md', class: merge, lane: A}
   - {path: 'modules/source-calypso/docs/README.md', class: generate, lane: C, tool: 'tools/packgen (module manifest)'}
   - {path: 'modules/source-calypso/docs/guide.md', class: merge, lane: A}
   - {path: 'modules/source-endur/docs/README.md', class: generate, lane: C, tool: 'tools/packgen (module manifest)'}

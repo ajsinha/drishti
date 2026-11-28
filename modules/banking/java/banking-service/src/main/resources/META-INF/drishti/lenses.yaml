@@ -42,7 +42,7 @@ lenses:
     chips: [TRD 1000001, BOOK BOOK-RATES-1, CTRD CP-ALDERSHOT, POS BOOK-RATES-1, VAR DESK DESK-RATES, EXP CPTY:CP-ALDERSHOT, CRV CRV-USD-OIS]   # Home's chips (shown only while their function is on)
   - id: market
     title: Market
-    modules: [capitalmarkets, banking]   # capital markets' functions over the market-data pack (the banking module's while its engines read it)
+    modules: [external-data, banking]   # capital markets' functions over the market-data pack (the banking module's while its engines read it)
     home: home/market_landing.html
     functions: [CRV, REPO, IRV, CPV, FIX, INF, INFC, FX, FXF, FXV, CDS, BND, EQ, EQX, DIV, EQV, CMD, CMDC, CMDV, CORR, CORRC, EQB, USEQ, IDX, SIC, EDGAR, FILING, FACT, PXH, FUND, HELD, TRACK]
     cards:                               # Home's quick cards: each opens its command; one whose function is off is not shown

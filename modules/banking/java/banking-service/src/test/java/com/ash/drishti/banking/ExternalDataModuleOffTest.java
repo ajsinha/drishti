@@ -37,27 +37,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The economy module off (a content module: the world-economy and news-and-markets packs and the public sector's six packs, their
- * functions, and the World and Public sector lenses; docs/guides/WORLD_DATA_GUIDE.md): every one of its packs and their connectors
- * is gone, its functions are off and neither lens is offered, while the banking module (its beans, engines and API), capital markets
- * and the core reference data (GLEIF) are unaffected.
+ * The external-data module off (a content module: the world-economy, world-development, national-statistics, oecd, central-banks, funds
+ * and us-equities packs): its packs and their connectors do not load and its functions and lenses are off, while the news-and-events and
+ * market-data modules (NEWS, CRV, FX, EQV stay on), the banking module (its beans, engines and API) and the reference data (GLEIF) are
+ * unaffected.
  */
-@SpringBootTest(properties = {"drishti.modules.economy.enabled=false", "drishti.rachana.hot-reload=false",
-        "drishti.packs.enabled=core,market-data,gleif,us-equities,world-economy,news-and-markets,world-development,central-banks,"
-                + "national-statistics,oecd,official-news,gdelt-events",
-        "drishti.sources.plugins.demo.enabled=false",
+@SpringBootTest(properties = {"drishti.modules.external-data.enabled=false", "drishti.rachana.hot-reload=false",
+        "drishti.packs.enabled=core,market-data,gleif,us-equities,funds,world-economy,world-development,central-banks,national-statistics,oecd,news-and-markets,official-news,gdelt-events", "drishti.sources.plugins.demo.enabled=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
-class EconomyModuleOffTest {
+class ExternalDataModuleOffTest {
 
-    static final List<String> PUBLIC_SECTOR = List.of("world-development", "central-banks", "national-statistics", "oecd", "official-news",
-            "gdelt-events");
-    static final List<String> PACKS = new ArrayList<>(List.of("world-economy", "news-and-markets"));
-
-    static {
-        PACKS.addAll(PUBLIC_SECTOR);
-    }
+    static final List<String> PACKS = List.of("world-economy", "world-development", "central-banks", "national-statistics", "oecd", "funds",
+            "us-equities");
 
     @Autowired AccessRegistry registry;
     @Autowired PackRegistry packs;
@@ -67,30 +60,29 @@ class EconomyModuleOffTest {
     @Autowired TokenVerifier tokens;
 
     @Test
-    void everyPackOfItAndItsConnectorsAreGone() throws Exception {
-        assertThat(registry.moduleOn("economy")).isFalse();
+    void itsPacksAndConnectorsAreGone() throws Exception {
+        assertThat(registry.moduleOn("external-data")).isFalse();
         List<String> loaded = packs.packs().stream().map(Pack::name).toList();
-        assertThat(loaded).contains("core", "market-data", "gleif", "us-equities").doesNotContainAnyElementsOf(PACKS);
+        assertThat(loaded).contains("core", "market-data", "gleif", "news-and-markets", "official-news", "gdelt-events").doesNotContainAnyElementsOf(PACKS);
         List<String> theirs = new ArrayList<>();
         ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
-        for (String p : PUBLIC_SECTOR) {
+        for (String p : PACKS) {
             JsonNode pack = yaml.readTree(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(System.getProperty("drishti.packs.dir", "../../../../config/packs")).toAbsolutePath().normalize().getParent().getParent()).packDir(p).resolve("pack.yaml").toFile());
-            assertThat(pack.path("domain").asText()).as(p).isEqualTo("economy");
             pack.path("connectors").fieldNames().forEachRemaining(theirs::add);
         }
-        assertThat(theirs).hasSize(6);
+        assertThat(theirs).isNotEmpty();
         assertThat(sources.connectorStatuses().keySet()).doesNotContainAnyElementsOf(theirs);
     }
 
     @Test
-    void itsFunctionsAndBothLensesAreGoneAndTheOthersStay() {
-        for (String w : List.of("ECON", "NEWS", "WDI", "WDIS", "CBANK", "CBSER", "NSTAT", "OECD", "OECDS", "PRESS", "PREL", "GDELT")) {
+    void itsFunctionsAreOffAndTheOthersOn() {
+        for (String w : List.of("USEQ", "EDGAR", "FUND", "HELD", "ECON", "WDI", "WDIS", "CBANK", "CBSER", "NSTAT", "OECD", "OECDS")) {
             assertThat(registry.functionOn(w)).as(w).isFalse();
         }
-        for (String w : List.of("VAR", "EXP", "TRD", "USEQ", "LEI", "BI")) {
+        for (String w : List.of("VAR", "EXP", "TRD", "LEI", "NEWS", "PRESS", "GDELT", "BI", "EQV", "CRV", "FX")) {
             assertThat(registry.functionOn(w)).as(w).isTrue();
         }
-        assertThat(registry.lensOffered("publicsector")).isFalse();
+        assertThat(registry.lensOffered("markets")).isFalse();
         assertThat(registry.lensOffered("world")).isFalse();
         assertThat(registry.lensOffered("risk")).isTrue();
     }

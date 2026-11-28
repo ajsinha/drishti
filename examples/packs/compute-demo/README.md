@@ -202,8 +202,8 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 |---|---|---|---|
 | `PBOOK` | `path-book` | synthetic: `python3 examples/packs/compute-demo/tools/make_samples.py` | `examples/packs/compute-demo/samples/` → `lake demo` → connector `compute-demo-store` |
 | `PSTRIP` | `path-strip` | synthetic: `python3 examples/packs/compute-demo/tools/make_samples.py` | `examples/packs/compute-demo/samples/` → `lake demo` → connector `compute-demo-store` |
-| `PSUM` | `path-sum` | computed by Drishti: the reactive connector path-sum-python (python engine); see the [reactive connectors](../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) | nothing to load: computed from its inputs when asked |
-| `PSUMJ` | `path-sum-java` | computed by Drishti: the reactive connector path-sum-java (java engine); see the [reactive connectors](../../../../docs/architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) | nothing to load: computed from its inputs when asked |
+| `PSUM` | `path-sum` | computed by Drishti: the reactive connector path-sum-python (python engine) | nothing to load: computed from its inputs when asked |
+| `PSUMJ` | `path-sum-java` | computed by Drishti: the reactive connector path-sum-java (java engine) | nothing to load: computed from its inputs when asked |
 
 ### Generators
 
@@ -219,5 +219,5 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 
 ## See also
 
-- [How to use the compute-demo pack](../../../../docs/guides/bi/NOTEBOOK_AND_PYTHON.md#compute-demo-pack): what it holds, its screens and a walk-through, in NOTEBOOK_AND_PYTHON.md.
+- [How to use the compute-demo pack](../../../docs/guides/bi/NOTEBOOK_AND_PYTHON.md#compute-demo-pack): what it holds, its screens and a walk-through, in NOTEBOOK_AND_PYTHON.md.
 - [Packs](../../../../docs/guides/BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which) and the [pack developer's guide](../../../../docs/guides/BUILD_GUIDE.md) (the README standard).

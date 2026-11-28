@@ -17,11 +17,11 @@
 
 # The command catalog
 
-Every command of the command line: its own words and forms, the 19 packs' codes, and the 131 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
+Every command of the command line: its own words and forms, the 18 packs' codes, and the 127 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([BUILD_GUIDE.md](BUILD_GUIDE.md#31-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored. Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 98 fundamental, 12 engine input, 2 Drishti's own and 19 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
+In numbers: 98 fundamental, 10 engine input, 2 Drishti's own and 17 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
 
 ## Contents
 
@@ -29,7 +29,6 @@ In numbers: 98 fundamental, 12 engine input, 2 Drishti's own and 19 computed; 0 
 - [Reserved words](#reserved-words)
 - [Pack codes](#pack-codes)
 - [Central banks (`central-banks`)](#central-banks-central-banks)
-- [Compute demo (`compute-demo`)](#compute-demo-compute-demo)
 - [Core (`core`)](#core-core)
 - [Counterparty credit risk (`counterparty-risk`)](#counterparty-credit-risk-counterparty-risk)
 - [Funds and ETFs (`funds`)](#funds-and-etfs-funds)
@@ -82,7 +81,6 @@ A pack's code typed alone opens the pack's overview.
 | Code | Pack | What it holds |
 |---|---|---|
 | `CBNK` | `central-banks` | Policy rates and the market series around them: the Federal Reserve's target range and effective rate, Treasury yields, the curve's slope, US inflation, unemployment and the Fed's balance sheet (FRED, Federal Reserve Bank of St. Louis), and the Bank of Canada's target rate, CORRA, Government of Canada yields and USD/CAD (Bank of Canada Valet). A bank's page shows its policy rate, its last move and its series; each series shows two years of history. Filled daily by the central-banks feed into the worldlake lake; FRED needs a free key in DRISHTI_FRED_API_KEY. |
-| `CMPD` | `compute-demo` | Sample pack for reactive connectors: three books of synthetic P&L strips (250 scenario days each) and the sum of a book's paths computed when it is asked for, by a Python engine in a compute pool (path-sum) and by its Java twin in the server (path-sum-java), with progress on the screen and a state per panel. Synthetic numbers only. Not loaded unless named in DRISHTI_PACKS. |
 | `CORE` | `core` | The parties and organisation every pack builds on: counterparties (with country of risk and UEN), groups, issuers, CCPs, legal entities, books and portfolios, desks, traders and holiday calendars. |
 | `CCR` | `counterparty-risk` | ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM. |
 | `FUNDS` | `funds` | The 200 largest US mutual funds and ETFs by net assets with their holdings, from SEC public data: Form N-PORT holdings, derivatives and counterparties, flows and monthly returns; Form N-CEN census facts; prospectus fees, turnover and calendar-year returns. A holding opens its company (us-equities), a company lists the funds that hold it, an index the funds that track it. |
@@ -109,17 +107,6 @@ Policy rates and the market series around them: the Federal Reserve's target ran
 |---|---|---|---|---|---|
 | `CBANK` | Central bank | One central bank: its policy rate, the last move, the rate's history and the market series around it. | `CBANK CBANK-FED` | fundamental |  |
 | `CBSER` | Central bank series | One central-bank or market series from FRED or the Bank of Canada: the history, the latest value, the change on the day and on the year. | `CBSER CBSER-FRED-DGS10` | fundamental |  |
-
-## Compute demo (`compute-demo`)
-
-Sample pack for reactive connectors: three books of synthetic P&L strips (250 scenario days each) and the sum of a book's paths computed when it is asked for, by a Python engine in a compute pool (path-sum) and by its Java twin in the server (path-sum-java), with progress on the screen and a state per panel. Synthetic numbers only. Not loaded unless named in DRISHTI_PACKS.
-
-| Command | Opens | What it does | Example | Data | Change |
-|---|---|---|---|---|---|
-| `PBOOK` | Path book | A book of synthetic P&L strips, and the sum of their paths computed when the page asks: by a Python engine and by its Java twin. | `PBOOK BOOK-RATES` | engine input |  |
-| `PSTRIP` | P&L strip | A synthetic P&L strip of the compute-demo pack: one path vector in a path book, summed by the demo engines. | `PSTRIP STRIP-FX-001` | engine input |  |
-| `PSUM` | Book path (Python) | Book path (Python) (the path-sum kind of the compute-demo pack) |  | computed |  |
-| `PSUMJ` | Book path (Java) | Book path (Java) (the path-sum-java kind of the compute-demo pack) | `PSUMJ BOOK-FX` | computed |  |
 
 ## Core (`core`)
 

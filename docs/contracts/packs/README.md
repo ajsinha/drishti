@@ -19,16 +19,12 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`modules/<module>/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-131 contracts, 399 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+127 contracts, 389 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
 | `CBANK` | `central-bank` | [central-banks](central-banks.md#cbank-central-bank-central-bank) | fundamental | active |  | 0 |
 | `CBSER` | `rate-series` | [central-banks](central-banks.md#cbser-central-bank-series-rate-series) | fundamental | active |  | 0 |
-| `PBOOK` | `path-book` | [compute-demo](compute-demo.md#pbook-path-book-path-book) | input | active |  | 4 |
-| `PSTRIP` | `path-strip` | [compute-demo](compute-demo.md#pstrip-pl-strip-path-strip) | input | active |  | 4 |
-| `PSUM` | `path-sum` | [compute-demo](compute-demo.md#psum-book-path-python-path-sum) | computed | active |  | 1 |
-| `PSUMJ` | `path-sum-java` | [compute-demo](compute-demo.md#psumj-book-path-java-path-sum-java) | computed | active |  | 1 |
 | `CPTY` | `counterparty` | [core](core.md#cpty-counterparty-counterparty) | fundamental | active |  | 7 |
 | `GRP` | `counterparty-group` | [core](core.md#grp-counterparty-group-counterparty-group) | fundamental | active |  | 6 |
 | `ISS` | `issuer` | [core](core.md#iss-issuer-issuer) | fundamental | active |  | 4 |

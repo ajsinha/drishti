@@ -85,8 +85,10 @@ class DistributionFinanceServerTest {
         assertThat(engines.state("exposure")).isEqualTo(com.ash.drishti.server.engines.EngineRegistry.State.NOT_INSTALLED);
         JsonNode d = getJson("/api/v1/admin/health").path("distribution");
         assertThat(d.path("id").asText()).isEqualTo("drishti.finance");
-        assertThat(d.path("modules").path("economy").asText()).isEqualTo("loaded");
+        assertThat(d.path("modules").path("external-data").asText()).isEqualTo("loaded");
+        assertThat(d.path("modules").path("news-and-events").asText()).isEqualTo("loaded");
+        assertThat(d.path("modules").path("reference-data").asText()).isEqualTo("loaded");
         assertThat(d.path("modules").path("market-data").asText()).isEqualTo("loaded");
-        assertThat(d.path("asked").toString()).contains("capitalmarkets", "economy", "market-data");
+        assertThat(d.path("asked").toString()).contains("external-data", "news-and-events", "reference-data", "market-data");
     }
 }

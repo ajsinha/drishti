@@ -37,16 +37,20 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * The capital-markets module off (a content module: the us-equities and funds packs): its packs and their connectors do not load and its
- * functions are off, while the market-data module (its own since 2.9.11.i2: CRV, FX, EQV stay on), the banking module (its beans, engines
- * and API) and the core reference data (GLEIF) are unaffected.
+ * The news-and-events module off (a content module: the news-and-markets, official-news and gdelt-events packs, their functions): every
+ * one of its packs and their connectors is gone and its functions are off, while the external-data module (the world, development, central
+ * bank, statistics and OECD packs and both lenses), the banking module (its beans, engines and API) and the reference data are unaffected.
  */
-@SpringBootTest(properties = {"drishti.modules.capitalmarkets.enabled=false", "drishti.rachana.hot-reload=false",
-        "drishti.packs.enabled=core,market-data,us-equities,funds,gleif,world-economy", "drishti.sources.plugins.demo.enabled=false",
+@SpringBootTest(properties = {"drishti.modules.news-and-events.enabled=false", "drishti.rachana.hot-reload=false",
+        "drishti.packs.enabled=core,market-data,gleif,us-equities,world-economy,news-and-markets,world-development,central-banks,"
+                + "national-statistics,oecd,official-news,gdelt-events",
+        "drishti.sources.plugins.demo.enabled=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
-class CapitalMarketsModuleOffTest {
+class NewsAndEventsModuleOffTest {
+
+    static final List<String> PACKS = List.of("news-and-markets", "official-news", "gdelt-events");
 
     @Autowired AccessRegistry registry;
     @Autowired PackRegistry packs;
@@ -56,31 +60,32 @@ class CapitalMarketsModuleOffTest {
     @Autowired TokenVerifier tokens;
 
     @Test
-    void itsPacksAndConnectorsAreGone() throws Exception {
-        assertThat(registry.moduleOn("capitalmarkets")).isFalse();
+    void everyPackOfItAndItsConnectorsAreGone() throws Exception {
+        assertThat(registry.moduleOn("news-and-events")).isFalse();
         List<String> loaded = packs.packs().stream().map(Pack::name).toList();
-        assertThat(loaded).contains("core", "market-data", "gleif", "world-economy").doesNotContain("us-equities", "funds");
+        assertThat(loaded).contains("core", "market-data", "gleif", "us-equities", "world-economy", "central-banks").doesNotContainAnyElementsOf(PACKS);
         List<String> theirs = new ArrayList<>();
         ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
-        for (String p : List.of("us-equities", "funds")) {
+        for (String p : PACKS) {
             JsonNode pack = yaml.readTree(com.ash.drishti.api.resolution.ConfigResolution.repository(Path.of(System.getProperty("drishti.packs.dir", "../../../../config/packs")).toAbsolutePath().normalize().getParent().getParent()).packDir(p).resolve("pack.yaml").toFile());
+            assertThat(pack.path("domain").asText()).as(p).isEqualTo("news-and-events");
             pack.path("connectors").fieldNames().forEachRemaining(theirs::add);
         }
-        assertThat(theirs).isNotEmpty();
+        assertThat(theirs).hasSize(3);
         assertThat(sources.connectorStatuses().keySet()).doesNotContainAnyElementsOf(theirs);
     }
 
     @Test
-    void itsFunctionsAreOffAndTheOthersOn() {
-        for (String w : List.of("USEQ", "EDGAR", "FUND", "HELD")) {
+    void itsFunctionsAreGoneAndTheOthersAndBothLensesStay() {
+        for (String w : List.of("NEWS", "PRESS", "PREL", "GDELT")) {
             assertThat(registry.functionOn(w)).as(w).isFalse();
         }
-        for (String w : List.of("VAR", "EXP", "TRD", "LEI", "ECON", "BI", "EQV", "CRV", "FX")) {
+        for (String w : List.of("VAR", "EXP", "TRD", "USEQ", "LEI", "BI", "ECON", "WDI", "CBANK", "NSTAT", "OECD")) {
             assertThat(registry.functionOn(w)).as(w).isTrue();
         }
-        assertThat(registry.lensOffered("market")).isFalse();
-        assertThat(registry.lensOffered("risk")).isTrue();
+        assertThat(registry.lensOffered("publicsector")).isTrue();
         assertThat(registry.lensOffered("world")).isTrue();
+        assertThat(registry.lensOffered("risk")).isTrue();
     }
 
     @Test

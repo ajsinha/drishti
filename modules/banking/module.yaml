@@ -33,6 +33,7 @@ plugin-api: '>=2.0'
 elements: '>=3.3 <4'
 requires:
   market-data: '>=1.0 <2'
+  reference-data: '>=1.0 <2'
 provides:
   kinds:
     trading:

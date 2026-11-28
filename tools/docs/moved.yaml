@@ -18,10 +18,6 @@
 moved:
   - {from: 'bin/README.md', to: 'docs/guides/OPERATIONS_GUIDE.md', how: merge}
   - {from: 'compute/drishti-compute/README.md', to: 'docs/guides/DEVELOPER_GUIDE.md', how: merge}
-  - {from: 'examples/packs/compute-demo/guides/compute-demo.md', to: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md', how: merge}
-  - {from: 'modules/reference-data/packs/core/guides/banking-data-model.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/reference-data/packs/core/guides/core.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/reference-data/packs/gleif/guides/gleif.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
   - {from: 'data/dataload/README.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'data/dataload/failed/README.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'data/dataload/inbox/README.md', to: '', how: delete, note: 'deleted outright'}
@@ -139,6 +135,7 @@ moved:
   - {from: 'drishti-console/web/guides/developer.md', to: 'docs/guides/API_REFERENCE.md', how: merge}
   - {from: 'drishti-console/web/guides/sharing-and-discussion.md', to: 'docs/guides/USER_GUIDE.md', how: merge}
   - {from: 'examples/packs/climate-risk/guides/climate-risk.md', to: '', how: delete, note: 'deleted outright'}
+  - {from: 'examples/packs/compute-demo/guides/compute-demo.md', to: 'docs/guides/bi/NOTEBOOK_AND_PYTHON.md', how: merge}
   - {from: 'examples/packs/finance/guides/write-your-first-sutra.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'examples/packs/genomics/guides/genomics.md', to: '', how: delete, note: 'deleted outright'}
   - {from: 'examples/packs/liquidity-risk/guides/liquidity-risk.md', to: '', how: delete, note: 'deleted outright'}
@@ -150,14 +147,11 @@ moved:
   - {from: 'modules/banking/packs/market-risk/guides/market-risk.md', to: 'docs/guides/VAR_GUIDE.md', how: merge}
   - {from: 'modules/banking/packs/trading/guides/trading-products.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
   - {from: 'modules/banking/packs/trading/guides/trading.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/external-data/packs/funds/guides/funds.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/external-data/packs/us-equities/guides/us-equities.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
   - {from: 'modules/external-data/packs/central-banks/guides/central-banks.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/news-and-events/packs/gdelt-events/guides/gdelt-events.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/external-data/packs/funds/guides/funds.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
   - {from: 'modules/external-data/packs/national-statistics/guides/national-statistics.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/news-and-events/packs/news-and-markets/guides/news-and-markets.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
   - {from: 'modules/external-data/packs/oecd/guides/oecd.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
-  - {from: 'modules/news-and-events/packs/official-news/guides/official-news.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/external-data/packs/us-equities/guides/us-equities.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
   - {from: 'modules/external-data/packs/world-development/guides/world-development.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
   - {from: 'modules/external-data/packs/world-economy/guides/world-economy.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
   - {from: 'modules/genomics/docs/tutorial.md', to: 'modules/genomics/docs/guide.md', how: merge}
@@ -165,6 +159,12 @@ moved:
   - {from: 'modules/genomics/packs/protein-engineering/guides/protein-engineering.md', to: 'modules/genomics/docs/guide.md', how: merge}
   - {from: 'modules/market-data/packs/market-data/guides/market-data-catalogue.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
   - {from: 'modules/market-data/packs/market-data/guides/market-data.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/news-and-events/packs/gdelt-events/guides/gdelt-events.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/news-and-events/packs/news-and-markets/guides/news-and-markets.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/news-and-events/packs/official-news/guides/official-news.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/reference-data/packs/core/guides/banking-data-model.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/reference-data/packs/core/guides/core.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
+  - {from: 'modules/reference-data/packs/gleif/guides/gleif.md', to: 'docs/guides/WORLD_DATA_GUIDE.md', how: merge}
   - {from: 'modules/source-calypso/docs/guide.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
   - {from: 'modules/source-endur/docs/guide.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}
   - {from: 'modules/source-ici/docs/guide.md', to: 'docs/guides/BANK_DATA_GUIDE.md', how: merge}

@@ -61,7 +61,7 @@ class BankingModuleOffTest {
     void theRegistrySaysOffAndWhy() {
         assertThat(registry.moduleOn("banking")).isFalse();
         assertThat(registry.module("banking").orElseThrow().reason()).contains("switched off").contains("drishti.modules.banking.enabled");
-        assertThat(registry.moduleOn("economy")).isTrue();
+        assertThat(registry.moduleOn("external-data")).isTrue();
         assertThat(registry.lensOffered("risk")).isFalse();
         assertThat(registry.lensOffered("world")).isTrue();
     }
@@ -140,6 +140,6 @@ class BankingModuleOffTest {
         assertThat(me).contains("\"word\":\"VAR\",\"module\":\"banking\"").contains("VAR is not available to you: ask your administrator");
         assertThat(me).doesNotContain("\"id\":\"risk\"").contains("\"id\":\"world\"").doesNotContain("\"word\":\"ECON\"");
         String about = mvc.perform(get("/public/about")).andReturn().getResponse().getContentAsString();
-        assertThat(about).contains("\"modules\":[").doesNotContain("\"banking\"").contains("\"economy\"");
+        assertThat(about).contains("\"modules\":[").doesNotContain("\"banking\"").contains("\"external-data\"");
     }
 }

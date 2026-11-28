@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 /**
- * The economy module on (as shipped) with the public sector's packs: the six load with their connectors (each reading worldlake or
+ * The external-data and news-and-events modules on (as shipped) with the public sector's packs: the six load with their connectors (each reading worldlake or
  * newslake, which their feeds fill), their functions are on, the Public sector lens is offered with them, and the World lens carries the
  * free news (PRESS, GDELT).
  */
@@ -41,8 +41,9 @@ class PublicSectorLensTest {
 
     @Test
     void thePacksConnectorsFunctionsAndLensAreThere() {
-        assertThat(registry.moduleOn("economy")).isTrue();
-        assertThat(packs.packs().stream().map(Pack::name).toList()).containsAll(EconomyModuleOffTest.PUBLIC_SECTOR);
+        assertThat(registry.moduleOn("external-data")).isTrue();
+        assertThat(registry.moduleOn("news-and-events")).isTrue();
+        assertThat(packs.packs().stream().map(Pack::name).toList()).contains("world-development", "central-banks", "national-statistics", "oecd", "official-news", "gdelt-events");
         assertThat(sources.connectorStatuses().keySet()).contains("development-store", "centralbank-store", "statistics-store", "oecd-store",
                 "officialnews-store", "gdelt-store");
         for (String w : List.of("WDI", "WDIS", "CBANK", "CBSER", "NSTAT", "OECD", "OECDS", "PRESS", "PREL", "GDELT")) {

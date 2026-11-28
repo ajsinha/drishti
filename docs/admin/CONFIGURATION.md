@@ -4636,7 +4636,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 ### Modules: `config/modules/*.yaml`
 
-One file per module (banking, capitalmarkets, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of its own (banking) its name, so a server without the jar knows it and leaves it off as not installed; the module's manifest ships in its jar and the access registry reads both ([KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md), [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module is on when installed, licensed and enabled; a change takes effect at the next start.
+One file per module (banking, external-data, news-and-events), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch, and for a module in a jar of its own (banking) its name, so a server without the jar knows it and leaves it off as not installed; the module's manifest ships in its jar and the access registry reads both ([KERNEL_AND_MODULES.md](../architecture/KERNEL_AND_MODULES.md), [OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#65-engines-modules-and-editions)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module is on when installed, licensed and enabled; a change takes effect at the next start.
 
 #### A module's switch: `config/modules/<module>.yaml` (docs/architecture/KERNEL_AND_MODULES.md)
 
@@ -4959,7 +4959,7 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 | `menus[].id` | string | none |  | console | The menu's id (what an edition's menus.&lt;id&gt; names) | live |  | admin |
 | `menus[].label` | string | none |  | console | Its name in the top bar | live |  | admin |
 | `menus[].icon` | string | none |  | console | Its Bootstrap icon name | live |  | admin |
-| `menus[].domain` | string | `core` |  | console | The domain module the menu belongs to (banking, economy; core when not said): the domain split moves its entries | live |  | admin |
+| `menus[].domain` | string | `core` |  | console | The domain module the menu belongs to (banking, external-data; core when not said): the domain split moves its entries | live |  | admin |
 | `menus[].also` | list | `[]` |  | console | Items listed in other menus that this menu's strip also draws, by id (the Admin tabs' BI settings and My account, the BI rail's Pivot and Build home), without listing them twice | live |  | admin |
 | `menus[].personal` | boolean | `false` |  | console | The person's own menu (My account): never drawn as a top menu | live |  | admin |
 | `menus[].subject` | boolean | `false` |  | console | A lens's subject menu (Curves, Economies ...): drawn only where an edition's menus.top names it | live |  | admin |
@@ -5032,7 +5032,7 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 | `sections[].groups[].guides[].children[].doc` | string | none |  | console | A repository document under docs/ rendered as it is | live |  | admin |
 | `sections[].groups[].guides[].children[].icon` | string | none |  | console | Its icon | live |  | admin |
 | `sections[].groups[].guides[].children[].summary` | string | none |  | console | The row's summary, also searched | live |  | admin |
-| `sections[].groups[].guides[].domain` | string | `core` |  | console | The domain module the page belongs to (core, banking, capitalmarkets, economy): while it is off for the person the page is not listed, searched or served | live |  | admin |
+| `sections[].groups[].guides[].domain` | string | `core` |  | console | The domain module the page belongs to (core, banking, external-data, news-and-events, reference-data): while it is off for the person the page is not listed, searched or served | live |  | admin |
 | `sections[].groups[].guides[].lenses` | list | `none` |  | console | The lenses that show the page (none: every lens; the full product shows every page) | live |  | admin |
 | `knowledge` | map | `shipped` |  | console | "What does this mean?" beside a data page: screen or kind -&gt; the Knowledge page or glossary entry that explains it | live |  | admin |
 | `knowledge.<name>` | string | none |  | console | One screen or kind and its Knowledge target | live |  | admin |
@@ -5751,7 +5751,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `pack` | string | none |  | the pack | Required: the pack's name, equal to its folder's name (else the pack is refused) | live |  | admin |
 | `version` | string | `0` |  | the pack | X.Y.Z, shown in About, Admin -&gt; Health and Admin -&gt; Packs and checked by deploys and the registry | live |  | admin |
 | `code` | string | `none` |  | the pack | The pack's short code: typed alone it opens the pack's overview (/p/&lt;pack&gt;); must not equal a mnemonic | live |  | admin |
-| `domain` | string | `core` |  | the pack | The domain it serves (core, banking, economy, capitalmarkets): a pack of a domain loads only while a module of that domain is on (docs/architecture/KERNEL\_AND\_MODULES.md) | live |  | admin |
+| `domain` | string | `core` |  | the pack | The domain it serves (core, banking, external-data, news-and-events, reference-data): a pack of a domain loads only while a module of that domain is on (docs/architecture/KERNEL\_AND\_MODULES.md) | live |  | admin |
 | `title` | string | `the pack's name` |  | the pack | Its name in menus, help and admin pages | live |  | admin |
 | `description` | string | empty |  | the pack | One paragraph for About and the help centre | live |  | admin |
 | `sample` | boolean | `false` |  | the pack | A demonstration pack: drishti.packs.samples can hide it from business users | live |  | admin |
@@ -6334,7 +6334,7 @@ One file per data feed: the source, its datasets and the lake they load, the sch
 | `history.first-run-days` | integer | `30` |  | drishti.py feed (each run) | the first run without data/datafeeds/&lt;feed&gt;/state.json pulls this many days (--since overrides) | live |  | admin |
 | `datasets.<dataset>` | map | `{pack: gleif, kind: lei-entity, key: LEI, description: "one legal entity: nam...` |  | drishti.py feed (each run) | one dataset: pack and kind (required), table (default the kind), key (the id field), dated (run or source), description | live |  | admin |
 | `options.args` | list | `[]` |  | drishti.py feed (each run) | arguments given to the source before the command line's (e.g. \[--scope, "NAME:allianz,CAP:200"]) | live |  | admin |
-| `snapshot.note` | string | `refreshes modules/reference-data/packs/gleif (samples, guide) and data/testdata/gleif, a...` |  | drishti.py feed (each run) | a line for the docs | live |  | admin |
+| `snapshot.note` | string | `refreshes modules/reference-data/packs/gleif (samples, guide) and data/testda...` |  | drishti.py feed (each run) | a line for the docs | live |  | admin |
 
 ### Report definitions: `config/reports/banking/`
 
