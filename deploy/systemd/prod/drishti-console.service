@@ -1,0 +1,36 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# The production console unit of docs/guides/OPERATIONS_GUIDE.md, section 6.2: copy to /etc/systemd/system/drishti-console.service.
+# /opt/python3.13/bin/python3.13 is the dedicated Python of the install (the one setup wrote as drishti.python).
+[Unit]
+Description=Drishti console
+After=network-online.target drishti-server.service
+Wants=drishti-server.service
+
+[Service]
+User=drishti
+Group=drishti
+WorkingDirectory=/srv/drishti
+EnvironmentFile=/etc/drishti/drishti.env
+EnvironmentFile=/etc/drishti/release.env
+EnvironmentFile=/etc/drishti/secrets.env
+ExecStart=/bin/sh -c 'exec /opt/python3.13/bin/python3.13 "$DRISHTI_HOME"/drishti-console/run_drishti_web.py --settings /etc/drishti/prod.ini'
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

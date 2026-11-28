@@ -25,6 +25,21 @@ SAFE = {"profile": "production",
         "server": {"host": "127.0.0.1"}}
 
 
+@pytest.fixture(autouse=True)
+def _site_folder(monkeypatch):
+    monkeypatch.setenv("DRISHTI_SITE_DIR", "/etc/drishti")
+    monkeypatch.setenv("DRISHTI_HOME", "/opt/drishti/current/drishti")
+
+
+def test_the_site_folder_is_named_and_outside_the_release(monkeypatch):
+    monkeypatch.delenv("DRISHTI_SITE_DIR")
+    one(safe(), "drishti.site.dir is not set")
+    monkeypatch.setenv("DRISHTI_SITE_DIR", "/opt/drishti/current/drishti/config")
+    one(safe(), "inside the release folder")
+    monkeypatch.setenv("DRISHTI_SITE_DIR", "/etc/drishti")
+    assert production.refusals(safe()) == []
+
+
 def safe(**changes):
     import copy
     data = copy.deepcopy(SAFE)

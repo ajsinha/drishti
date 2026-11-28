@@ -55,7 +55,7 @@ public class ArtifactConfiguration {
     @Bean
     public ArtifactPaths artifactPaths(ConfigurableEnvironment env, ConnectorManager connectors, BiProperties bi) {
         return new ArtifactPaths(Path.of(PackPaths.packsDir(env)), Path.of(PackPaths.installedDir(env)), connectors.files().dir(), Path.of(bi.dir()),
-                Path.of(env.getProperty("drishti.tables.root", com.ash.drishti.api.Roots.config("tables"))), () -> PackPaths.resolution(env));
+                Path.of(env.getProperty("drishti.tables.site", com.ash.drishti.api.Roots.site("tables"))), () -> PackPaths.resolution(env));
     }
 
     @Bean

@@ -3545,25 +3545,24 @@ address), never `localhost`. Commands that change the machine run as root (`sudo
 ### Quick path
 
 The whole install on one Linux machine, as root, in order. Each line says what you should see; the sections after it give the detail.
-`<release>` is the release's folder name, `PY` is the dedicated Python 3.13 of step 1.
+`<release>` is the release's folder name, `BASE` is the Python 3.13 of step 1 and `PY` the release's own Python made from it (step 4).
 
 1. **A dedicated Python 3.13** for Drishti alone: `/opt/python3.13/bin/python3.13 --version` says `Python 3.13.<n>` ([section 1](#1-what-you-need)).
    Never the operating system's `python3` and never a Python shared with other work: installing Drishti's pinned libraries **upgrades pandas,
    pyarrow, tzdata and others in that Python**. Drishti never creates an environment or runs pip itself; a virtual environment you make yourself
    from that Python is fine (then `PY` is its `python`).
 2. **Java 21 and the folders**: `java -version` says 21; make the user and folders of [section 2](#2-lay-out-the-machine).
-3. **Unzip the release and the Linux wheel pack**, both into folders (setup never opens a zip):
-   `sudo unzip -q drishti-platform-<release>-source.zip -d /opt/drishti/<release>` and
-   `sudo unzip -q drishti-platform-<release>-wheels-linux-x64-py313.zip -d /root/drishti-wheels`. `ls /root/drishti-wheels | head` lists `.whl` files
-   (if the zip made one more folder inside, the `--find-links` folder is that one).
-4. **Build once**, in the folder that holds `build_all.py`: `cd /opt/drishti/<release> && sudo $PY build_all.py --skip-tests` ends without error, and
-   `ls drishti/lib/drishti-server-*-exec.jar` lists exactly one jar ([section 3](#3-install-a-release)).
-5. **Install the libraries**: two pip commands, one each, from `drishti/drishti-console`, offline from the unzipped pack:
-   `sudo $PY -m pip install --no-index --find-links /root/drishti-wheels -r requirements.txt` then
-   `sudo $PY -m pip install --no-index --find-links /root/drishti-wheels -r ../config/compute/locks/python.lock`; both end `Successfully installed ...`
-   (or `Requirement already satisfied`).
+3. **Unpack the binary package** into its own release folder (one archive holds the server, the modules, the console, the tools and the Python
+   libraries; nothing is built on this machine): `sudo mkdir -p /opt/drishti/releases/<release> && sudo tar -xzf drishti-<release>-linux-x64.tar.gz -C /opt/drishti/releases/<release> --strip-components=1`,
+   then `cd /opt/drishti/releases/<release> && sudo $BASE verify_package.py` says **`package verified`** ([section 3](#3-install-a-release)).
+4. **Make this release's Python and install the libraries** (offline, from the package's `wheels/` folder): `sudo $BASE -m venv /opt/drishti/python/<release>`,
+   link it in (`ln -s`, section 3), then two pip commands, one each, with that Python (`PY`):
+   `sudo $PY -m pip install --no-index --find-links wheels -r wheels/requirements.txt` then
+   `sudo $PY -m pip install --no-index --find-links wheels -r wheels/python.lock`; both end `Successfully installed ...`
+   (or `Requirement already satisfied`). Then make the release `current`: `sudo ln -sfn releases/<release> /opt/drishti/current`.
+5. **The data folder**: `sudo -u drishti $PY /opt/drishti/current/drishti/tools/drishti.py setup --data-dir /srv/drishti/data` makes its layout.
 6. **Write `/etc/drishti/prod.ini`** ([4.1](#41-the-settings-file)), the secrets ([4.2](#42-the-secrets)) and the environment ([4.5](#45-the-environment-file)).
-7. **Check with setup**: `sudo $PY /opt/drishti/<release>/drishti/tools/drishti.py setup --settings /etc/drishti/prod.ini` ends with the line
+7. **Check with setup**: `sudo $PY /opt/drishti/current/drishti/tools/drishti.py setup --settings /etc/drishti/prod.ini --wheels /opt/drishti/current/wheels` ends with the line
    **`Drishti is ready.`** Any `[FAIL]` line names its fix: [3.1](#31-what-setup-tells-you). Setup changes nothing in the Python.
 8. **Disk**: the data folder's disk has at least 20 GB free (`df -h /srv/drishti/data`), or you lowered `drishti.disk.min-free-gb` in `prod.ini`
    ([2](#2-lay-out-the-machine)); below the guard a VaR date is refused with 503.
@@ -3595,10 +3594,9 @@ The whole install on one Linux machine, as root, in order. Each line says what y
 | Need | Detail |
 |---|---|
 | **Linux**, 64-bit, systemd | Ubuntu 22.04+ or RHEL 9+ |
-| **Java 21**, a JDK | the distribution's `openjdk-21-jdk` / `java-21-openjdk-devel`, or a Temurin 21 `.tar.gz`; `java -version` says 21 |
-| **A Python 3.13 base** | the release's wheel pack is for Python 3.13. Use the distribution's `python3.13` package where it has one, else build python.org's source once into `/opt/python3.13` (below). The operating system's own `python3` is not used when it is not 3.13, and a distribution's Python refuses `pip install` into itself (PEP 668): Drishti's libraries never go into it |
-| **The release** | `drishti-platform-<release>-source.zip`: the platform folder (`build_all.py`, `drishti/` and the products it is built on). There is no binary archive: the release is built on the machine once with `build_all.py` ([section 3](#3-install-a-release)), which needs the JDK 21 and Maven's libraries (a company mirror, or a filled `~/.m2`) |
-| **The offline wheel pack** | `drishti-platform-<release>-wheels-linux-x64-py313.zip`: every Python library the console and the server's Python work need, and the pinned Lake wheel. No package index is needed on the machine |
+| **Java 21** | a 21 runtime: the distribution's `openjdk-21-jre-headless` / `java-21-openjdk-headless` (a JDK also works), or a Temurin 21 `.tar.gz`; `java -version` says 21. It runs the server; nothing is compiled |
+| **A Python 3.13 base** | the package's wheels are for Python 3.13. Use the distribution's `python3.13` package where it has one, else build python.org's source once into `/opt/python3.13` (below). The operating system's own `python3` is not used when it is not 3.13, and a distribution's Python refuses `pip install` into itself (PEP 668): Drishti's libraries never go into it |
+| **The release** | **the binary package** `drishti-<release>-linux-x64.tar.gz` (and its `.sha256`): the server jar, the module packages (`.dmod`), the console, the operator tools, the config templates, the systemd unit templates, the help documents, the licences, **the pinned Python libraries** (`wheels/`, offline) and `MANIFEST.json` (the versions of Drishti and of its pinned products, the hashes). It is built once per release by the build pipeline from the release's tags (`make_binary.py --release <release> --target linux-x64`), never on this machine: **the host needs no Maven, no compiler, no source and no internet** |
 | **A database** | PostgreSQL for a cluster or any shared use ([section 5](#5-database)); SQLite is the default of a single node |
 | **Memory** | the server's heap plus about 1 GB, plus RAM for the page cache of the mapped hot files; the console about 1 GB (4 worker processes). About 4 GB of heap per 400,000 trades a day, 8 GB for a million or more |
 | **Disk** | the data folder (lakes if local, hot files, caches, logs, dumps): size it with the sizing planner |
@@ -3633,15 +3631,18 @@ committed copy is `docs/architecture/Drishti-Sizing-Planner.xlsx`), and **Admin 
 ### 2. Lay out the machine
 
 ```text
-/opt/drishti/<release>/        the platform folder of one release (build_all.py, the products); read only to the service user
-/opt/drishti/<release>/drishti/      the install folder (DRISHTI_HOME)
-/opt/python3.13/                    the Python 3.13 Drishti runs with, its libraries installed by you with the two pip commands; setup only checks (drishti.python)
+/opt/drishti/releases/<release>/       one release, unpacked from its binary package (drishti/, wheels/, MANIFEST.json, SHA256SUMS); root-owned, read only to the service user
+/opt/drishti/releases/<release>/drishti/   the install folder of that release
+/opt/drishti/python/<release>/        the Python of that release (made from the base Python 3.13, its libraries installed by you with the two pip commands; setup only checks)
+/opt/drishti/releases/<release>/python  ->  /opt/drishti/python/<release>        (a link you make)
+/opt/drishti/current   ->  releases/<release>     the running release: DRISHTI_HOME is /opt/drishti/current/drishti, drishti.python is /opt/drishti/current/python/bin/python3.13
+/opt/drishti/previous  ->  releases/<old>         what a rollback switches back to (made by the first upgrade)
 /srv/drishti/data/             the data folder (DRISHTI_DATA_DIR): everything Drishti writes; owned by drishti
 /etc/drishti/prod.ini          the settings file: folders, lakes, databases, brokers (no secret in it)
 /etc/drishti/secrets.ini       optional: passwords of the databases, brokers and lakes, given last (mode 600)
 /etc/drishti/secrets.env       the secrets as environment variables (mode 600, root)
 /etc/drishti/drishti.env       the non-secret environment of both services (mode 644)
-/etc/drishti/release.env       which release runs (the file to change on an upgrade)
+/etc/drishti/release.env       the release's paths: all through /opt/drishti/current, so it never changes on an upgrade
 /etc/drishti/server.args       the server's JVM options
 /etc/drishti/                  ALSO the site folder (drishti.site.dir): every site file and every Admin change, never the release:
     connectors/                  connector overrides (only the keys a site changes), bindings.yaml, placement.yaml
@@ -3660,7 +3661,7 @@ The site folder is `/etc/drishti`; give it to the service user (`sudo chown -R d
 
 ```bash
 sudo useradd --system --home-dir /srv/drishti --shell /usr/sbin/nologin drishti
-sudo mkdir -p /opt/drishti /srv/drishti/data /etc/drishti/{connectors,engines,modules,access,lakes,console}
+sudo mkdir -p /opt/drishti/releases /opt/drishti/python /srv/drishti/data /etc/drishti/{connectors,engines,modules,access,lakes,console}
 sudo chown drishti:drishti /srv/drishti/data
 sudo chown -R drishti:drishti /etc/drishti/{connectors,engines,modules,access,lakes,console}   # the site's folders: what Admin writes
 sudo chmod 750 /srv/drishti/data
@@ -3689,34 +3690,41 @@ default). Local lakes sit on the data disk or on a mount named in their lake fil
 ### 3. Install a release
 
 ```bash
-# as root. PY is the dedicated Python 3.13 (section 1)
-PY=/opt/python3.13/bin/python3.13
+# as root. BASE is the Python 3.13 of section 1; each release gets its own Python made from it
+BASE=/opt/python3.13/bin/python3.13 ; REL=<release> ; R=/opt/drishti/releases/$REL ; PY=/opt/drishti/python/$REL/bin/python3.13
 
-# 1. unpack the release into its own folder (one folder per release, never over another) and build it once, in the folder that holds
-#    build_all.py (when the zip holds one top folder, cd into it): the products, then Drishti's server jar into drishti/lib and its
-#    module packages into drishti/modules (no tests)
-sudo mkdir -p /opt/drishti/<release> && sudo unzip -q /root/drishti-platform-<release>-source.zip -d /opt/drishti/<release>
-cd /opt/drishti/<release> && sudo $PY build_all.py --skip-tests
-ls /opt/drishti/<release>/drishti/lib/drishti-server-*-exec.jar          # exactly one jar (the start refuses two)
-ls /opt/drishti/<release>/drishti/modules/*.dmod | head -3               # the module packages
+# 1. check the archive against the checksum published with it, unpack it into its own folder (one folder per release, never over another)
+#    and verify every file of it: no build, no Maven, no network
+cd /root && sha256sum -c drishti-$REL-linux-x64.tar.gz.sha256
+sudo mkdir -p $R && sudo tar -xzf drishti-$REL-linux-x64.tar.gz -C $R --strip-components=1
+cd $R && sudo $BASE verify_package.py                                    # "package verified: <n> files"
+ls $R/drishti/lib/drishti-server-*-exec.jar                              # exactly one jar (the start refuses two)
+ls $R/drishti/modules/*.dmod | head -3                                   # the module packages
+cat $R/MANIFEST.json                                                     # the versions of Drishti and of the pinned products, the hashes
 
-# 2. the wheel pack, UNZIPPED (setup does not open a zip)
-sudo unzip -q /root/drishti-platform-<release>-wheels-linux-x64-py313.zip -d /root/drishti-wheels
+# 2. this release's own Python (never shared with a running release whose pins differ), linked into the release; then the libraries
+#    from the package's wheels/ folder: two pip commands, one each (the lock file carries hashes, so pip takes it in its own run), offline
+sudo $BASE -m venv /opt/drishti/python/$REL && sudo ln -s /opt/drishti/python/$REL $R/python
+cd $R
+sudo $PY -m pip install --no-index --find-links wheels -r wheels/requirements.txt
+sudo $PY -m pip install --no-index --find-links wheels -r wheels/python.lock
 
-# 3. the Python libraries: two pip commands, one each (the lock file carries hashes, so pip takes it in its own run), offline
-cd /opt/drishti/<release>/drishti/drishti-console
-sudo $PY -m pip install --no-index --find-links /root/drishti-wheels -r requirements.txt
-sudo $PY -m pip install --no-index --find-links /root/drishti-wheels -r ../config/compute/locks/python.lock
+# 3. make it the running release, make the data folder's layout (as the service user), write /etc/drishti/prod.ini (4.1) and let setup CHECK
+#    everything; it ends with "Drishti is ready." or "Drishti is NOT ready: N to fix"
+sudo ln -sfn releases/$REL /opt/drishti/current
+sudo -u drishti $PY /opt/drishti/current/drishti/tools/drishti.py setup --data-dir /srv/drishti/data
+sudo $PY /opt/drishti/current/drishti/tools/drishti.py setup --settings /etc/drishti/prod.ini --wheels /opt/drishti/current/wheels
 
-# 4. write /etc/drishti/prod.ini (4.1), then let setup CHECK everything; it ends with "Drishti is ready." or "Drishti is NOT ready: N to fix"
-sudo $PY /opt/drishti/<release>/drishti/tools/drishti.py setup --settings /etc/drishti/prod.ini
-
-# 5. the install is root-owned and not writable by the service user
-sudo chown -R root:root /opt/drishti/<release> && sudo chmod -R go-w /opt/drishti/<release>
+# 4. the release is root-owned and not writable by the service user
+sudo chown -R root:root $R && sudo chmod -R go-w $R
 ```
 
-The build needs the JDK 21 and Maven's libraries (a company mirror, or a filled `~/.m2` of root). Your own jars (JDBC drivers, connector
-plugins) go in `/opt/drishti/<release>/drishti/lib/ext`; copy them from the previous release on an upgrade.
+The package holds no source and no site configuration. The host needs only Java 21 and the dedicated Python: no Maven libraries, no mirror. Your own
+jars (JDBC drivers, connector plugins) go in `/opt/drishti/releases/<release>/drishti/lib/ext`; copy them from the previous release on an upgrade.
+Where the package comes from: the release pipeline builds it once from the release's tags (`make_binary.py --release <release> --target linux-x64`
+in the platform's index repository, on a build machine with the JDK and the product repositories; the wheel pack is made on the same machine from
+the pinned requirements), publishes the archive with its `.sha256`, and keeps `MANIFEST.json` as the record of what is in it. The same inputs give
+the same bytes.
 
 `setup --settings /etc/drishti/prod.ini` reads and keeps your settings file (never moves it), adds `drishti.python` (the Python it ran with:
 the one both services and the server's compute work use) and writes no developer settings folder or IDE files in the home of whoever runs
@@ -3737,7 +3745,7 @@ every `[FAIL]` ends with `Fix:`. Run it again after each fix.
 | `[FAIL] libraries: no wheel pack found` | no folder with the `.whl` files where setup looked | unzip the pack and name it: `setup --wheels /root/drishti-wheels` (or `DRISHTI_WHEELS`) |
 | `[FAIL] wheel pack` ... another system, architecture or Python version | the pack is for another machine or not Python 3.13 | fetch the `linux-x64-py313` pack of this release |
 | `this Python is managed by the operating system` | setup ran with the distribution's Python (`EXTERNALLY-MANAGED`, PEP 668) | run setup with the dedicated Python 3.13 (or your own virtual environment); never `--break-system-packages` |
-| `[FAIL] the server jar: no server jar in <home>/lib` | the release is not built | `cd` to the folder with `build_all.py`, run `$PY build_all.py --skip-tests` (step 1) |
+| `[FAIL] the server jar: no server jar in <home>/lib` | the package was not unpacked completely (or the wrong folder is named) | unpack the package again, `verify_package.py` says which file is missing or changed |
 | `<n> server jars` | an old jar is still in `lib/` | keep exactly one `drishti-server-*-exec.jar` (your jars live in `lib/ext`) |
 | `[FAIL] Java` ... `Java <n> is older than 21` | the JDK found is too old | install JDK 21; point `JAVA_HOME` or `drishti.java.home` in `prod.ini` at it |
 | `[FAIL] <file>: <folder> is not writable` | the account running setup cannot write the settings file or the data folder | run setup as root (or as `drishti` for the data folder), or fix the owner of `/etc/drishti` and `/srv/drishti/data` |
@@ -3757,9 +3765,9 @@ for a small machine (Admin → Health → Disk shows what holds it).
 ```ini
 # /etc/drishti/prod.ini: no secret in this file; a value runs to the end of its line, so no comment after a value
 [roots]
-drishti.home=/opt/drishti/<release>/drishti
+drishti.home=/opt/drishti/current/drishti
 drishti.data.dir=/srv/drishti/data
-drishti.modules.home=/opt/drishti/<release>/drishti/modules
+drishti.modules.home=/opt/drishti/current/drishti/modules
 # the site folder: every site file and every Admin change; the release is never written (production refuses to start without it)
 drishti.site.dir=/etc/drishti
 
@@ -3833,7 +3841,7 @@ The built-in development administrator `drishti-dev-admin` with its default pass
 
 #### 4.5 The environment file
 
-`/etc/drishti/drishti.env` (mode 644, no secret) is read by both services; `/etc/drishti/release.env` names the release that runs:
+`/etc/drishti/drishti.env` (mode 644, no secret) is read by both services; `/etc/drishti/release.env` names the release folders **through the `current` link**, so an upgrade never edits it:
 
 ```bash
 sudo tee /etc/drishti/drishti.env >/dev/null <<'EOF'
@@ -3849,9 +3857,9 @@ DRISHTI_CONSOLE_HOST=127.0.0.1
 DRISHTI_CONSOLE_PORT=17480
 EOF
 sudo tee /etc/drishti/release.env >/dev/null <<'EOF'
-DRISHTI_HOME=/opt/drishti/<release>/drishti
+DRISHTI_HOME=/opt/drishti/current/drishti
 DRISHTI_DATA_DIR=/srv/drishti/data
-DRISHTI_MODULES_HOME=/opt/drishti/<release>/drishti/modules
+DRISHTI_MODULES_HOME=/opt/drishti/current/drishti/modules
 EOF
 ```
 
@@ -3859,8 +3867,8 @@ EOF
 machine, so only the reverse proxy reaches it ([section 8](#8-tls-and-the-reverse-proxy)); `SERVER_ADDRESS=127.0.0.1` does the same for the
 server on a single machine (**remove it on a cluster node**, [section 7](#7-cluster-more-nodes)). `DRISHTI_SECURE_COOKIE` stays unset
 (cookies are `Secure` by default). Leave `DRISHTI_AI_ENABLED`, `DRISHTI_MCP_ENABLED`, `DRISHTI_OFFLINE`, `DRISHTI_STUDIO_SAVE` and the data
-inbox as shipped unless you want them ([12](#12-security-checklist)). Modules and engines are switched in `config/modules/<module>.yaml`
-(`enabled: true/false`) and `config/engines/<engine>.yaml`; Admin → Modules and Admin → Engines show and change them, and a change takes
+inbox as shipped unless you want them ([12](#12-security-checklist)). Modules and engines are switched in the site folder, `/etc/drishti/modules/<module>.yaml`
+(`enabled: true/false`) and `/etc/drishti/engines/<engine>.yaml`; Admin → Modules and Admin → Engines show and change them, and a change takes
 effect at the next start. Every variable: [CONFIGURATION.md](../admin/CONFIGURATION.md#every-placeholder).
 
 #### 4.6 The JVM options
@@ -3935,7 +3943,7 @@ the Python of section 3 running `run_drishti_web.py`. Neither goes through `tool
 
 #### 6.1 The server unit
 
-`/etc/systemd/system/drishti-server.service` (the shipped `deploy/systemd/drishti-server.service`, with this guide's layout):
+`/etc/systemd/system/drishti-server.service` (shipped in the package as `drishti/deploy/systemd/prod/drishti-server.service`, this guide's layout; copy it):
 
 ```ini
 [Unit]
@@ -3973,7 +3981,7 @@ WantedBy=multi-user.target
 
 #### 6.2 The console unit
 
-`/etc/systemd/system/drishti-console.service`:
+`/etc/systemd/system/drishti-console.service` (shipped as `drishti/deploy/systemd/prod/drishti-console.service`):
 
 ```ini
 [Unit]
@@ -3988,7 +3996,7 @@ WorkingDirectory=/srv/drishti
 EnvironmentFile=/etc/drishti/drishti.env
 EnvironmentFile=/etc/drishti/release.env
 EnvironmentFile=/etc/drishti/secrets.env
-ExecStart=/bin/sh -c 'exec /opt/python3.13/bin/python3.13 "$DRISHTI_HOME"/drishti-console/run_drishti_web.py --settings /etc/drishti/prod.ini'
+ExecStart=/bin/sh -c 'exec /opt/drishti/current/python/bin/python3.13 "$DRISHTI_HOME"/drishti-console/run_drishti_web.py --settings /etc/drishti/prod.ini'
 Restart=on-failure
 RestartSec=5
 NoNewPrivileges=true
@@ -4049,8 +4057,8 @@ service user, with the cluster key in the command's environment so the check can
 files hold only the reference `${DRISHTI_NET_SECRET}`):
 
 ```bash
-PY=/opt/python3.13/bin/python3.13
-D=/opt/drishti/<release>/drishti/tools/drishti.py
+PY=/opt/drishti/current/python/bin/python3.13
+D=/opt/drishti/current/drishti/tools/drishti.py
 NET=/srv/drishti/data/nodes/drishti-b/net
 KEY=$(sudo sed -n 's/^DRISHTI_NET_SECRET=//p' /etc/drishti/secrets.env)
 sudo -u drishti mkdir -p "$NET"
@@ -4173,7 +4181,7 @@ lists the folders under `/srv/drishti/data`; **Admin → Configuration → Resol
 From a terminal, as the same Python (`--token-file` names a file holding an administrator's personal API token, mode 600):
 
 ```bash
-PY=/opt/python3.13/bin/python3.13; D=/opt/drishti/<release>/drishti/tools/drishti.py
+PY=/opt/drishti/current/python/bin/python3.13; D=/opt/drishti/current/drishti/tools/drishti.py
 sudo $PY $D server health --server http://127.0.0.1:18480 --token-file /root/drishti.token     # exit 0 only when the status is OK
 sudo $PY $D doctor --server http://127.0.0.1:18480 --token-file /root/drishti.token           # green/yellow/red lines, each with a fix; exit 1 on any red
 ```
@@ -4270,70 +4278,73 @@ A Python whose pins did not change may be the same prefix for two releases (`ln 
 prefix, because installing into the first would change the libraries of the console that is running on it, and of the rollback target.
 Retired settings names are not migrated: the new server **refuses to start** and names each key to use instead (section 11.4).
 
-#### 11.1 Once: make the install switchable
+#### 11.1 An install made in the old layout: make it switchable once
 
-Do this in the window of the first upgrade, with both services stopped. `<old>` is the release now running.
+An install made as section 3 says is already switchable (`current` exists). Only an older install, unpacked as `/opt/drishti/<old>/drishti`,
+needs this once, in the window of its first upgrade, with both services stopped. `<old>` is the release now running.
 
 ```bash
 sudo systemctl stop drishti-console drishti-server
 sudo mkdir -p /opt/drishti/releases /opt/drishti/python
-sudo mv /opt/drishti/<old>/drishti /opt/drishti/releases/<old>                  # the install folder is the release
+sudo mv /opt/drishti/<old> /opt/drishti/releases/<old>                          # the unpacked release is the release folder
 sudo ln -s /opt/python3.13 /opt/drishti/python/<old>                            # the Python it runs with, as its own prefix
 sudo ln -s /opt/drishti/python/<old> /opt/drishti/releases/<old>/python
 sudo ln -sfn releases/<old> /opt/drishti/current
-sudo sed -i -e 's#/opt/drishti/<old>/drishti#/opt/drishti/current#g' -e 's#^drishti.python=.*#drishti.python=/opt/drishti/current/python/bin/python3.13#' /etc/drishti/prod.ini
-sudo sed -i 's#/opt/drishti/<old>/drishti#/opt/drishti/current#g' /etc/drishti/release.env
+sudo sed -i -e 's#/opt/drishti/<old>/drishti#/opt/drishti/current/drishti#g' -e 's#^drishti.python=.*#drishti.python=/opt/drishti/current/python/bin/python3.13#' /etc/drishti/prod.ini
+sudo sed -i 's#/opt/drishti/<old>/drishti#/opt/drishti/current/drishti#g' /etc/drishti/release.env
 sudo sed -i 's#/opt/python3.13/bin/python3.13#/opt/drishti/current/python/bin/python3.13#' /etc/systemd/system/drishti-console.service
 sudo systemctl daemon-reload && sudo systemctl start drishti-server drishti-console
 ```
 
-`prod.ini` and `release.env` now name `/opt/drishti/current` and never change again.
+`prod.ini` and `release.env` now name `/opt/drishti/current` and never change again. The site's settings stay in `/etc/drishti`
+(`drishti.site.dir`) and the data folder where it was.
 
 #### 11.2 Prepare the new release (the old one keeps running)
 
 ```bash
-NEW=2.9.12 ; PY=/opt/python3.13/bin/python3.13
+NEW=2.9.12 ; BASE=/opt/python3.13/bin/python3.13 ; R=/opt/drishti/releases/$NEW
 # 1. read RELEASE_NOTES.md and CHANGELOG.md of the new release (retired settings, storage changes); back up (11.3)
-# 2. unpack and build it beside the others (the build is described in section 3), then place the install folder
-sudo mkdir -p /opt/drishti/stage/$NEW && sudo unzip -q /root/drishti-platform-$NEW-source.zip -d /opt/drishti/stage/$NEW
-(cd /opt/drishti/stage/$NEW/* && sudo $PY build_all.py --skip-tests)
-sudo mv /opt/drishti/stage/$NEW/*/drishti /opt/drishti/releases/$NEW
-sudo cp -a /opt/drishti/current/lib/ext/. /opt/drishti/releases/$NEW/lib/ext/          # the site's own jars
-# 3. ask what the new release needs of its Python (read only); pass the Python you intend to use
-sudo $PY /opt/drishti/releases/$NEW/tools/drishti.py --settings /etc/drishti/prod.ini upgrade check /opt/drishti/releases/$NEW
+# 2. unpack the new binary package beside the others (nothing is built), verify it, carry over the site's own jars
+cd /root && sha256sum -c drishti-$NEW-linux-x64.tar.gz.sha256
+sudo mkdir -p $R && sudo tar -xzf drishti-$NEW-linux-x64.tar.gz -C $R --strip-components=1
+(cd $R && sudo $BASE verify_package.py)
+sudo cp -a /opt/drishti/current/drishti/lib/ext/. $R/drishti/lib/ext/
+# 3. ask what the new release needs of its Python and of the site (read only)
+sudo /opt/drishti/current/python/bin/python3.13 $R/drishti/tools/drishti.py --settings /etc/drishti/prod.ini upgrade check $R
 ```
 
-The report says whether the pins changed (the lines `changed: markdown>=3.6  ->  markdown>=3.7` name each) and what to do:
+The report says whether the pins changed (the lines `changed: markdown>=3.6  ->  markdown>=3.7` name each), what to do, and about the site
+folder: that `drishti.site.dir` is set, is a folder outside both releases, and that its settings files hold no key the new release does not know.
 
 - **Pins unchanged**: the new release may use the running Python: `sudo ln -s /opt/drishti/python/<old> /opt/drishti/python/$NEW`.
-- **Pins changed**: make a Python of your choosing in its own prefix, for example `sudo python3.13 -m venv /opt/drishti/python/$NEW` (or build
-  another prefix from python.org's source, or copy the running one), then run the two pip commands **with that Python** from the new release
-  and its wheel pack, exactly the lines the check prints under `run yourself`:
+- **Pins changed**: make a Python in its own prefix, `sudo $BASE -m venv /opt/drishti/python/$NEW` (or build another prefix from python.org's
+  source, or copy the running one), then run the two pip commands **with that Python** from the new release's `wheels/` folder, exactly the lines
+  the check prints under `run yourself`:
 
 ```bash
-sudo unzip -q /root/drishti-platform-$NEW-wheels-linux-x64-py313.zip -d /root/drishti-wheels-$NEW
-cd /opt/drishti/releases/$NEW/drishti-console
-sudo /opt/drishti/python/$NEW/bin/python3.13 -m pip install --no-index --find-links /root/drishti-wheels-$NEW -r requirements.txt
-sudo /opt/drishti/python/$NEW/bin/python3.13 -m pip install --no-index --find-links /root/drishti-wheels-$NEW -r ../config/compute/locks/python.lock
+cd $R
+sudo /opt/drishti/python/$NEW/bin/python3.13 -m pip install --no-index --find-links wheels -r wheels/requirements.txt
+sudo /opt/drishti/python/$NEW/bin/python3.13 -m pip install --no-index --find-links wheels -r wheels/python.lock
 ```
 
 Then link it into the release, run the check again until it exits 0, and lock the folder:
 
 ```bash
-sudo ln -s /opt/drishti/python/$NEW /opt/drishti/releases/$NEW/python
-sudo /opt/drishti/python/$NEW/bin/python3.13 /opt/drishti/releases/$NEW/tools/drishti.py --settings /etc/drishti/prod.ini upgrade check /opt/drishti/releases/$NEW --python /opt/drishti/python/$NEW/bin/python3.13   # exit 0
-sudo chown -R root:root /opt/drishti/releases/$NEW && sudo chmod -R go-w /opt/drishti/releases/$NEW
+sudo ln -s /opt/drishti/python/$NEW $R/python
+sudo /opt/drishti/python/$NEW/bin/python3.13 $R/drishti/tools/drishti.py --settings /etc/drishti/prod.ini upgrade check $R --python /opt/drishti/python/$NEW/bin/python3.13   # exit 0
+sudo chown -R root:root $R && sudo chmod -R go-w $R
 ```
 
 The check exits 1 (a `[FAIL]`) when the Python named is the running release's while the pins changed, when a library is missing or at the
-wrong version, when the folder is incomplete, or when it is the running release itself. Its `[TODO]` lines are what you confirm: settings keys
-of `prod.ini` the new release's `CONFIGURATION.md` does not list (a retired key refuses the start, 11.4), and modules the new release drops.
+wrong version, when the folder is incomplete, when it is the running release itself, or when the site folder is missing or inside a release.
+Its `[TODO]` lines are what you confirm: settings keys of the site's files that the new release's `CONFIGURATION.md` does not list (a retired
+key refuses the start, 11.4), and modules the new release drops.
 
 #### 11.3 Switch (the maintenance window)
 
 ```bash
 NEW=2.9.12 ; OLD=$(basename "$(readlink -f /opt/drishti/current)") ; B=/backup/drishti/pre-$NEW
-PY=/opt/drishti/current/python/bin/python3.13 ; DR="$PY /opt/drishti/current/tools/drishti.py --settings /etc/drishti/prod.ini"   # the RUNNING release's Python and tools
+PY=/opt/drishti/current/python/bin/python3.13 ; DR="$PY /opt/drishti/current/drishti/tools/drishti.py --settings /etc/drishti/prod.ini"   # the RUNNING release's Python and tools
 # 1. drain and stop: the console first, then the server (the stop drains first, section 6.1)
 sudo systemctl stop drishti-console
 sudo -u drishti $DR node drain --server http://127.0.0.1:18480 --wait 240
@@ -4479,18 +4490,18 @@ More: [OPERATIONS_GUIDE.md › Troubleshooting](OPERATIONS_GUIDE.md#21-troublesh
 
 ### Command line reference
 
-Every operator command in one place. `PY` is the dedicated Python 3.13 (`/opt/python3.13/bin/python3.13`), `D` is
-`/opt/drishti/<release>/drishti/tools/drishti.py`, `<settings>` is `/etc/drishti/prod.ini`. In production the two services are run by
+Every operator command in one place. `PY` is the running release's Python (`/opt/drishti/current/python/bin/python3.13`), `D` is
+`/opt/drishti/current/drishti/tools/drishti.py`, `<settings>` is `/etc/drishti/prod.ini`. In production the two services are run by
 systemd ([section 6](#6-run-as-services-systemd)); `start`, `stop` and `status` are the terminal's tools for a machine without units.
 
 | Command | What it does | What you should see |
 |---|---|---|
-| `cd /opt/drishti/<release> && sudo $PY build_all.py --skip-tests` | builds the products and Drishti's server jar and module packages, once per release | ends without error; one `drishti/lib/drishti-server-*-exec.jar` |
-| `cd drishti/drishti-console && sudo $PY -m pip install --no-index --find-links <pack folder> -r requirements.txt` | installs the console's and server's Python libraries from the unzipped wheel pack (never from the network) | `Successfully installed ...` or `Requirement already satisfied` |
-| `sudo $PY -m pip install --no-index --find-links <pack folder> -r ../config/compute/locks/python.lock` | the second pip command: the server's compute pool (hash-locked, so its own run) | the same |
+| `cd /opt/drishti/releases/<release> && sudo $BASE verify_package.py` | checks every file of the unpacked binary package against its `SHA256SUMS` (nothing is built on the host) | `package verified: <n> files`; else the changed, missing or unlisted files |
+| `cd /opt/drishti/releases/<release> && sudo $PY -m pip install --no-index --find-links wheels -r wheels/requirements.txt` | installs the console's Python libraries from the package's `wheels/` folder (never from the network) | `Successfully installed ...` or `Requirement already satisfied` |
+| `sudo $PY -m pip install --no-index --find-links wheels -r wheels/python.lock` | the second pip command: the server's compute pool (hash-locked, so its own run) | the same |
 | `sudo $PY $D setup --settings <settings>` | checks Java 21, the jar, the modules, the folders and every library name by name; writes `drishti.python` into the settings file; installs nothing | `[  ok]` lines, then **`Drishti is ready.`** (else `[FAIL] ... Fix:`, [3.1](#31-what-setup-tells-you)) |
 | `sudo $PY $D setup --settings <settings> --check` | the same, changing nothing | exit 0 when nothing is to do, 1 otherwise |
-| `sudo $PY $D setup --settings <settings> --wheels <folder>` | names the unzipped wheel pack in the pip commands setup prints | the printed pip commands name that folder |
+| `sudo $PY $D setup --settings <settings> --wheels /opt/drishti/current/wheels` | names the package's `wheels/` folder in the pip commands setup prints | the printed pip commands name that folder |
 | `sudo systemctl enable --now drishti-server` / `drishti-console` | starts and enables a service; `systemctl stop` drains the server first | `systemctl is-active` says `active` |
 | `$PY $D --settings <settings> start server` / `start console` / `start all` | starts the server or the console from a terminal, with the same settings file as the units (add `--background` to keep your shell) | the log says started; `status` lists it |
 | `$PY $D --settings <settings> status` | the servers and consoles of this install and their ports | one line each; nothing running prints so |

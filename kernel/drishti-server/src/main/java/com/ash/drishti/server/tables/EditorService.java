@@ -338,8 +338,11 @@ public final class EditorService {
         Catalogue c = tables.catalogue();
         for (Catalogue.Entry e : c.entries()) {
             if (e.kind().equals(kind) && e.name().equals(name)) {
-                java.nio.file.Path f = tables.root().resolve(e.source()).normalize();
-                if (!f.startsWith(tables.root())) {
+                java.nio.file.Path f = tables.writeRoot().resolve(e.source()).normalize();      // the site's layer, else the release's
+                if (!java.nio.file.Files.isRegularFile(f)) {
+                    f = tables.root().resolve(e.source()).normalize();
+                }
+                if (!f.startsWith(tables.root()) && !f.startsWith(tables.writeRoot())) {
                     break;
                 }
                 try {

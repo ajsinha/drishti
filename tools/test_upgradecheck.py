@@ -155,3 +155,25 @@ def test_the_command_runs_from_the_command_line_changes_nothing_and_says_json(tm
     assert sorted(x.relative_to(tmp_path).as_posix() for x in tmp_path.rglob("*")) == before
     doc = json.loads(r.stdout[r.stdout.index("{"):])
     assert r.returncode == (0 if doc["ok"] else 1) and any("new release is" in x["text"] for x in doc["lines"])
+
+
+def test_the_site_folder_is_named_outside_both_releases_and_its_ini_files_are_compared(tmp_path):
+    old, new = release(tmp_path, "a"), release(tmp_path, "b")
+    site = tmp_path / "etc"
+    site.mkdir()
+    (site / "prod.ini").write_text("[roots]\nretired.key=1\n", encoding="utf-8")
+    rep = U.check(str(new), str(old), py(tmp_path, "p"), keys={"drishti.site.dir": str(site)}, run=fake_run(HAVE))
+    t = text(rep)
+    assert U.FAIL not in levels(rep) and "is outside both releases" in t and "retired.key (in prod.ini)" in t
+
+
+def test_a_site_folder_missing_unset_in_production_or_inside_a_release_fails(tmp_path):
+    old, new = release(tmp_path, "a"), release(tmp_path, "b")
+    p = py(tmp_path, "p")
+    assert U.FAIL in levels(U.check(str(new), str(old), p, keys={"drishti.site.dir": str(tmp_path / "nope")}, run=fake_run(HAVE)))
+    assert U.FAIL in levels(U.check(str(new), str(old), p, keys={"drishti.profile": "production"}, run=fake_run(HAVE)))
+    assert U.FAIL not in levels(U.check(str(new), str(old), p, keys={}, run=fake_run(HAVE)))          # development: a TODO only
+    rep = U.check(str(new), str(old), p, keys={"drishti.site.dir": str(old / "config")}, run=fake_run(HAVE))
+    assert U.FAIL in levels(rep) or (old / "config").is_dir() is False
+    (old / "config").mkdir(exist_ok=True)
+    assert "one tree" in text(U.check(str(new), str(old), p, keys={"drishti.site.dir": str(old / "config")}, run=fake_run(HAVE)))

@@ -1,0 +1,42 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# The production server unit of docs/guides/OPERATIONS_GUIDE.md, "Production deployment (Linux)", section 6.1: copy to
+# /etc/systemd/system/drishti-server.service. Layout: /etc/drishti/{prod.ini,secrets.ini,secrets.env,drishti.env,release.env,server.args},
+# the release under /opt/drishti/<release>, the data under /srv/drishti/data.
+[Unit]
+Description=Drishti server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=drishti
+Group=drishti
+WorkingDirectory=/srv/drishti
+EnvironmentFile=/etc/drishti/drishti.env
+EnvironmentFile=/etc/drishti/release.env
+EnvironmentFile=/etc/drishti/secrets.env
+Environment=MALLOC_ARENA_MAX=2
+ExecStartPre=/usr/bin/mkdir -p /srv/drishti/data/logs /srv/drishti/data/dumps/server /srv/drishti/data/tmp/server
+ExecStart=/bin/sh -c 'exec java @/etc/drishti/server.args -XX:+ZGenerational -Ddrishti.settings.file=/etc/drishti/prod.ini,/etc/drishti/secrets.ini -jar "$DRISHTI_HOME"/lib/drishti-server-*-exec.jar'
+SuccessExitStatus=143
+TimeoutStopSec=300
+Restart=on-failure
+RestartSec=5
+LimitNOFILE=65536
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

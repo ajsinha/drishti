@@ -98,4 +98,24 @@ class SiteWritersTest {
         assertThatThrownBy(() -> files.write(e, false, "mara", "2026-11-28T00:00:00Z", "r", null)).hasMessageContaining("release folder");
         assertThat(release.resolve("engines")).doesNotExist();
     }
+
+    @Test
+    void anUploadedTableGoesToTheSiteLayerAndBothLayersAreRead() throws Exception {
+        Path shipped = Files.createDirectories(release.resolve("tables/banking"));
+        Files.copy(Path.of("../../config/tables/banking/trading_risk_trades.table.yaml"), shipped.resolve("trading_risk_trades.table.yaml"));
+        Path mine = Files.createDirectories(site.resolve("tables/banking"));
+        Files.writeString(mine.resolve("my_own.table.yaml"), Files.readString(shipped.resolve("trading_risk_trades.table.yaml"))
+                .replace("trading_risk_trades", "my_own"));
+        com.ash.drishti.server.admin.ArtifactPaths paths = new com.ash.drishti.server.admin.ArtifactPaths(dir.resolve("p"), dir.resolve("i"), dir.resolve("c"),
+                dir.resolve("b"), site.resolve("tables"));
+        Path target = paths.biFile("table", "banking.another");
+        assertThat(target).startsWith(site);
+        Roots.guardWrite(target);                                    // allowed: the site layer
+        assertThatThrownBy(() -> Roots.guardWrite(release.resolve("tables/banking/x.table.yaml"))).hasMessageContaining("release folder");
+        var tables = new com.ash.drishti.server.tables.TablesService(release.resolve("tables"), null, null, null, () -> false, 10, 10, null)
+                .site(site.resolve("tables"));
+        assertThat(tables.writeRoot()).isEqualTo(site.resolve("tables").toAbsolutePath().normalize());
+        var names = tables.catalogue().entries().stream().map(e -> e.name()).toList();
+        assertThat(names).anyMatch(n -> n.endsWith("trading_risk_trades")).anyMatch(n -> n.endsWith("my_own"));
+    }
 }

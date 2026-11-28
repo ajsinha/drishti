@@ -21,8 +21,11 @@ check that enforces it. The install, upgrade and backup commands are in
 [OPERATIONS_GUIDE.md, Production deployment (Linux)](../guides/OPERATIONS_GUIDE.md); every setting, default and variable is in
 [CONFIGURATION.md](CONFIGURATION.md). This page repeats neither.
 
-Production is Linux. This first section is the production profile; the other sections of the standard (data, targets, configuration,
-secrets, modules and engines, layout, lifecycle, acceptance) are added as their rules are built. Section 2 is the site configuration.
+Production is Linux. The sections so far: 1 the production profile, 2 site configuration, 3 upgrades (releases side by side, installed from the
+binary package). The other sections of the standard (data, targets, secrets, modules and engines, lifecycle, acceptance; tables and the console)
+are added as their rules are built. **One layout** serves all of them: releases in `/opt/drishti/releases/<version>` (read only) with the
+`current` and `previous` links, the site's files only in `/etc/drishti` (`drishti.site.dir`), the data in its own folder (`/srv/drishti/data`:
+identity database, content store, lakes, logs), each release with its own Python (`<release>/python`).
 
 ## 1. The production profile
 
@@ -65,6 +68,7 @@ Every line names the setting and the fix; the console does the same (`The consol
 | P11 | The console's cookies are secure | `Secure` (`auth.secure_cookie=true`), `HttpOnly` and `SameSite=Lax` (fixed in code) | `auth.secure_cookie` is `false` | `core/production.py`; `auth_routes.py` sets the other two |
 | P12 | The console is not on the network without TLS in front | bind `127.0.0.1` behind a proxy | `server.host` is not a loopback address and `production.tls=proxy` is not declared | `core/production.py` |
 | P13 | Cross-origin calls are an allow-list | the registered embedding origins only | there is no wildcard setting to refuse | by design: `embed` origins are registered, never `*` |
+| P14 | The site folder is named and outside the release | none: you set `drishti.site.dir` (`DRISHTI_SITE_DIR`) | it is missing, is the release's configuration folder, or lies inside the release folder (server and console) | server check; `ProductionProfileTest`; `core/production.py`; `test_production_profile.py` |
 
 The checks run before any bean is built (`kernel/drishti-server`, `com.ash.drishti.server.profile.ProductionProfile`, run by
 `ProductionProfileProcessor`) and before the console's first request (`drishti-console/core/production.py`, called by
@@ -116,12 +120,12 @@ asymmetric token signing and TLS between hosts are later sections of the standar
 | Admin -> Modules, licence, lenses, roles | `modules/<id>.yaml`, `access/*.yaml` | site |
 | Admin -> Configuration (approved) | `application.local.yaml`; the console's `console/application.local.yaml` | site |
 | Admin -> Artifacts (BI files) | `bi/...` | site (the release's shipped BI files are read first) |
-| Admin -> Artifacts (table or model file) | `tables/<domain>/...` | the release's tables are shipped content: a site's own tables are authored in the table editor and live in the content store (data folder); an upload into the release is refused |
+| Admin -> Artifacts (table or model file) | `tables/<domain>/<name>.table.yaml` | site (`<site>/tables`; the release's shipped tables are read first, never written; a name is unique across both layers) |
 | everything else Admin changes | identity, content store, packs overlay, loads, archives | data |
 
 ### 2.3 Checks
 
-`SiteFolderTest` (resolver, defaults, refusal), `SiteWritersTest` (connectors, engines, settings), `SiteModuleSwitchTest` (layered module
+`SiteFolderTest` (resolver, defaults, refusal), `SiteWritersTest` (connectors, engines, settings, an uploaded table to the site layer), `SiteModuleSwitchTest` (layered module
 switches), `SiteFolderGuardTest` (writers ask the guard; no class writes what it reads from the release), console `test_site_config.py`
 (the console's file). By hand: `chmod -R a-w` the release, start both services with a separate `drishti.site.dir`, change a module switch, a
 connector override and a setting in Admin, restart, and `find <release> -newer <marker>` is empty.
@@ -130,6 +134,8 @@ connector override and a setting in Admin, restart, and `find <release> -newer <
 
 | Rule | How it is met | Enforced by |
 |---|---|---|
+| The site folder is named, exists and lies outside both releases; its settings files are compared with the new release's configuration catalogue | `drishti.site.dir` is `/etc/drishti`; an upgrade never touches it (S5) | `drishti.py upgrade check` (`[FAIL]` when missing or inside a release; retired keys listed); `tools/test_upgradecheck.py` |
+| Each release is installed from the binary package and is read only | the package is unpacked into `releases/<version>`, `verify_package.py` says `package verified`, the folder is root-owned `go-w`; nothing is built or downloaded on the host | `verify_package.py` (SHA256SUMS), `make_binary.py` in the index repository; [OPERATIONS_GUIDE, section 3](../guides/OPERATIONS_GUIDE.md#3-install-a-release) |
 | An upgrade swaps one release; the site's files and data are outside it | releases side by side (`/opt/drishti/releases/<version>`), one `current` link, settings in `/etc/drishti`, data in the data folder | [OPERATIONS_GUIDE, section 11](../guides/OPERATIONS_GUIDE.md#11-upgrade-and-rollback) |
 | The Python libraries of a running release are never changed | each release has its own Python prefix (`<release>/python`); when the pins did not change two releases may share one prefix | `drishti.py upgrade check <new-release-dir>` fails the run that would install into the running one |
 | Drishti never creates an environment and never installs a library | the operator makes the Python and runs pip; `setup` and `upgrade check` only check and print the command | `tools/test_no_venv.py`, `tools/test_upgradecheck.py` |

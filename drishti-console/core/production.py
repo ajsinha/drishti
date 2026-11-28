@@ -20,6 +20,8 @@ stops the process (``enforce``)."""
 from __future__ import annotations
 
 import ipaddress
+import os
+from pathlib import Path
 
 PRODUCTION = "production"
 #: addresses that reach this machine only
@@ -67,6 +69,13 @@ def refusals(settings) -> list[str]:
         shown = host or "(every interface)"
         out.append(f"server.host is {shown}: the console would be reached over plain HTTP from the network. Fix: bind 127.0.0.1 "
                    "(DRISHTI_CONSOLE_HOST) behind a proxy that ends TLS, or state that proxy with production.tls=proxy (DRISHTI_PRODUCTION_TLS=proxy)")
+    site = (os.environ.get("DRISHTI_SITE_DIR") or "").strip()
+    home = (os.environ.get("DRISHTI_HOME") or "").strip()
+    if not site:
+        out.append("drishti.site.dir is not set: the console's approved settings would be written into the release folder. Fix: name the site folder outside the release "
+                   "(DRISHTI_SITE_DIR, /etc/drishti), in the settings file the server reads too")
+    elif home and (lambda s, h: s == h or h in s.parents)(Path(site).absolute(), Path(home).absolute()):
+        out.append(f"drishti.site.dir ({site}) is inside the release folder ({home}), which is never written. Fix: name a site folder outside the release (/etc/drishti)")
     return out
 
 

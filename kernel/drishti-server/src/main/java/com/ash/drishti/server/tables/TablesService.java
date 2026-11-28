@@ -60,6 +60,7 @@ public final class TablesService {
     private static final Logger LOG = LoggerFactory.getLogger(TablesService.class);
 
     private final Path root;
+    private volatile Path site;
     /** Whether a domain folder of the tables is read (false for an off module's: {@link #domains}). */
     private volatile java.util.function.Predicate<String> domainOn = d -> true;
     private final DataViewService data;
@@ -150,6 +151,25 @@ public final class TablesService {
         Loaded l = current();
         TableReads r = new TableReads(l.catalogue(), new KindRows(who), null, maxRows, clock);
         return enforce.getAsBoolean() ? r : r.rulesOff();
+    }
+
+    /**
+     * The site's own tables and models folder (production: under the site folder, the only place Admin writes; the release's {@link #root()} is
+     * shipped content and never written). Read after the release's; null or the same folder: one layer.
+     */
+    public TablesService site(Path siteTables) {
+        this.site = siteTables == null || siteTables.toAbsolutePath().normalize().equals(root) ? null : siteTables.toAbsolutePath().normalize();
+        return this;
+    }
+
+    /** The site's table folder where it is a separate one, else {@link #root()}: where an uploaded or authored file is written. */
+    public Path writeRoot() {
+        return site == null ? root : site;
+    }
+
+    private List<Path> layers() {
+        Path s = site;
+        return s == null ? java.util.Collections.singletonList(root) : java.util.Arrays.asList(root, s);
     }
 
     /** The definitions' folder ({@code drishti.tables.root}). */
@@ -276,7 +296,7 @@ public final class TablesService {
             Catalogue c;
             List<Problem> problems = new ArrayList<>();
             try {
-                c = Catalogue.load(root, items, domainOn);
+                c = Catalogue.load(layers(), items, domainOn);
                 problems.addAll(c.check());
             } catch (IOException | RuntimeException e) {
                 LOG.warn("virtual tables under {} could not be read: {}", root, e.getMessage());
@@ -303,15 +323,22 @@ public final class TablesService {
         } catch (RuntimeException e) {
             b.append("store-unreadable;");
         }
-        if (root == null || !Files.isDirectory(root)) {
-            return "none:" + Integer.toHexString(b.toString().hashCode());
-        }
-        try (Stream<Path> walk = Files.walk(root, 2)) {
-            for (Path f : walk.filter(Files::isRegularFile).sorted().toList()) {
-                b.append(f).append(':').append(Files.size(f)).append(':').append(Files.getLastModifiedTime(f).toMillis()).append(';');
+        boolean any = false;
+        for (Path r : layers()) {
+            if (r == null || !Files.isDirectory(r)) {
+                continue;
             }
-        } catch (IOException e) {
-            return "unreadable";
+            any = true;
+            try (Stream<Path> walk = Files.walk(r, 2)) {
+                for (Path f : walk.filter(Files::isRegularFile).sorted().toList()) {
+                    b.append(f).append(':').append(Files.size(f)).append(':').append(Files.getLastModifiedTime(f).toMillis()).append(';');
+                }
+            } catch (IOException e) {
+                return "unreadable";
+            }
+        }
+        if (!any) {
+            return "none:" + Integer.toHexString(b.toString().hashCode());
         }
         return Integer.toHexString(b.toString().hashCode()) + ":" + b.length();
     }

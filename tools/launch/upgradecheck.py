@@ -97,6 +97,28 @@ def same_prefix(a: str, b: str) -> bool:
     return prefix(a) == prefix(b)
 
 
+def site_check(add, keys: dict, new: Path, old: Path | None) -> list[str]:
+    """The site folder (``drishti.site.dir``, ``/etc/drishti``): named, an existing folder, and inside neither release (an upgrade swaps a
+    release and must leave the site's files where they are). Returns its settings files (``*.ini`` straight in it) for the key comparison."""
+    raw = (keys.get("drishti.site.dir") or os.environ.get("DRISHTI_SITE_DIR") or "").strip()
+    production = (keys.get("drishti.profile") or os.environ.get("DRISHTI_PROFILE") or "").strip().lower() == "production"
+    if not raw:
+        add(FAIL if production else TODO, "drishti.site.dir is not set: the site's settings, connector overrides and Admin changes would live in a release folder, which an "
+                                          "upgrade replaces. Set it to a folder outside every release (/etc/drishti), as PRODUCTION_STANDARD.md section 2 says")
+        return []
+    site = Path(raw).expanduser().resolve()
+    if not site.is_dir():
+        add(FAIL, f"the site folder {site} (drishti.site.dir) is not a folder: create it and move the site's files there before the switch")
+        return []
+    for label, rel in (("new", new), ("running", old)):
+        if rel is not None and (site == rel or rel in site.parents or site in rel.parents):
+            add(FAIL, f"the site folder {site} and the {label} release {rel} are one tree: the site's files must live outside every release")
+            return []
+    files = sorted(str(f) for f in site.glob("*.ini"))
+    add(OK, f"the site folder {site} is outside both releases and stays as it is ({len(files)} settings file(s) compared with the new release)")
+    return files
+
+
 def check(new_dir: str, current: str | None = None, python: str | None = None, settings: list[str] | None = None, keys: dict | None = None,
           run=None) -> list[tuple[str, str]]:
     """The lines of the report: (ok|todo|fail, text)."""
@@ -161,8 +183,9 @@ def check(new_dir: str, current: str | None = None, python: str | None = None, s
                 add(TODO, f"run yourself (Drishti installs nothing): {c}")
         else:
             add(OK, f"{py_new} has every library of the new release at the pinned version (requirements.txt, python.lock, the Lake wheel)")
-    # settings
-    sk = settings_keys(settings or [])
+    # the site folder: outside every release, named by drishti.site.dir, its settings files read for retired keys with the settings files
+    site_files = site_check(add, keys, new, old)
+    sk = settings_keys(list(settings or []) + site_files)
     cat = new / "docs" / "admin" / "CONFIGURATION.md"
     if sk and cat.is_file():
         text = cat.read_text(encoding="utf-8", errors="replace")

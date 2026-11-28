@@ -116,20 +116,30 @@ public final class Catalogue {
      * brings no table or model: docs/architecture/KERNEL_AND_MODULES.md section 8).
      */
     public static Catalogue load(Path root, ItemStore store, java.util.function.Predicate<String> domainOn) throws IOException {
+        return load(root == null ? List.of() : List.of(root), store, domainOn);
+    }
+
+    /**
+     * As above over several layers in order: the release's shipped tables, then the site's own (a production site folder, which is the only
+     * place Admin writes). A name is unique across the layers: a site file never silently replaces a shipped one, both are refused.
+     */
+    public static Catalogue load(List<Path> roots, ItemStore store, java.util.function.Predicate<String> domainOn) throws IOException {
         Catalogue c = new Catalogue();
-        if (root != null && Files.isDirectory(root)) {
-            try (Stream<Path> walk = Files.walk(root, 2)) {
-                for (Path f : walk.filter(Files::isRegularFile).sorted(Comparator.comparing(Path::toString)).toList()) {
-                    String file = f.getFileName().toString();
-                    if (!file.endsWith(".table.yaml") && !file.endsWith(".model.yaml")) {
-                        continue;
+        for (Path root : roots) {
+            if (root != null && Files.isDirectory(root)) {
+                try (Stream<Path> walk = Files.walk(root, 2)) {
+                    for (Path f : walk.filter(Files::isRegularFile).sorted(Comparator.comparing(Path::toString)).toList()) {
+                        String file = f.getFileName().toString();
+                        if (!file.endsWith(".table.yaml") && !file.endsWith(".model.yaml")) {
+                            continue;
+                        }
+                        String label = root.relativize(f).toString().replace('\\', '/');
+                        String folder = f.getParent().equals(root) ? null : f.getParent().getFileName().toString();
+                        if (folder != null && !domainOn.test(folder)) {
+                            continue;
+                        }
+                        c.read(file.endsWith(".table.yaml") ? Entry.TABLE : Entry.MODEL, Files.readString(f), label, folder);
                     }
-                    String label = root.relativize(f).toString().replace('\\', '/');
-                    String folder = f.getParent().equals(root) ? null : f.getParent().getFileName().toString();
-                    if (folder != null && !domainOn.test(folder)) {
-                        continue;
-                    }
-                    c.read(file.endsWith(".table.yaml") ? Entry.TABLE : Entry.MODEL, Files.readString(f), label, folder);
                 }
             }
         }

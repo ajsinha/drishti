@@ -191,6 +191,10 @@ class ProductionProfileTest {
             m.put("drishti.home", dir.resolve("rel").toString());
             m.put("drishti.site.dir", dir.resolve("rel/config").toString());
         }), "release's configuration folder");
+        assertOne(refusals(m -> {
+            m.put("drishti.home", dir.resolve("rel/drishti").toString());
+            m.put("drishti.site.dir", dir.resolve("rel/drishti/site").toString());
+        }), "inside the release folder");
         assertOne(refusals(m -> m.remove("drishti.production.tls")), "TLS is not stated");
         assertEquals(List.of(), refusals(m -> {
             m.remove("drishti.production.tls");
