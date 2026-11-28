@@ -30,7 +30,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record NetProperties(String dir, String watch, Duration poll) {
 
     public NetProperties {
-        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.Roots.config("net") : dir;
+        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.Roots.site("net") : dir;
         watch = watch == null || watch.isBlank() ? "auto" : watch;
         poll = poll == null ? Duration.ofSeconds(5) : poll;
     }

@@ -56,7 +56,7 @@ public class EngineConfiguration {
     public EngineRegistry engineRegistry(EngineCatalogue catalogue, EngineSwitches switches, ConfigurableEnvironment env,
             ObjectProvider<ComputeEngine> engines, ObjectProvider<AuditLog> audit, ObjectProvider<NetService> net,
             ObjectProvider<com.ash.drishti.registry.AccessRegistry> modules) {
-        EngineFiles files = new EngineFiles(Path.of(env.getProperty("drishti.engines.dir", com.ash.drishti.api.Roots.config("engines"))), System::getenv);
+        EngineFiles files = new EngineFiles(Path.of(env.getProperty("drishti.engines.dir", com.ash.drishti.api.Roots.site("engines"))), System::getenv);
         EngineHistory history = new EngineHistory(Path.of(env.getProperty("drishti.data.dir", com.ash.drishti.api.Roots.data()), "engines", "history.jsonl"));
         Duration drain = env.getProperty("drishti.engines.drain", Duration.class, Duration.ofSeconds(30));
         EngineRegistry r = new EngineRegistry(catalogue, switches, files, history, audit.getIfAvailable(), () -> {

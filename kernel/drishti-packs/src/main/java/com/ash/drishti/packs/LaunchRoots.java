@@ -62,13 +62,15 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
     static final List<Root> ROOTS = List.of(
             new Root("data", List.of("drishti.data.dir"), HOME, "data", false),
             new Root("config", List.of("drishti.config.dir"), HOME, "config", false),
+            // the site folder: where every site file is read and every Admin change is written; none named: the config folder (the developer layout)
+            new Root("site", List.of(com.ash.drishti.api.Roots.SITE), "config", "", false),
             new Root("packs", List.of("drishti.packs.site-dir", "drishti.packs.dir"), "config", "packs", false),
             new Root("kernel packs", List.of("drishti.kernel.packs-dir"), "packs", "core", false),
             new Root("modules", List.of(com.ash.drishti.module.runtime.ModuleBoot.HOME_SETTING), HOME, "modules", true),
-            new Root("module switches", List.of("drishti.modules.dir"), "config", "modules", false),
-            new Root("access", List.of("drishti.access.dir"), "config", "access", false),
-            new Root("lakes", List.of("lake.lakes.dir"), "config", "lakes", false),
-            new Root("connectors", List.of("drishti.sources.connectors-dir"), "config", "connectors", false),
+            new Root("module switches", List.of("drishti.modules.dir"), "site", "modules", false),
+            new Root("access", List.of("drishti.access.dir"), "site", "access", false),
+            new Root("lakes", List.of("lake.lakes.dir"), "site", "lakes", false),
+            new Root("connectors", List.of("drishti.sources.connectors-dir"), "site", "connectors", false),
             new Root("inbox", List.of("drishti.dataload.dir"), "data", "dataload", false));
     /** The keys the settings file set (server main, before Spring): their origin is the file. */
     public static final String FROM_FILE = "drishti.settings.file.keys";
@@ -202,7 +204,7 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
         synchronized (SNAPSHOTS) {
             SNAPSHOTS.put(env, new Snapshot(r.roots(), List.copyOf(shown)));
         }
-        List<String> published = new ArrayList<>(List.of(HOME, MODULES, "drishti.config.dir"));
+        List<String> published = new ArrayList<>(List.of(HOME, MODULES, "drishti.config.dir", com.ash.drishti.api.Roots.SITE));
         values.keySet().stream().filter(k -> k.startsWith(com.ash.drishti.api.resolution.ModuleHomes.DIR_PROPERTY)
                 || k.equals(com.ash.drishti.api.resolution.ModuleHomes.PROPERTY)).forEach(published::add);
         for (String k : published) {   // for code with no Spring environment (a record's default) and the child processes
@@ -350,7 +352,7 @@ public final class LaunchRoots implements EnvironmentPostProcessor, Ordered {
             "^drishti\\..*[.-](?:dir|dirs|file|folder|root|path|home|url)$|^logging\\.file\\.(?:name|path)$|^server\\.ssl\\.(?:key|trust)-store$"
             + "|^spring\\.datasource\\.url$");
     /** The settings the configuration imports name (application.yaml spring.config.import): each must be absolute when given. */
-    static final List<String> IMPORTED = List.of("DRISHTI_ENGINES_DIR", "drishti.config.dir", "DRISHTI_CONFIG_DIR", "DRISHTI_PACKS_OVERLAY",
+    static final List<String> IMPORTED = List.of("DRISHTI_ENGINES_DIR", "drishti.config.dir", "DRISHTI_CONFIG_DIR", "drishti.site.dir", "DRISHTI_SITE_DIR", "DRISHTI_PACKS_OVERLAY",
             "drishti.data.dir", "DRISHTI_DATA_DIR");
     /** An environment variable that names a folder or a file. */
     static final java.util.regex.Pattern PATH_ENV = java.util.regex.Pattern.compile("^DRISHTI_[A-Z0-9_]*_(?:DIR|DIRS|FILE|FOLDER|ROOT|PATH|HOME)$");

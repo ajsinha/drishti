@@ -42,6 +42,12 @@ public final class FileReplace {
 
     /** {@code tmp} moved over {@code file} atomically; {@link java.nio.file.AtomicMoveNotSupportedException} is thrown as it comes. */
     public static void atomically(Path tmp, Path file) throws IOException {
+        try {
+            Roots.guardWrite(file);          // a site file is never written into the release folder (Roots.guardWrite)
+        } catch (RuntimeException e) {
+            Files.deleteIfExists(tmp);
+            throw e;
+        }
         long until = System.nanoTime() + PATIENCE_MS * 1_000_000;
         long pause = 5;
         while (true) {

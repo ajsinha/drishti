@@ -194,6 +194,7 @@ public final class SettingProposals {
             } else {
                 lines.add(line);
             }
+            com.ash.drishti.api.Roots.guardWrite(localFile);      // never into the release folder
             Path dir = localFile.toAbsolutePath().getParent();
             Files.createDirectories(dir);
             Path tmp = com.ash.drishti.common.TempFiles.createFile(dir, "application-local-writing-", ".tmp");

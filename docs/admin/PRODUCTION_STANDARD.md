@@ -22,7 +22,7 @@ check that enforces it. The install, upgrade and backup commands are in
 [CONFIGURATION.md](CONFIGURATION.md). This page repeats neither.
 
 Production is Linux. This first section is the production profile; the other sections of the standard (data, targets, configuration,
-secrets, modules and engines, layout, lifecycle, acceptance) are added as their rules are built.
+secrets, modules and engines, layout, lifecycle, acceptance) are added as their rules are built. Section 2 is the site configuration.
 
 ## 1. The production profile
 
@@ -92,3 +92,36 @@ How to make the same three users by hand: [ADMIN_GUIDE.md, Three demo users](../
 
 The licence and edition rules above are the start check only; a production acceptance run (`doctor --acceptance` with a token file),
 asymmetric token signing and TLS between hosts are later sections of the standard.
+
+## 2. Site configuration
+
+### 2.1 The rules
+
+| # | Rule | Enforced by |
+|---|---|---|
+| S1 | The release folder is immutable: root-owned, read only to the service user, never written by the server or the console. | `Roots.guardWrite` (`DRS-1038`, "refused: ... is inside the release folder"); `SiteWritersTest`, `SiteFolderTest` |
+| S2 | All site state lives outside it: the **site folder** (`drishti.site.dir`, `/etc/drishti`: site settings, connector overrides and bindings, engine and module switches, licences, lens and role files, lake files, AI and MCP provider files, the site's BI files, the approved-settings files) and the **data folder** (identity database, content store, lakes, logs). | `SiteFolderGuardTest` (every Admin writer asks the guard) |
+| S3 | One resolver. A site file's path is `Roots.site(...)` (Python: `core.config.local_file`); the release's shipped defaults are `Roots.config(...)`. A class that writes files never takes a path from `Roots.config`. | `SiteFolderGuardTest` |
+| S4 | The order is explicit and the same everywhere: release defaults (templates, shipped module switches, the jar's engine files, shipped BI files), then the site's files over them (key by key for a connector, file by file for a switch, by path for BI), then secrets in memory. Admin -> Configuration -> Resolved paths shows the `config` and `site` folders and where each came from. The server never rewrites a connector file, nothing is migrated. | `LaunchRootsTest`; Admin page |
+| S5 | An upgrade swaps the release and leaves the site folder untouched: no `diff -r` of config folders. | OPERATIONS_GUIDE upgrade steps |
+| S6 | The developer and demo layout keeps working with no setting: with `drishti.site.dir` unset the site folder is the configuration folder (`<home>/config`) and the server's local file is `<home>/application.local.yaml`; no write is refused. | `SiteFolderTest` |
+| S7 | Production sets `drishti.site.dir` (a folder outside the release). | the production start check |
+
+### 2.2 What goes where
+
+| Written by | File | Folder |
+|---|---|---|
+| Admin -> Connectors, bindings, placement | `connectors/<name>.yaml`, `bindings.yaml`, `placement.yaml` | site |
+| Admin -> Engines | `engines/<engine>.yaml` (`changed:` block) | site |
+| Admin -> Modules, licence, lenses, roles | `modules/<id>.yaml`, `access/*.yaml` | site |
+| Admin -> Configuration (approved) | `application.local.yaml`; the console's `console/application.local.yaml` | site |
+| Admin -> Artifacts (BI files) | `bi/...` | site (the release's shipped BI files are read first) |
+| Admin -> Artifacts (table or model file) | `tables/<domain>/...` | the release's tables are shipped content: a site's own tables are authored in the table editor and live in the content store (data folder); an upload into the release is refused |
+| everything else Admin changes | identity, content store, packs overlay, loads, archives | data |
+
+### 2.3 Checks
+
+`SiteFolderTest` (resolver, defaults, refusal), `SiteWritersTest` (connectors, engines, settings), `SiteModuleSwitchTest` (layered module
+switches), `SiteFolderGuardTest` (writers ask the guard; no class writes what it reads from the release), console `test_site_config.py`
+(the console's file). By hand: `chmod -R a-w` the release, start both services with a separate `drishti.site.dir`, change a module switch, a
+connector override and a setting in Admin, restart, and `find <release> -newer <marker>` is empty.

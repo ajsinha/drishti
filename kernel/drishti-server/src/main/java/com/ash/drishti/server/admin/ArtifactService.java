@@ -431,6 +431,7 @@ public final class ArtifactService {
                 ArtifactArchive.Entry old = move("bi", o.subtype(), o.name(), actor, "replaced by an upload");
                 also.add("the previous file is archived as " + old.id());
             }
+            com.ash.drishti.api.Roots.guardWrite(target);      // never into the release folder
             try {
                 Files.createDirectories(target.getParent());
                 Path tmp = com.ash.drishti.common.TempFiles.createFile(target.getParent(), o.name() + "-", ".part");

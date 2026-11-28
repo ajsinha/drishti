@@ -221,7 +221,7 @@ def placeholder_default(raw: str) -> str | None:
     while prev != text:
         prev = text
         text = re.sub(r"\$\{[A-Za-z][A-Za-z0-9_.\-]*:((?:[^{}]|\{[^{}]*\})*)\}", lambda m: m.group(1), text)
-    for ref, word in (("${drishti.config.dir}", "<config>"), ("${drishti.home}", "<home>"), ("${drishti.modules.home}", "<modules>")):
+    for ref, word in (("${drishti.site.dir}", "<site>"), ("${drishti.config.dir}", "<config>"), ("${drishti.home}", "<home>"), ("${drishti.modules.home}", "<modules>")):
         text = text.replace(ref, word)
     if re.search(r"\$\{[A-Z][A-Z0-9_]*\}", text):
         if text.strip().startswith("${") and text.strip().endswith("}"):

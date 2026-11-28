@@ -108,6 +108,13 @@ public final class ProductionProfile {
             out.add("the licence file is missing: " + (access == null || access.isBlank() ? "drishti.access.dir is not set" : access + "/licence.yaml is not a file")
                     + ", so every module would run. Fix: put the licence you were issued there (DRISHTI_ACCESS_DIR)");
         }
+        String site = env.getProperty(com.ash.drishti.api.Roots.SITE, "").strip();
+        String home = env.getProperty(com.ash.drishti.api.Roots.HOME, "").strip();
+        if (site.isEmpty()) {
+            out.add("drishti.site.dir is not set: Admin's changes and the site's files would be written into the release folder. Fix: name the site folder outside the release (DRISHTI_SITE_DIR, /etc/drishti)");
+        } else if (!home.isEmpty() && Path.of(site).toAbsolutePath().normalize().startsWith(Path.of(home).toAbsolutePath().normalize())) {
+            out.add("drishti.site.dir (" + site + ") is inside the release folder (" + home + "), which is never written. Fix: name a site folder outside it (/etc/drishti)");
+        }
         String db = env.getProperty("drishti.identity.database-url", "");
         if (db.startsWith("jdbc:sqlite") && clustered(env)) {
             out.add("drishti.identity.database-url is SQLite but this server is a node of a cluster. Fix: point every node at one PostgreSQL identity database (db.identity.url)");

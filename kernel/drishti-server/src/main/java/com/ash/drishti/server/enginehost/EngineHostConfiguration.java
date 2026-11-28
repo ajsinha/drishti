@@ -79,7 +79,7 @@ public class EngineHostConfiguration {
     public EngineHost engineHost(ConfigurableEnvironment env, SourceRouter router, PackRegistry packs, EngineCatalogue catalogue,
             ObjectProvider<AuditLog> audit, ObjectProvider<EngineRegistry> registry) {
         Path home = Roots.home();
-        Path config = Path.of(env.getProperty(Roots.CONFIG, Roots.config()));
+        Path config = Path.of(env.getProperty(Roots.SITE, Roots.site()));     // the site folder: the engines' files and the licence (never the release)
         Path data = Path.of(env.getProperty("drishti.data.dir", Roots.data()));
         EngineHostSettings settings = EngineHostSettings.of(env::getProperty, home, config, data);
         Map<String, Map<String, Object>> manifests = new TreeMap<>();

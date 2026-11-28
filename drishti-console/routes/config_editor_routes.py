@@ -23,6 +23,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from core import config_editor
+from core.config import local_file
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from core.settings_page import console_effective, console_keys, server_effective
@@ -39,7 +40,7 @@ def _problem(e: BackendError) -> JSONResponse:
 
 def _local_file(request: Request) -> Path:
     """This console's own settings file (a test points the app at its own)."""
-    return getattr(request.app.state, "console_local_file", None) or CONSOLE_DIR / "config" / "application.local.yaml"
+    return getattr(request.app.state, "console_local_file", None) or local_file(CONSOLE_DIR / "config")
 
 
 @router.get("/configuration")

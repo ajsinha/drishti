@@ -53,7 +53,7 @@ public record AiProperties(Boolean enabled, String dir, String watch, Long pollM
 
     public AiProperties {
         enabled = enabled != null && enabled;
-        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.Roots.config("ai") : dir.strip();
+        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.Roots.site("ai") : dir.strip();
         watch = watch == null || watch.isBlank() ? "auto" : watch.strip();
         pollMs = pollMs == null || pollMs <= 0 ? 5000 : pollMs;
         defaultModel = defaultModel == null ? "" : defaultModel.strip();

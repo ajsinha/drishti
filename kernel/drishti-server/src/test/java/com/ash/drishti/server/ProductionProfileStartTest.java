@@ -30,7 +30,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(properties = {"drishti.profile=production", "drishti.production.tls=proxy",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.identity.iterations=1000",
         "drishti.engine-lib.trust=pinned", "drishti.engine-lib.licence=${drishti.test.dir}/prodprofile-licence.yaml",
-        "drishti.access.dir=${drishti.test.dir}/prodprofile-access",
+        "drishti.access.dir=${drishti.test.dir}/prodprofile-access", "drishti.site.dir=${drishti.test.dir}/prodprofile-site",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/prodprofile-${random.uuid}/identity.db"})
 class ProductionProfileStartTest {
 

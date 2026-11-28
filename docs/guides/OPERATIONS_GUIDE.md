@@ -3640,12 +3640,26 @@ committed copy is `docs/architecture/Drishti-Sizing-Planner.xlsx`), and **Admin 
 /etc/drishti/drishti.env       the non-secret environment of both services (mode 644)
 /etc/drishti/release.env       which release runs (the file to change on an upgrade)
 /etc/drishti/server.args       the server's JVM options
+/etc/drishti/                  ALSO the site folder (drishti.site.dir): every site file and every Admin change, never the release:
+    connectors/                  connector overrides (only the keys a site changes), bindings.yaml, placement.yaml
+    engines/                     the engines' switches Admin -> Engines writes (a missing file: the jar's own default)
+    modules/, access/            module switches (over the release's shipped ones), licence.yaml, lenses, roles, assignments
+    lakes/                       the site's lake files (a lake and the tables it holds, by path)
+    ai/, mcp/, bi/               provider and MCP server files; the site's own BI files (read after the release's)
+    console/application.local.yaml   the console's own approved settings
+    application.local.yaml       the server's approved settings (Admin -> Configuration, four eyes)
 ```
+
+The release folder is **never written**: root-owned and read only to the service user. Admin writes only to the site folder and the data
+folder; a write that would land in the release is refused (`DRS-1038`) with the way out. Resolution is always release defaults, then the
+site's files over them, then the secrets in memory ([PRODUCTION_STANDARD.md, Site configuration](../admin/PRODUCTION_STANDARD.md#2-site-configuration)).
+The site folder is `/etc/drishti`; give it to the service user (`sudo chown -R drishti:drishti /etc/drishti/{connectors,engines,modules,access,lakes,console}`), and keep `secrets.*` root-owned.
 
 ```bash
 sudo useradd --system --home-dir /srv/drishti --shell /usr/sbin/nologin drishti
-sudo mkdir -p /opt/drishti /srv/drishti/data /etc/drishti
+sudo mkdir -p /opt/drishti /srv/drishti/data /etc/drishti/{connectors,engines,modules,access,lakes,console}
 sudo chown drishti:drishti /srv/drishti/data
+sudo chown -R drishti:drishti /etc/drishti/{connectors,engines,modules,access,lakes,console}   # the site's folders: what Admin writes
 sudo chmod 750 /srv/drishti/data
 ```
 
@@ -3743,6 +3757,8 @@ for a small machine (Admin → Health → Disk shows what holds it).
 drishti.home=/opt/drishti/<release>/drishti
 drishti.data.dir=/srv/drishti/data
 drishti.modules.home=/opt/drishti/<release>/drishti/modules
+# the site folder: every site file and every Admin change; the release is never written (production refuses to start without it)
+drishti.site.dir=/etc/drishti
 
 [console.backend]
 url=http://127.0.0.1:18480
@@ -4202,8 +4218,8 @@ Back up **what Drishti writes and what you configured**; caches are rebuilt. The
 |---|---|---|
 | the identity database | **daily** | SQLite: `sqlite3 /srv/drishti/data/identity/drishti.db ".backup '/backup/drishti/identity.db'"` (safe while running); PostgreSQL: `pg_dump -Fc drishti` |
 | `<data>/fstore/`, `governance/`, `packs/`, `loads/`, `reports/`, `net/` and `nodes/*/net/` (the node's `node-id` and net files) | **yes** | copy |
-| the site's changes under the release's `config/` (modules, engines, connector overrides, tables, BI), `lib/ext`, your own Sutras | **yes**, in version control | commit or copy |
-| `/etc/drishti/` (`prod.ini`, `secrets.ini`, `secrets.env`, units) | **yes**, securely | copy; the secrets also in your vault |
+| `lib/ext`, your own Sutras | **yes**, in version control | commit or copy |
+| `/etc/drishti/` (the site folder: `prod.ini`, `connectors/`, `engines/`, `modules/`, `access/`, `lakes/`, `console/`, `application.local.yaml`; and `secrets.ini`, `secrets.env`, units) | **yes**, securely | copy; version control for everything but the secrets, which are also in your vault |
 | the lakes (`<data>/delta/` or the bucket) | by their owners | your data platform's policy |
 | `<data>/cache`, `derived`, `index`, `bi-store`, `tmp`, `dumps`, `logs` | no | rebuilt, or diagnostics |
 | `<data>/state/<connector>/` of ActiveMQ and RabbitMQ connectors | if used | with the server stopped |
@@ -4248,9 +4264,8 @@ sudo $PY -m pip install --no-index --find-links /root/drishti-wheels-<new> -r ..
 sudo $PY /opt/drishti/<new>/drishti/tools/drishti.py setup --settings /etc/drishti/prod.ini     # checks: "Drishti is ready."
 sudo chown -R root:root /opt/drishti/<new> && sudo chmod -R go-w /opt/drishti/<new>
 
-# 3. carry over what the site added: your jars, and the site's changed config files (compare the two config folders)
+# 3. carry over your jars; the site's configuration is /etc/drishti and is not touched (no config diff: the release holds only defaults)
 sudo cp -a /opt/drishti/<old>/drishti/lib/ext/. /opt/drishti/<new>/drishti/lib/ext/
-diff -r /opt/drishti/<old>/drishti/config /opt/drishti/<new>/drishti/config
 
 # 4. stop (the console, then the server), switch the release, start (the server, then the console)
 sudo systemctl stop drishti-console drishti-server

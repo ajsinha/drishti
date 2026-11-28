@@ -114,6 +114,7 @@ public final class EngineFiles {
      */
     public String[] write(EngineCatalogue.Entry e, boolean on, String by, String at, String reason, String expected) {
         Path f = file(e);
+        com.ash.drishti.api.Roots.guardWrite(f);      // never into the release folder
         String before = checksum(e);
         if (expected != null && !expected.equals(before)) {
             throw new DrishtiException(ErrorCode.ENGINE_FILE_CONFLICT, "the file " + f + " was edited by hand since you opened this page; reload");

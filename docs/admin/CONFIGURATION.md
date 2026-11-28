@@ -440,14 +440,21 @@ from its own setting or from one anchor, the install folder:
 |---|---|---|
 | install folder (the anchor) | `drishti.home` (`DRISHTI_HOME`) | none: `drishti.py start server` and `start cluster`, the images and the systemd unit pass it |
 | data | `drishti.data.dir` (`DRISHTI_DATA_DIR`) | `<home>/data`, and only if it already holds an identity database (a new data folder is made only when it is named) |
-| configuration | `drishti.config.dir` (`DRISHTI_CONFIG_DIR`) | `<home>/config` |
+| configuration (the release's shipped defaults) | `drishti.config.dir` (`DRISHTI_CONFIG_DIR`) | `<home>/config` |
+| **site folder** (every site file and every Admin change) | `drishti.site.dir` (`DRISHTI_SITE_DIR`) | `<config>`: the developer and demo layout, one folder holds both. In production it is named (`/etc/drishti`) and the release folder is never written; a write that would land in the release is refused (`DRS-1038`) |
 | site packs, kernel packs | `drishti.packs.site-dir`/`drishti.packs.dir` (`DRISHTI_PACKS_DIR`), `drishti.kernel.packs-dir` | `<config>/packs`, `<packs>/core` |
 | JDK of the Python tools | `drishti.java.home` (`DRISHTI_JAVA_HOME`) | `JAVA_HOME`, then `java` on the PATH. The JDK the Python tools run Java from (lake demo, lake build --engine java, start); the server in the IDE uses the project's JDK. The key beats the variable |
 | modules | `drishti.modules.home` (`DRISHTI_MODULES_HOME`) | `<home>/modules`; required (`none`: a server with no shipped module folders) |
-| module switches, access | `drishti.modules.dir`, `drishti.access.dir` | `<config>/modules`, `<config>/access` |
-| lakes, connectors | `lake.lakes.dir`, `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `<config>/lakes`, `<config>/connectors` |
+| module switches, access | `drishti.modules.dir`, `drishti.access.dir` | `<site>/modules`, `<site>/access` (the release's shipped `<config>/modules` are read first) |
+| lakes, connectors | `lake.lakes.dir`, `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `<site>/lakes`, `<site>/connectors` |
+| engine switches, AI and MCP providers, BI files | `drishti.engines.dir` (`DRISHTI_ENGINES_DIR`), `drishti.ai.dir`, `drishti.mcp.dir`, `drishti.bi.dir` | `<site>/engines` (the jar's file first), `<site>/ai`, `<site>/mcp`, `<site>/bi` (the release's `<config>/bi` read first) |
+| server and console local settings | (none: follows the site folder) | `<site>/application.local.yaml`, `<site>/console/application.local.yaml`; with no site folder named, `<home>/application.local.yaml` and `drishti-console/config/application.local.yaml` |
 | inbox | `drishti.dataload.dir` | `<data>/dataload` |
 | extra pack folders | `drishti.packs.extra-dirs` | none; each named one must exist |
+
+The order of every site file is the same and is the one resolver (`com.ash.drishti.api.Roots`, Python `core.config.local_file`): the release's
+defaults (templates, shipped module switches, the jars' engine files, shipped BI files), then the site's files over them, then secrets in
+memory; the server never rewrites a connector file. [PRODUCTION_STANDARD.md, Site configuration](PRODUCTION_STANDARD.md#2-site-configuration).
 
 A relative value is taken under the install folder, never the working directory. The server logs one block at start,
 `resolved paths:`, naming every root, its absolute path and where it came from. It refuses to start, with one message naming the

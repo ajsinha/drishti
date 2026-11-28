@@ -50,8 +50,8 @@ public class SettingProposalsController {
     public SettingProposalsController(Entitlements entitlements, AuditLog audit, @Value("${drishti.data.dir}") String dataDir,
             @Value("${drishti.home}") String home) {
         this.entitlements = entitlements;
-        // the local overrides the server read at start (application.yaml imports ${drishti.home}/application.local.yaml): the same file
-        this.proposals = new SettingProposals(Path.of(dataDir, "settings", "proposals.json"), Path.of(home, "application.local.yaml"), audit,
+        // the local overrides the server read at start (application.yaml imports it: the site folder's, else the install folder's): the same file
+        this.proposals = new SettingProposals(Path.of(dataDir, "settings", "proposals.json"), com.ash.drishti.api.Roots.localFile(), audit,
                 Clock.systemUTC());
     }
 

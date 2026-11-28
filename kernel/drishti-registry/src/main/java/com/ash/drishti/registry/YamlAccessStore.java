@@ -60,6 +60,8 @@ public final class YamlAccessStore implements AccessStore {
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
     private final Path modulesDir;
+    /** The release's shipped module files (read first, never written; null or the same folder as modulesDir: none). */
+    private final Path defaultsModulesDir;
     private final Path accessDir;
     private final ClassLoader loader;
     private final java.util.function.Supplier<com.ash.drishti.api.resolution.ModuleHomes> homes;
@@ -79,7 +81,18 @@ public final class YamlAccessStore implements AccessStore {
      */
     public YamlAccessStore(Path modulesDir, Path accessDir, ClassLoader loader,
             java.util.function.Supplier<com.ash.drishti.api.resolution.ModuleHomes> homes) {
+        this(null, modulesDir, accessDir, loader, homes);
+    }
+
+    /**
+     * As above, with the release's shipped module files ({@code <release>/config/modules}: the declarations of the content modules and their
+     * default switches) read first and never written; the site's files ({@code modulesDir}) are read after them and win, and are the only ones
+     * the switch writes. A null or equal folder is none.
+     */
+    public YamlAccessStore(Path defaultsModulesDir, Path modulesDir, Path accessDir, ClassLoader loader,
+            java.util.function.Supplier<com.ash.drishti.api.resolution.ModuleHomes> homes) {
         this.homes = homes == null ? () -> null : homes;
+        this.defaultsModulesDir = defaultsModulesDir == null || defaultsModulesDir.normalize().equals(modulesDir.normalize()) ? null : defaultsModulesDir;
         this.modulesDir = modulesDir;
         this.accessDir = accessDir;
         this.loader = loader == null ? YamlAccessStore.class.getClassLoader() : loader;
@@ -133,7 +146,12 @@ public final class YamlAccessStore implements AccessStore {
             }
         });
         Map<String, Boolean> switches = new LinkedHashMap<>();
-        for (Path f : yamlFiles(modulesDir)) {
+        List<Path> switchFiles = new ArrayList<>();
+        if (defaultsModulesDir != null) {
+            switchFiles.addAll(yamlFiles(defaultsModulesDir));
+        }
+        switchFiles.addAll(yamlFiles(modulesDir));                            // the site's files after the release's: they win
+        for (Path f : switchFiles) {
             String id = ModuleManifest.norm(f.getFileName().toString().replaceFirst("\\.ya?ml$", ""));
             try {
                 Map<String, Object> m = readMap(f);
@@ -203,7 +221,7 @@ public final class YamlAccessStore implements AccessStore {
     @Override
     public long stamp() {
         long h = 17;
-        for (Path dir : List.of(modulesDir, accessDir)) {
+        for (Path dir : defaultsModulesDir == null ? List.of(modulesDir, accessDir) : List.of(defaultsModulesDir, modulesDir, accessDir)) {
             for (Path f : yamlFiles(dir)) {
                 try {
                     h = 31 * h + f.getFileName().toString().hashCode();
@@ -219,7 +237,7 @@ public final class YamlAccessStore implements AccessStore {
 
     @Override
     public String describe() {
-        return "YAML: the modules' jars, " + modulesDir + " and " + accessDir;
+        return "YAML: the modules' jars, " + (defaultsModulesDir == null ? "" : defaultsModulesDir + ", ") + modulesDir + " and " + accessDir;
     }
 
     private Licence licence(List<String> warnings) {

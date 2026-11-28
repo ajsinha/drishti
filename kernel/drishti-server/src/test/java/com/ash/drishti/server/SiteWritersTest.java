@@ -1,0 +1,101 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.ash.drishti.api.Roots;
+import com.ash.drishti.identity.AuditLog;
+import com.ash.drishti.packs.ConnectorFiles;
+import com.ash.drishti.server.engines.EngineCatalogue;
+import com.ash.drishti.server.engines.EngineFiles;
+import com.ash.drishti.server.settings.SettingProposals;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+/** Each Admin writer of site files lands in the site folder and is refused, with the way out, inside the release (PRODUCTION_STANDARD.md, "Site configuration"). */
+class SiteWritersTest {
+
+    @TempDir
+    Path dir;
+    Path release;
+    Path site;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        release = Files.createDirectories(dir.resolve("release/config"));
+        site = Files.createDirectories(dir.resolve("etc-drishti"));
+        System.setProperty(Roots.HOME, dir.resolve("release").toString());
+        System.setProperty(Roots.SITE, site.toString());
+    }
+
+    @AfterEach
+    void tearDown() {
+        System.clearProperty(Roots.HOME);
+        System.clearProperty(Roots.SITE);
+    }
+
+    @Test
+    void connectorOverridesAreWrittenToTheSiteFolderOnly() throws Exception {
+        ConnectorFiles files = new ConnectorFiles(site.resolve("connectors"));
+        files.write("trade-endur", "settings:\n  topic: t\n");
+        assertThat(site.resolve("connectors/trade-endur.yaml")).exists();
+        assertThatThrownBy(() -> new ConnectorFiles(release.resolve("connectors")).write("trade-endur", "x: 1\n"))
+                .hasMessageContaining("release folder").hasMessageContaining("drishti.site.dir");
+        assertThat(release.resolve("connectors")).doesNotExist();
+    }
+
+    @Test
+    void anApprovedSettingGoesToTheSiteFoldersLocalFile() throws Exception {
+        AuditLog audit = new AuditLog() {
+            @Override
+            public void record(String actor, String action, String subject, String detail) {
+            }
+
+            @Override
+            public List<Event> recent(int limit, String subject) {
+                return List.of();
+            }
+        };
+        Clock clock = Clock.fixed(Instant.parse("2026-11-07T10:00:00Z"), ZoneOffset.UTC);
+        SettingProposals toRelease = new SettingProposals(dir.resolve("data/p.json"), Path.of(dir.toString(), "release", "application.local.yaml"), audit, clock);
+        var p = toRelease.propose("drishti.module.banking.var.confidence", "engines", "0.975", "0.99", "r", "mara");
+        assertThatThrownBy(() -> toRelease.decide(p.id(), true, "", "nina")).hasMessageContaining("release folder");
+        assertThat(dir.resolve("release/application.local.yaml")).doesNotExist();
+        SettingProposals toSite = new SettingProposals(dir.resolve("data/q.json"), Roots.localFile(), audit, clock);
+        var q = toSite.propose("drishti.module.banking.var.confidence", "engines", "0.975", "0.99", "r", "mara");
+        toSite.decide(q.id(), true, "", "nina");
+        assertThat(Files.readString(site.resolve("application.local.yaml"))).contains("0.975");
+    }
+
+    @Test
+    void anEngineSwitchInTheReleaseIsRefused() {
+        EngineFiles files = new EngineFiles(release.resolve("engines"), k -> null);
+        var e = new EngineCatalogue.Entry("pivot", "Pivot", "", "pivot.yaml", "drishti.engines.pivot.enabled", null, List.of(), true, true, true, Map.of());
+        assertThatThrownBy(() -> files.write(e, false, "mara", "2026-11-28T00:00:00Z", "r", null)).hasMessageContaining("release folder");
+        assertThat(release.resolve("engines")).doesNotExist();
+    }
+}

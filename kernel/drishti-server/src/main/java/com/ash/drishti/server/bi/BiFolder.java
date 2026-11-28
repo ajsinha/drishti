@@ -76,6 +76,9 @@ public final class BiFolder implements AutoCloseable {
 
     private final Path dir;
     private final Path tablesDir;
+    /** The release's own BI and table folders, read first and never written (a site folder that is a separate one); the site's files win by their path. */
+    private Path defaultsDir;
+    private Path defaultsTablesDir;
     private final Duration refresh;
     private final String watchMode;
     private final AtomicBoolean loading = new AtomicBoolean();
@@ -96,6 +99,12 @@ public final class BiFolder implements AutoCloseable {
      * Reads a domain folder ({@code reports/banking/}, {@code tables/banking/}: docs/architecture/KERNEL_AND_MODULES.md section 8) only while
      * {@code on} says its domain is on: a module that is off brings no BI file.
      */
+    public BiFolder withDefaults(Path biDefaults, Path tablesDefaults) {
+        this.defaultsDir = biDefaults == null || biDefaults.normalize().equals(dir.normalize()) ? null : biDefaults;
+        this.defaultsTablesDir = tablesDefaults == null || tablesDir == null || tablesDefaults.normalize().equals(tablesDir.normalize()) ? null : tablesDefaults;
+        return this;
+    }
+
     public BiFolder withDomains(java.util.function.Predicate<String> on) {
         this.domainOn = on == null ? d -> true : on;
         return this;
@@ -211,8 +220,10 @@ public final class BiFolder implements AutoCloseable {
         }
         try {
             Map<String, Entry> next = new TreeMap<>();
+            List<Path> biRoots = defaultsDir == null ? List.of(dir) : List.of(defaultsDir, dir);       // the release's files, then the site's (the site wins by path)
+            for (Path biRoot : biRoots) {
             for (String old : OLD_FOLDERS) {                                   // BI's own dataset and model files: refused, the command named
-                Path folder = dir.resolve(old);
+                Path folder = biRoot.resolve(old);
                 if (!Files.isDirectory(folder)) {
                     continue;
                 }
@@ -229,7 +240,7 @@ public final class BiFolder implements AutoCloseable {
                 }
             }
             for (Map.Entry<String, String> k : KINDS.entrySet()) {
-                Path folder = dir.resolve(k.getKey());
+                Path folder = biRoot.resolve(k.getKey());
                 if (!Files.isDirectory(folder)) {
                     continue;
                 }
@@ -254,8 +265,10 @@ public final class BiFolder implements AutoCloseable {
                     LOG.warn("BI folder: {} unreadable: {}", folder, e.getMessage());
                 }
             }
-            if (tablesDir != null && Files.isDirectory(tablesDir)) {
-                try (Stream<Path> domains = Files.list(tablesDir)) {
+            }
+            for (Path tablesRoot : tablesDir == null ? List.<Path>of() : defaultsTablesDir == null ? List.of(tablesDir) : List.of(defaultsTablesDir, tablesDir)) {
+            if (Files.isDirectory(tablesRoot)) {
+                try (Stream<Path> domains = Files.list(tablesRoot)) {
                     for (Path domain : domains.filter(Files::isDirectory).filter(d -> domainOn.test(d.getFileName().toString())).sorted().toList()) {
                         try (Stream<Path> files = Files.list(domain)) {
                             for (Path f : files.sorted().toList()) {
@@ -269,8 +282,9 @@ public final class BiFolder implements AutoCloseable {
                         }
                     }
                 } catch (IOException e) {
-                    LOG.warn("BI folder: the tables folder {} unreadable: {}", tablesDir, e.getMessage());
+                    LOG.warn("BI folder: the tables folder {} unreadable: {}", tablesRoot, e.getMessage());
                 }
+            }
             }
             entries.keySet().stream().filter(x -> !next.containsKey(x)).forEach(x -> LOG.info("BI folder: {} removed", x));
             entries = Map.copyOf(next);
