@@ -1117,7 +1117,10 @@ def cmd_doctor(a, extra) -> int:
         say_json({"ok": doctor.exit_code(results) == 0, "checks": results}) if a.json else doctor.render(results)
         return doctor.exit_code(results)
     api = Api.from_args(a) if a.server or os.environ.get("DRISHTI_SERVER") or settingsfile.server_url(javacmd.settings()[1]) else None
-    results = doctor.run(os.environ, ROOT, find_jar, find_java, api, a.java)
+    own = ROOT / "data"                          # a data folder named elsewhere (settings file or DRISHTI_DATA_DIR) is a scratch run
+    named = (os.environ.get("DRISHTI_DATA_DIR") or javacmd.settings()[1].get("drishti.data.dir") or "").strip()
+    scratch = bool(named) and pathlib.Path(named).expanduser().resolve() != own.resolve() and api is None
+    results = doctor.run(os.environ, ROOT, find_jar, find_java, api, a.java, scratch)
     say_json({"ok": doctor.exit_code(results) == 0, "checks": results}) if a.json else doctor.render(results)
     return doctor.exit_code(results)
 

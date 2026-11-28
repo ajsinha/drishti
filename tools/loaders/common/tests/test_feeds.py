@@ -101,6 +101,9 @@ def test_every_shipped_feed_file_parses_and_names_its_class():
         assert s.licence.url.startswith("http"), s.name
         assert (ROOT / "config" / "lakes" / f"{s.lake}.yaml").is_file(), f"{s.name}: lake {s.lake} has no config/lakes file"
         for d in s.datasets.values():
+            if d.pack == "genomics":        # a kinds-only domain: its contracts folder, no pack.yaml (loaded as a new table of the domain)
+                assert (ROOT / "modules" / "genomics" / "packs" / "genomics" / "contracts" / f"{d.kind}.yaml").is_file(), f"{s.name}: kind {d.kind}"
+                continue
             assert (FB.K.pack_dir(d.pack) / "pack.yaml").is_file(), f"{s.name}: pack {d.pack}"
 
 

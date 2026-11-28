@@ -40,6 +40,7 @@ features:
   # Data in and out, build (core)
   - { id: B1, name: Connect, domain: core, lenses: all, guide: guides/DATA_GUIDE.md, budget: 1000, tutorial: tutorials/15-connect-your-data.md, tutorial-budget: 300 }
   - { id: B1b, name: Data lake and data load, domain: core, lenses: all, guide: guides/DATA_LAKE_GUIDE.md, budget: 1100, tutorial: tutorials/16-load-your-own-data-into-a-new-lake.md, tutorial-parts: [tutorials/13-one-file-per-lake.md, tutorials/14-load-files-with-the-data-inbox.md, tutorials/18-news-held-in-memory.md, tutorials/23-the-risk-lake-on-iceberg.md], tutorial-budget: 1500 }
+  - { id: B1c, name: "Daily data loads, one page per type", domain: core, lenses: all, guide: guides/loads/README.md, budget: 3800, tutorial: none }
   - { id: B3, name: Packs and screens, domain: core, lenses: all, guide: guides/BUILD_GUIDE.md, budget: 2000, tutorial: tutorials/19-build-a-pack-and-a-screen.md, tutorial-parts: [tutorials/24-customize-a-live-page.md, tutorials/25-computed-panels.md], tutorial-budget: 1200 }
   - { id: B4, name: Data out, domain: core, lenses: all, guide: guides/DATA_GUIDE.md, budget: 900, tutorial: tutorials/17-data-out-with-arrow-flight.md, tutorial-budget: 300 }
   - { id: B5, name: Embed, domain: core, lenses: all, guide: guides/INTEGRATION_GUIDE.md, budget: 800, tutorial: tutorials/20-embed-drishti.md, tutorial-budget: 300 }

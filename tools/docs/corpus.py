@@ -106,6 +106,7 @@ R: list[tuple[str, str, str, str, str]] = [
     (r"docs/guides/PVF_LOADING\.md", "rename", "A", BANK, ""),
     (r"docs/guides/bi/MODELS_AND_DATASETS_FOR_REPORTS\.md", "merge", "A", GL + "bi/TABLES_AND_MODELS.md", ""),
     (r"docs/guides/bi/[^/]+\.md", "keep", "A", "", ""),
+    (r"docs/guides/loads/[^/]+\.md", "keep", "A", "", ""),
     (r"docs/guides/examples/pack/helpdesk/guides/helpdesk\.md", "notdoc", "A", "", ""),
     (r"docs/guides/examples/README\.md", "keep", "A", "", ""),
     (r"docs/guides/examples/embed/README\.md", "merge", "A", GL + "INTEGRATION_GUIDE.md", ""),

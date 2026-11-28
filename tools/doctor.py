@@ -199,13 +199,16 @@ def server_check(api) -> list[dict]:
     return out
 
 
-def run(env, root: pathlib.Path, find_jar, find_java, api=None, java: str | None = None) -> list[dict]:
+def run(env, root: pathlib.Path, find_jar, find_java, api=None, java: str | None = None, scratch: bool = False) -> list[dict]:
+    """``scratch``: the run is on a scratch data folder (not this checkout's own): no server is probed unless one is named (``api``, or
+    DRISHTI_DOCTOR_PORTS for the ports); the default ports are another instance's, not this run's to touch."""
     try:
         found = java_check(find_java(java))
     except Exception as e:                       # noqa: BLE001 - no Java, or one older than 21: said in words
         found = item("fail", "java", str(e), f"install a JDK {MIN_JAVA} and set drishti.java.home in your settings file (or pass --java)")
     out = [found, jar_check(find_jar)]
-    out += python_check() + layout_check(root) + dir_check(env) + port_check()
+    out += python_check() + layout_check(root) + dir_check(env) + (port_check() if not scratch or env.get("DRISHTI_DOCTOR_PORTS") else
+                                                                     [item("ok", "ports", "not probed: a scratch data folder; name --server (or DRISHTI_DOCTOR_PORTS) to check one")])
     if api is not None:
         out += server_check(api)
     return out

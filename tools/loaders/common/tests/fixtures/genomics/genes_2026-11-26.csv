@@ -1,0 +1,4 @@
+gene,chrom,start,protein_length,domains
+MLH1,3,36993350,756,"DNA mismatch repair"
+APC,5,112707498,2843,
+BADGENE,3,notanumber,10,
