@@ -9,7 +9,7 @@
 
 What every Drishti component must satisfy to be run in production. One section per component; each rule is checked by a test named beside it.
 
-## Console
+## 2. Console
 
 The console (`drishti-console`) is a deployable of its own.
 
