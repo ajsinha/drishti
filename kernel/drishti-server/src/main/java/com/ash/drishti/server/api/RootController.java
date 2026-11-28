@@ -37,6 +37,12 @@ public class RootController {
         this.version = b == null ? "dev" : b.getVersion();
     }
 
+    /** The API's version ({@link ApiVersion}), open like the root: a client checks it before it signs in; no node, user, path or setting. */
+    @GetMapping(value = "/api/v1/version", produces = "application/json")
+    public Map<String, Object> apiVersion() {
+        return ApiVersion.answer(Branding.name(""), version);
+    }
+
     /** What this address is. */
     @GetMapping(value = "/", produces = "application/json")
     public Map<String, Object> root() {
@@ -49,6 +55,7 @@ public class RootController {
         m.put("message", "This is the " + named + "server: its API, not a web page. The user interface is the console, a separate program "
                 + "(python tools/drishti.py start console) that is given this server's address. Open the console's address in the browser.");
         m.put("api", "/api/v1/about");
+        m.put("apiVersion", "/api/v1/version");
         m.put("health", "/actuator/health");
         return m;
     }

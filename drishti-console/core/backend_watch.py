@@ -27,6 +27,8 @@ import time
 
 import httpx
 
+from core import api_compat
+
 LOG = logging.getLogger("drishti.console.backend")
 
 
@@ -74,6 +76,7 @@ class BackendWatch:
         try:
             about = await self.probe(self._url_of(server))
             up, error, version = True, "", str(about.get("version") or "")
+            api_problem = api_compat.problem(about.get("api"), self._url_of(server))
             if self.on_about is not None:
                 try:
                     learned = self.on_about(server, about)
@@ -83,6 +86,7 @@ class BackendWatch:
                     LOG.exception("reading the server's edition failed")
         except Exception as e:  # noqa: BLE001 - any failure means not reachable
             up, error, version = False, _brief(e), (old or {}).get("version", "")
+            api_problem = (old or {}).get("apiProblem", "")
         if old is None or old["reachable"] != up:
             since = now
             if old is not None and up:
@@ -91,7 +95,10 @@ class BackendWatch:
                 LOG.warning("server %s unreachable: %s", self._url_of(server), error)
         else:
             since = old["since"]
-        self._state[server.id] = {"reachable": up, "since": since, "lastError": error, "version": version, "checked": now}
+        if up and api_problem and api_problem != (old or {}).get("apiProblem"):
+            LOG.error("server %s: %s", self._url_of(server), api_problem)               # once per change; Admin -> Health shows it
+        self._state[server.id] = {"reachable": up, "since": since, "lastError": error, "version": version, "checked": now,
+                                  "api": str(about.get("api") or "") if up else (old or {}).get("api", ""), "apiProblem": api_problem or ""}
         return self._state[server.id]
 
     async def check_all(self) -> None:

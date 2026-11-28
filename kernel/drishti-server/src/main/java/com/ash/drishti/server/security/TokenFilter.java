@@ -67,7 +67,8 @@ public final class TokenFilter extends OncePerRequestFilter {
         // the path that is served, not the raw request line (SEC-02): /api/v1;x/… and /api/%761/… are /api/v1/…
         String path = RequestPaths.routed(request);
         // the exchange authenticates inside its own request; the key set is public
-        return !path.startsWith("/api/v1/") || path.equals("/api/v1/embed/token") || path.equals("/api/v1/embed/jwks");
+        return !path.startsWith("/api/v1/") || path.equals("/api/v1/embed/token") || path.equals("/api/v1/embed/jwks")
+                || path.equals("/api/v1/version");     // the API's version: asked before any sign-in (the console's start-up handshake)
     }
 
     /** Switches on embed tokens (Drishti Elements); without it a bearer that is not a session or personal token is refused as before. */

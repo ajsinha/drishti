@@ -498,6 +498,9 @@ class EmbedTokenTest {
         MvcResult jwks = run(get("/api/v1/embed/jwks"));
         assertThat(jwks.getResponse().getStatus()).isEqualTo(200);
         assertThat(body(jwks).path("keys").get(0).path("alg").asText()).isEqualTo("ES256");
+        MvcResult version = run(get("/api/v1/version"));                    // open like the key set: a client checks the API version before any sign-in
+        assertThat(version.getResponse().getStatus()).isEqualTo(200);
+        assertThat(body(version).path("api").asText()).matches("\\d+\\.\\d+");
         String service = "Bearer " + tokens.mint("console", List.of("service"), 60);
         MvcResult origins = run(get("/api/v1/embed/apps/origins").header("Authorization", service));
         assertThat(body(origins).path("origins").toString()).contains(CRM);

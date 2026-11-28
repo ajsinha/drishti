@@ -725,6 +725,38 @@ many users. A stop closes open live streams after `server.shutdown_seconds` (5);
 Consoles on several hosts relay to each other (`DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true`, one `DRISHTI_CONSOLE_RELAY_KEY`, ports 17490 to
 17493 open between them), so a load balancer needs no sticky sessions ([CLUSTER_GUIDE.md](CLUSTER_GUIDE.md)).
 
+### 5.7 The console as its own deployable
+
+The console (`drishti-console`, Python) is a program of its own: it holds its templates, its static files and its own configuration, and it reaches the
+server **only by the server's published API** (`/api/v1`, `/public`). It reads no folder of the server (its config, lakes, identity database,
+modules or data folder), so it runs on a **separate host** that holds nothing of the server, or as **several instances behind a load balancer**. A guard test
+(`drishti-console/tests/test_console_boundary_guard.py`) keeps it so.
+
+**What a console host needs**
+
+| Need | What |
+|---|---|
+| Python | 3.13 you prepared yourself (Drishti installs nothing); the libraries of `drishti-console/requirements.txt`, from the wheel pack (§2.3) |
+| Files | the `drishti-console/` folder, and the `docs/` folder beside it (the pages Help renders); the binary package carries both, and `python tools/drishti.py start console` runs from it |
+| Settings | the console's own: `backend.url` (`DRISHTI_BACKEND_URL`), or `backend.urls` for a cluster (`DRISHTI_BACKEND_URLS`), `server.port`, `server.workers`, `auth.token_secret` (the server's `drishti.security.secret`), `DRISHTI_SESSION_SECRET`; a site file `config/application.local.yaml` for the rest ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |
+| State | its own folder `<data dir>/console` (the server list it learned, user stamps, the hosted module parts it fetched) and its temp folder; both can be lost, nothing is kept there that the server does not hold |
+| Start | `python3.13 tools/drishti.py start console --server https://drishti-a:18480` (or `drishti-console/run_drishti_web.py`) |
+
+**Start-up handshake.** Before the console opens its port it asks the server's API version (`GET /api/v1/version`). A server outside the console's
+supported range stops the start with one line (`[FAIL] the server at … speaks API 2.0, newer than this console supports …`); a server that is not up yet
+is not a refusal (start order does not matter). See [API_REFERENCE.md](API_REFERENCE.md#1-conventions), *The API's version*. Upgrade the servers and the
+consoles of one release together; a console may be older or newer by minor versions inside its range.
+
+**Several instances.** Nothing a request needs lives in one process only (nothing per person in the process: the session is a signed cookie the server
+verifies, every per-person cache is rebuilt from the server and dropped when the server's stamp changes). So any instance may take any request:
+
+- the same `DRISHTI_SESSION_SECRET`, `auth.token_secret` and `DRISHTI_CONSOLE_RELAY_KEY` on every instance (from the secret store);
+- **sticky sessions are not needed** when the instances relay to each other: `DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true`, ports 17490 to 17493 open between
+  the console hosts only (a live page's stream is held by one worker; its later calls are passed on, [CLUSTER_GUIDE.md](CLUSTER_GUIDE.md#74-no-sticky-sessions-the-console-relay));
+- **without the relay across hosts, the balancer must be sticky** (by source address or a cookie of its own) for the live pages and the pack wizard's job calls
+  only; every other page needs no stickiness;
+- the balancer probes `GET /readyz` (`200` when the server is reachable and speaks a compatible API, else `503`) and `GET /healthz`.
+
 ## 6. Configure
 
 Every setting of every kind, with its type, default, environment variable, meaning and whether a change needs a restart, is in one

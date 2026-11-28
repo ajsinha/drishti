@@ -28,6 +28,8 @@ tmpguard.install()      # first: every temp path of this session, its workers an
 import pytest
 from fastapi.testclient import TestClient
 
+from core import api_compat
+
 CONSOLE = Path(__file__).resolve().parent.parent
 FIXTURES = Path(__file__).resolve().parent / "fixtures"
 sys.path.insert(0, str(CONSOLE))
@@ -1372,6 +1374,10 @@ def forget_backend_answers(app) -> None:
 def client(backend):
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = backend
+
+    async def stand_in_about(url):          # the console's watch asks the stand-in, never the default URL (the owner's running server may answer there)
+        return {"product": "Drishti", "version": "1.2.0", "api": api_compat.SUPPORTED_MIN}
+    app.state.backend_watch.probe = stand_in_about
     _SESSION_APPS.append(app)
     return TestClient(app)
 

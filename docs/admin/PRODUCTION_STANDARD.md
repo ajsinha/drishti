@@ -22,7 +22,7 @@ check that enforces it. The install, upgrade and backup commands are in
 [CONFIGURATION.md](CONFIGURATION.md). This page repeats neither.
 
 Production is Linux. The sections so far: 1 the production profile, 2 site configuration, 3 upgrades (releases side by side, installed from the
-binary package). The other sections of the standard (data, targets, secrets, modules and engines, lifecycle, acceptance; tables and the console)
+binary package), 4 the console, 5 data and access. The other sections of the standard (data, targets, secrets, modules and engines, lifecycle, acceptance)
 are added as their rules are built. **One layout** serves all of them: releases in `/opt/drishti/releases/<version>` (read only) with the
 `current` and `previous` links, the site's files only in `/etc/drishti` (`drishti.site.dir`), the data in its own folder (`/srv/drishti/data`:
 identity database, content store, lakes, logs), each release with its own Python (`<release>/python`).
@@ -142,3 +142,29 @@ connector override and a setting in Admin, restart, and `find <release> -newer <
 | A rollback needs nothing that the upgrade removed | the previous release folder and its Python stay until the new release has run a business day; the site's files, the identity database and the content store are copied before the switch | the rollback of section 11.5, tried on a scratch machine |
 | No migrations | a retired settings name refuses the start and names its replacement; stored data is only read by the release that wrote it or restored from the backup | section 11.4 |
 | The check is read-only | it writes, installs, starts and stops nothing and reads no secret value | `tools/test_upgradecheck.py` |
+
+## 4. The console
+
+The console (`drishti-console`) is a deployable of its own.
+
+1. **It uses only the server's published API.** It reads no file or folder of the server: not the server's config, its lakes, the identity database, the
+   modules folder or the data folder, and takes no shortcut around the API. It may read its own configuration, its templates and static files, the docs it
+   renders for Help (`docs/` and the generated copies), and the few shared read-only files whitelisted with a reason in the guard test. Where the API lacks
+   an answer the console needs, the server gets a small endpoint, documented in [API_REFERENCE.md](../guides/API_REFERENCE.md). Test:
+   `drishti-console/tests/test_console_boundary_guard.py` (a new reach fails; the known ones are listed as pending with the lane that fixes each, and the list only shrinks).
+2. **It runs alone.** Its own requirements (`drishti-console/requirements.txt`), its own settings (`drishti-console/config/application.yaml` and a site
+   file) and its own start command (`python3.13 tools/drishti.py start console --server URL`); it runs from the binary package's `drishti-console/` folder
+   on a host that holds nothing of the server.
+3. **It scales out.** No per-person state in the process (session isolation): several instances, or several workers, behind a load balancer that
+   probes `GET /readyz`. Sticky sessions are not needed with the relay across hosts, and are needed for live pages without it
+   ([OPERATIONS_GUIDE.md](../guides/OPERATIONS_GUIDE.md#57-the-console-as-its-own-deployable)).
+4. **It checks the server's API version.** The server reports it (`GET /api/v1/version`, open); the console declares the range it supports
+   (`core/api_compat.py`) and refuses to start against a server outside it, with one line. Tests: `drishti-console/tests/test_api_version_handshake.py`,
+   `RootControllerTest` (the server's answer).
+
+## 5. Data and access
+
+| Rule | How it is met | Enforced by |
+|---|---|---|
+| Every loader stages under `<data>/tmp/loaders`, never the system temp folder | the loaders take their staging folder from the data folder's layout | the loaders' tests (`tools/loaders`, the temp-folder guard) |
+| Every controller is classified for row-rule coverage | each route of the server is listed in `row-rule-route-inventory.tsv` with how its rows are filtered; a new controller without a row fails the build | `RowRuleRouteInventoryGuardTest` |
