@@ -497,6 +497,8 @@ def run(a, say=print) -> tuple[int, dict]:
     """The whole build; returns (exit code, summary). Never raises for a data problem: it is in the summary. A pack's child kinds of the
     table (``ingest: {child-of}``, DATA_LAKE_GUIDE.md section 5.7) are built after it, each from its parent's array, in the same format;
     the parallel loader does that itself (the same rules), so only a build by the Python path does it here."""
+    import lakeconfig
+    lakeconfig.use_data_dir(getattr(a, "data_dir", None))   # --data-dir: the lake reader and every child take it
     before = (getattr(a, "lake", None), getattr(a, "format", "delta"), getattr(a, "mode", None), getattr(a, "_mode_given", False))
     code, summary = _run_table(a, say)
     if code in (EXIT_OK, EXIT_PARTIAL) and not a.dry_run and not getattr(a, "plan", False) and summary.get("status") in ("ok", "partial") \
@@ -588,7 +590,8 @@ def refused_home(a, name: str) -> pathlib.Path:
 
 def data_dir() -> pathlib.Path:
     """The configured data folder: DRISHTI_DATA_DIR, else the repository's data folder."""
-    return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (HERE.parents[1] / "data"))
+    import lakeconfig
+    return lakeconfig.data_dir()
 
 
 PARTITION_NAME_REFUSED = set(" ,;{}()\n\t=/\\%:#?*\"'[]^") | {chr(c) for c in range(32)} | {"\x7f"}
@@ -951,6 +954,8 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                    "docs/guides/DATA_LAKE_GUIDE.md), or a folder, the old form (the options and the pack decide)")
     g.add_argument("--lake-root", metavar="DIR", help="with --lake NAME: write the lake's layout under this folder instead of its root (a scratch "
                    "or test lake)")
+    g.add_argument("--data-dir", metavar="DIR", help="the data folder a lake NAME's root is under (default drishti.data.dir of the settings file, else "
+                   "DRISHTI_DATA_DIR, else this checkout's data/): the lake files' ${drishti.data.dir}")
     g.add_argument("--domain", help="the lake domain (default: the pack's Delta connector's domain)")
     g.add_argument("--pack", metavar="DIR", help="a pack folder: domain, kind, key, date and promoted columns from its pack.yaml")
     g.add_argument("--connector", help="which of the pack's Delta connectors the table is for (one per source system: trade-endur); default: the first")

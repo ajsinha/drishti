@@ -135,6 +135,8 @@ def add_arguments(group, shared: bool = True) -> None:
     group.add_argument("--load", action="store_true", help="instead: load the files now, one `drishti.py lake build --engine java` each, "
                        "in dependency order, into --lake; stops at the first failure")
     group.add_argument("--plan", action="store_true", help="with --load: say what each load would do (lake build --plan); write nothing")
+    group.add_argument("--data-dir", metavar="DIR", help="the data folder (default drishti.data.dir of the settings file, else DRISHTI_DATA_DIR, else "
+                       "data/): the lake NAME's root, the inbox and the loads are under it")
     if shared:
         group.add_argument("--server", help="with --load: the server to signal after each load (lake build --signal URL)")
         group.add_argument("--token-file", help="with --load --server: a file holding the API token (never printed)")
@@ -147,6 +149,12 @@ def deliver(a, files: list, order: list[str] | tuple[str, ...] = DEFAULT_ORDER) 
     if getattr(a, "inbox", None) and getattr(a, "load", False):
         raise PvfError("--inbox and --load are two ways to the same end: give one")
     files = [Path(f) for f in files]
+    if getattr(a, "data_dir", None):                          # --data-dir: this run and the lake build it starts (the environment) use it
+        sys.path.insert(0, str(ROOT / "tools" / "lake"))
+        import lakeconfig
+        lakeconfig.use_data_dir(a.data_dir)
+        if a.inbox == DEFAULT_INBOX:
+            a.inbox = lakeconfig.data_dir() / "dataload" / "inbox"
     if a.inbox:
         return {"FOLDER": str(a.inbox), "DELIVERED": to_inbox(files, a.inbox, order)}
     if a.load:

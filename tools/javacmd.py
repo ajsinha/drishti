@@ -366,7 +366,8 @@ def root_flags(args: list, cwd=None, env=None) -> list:
     if not _named("drishti.data.dir", ("DRISHTI_DATA_DIR",), args, env):
         out.append(f"-Ddrishti.data.dir={home / 'data'}")
     if not _named("lake.data.dir", ("LAKE_DATA_DIR",), args, env):       # Drishti Lake's name of the same folder (lake files: ${lake.data.dir})
-        out.append(f"-Dlake.data.dir={((os.environ if env is None else env).get('DRISHTI_DATA_DIR') or '').strip() or home / 'data'}")
+        given = next((a.split("=", 1)[1] for a in args if a.startswith("-Ddrishti.data.dir=")), "")   # the data folder named in the arguments, the settings file, the environment
+        out.append(f"-Dlake.data.dir={given or (_SETTINGS_KEYS.get('drishti.data.dir') or '').strip() or ((os.environ if env is None else env).get('DRISHTI_DATA_DIR') or '').strip() or home / 'data'}")
     if not _named("drishti.modules.home", ("DRISHTI_MODULES_HOME",), args, env):
         out.append(f"-Ddrishti.modules.home={REPO / 'modules'}")
     return out

@@ -40,8 +40,10 @@ final class IcebergSink implements OfficialSink {
     private final String root;
     private final Map<String, String> settings;
     private final int retentionDays;
+    private final Map<String, String> uris;
 
-    IcebergSink(String root, Map<String, String> settings, int retentionDays) {
+    IcebergSink(String root, Map<String, String> settings, int retentionDays, Map<String, String> uris) {
+        this.uris = uris == null ? Map.of() : uris;
         this.root = root;
         this.settings = settings;
         this.retentionDays = retentionDays;
@@ -55,6 +57,11 @@ final class IcebergSink implements OfficialSink {
     @Override
     public String root() {
         return root;
+    }
+
+    @Override
+    public Map<String, String> uris() {
+        return uris;
     }
 
     @Override

@@ -239,7 +239,7 @@ def record_build(delta: pathlib.Path, root: pathlib.Path, table_name: str, domai
     import ownership
     src = ownership.owner(delta.parent.parent, f"{delta.parent.name}/{delta.name}") or {}
     now = datetime.now(timezone.utc)
-    ownership.record(root, {"table": str(root / domain / table_name), "pack": src.get("pack"), "kind": src.get("kind") or table_name,
+    ownership.record(root, {"table": lakeconfig.locate(root, domain, table_name), "pack": src.get("pack"), "kind": src.get("kind") or table_name,
                             "finishedAt": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "run": f"stores-copy-{now.strftime('%Y%m%dT%H%M%S%f')}",
                             "rows": rows})
 
@@ -399,16 +399,16 @@ def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: path
     tpl = _template(pack, name, store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
     if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)
-        where = f"every {domain} table in Iceberg ({ice / domain}, lake {ICEBERG_LAKE})"
+        where = f"every {domain} table in Iceberg ({lakeconfig.locate(ice, domain, "")}, lake {ICEBERG_LAKE})"
     elif "lake" in settings:                          # the demo lake in Delta: the template as it is (lake: demo)
-        where = f"every {domain} table in Delta ({lake / domain}, config/lakes/demo.yaml)"
+        where = f"every {domain} table in Delta ({lakeconfig.locate(lake, domain, "")}, config/lakes/demo.yaml)"
     elif store == "iceberg":
         root = ICEBERG_DEFAULT if ice.resolve() == _resolve(ICEBERG_DEFAULT, data, "DRISHTI_ICEBERG_ROOT") else str(ice)
         settings = {"root": root, **{k: v for k, v in settings.items() if k != "root"}}
-        where = f"every {domain} table in Iceberg ({ice / domain})"
+        where = f"every {domain} table in Iceberg ({lakeconfig.locate(ice, domain, "")})"
     else:
         settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, lakeconfig.DEMO_ROOT_ENV) else str(lake)
-        where = f"every {domain} table in Delta ({lake / domain})"
+        where = f"every {domain} table in Delta ({lakeconfig.locate(lake, domain, "")})"
     return (override_of(name, store, settings),
             f"{WRITTEN_BY} {domain}={store}: {where}; every other key is the template of pack '{pack_name}'.\n"
             "# Building the lakes with another --store switches it.\n")

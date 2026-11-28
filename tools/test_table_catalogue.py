@@ -53,3 +53,24 @@ def test_the_genomics_feeds_write_the_tables_the_home_reads():
     feeds = ROOT / "config" / "feeds"
     assert yaml.safe_load((feeds / "clinvar.yaml").read_text(encoding="utf-8"))["datasets"]["variant"]["table"] == "clinvar-variant"
     assert yaml.safe_load((feeds / "ensembl.yaml").read_text(encoding="utf-8"))["datasets"]["gene"]["table"] == "ensembl-gene"
+
+
+# ---- the Python guard: nobody joins lake/domain/table by hand (lakeconfig.locate is the one join)
+
+import re  # noqa: E402
+
+#: a lake-ish name divided by a domain, or a domain divided by a table (the join lakeconfig.locate owns)
+_JOIN = re.compile(r"\b\w*(?:root|lake|ice|iceberg|delta|warehouse)\w*\)?\s+/\s+\(?\w*domain\w*\b|\bdomain\w*\)?\s+/\s+\(?(?:table\w*|kind|name|t\.name)\b")
+
+
+def test_no_tool_joins_lake_domain_table_outside_lakeconfig():
+    found = []
+    for f in sorted((ROOT / "tools").rglob("*.py")):
+        rel = f.relative_to(ROOT).as_posix()
+        if f.name.startswith("test_") or f.name == "lakeconfig.py" or "/testdata/" in rel or "/__pycache__/" in rel:
+            continue
+        for n, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+            code = line.split("  #")[0]
+            if _JOIN.search(code) and not code.lstrip().startswith(("#", '"', "'")):
+                found.append(f"{rel}:{n}: {line.strip()[:110]}")
+    assert not found, "a lake/domain/table path joined by hand (use lakeconfig.locate / locate_path):\n" + "\n".join(found)

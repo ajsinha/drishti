@@ -114,4 +114,26 @@ class OfficialSinkTest {
                 OfficialTables.rows(2, 1.0), r -> r.get("NODE_ID") + "#2")).isInstanceOf(java.io.IOException.class)
                 .hasMessageContaining("is a Delta table and the official format is iceberg");
     }
+
+    /**
+     * A table bound by its lake entry's {@code uri:} is written and read where the uri says, in Delta and in Iceberg alike (storage parity), and
+     * the same rows come back from both; without a uri the table is where it always was ({@code <root>/risk-results/<table>}).
+     */
+    @Test
+    void aTableBoundByUriIsWrittenAndReadThereInBothFormatsAndAnUnboundOneStaysByLayout() throws Exception {
+        Map<String, Map<String, Map<String, Object>>> byFormat = new java.util.HashMap<>();
+        for (String format : List.of("delta", "iceberg")) {
+            Path root = tmp.resolve(format + "-root");
+            Path own = tmp.resolve(format + "-elsewhere").resolve("risk-results").resolve(TABLE);
+            OfficialSink sink = OfficialSink.of(format, root.toString(), Map.of(), 7, Map.of(TABLE, own.toString()));
+            assertThat(sink.where(TABLE)).isEqualTo(own.toString());
+            assertThat(sink.where("other")).isEqualTo(root + "/risk-results/other");
+            sink.append(TABLE, OfficialTables.DAY, OfficialTables.columns(), OfficialTables.rows(1, 1.0), OfficialSinkTest::id);
+            sink.append(TABLE, OfficialTables.DAY, OfficialTables.columns(), OfficialTables.rows(2, 1.5), OfficialSinkTest::id);
+            assertThat(Files.exists(root.resolve("risk-results"))).as(format + ": nothing under the layout's folder").isFalse();
+            byFormat.put(format, OfficialTables.read(format, own.getParent().getParent().toString(), "risk-results", TABLE, TABLE, Map.of()));
+            assertThat(byFormat.get(format)).as(format + ": both versions read back from the uri").hasSize(6);
+        }
+        assertThat(byFormat.get("iceberg")).isEqualTo(byFormat.get("delta"));
+    }
 }

@@ -90,6 +90,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DRISHTI = ROOT / "tools" / "drishti.py"
 STORES_PY = ROOT / "tools" / "lake" / "stores.py"
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
+import lakeconfig  # noqa: E402  (the one join of lake/domain/table: locate)
 import stores  # noqa: E402  (tools/lake/stores.py: Delta or Iceberg per source system)
 import feedroute  # noqa: E402  (tools/lake/feedroute.py: the data files' extensions)
 sys.path.insert(0, str(ROOT / "tools" / "launch"))
@@ -422,22 +423,22 @@ def move_domain(domain: str, store: str, a, plan: "StorePlan") -> str:
     """Every table of the domain into the store (``--store risk=iceberg``): each Delta table copied into Iceberg and removed, or, back to
     Delta, the Iceberg copies removed once the Delta tables are there; then the domain's connector file switched. The closing line."""
     lake, ice = plan.lake, plan.ice
-    delta_tables = sorted(p for p in (lake / domain).iterdir() if (p / "_delta_log").is_dir()) if (lake / domain).is_dir() else []
+    delta_tables = sorted(p for p in lakeconfig.locate_path(lake, domain).iterdir() if (p / "_delta_log").is_dir()) if lakeconfig.locate_path(lake, domain).is_dir() else []
     if store == "iceberg":
         if not delta_tables:
-            print(f"  every {domain} table of {lake / domain} into Iceberg ({ice / domain})" + ("" if a.dry_run else ": none in Delta now"))
+            print(f"  every {domain} table of {lakeconfig.locate(lake, domain, "")} into Iceberg ({lakeconfig.locate(ice, domain, "")})" + ("" if a.dry_run else ": none in Delta now"))
         for t in delta_tables:
-            print(f"  {domain}/{t.name} into Iceberg: {t} -> {ice / domain / t.name}", flush=True)
+            print(f"  {domain}/{t.name} into Iceberg: {t} -> {lakeconfig.locate(ice, domain, t.name)}", flush=True)
             run([sys.executable, str(STORES_PY), "--from", str(t), "--root", str(ice), "--table", t.name, "--domain", domain,
                  "--data-dir", str(plan.data), "--replace"], a.dry_run, f"{domain}/{t.name} into Iceberg", None, capture=True)
             if not a.dry_run:
                 shutil.rmtree(t, ignore_errors=True)               # one store per domain: the Delta copy goes
-    elif delta_tables and (ice / domain).is_dir():
-        print(f"  the {domain} domain is in Delta now: its Iceberg tables are removed ({ice / domain})")
+    elif delta_tables and lakeconfig.locate_path(ice, domain).is_dir():
+        print(f"  the {domain} domain is in Delta now: its Iceberg tables are removed ({lakeconfig.locate(ice, domain, "")})")
         if not a.dry_run:
-            shutil.rmtree(ice / domain)
+            shutil.rmtree(lakeconfig.locate_path(ice, domain))
     said = stores.switch_domain(plan.folder, domain, store, lake, ice, plan.data, a.dry_run)
-    return f"  {domain.capitalize()} domain: {store} {(ice if store == 'iceberg' else lake) / domain}; {said}"
+    return f"  {domain.capitalize()} domain: {store} {lakeconfig.locate(ice if store == 'iceberg' else lake, domain, '')}; {said}"
 
 
 class StorePlan:

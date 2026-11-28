@@ -410,7 +410,7 @@ def history_entry(report: dict, dry_run: bool, by: str, schedule: str | None = N
 
 def relayout_main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="maintain.py relayout", description="lay tables out again by their pack's layout (lake maintain --relayout)")
-    ap.add_argument("--root", default=(__import__("os").environ.get("DRISHTI_DATA_DIR") or str(__import__("pathlib").Path(__file__).resolve().parents[2] / "data")) + "/delta")
+    ap.add_argument("--root", default=str(__import__("lakeconfig").lakes_parent()))
     ap.add_argument("--domain", required=True)
     ap.add_argument("--kind", default=None, help="one kind (default: every kind with a layout in the domain)")
     ap.add_argument("--dates", default=None, help="only these business dates: 2026-09-28,2026-09-30 or 2026-09-01..2026-09-30")
@@ -427,7 +427,8 @@ def relayout_main(argv: list[str]) -> int:
     import maintain_iceberg
     failures = 0
     for table, (_kind, lay) in sorted(tables.items()):
-        uri = str(Path(a.root) / a.domain / table)
+        import lakeconfig
+        uri = lakeconfig.locate(a.root, a.domain, table)
         if not (Path(uri) / "_delta_log").is_dir() and "://" not in uri:
             continue                                          # a table the lake does not have (yet)
         try:
