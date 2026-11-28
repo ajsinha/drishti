@@ -68,6 +68,19 @@ class DrishtiLibrariesTest {
         assertThat(s.libraries()).extracting(l -> l.toString()).anyMatch(t -> t.contains("core"));
     }
 
+    /** Core 1.1: the fragments take the panel keys a Drishti screen writes (key, code, span, when), so such a panel can be a use. */
+    @Test
+    void theCoreFragmentsTakeThePanelKeysAScreenNeeds() {
+        String use = "  - use: core/data-table@1\n    with:\n      rows: $.ORDERS\n      columns: [ { label: Order, bind: \"@.ID\" } ]\n"
+                + "      key: F2\n      code: ORD\n      span: 6\n      empty: No orders\n      when: \"$.SHOW\"\n"
+                + "  - use: core/record-card@1\n    with:\n      record: \"$\"\n      title: Facts\n      facts: [ { label: Staff, bind: \"@.STAFF\" } ]\n"
+                + "      code: FACTS\n";
+        Sutra s = parse(sutra("libraries: [core@1]\n", use));
+        assertThat(s.panels()).extracting(p -> p.id()).contains("table", "card");
+        assertThat(s.panels().stream().filter(p -> p.id().equals("table")).findFirst().orElseThrow().key()).isEqualTo("F2");
+        assertThat(s.panels().stream().filter(p -> p.id().equals("card")).findFirst().orElseThrow().code()).isEqualTo("FACTS");
+    }
+
     @Test
     void theLongFormNeedsNoDeclaration() {
         Sutra s = parse(sutra("", CARD.replace("core/record-card@1", "core@1/record-card@1")));
