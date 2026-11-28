@@ -107,3 +107,26 @@ compare the compiled ViewModels, writing them is a guess.
    parser must accept `category`, `tags`, `use-when`, `avoid-when`, `data`, `example`, `see-also`, `keywords`; the schema `doc` definition is on
    `genui/kit-lite`).
 3. `retail-banking` and `genomics` example packs loaded through `DRISHTI_PACKS_EXTRA_DIRS`: open one page of each.
+
+## Status check on i8/develop (2026-11-28, increment 1)
+
+Live tables and blotters: already on the one engine. `DrishtiLiveTables` (Rachana's live tables), `KindSnapshot`, `KindStream`, `KindBindings`,
+`FormResults` and `DrishtiAuthoriser` serve `/api/v1/rdp/tables`; the console's `live_routes.py` and `live_results.py` only proxy and shape
+pages; the one declaration is `modules/trading/blotters/trade.live.yaml` (a FORM's result is the same table without edits). No `LiveSet` class,
+route or template is left, so there is no bespoke path to retire. The BI engine's `LiveTables` (dataset live tables) is a separate feature
+(a dataset's in-memory table), not a result set; whether it should read through the same engine is a decision for the owner.
+
+Non-risk screens on library fragments: the resolver (C6, `DrishtiLibraries`) is on the branch but marked "wip: unbuilt", and the 213 residual
+panels cannot move one for one. A scan of the hand-written and generated non-risk Sutras (inline `table` and `kv` panels) by the keys they carry
+beyond id, kind, title, area, rows and columns:
+
+| Shape | Panels | What blocks the move |
+|---|---|---|
+| `kv`, nothing else | 29 | `core/record-card` forces a head (name) and draws a status panel; the headless record list is G1 |
+| `table`, nothing else | 3 | none (these three are `core/data-table` uses) |
+| `table` or `kv` with `key` (a function key) and/or `code` (a mnemonic) | about 70 | `core/data-table` and `core/record-card` take neither; they cannot be passed through `with:` |
+| with `source` (a panel reading another kind), `empty`, `waits`, `when`, `totalLabel` beside `limit`, `pivot`, `where`, `span` | about 30 | no such parameter in the core fragments |
+
+Needs the owner (or the Rachana lane): extend `core/data-table`, `core/record-card` (or add `core/record-list`) with `key`, `code`, `source`,
+`empty`, `when` and `span` so the moves are faithful, or accept that those screens keep the inline panel (the compiled panel is then exactly
+what the fragment would draw). Until C6 builds green and the fragments take those parameters, moving a panel changes what it shows.
