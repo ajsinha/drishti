@@ -99,7 +99,7 @@ public final class Roots {
 
     /**
      * The one check before a site file is written: a write under the release (the install folder) that is neither the site folder nor the
-     * data folder is refused with the way out, when the site folder is a separate one. Refused when the release is immutable, the message
+     * data folder is refused with the way out, when the site folder is a separate one. The release's own files are its configuration folder and the files straight under the install folder. Refused when the release is immutable, the message
      * names the setting; allowed everywhere else (the developer layout, where the site folder is the configuration folder).
      *
      * @param target the file or folder about to be written
@@ -111,12 +111,16 @@ public final class Roots {
         }
         Path t = target.toAbsolutePath().normalize();
         Path home;
+        Path config;
         try {
             home = home();
+            config = base(CONFIG, "DRISHTI_CONFIG_DIR", "config");
         } catch (IllegalStateException noHome) {
             return;                                  // no release folder is known: nothing to protect
         }
-        if (t.startsWith(home) && !t.startsWith(sitePath()) && !t.startsWith(base(DataDir.PROPERTY, DataDir.ENV, "data"))) {
+        // the release's own files: its configuration folder and the files straight under the install folder (not the data folder, which may sit anywhere)
+        boolean inRelease = t.startsWith(config) || (t.getParent() != null && t.getParent().equals(home));
+        if (inRelease && !t.startsWith(sitePath())) {
             throw new ReleaseFolderWriteException("refused: " + t + " is inside the release folder " + home + ", which is never written: site files and Admin changes go to the"
                     + " site folder " + sitePath() + " (" + SITE + ") and the data folder");
         }

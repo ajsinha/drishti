@@ -57,6 +57,7 @@ class ProductionProfileTest {
                 "drishti.access.dir", access.toString(),
                 "drishti.identity.database-url", "jdbc:postgresql://db.bank.internal:5432/drishti",
                 "drishti.production.tls", "proxy"));
+        safe.put("drishti.home", dir.resolve("release").toString());
         safe.put("drishti.site.dir", dir.resolve("etc-drishti").toString());
     }
 
@@ -189,7 +190,7 @@ class ProductionProfileTest {
         assertOne(refusals(m -> {
             m.put("drishti.home", dir.resolve("rel").toString());
             m.put("drishti.site.dir", dir.resolve("rel/config").toString());
-        }), "inside the release folder");
+        }), "release's configuration folder");
         assertOne(refusals(m -> m.remove("drishti.production.tls")), "TLS is not stated");
         assertEquals(List.of(), refusals(m -> {
             m.remove("drishti.production.tls");

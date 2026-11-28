@@ -110,10 +110,11 @@ public final class ProductionProfile {
         }
         String site = env.getProperty(com.ash.drishti.api.Roots.SITE, "").strip();
         String home = env.getProperty(com.ash.drishti.api.Roots.HOME, "").strip();
+        String config = env.getProperty(com.ash.drishti.api.Roots.CONFIG, home.isEmpty() ? "" : home + "/config").strip();
         if (site.isEmpty()) {
             out.add("drishti.site.dir is not set: Admin's changes and the site's files would be written into the release folder. Fix: name the site folder outside the release (DRISHTI_SITE_DIR, /etc/drishti)");
-        } else if (!home.isEmpty() && Path.of(site).toAbsolutePath().normalize().startsWith(Path.of(home).toAbsolutePath().normalize())) {
-            out.add("drishti.site.dir (" + site + ") is inside the release folder (" + home + "), which is never written. Fix: name a site folder outside it (/etc/drishti)");
+        } else if (!config.isEmpty() && Path.of(site).toAbsolutePath().normalize().startsWith(Path.of(config).toAbsolutePath().normalize())) {
+            out.add("drishti.site.dir (" + site + ") is the release's configuration folder (" + config + "), which is never written. Fix: name a site folder outside the release (/etc/drishti)");
         }
         String db = env.getProperty("drishti.identity.database-url", "");
         if (db.startsWith("jdbc:sqlite") && clustered(env)) {
