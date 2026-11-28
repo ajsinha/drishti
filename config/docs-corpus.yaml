@@ -242,6 +242,30 @@ files:
   - {path: 'docs/guides/examples/relationships.md', class: merge, lane: A}
   - {path: 'docs/guides/examples/risk-distribution.md', class: merge, lane: A}
   - {path: 'docs/guides/examples/tree-table.md', class: merge, lane: A}
+  - {path: 'docs/guides/loads/README.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-central-banks.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-clinvar.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-csv-counterparty.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-csv-limits-and-factors.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-csv-organisation.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-csv-sensitivities-and-pnl.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-ensembl-genes.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-funds.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-gdelt-events.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-genomics-files.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-gleif.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-market-data.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-national-statistics.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-news-and-markets.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-oecd.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-official-news.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-portfolio.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-positions.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-scenario-pv.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-trade.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-us-equities.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-world-development.md', class: keep, lane: A}
+  - {path: 'docs/guides/loads/load-world-economy.md', class: keep, lane: A}
   - {path: 'docs/knowledge/README.md', class: keep, lane: A}
   - {path: 'docs/knowledge/data.md', class: keep, lane: A}
   - {path: 'docs/knowledge/risk.md', class: keep, lane: A}
