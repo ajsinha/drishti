@@ -444,7 +444,7 @@ Each dataset: what it is for, whether it is required and where its sample lives,
 | Dataset (kind) | What it is for | Required? | Sample files (`data/testdata/…`) | Guide |
 |---|---|---|---|---|
 | [`fund`](#182-fund-the-funds-fact-sheet-and-holdings) | the FUND page, its holdings and look-through | **yes** | `funds/fund/fund.tar` | [8](#8-fund) |
-| [`fund-holder`](#183-fund-holder-who-holds-a-company) | the funds holding each issuer | for HELD and the company page | `funds/fund-holder/fund-holder.*.jsonl.gz` | [9](#9-fund-holder) |
+| [`fund-holder`](#183-fund-holder-who-holds-a-company) | the funds holding each issuer | for HELD and the company page | `funds/fund-holder/fund-holder.tar` | [9](#9-fund-holder) |
 | [`index-funds`](#184-index-funds-funds-tracking-an-index) | the funds tracking each index | for TRACK and the index page | `funds/index-funds/index-funds.*.jsonl.gz` | [10](#10-index-funds) |
 
 ### 18.2 `fund`: the fund's fact sheet and holdings
@@ -459,6 +459,7 @@ One document per fund: its identity, share classes, fees, returns and its holdin
 One row per held company: the funds that hold it and how much, read by HELD and the company page's Held by funds panel.
 
 - **Data contract:** [`fund-holder`](../contracts/packs/funds.md#held-funds-holding-a-company-fund-holder) (HELD), key `TICKER`; 16 fields, 14 required; the file [`fund-holder.contract.yaml`](../../modules/capital-markets/packs/funds/contracts/fund-holder.contract.yaml).
+- **Example:** [a real record of the test data](../contracts/packs/funds.md#example-funds-fund-holder) (files `data/testdata/funds/fund-holder/fund-holder.tar`).
 
 ### 18.4 `index-funds`: funds tracking an index
 

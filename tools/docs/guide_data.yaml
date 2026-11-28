@@ -351,7 +351,7 @@ guides:
           One document per fund: its identity, share classes, fees, returns and its holdings, the FUND page and the Look-through holdings tab.
       - kind: fund-holder
         title: who holds a company
-        sample: funds/fund-holder/fund-holder.*.jsonl.gz
+        sample: funds/fund-holder/fund-holder.tar
         required: for HELD and the company page
         for: the funds holding each issuer
         guide: "[9](#9-fund-holder)"
