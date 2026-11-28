@@ -153,7 +153,7 @@ def healthz(request: Request):
 @router.get("/healthz/backend")
 async def healthz_backend(request: Request):
     """Whether the console can reach the server this browser uses, as the console's watch last saw it (core/backend_watch.py):
-    {reachable, since, lastError, version, server, checkSeconds}. What drishti_server-watch.js polls while a page shows the banner. No secrets."""
+    {reachable, since, lastError, version, api, apiProblem, server, checkSeconds}. What drishti_server-watch.js polls while a page shows the banner. No secrets."""
     from core import servers
 
     sid = servers.current()
@@ -168,4 +168,9 @@ async def readyz(request: Request):
         await request.app.state.backend.business_date(request.app.state.auth.service())
     except Exception as e:  # noqa: BLE001 - any failure means not ready
         return JSONResponse({"status": "DOWN", "server": "unreachable", "detail": str(getattr(e, "detail", e))[:200]}, status_code=503)
+    from core import servers
+
+    seen = await request.app.state.backend_watch.state(servers.current()) if request.app.state.backend_watch.enabled else {}
+    if seen.get("apiProblem"):                           # a server this console cannot speak to (core/api_compat.py): a balancer sends no traffic here
+        return JSONResponse({"status": "DOWN", "server": "incompatible", "detail": seen["apiProblem"][:300]}, status_code=503)
     return {"status": "UP", "server": "reachable"}

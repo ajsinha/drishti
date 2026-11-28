@@ -52,4 +52,17 @@ class RootControllerTest {
     void withoutABuildTheVersionIsDev() {
         assertThat(new RootController(provider(null)).root()).containsEntry("version", "dev");
     }
+
+    @Test
+    void theApiVersionIsOneMajorDotMinorWithTheOldestServed() {
+        java.util.Properties p = new java.util.Properties();
+        p.setProperty("version", "9.9.9");
+        Map<String, Object> m = new RootController(provider(new BuildProperties(p))).apiVersion();
+        assertThat(m).containsEntry("api", ApiVersion.CURRENT).containsEntry("minSupported", ApiVersion.MIN_SUPPORTED).containsEntry("version", "9.9.9");
+        assertThat((String) m.get("api")).matches("\\d+\\.\\d+");
+        assertThat((String) m.get("minSupported")).matches("\\d+\\.\\d+");
+        assertThat(m.keySet()).containsExactly("api", "minSupported", "product", "version");     // no node, user, path or setting
+        String[] now = ApiVersion.CURRENT.split("\\."), min = ApiVersion.MIN_SUPPORTED.split("\\.");
+        assertThat(Integer.parseInt(min[0])).isLessThanOrEqualTo(Integer.parseInt(now[0]));       // the oldest served is never newer than the current
+    }
 }

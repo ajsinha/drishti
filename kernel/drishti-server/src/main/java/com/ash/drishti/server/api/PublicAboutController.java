@@ -72,6 +72,8 @@ public class PublicAboutController {
         m.put("version", build.map(BuildProperties::getVersion).orElse("dev"));
         m.put("notice", branding.notice());
         m.put("tagline", branding.tagline());
+        m.put("api", ApiVersion.CURRENT);                       // the published API's version (GET /api/v1/version has the range)
+        m.put("apiMinSupported", ApiVersion.MIN_SUPPORTED);
         if (!profile.isEmpty()) {
             m.put("profile", profile);                          // doctor --acceptance signs in as the development administrator only on "demo"
         }

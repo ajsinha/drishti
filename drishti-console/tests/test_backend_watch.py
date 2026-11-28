@@ -67,7 +67,7 @@ def test_healthz_backend_reports_the_watch(client, monkeypatch):
     monkeypatch.setitem(client.app.state._state, "backend_watch", w)
     body = client.get("/healthz/backend").json()
     assert body["reachable"] is True and body["version"] == "9.9.9" and body["checkSeconds"] == 5
-    assert set(body) == {"reachable", "since", "lastError", "version", "checked", "server", "checkSeconds"}
+    assert set(body) == {"reachable", "since", "lastError", "version", "checked", "api", "apiProblem", "server", "checkSeconds"}
     w._state.clear()
     w.probe = _watch([OSError("refused")]).probe
     assert client.get("/healthz/backend").json()["reachable"] is False
