@@ -39,6 +39,10 @@ import packsamples as PSAMP  # noqa: E402
 import sutradoc as SD  # noqa: E402  (the structured doc fields of a Sutra)
 
 
+#: the Help page of the genomics module's guide (drishti-console/config/help.yaml)
+GUIDE_PAGE = "module-genomics-1"
+
+
 def _load(name: str, path: Path):
     s = importlib.util.spec_from_file_location(name, path)
     m = importlib.util.module_from_spec(s)
@@ -198,7 +202,7 @@ def about(pack: str) -> str:
             if f.unit:
                 e["unit"] = f.unit
             gl[f.name] = e
-        kinds[k.kind] = {"title": k.title, "about": ABOUT[k.kind], "guide": pack, "glossary": gl}
+        kinds[k.kind] = {"title": k.title, "about": ABOUT[k.kind], "guide": GUIDE_PAGE, "glossary": gl}
     return (HEADER + f"\n# About this page: what the {pack} pack's kinds and fields mean (the README, the contracts and the About card read it).\n"
             "# Written by " + GENERATOR + " from tools/packgen/genomics_showcase/spec.py.\n"
             + dump({"about": 1, "vocabulary": {}, "kinds": kinds})

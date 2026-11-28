@@ -69,18 +69,27 @@ def kinds_text(pack: str, no_imf: bool) -> str:
 
 def render(pack: str, no_imf: bool = False) -> str:
     voc = yaml.safe_dump({"vocabulary": vocabulary(N.load_config(), PACKS[pack][1], no_imf)}, sort_keys=False, allow_unicode=True, width=WIDTH)
-    return f"{header()}\n\nabout: 1\n{voc}{kinds_text(pack, no_imf)}{_intro(pack)}"
+    return f"{header()}\n\nabout: 1\n{voc}{kinds_text(pack, no_imf)}{_intro(pack, no_imf)}"
 
 
-def _intro(pack: str) -> str:
-    """The pack's hand-written README intro (tools/packgen/<pack>/intro.yaml without its comment lines), the ``intro:`` of the about.yaml."""
+def _intro(pack: str, no_imf: bool = False) -> str:
+    """The pack's hand-written README intro (tools/packgen/<pack>/intro.yaml without its comment lines), the ``intro:`` of the about.yaml; with
+    no_imf, parsed, stripped of the IMF source and of every sentence that cites the IMF, and dumped again."""
     f = ROOT / "tools" / "packgen" / pack / "intro.yaml"
     if not f.is_file():
         return ""
     lines = f.read_text(encoding="utf-8").split("\n")
     while lines and (lines[0].startswith("#") or not lines[0].strip()):
         lines.pop(0)
-    return "\n".join(lines)
+    text = "\n".join(lines)
+    if not no_imf or "IMF" not in text:
+        return text
+    intro = yaml.safe_load(text)["intro"]
+    intro["sources"] = [x for x in intro["sources"] if "IMF" not in x["name"]]
+    sections = intro["sections"]
+    sections["What it is"] = sections["What it is"].replace("IMF forecasts, labour markets", "labour markets")
+    sections["Data sources and licences"] = "Every document names its source, dataset, retrieval date and licence."
+    return yaml.safe_dump({"intro": intro}, sort_keys=False, allow_unicode=True, width=WIDTH)
 
 
 def targets(out: Path | None = None) -> dict[str, Path]:

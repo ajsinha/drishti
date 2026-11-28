@@ -1801,8 +1801,8 @@ memory, partitions and promoted columns ([CLI_REFERENCE.md](CLI_REFERENCE.md)).
 
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d postgres                                       # or your own server
-python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti                                 # the samples, 10 days
-python tools/drishti.py data load --store postgres jdbc:postgresql://localhost:5432/drishti --trades 10000                  # and a book
+python tools/drishti.py data load --store postgres <postgres-jdbc-url>                                                   # the samples, 10 days (your Postgres server's JDBC url)
+python tools/drishti.py data load --store postgres <postgres-jdbc-url> --trades 10000                                    # and a book
 DRISHTI_CONNECTORS_DIR=config/connectors.examples/postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar lib/drishti-server-*-exec.jar
 ```
 
