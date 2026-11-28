@@ -18,7 +18,7 @@ name: windows
 # start server, status, stop server) with the server on a generated lake asked for a view, a search and a past business
 # date. Testcontainers tests skip themselves (no Docker on Windows runners).
 on:
-  push: { branches: [develop, main, 'release/**', 'i7k/**', 'i7l/**'] }
+  push: { branches: [develop, main, 'release/**', 'i7k/**', 'i7l/**', 'i8/**'] }
   pull_request:
   workflow_dispatch:
 jobs:
@@ -54,21 +54,24 @@ jobs:
       - name: Build (no tests)
         run: ./mvnw.cmd -B -q install -DskipTests
       - name: Tests of the lake host, the Delta and Iceberg connectors and the server
-        run: ./mvnw.cmd -B -fae verify -pl :drishti-lake-host,plugins/drishti-plugin-delta,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external,:drishti-server
+        run: ./mvnw.cmd -B -fae verify -pl :drishti-api,:drishti-lake-host,plugins/drishti-plugin-delta,plugins/drishti-plugin-iceberg,plugins/drishti-plugin-iceberg-external,:drishti-server
       # its own step (everything is installed above): a failure here never hides the server suite's result, nor the other way round
       - name: Tests of the identity stores (users, preferences, designs)
         if: ${{ !cancelled() }}
         run: ./mvnw.cmd -B verify -pl :drishti-identity
+      # the tools read where everything is from the kernel jar: it is built into lib/ first (python tools/drishti.py build jar)
+      - name: Build the server jar into lib/ (python tools/drishti.py build jar)
+        run: python tools/drishti.py build jar --offline
       - name: A small lake (the banking packs' samples, ten business days)
         run: |
           python -m pip install --quiet deltalake pyarrow pyyaml
           python tools/packgen/banking/make_data.py --lake data/delta/demo --rows data/build/lake-rows --no-load
+          if ($LASTEXITCODE -ne 0) { throw "make_data failed ($LASTEXITCODE)" }
           python tools/samplegen/load_rows.py --root data/delta/demo --rows data/build/lake-rows/banking-history.jsonl --restated data/build/lake-rows/banking-restated.jsonl
+          if ($LASTEXITCODE -ne 0) { throw "load_rows failed ($LASTEXITCODE)" }
           if (-not (Test-Path data/delta/demo/trading/trade_endur/_delta_log)) { throw 'no trade table was written' }
       # the Python commands, as an administrator runs them on Windows (docs/DEPLOYMENT_AND_QA_GUIDE.md section 7): the jar into lib/ by
       # build jar (never copied by hand), the machine prepared and checked, the server started, asked, shown in status and stopped
-      - name: Build the server jar into lib/ (python tools/drishti.py build jar)
-        run: python tools/drishti.py build jar --offline
       - name: Prepare and check this machine (setup, then setup --check)
         run: |
           python tools/drishti.py setup drishti

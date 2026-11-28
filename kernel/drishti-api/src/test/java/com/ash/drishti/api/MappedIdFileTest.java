@@ -59,6 +59,9 @@ class MappedIdFileTest {
         MappedIdFile b = write(f, 20);
         assertThat(a.closed()).isTrue();
         assertThat(b.size()).isEqualTo(20);
+        if (System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).startsWith("windows")) {
+            MappedIdFile.release(f, false);                            // Windows cannot overwrite a file while it is mapped: the mapping goes first
+        }
         Files.write(f, new byte[] {1, 2, 3});                          // damaged: not used, written again
         assertThat(MappedIdFile.open(f)).isNull();
         assertThat(b.closed()).isTrue();

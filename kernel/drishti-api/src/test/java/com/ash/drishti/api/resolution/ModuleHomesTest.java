@@ -81,10 +81,13 @@ class ModuleHomesTest {
         assertThat(h.fingerprint()).isEqualTo("f7339103d32cab19ed228794976e07e9be7eb28dc4f104c10dceaba7d2cf2f29");
     }
 
+    /** A colon is not allowed in a Windows file name, so the odd-characters folder carries a semicolon there instead. */
+    private static final boolean WINDOWS = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).startsWith("windows");
+
     @Test
     void theValueTravelsAsOneSettingWhateverItsFolders() {
         ModuleHomes h = ModuleHomes.of(List.of(home("banking", A), new ModuleHomes.Home("genomics", "0.1.0",
-                Path.of("/src/a folder, with: odd%chars/genomics"), null, ModuleHomes.Origin.DEVELOPMENT)));
+                Path.of(WINDOWS ? "/src/a folder, with; odd%chars/genomics" : "/src/a folder, with: odd%chars/genomics"), null, ModuleHomes.Origin.DEVELOPMENT)));
 
         assertThat(ModuleHomes.fromProperty(h.toProperty())).isEqualTo(h);
         assertThat(ModuleHomes.fromProperty("")).isEqualTo(ModuleHomes.none());
