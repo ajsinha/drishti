@@ -1569,6 +1569,8 @@ $ curl -s -X POST .../uninstalled/20261012T142658-connector-scratch-conn/restore
 
 ## 11. Security checklist
 
+The rules a production server must meet, and the checks that enforce them, are in [PRODUCTION_STANDARD.md](../admin/PRODUCTION_STANDARD.md): set `drishti.profile=production` and the server and the console refuse to start while any is broken. Under it the first administrator of section 4.4 also needs `DRISHTI_SEED_ADMIN=true` (the safe default is off) with your own `DRISHTI_SEED_USERNAME` and `DRISHTI_SEED_PASSWORD`.
+
 Work through this for every shared installation. Each item says how to check it.
 
 ### 11.1 The checklist

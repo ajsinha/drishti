@@ -79,6 +79,8 @@ ARGV = "DRISHTI_CONSOLE_ARGV"
 def factory():
     """One worker's app (server.workers > 1): the settings from the launcher's arguments, passed through the environment."""
     settings = load_settings(HERE / "config", json.loads(os.environ.get(ARGV, "[]")))
+    from core import production
+    production.enforce(settings)
     app = create_app(settings)
     app.state.tmp_owner = True                    # each worker removes its own temp folder when it stops (core/tmpdir.py)
     return app
@@ -203,6 +205,8 @@ def main() -> None:
     except settings_ini.SettingsError as e:            # e.g. the launcher's ~/drishti-envs/dev.ini before setup: one line, no traceback
         raise SystemExit(settings_ini.fail(e)) from None
     settings = load_settings(HERE / "config", sys.argv[1:])
+    from core import production
+    production.enforce(settings)                  # the production profile refuses an unsafe start, one line per setting (core/production.py)
     from core.launcher_stop import MAIN_PID_ENV
     os.environ[MAIN_PID_ENV] = str(os.getpid())   # the launcher's stop signals this process, whichever worker takes the request (core/launcher_stop.py)
     temp_under_data(settings)

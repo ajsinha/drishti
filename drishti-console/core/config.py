@@ -175,7 +175,14 @@ def _shared(named: str) -> dict[str, Any]:
         elif not old:
             os.environ[var] = value
     url = settings_ini.server_url(entries)
-    return {"backend": {"url": url}} if url and not (os.environ.get("DRISHTI_BACKEND_URL") or "").strip() else {}
+    out: dict[str, Any] = {"backend": {"url": url}} if url and not (os.environ.get("DRISHTI_BACKEND_URL") or "").strip() else {}
+    profile = str(entries.get("drishti.profile") or "").strip()      # the one profile name of the server and the console (production.py)
+    if profile and not (os.environ.get("DRISHTI_PROFILE") or "").strip():
+        out["profile"] = profile
+    tls = str(entries.get("drishti.production.tls") or "").strip()
+    if tls and not (os.environ.get("DRISHTI_PRODUCTION_TLS") or "").strip():
+        out.setdefault("production", {})["tls"] = tls
+    return out
 
 
 def load_settings(config_dir: Path, argv: list[str] | None = None) -> Settings:

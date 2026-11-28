@@ -136,6 +136,11 @@ management:
           include: readinessState,nodeReadiness
 
 drishti:
+  # The profile (docs/admin/PRODUCTION_STANDARD.md): production (safe defaults; the start is refused while anything unsafe is set), demo (the
+  # development administrator and three demo users, never on a shared server), or blank: development, today's open defaults.
+  profile: ${DRISHTI_PROFILE:}
+  production:
+    tls: ${DRISHTI_PRODUCTION_TLS:}   # production only: proxy (a proxy in front ends TLS) or blank with server.ssl enabled; plain HTTP stated nowhere is refused
   # The distribution (docs/architecture/KERNEL_AND_MODULES.md): risk, finance, genomics or all, or the path of a site's own file; it names
   # config/distributions/drishti.<name>.yaml (brand, theme, modules, lenses, Home, Help) and is the one way to make the product. Blank:
   # Drishti All, exactly as before. Also --distribution=<name> on the command line (drishti.py start server --distribution <name>).
@@ -298,7 +303,7 @@ drishti:
     routes: {}  # kind -> plugin or connector that serves it (packs add theirs: trade: trade-endur)
     plugins:
       demo:
-        enabled: ${DRISHTI_DEMO_ENABLED:true}  # run the demo source (the packs' sample data)
+        enabled: ${DRISHTI_DEMO_ENABLED:${drishti.defaults.open:true}}  # run the demo source (the packs' sample data)
       file:
         enabled: true  # run the bundled file source (JSON Lines under its root)
         settings:
@@ -375,7 +380,7 @@ drishti:
     cache-mb: 256                           # heap for cached answers (keyed by the data's version), one budget for every caller
   security:
     # Off for local development. Production: enabled: true and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console).
-    enabled: ${DRISHTI_SECURITY_ENABLED:false}
+    enabled: ${DRISHTI_SECURITY_ENABLED:${drishti.defaults.secure:false}}
     secret: ${DRISHTI_TOKEN_SECRET:}  # the token signing secret (at least 32 bytes), shared with the console; from the environment only
     registered-users-only: true      # a signed token is refused when its user was deleted or disabled (false: trust the token alone)
     clock-skew: 30s  # clock difference tolerated when checking a token's expiry
@@ -1001,6 +1006,7 @@ drishti:
       operations: [operations]   # the operations Home
       quant: [quant]   # the quant's Home
       analyst: [quant]   # an analyst opens the quant's Home
+      risk-trading: [risk-manager, trader]   # the demo user demo-risk (demo profile): the risk manager's Home first, the trader's second
       economist: [economist]   # the economist's Home
   trading:                           # the Trading landings' figures (the trading module's server part, /api/v1/trading/landing; LENSES.md › The design)
     people: {}                       # user: {trader: TRDR-…} or {desk: DESK-…, role: desk-head}: "my" scope, over the lens's trading.people (a name in both: this)
@@ -1052,12 +1058,15 @@ drishti:
     force-password-change-on-reset: ${DRISHTI_FORCE_PW_CHANGE_ON_RESET:false}
     # On first start with no users, create a development admin. Change its password at once;
     # the console warns until you do. Turn off (DRISHTI_SEED_ADMIN=false) for production.
-    seed-admin: ${DRISHTI_SEED_ADMIN:true}
+    seed-admin: ${DRISHTI_SEED_ADMIN:${drishti.defaults.open:true}}
     # With DRISHTI_SEED_USERNAME / DRISHTI_SEED_PASSWORD set (deploy/docker/compose.yaml requires both) it is the first
     # administrator you chose, not the development admin.
     seed-username: ${DRISHTI_SEED_USERNAME:drishti-dev-admin}
     # the first administrator's password; only this built-in default shows the default password warning
     seed-password: ${DRISHTI_SEED_PASSWORD:drishti-dev-admin123}
+    # Under the demo profile three demo users (demo-risk, demo-genomics, demo-market) are created beside the development admin, with the same
+    # empty-store rule and the same default-password warning. true: also outside the demo profile; false: not even there. Never in production.
+    seed-demo-users: ${DRISHTI_SEED_DEMO_USERS:}
     seed-roles: [admin]  # the first administrator's roles
     seed-display-name: Drishti dev admin  # the name shown for the first administrator
   rachana:
@@ -1247,7 +1256,7 @@ drishti:
 springdoc:
   api-docs:
     path: /api/docs  # the OpenAPI description
-    enabled: ${DRISHTI_API_DOCS:true}      # set explicitly, so a start does not warn that they are on by default
+    enabled: ${DRISHTI_API_DOCS:${drishti.defaults.open:true}}      # set explicitly, so a start does not warn that they are on by default
   swagger-ui:
     path: /api/docs/ui  # the OpenAPI UI
-    enabled: ${DRISHTI_API_DOCS:true}  # serve the OpenAPI UI (false: the description only)
+    enabled: ${DRISHTI_API_DOCS:${drishti.defaults.open:true}}  # serve the OpenAPI UI (false: the description only)

@@ -217,7 +217,8 @@ public class IdentityController {
         } catch (RuntimeException e) {
             // the badge is a hint: a connector folder that cannot be read never closes the Admin pages
         }
-        return Map.of("defaultAdminPasswordInUse", users.defaultAdminPasswordInUse(), "users", users.list("").size(),
+        java.util.List<String> published = users.defaultPasswordUsers();
+        return Map.of("defaultAdminPasswordInUse", !published.isEmpty(), "defaultPasswordUsers", published, "users", users.list("").size(),
                 "forceChangeOnCreate", users.forceChangeOnCreate(), "installedPacks", packAccess.installed(), "connectorSupersededFiles", superseded);
     }
 

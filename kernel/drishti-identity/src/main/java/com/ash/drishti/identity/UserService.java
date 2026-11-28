@@ -86,6 +86,20 @@ public final class UserService {
         this.dummyHash = hasher.hash("timing-equaliser");
     }
 
+    /** Published demo accounts (user name to password) whose password still signs in: they raise the same warning as the development admin. */
+    private final java.util.Map<String, String> demoDefaults = new java.util.concurrent.ConcurrentHashMap<>();
+    private volatile boolean seededThisStart;
+
+    /** Whether this start created the first administrator (the user store was empty): the demo accounts follow the same rule. */
+    public boolean seededThisStart() {
+        return seededThisStart;
+    }
+
+    /** Declares an account whose password is published (demo profile only): {@link #defaultAdminPasswordInUse} stays true while it signs in. */
+    public void registerDemoDefault(String username, String password) {
+        demoDefaults.put(norm(username), password);
+    }
+
     /** Creates the development admin when there are no users at all. Returns true when it did. */
     public boolean seedIfEmpty() {
         if (!props.seedAdmin() || !store.all().isEmpty()) {
@@ -99,6 +113,7 @@ public final class UserService {
                 true, false, hash, 0, null, now, now, null, now, null))) {
             return false;
         }
+        seededThisStart = true;
         audit.record("system", "user-seeded", props.seedUsername(), "development admin created because the user store was empty");
         if (props.seedPasswordIsDefault()) {
             LOG.warn("Created development admin '{}' with the default password. Change it before any shared use.", props.seedUsername());
@@ -110,8 +125,22 @@ public final class UserService {
 
     /** Whether the seeded admin can still sign in with the default password (the console shows a warning); a disabled account cannot, so it clears the warning. */
     public boolean defaultAdminPasswordInUse() {
-        return props.seedPasswordIsDefault()
-                && store.find(props.seedUsername()).map(u -> u.enabled() && hasher.verify(props.seedPassword(), u.passwordHash())).orElse(false);
+        return !defaultPasswordUsers().isEmpty();
+    }
+
+    /** The accounts that can still sign in with a published password (the development admin, the demo accounts), by name. */
+    public List<String> defaultPasswordUsers() {
+        List<String> out = new java.util.ArrayList<>();
+        if (props.seedPasswordIsDefault()
+                && store.find(props.seedUsername()).map(u -> u.enabled() && hasher.verify(props.seedPassword(), u.passwordHash())).orElse(false)) {
+            out.add(props.seedUsername());
+        }
+        new java.util.TreeMap<>(demoDefaults).forEach((name, password) -> {
+            if (store.find(name).map(u -> u.enabled() && hasher.verify(password, u.passwordHash())).orElse(false)) {
+                out.add(name);
+            }
+        });
+        return out;
     }
 
     // ---- sign-in and self service --------------------------------------------------------------
