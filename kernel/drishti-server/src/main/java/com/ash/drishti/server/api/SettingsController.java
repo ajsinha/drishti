@@ -276,12 +276,12 @@ public class SettingsController {
 
     /**
      * The person's own arrangement of their role Home (the console's {@code /home}): {@code {pins: [card], hidden: [card], order: [card],
-     * snooze: {key: ISO instant}, lastVisit: ISO instant}}, every part optional and the whole replaced by a patch. Card ids are lower-case
+     * snooze: {key: ISO instant}, lastVisit: ISO instant, prevVisit: ISO instant, viewAs: Home name}}, every part optional and the whole replaced by a patch. Card ids are lower-case
      * words; a card the person's modules do not offer is simply never drawn, so nothing here can widen what they may see.
      */
     private ObjectNode homeCards(JsonNode v) {
         if (!v.isObject()) {
-            throw bad("homeCards is {pins, hidden, order, snooze, lastVisit}");
+            throw bad("homeCards is {pins, hidden, order, snooze, lastVisit, prevVisit, viewAs}");
         }
         ObjectNode out = json.createObjectNode();
         v.fields().forEachRemaining(e -> {
@@ -318,14 +318,20 @@ public class SettingsController {
                         }
                     });
                 }
-                case "lastVisit" -> {
+                case "lastVisit", "prevVisit" -> {          // the visit digest reads against the visit before this one (prevVisit)
                     try {
-                        out.put("lastVisit", java.time.Instant.parse(x.asText()).toString());
+                        out.put(e.getKey(), java.time.Instant.parse(x.asText()).toString());
                     } catch (DateTimeException ex) {
-                        throw bad("homeCards.lastVisit is a time (ISO 8601, UTC)");
+                        throw bad("homeCards." + e.getKey() + " is a time (ISO 8601, UTC)");
                     }
                 }
-                default -> throw bad("homeCards has pins, hidden, order, snooze and lastVisit, not '" + e.getKey() + "'");
+                case "viewAs" -> {                          // the Home the person views as (the console checks it is one they have; the server keeps only its shape)
+                    if (!x.isTextual() || !x.asText().matches("[a-z][a-z0-9-]{1,63}")) {
+                        throw bad("homeCards.viewAs is the name of one of your Homes");
+                    }
+                    out.put("viewAs", x.asText());
+                }
+                default -> throw bad("homeCards has pins, hidden, order, snooze, lastVisit, prevVisit and viewAs, not '" + e.getKey() + "'");
             }
         });
         return out;

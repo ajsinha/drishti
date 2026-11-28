@@ -224,4 +224,71 @@ class RoleHomesTest {
         store.putSnapshot(day.plusDays(40), Instant.parse("2026-12-29T22:00:00Z"), List.of());
         assertFalse(store.hasSnapshot(day), "days beyond keep-days are removed");
     }
+
+    /** A fake engine whose desk VaR moved: DESK-A now 150 (was 100), DESK-B unchanged. */
+    static final class MovingVar implements MeasureSource {
+        public String engine() {
+            return "var";
+        }
+
+        public boolean on() {
+            return true;
+        }
+
+        public OptionalDouble kpi(Principal p, String m, Map<String, Object> a, LocalDate d) {
+            return OptionalDouble.empty();
+        }
+
+        public List<HomeData.MeasureValue> values(Principal p, String m, String kind, LocalDate d) {
+            return List.of(new HomeData.MeasureValue("desk", "DESK-A", "VAR", 150), new HomeData.MeasureValue("desk", "DESK-B", "VAR", 80));
+        }
+
+        public List<HomeData.LimitRow> limits(Principal p, String m, String kind, LocalDate d) {
+            return List.of();
+        }
+    }
+
+    /** A module's own table, served to its own Home only. */
+    record OwnTable(String name, List<String> homes) implements com.ash.drishti.kernel.api.home.HomeTable {
+        public List<Map<String, Object>> rows(Context c) {
+            return List.of(Map.of("SINCE", String.valueOf(c.since())));
+        }
+    }
+
+    @Test
+    void theDigestReadsFromTheGivenTimeAndAModulesTableIsItsHomesOnly() throws IOException {
+        Path dir = Files.createDirectories(data.resolve("homes/x"));
+        Files.writeString(dir.resolve("one.sutra.yaml"), "rachana: 1.2\nsutra: home-one\n");
+        Files.writeString(dir.resolve("one.home.yaml"), "home: one\ntitle: One\nsutra: one.sutra.yaml\nmeasures: one.measures.yaml\n");
+        Files.writeString(dir.resolve("one.measures.yaml"), "home: one\nfollow:\n  - { measure: VAR, engine: var, subjects: desk, min-abs: 10, min-rel: 0 }\nevents: [ load ]\n");
+        Files.writeString(dir.resolve("two.sutra.yaml"), "rachana: 1.2\nsutra: home-two\n");
+        Files.writeString(dir.resolve("two.home.yaml"), "home: two\ntitle: Two\nsutra: two.sutra.yaml\n");
+        HomeCatalogue c = new HomeCatalogue(new HomeProperties(true, data.resolve("homes").toString(), data.toString(), Map.of("r", List.of("one", "two")), null, null));
+        HomeStore store = new HomeStore(data, 30);
+        store.putSnapshot(LocalDate.parse("2026-11-19"), Instant.parse("2026-11-19T22:00:00Z"),
+                List.of(new HomeData.MeasureValue("desk", "DESK-A", "VAR", 100), new HomeData.MeasureValue("desk", "DESK-B", "VAR", 80)));
+        store.addEvent(LocalDate.parse("2026-11-19"), new HomeData.Event("feed", "p/old", "load", Instant.parse("2026-11-19T20:00:00Z"), "p/old loaded"));
+        store.addEvent(LocalDate.parse("2026-11-19"), new HomeData.Event("feed", "p/new", "load", Instant.parse("2026-11-19T23:00:00Z"), "p/new loaded"));
+        store.addEvent(LocalDate.parse("2026-11-20"), new HomeData.Event("feed", "p/today", "load", Instant.parse("2026-11-20T09:00:00Z"), "p/today loaded"));
+        store.addEvent(LocalDate.parse("2026-11-20"), new HomeData.Event("desk", "DESK-Z", "limit-state", Instant.parse("2026-11-20T10:00:00Z"), "not a kind of this Home"));
+        BusinessDates dates = new BusinessDates(new BusinessDateProperties(null, "UTC", null, "2026-11-20"), Clock.fixed(Instant.parse("2026-11-20T18:00:00Z"), ZoneOffset.UTC));
+        HomeTables t = new HomeTables(new HomeProperties(true, null, data.toString(), null, null, null), store,
+                new HomeClock(dates, Clock.fixed(Instant.parse("2026-11-20T18:00:00Z"), ZoneOffset.UTC)), List.of(new MovingVar()),
+                List.of(new OwnTable("module_table", List.of("one"))), ChangeEngineHost.NOT_HOSTED, List::of);
+        Principal p = new Principal("u", List.of("r"));
+        HomeDefinition one = c.find("one").orElseThrow(), two = c.find("two").orElseThrow();
+
+        List<String> texts = t.rows("home_digest", p, one, Instant.parse("2026-11-20T00:00:00Z")).orElseThrow().stream().map(r -> String.valueOf(r.get("TEXT"))).toList();
+        assertTrue(texts.contains("p/today loaded") && !texts.contains("p/new loaded") && !texts.contains("p/old loaded"), "only what happened since the visit: " + texts);
+        assertTrue(texts.stream().anyMatch(x -> x.equals("DESK-A VAR 100 to 150 (+50)")) && texts.stream().noneMatch(x -> x.contains("DESK-B") || x.contains("not a kind")),
+                "a followed measure that moved, not one that did not, and no event of another kind: " + texts);
+        List<String> since = t.rows("home_digest", p, one, Instant.parse("2026-11-19T21:00:00Z")).orElseThrow().stream().map(r -> String.valueOf(r.get("TEXT"))).toList();
+        assertTrue(since.contains("p/new loaded") && since.contains("p/today loaded") && !since.contains("p/old loaded"));
+        assertEquals(3, t.rows("home_digest", p, one).orElseThrow().stream().filter(r -> String.valueOf(r.get("TEXT")).endsWith("loaded")).count(),
+                "with no time the Home's own cut-off (yesterday 17:00) is the start");
+
+        assertTrue(t.rows("module_table", p, one, null).isPresent());
+        assertTrue(t.rows("module_table", p, two, null).isEmpty(), "a module's table is served to its own Homes only");
+        assertTrue(t.names().contains("module_table") && t.names().contains("home_digest"));
+    }
 }

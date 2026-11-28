@@ -105,7 +105,22 @@ roles and, like every table, your row rules and masks.
 - **Your cards,** best first for your role. A risk manager sees firm VaR, expected shortfall, the backtest light, limit utilisation by desk and
   the biggest movers; a credit officer starts with exposure against limits; a trader with their desk's VaR. Every role also gets **Data loads**,
   **Pinned** (the entities you pinned) and **Recently used**. If you hold several roles you see the cards of all of them, ranked together.
-- **Since yesterday 17:00:** what moved since the Home's reference cut-off, from the same change detection the Home Sutras use.
+- **Since your last visit:** what the server recorded since you were last here: data loads, limit moves, measures that moved (new variants in
+  a cohort, a desk's VaR), and the alerts that fired. The panel's title says from when (**Since your last visit, 2026-11-26 18:00 UTC**), and
+  the strip carries the same time. A refresh or a click on the page does not move that time, only coming back after more than half an hour
+  does. The first time you come, there is no earlier visit and the panel reads since the Home's reference cut-off (**Since yesterday 17:00**).
+- **A genomics Home** (for the genomicist roles): cohort samples, new variants since the cut-off, the strongest associations with a small
+  association map (the tallest peak of each stretch of the genome, coloured by chromosome), ClinVar updates for the genes your cohorts carry,
+  the genomics data loads (the ClinVar and Ensembl feeds and the files of your own that were read) and, under **Needs you**, any VCF file that failed validation.
+
+**View as.** If you hold more than one role, the top of your Home has **View as**: **All** (the cards of every role, ranked together, as
+before) and one button for each role you have (Risk manager, Credit officer, Genomicist ...). A button shows that role's Home alone, in
+place: its cards, its order and its layout, without leaving the page, and the choice is remembered for you on the server (your next visit
+opens the same way, on any browser). The buttons are the roles you really have, so nothing is offered that you could not see anyway;
+`/home/role/<name>` still opens a role's own Home page. With a single role there is nothing to switch and the buttons are not shown. They
+work from the keyboard (**Tab** to the row, **Enter** or **Space** to press one) and wrap onto a second line on a phone.
+
+**The logo** at the top left always brings you back to Your Home.
 
 **Two layouts.** Most roles get the calm layout: two cards across, room to read. Risk-manager roles get the cockpit: the same cards, denser,
 the figures in one row first. On a phone the cards stack and Needs you comes first.
@@ -120,7 +135,7 @@ the figures in one row first. On a phone the cards stack and Needs you comes fir
 | **Up**, **Down** | moves the card in your order |
 | **Hide** | takes the card off your Home; **Show …** in the **Your Home** card at the bottom brings it back, **Reset my Home** puts your role's order back |
 
-What you pin, hide, move or snooze is **your own setting** on the server (`homeCards`), so it follows you to every browser and is never seen
+What you pin, hide, move or snooze, the role you view as and when you last visited are **your own setting** on the server (`homeCards`), so it follows you to every browser and is never seen
 by anyone else. Light and dark follow your theme.
 
 ## Home: the fact of the day

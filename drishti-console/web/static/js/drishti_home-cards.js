@@ -40,7 +40,7 @@
 
   /* "View as": All, and one button per Home the person has (a Drishti Elements button group, one pressed); a choice is the person's own setting on the
      server, and the Home is drawn again in place. Hidden for a person with one Home. */
-  var switcher = root.querySelector('[data-home-viewas]'), group = null;
+  var ALL = '*', switcher = root.querySelector('[data-home-viewas]'), group = null;      /* the All button's value (a button group keeps a value that is not empty) */
   function viewAs(next) {
     var v = next.viewAs || { options: [] };
     switcher.hidden = v.options.length < 2;
@@ -50,11 +50,11 @@
       if (group && group.destroy) { group.destroy(); }
       box.textContent = '';
       group = new D.elements.inputs.ButtonGroup(box, {
-        label: 'View as', mode: 'single', value: v.value || '',
-        buttons: v.options.map(function (o) { return { label: o.label, data: { value: o.value }, attrs: { title: o.value ? 'Show the Home of ' + o.label : 'Show every Home you have' } }; })
+        label: 'View as', mode: 'single', value: v.value || ALL,
+        buttons: v.options.map(function (o) { return { label: o.label, data: { value: o.value || ALL }, attrs: { title: o.value ? 'Show the Home of ' + o.label : 'Show every Home you have' } }; })
       });
       group.on('change', function (d) {
-        send('viewas', (d && d.value) || '').then(function (n) { if (n) { data = n; paint(n.view); } });
+        send('viewas', d && d.value !== ALL ? d.value : '').then(function (n) { if (n) { data = n; paint(n.view); } });
       });
     });
   }

@@ -66,7 +66,9 @@ class SettingsTest {
         String ana = "ana-" + System.nanoTime();
         String bea = "bea-" + System.nanoTime();
         patchAs(ana, "{\"homeCards\":{\"pins\":[\"var\",\"var\",\"limits\"],\"hidden\":[\"news\"],\"order\":[\"es\",\"var\"],"
-                + "\"snooze\":{\"load:EQ\":\"2026-11-28T09:00:00Z\"},\"lastVisit\":\"2026-11-27T20:00:00Z\"}}").andExpect(status().isOk())
+                + "\"snooze\":{\"load:EQ\":\"2026-11-28T09:00:00Z\"},\"lastVisit\":\"2026-11-27T20:00:00Z\","
+                + "\"prevVisit\":\"2026-11-26T18:00:00Z\",\"viewAs\":\"genomicist\"}}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.homeCards.prevVisit").value("2026-11-26T18:00:00Z")).andExpect(jsonPath("$.homeCards.viewAs").value("genomicist"))
                 .andExpect(jsonPath("$.homeCards.pins", hasSize(2))).andExpect(jsonPath("$.homeCards.hidden[0]").value("news"))
                 .andExpect(jsonPath("$.homeCards.snooze['load:EQ']").value("2026-11-28T09:00:00Z"));
         mvc.perform(get("/api/v1/me/settings").header("Authorization", "Bearer " + tokens.mint(bea, List.of("viewer"), 60)))
@@ -74,6 +76,8 @@ class SettingsTest {
         patchAs(ana, "{\"homeCards\":{\"pins\":[\"Not A Card\"]}}").andExpect(status().isBadRequest());
         patchAs(ana, "{\"homeCards\":{\"snooze\":{\"x\":\"tomorrow\"}}}").andExpect(status().isBadRequest());
         patchAs(ana, "{\"homeCards\":{\"colour\":[]}}").andExpect(status().isBadRequest());
+        patchAs(ana, "{\"homeCards\":{\"viewAs\":\"Not A Home\"}}").andExpect(status().isBadRequest());
+        patchAs(ana, "{\"homeCards\":{\"prevVisit\":\"yesterday\"}}").andExpect(status().isBadRequest());
         patchAs(ana, "{\"homeCards\":null}").andExpect(jsonPath("$.homeCards").isEmpty());
     }
 
