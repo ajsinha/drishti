@@ -90,9 +90,9 @@ The demo profile (`drishti.profile=demo`, which `start all --demo` uses) also cr
 
 | User | Password | Role |
 |---|---|---|
-| `demo-risk` | `demo-risk-pass2026` | `risk-trading` |
-| `demo-genomics` | `demo-genomics-pass2026` | `genomics-reader` |
-| `demo-market` | `demo-market-pass2026` | `market-data-reader` |
+| `drishti-dev-risk` | `drishti-dev-risk123` | `risk-trading` |
+| `drishti-dev-genomics` | `drishti-dev-genomics123` | `genomics-reader` |
+| `drishti-dev-market` | `drishti-dev-market123` | `market-data-reader` |
 
 Open the console (for example `http://localhost:17480`), click **Sign in** and use those details. Until you change the password, every
 admin page shows a red warning naming every account that still has a published password (the development admin, the demo users). Under
@@ -160,12 +160,12 @@ that holds it.
 
 | User | Sees | Role | Packs |
 |---|---|---|---|
-| `demo-risk` | trades, market data, VaR and ES, exposure, limits | `risk-trading` | `core`, `trading`, `market-data`, `market-risk`, `counterparty-risk` |
-| `demo-genomics` | genomics only | `genomics-reader` | `genomics`, `genomics-showcase`, `protein-engineering` |
-| `demo-market` | market data only | `market-data-reader` | `market-data` |
+| `drishti-dev-risk` | trades, market data, VaR and ES, exposure, limits | `risk-trading` | `core`, `trading`, `market-data`, `market-risk`, `counterparty-risk` |
+| `drishti-dev-genomics` | genomics only | `genomics-reader` | `genomics`, `genomics-showcase`, `protein-engineering` |
+| `drishti-dev-market` | market data only | `market-data-reader` | `market-data` |
 
 **By hand.** Sign in as an administrator. **Admin → Roles → New role**, once per role: fill in the name and description, click the pack
-buttons of the table under **Add every kind of a pack** (this fills *Kinds it opens*), leave the powers unticked (`demo-risk`'s role may
+buttons of the table under **Add every kind of a pack** (this fills *Kinds it opens*), leave the powers unticked (`drishti-dev-risk`'s role may
 have `bi` for pivots and reports) and click **Save**; you should see *Created <name>*. Never tick *Opens every kind*. Then **Admin → Users
 → New user**, once per user: the user name, the display name, tick the role, tick exactly the packs of the table (an empty list means *no*
 packs; a user never given a list sees the default packs), an initial password of at least 10 characters with letters and digits, and
@@ -176,12 +176,12 @@ until a password is changed, Admin shows the red default-password warning, so ne
 
 | As | Try | Expect |
 |---|---|---|
-| `demo-risk` | `VAR BANK <GO>`, `TRD T-1 <GO>`, a curve | all open; the pack switcher lists its five packs; the risk manager's Home first |
-| `demo-risk` | `GENE HLXK7 <GO>` | refused: *may not open gene entities* |
-| `demo-genomics` | `/m/genomics/showcase`, `GENE HLXK7 <GO>` | open |
-| `demo-genomics` | `VAR BANK <GO>`, `TRD T-1 <GO>` | refused; risk menus absent |
-| `demo-market` | a curve or an FX rate | opens |
-| `demo-market` | `TRD T-1 <GO>`, `VAR BANK <GO>` | refused; links to trades show greyed out with the reason |
+| `drishti-dev-risk` | `VAR BANK <GO>`, `TRD T-1 <GO>`, a curve | all open; the pack switcher lists its five packs; the risk manager's Home first |
+| `drishti-dev-risk` | `GENE HLXK7 <GO>` | refused: *may not open gene entities* |
+| `drishti-dev-genomics` | `/m/genomics/showcase`, `GENE HLXK7 <GO>` | open |
+| `drishti-dev-genomics` | `VAR BANK <GO>`, `TRD T-1 <GO>` | refused; risk menus absent |
+| `drishti-dev-market` | a curve or an FX rate | opens |
+| `drishti-dev-market` | `TRD T-1 <GO>`, `VAR BANK <GO>` | refused; links to trades show greyed out with the reason |
 
 A refusal shows that something exists without showing its content, by design. Back as the administrator, **Admin → Audit log** lists
 `role-created` and `user-created` for each, then each user's `login`; filter by `demo-` to see only these. To remove access later,
@@ -641,7 +641,7 @@ restore the database from a backup.
 | Forced password change | off; an admin can tick it per user. Until it is done the console answers only the account page, the change and sign-out (other pages lead back to *My account*; console API calls `403 DRS-6010`) | `force-password-change-on-create`, `force-password-change-on-reset` |
 | Sessions follow the user | each console sign-in is a session the server keeps; the console checks it, the user's roles and enabled flag per request (reusing an answer for the console's `auth.recheck_seconds`, 10). Disabling, deleting or resetting the password of a user signs them out everywhere (enabling them again does not bring a session back); a role change applies within those seconds, at once on every worker process of the console you used. Sign-out ends the session on the server | console `auth.recheck_seconds` |
 | Development admin | created when the database has no users; never under the production profile, which refuses the built-in name and password | `seed-admin` (off by default in production), `seed-username`, `seed-password`, `seed-roles` |
-| Demo users | `demo-risk`, `demo-genomics`, `demo-market`, created beside the development admin under the demo profile only | `seed-demo-users` |
+| Demo users | `drishti-dev-risk`, `drishti-dev-genomics`, `drishti-dev-market`, created beside the development admin under the demo profile only | `seed-demo-users` |
 | Last admin | there is always one enabled admin: it cannot be disabled, demoted or deleted | — |
 | Self-protection | nobody can disable or delete their own account | — |
 | Database | SQLite file | `database-url` (`DRISHTI_IDENTITY_DB_URL`), `database-user`, `database-password`, `database-pool-size` (unset: `drishti.db.pool.size`, 20, on PostgreSQL; 8 on SQLite) |

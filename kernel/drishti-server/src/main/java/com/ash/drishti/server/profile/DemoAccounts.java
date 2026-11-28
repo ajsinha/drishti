@@ -28,11 +28,11 @@ public final class DemoAccounts {
     }
 
     public static final List<Account> ALL = List.of(
-            new Account("demo-risk", "Demo Risk", "demo-risk-pass2026", "risk-trading", "Trades, market data and risk",
+            new Account("drishti-dev-risk", "Demo Risk", "drishti-dev-risk123", "risk-trading", "Trades, market data and risk",
                     List.of("core", "trading", "market-data", "market-risk", "counterparty-risk"), List.of("bi")),
-            new Account("demo-genomics", "Demo Genomics", "demo-genomics-pass2026", "genomics-reader", "Genomics only",
+            new Account("drishti-dev-genomics", "Demo Genomics", "drishti-dev-genomics123", "genomics-reader", "Genomics only",
                     List.of("genomics", "genomics-showcase", "protein-engineering"), List.of()),
-            new Account("demo-market", "Demo Market", "demo-market-pass2026", "market-data-reader", "Market data only",
+            new Account("drishti-dev-market", "Demo Market", "drishti-dev-market123", "market-data-reader", "Market data only",
                     List.of("market-data"), List.of()));
 
     private DemoAccounts() {

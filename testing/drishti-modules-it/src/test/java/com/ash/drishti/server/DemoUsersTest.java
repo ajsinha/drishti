@@ -53,14 +53,14 @@ class DemoUsersTest {
     void theDemoProfileSeedsTheAdministratorAndThreeUsersWithTheirRolesAndPacks() throws Exception {
         String admin = as("drishti-dev-admin", "admin");
         mvc.perform(get("/api/v1/admin/users").header("Authorization", admin))
-                .andExpect(jsonPath("$[*].username").value(hasItems("drishti-dev-admin", "demo-risk", "demo-genomics", "demo-market")));
-        mvc.perform(get("/api/v1/admin/users/demo-risk").header("Authorization", admin))
+                .andExpect(jsonPath("$[*].username").value(hasItems("drishti-dev-admin", "drishti-dev-risk", "drishti-dev-genomics", "drishti-dev-market")));
+        mvc.perform(get("/api/v1/admin/users/drishti-dev-risk").header("Authorization", admin))
                 .andExpect(jsonPath("$.roles").value(hasItem("risk-trading")))
                 .andExpect(jsonPath("$.packs").value(hasItems("core", "trading", "market-data", "market-risk", "counterparty-risk")));
-        mvc.perform(get("/api/v1/admin/users/demo-genomics").header("Authorization", admin))
+        mvc.perform(get("/api/v1/admin/users/drishti-dev-genomics").header("Authorization", admin))
                 .andExpect(jsonPath("$.roles").value(hasItem("genomics-reader")))
                 .andExpect(jsonPath("$.packs").value(hasItems("genomics-showcase", "protein-engineering")));
-        mvc.perform(get("/api/v1/admin/users/demo-market").header("Authorization", admin))
+        mvc.perform(get("/api/v1/admin/users/drishti-dev-market").header("Authorization", admin))
                 .andExpect(jsonPath("$.roles").value(hasItem("market-data-reader")))
                 .andExpect(jsonPath("$.packs.length()").value(1));
         mvc.perform(get("/api/v1/admin/role-definitions/market-data-reader").header("Authorization", admin))
@@ -69,20 +69,20 @@ class DemoUsersTest {
                 .andExpect(jsonPath("$.kinds").value(hasItems("trade", "fx-spot")));
         mvc.perform(get("/api/v1/admin/status").header("Authorization", admin))
                 .andExpect(jsonPath("$.defaultAdminPasswordInUse").value(true))
-                .andExpect(jsonPath("$.defaultPasswordUsers").value(hasItems("drishti-dev-admin", "demo-risk", "demo-genomics", "demo-market")));
+                .andExpect(jsonPath("$.defaultPasswordUsers").value(hasItems("drishti-dev-admin", "drishti-dev-risk", "drishti-dev-genomics", "drishti-dev-market")));
     }
 
     @Test
     void eachDemoUserOpensOnlyItsKinds() throws Exception {
-        String market = as("demo-market", "market-data-reader");
+        String market = as("drishti-dev-market", "market-data-reader");
         mvc.perform(get("/api/v1/views/trade/T-1").header("Authorization", market)).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/views/gene/HLXK7").header("Authorization", market)).andExpect(status().isForbidden());
-        String genomics = as("demo-genomics", "genomics-reader");
+        String genomics = as("drishti-dev-genomics", "genomics-reader");
         mvc.perform(get("/api/v1/views/trade/T-1").header("Authorization", genomics)).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/views/fx-spot/EURUSD").header("Authorization", genomics)).andExpect(status().isForbidden());
-        String risk = as("demo-risk", "risk-trading");
+        String risk = as("drishti-dev-risk", "risk-trading");
         mvc.perform(get("/api/v1/views/gene/HLXK7").header("Authorization", risk)).andExpect(status().isForbidden());
         MvcResult trade = mvc.perform(get("/api/v1/views/trade/T-1").header("Authorization", risk)).andReturn();
-        org.junit.jupiter.api.Assertions.assertNotEquals(403, trade.getResponse().getStatus(), "demo-risk opens trades");
+        org.junit.jupiter.api.Assertions.assertNotEquals(403, trade.getResponse().getStatus(), "drishti-dev-risk opens trades");
     }
 }

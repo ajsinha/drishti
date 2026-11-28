@@ -79,9 +79,9 @@ first administrator (an empty user store), also creates three demo users with th
 | User | Password | Role (kinds of) | Packs | Home |
 |---|---|---|---|---|
 | `drishti-dev-admin` | `drishti-dev-admin123` | `admin` | all | every Home |
-| `demo-risk` | `demo-risk-pass2026` | `risk-trading` (trading, market-data, market-risk, counterparty-risk, core) | `core`, `trading`, `market-data`, `market-risk`, `counterparty-risk` | the risk manager's, then the trader's |
-| `demo-genomics` | `demo-genomics-pass2026` | `genomics-reader` (genomics, genomics-showcase, protein-engineering) | `genomics`, `genomics-showcase`, `protein-engineering` | none yet (no genomics Home is shipped) |
-| `demo-market` | `demo-market-pass2026` | `market-data-reader` (market-data) | `market-data` | none |
+| `drishti-dev-risk` | `drishti-dev-risk123` | `risk-trading` (trading, market-data, market-risk, counterparty-risk, core) | `core`, `trading`, `market-data`, `market-risk`, `counterparty-risk` | the risk manager's, then the trader's |
+| `drishti-dev-genomics` | `drishti-dev-genomics123` | `genomics-reader` (genomics, genomics-showcase, protein-engineering) | `genomics`, `genomics-showcase`, `protein-engineering` | none yet (no genomics Home is shipped) |
+| `drishti-dev-market` | `drishti-dev-market123` | `market-data-reader` (market-data) | `market-data` | none |
 
 Admin shows the same red *default password* warning, naming every account that still signs in with a published password, until each is
 changed. A pack that is not installed is left out of its role and user; a user none of whose packs is installed is not created.

@@ -3788,7 +3788,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.homes.roles.operations` | list | `[operations]` |  | server | the operations Home | restart |  | admin |
 | `drishti.homes.roles.quant` | list | `[quant]` |  | server | the quant's Home | restart |  | admin |
 | `drishti.homes.roles.analyst` | list | `[quant]` |  | server | an analyst opens the quant's Home | restart |  | admin |
-| `drishti.homes.roles.risk-trading` | list | `[risk-manager, trader]` |  | server | the demo user demo-risk (demo profile): the risk manager's Home first, the trader's second | restart |  | admin |
+| `drishti.homes.roles.risk-trading` | list | `[risk-manager, trader]` |  | server | the demo user drishti-dev-risk (demo profile): the risk manager's Home first, the trader's second | restart |  | admin |
 | `drishti.homes.roles.economist` | list | `[economist]` |  | server | the economist's Home | restart |  | admin |
 
 #### `drishti.trading`
@@ -3857,7 +3857,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.identity.seed-admin` | boolean | `true` | `DRISHTI_SEED_ADMIN` | server | On first start with no users, create a development admin. Change its password at once; the console warns until you do. Turn off (DRISHTI\_SEED\_ADMIN=false) for production. | restart |  | admin |
 | `drishti.identity.seed-username` | string | `drishti-dev-admin` | `DRISHTI_SEED_USERNAME` | server | With DRISHTI\_SEED\_USERNAME / DRISHTI\_SEED\_PASSWORD set (deploy/docker/compose.yaml requires both) it is the first administrator you chose, not the development admin. | restart |  | admin |
 | `drishti.identity.seed-password` | string | `drishti-dev-admin123` | `DRISHTI_SEED_PASSWORD` | server | the first administrator's password; only this built-in default shows the default password warning (secret) | restart |  | admin |
-| `drishti.identity.seed-demo-users` | string | empty | `DRISHTI_SEED_DEMO_USERS` | server | Under the demo profile three demo users (demo-risk, demo-genomics, demo-market) are created beside the development admin, with the same empty-store rule and the same default-password warning. true: also outside the demo profile; false: not even there. Never in production. | restart |  | admin |
+| `drishti.identity.seed-demo-users` | string | empty | `DRISHTI_SEED_DEMO_USERS` | server | Under the demo profile three demo users (drishti-dev-risk, drishti-dev-genomics, drishti-dev-market) are created beside the development admin, with the same empty-store rule and the same default-password warning. true: also outside the demo profile; false: not even there. Never in production. | restart |  | admin |
 | `drishti.identity.seed-roles` | list | `[admin]` |  | server | the first administrator's roles | restart |  | admin |
 | `drishti.identity.seed-display-name` | string | `Drishti dev admin` |  | server | the name shown for the first administrator | restart |  | admin |
 
@@ -6774,7 +6774,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_SECURE_COOKIE` | `auth.secure_cookie` | `true` | console | mark cookies Secure (false only for plain-HTTP development with sign-in on) |
 | `DRISHTI_SECURITY_ENABLED` | `drishti.security.enabled` | `false` | server | Off for local development. Production: enabled: true and DRISHTI\_TOKEN\_SECRET (&gt;= 32 bytes, shared with the console). |
 | `DRISHTI_SEED_ADMIN` | `drishti.identity.seed-admin` | `true` | server | On first start with no users, create a development admin. Change its password at once; the console warns until you do. Turn off (DRISHTI\_SEED\_ADMIN=false) for production. |
-| `DRISHTI_SEED_DEMO_USERS` | `drishti.identity.seed-demo-users` | empty | server | Under the demo profile three demo users (demo-risk, demo-genomics, demo-market) are created beside the development admin, with the same empty-store rule and the same default-password warning. true: also outside the demo profile; false: not even there. Never in production. |
+| `DRISHTI_SEED_DEMO_USERS` | `drishti.identity.seed-demo-users` | empty | server | Under the demo profile three demo users (drishti-dev-risk, drishti-dev-genomics, drishti-dev-market) are created beside the development admin, with the same empty-store rule and the same default-password warning. true: also outside the demo profile; false: not even there. Never in production. |
 | `DRISHTI_SEED_PASSWORD` | `drishti.identity.seed-password` | `drishti-dev-admin123` | server | the first administrator's password; only this built-in default shows the default password warning |
 | `DRISHTI_SEED_USERNAME` | `drishti.identity.seed-username` | `drishti-dev-admin` | server | With DRISHTI\_SEED\_USERNAME / DRISHTI\_SEED\_PASSWORD set (deploy/docker/compose.yaml requires both) it is the first administrator you chose, not the development admin. |
 | `DRISHTI_SENSITIVITIES_ENABLED` | `drishti.engines.sensitivities.enabled` (engine) | `true` | engine | run position sensitivities on this node: /api/v1/sensitivities, /api/v1/risk-factors; FRTB-SA and SIMM need it (live) |
