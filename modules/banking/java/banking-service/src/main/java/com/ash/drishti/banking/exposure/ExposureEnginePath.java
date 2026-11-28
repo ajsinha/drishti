@@ -381,11 +381,14 @@ public class ExposureEnginePath {
      * The tree's shape, names, groups, reference netting sets and the viewer's rules stay the host's ({@link ExposureViews#tree}). Refused
      * in words, answered in-tree: a viewer whose role has exposure access levels.
      */
-    ExposureViews.TreeFigures tree(Principal p, LocalDate date, String q) {
-        if (date == null) {
-            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the engine path needs the business date: give asOf");
-        }
+    Map<String, Object> tree(Principal p, LocalDate asked, String q) {
         ExposureService es = svc.getObject();
+        LocalDate latest = es.loader().latest();
+        LocalDate date = asked == null || latest != null && asked.isAfter(latest) ? latest : asked;   // as the in-tree route reads the date
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no exposure paths in any connector (kind " + es.props().kinds().paths() + ")");
+        }
+        es.access().requireOpen(p);
         if (p != null && !es.access().levels(p).isEmpty()) {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "your role's exposure access levels are applied in-tree; the tree is "
                     + "answered there (path=in-tree)");
@@ -420,7 +423,76 @@ public class ExposureEnginePath {
         }
         String runId = String.valueOf(run.get(0).get("RUN_ID"));
         ExposureViews views = this.views.getObject();
-        return new ExposureViews.TreeFigures() {
+        // the tree's shape from the reference alone (no paths read): the netting sets with paths and their order are the engine's rows
+        ExposureLoader.ExposureReference ref = es.loader().reference(date);
+        List<Map<String, Object>> sets = new ArrayList<>(nodes.stream().filter(r -> "netting-set".equals(r.get("KIND"))).toList());
+        sets.sort(java.util.Comparator.comparingLong(r -> ((Number) r.get("ORDER")).longValue()));
+        List<String> setIds = sets.stream().map(r -> String.valueOf(r.get("ID"))).toList();
+        Map<String, Integer> ordinal = new LinkedHashMap<>();
+        for (int i = 0; i < setIds.size(); i++) {
+            ordinal.put(setIds.get(i), i);
+        }
+        List<SetRef> refs = new ArrayList<>();
+        for (Map<String, Object> r : sets) {
+            String id = String.valueOf(r.get("ID"));
+            ExposureDate.Known k = ref.date().known().get(id);
+            refs.add(new SetRef(id, k == null ? null : k.counterparty(), k == null ? null : k.legalEntity(), ref.flags().getOrDefault(id, List.of()),
+                    ((Number) r.get("TRADES")).intValue()));
+        }
+        ExposureViews.TreeShape shape = new ExposureViews.TreeShape() {
+            @Override
+            public ExposureDate date() {
+                return ref.date();
+            }
+
+            @Override
+            public int set(String id) {
+                return ordinal.getOrDefault(id, -1);
+            }
+
+            @Override
+            public boolean sees(int set) {
+                return true;                                            // a viewer with access levels is refused above: the rest see every set
+            }
+
+            @Override
+            public boolean details(int set) {
+                return true;
+            }
+
+            @Override
+            public boolean full() {
+                return true;
+            }
+
+            @Override
+            public String csa(int set) {
+                return ExposureExplorer.csaLabel(ref.terms().getOrDefault(setIds.get(set), com.ash.drishti.banking.compute.ccr.CsaTerms.NONE));
+            }
+
+            @Override
+            public String home(String counterparty) {                   // as ExposureExplorer.homeLegalEntity: the legal entity with most trades
+                Map<String, Integer> n = new java.util.HashMap<>();
+                for (SetRef sr : refs) {
+                    if (counterparty.equals(sr.counterparty()) && sr.legalEntity() != null) {
+                        n.merge(sr.legalEntity(), sr.trades(), Integer::sum);
+                    }
+                }
+                return n.entrySet().stream().max((x, y) -> x.getValue().equals(y.getValue()) ? y.getKey().compareTo(x.getKey())
+                        : Integer.compare(x.getValue(), y.getValue())).map(Map.Entry::getKey).orElse(null);
+            }
+
+            @Override
+            public List<String> tenors() {
+                return ExposureExplorer.tenors(ref.grid());
+            }
+
+            @Override
+            public int withPaths() {
+                return setIds.size();
+            }
+        };
+        ExposureViews.TreeFigures figures = new ExposureViews.TreeFigures() {
             @Override
             public int put(Map<String, Object> n, String scope, ExposureDate d) {
                 Map<String, Object> r = byScope.get(scope);
@@ -436,7 +508,7 @@ public class ExposureEnginePath {
                 n.put("peakPfeTenor", r.get("PEAK_PFE_TENOR"));
                 n.put("peakEe", Math.round(((Number) r.get("PEAK_EE")).doubleValue()));
                 n.put("ee", ee.getOrDefault(scope, List.of()));
-                List<String> flags = flags(r.get("FLAGS"), d, scope, set -> byScope.containsKey("NSET:" + set));
+                List<String> flags = flags(r.get("FLAGS"), refs, ref.date().groups(), scope);
                 if (!d.warnings().isEmpty() && !flags.contains("stale-run")) {    // the host's word on its own run, as in-tree
                     flags.add("stale-run");
                 }
@@ -456,7 +528,11 @@ public class ExposureEnginePath {
                 return runId;
             }
         };
+        return views.tree(p, shape, ExposureService.Ask.of(es.props(), q, null, null, null), figures);
     }
+
+    /** A netting set with paths as a scope's flags read it: its id, counterparty, legal entity, data-quality flags and trades with paths. */
+    record SetRef(String id, String counterparty, String legalEntity, List<String> flags, int trades) {}
 
     /**
      * A netting set's or counterparty's page figures through the engine ({@link ExposureFigures}), as the in-tree scope answer's keys they
@@ -491,10 +567,11 @@ public class ExposureEnginePath {
                     ? "no exposure paths for the netting set " + id + " on " + d + " (the run " + runId + " does not cover it)"
                     : "no exposure paths for the counterparty " + id + " on " + d + " (the run " + runId + " covers none of its netting sets)");
         }
-        Map<String, Object> a = call(p, List.of("exposure-summary", "exposure-profile", "exposure-flags"), prm, d);
+        Map<String, Object> a = call(p, List.of("exposure-summary", "exposure-profile", "exposure-flags", "exposure-by-netting-set"), prm, d);
         List<Map<String, Object>> summary = rows(a, "exposure-summary");
         List<Map<String, Object>> points = rows(a, "exposure-profile");
         List<Map<String, Object>> flags = rows(a, "exposure-flags");
+        List<Map<String, Object>> bySet = rows(a, "exposure-by-netting-set");
         if (summary == null || summary.isEmpty() || points == null || flags == null || flags.isEmpty()) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " has no exposure of " + scope + " on " + d + missing(a));
         }
@@ -534,7 +611,18 @@ public class ExposureEnginePath {
             prof.add(x);
         }
         out.put("profile", prof);
-        out.put("flags", flags(flags.get(0).get("FLAGS"), es.date(d), scope, set -> true));
+        // the data-quality flags of the scope's netting sets (in the book's order) from the reference alone: no paths read here (R2)
+        ExposureLoader.ExposureReference ref = es.loader().reference(d);
+        List<SetRef> sets = new ArrayList<>();
+        List<Map<String, Object>> ordered = new ArrayList<>(bySet == null ? List.of() : bySet);
+        ordered.sort(java.util.Comparator.comparingLong(r -> ((Number) r.get("RANK")).longValue()));
+        for (Map<String, Object> r : ordered) {
+            String id = String.valueOf(r.get("NETTING_SET"));
+            ExposureDate.Known k = ref.date().known().get(id);
+            sets.add(new SetRef(id, k == null ? String.valueOf(r.get("COUNTERPARTY")) : k.counterparty(), k == null ? null : k.legalEntity(),
+                    ref.flags().getOrDefault(id, List.of()), 0));
+        }
+        out.put("flags", flags(flags.get(0).get("FLAGS"), sets, ref.date().groups(), scope));
         out.put("path", "engine");
         return out;
     }
@@ -570,6 +658,17 @@ public class ExposureEnginePath {
      * book holds for the viewer.
      */
     static List<String> flags(Object engine, ExposureDate d, String scope, java.util.function.Predicate<String> seen) {
+        List<SetRef> sets = new ArrayList<>();
+        for (com.ash.drishti.banking.compute.ccr.ExposureBook.SetInfo si : d.book().sets()) {
+            if (seen.test(si.id())) {
+                sets.add(new SetRef(si.id(), si.counterparty(), si.legalEntity(), si.flags(), si.to() - si.from()));
+            }
+        }
+        return flags(engine, sets, d.groups(), scope);
+    }
+
+    /** The same over netting sets given in the book's order (the reference-only read's: the engine's rows with the host's reference flags). */
+    static List<String> flags(Object engine, List<SetRef> sets, Map<String, List<String>> groups, String scope) {
         List<String> out = new ArrayList<>();
         for (String f : String.valueOf(engine == null ? "" : engine).split(",")) {
             if (!f.isBlank()) {
@@ -578,13 +677,13 @@ public class ExposureEnginePath {
         }
         String s = scope.trim();
         String id = s.contains(":") ? s.substring(s.indexOf(':') + 1).trim() : s;
-        for (com.ash.drishti.banking.compute.ccr.ExposureBook.SetInfo si : d.book().sets()) {
+        for (SetRef si : sets) {
             boolean in = s.regionMatches(true, 0, "NSET:", 0, 5) ? si.id().equalsIgnoreCase(id)
                     : s.regionMatches(true, 0, "CPTY:", 0, 5) ? id.equalsIgnoreCase(si.counterparty())
                     : s.regionMatches(true, 0, "LE:", 0, 3) ? id.equalsIgnoreCase(si.legalEntity())
-                    : s.regionMatches(true, 0, "GROUP:", 0, 6) ? members(d, id).contains(si.counterparty())
+                    : s.regionMatches(true, 0, "GROUP:", 0, 6) ? members(groups, id).contains(si.counterparty())
                     : s.equalsIgnoreCase("BANK");
-            if (!in || !seen.test(si.id())) {
+            if (!in) {
                 continue;
             }
             for (String f : si.flags()) {
@@ -597,9 +696,9 @@ public class ExposureEnginePath {
     }
 
     /** A connected group's members as the in-tree scope words read them (the id, else {@code GRP-<id>}). */
-    private static List<String> members(ExposureDate d, String group) {
-        List<String> m = d.groups().get(group);
-        return m != null ? m : d.groups().getOrDefault("GRP-" + group, List.of());
+    private static List<String> members(Map<String, List<String>> groups, String group) {
+        List<String> m = groups.get(group);
+        return m != null ? m : groups.getOrDefault("GRP-" + group, List.of());
     }
 
     /**

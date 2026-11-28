@@ -181,6 +181,23 @@ final class ExposureLoader {
                 versions, List.of());
     }
 
+    /**
+     * A date's reference alone (R2: the engine path's tree reads no paths): the run the date answers with, its grid, every netting set the
+     * reference data knows with its CSA terms and data-quality flags, the counterparties' names, the groups and the credit limits; the date
+     * as an {@link ExposureDate} without a book. Nothing of the exposure paths is read.
+     */
+    ExposureReference reference(LocalDate date) {
+        AsOf asOf = AsOf.of(date);
+        DataNode run = run(date, documents(props.kinds().run(), asOf));
+        Reference ref = reference(date, asOf, run);
+        ExposureDate d = new ExposureDate(date, null, ref.known, ref.names, ref.groups, ref.limits, version(date), java.time.Instant.now(), 0, Map.of(),
+                Map.of(), List.of());
+        return new ExposureReference(d, text(run, "RUN_ID"), grid(date, run), Map.copyOf(ref.terms), Map.copyOf(ref.flags));
+    }
+
+    /** A date's reference without its paths: the date (no book), its run, grid, each known netting set's CSA terms and data-quality flags. */
+    record ExposureReference(ExposureDate date, String runId, ExposureGrid grid, Map<String, CsaTerms> terms, Map<String, List<String>> flags) {}
+
     /** Streams the run's rows into a new book, then writes its hot file (or keeps it on the heap). */
     private ExposureBook build(LocalDate date, AsOf asOf, DataNode run, Reference ref, String digest) {
         ExposureGrid grid = grid(date, run);

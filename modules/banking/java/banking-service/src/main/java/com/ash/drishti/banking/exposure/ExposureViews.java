@@ -449,14 +449,94 @@ final class ExposureViews {
                 return dd.book().runId();
             }
         };
-        ExposureAccess.View v = svc.access().view(p, d);
-        ExposureBook b = d.book();
+        return tree(p, TreeShape.of(d, svc.access().view(p, d)), ask, f);
+    }
+
+    /**
+     * What the tree reads of a date beside its figures: the reference ({@link #date}: known netting sets, names, groups, limits), which known
+     * sets have paths (an ordinal, -1 without), what the viewer sees, each set's CSA label, a counterparty's home legal entity, the grid's
+     * tenors and the number of sets with paths. In-tree from the loaded date's book ({@link #of}); on the engine path from a reference-only
+     * read and the engine's rows (R2, {@link ExposureEnginePath#tree}).
+     */
+    interface TreeShape {
+        ExposureDate date();
+
+        int set(String id);
+
+        boolean sees(int set);
+
+        boolean details(int set);
+
+        boolean full();
+
+        String csa(int set);
+
+        String home(String counterparty);
+
+        List<String> tenors();
+
+        int withPaths();
+
+        static TreeShape of(ExposureDate d, ExposureAccess.View v) {
+            ExposureBook b = d.book();
+            return new TreeShape() {
+                @Override
+                public ExposureDate date() {
+                    return d;
+                }
+
+                @Override
+                public int set(String id) {
+                    return b.setOrdinal(id);
+                }
+
+                @Override
+                public boolean sees(int set) {
+                    return v.seesSet(set);
+                }
+
+                @Override
+                public boolean details(int set) {
+                    return v.detailsSet(set);
+                }
+
+                @Override
+                public boolean full() {
+                    return v.full();
+                }
+
+                @Override
+                public String csa(int set) {
+                    return ExposureExplorer.csaLabel(b.set(set).csa());
+                }
+
+                @Override
+                public String home(String counterparty) {
+                    return ExposureExplorer.homeLegalEntity(b, counterparty);
+                }
+
+                @Override
+                public List<String> tenors() {
+                    return ExposureExplorer.tenors(b.grid());
+                }
+
+                @Override
+                public int withPaths() {
+                    return b.sets().size();
+                }
+            };
+        }
+    }
+
+    /** The tree from its shape and figures (both paths). */
+    Map<String, Object> tree(Principal p, TreeShape t, ExposureService.Ask ask, TreeFigures f) {
+        ExposureDate d = t.date();
         Map<String, String> groupOf = new LinkedHashMap<>();
         d.groups().forEach((g, ms) -> ms.forEach(c -> groupOf.putIfAbsent(c, g)));
         Map<String, Map<String, Object>> cps = new java.util.TreeMap<>();
         for (ExposureDate.Known k : d.known().values()) {
-            int s = b.setOrdinal(k.id());
-            if (s >= 0 && !v.seesSet(s) || s < 0 && !v.full()) {
+            int s = t.set(k.id());
+            if (s >= 0 && !t.sees(s) || s < 0 && !t.full()) {
                 continue;
             }
             Map<String, Object> cp = cps.computeIfAbsent(String.valueOf(k.counterparty()), c -> {
@@ -473,10 +553,10 @@ final class ExposureViews {
             n.put("id", k.id());
             n.put("legalEntity", k.legalEntity());
             n.put("members", k.members());
-            n.put("csa", s >= 0 ? ExposureExplorer.csaLabel(b.set(s).csa()) : k.csa() == null ? "none" : k.csa());
+            n.put("csa", s >= 0 ? t.csa(s) : k.csa() == null ? "none" : k.csa());
             if (s < 0) {
                 n.put("noPaths", true);
-            } else if (v.detailsSet(s)) {
+            } else if (t.details(s)) {
                 f.put(n, "NSET:" + k.id(), d);
             }
             @SuppressWarnings("unchecked")
@@ -494,7 +574,7 @@ final class ExposureViews {
             cp.put("legalEntities", les);
             if (any) {
                 f.put(cp, "CPTY:" + cp.get("id"), d);
-                cp.put("homeLegalEntity", ExposureExplorer.homeLegalEntity(b, String.valueOf(cp.get("id"))));
+                cp.put("homeLegalEntity", t.home(String.valueOf(cp.get("id"))));
                 cp.put("limit", f.limit(d, String.valueOf(cp.get("id"))));
             } else {
                 cp.put("noPaths", true);
@@ -517,7 +597,7 @@ final class ExposureViews {
         out.put("runId", f.runId(d));
         out.put("confidence", ask.q());
         out.put("bank", "BANK");
-        out.put("tenors", ExposureExplorer.tenors(b.grid()));
+        out.put("tenors", t.tenors());
         out.put("bankNode", nodeFigures(f, d, "BANK", "Bank"));
         List<Map<String, Object>> les = new ArrayList<>();
         new java.util.TreeSet<>(cps.values().stream().flatMap(cp -> {
@@ -531,7 +611,7 @@ final class ExposureViews {
         });
         out.put("legalEntities", les);
         out.put("groups", groups);
-        out.put("nettingSetsWithPaths", b.sets().size());
+        out.put("nettingSetsWithPaths", t.withPaths());
         out.put("nettingSetsKnown", d.known().size());
         return out;
     }

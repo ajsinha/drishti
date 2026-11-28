@@ -376,17 +376,21 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
   left**: delivery "links closed" (7 bytedeco/OpenBLAS references, shared with `MarketKitIT`), scan (335 findings: mutable statics,
   reflection, threads in `risk-kernel`/hostcompat), coverage (SIMM outputs and switches, the options `model`/`rule`/`im-model`/
   `vector-tier`, the CSA and collateral input columns, NOT_FOUND cases, the engine's codes file `ccr.codes.yaml`).
+- **(8) The engine-path tree and page flags read the reference alone** (no in-tree paths): `ExposureLoader.reference` (the run, its grid,
+  every known netting set's CSA terms and data-quality flags, names, groups, limits; no exposure paths), `ExposureViews.TreeShape` (what
+  the tree reads of a date beside its figures: in-tree from the book, on the engine path from the reference and the engine's rows), the
+  netting sets with paths and their order from `exposure-tree`'s new `ORDER` column, the home legal entity from the engine's trades per
+  set; the page flags (`ExposureFigures`) from the reference and `exposure-by-netting-set`'s order. Still reading the loaded date for
+  their structure: the official capture (nodes over the trades' level columns), captures (the host's answer for its own fields) and the
+  pre-deal proxy (the counterparty's sets seen). Same side-by-sides (tree 5,448 values, 100 pages) green.
 - **Not done**: (6) SIMM on the engine path: the engine's `simm` inputs are not bound in `config/engines/ccr.yaml` (sensitivity elements,
   the factor dictionary, fx) and the licensed parameter files are host files, not a lake kind (`simm-parameters` needs a kind or a host
-  supplier); no SIMM data in the side-by-side lake. (8) the reference-only read for the engine-path tree and page flags: the tree reads
-  the book for each set's paths, CSA label (`ExposureBook` terms), home legal entity (trades per set), the grid's tenors and the run's
-  warnings (the load's run choice); a reference read needs `ExposureLoader` to give the run choice, grid, terms and flags without the
-  rows, and `ExposureViews.tree` to take its shape from that (not started; the official capture, captures and pre-deal proxy also read the
-  loaded date for their structure).
-- **Regression at this stop** (drishti 83ef32809, drishti-risk 1bb7d55): `ExposureSideBySideTest` 12/12 and `ExposureHomesSideBySideTest`
+  supplier); no SIMM data in the side-by-side lake; the SIMM routes' answer (`SimmAnswer`: regimes, both directions, risk-class rows,
+  provenance) needs more than `simm`/`simm-total` give.
+- **Regression at this stop** (drishti 64e7cf999 and (8) on top, drishti-risk d8851de): `ExposureSideBySideTest` 12/12 and `ExposureHomesSideBySideTest`
   green on both tiers (heap: 560 engine figures equal to the recorder's raw bits); in-tree `Exposure*Test` of banking 43/43; drishti-risk
   `CcrRecordedIT` green (tolerance unchanged), `risk-ccr` tests green; `CcrKitIT`: every case and law green but the pre-existing delivery,
-  scan and coverage findings above. VaR goldens and side-by-sides: running at this commit (next line when done). Defaults unchanged; nothing removed from in-tree.
+  scan and coverage findings above. VaR (mapped tier, before (8)): `PackagedVarGoldenTest` green (167,372,692 / 210,131,972), `RiskSideBySideTest` 14/14 (headline 3,918 of 3,918 raw bits), `HomesSideBySideTest` green (1,054 rows); (8) touches no VaR class. After (8): the two exposure side-by-sides green again (mapped; heap: see the next line). Defaults unchanged; nothing removed from in-tree.
 
 ### Status, exposure part 2 (2026-11-27 19:0x, branch `r2/exposure-routes`; drishti-risk `r2/exposure-routes` 09fba3a)
 

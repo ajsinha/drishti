@@ -166,9 +166,8 @@ public class ExposureController {
     @GetMapping("/tree")
     public Map<String, Object> tree(@RequestParam(required = false) String q, AsOf asOf, @RequestParam(required = false) String path,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        if (enginePath.engine(path)) {                                 // R2: the figures from the ccr engine, the tree's shape and names the host's
-            LocalDate d = svc.date(date(asOf)).date();                  // the date the host's tree reads (its newest with paths when later)
-            return views.tree(p, d, ask(q, null, null, null), enginePath.tree(p, d, q));
+        if (enginePath.engine(path)) {                                 // R2: the figures from the ccr engine, the tree's shape from the reference alone
+            return enginePath.tree(p, date(asOf), q);
         }
         return views.tree(p, date(asOf), ask(q, null, null, null));
     }
