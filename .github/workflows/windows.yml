@@ -57,7 +57,7 @@ jobs:
           git clone -q --depth 1 --branch develop https://github.com/drishti-platform/drishti-engine.git "$env:RUNNER_TEMP/drishti-engine"
           if ($LASTEXITCODE -ne 0) { throw 'clone of drishti-engine develop failed' }
           Push-Location "$env:RUNNER_TEMP/drishti-engine/java"
-          ./mvnw.cmd -B -q install -DskipTests -pl :engine-bom,:engine-api,:engine-host,:engine-sample -am
+          ./mvnw.cmd -B -q install -DskipTests -Drachana.version=1.0.1 -pl :engine-bom,:engine-api,:engine-host,:engine-sample -am
           if ($LASTEXITCODE -ne 0) { throw 'build of drishti-engine failed' }
           Pop-Location
       - name: Build (no tests)
