@@ -166,7 +166,7 @@ view types. The first route switched end to end is the VaR headline (`GET /api/v
 | `GET /api/v1/risk/exposure/tree` (groups, counterparties, netting sets, the bank and legal-entity nodes: EPE, peak PFE and tenor, peak EE, EE line, flags, netting sets, each counterparty's limit use) | `ccr` `exposure-tree`, `exposure-tree-ee`, `exposure-run` (new); `counterparty-summary` at the limit's confidence when the tree's is another | `ExposureSideBySideTest.theTreeIsTheSameOnBothPaths`: the whole answer at the default and at 0.99, 5,448 values, every value equal, both tiers. The tree's shape, names, groups, reference netting sets without paths, CSA labels, the viewer's rules and the data-quality flags (`PAST_MATURITY`, `MPOR_MISMATCH`: the host's reference) stay host-side. Refused in words: a role with exposure access levels | path available; default `in-tree` |
 | Netting-set and counterparty page figures (`ExposureFigures`, `EXPOSURE_ENGINE`: run, paths, figures, profile at the default and 99%, flags, `no-paths`) | `ccr` `scope-resolution`, `exposure-run`, `exposure-summary`, `exposure-profile` (also at 0.99), `exposure-flags` (new) | `ExposureHomesSideBySideTest` (two servers): 100 pages as rendered (74 netting-set pages with figures, the others `no-paths` or without the panel), every rendered field equal, both tiers | path proven; behind `exposure.route`, default `in-tree` |
 | The audit line of the engine-path reads (`ccr-view`: contributions, distribution) | `exposure-flags`, `exposure-run` beside the read | `ExposureSideBySideTest.theContributionsRouteWritesTheSameAuditLineOnBothPaths`: each path writes one line; date, run, view, q, collateral, EPE, peak PFE, sets, trades and what was read equal (the engine's adds `path=engine`, `version=engine`; no `hiddenSets`: the engine's book is the viewer's) | path available |
-| `GET /api/v1/risk/exposure/scope/distribution` (histogram, quantiles, mean, share without exposure; `bands`: the path fan) | `ccr` `exposure-distribution`, `exposure-histogram`, `exposure-fan` (new; param `bins`) | `ExposureSideBySideTest.theDistributionOfEveryScopeIsTheSameOnBothPaths`: STATUS_DIST | STATUS_DIST_SW |
+| `GET /api/v1/risk/exposure/scope/distribution` (histogram, quantiles, mean, share without exposure; `bands`: the path fan) | `ccr` `exposure-distribution`, `exposure-histogram`, `exposure-fan` (new; param `bins`) | `ExposureSideBySideTest.theDistributionOfEveryScopeIsTheSameOnBothPaths`: 408 answers (every scope at the peak, at 1Y, 10 bins with the fan, uncollateralised at 99% at 5Y with the fan), 54,672 values, every value equal, both tiers | path available; default `in-tree` |
 | the rest of 6.3 | | | |
 
 ## 5. Risks
@@ -355,6 +355,25 @@ Under `modules/banking/java/banking-service/src/main/java/com/ash/drishti/bankin
    the child contributions, the P&L path's worst scenarios, rounded vector, scenario dates and k from the engine; `figuresFrom: engine`
    on the capture). `GET /compare?b=now&path=engine` reads now from the engine. A lens other than the offered one and a scope whose
    parts are positions or terms are refused in words on the engine path (captured in-tree).
+
+### Status, exposure part 2 (2026-11-27 19:0x, branch `r2/exposure-routes`; drishti-risk `r2/exposure-routes` 09fba3a)
+
+- **New on the engine path (behind `exposure.route`, default `in-tree` unchanged; Appendix A rows)**: (1) the tree: every node's
+  figures from new `ccr` outputs `exposure-tree`, `exposure-tree-ee`, `exposure-run` (limit use at the limit's confidence from
+  `counterparty-summary` when the tree's is another); the tree's shape, names, groups, reference sets, CSA labels, the viewer's rules
+  and the data-quality flags `PAST_MATURITY`/`MPOR_MISMATCH` (the host's reference) stay host-side (`ExposureViews.TreeFigures`):
+  5,448 values equal; (2) `ExposureFigures` (netting-set and counterparty pages): run id and paths (`exposure-run`), the figures and
+  profile at the default and at 99%, flags (`exposure-flags`), `no-paths` in the in-tree words: 100 rendered pages equal (two servers);
+  (3) the audit line of the engine-path contributions and distribution reads (`ccr-view`, same fields; adds `path=engine`,
+  `version=engine`, no `hiddenSets`); (4) the distribution (`exposure-distribution`, `exposure-histogram`, `exposure-fan`): 408
+  answers, 54,672 values equal. Every one on both tiers (mapped and heap).
+- **Open, host-side reference on the engine path**: the tree and the page flags read the host's loaded date for reference (known
+  sets, groups, names, CSA labels, data-quality flags); a reference-only read (without the in-tree book) is open. `CcrKitIT` was red
+  before this work (pre-deal workbook names, coverage of outputs without kit cases, delivery/scan findings shared with `MarketKitIT`);
+  the new outputs have no kit cases yet (coverage gate).
+- **Still in-tree only**: what-if, GROUP: scopes (next: the engine resolves groups from an input, or the host rewrites them to
+  counterparties), proxy pre-deal, official records, captures/compare, SIMM routes, run/strict, contributions by counterparty or trade.
+- **Regression at this stop**: on 9f62a2a0a, mapped tier: `PackagedVarGoldenTest` green (167,372,692 / 210,131,972), `RiskSideBySideTest` 14/14 (headline 3,918 of 3,918 raw bits), `HomesSideBySideTest` green; `ExposureSideBySideTest` 8/8 and `ExposureHomesSideBySideTest` green on both tiers (heap: 560 engine figures equal to the recorder's raw bits); drishti-risk `CcrRecordedIT` green, tolerance unchanged. Defaults unchanged; nothing removed from in-tree.
 
 ### Status, exposure (2026-11-27 17:3x, branch `r2/exposure-routes` = `r2/var-routes` + `r2/exposure`; drishti-risk `r2/exposure-routes`)
 
