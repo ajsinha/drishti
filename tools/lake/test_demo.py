@@ -387,6 +387,29 @@ class TellServer(unittest.TestCase):
         threading.Thread(target=srv.serve_forever, daemon=True).start()
         return srv, got
 
+    def test_a_scratch_data_folder_tells_no_server_unless_one_is_named(self):
+        """No signal reaches the default server (here a stand-in on a free port) from a --data-dir or other scratch run."""
+        import demo
+        srv, got = self.server(lambda h, n: (h.send_response(201), h.end_headers()))
+        old, old_env = demo.DEFAULT_SERVER, os.environ.pop("DRISHTI_SERVER", None)
+        demo.DEFAULT_SERVER = f"http://127.0.0.1:{srv.server_port}"
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                d = self.lake(None, tmp)
+                d.a.data_dir = tmp
+                note = d.tell_server()
+                self.assertTrue((Path(tmp) / "bi-store" / demo.REBUILT_STAMP).is_file())
+                d.a.data_dir = None
+                self.assertIn("scratch", d.tell_server())
+        finally:
+            demo.DEFAULT_SERVER = old
+            if old_env is not None:
+                os.environ["DRISHTI_SERVER"] = old_env
+            srv.shutdown()
+            srv.server_close()
+        self.assertEqual(got, [])
+        self.assertIn("scratch", note)
+
     def test_signal_once_tells_each_table_on_its_newest_date(self):
         def ok(h, n):
             h.send_response(201)

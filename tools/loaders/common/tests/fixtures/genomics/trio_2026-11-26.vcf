@@ -1,0 +1,11 @@
+##fileformat=VCFv4.2
+##reference=GRCh38
+##INFO=<ID=GENE,Number=1,Type=String,Description="Gene symbol">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##SAMPLE=<ID=MOM,Cohort=FAM1,Sex=F,Population=EUR>
+##SAMPLE=<ID=DAD,Cohort=FAM1,Sex=M,Population=EUR>
+##SAMPLE=<ID=KID,Cohort=FAM1,Sex=F,Population=EUR>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	MOM	DAD	KID
+17	43094820	rs111	TT	T	99	PASS	GENE=BRCA1;CSQ=frameshift_variant;IMPACT=HIGH;AAPOS=237	GT	0/1	0/0	0/1
+17	7676154	.	G	C,T	50.5	PASS	GENE=TP53;CSQ=missense_variant;IMPACT=MODERATE;AAPOS=72	GT:DP	1/2:30	0/0:28	./.:0
+13	32340300	.	A	G	.	LowQual	GENE=BRCA2	GT	0/0	0/0	1|1

@@ -1,0 +1,48 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# The ensembl feed (tools/loaders/genomics/README.md): Ensembl gene annotations of a gene panel. Class: tools/loaders/genomics/ensembl.py.
+# Run: python3 tools/drishti.py feed run ensembl   (Windows: py -3.13 tools\drishti.py feed run ensembl)
+feed: ensembl
+title: Ensembl gene annotations of a gene panel
+description: >-
+  Gene annotations of a small gene panel (default BRCA1, BRCA2 and TP53) from the Ensembl REST API, GRCh38: chromosome, start, end, strand, biotype and the protein length of the canonical transcript, as rows of the genomics module's gene kind.
+class: ensembl.EnsemblFeed
+source:
+  provider: Ensembl (EMBL-EBI)
+  url: https://www.ensembl.org
+  pause: 0.2
+  retries: 3
+  timeout: 90
+  cache-hours: 20
+lake: genomicslake
+load: java
+enabled: true
+schedule:
+  at: "06:10"
+  days: daily
+licence:
+  name: Ensembl data is open (EMBL-EBI terms of use)
+  url: https://www.ebi.ac.uk/about/terms-of-use/
+  redistribution: attribution
+  internal-only: false
+  attribution: "Contains data from Ensembl (EMBL-EBI), https://www.ensembl.org"
+  notes: "Free to use and redistribute; the REST API allows 15 requests a second and the feed asks for about 5."
+history:
+  first-run-days: 1
+datasets:
+  gene: {pack: genomics, kind: gene, key: GENE, description: "one gene of the panel: chromosome, start, end, strand, biotype, protein length of the canonical transcript"}
+options:
+  genes: [BRCA1, BRCA2, TP53]         # the gene panel (HGNC symbols); --set genes=MLH1,APC

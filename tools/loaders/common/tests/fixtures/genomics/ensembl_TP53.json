@@ -1,0 +1,44 @@
+{
+ "id": "ENSG00000141510",
+ "assembly_name": "GRCh38",
+ "strand": -1,
+ "start": 7661779,
+ "source": "ensembl_havana",
+ "description": "tumor protein p53 [Source:HGNC Symbol;Acc:HGNC:11998]",
+ "species": "homo_sapiens",
+ "canonical_transcript": "ENST00000269305.9",
+ "db_type": "core",
+ "biotype": "protein_coding",
+ "Transcript": [
+  {
+   "version": 9,
+   "Translation": {
+    "length": 393
+   },
+   "ens_canon_extended": 0,
+   "display_name": "TP53-201",
+   "end": 7687490,
+   "logic_name": "havana_homo_sapiens",
+   "seq_region_name": "17",
+   "db_type": "core",
+   "object_type": "Transcript",
+   "is_canonical": 1,
+   "biotype": "protein_coding",
+   "source": "havana",
+   "start": 7668421,
+   "species": "homo_sapiens",
+   "Parent": "ENSG00000141510",
+   "id": "ENST00000269305",
+   "length": 2512,
+   "gencode_primary": 1,
+   "strand": -1,
+   "assembly_name": "GRCh38"
+  }
+ ],
+ "object_type": "Gene",
+ "display_name": "TP53",
+ "version": 21,
+ "seq_region_name": "17",
+ "end": 7687546,
+ "logic_name": "ensembl_havana_gene_homo_sapiens"
+}

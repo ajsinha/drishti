@@ -51,7 +51,7 @@ Java writer, else deltalake and pyarrow). Independent tables load at the same ti
 
 A server must not keep serving the old figures: its BI store (<data>/bi-store) holds columns and rollups read from the lake. After the
 build, lake demo sends the data-load signal (POST /api/v1/packs/{pack}/loads) for every table and business date it wrote to the server
---server names (default DRISHTI_SERVER, then http://localhost:18480; the token from --token-file or DRISHTI_TOKEN). When no server is
+--server names (default DRISHTI_SERVER; for the default data folder alone, http://localhost:18480; a scratch run, --data-dir or a lake elsewhere, tells no server unless one is named; the token from --token-file or DRISHTI_TOKEN). When no server is
 reachable, or one refuses the signal, it leaves <bi-store>/lake-rebuilt.json and the server clears its columns and rollups at its next
 start. A running server also notices a rebuilt table by itself (a date's Delta files changed) and reads it again. --no-signal skips both;
 --signal-once tells each table once, for its newest date (a running server reads the older dates again by itself), not each table and
@@ -502,11 +502,30 @@ class DemoLake:
     def bi_store(self) -> pathlib.Path:
         return pathlib.Path(os.environ.get("DRISHTI_BI_STORE") or (self.data / "bi-store"))
 
+    def own_server_data(self) -> bool:
+        """True when the data folder is the default server's own (the repository's data/, or DRISHTI_DATA_DIR) and was not set by --data-dir:
+        only then is the default server (DEFAULT_SERVER) the one to tell. A scratch run (--data-dir, or a lake elsewhere) tells nobody
+        unless --server or DRISHTI_SERVER names one."""
+        if getattr(self.a, "data_dir", None):
+            return False
+        return pathlib.Path(self.data).resolve() == data_dir().resolve()
+
+    def write_stamp(self, stamp: pathlib.Path) -> None:
+        stamp.parent.mkdir(parents=True, exist_ok=True)
+        stamp.write_text(json.dumps({"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "by": "drishti.py lake demo", "lake": str(self.lake),
+                                     "dates": self.dates, "tables": [t for _, _, t in self.written]}, indent=1) + "\n", encoding="utf-8")
+
     def tell_server(self) -> str:
         """The data-load signal for every table and date written; else the stamp the server reads at its next start."""
         if self.a.no_signal or not self.written:
             return "not told (--no-signal)" if self.a.no_signal else ""
-        base = (self.a.server or os.environ.get("DRISHTI_SERVER") or DEFAULT_SERVER).rstrip("/")
+        named = self.a.server or os.environ.get("DRISHTI_SERVER")
+        if not named and not self.own_server_data():
+            stamp = self.bi_store() / REBUILT_STAMP
+            self.write_stamp(stamp)
+            return (f"no server told: {self.data} is a scratch data folder (no --server or DRISHTI_SERVER named); left {stamp} for a server "
+                    "started on it")
+        base = (named or DEFAULT_SERVER).rstrip("/")
         token = None
         if self.a.token_file:
             token = pathlib.Path(os.path.expanduser(self.a.token_file)).read_text(encoding="utf-8").strip()
@@ -550,9 +569,7 @@ class DemoLake:
             if not refused and not unanswered:
                 return f"{base} told: {sent} data-load signals{took} ({'each table once, its newest date' if once else 'each table, each date'}); it reads them again"
         stamp = self.bi_store() / REBUILT_STAMP
-        stamp.parent.mkdir(parents=True, exist_ok=True)
-        stamp.write_text(json.dumps({"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "by": "drishti.py lake demo", "lake": str(self.lake),
-                                     "dates": self.dates, "tables": [t for _, _, t in self.written]}, indent=1) + "\n", encoding="utf-8")
+        self.write_stamp(stamp)
         if not reachable:
             return (f"no server at {base}: left {stamp}, so a server clears its stored BI columns and rollups at its next start")
         parts = []
@@ -925,7 +942,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--with-real", metavar="FILE[,FILE]", help="LOCAL ONLY: real trade extracts (JSON) whose counterparties, agreements and "
                    "netting sets are added to the local lake, never to data/testdata")
     p.add_argument("--only", metavar="PREFIX[,PREFIX]", help="only these datasets: a folder prefix (trades/, core/counterparty) or a pack name")
-    p.add_argument("--server", help=f"the server told of the new data (default: DRISHTI_SERVER, then {DEFAULT_SERVER})")
+    p.add_argument("--server", help=f"the server told of the new data (default: DRISHTI_SERVER; the default data folder tells {DEFAULT_SERVER}; a scratch --data-dir tells nobody)")
     p.add_argument("--token-file", help="the API token for the data-load signal (default: DRISHTI_TOKEN); never printed")
     p.add_argument("--no-signal", action="store_true", help="tell no server, and leave no stamp for one")
     p.add_argument("--signal-once", action="store_true", help="tell each table once, for its newest date, not each table and date "

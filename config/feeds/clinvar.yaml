@@ -1,0 +1,52 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# The clinvar feed (tools/loaders/genomics/README.md): NCBI ClinVar variants of a gene panel. Class: tools/loaders/genomics/clinvar.py.
+# Run: python3 tools/drishti.py feed run clinvar   (Windows: py -3.13 tools\drishti.py feed run clinvar)
+feed: clinvar
+title: NCBI ClinVar variants of a gene panel
+description: >-
+  Pathogenic and likely pathogenic ClinVar variants of a small gene panel (default BRCA1, BRCA2 and TP53, 200 variants a gene) as rows of the genomics module's variant kind: GRCh38 position and alleles, gene, consequence, impact, clinical significance, review status and conditions. One run is about ten requests.
+class: clinvar.ClinVarFeed
+source:
+  provider: NCBI (National Library of Medicine)
+  url: https://www.ncbi.nlm.nih.gov/clinvar/
+  pause: 0.4
+  retries: 3
+  timeout: 90
+  cache-hours: 20
+lake: genomicslake
+load: java
+enabled: true
+schedule:
+  at: "06:00"
+  days: daily
+licence:
+  name: Public domain (NCBI data policy)
+  url: https://www.ncbi.nlm.nih.gov/home/about/policies/
+  redistribution: allowed
+  internal-only: false
+  attribution: "Contains data from NCBI ClinVar (public domain; NCBI asks that it is not presented as an NCBI endorsement)"
+  notes: "ClinVar submissions are the submitters' own interpretations; NCBI asks for at most 3 requests a second without an API key (10 with one)."
+history:
+  first-run-days: 1
+datasets:
+  variant: {pack: genomics, kind: variant, key: VARIANT_ID, description: "one variant of the panel: GRCh38 position and alleles, gene, consequence, impact, ClinVar significance, review status and conditions"}
+options:
+  genes: [BRCA1, BRCA2, TP53]         # the gene panel (HGNC symbols); --set genes=MLH1,APC
+  significance: [pathogenic, likely pathogenic]   # ClinVar clinical significance terms; an empty list takes every record
+  max-per-gene: 200                   # the most variants of one gene (1 to 5000)
+keys:
+  ncbi: {env: "${NCBI_API_KEY}", required: false}   # optional: raises NCBI's limit from 3 to 10 requests a second

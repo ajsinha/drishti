@@ -60,9 +60,23 @@ def inbox_dir(given: str | None = None) -> Path:
     return pullkit.data_dir() / "dataload" / "inbox"
 
 
+def has_pack(name: str) -> bool:
+    """Whether the dataset's pack is a pack (has a pack.yaml). A dataset of a kinds-only domain (the genomics module's contracts folder
+    holds contracts and no pack.yaml) is loaded as a new table of that domain (``lake build --new-table --domain <pack>``) and its lake
+    file lists the table itself."""
+    try:
+        return (pack_dir(name, packs_dir()) / "pack.yaml").is_file()
+    except Exception:  # noqa: BLE001  (the resolver's refusal: not a pack)
+        return False
+
+
 def lake_build_args(f: dict, lake: str, engine: str | None, summary: Path, opts: dict) -> list[str]:
-    args = [sys.executable, str(DRISHTI), "lake", "build", "--from", f["path"], "--lake", lake, "--pack", str(pack_dir(f["pack"], packs_dir())),
-            "--kind", f["kind"], "--mode", "overwrite-dates", "--summary", str(summary), "-q"]
+    args = [sys.executable, str(DRISHTI), "lake", "build", "--from", f["path"], "--lake", lake]
+    if has_pack(f["pack"]):
+        args += ["--pack", str(pack_dir(f["pack"], packs_dir()))]
+    else:
+        args += ["--new-table", "--domain", f["pack"]]
+    args += ["--kind", f["kind"], "--mode", "overwrite-dates", "--summary", str(summary), "-q"]
     if f["table"] != f["kind"]:
         args += ["--table", f["table"]]
     if f.get("key"):                                   # the dataset's id field (a lake entry without one takes it; one that has one must agree)
@@ -83,7 +97,7 @@ def ensure_entries(files: list[dict], lake: str, opts: dict, log=print) -> list[
     sys.path.insert(0, str(ROOT / "tools" / "lake"))
     import lakeconfig
     added = []
-    keys = {(f["pack"], f["kind"]): f.get("key") or "" for f in files if f["rows"]}
+    keys = {(f["pack"], f["kind"]): f.get("key") or "" for f in files if f["rows"] and has_pack(f["pack"])}
     for pack, kind in sorted(keys):
         args = ["add-entry", "--lake", lake, "--pack", str(pack_dir(pack, packs_dir())), "--kind", kind]
         res = lakeconfig.run(args, jar=opts.get("jar"), java=opts.get("java"))

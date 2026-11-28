@@ -1,0 +1,45 @@
+{
+ "header": {
+  "type": "esearch",
+  "version": "0.3"
+ },
+ "esearchresult": {
+  "count": "14336",
+  "retmax": "3",
+  "retstart": "0",
+  "idlist": [
+   "5042465",
+   "5042298",
+   "5042243"
+  ],
+  "translationset": [],
+  "translationstack": [
+   {
+    "term": "BRCA1[gene]",
+    "field": "gene",
+    "count": "16172",
+    "explode": "N"
+   },
+   {
+    "term": "\"pathogenic\"[All Fields]",
+    "field": "All Fields",
+    "count": "804240",
+    "explode": "N"
+   },
+   {
+    "term": "\"likely pathogenic\"[All Fields]",
+    "field": "All Fields",
+    "count": "232606",
+    "explode": "N"
+   },
+   "OR",
+   "GROUP",
+   "AND"
+  ],
+  "querytranslation": "BRCA1[gene] AND (\"pathogenic\"[All Fields] OR \"likely pathogenic\"[All Fields])",
+  "errorlist": {
+   "phrasesnotfound": [],
+   "fieldsnotfound": []
+  }
+ }
+}

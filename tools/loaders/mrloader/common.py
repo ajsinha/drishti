@@ -260,7 +260,7 @@ def add_remove_arguments(p) -> None:
     g = p.add_argument_group("remove (with --remove: the date's rows leave the lake; whole dates only)")
     g.add_argument("--lake", help="the lake by its name (risklake) or its folder; required to remove; with add it is named in the .ready")
     g.add_argument("--settings", help="the settings file drishti.py takes before its command (--settings FILE)")
-    g.add_argument("--server", help="the server to tell (default DRISHTI_SERVER, then http://localhost:18480)")
+    g.add_argument("--server", help="the server to tell (no server is told unless one is named here)")
     g.add_argument("--token-file", help="a file holding the API token (loads:write); never printed")
     g.add_argument("--dry-run", action="store_true", help="say what would be done (rows per date for a remove), change nothing")
     g.add_argument("--yes", action="store_true", help="remove without asking you to type the table's name (scripts)")

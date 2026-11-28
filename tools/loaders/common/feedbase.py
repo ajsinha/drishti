@@ -70,7 +70,7 @@ import pullkit as K  # noqa: E402  (the polite HTTP client and the download cach
 ROOT = K.ROOT
 CONFIG = ROOT / "config" / "feeds"
 LOADERS = HERE.parent
-SOURCES = [LOADERS / "external", LOADERS / "news"]     # where a feed's `class: <module>.<Class>` module is looked for (then beside its feed file)
+SOURCES = [LOADERS / "external", LOADERS / "news", LOADERS / "genomics"]     # where a feed's `class: <module>.<Class>` module is looked for (then beside its feed file)
 SCHEMA_VERSION = 1
 
 # exit codes, for schedulers (docs/guides/WORLD_DATA_GUIDE.md section "Exit codes")
@@ -137,7 +137,7 @@ class FeedSpec:
     """config/feeds/<feed>.yaml, checked. Every key is in docs/guides/WORLD_DATA_GUIDE.md section "The feed file"."""
     name: str
     title: str
-    impl: str                     # <module>.<Class> under tools/loaders/(external|news)/
+    impl: str                     # <module>.<Class> under tools/loaders/(external|news|genomics)/
     lake: str
     datasets: dict[str, Dataset]
     licence: Licence
@@ -271,7 +271,7 @@ def all_specs(config: Path | None = None) -> list[FeedSpec]:
 
 
 def feed_class(spec: FeedSpec, sources: Path | None = None):
-    """The Feed class a feed file names (``class: <module>.<Class>``): the module under tools/loaders/(external|news)/, else beside the feed
+    """The Feed class a feed file names (``class: <module>.<Class>``): the module under tools/loaders/(external|news|genomics)/, else beside the feed
     file (a site's own feed kept with its feed file)."""
     mod_name, _, cls_name = spec.impl.rpartition(".")
     folders = ([Path(sources)] if isinstance(sources, (str, Path)) else list(sources)) if sources else SOURCES + ([spec.path.parent] if spec.path else [])
