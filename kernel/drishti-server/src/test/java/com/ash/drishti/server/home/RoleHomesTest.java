@@ -253,7 +253,7 @@ class RoleHomesTest {
         Files.createSymbolicLink(link, homes());
         HomeCatalogue c = new HomeCatalogue(new HomeProperties(true, link.toString(), data.toString(), ROLES, "17:00", 30));
         assertEquals(Map.of(), c.faults());
-        assertEquals(7, c.all().size());
+        assertEquals(8, c.all().size());
     }
 
     @Test
