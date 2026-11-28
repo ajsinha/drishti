@@ -16,6 +16,7 @@
 package com.ash.drishti.kernel.api.home;
 
 import com.ash.drishti.kernel.api.security.Principal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -29,9 +30,23 @@ public interface HomeTable {
     /** The table's name, as a Home Sutra's {@code data:} entry says ({@code home_positions}). */
     String name();
 
+    /**
+     * The Homes this table is served to (empty: any Home). A module's own table names the Homes of its domain, so a person who is not offered
+     * one of them never reads it, whichever Home they ask through.
+     */
+    default List<String> homes() {
+        return List.of();
+    }
+
     /** The rows for the person; empty when the engine behind it has nothing for them (the fragment says so in its own words). */
     List<Map<String, Object>> rows(Context c);
 
     /** What a table is asked with. */
-    record Context(Principal person, HomeDefinition home, LocalDate today, LocalDate previous) {}
+    record Context(Principal person, HomeDefinition home, LocalDate today, LocalDate previous, Instant since) {
+
+        /** A table asked without a window: {@code since} is empty and the table reads from the Home's cut-off. */
+        public Context(Principal person, HomeDefinition home, LocalDate today, LocalDate previous) {
+            this(person, home, today, previous, null);
+        }
+    }
 }

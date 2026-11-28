@@ -253,6 +253,7 @@ Still at their old homes and to move with i2: `FunctionProvider` (its `EvalConte
 | `KindProvider` | answers a kind the module **computes** (replaces modules' `SourcePlugin`s and the reactive-connector Java runners): fetch, search, subscribe; inputs read through `Kinds` | `position` (derived from trades), `var-result` (`VRES`), `exposure-result`, intraday scenario PVs |
 | `ModuleSettings` | binds the module's `settings/schema.json` to a typed record; validated at start and on change | VaR windows, confidence, root names, hierarchies |
 | `AiToolProvider` | tools the AI assistant may call, each tied to a function (off function = no tool) | "VaR of a scope", "why VaR moved" |
+| `HomeTable`, `MeasureSource` | a module's own role-Home tables (served to the Homes it names) and measure source (figures and followed measures) | genomics: `genomics_gwas_top`, engine `genomics` |
 | `RestModule` (annotation `@ModuleApi`) | marks the module's controllers; the kernel mounts them under the module's namespace (section 4.5) | `/api/v1/risk/**` |
 | `ExportProvider` (P3) | named exports (workbook, regulatory files) | regulatory VaR files |
 | `PlaygroundTemplates` (P3) | the generic workbook streamer's templates | VaR, FRTB-SA, SIMM, SA-CCR, FVA playgrounds |

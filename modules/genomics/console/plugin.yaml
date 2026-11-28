@@ -42,6 +42,65 @@ home:
     - {title: "A gene: its variants along the protein", route: gene, params: {id: TP53}, cmd: "GENE TP53"}
     - {title: "A cohort: samples and variants", route: cohort, params: {id: COH-A}, cmd: "COHORT COH-A"}
     - {title: "A variant and its carriers", route: variant, params: {id: HX-A001}, cmd: "VARIANT HX-A001"}
+  role-cards:                # the cards genomics puts on the genomicist's Home (Your Home); each reads a home table the module serves for the genomicist Home only
+    - id: genomics-cohort
+      title: Cohort samples
+      kind: metric
+      table: home_kpis
+      pick: {LABEL: Samples}
+      fmt: amount0
+      open: COHORT
+      rank: {genomicist: 100}
+    - id: genomics-variants
+      title: New variants since the cut-off
+      kind: metric
+      table: home_kpis
+      pick: {LABEL: Variants}
+      fmt: amount0
+      worse: none
+      open: VARIANT
+      rank: {genomicist: 95}
+    - id: genomics-gwas
+      title: Top associations
+      kind: table
+      table: genomics_gwas_top
+      columns: [{label: Gene, col: GENE}, {label: Variant, col: VARIANT_ID}, {label: Trait, col: TRAIT}, {label: "-log10 p", col: NEG_LOG10_P, fmt: compact}]
+      rows: 6
+      open: "GWAS RESPONSE"
+      empty: No association table is loaded.
+      always: true
+      rank: {genomicist: 90}
+    - id: genomics-manhattan
+      title: Association map
+      kind: scatter
+      table: genomics_manhattan
+      x: X
+      value: Y
+      name: GENE
+      group: CHROM
+      rows: 120
+      open: "GWAS RESPONSE"
+      rank: {genomicist: 85}
+    - id: genomics-clinvar
+      title: ClinVar updates for your genes
+      kind: table
+      table: genomics_clinvar
+      columns: [{label: Gene, col: GENE}, {label: Variant, col: VARIANT_ID}, {label: Significance, col: SIGNIFICANCE}, {label: Updated, col: UPDATED}]
+      rows: 6
+      empty: No ClinVar changes for the genes your cohorts carry (or the ClinVar feed is not loaded).
+      always: true
+      rank: {genomicist: 80}
+    - id: genomics-loads
+      title: Genomics data loads
+      kind: table
+      table: genomics_loads
+      columns: [{label: Source, col: SOURCE}, {label: What, col: WHAT}, {label: Date, col: DATE}, {label: State, col: STATE}]
+      rows: 6
+      open: LOADS
+      always: true
+      rank: {genomicist: 70}
+  needs:                     # what genomics adds to Needs you: a VCF that failed validation (table genomics_needs of the Home genomicist)
+    - {table: genomics_needs, what: WHAT, detail: DETAIL, tone: bad, open: LOADS, homes: [genomicist]}
 visuals:                     # the module's own visual types (the custom-visual SDK): kinds of drishti-chart's registry, from its library
                              # elements/<library>/<file>, served at /m/genomics/elements/<library>/<module version>/<file>; each is glue over a
                              # generic drishti-chart kind (the drawing is the generic library's)

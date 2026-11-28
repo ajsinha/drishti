@@ -99,7 +99,7 @@ public final class MeasureSnapshotJob implements AutoCloseable {
         List<HomeData.KpiPoint> kpis = new ArrayList<>();
         for (HomeDefinition d : catalogue.all()) {
             for (HomeDefinition.Follow f : d.measures().follow()) {
-                MeasureSource s = sources.get(f.engine());
+                MeasureSource s = HomeSources.find(sources, f.engine());
                 if (s == null || !s.on()) {
                     LOG.info("home snapshot: {} left out, engine {} is {}", f.measure(), f.engine(), s == null ? "not present" : "off");
                     continue;
@@ -109,7 +109,7 @@ public final class MeasureSnapshotJob implements AutoCloseable {
                 }
             }
             for (HomeDefinition.Kpi k : d.measures().kpis()) {
-                MeasureSource s = sources.get(k.engine());
+                MeasureSource s = HomeSources.find(sources, k.engine());
                 if (s != null && s.on() && seen.add("kpi|" + k.label())) {
                     OptionalDouble v = s.kpi(FIRM, k.measure(), k.args(), day);
                     v.ifPresent(x -> kpis.add(new HomeData.KpiPoint(k.label(), day, x)));

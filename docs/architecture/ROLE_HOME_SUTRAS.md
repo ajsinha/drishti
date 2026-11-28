@@ -169,3 +169,22 @@ console page `/home/role`, a test per role and a browser walk of both Homes, and
 | The role definition's `home` field | `RoleDefinition` has no such field; `drishti.homes.roles` carries the mapping until the role store changes |
 | Contracts `docs/contracts/HOME.md` for the `home/*` tables | to write with the first run |
 | Build, run the tests, regenerate the fragment goldens and hashes | owner: builds later |
+
+## 6. Your Home: the cards every person lands on
+
+`/home` (drishti-console `routes/home_cards_routes.py`, `core/home_cards.py`) is where everyone lands after signing in. It does not replace the
+Home Sutras above; it reads the **same home tables** (`GET /api/v1/homes/<home>/tables/<table>`, for the person) and shows them as ranked cards.
+
+| Piece | What |
+|---|---|
+| Cards | declared by modules (console `plugin.yaml`, `home: role-cards:`) and by the console (`drishti-console/config/home-cards.yaml`): `id`, `kind` (`metric`, `bars`, `table`, `scatter`), `table`, `pick`, `rank` per role Home, `open`, `explain` |
+| Layout | Calm; Cockpit for the Homes named in `layouts:` (risk-manager, risk-officer); phone: stacked, Needs you first |
+| Needs you | raised alerts, the approvals inbox, late/missing/failed loads (`home_loads`), the high rows of `home_exceptions`; absent from the document when empty |
+| The document | a ViewModel (contract 1.2: panels, `layout.areas` and `place`, `phone`, panel `actions`) drawn by drishti-views; button effects (`host`) come back to the page: pin, unpin, hide, show, up, down, snooze, reset, explain, open |
+| View as | `All` and one button per Home the person is offered (Drishti Elements button group, one pressed); the choice is `homeCards.viewAs`, checked against the Homes offered; it limits ranking, layout and the tables asked to that Home |
+| Since your last visit | `home_digest` (built in): change events of the Home's `events:` kinds and followed measures that moved since the snapshot of that day, from `?since=<UTC>`; the window is the visit before this one (`prevVisit`) while this visit is the one just recorded, else `lastVisit`; none: the Home's cut-off; the console adds the alerts fired since |
+| A module's Homes | a module's `MeasureSource` and `HomeTable` beans reach the Homes through the registration bridge (`Extensions`, while the module is on); a table names its Homes (`homes()`), so it is served to them only; the console plugin's `home: needs:` adds a table's rows to Needs you |
+| Per person | the person's setting `homeCards` `{pins, hidden, order, snooze, lastVisit, prevVisit, viewAs}` (`PATCH /api/v1/me/settings`), validated by the server; nothing per person is held in the console |
+
+The genomics module's Home (`genomicist`, `config/homes/genomics/`) is the first module Home built this way: its figures (`genomics` measure source), its tables `genomics_gwas_top`, `genomics_manhattan`, `genomics_clinvar`, `genomics_loads`, `genomics_needs`, and its cards in `modules/genomics/console/plugin.yaml`.
+

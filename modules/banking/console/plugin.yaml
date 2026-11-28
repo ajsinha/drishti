@@ -258,3 +258,70 @@ routes:
   sutra: counterparty-risk/cpty-mtm
   function: CPMTM
   title: Counterparty MtM totals (derived from the trade valuations)
+home:
+  role-cards:                  # the cards banking puts on a role Home (docs/guides/USER_GUIDE.md, "Your Home"); each reads a home table the server serves for the person
+    - id: var
+      title: Firm VaR
+      kind: metric
+      table: home_kpis
+      pick: { LABEL: Firm VaR }
+      open: VAR BANK
+      explain: { kind: var, measure: var, scope: BANK }
+      rank: { risk-manager: 100, risk-officer: 100, trader: 70, quant: 60, credit-officer: 30 }
+    - id: es
+      title: Expected shortfall
+      kind: metric
+      table: home_kpis
+      pick: { LABEL: Expected shortfall }
+      open: VAR BANK
+      explain: { kind: var, measure: es, scope: BANK }
+      rank: { risk-manager: 90, risk-officer: 95, quant: 55 }
+    - id: desk-var
+      title: Desk VaR
+      kind: metric
+      table: home_kpis
+      pick: { LABEL: Desk VaR }
+      open: VAR
+      rank: { trader: 100 }
+    - id: limit-use
+      title: Limit use
+      kind: metric
+      table: home_kpis
+      pick: { LABEL: Limit use }
+      fmt: pct0
+      open: VLIM
+      rank: { risk-manager: 85, risk-officer: 90, trader: 80 }
+    - id: limits
+      title: Limit utilisation by desk
+      kind: bars
+      table: home_desk_limits
+      name: DESK
+      value: VAR
+      limit: LIMIT
+      open: VLIM
+      rank: { risk-manager: 80, risk-officer: 85, trader: 50 }
+    - id: backtest
+      title: Backtest
+      kind: metric
+      table: home_kpis
+      pick: { LABEL: Breaches }
+      fmt: amount0
+      light: [ 4, 9 ]                   # green up to 4 breaches in the window, amber up to 9, red above (the regulatory traffic light)
+      open: VHIST BANK
+      rank: { risk-manager: 75, risk-officer: 88, quant: 70 }
+    - id: exposure
+      title: Exposure against limits
+      kind: bars
+      table: home_exposure
+      name: CPTY
+      value: EXPOSURE
+      limit: LIMIT
+      open: EXP BANK
+      rank: { credit-officer: 100, risk-officer: 80, risk-manager: 70 }
+    - id: movers
+      title: Biggest movers
+      kind: table
+      table: home_changes
+      columns: [ { label: Subject, col: SUBJECT }, { label: Measure, col: MEASURE }, { label: Change, col: CHANGE } ]
+      rows: 5
+      rank: { risk-manager: 65, risk-officer: 60, trader: 75, credit-officer: 55, quant: 40 }

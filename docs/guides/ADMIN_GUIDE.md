@@ -37,7 +37,7 @@ almost everything here; it is all under **Admin** in the top bar. Every setting 
 12. [What a lens is](#12-what-a-lens-is)
 13. [Run a whole instance as Drishti Risk or Drishti Finance](#13-run-a-whole-instance-as-drishti-risk-or-drishti-finance)
 14. [Offer lenses to people](#14-offer-lenses-to-people)
-15. [Home: landings, cards and chips](#15-home-landings-cards-and-chips)
+15. [Home: landings, cards and chips](#15-home-landings-cards-and-chips) ([15.1 Configuring role Homes](#151-configuring-role-homes))
 16. [The shipped lenses](#16-the-shipped-lenses)
 17. [Customise a lens without forking it, and white-label it](#17-customise-a-lens-without-forking-it-and-white-label-it)
 18. [Make your own lens](#18-make-your-own-lens)
@@ -821,6 +821,72 @@ without a change to any file. A site replaces them in the console's `edition:` b
 The landings are not Sutras: a Sutra lays out one entity's view, and these pages span the engines with no entity. Each lens's landing is
 one template under its module's console plugin (`home/<lens>_landing.html`), drawn in the terminal look with the theme's own variables in
 every theme, one column on a phone. A figure the data cannot give is left out or labelled, never invented.
+
+### 15.1 Configuring role Homes
+
+Everyone lands on **Your Home** (`/home`) after signing in, unless they asked for another page or chose a landing of their own in their
+settings. What it holds is configured in three places, all files, none code:
+
+| What | Where | Says |
+|---|---|---|
+| Which Home a role has | the role's `home` field (Admin, Roles), preset by the distribution | the Home name (`risk-manager`, `trader`, `risk-officer`, `credit-officer`, `operations`, `quant`, `economist`, `genomicist`); the Home files are `config/homes/<module>/<home>.home.yaml` ([ROLE_HOME_SUTRAS.md](../architecture/ROLE_HOME_SUTRAS.md)) |
+| Which cards exist and for whom | a module's console `plugin.yaml`, `home: role-cards:`; the console's own in `drishti-console/config/home-cards.yaml` | a card's `id`, `title`, `kind` (`metric`, `bars`, `table`, `scatter`), the home `table` it reads, `pick`, `columns`, `open`, `explain` and `rank` |
+| Which layout | `layouts:` in `home-cards.yaml` | `risk-manager: cockpit`; any Home not named is calm |
+
+A card is a declaration over a **home table** (`home_kpis`, `home_desk_limits`, `home_exposure`, `home_changes`, `home_loads`, ...): the server serves each
+table for the person, so the figures are theirs and nothing is computed in the console.
+
+```yaml
+home:
+  role-cards:
+    - id: limits                      # lower-case words; the person's pins and hidden cards are kept under this id
+      title: Limit utilisation by desk
+      kind: bars                      # metric: one figure of a table row; bars: use against a limit; table: columns of rows
+      table: home_desk_limits
+      name: DESK
+      value: VAR
+      limit: LIMIT
+      open: VLIM                      # the Open button's command
+      explain: { kind: var, measure: var, scope: BANK }   # the Explain button (optional)
+      rank: { risk-manager: 80, risk-officer: 85, trader: 50 }   # weight per role Home; "*" is any Home
+```
+
+**Ranking.** A card is offered when one of the person's Homes has a weight for it (or it has a `*` weight); the highest weight over all their
+Homes puts it first, so a person with several roles sees the cards of every one ranked together. A card of a module that is switched off is
+not offered. A metric card whose figure the server does not have (its engine is off) is left out; a table card says its own empty words
+(`empty:`, or `always: true` to keep it on the page). A `light: [4, 9]` on a metric colours it green up to 4, amber up to 9, red above.
+
+**Needs you** reads three things that need no configuration: the person's raised alerts, their approvals inbox and the data loads that are
+late, missing or failed; the high exceptions of the Home's measures file (`exceptions:`) join them.
+
+**Per person.** Pins, hidden cards, order, snoozes, the last visit (`lastVisit`, and `prevVisit`, the visit before it, which the digest
+reads against), and the role they **View as** (`viewAs`, one of their own Homes: the console refuses a Home they are not offered) are the
+person's `homeCards` setting (`PATCH /api/v1/me/settings`); a card an administrator removes simply stops being drawn.
+
+**Since your last visit.** The digest panel reads the home table `home_digest` from the person's last visit (`GET /api/v1/homes/{home}/tables/home_digest?since=<UTC time>`;
+with no `since` the Home's reference cut-off): the change events of the kinds the Home's measures file lists (`events:`), and each followed
+measure (`follow:`) that moved since the stored snapshot of that day, for the subjects the person may see; the console adds the alerts fired since.
+
+**A module's own Home (genomics).** A module brings figures, tables and Needs-you items to a Home with no kernel code: a `MeasureSource` bean
+(engine `genomics`: `SAMPLES`, `VARIANTS`, `HITS`, and the variants and samples of each cohort, which the Home's `follow:` compares with the cut-off
+snapshot), `HomeTable` beans (a table names the Homes it is served to by `homes()`, so a person who is not offered that Home never reads it),
+and the console `plugin.yaml`:
+
+```yaml
+home:
+  role-cards:                         # the genomics cards; rank names the genomicist Home only, so no other role is offered them
+    - {id: genomics-gwas, title: Top associations, kind: table, table: genomics_gwas_top, rank: {genomicist: 90}}
+    - {id: genomics-manhattan, title: Association map, kind: scatter, table: genomics_manhattan, x: X, value: Y, name: GENE, group: CHROM, rank: {genomicist: 85}}
+  needs:                              # what the module adds to Needs you: each row of the table is one item
+    - {table: genomics_needs, what: WHAT, detail: DETAIL, tone: bad, open: LOADS, homes: [genomicist]}
+```
+
+The module's tables are `genomics_gwas_top` and `genomics_manhattan` (the association table of the genomics-showcase pack), `genomics_clinvar`
+(the ClinVar feed's table, symbolic name clinvar-variant: `GENE`, `VARIANT_ID`, `SIGNIFICANCE`, `UPDATED`, `BUSINESS_DATE`, for the genes the cohorts carry), `genomics_loads` (the ClinVar
+feed, the Ensembl feed's table, ensembl-gene, and each VCF file read) and `genomics_needs` (a VCF that failed validation, with its first problem). The lake
+tables are read by their symbolic names, never by a path (the site's bindings say where they live); a table that is not loaded shows as *not loaded*
+and its card says so in its own words. The feed rows are read at most once a minute. A role opens the Home through `drishti.homes.roles`
+(`genomicist` and `geneticist` open `genomicist`; add your own roles there, or in Admin, Roles); the Home files are `config/homes/genomics/`.
 
 ## 16. The shipped lenses
 

@@ -3782,6 +3782,8 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.homes.roles.quant` | list | `[quant]` |  | server | the quant's Home | restart |  | admin |
 | `drishti.homes.roles.analyst` | list | `[quant]` |  | server | an analyst opens the quant's Home | restart |  | admin |
 | `drishti.homes.roles.economist` | list | `[economist]` |  | server | the economist's Home | restart |  | admin |
+| `drishti.homes.roles.genomicist` | list | `[genomicist]` |  | server | the genomicist's Home (the genomics module) | restart |  | admin |
+| `drishti.homes.roles.geneticist` | list | `[genomicist]` |  | server | a geneticist opens the genomicist's Home | restart |  | admin |
 
 #### `drishti.trading`
 

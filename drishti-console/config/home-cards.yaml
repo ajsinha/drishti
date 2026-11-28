@@ -1,0 +1,47 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The console's own role-Home cards (docs/guides/USER_GUIDE.md, "Your Home"). A module adds its own in its console plugin.yaml under
+# home: role-cards: (the same shape); a Home's layout is Calm unless it is named here as a cockpit Home.
+#
+# A card reads one home table (the server serves it for the person: row rules and masks already applied; docs/architecture/ROLE_HOME_SUTRAS.md 2),
+# picks rows by ``pick``, and is drawn by Drishti Elements as ``kind``: metric (one figure), bars (use against a limit) or table. ``rank`` is the
+# weight per role Home (``*``: any Home); the highest weight over the Homes the person has puts the card first. ``open`` is the command its
+# Open button runs, ``explain`` the request of the existing Explain.
+layouts:
+  risk-manager: cockpit
+  risk-officer: cockpit
+cards:
+  - id: loads
+    title: Data loads
+    table: home_loads
+    kind: table
+    columns: [ { label: Pack, col: PACK }, { label: Kind, col: KIND }, { label: Date, col: BUSINESS_DATE }, { label: State, col: STATE } ]
+    open: LOADS
+    always: true
+    empty: Every daily load is in.
+    rank: { "*": 55, operations: 100 }
+  - id: pinned
+    title: Pinned
+    table: "@pinned"
+    kind: table
+    columns: [ { label: Kind, col: KIND }, { label: Id, col: ID, link: entity } ]
+    rank: { "*": 45 }
+  - id: recent
+    title: Recently used
+    table: home_mnemonics
+    kind: table
+    columns: [ { label: Mnemonic, col: MNEMONIC, link: command }, { label: About, col: ABOUT } ]
+    rows: 5
+    rank: { "*": 40 }

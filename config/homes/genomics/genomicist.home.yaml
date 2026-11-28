@@ -1,0 +1,23 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# A Home (docs/architecture/ROLE_HOME_SUTRAS.md, 1): the genomicist's. The cards of Your Home are the genomics module's own (its console plugin.yaml); this
+# file makes the Home exist for the roles that name it, so the module's figures, tables and Needs-you items are served to them and to no one else.
+home: genomicist
+title: Genomicist
+description: "Cohort status, the strongest associations, ClinVar updates for the genes you follow, data loads, files that failed validation"
+modules: [ genomics ]                      # offered only while the genomics module is on
+sutra: genomicist.sutra.yaml
+arrange: allow
+measures: genomicist.measures.yaml

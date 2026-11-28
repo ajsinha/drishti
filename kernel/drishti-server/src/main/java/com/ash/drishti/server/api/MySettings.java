@@ -67,6 +67,7 @@ public class MySettings {
         out.set("homeLanding", s.path("homeLanding").isTextual() ? s.get("homeLanding") : json.nullNode());
         out.set("tradingView", s.path("tradingView").isTextual() ? s.get("tradingView") : json.nullNode());   // Drishti Trading's View as
         out.set("varView", s.path("varView").isObject() ? s.get("varView") : json.nullNode());        // the VaR page's lens (2.9.7)
+        out.set("homeCards", s.path("homeCards").isObject() ? s.get("homeCards") : json.nullNode());     // the person's arrangement of their role Home
         return out;
     }
 }

@@ -18,7 +18,7 @@ from routes.home_routes import back_label
 
 def test_the_logo_carries_the_page_when_signed_in_and_the_landing_page_offers_the_way_back(client):
     view = client.get("/v/trade/IRS-48213").text
-    assert 'class="tbar-brand" href="/?from=/v/trade/IRS-48213"' in view
+    assert 'class="tbar-brand" href="/home"' in view                   # the logo is the way to Your Home
     landing = client.get("/?from=/v/trade/IRS-48213").text
     assert 'data-landing-back' in landing and 'href="/v/trade/IRS-48213"' in landing and "Back to IRS-48213" in landing
 
@@ -37,5 +37,5 @@ def test_labels_name_the_page():
 
 
 def test_every_header_logo_carries_the_page(client):
-    assert 'class="tbar-brand" href="/?from=/help"' in client.get("/help").text      # Help, signed in: the terminal header
-    assert 'class="tbar-brand" href="/"' in client.get("/").text, "the landing page's own logo needs no way back to itself"   # signed in: the one top bar
+    assert 'class="tbar-brand" href="/home"' in client.get("/help").text      # Help, signed in: the terminal header
+    assert 'class="tbar-brand" href="/home"' in client.get("/").text          # signed in: the one top bar, on the landing page too
