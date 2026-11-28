@@ -64,7 +64,7 @@ def test_sign_in_on_public_pages_offer_sign_in_with_a_checked_next(backend):
     assert login_url("//evil.example") == "/login" and login_url("/\\evil") == "/login"
     assert login_url("/help", "q=a b") == "/login?next=/help%3Fq%3Da%20b"
     r = c.post("/login", content="user=drishti-dev-admin&password=drishti-dev-admin123&next=//evil.example", headers=FORM, follow_redirects=False)
-    assert r.headers["location"] == "/t"
+    assert r.headers["location"] == "/home"                  # a refused next is the default landing: Your Home
 
 
 def test_signed_in_public_pages_show_the_account_menu_and_sign_out_lands_home_with_a_notice(backend):

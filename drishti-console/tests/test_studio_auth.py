@@ -84,7 +84,7 @@ def test_sign_in_goes_through_the_server(backend):
     assert bad.status_code == 401 and "wrong password" in bad.text
     r = c.post("/login", content="user=drishti-dev-admin&password=drishti-dev-admin123&next=//evil.example",
                follow_redirects=False, headers=FORM)
-    assert r.status_code == 303 and r.headers["location"] == "/t"
+    assert r.status_code == 303 and r.headers["location"] == "/home"
     home = c.get("/t").text
     assert "Sign out" in home and 'href="/admin/users"' in home
     ident = app.state.auth.identity(c.cookies.get(COOKIE))

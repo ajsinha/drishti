@@ -22,6 +22,7 @@ server (``homeCards``), read and written as them on every request: nothing per p
 from __future__ import annotations
 
 import asyncio
+import functools
 import json
 from datetime import datetime, timezone
 from urllib.parse import quote
@@ -39,17 +40,20 @@ router = APIRouter(include_in_schema=False)
 MERGED = ("home_kpis", "home_exceptions", "home_changes")      # a person with several roles sees every Home's rows of these
 ACTIONS = ("pin", "unpin", "hide", "show", "up", "down", "snooze", "reset", "visited")
 TONES = {"critical": "bad", "high": "bad", "error": "bad", "warn": "warn", "medium": "warn", "low": "muted", "info": "muted"}
-_CONFIG: dict = {}                                               # the console's own card file, read again when it changes (not per person)
+
+
+@functools.lru_cache(maxsize=4)
+def _load(stamp: int):
+    return hc.common_cards()
 
 
 def _common():
+    """The console's own card file, read again when it changes (static configuration: nothing of a person's)."""
     try:
         stamp = hc.CONFIG.stat().st_mtime_ns
     except OSError:
         stamp = 0
-    if _CONFIG.get("stamp") != stamp:
-        _CONFIG.update(stamp=stamp, value=hc.common_cards())
-    return _CONFIG["value"]
+    return _load(stamp)
 
 
 async def _get(request: Request, path: str):
