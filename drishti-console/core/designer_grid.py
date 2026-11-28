@@ -389,6 +389,9 @@ def _call(line: str, lead: int, base: int) -> dict:
     if r.peek() == ")":
         r.i += 1
     else:
+        if use and r.peek() == ";":      # a fragment with no parameters but the panel's own settings: fragment(; as: name), as shown() writes it
+            r.i += 1
+            into = opts
         while True:
             if r.peek() == "":
                 r.err("the formula is not closed: add )", opened, len(line))

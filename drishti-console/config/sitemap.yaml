@@ -210,6 +210,7 @@ help-sections:
 # the address and where it is reached from.
 in-context:
   /: "the brand at the left of the top bar (Home)"
+  /home/role: "the brand at the left of the top bar (Home): the person's start Home, by role (the picker beside its title chooses another)"
   /help/configuration: "Admin → Configuration (the reference) and Help → Operate"
   /help/developer: "Help centre"
   /help/examples: "Help centre and the terminal's examples"

@@ -29,7 +29,7 @@ HOMES = ("risk-manager", "trader")
 
 
 def data(pg):
-    return json.loads(pg.evaluate("document.getElementById('role-home-data').textContent"))
+    return json.loads(pg.evaluate("document.querySelector('[data-role-home]').getAttribute('data-role-home-data')"))
 
 
 @pytest.mark.parametrize("home", HOMES)

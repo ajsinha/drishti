@@ -14,7 +14,8 @@
 {% extends "base.html" %}
 {% block title %}{{ home.title }} · Home{% endblock %}
 {% block content %}
-<section class="role-home" data-role-home="{{ home.home }}" data-arrange="{{ 'true' if home.arrange else 'false' }}">
+<section class="role-home" data-role-home="{{ home.home }}" data-arrange="{{ 'true' if home.arrange else 'false' }}"
+  data-role-home-data='{{ {'home': home.home, 'sutra': home.sutra, 'sutraName': home.sutraName, 'arrange': home.arrange, 'tables': tables} | tojson }}'>
   <header class="role-home-head">
     <h1>{{ home.title }}</h1>
     {% if picker %}
@@ -28,7 +29,6 @@
   </header>
   {% if status.note %}<p class="role-home-note" role="status" data-role-home-note>{{ status.note }}</p>{% endif %}
   <div data-role-home-view></div>
-  <script type="application/json" id="role-home-data">{{ {'home': home.home, 'sutra': home.sutra, 'sutraName': home.sutraName, 'arrange': home.arrange, 'tables': tables} | tojson }}</script>
   <script src="{{ url_for('static', path='js/drishti_role-home.js') }}" defer></script>
 </section>
 {% endblock %}

@@ -20,6 +20,7 @@
      by /me/arrange/<sutra>), and a figure's click event (the Rachana events open0..open7 of core/kpi-strip, open of the lists) runs its
      command in the terminal. The Sutra's panels are drawn by the Elements renderer into [data-role-home-view]; TODO: the server's view
      model of a Home (the bind of the Sutra over the home tables) is the one thing not wired yet. */
+  function drishti_url(p) { var f = globalThis.drishti_url; return typeof f === 'function' && f !== drishti_url ? f(p) : p; }   // drishti-core's base helper when the page has it; a page without it (the renderer, an embed) keeps the URL as it is
   var root = document.querySelector('[data-role-home]');
   if (!root) { return; }
   var D = (g.Drishti = g.Drishti || {});
@@ -32,12 +33,12 @@
   var pick = root.querySelector('[data-role-home-pick]');
   if (pick) {
     pick.addEventListener('change', function () {
-      fetch('/api/home/me', {
+      fetch(drishti_url('/api/home/me'), {
         method: 'PUT', credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf() },
         body: JSON.stringify({ home: pick.value })
       }).then(function (r) {
-        if (r.ok) { g.location.href = '/home/role/' + encodeURIComponent(pick.value); }
+        if (r.ok) { g.location.href = drishti_url('/home/role/') + encodeURIComponent(pick.value); }
       });
     });
   }
@@ -57,7 +58,7 @@
     var d = e.detail || {};
     var cmd = d.payload && d.payload.command;
     if (/^(open[0-7]?|open)$/.test(d.name || '') && typeof cmd === 'string' && cmd.trim()) {
-      g.location.href = '/go?q=' + encodeURIComponent(cmd.trim());
+      g.location.href = drishti_url('/go?q=') + encodeURIComponent(cmd.trim());
     }
   });
 
