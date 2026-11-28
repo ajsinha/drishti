@@ -58,7 +58,7 @@ public final class HomeCatalogue {
             Map<String, HomeDefinition> next = new LinkedHashMap<>();
             Map<String, String> bad = new LinkedHashMap<>();
             if (props.enabled() && props.dir() != null && !props.dir().isBlank() && Files.isDirectory(Path.of(props.dir()))) {
-                try (Stream<Path> s = Files.walk(Path.of(props.dir()))) {
+                try (Stream<Path> s = Files.walk(Path.of(props.dir()), java.nio.file.FileVisitOption.FOLLOW_LINKS)) {
                     for (Path f : s.filter(p -> p.getFileName().toString().endsWith(".home.yaml")).sorted().toList()) {
                         try {
                             HomeDefinition d = HomeFiles.read(f);

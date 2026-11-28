@@ -91,7 +91,8 @@ def split(a, kind: str, table: str | None, children: list, scratch: pathlib.Path
 def run(a, kind: str, table: str | None, children: list, build_run) -> tuple[int, dict]:
     """Builds every child kind of ``kind`` (after its parent's load); (worst exit code, {child kind: key facts of its summary}).
     ``build_run`` is lake build's ``run`` (a child build is a build of the scratch files with the parent's options)."""
-    scratch = pathlib.Path(tempfile.mkdtemp(prefix="drishti-children-"))
+    import lakeconfig
+    scratch = pathlib.Path(tempfile.mkdtemp(prefix="drishti-children-", dir=lakeconfig.loader_work_dir()))
     worst, out = 0, {}
     try:
         rows = split(a, kind, table, children, scratch)

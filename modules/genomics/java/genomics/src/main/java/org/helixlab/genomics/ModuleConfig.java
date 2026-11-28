@@ -62,6 +62,42 @@ public class ModuleConfig {
         return new ProteinBench(data, board);
     }
 
+    /** What the genomicist's Home reads: the figures and the module's own home tables (docs/architecture/ROLE_HOME_SUTRAS.md). */
+    @Bean
+    public GenomicsHome genomicsHome(GenomicsData data, ShowcaseData showcase) {
+        return new GenomicsHome(data, showcase);
+    }
+
+    @Bean
+    public com.ash.drishti.kernel.api.home.MeasureSource genomicsMeasures(GenomicsHome home) {
+        return home.measures();
+    }
+
+    @Bean
+    public com.ash.drishti.kernel.api.home.HomeTable genomicsGwasTop(GenomicsHome home) {
+        return home.tables().get(0);
+    }
+
+    @Bean
+    public com.ash.drishti.kernel.api.home.HomeTable genomicsManhattan(GenomicsHome home) {
+        return home.tables().get(1);
+    }
+
+    @Bean
+    public com.ash.drishti.kernel.api.home.HomeTable genomicsClinvar(GenomicsHome home) {
+        return home.tables().get(2);
+    }
+
+    @Bean
+    public com.ash.drishti.kernel.api.home.HomeTable genomicsLoads(GenomicsHome home) {
+        return home.tables().get(3);
+    }
+
+    @Bean
+    public com.ash.drishti.kernel.api.home.HomeTable genomicsNeeds(GenomicsHome home) {
+        return home.tables().get(4);
+    }
+
     /** The showcase's REST API, under /api/v1/genomics/. */
     @Bean
     public ShowcaseController showcaseController(ShowcaseData data, GenomicsBoard board, ProteinBench bench) {

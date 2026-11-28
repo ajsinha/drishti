@@ -52,6 +52,7 @@ from datetime import date
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "lake"))
+import lakeconfig  # noqa: E402  (the one join of lake/domain/table: locate)
 import feedroute  # noqa: E402  (a file's .ready file)
 import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
 from drishti_lake import archives  # noqa: E402  (Drishti Lake's archive rule, the one every loader shares)
@@ -192,7 +193,7 @@ def load(rows: list[pathlib.Path], root: pathlib.Path, restated: list[pathlib.Pa
     for (domain, table), t in tables.items():
         lay = _layout(domain, table, t["kind"], layouts if layouts is not None else lays)
         by_day = {d: [(i, body, json.loads(body) if lay else None) for i, body in rs] for d, rs in t["days"].items()}
-        path = root / domain / table
+        path = lakeconfig.locate_path(root, domain, table)
         if fmt == "iceberg":                            # the corrections first, then one load: each date is replaced once
             for d, rs in sorted(fixes.get((domain, table), {}).items()):
                 ids = {i for i, _ in rs}

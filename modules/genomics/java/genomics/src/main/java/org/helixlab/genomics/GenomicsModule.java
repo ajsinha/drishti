@@ -28,10 +28,12 @@ import java.util.Map;
 public class GenomicsModule implements DrishtiModule {
 
     private final ShowcaseData showcase;
+    private final GenomicsHome home;
 
-    /** The kernel registers the entry in the module's Spring context, which gives it the showcase's tables (ModuleConfig). */
-    public GenomicsModule(ShowcaseData showcase) {
+    /** The kernel registers the entry in the module's Spring context, which gives it the showcase's tables and the Home's (ModuleConfig). */
+    public GenomicsModule(ShowcaseData showcase, GenomicsHome home) {
         this.showcase = showcase;
+        this.home = home;
     }
 
     @Override
@@ -42,14 +44,18 @@ public class GenomicsModule implements DrishtiModule {
     @Override
     public void start(ModuleContext context) {
         context.audit("genomics.started", java.util.Map.of("data", context.dataDir().toString()));
+        ShowcaseData.Source rows = (kind, sink) -> context.kinds().documents(kind, AsOf.LATEST, d -> {
+            if (!d.deleted() && d.data() != null && d.data().unwrap() instanceof Map<?, ?> m) {
+                Map<String, Object> row = new LinkedHashMap<>();
+                m.forEach((k, v) -> row.put(String.valueOf(k), v));
+                sink.accept(row);
+            }
+        });
         if (showcase != null) {
-            showcase.attach((kind, sink) -> context.kinds().documents(kind, AsOf.LATEST, d -> {
-                if (!d.deleted() && d.data() != null && d.data().unwrap() instanceof Map<?, ?> m) {
-                    Map<String, Object> row = new LinkedHashMap<>();
-                    m.forEach((k, v) -> row.put(String.valueOf(k), v));
-                    sink.accept(row);
-                }
-            }));
+            showcase.attach(rows);
+        }
+        if (home != null) {
+            home.attach(rows);
         }
     }
 
@@ -57,6 +63,9 @@ public class GenomicsModule implements DrishtiModule {
     public void stop() {
         if (showcase != null) {
             showcase.clear();
+        }
+        if (home != null) {
+            home.clear();
         }
     }
 }

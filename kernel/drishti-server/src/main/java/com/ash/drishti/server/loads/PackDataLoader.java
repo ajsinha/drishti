@@ -118,8 +118,7 @@ public class PackDataLoader {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the connector '" + connector + "' has no root folder (settings.root)");
         }
         String domain = java.util.Objects.requireNonNullElse(setting.apply("domain"), "");
-        Path dir = Path.of(root).toAbsolutePath().normalize();
-        dir = domain.isBlank() ? dir : dir.resolve(domain).normalize();
+        Path dir = com.ash.drishti.api.resolution.TableCatalogue.locateLocal(root, domain);
         String cols = java.util.Objects.requireNonNullElse(setting.apply("layout." + kind + ".columns"), "");
         List<String> columns = java.util.Arrays.stream(cols.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
         String key = String.valueOf(spec.get("key") == null ? "id" : spec.get("key"));

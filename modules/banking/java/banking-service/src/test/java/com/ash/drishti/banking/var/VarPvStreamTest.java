@@ -309,9 +309,26 @@ class VarPvStreamTest {
             for (String node : one.book().nodes().keySet()) {
                 JsonNode a = ask("/api/v1/risk/var/scope/path?size=1", "NODE:" + node, DAY, ccy);
                 JsonNode e = ask("/api/v1/risk/var/scope/path?size=1", "NODE:" + node, ONE_RUN, ccy);
-                assertThat(a.get("series").toString()).as(node + " " + ccy).isEqualTo(e.get("series").toString());
-                assertThat(a.get("var").asDouble()).as(node + " " + ccy).isEqualTo(e.get("var").asDouble());
-                assertThat(a.get("es").asDouble()).as(node + " " + ccy).isEqualTo(e.get("es").asDouble());
+                if (ccy == null) {
+                    assertThat(a.get("series").toString()).as(node + " " + ccy).isEqualTo(e.get("series").toString());
+                    assertThat(a.get("var").asDouble()).as(node + " " + ccy).isEqualTo(e.get("var").asDouble());
+                    assertThat(a.get("es").asDouble()).as(node + " " + ccy).isEqualTo(e.get("es").asDouble());
+                } else {
+                    // another currency sums the converted book (R2_CUT_PLAN 6.6 (2)): a full run's rows come from the mapped tier's
+                    // float32 USD rows, the stream's from the batch's own figures, a few millionths apart; the fixture's CAD figures sit
+                    // on half units, so the API's whole units may tie either way: to the cent on the exact vectors, a unit on the API
+                    for (int j = 0; j < a.get("series").size(); j++) {
+                        assertThat(a.get("series").get(j).asDouble()).as(node + " " + ccy + " " + j).isCloseTo(e.get("series").get(j).asDouble(),
+                                within(1.0));
+                    }
+                    assertThat(a.get("var").asDouble()).as(node + " " + ccy).isCloseTo(e.get("var").asDouble(), within(1.0));
+                    assertThat(a.get("es").asDouble()).as(node + " " + ccy).isCloseTo(e.get("es").asDouble(), within(1.0));
+                    double[] xa = svc.scoped(null, "NODE:" + node, DAY, ccy).vector();
+                    double[] xe = svc.scoped(null, "NODE:" + node, ONE_RUN, ccy).vector();
+                    for (int j = 0; j < xa.length; j++) {
+                        assertThat(xa[j]).as(node + " " + ccy + " exact " + j).isCloseTo(xe[j], within(0.005));
+                    }
+                }
             }
         }
         VarService.Scoped a = svc.scoped(null, "NODE:MGMT~BANK", DAY, null);

@@ -58,8 +58,11 @@ COMMITTABLE, INTERNAL = "committable", "internal only"
 
 
 def data_dir() -> Path:
-    """The configurable data folder: DRISHTI_DATA_DIR, else <repository>/data."""
-    return Path(os.environ.get("DRISHTI_DATA_DIR") or ROOT / "data").expanduser().resolve()
+    """The configurable data folder, as every lake tool has it (lakeconfig.data_dir): --data-dir, the settings file, DRISHTI_DATA_DIR, else <repository>/data."""
+    if str(ROOT / "tools" / "lake") not in sys.path:
+        sys.path.insert(0, str(ROOT / "tools" / "lake"))
+    import lakeconfig
+    return lakeconfig.data_dir().expanduser().resolve()
 
 
 def now() -> str:

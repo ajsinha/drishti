@@ -54,7 +54,7 @@ class RoleHomesTest {
 
     static final Map<String, List<String>> ROLES = Map.ofEntries(Map.entry("risk-manager", List.of("risk-manager")), Map.entry("trader", List.of("trader")),
             Map.entry("risk-officer", List.of("risk-officer")), Map.entry("credit-officer", List.of("credit-officer")),
-            Map.entry("operations", List.of("operations")), Map.entry("quant", List.of("quant")), Map.entry("economist", List.of("economist")));
+            Map.entry("operations", List.of("operations")), Map.entry("quant", List.of("quant")), Map.entry("economist", List.of("economist")), Map.entry("genomicist", List.of("genomicist")));
 
     @TempDir Path data;
 
@@ -70,13 +70,13 @@ class RoleHomesTest {
     void everyHomeFileLoads() {
         HomeCatalogue c = catalogue();
         assertEquals(Map.of(), c.faults());
-        assertEquals(Set.of("risk-manager", "trader", "risk-officer", "credit-officer", "operations", "quant", "economist"),
+        assertEquals(Set.of("risk-manager", "trader", "risk-officer", "credit-officer", "operations", "quant", "economist", "genomicist"),
                 c.all().stream().map(HomeDefinition::name).collect(java.util.stream.Collectors.toSet()));
     }
 
     @ParameterizedTest
     @CsvSource({"risk-manager,risk-manager", "trader,trader", "risk-officer,risk-officer", "credit-officer,credit-officer", "operations,operations",
-            "quant,quant", "economist,economist"})
+            "quant,quant", "economist,economist", "genomicist,genomicist"})
     void aRoleOpensItsHomeAndOnlyItsHome(String role, String home) {
         HomeCatalogue c = catalogue();
         List<HomeDefinition> offered = c.offered(new Principal("u", List.of(role)), false, m -> true, m -> true);
@@ -88,7 +88,7 @@ class RoleHomesTest {
     @Test
     void anAdministratorOpensEveryHomeAndAnUnknownRoleNone() {
         HomeCatalogue c = catalogue();
-        assertEquals(7, c.offered(new Principal("a", List.of("admin")), true, m -> true, m -> true).size());
+        assertEquals(8, c.offered(new Principal("a", List.of("admin")), true, m -> true, m -> true).size());
         assertTrue(c.offered(new Principal("x", List.of("viewer")), false, m -> true, m -> true).isEmpty());
     }
 
@@ -100,7 +100,7 @@ class RoleHomesTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"risk-manager", "trader", "risk-officer", "credit-officer", "operations", "quant", "economist"})
+    @CsvSource({"risk-manager", "trader", "risk-officer", "credit-officer", "operations", "quant", "economist", "genomicist"})
     void theSutraIsFragmentsOnlyAndReadsServedTables(String home) {
         HomeDefinition d = catalogue().find(home).orElseThrow();
         String text = d.sutraText();
@@ -145,7 +145,7 @@ class RoleHomesTest {
     }
 
     /** A fake engine: desk VaR with a limit, and a KPI. */
-    static final class FakeVar implements MeasureSource {
+    static class FakeVar implements MeasureSource {
         boolean on = true;
 
         public String engine() {
@@ -213,6 +213,49 @@ class RoleHomesTest {
         assertTrue(t.rows("home_desk_limits", p, d).orElseThrow().isEmpty());
     }
 
+    /** A loaded module's MeasureSource and HomeTable reach the Homes through the bridge's live collection (a product bug before: the panels were empty). */
+    @Test
+    void aLoadedModulesSourceAndTableAreReadLive() {
+        HomeStore store = new HomeStore(data, 30);
+        HomeTables t = tables(new FakeVar() {
+            public String engine() {
+                return "other";
+            }
+        }, store);
+        HomeDefinition d = catalogue().find("risk-manager").orElseThrow();
+        Principal p = new Principal("u", List.of("risk-manager"));
+        assertTrue(t.rows("home_kpis", p, d).orElseThrow().isEmpty(), "no source of the engine var yet");
+        Runnable w1 = com.ash.drishti.common.Extensions.add(MeasureSource.class, "test-module", new FakeVar());
+        Runnable w2 = com.ash.drishti.common.Extensions.add(com.ash.drishti.kernel.api.home.HomeTable.class, "test-module", new com.ash.drishti.kernel.api.home.HomeTable() {
+            public String name() {
+                return "home_test_live";
+            }
+
+            public List<Map<String, Object>> rows(Context c) {
+                return List.of(Map.of("X", 1));
+            }
+        });
+        try {
+            assertEquals(1, t.rows("home_kpis", p, d).orElseThrow().size(), "the module's source answers");
+            assertEquals(1, t.rows("home_test_live", p, d).orElseThrow().size(), "the module's table answers");
+            assertTrue(t.names().contains("home_test_live"));
+        } finally {
+            w1.run();
+            w2.run();
+        }
+        assertTrue(t.rows("home_kpis", p, d).orElseThrow().isEmpty(), "withdrawn with the module");
+    }
+
+    /** The homes folder may be a symlink (a packaged server links each committed config part): it is walked, no setting needed. */
+    @Test
+    void aSymlinkedHomesFolderIsWalked() throws IOException {
+        Path link = data.resolve("homes-link");
+        Files.createSymbolicLink(link, homes());
+        HomeCatalogue c = new HomeCatalogue(new HomeProperties(true, link.toString(), data.toString(), ROLES, "17:00", 30));
+        assertEquals(Map.of(), c.faults());
+        assertEquals(8, c.all().size());
+    }
+
     @Test
     void theSnapshotIsTakenOnceAndTheEventsAndDriversAreKept() {
         HomeStore store = new HomeStore(data, 30);
@@ -227,5 +270,72 @@ class RoleHomesTest {
         assertEquals("market-data", store.drivers(day).get(0).driver());
         store.putSnapshot(day.plusDays(40), Instant.parse("2026-12-29T22:00:00Z"), List.of());
         assertFalse(store.hasSnapshot(day), "days beyond keep-days are removed");
+    }
+
+    /** A fake engine whose desk VaR moved: DESK-A now 150 (was 100), DESK-B unchanged. */
+    static final class MovingVar implements MeasureSource {
+        public String engine() {
+            return "var";
+        }
+
+        public boolean on() {
+            return true;
+        }
+
+        public OptionalDouble kpi(Principal p, String m, Map<String, Object> a, LocalDate d) {
+            return OptionalDouble.empty();
+        }
+
+        public List<HomeData.MeasureValue> values(Principal p, String m, String kind, LocalDate d) {
+            return List.of(new HomeData.MeasureValue("desk", "DESK-A", "VAR", 150), new HomeData.MeasureValue("desk", "DESK-B", "VAR", 80));
+        }
+
+        public List<HomeData.LimitRow> limits(Principal p, String m, String kind, LocalDate d) {
+            return List.of();
+        }
+    }
+
+    /** A module's own table, served to its own Home only. */
+    record OwnTable(String name, List<String> homes) implements com.ash.drishti.kernel.api.home.HomeTable {
+        public List<Map<String, Object>> rows(Context c) {
+            return List.of(Map.of("SINCE", String.valueOf(c.since())));
+        }
+    }
+
+    @Test
+    void theDigestReadsFromTheGivenTimeAndAModulesTableIsItsHomesOnly() throws IOException {
+        Path dir = Files.createDirectories(data.resolve("homes/x"));
+        Files.writeString(dir.resolve("one.sutra.yaml"), "rachana: 1.2\nsutra: home-one\n");
+        Files.writeString(dir.resolve("one.home.yaml"), "home: one\ntitle: One\nsutra: one.sutra.yaml\nmeasures: one.measures.yaml\n");
+        Files.writeString(dir.resolve("one.measures.yaml"), "home: one\nfollow:\n  - { measure: VAR, engine: var, subjects: desk, min-abs: 10, min-rel: 0 }\nevents: [ load ]\n");
+        Files.writeString(dir.resolve("two.sutra.yaml"), "rachana: 1.2\nsutra: home-two\n");
+        Files.writeString(dir.resolve("two.home.yaml"), "home: two\ntitle: Two\nsutra: two.sutra.yaml\n");
+        HomeCatalogue c = new HomeCatalogue(new HomeProperties(true, data.resolve("homes").toString(), data.toString(), Map.of("r", List.of("one", "two")), null, null));
+        HomeStore store = new HomeStore(data, 30);
+        store.putSnapshot(LocalDate.parse("2026-11-19"), Instant.parse("2026-11-19T22:00:00Z"),
+                List.of(new HomeData.MeasureValue("desk", "DESK-A", "VAR", 100), new HomeData.MeasureValue("desk", "DESK-B", "VAR", 80)));
+        store.addEvent(LocalDate.parse("2026-11-19"), new HomeData.Event("feed", "p/old", "load", Instant.parse("2026-11-19T20:00:00Z"), "p/old loaded"));
+        store.addEvent(LocalDate.parse("2026-11-19"), new HomeData.Event("feed", "p/new", "load", Instant.parse("2026-11-19T23:00:00Z"), "p/new loaded"));
+        store.addEvent(LocalDate.parse("2026-11-20"), new HomeData.Event("feed", "p/today", "load", Instant.parse("2026-11-20T09:00:00Z"), "p/today loaded"));
+        store.addEvent(LocalDate.parse("2026-11-20"), new HomeData.Event("desk", "DESK-Z", "limit-state", Instant.parse("2026-11-20T10:00:00Z"), "not a kind of this Home"));
+        BusinessDates dates = new BusinessDates(new BusinessDateProperties(null, "UTC", null, "2026-11-20"), Clock.fixed(Instant.parse("2026-11-20T18:00:00Z"), ZoneOffset.UTC));
+        HomeTables t = new HomeTables(new HomeProperties(true, null, data.toString(), null, null, null), store,
+                new HomeClock(dates, Clock.fixed(Instant.parse("2026-11-20T18:00:00Z"), ZoneOffset.UTC)), List.of(new MovingVar()),
+                List.of(new OwnTable("module_table", List.of("one"))), ChangeEngineHost.NOT_HOSTED, List::of);
+        Principal p = new Principal("u", List.of("r"));
+        HomeDefinition one = c.find("one").orElseThrow(), two = c.find("two").orElseThrow();
+
+        List<String> texts = t.rows("home_digest", p, one, Instant.parse("2026-11-20T00:00:00Z")).orElseThrow().stream().map(r -> String.valueOf(r.get("TEXT"))).toList();
+        assertTrue(texts.contains("p/today loaded") && !texts.contains("p/new loaded") && !texts.contains("p/old loaded"), "only what happened since the visit: " + texts);
+        assertTrue(texts.stream().anyMatch(x -> x.equals("DESK-A VAR 100 to 150 (+50)")) && texts.stream().noneMatch(x -> x.contains("DESK-B") || x.contains("not a kind")),
+                "a followed measure that moved, not one that did not, and no event of another kind: " + texts);
+        List<String> since = t.rows("home_digest", p, one, Instant.parse("2026-11-19T21:00:00Z")).orElseThrow().stream().map(r -> String.valueOf(r.get("TEXT"))).toList();
+        assertTrue(since.contains("p/new loaded") && since.contains("p/today loaded") && !since.contains("p/old loaded"));
+        assertEquals(3, t.rows("home_digest", p, one).orElseThrow().stream().filter(r -> String.valueOf(r.get("TEXT")).endsWith("loaded")).count(),
+                "with no time the Home's own cut-off (yesterday 17:00) is the start");
+
+        assertTrue(t.rows("module_table", p, one, null).isPresent());
+        assertTrue(t.rows("module_table", p, two, null).isEmpty(), "a module's table is served to its own Homes only");
+        assertTrue(t.names().contains("module_table") && t.names().contains("home_digest"));
     }
 }

@@ -35,8 +35,18 @@ SCENARIO_PV_CONTRACT = CONTRACTS / "scenario-pv.contract.yaml"
 SCENARIO_SET_CONTRACT = CONTRACTS / "scenario-set.contract.yaml"
 FX_SCENARIO_CONTRACT = CONTRACTS / "fx-scenario.contract.yaml"
 PACK = "market-risk"
-DEFAULT_INBOX = ROOT / "data" / "dataload" / "inbox"
-DEFAULT_OUT = ROOT / "data" / "pvf"
+
+
+def _data() -> Path:
+    """The data folder (lakeconfig.data_dir): the settings file, DRISHTI_DATA_DIR, else this checkout's data/."""
+    if str(ROOT / "tools" / "lake") not in sys.path:
+        sys.path.insert(0, str(ROOT / "tools" / "lake"))
+    import lakeconfig
+    return lakeconfig.data_dir()
+
+
+DEFAULT_INBOX = _data() / "dataload" / "inbox"
+DEFAULT_OUT = _data() / "pvf"
 DEFAULT_MAPPING = Path(__file__).resolve().parent / "kinds" / "scenario-pv.pvf.yaml"
 
 log = logging.getLogger("pvf")

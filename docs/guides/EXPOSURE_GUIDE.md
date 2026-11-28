@@ -593,7 +593,7 @@ All under `/api/v1/risk/exposure`. Every `GET` takes `asOf` (the business date; 
 | `GET /compare` | `a`, `b` (an id or `now`) | both, the change, PFE per tenor, trades added and removed |
 | `GET /status` | | the settings, runs loaded, hot files, sizes |
 | `GET /retention` | | each date held: what the retention keeps, the dates whose trade paths are beyond their window |
-| `GET /official` | `asOf` | the official record of a date |
+| `GET /official` | `asOf`, `trades` | the official record of a date; `trades=true` adds every trade's EE contribution the record kept (`tradeContributions`) |
 | `POST /official` | `asOf` | take the official capture now (administrators) |
 | `POST /reload` | | drop the loaded dates (administrators) |
 

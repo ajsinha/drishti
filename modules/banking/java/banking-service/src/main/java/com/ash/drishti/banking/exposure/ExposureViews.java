@@ -407,15 +407,136 @@ final class ExposureViews {
      * paths and sets the reference data knows without (marked {@code noPaths}); only what the viewer sees, at their level.
      */
     Map<String, Object> tree(Principal p, LocalDate date, ExposureService.Ask ask) {
+        return tree(p, date, ask, null);
+    }
+
+    /**
+     * Where the tree's figures come from: the in-tree calculator ({@code null} to {@link #tree(Principal, LocalDate, ExposureService.Ask,
+     * TreeFigures)}), or Drishti Risk's {@code ccr} engine ({@link ExposureEnginePath#tree}, R2). The tree's shape, names, groups, the
+     * reference netting sets without paths and the viewer's rules stay the host's either way.
+     */
+    interface TreeFigures {
+        /** Puts the scope's {@code epe, peakPfe, peakPfeTenor, peakEe, ee, flags} into {@code n}; its netting sets; refuses when it cannot be summed. */
+        int put(Map<String, Object> n, String scope, ExposureDate d);
+
+        /** The counterparty's stored credit limit and how much of it the peak PFE at the limit's confidence uses (after {@link #put}); null without one. */
+        Map<String, Object> limit(ExposureDate d, String counterparty);
+
+        /** The run the figures are of. */
+        String runId(ExposureDate d);
+    }
+
+    Map<String, Object> tree(Principal p, LocalDate date, ExposureService.Ask ask, TreeFigures engine) {
         ExposureDate d = svc.date(date, ask.strict());
-        ExposureAccess.View v = svc.access().view(p, d);
-        ExposureBook b = d.book();
+        TreeFigures f = engine != null ? engine : new TreeFigures() {
+            private final Map<String, ExposureService.Scoped> asked = new java.util.HashMap<>();
+
+            @Override
+            public int put(Map<String, Object> n, String scope, ExposureDate dd) {
+                ExposureService.Scoped s = svc.scoped(p, scope, dd.date(), ask);
+                figures(n, s);
+                asked.put(scope, s);
+                return s.result().pieces.size();
+            }
+
+            @Override
+            public Map<String, Object> limit(ExposureDate dd, String counterparty) {
+                return explorer.limit(asked.get("CPTY:" + counterparty), counterparty);
+            }
+
+            @Override
+            public String runId(ExposureDate dd) {
+                return dd.book().runId();
+            }
+        };
+        return tree(p, TreeShape.of(d, svc.access().view(p, d)), ask, f);
+    }
+
+    /**
+     * What the tree reads of a date beside its figures: the reference ({@link #date}: known netting sets, names, groups, limits), which known
+     * sets have paths (an ordinal, -1 without), what the viewer sees, each set's CSA label, a counterparty's home legal entity, the grid's
+     * tenors and the number of sets with paths. In-tree from the loaded date's book ({@link #of}); on the engine path from a reference-only
+     * read and the engine's rows (R2, {@link ExposureEnginePath#tree}).
+     */
+    interface TreeShape {
+        ExposureDate date();
+
+        int set(String id);
+
+        boolean sees(int set);
+
+        boolean details(int set);
+
+        boolean full();
+
+        String csa(int set);
+
+        String home(String counterparty);
+
+        List<String> tenors();
+
+        int withPaths();
+
+        static TreeShape of(ExposureDate d, ExposureAccess.View v) {
+            ExposureBook b = d.book();
+            return new TreeShape() {
+                @Override
+                public ExposureDate date() {
+                    return d;
+                }
+
+                @Override
+                public int set(String id) {
+                    return b.setOrdinal(id);
+                }
+
+                @Override
+                public boolean sees(int set) {
+                    return v.seesSet(set);
+                }
+
+                @Override
+                public boolean details(int set) {
+                    return v.detailsSet(set);
+                }
+
+                @Override
+                public boolean full() {
+                    return v.full();
+                }
+
+                @Override
+                public String csa(int set) {
+                    return ExposureExplorer.csaLabel(b.set(set).csa());
+                }
+
+                @Override
+                public String home(String counterparty) {
+                    return ExposureExplorer.homeLegalEntity(b, counterparty);
+                }
+
+                @Override
+                public List<String> tenors() {
+                    return ExposureExplorer.tenors(b.grid());
+                }
+
+                @Override
+                public int withPaths() {
+                    return b.sets().size();
+                }
+            };
+        }
+    }
+
+    /** The tree from its shape and figures (both paths). */
+    Map<String, Object> tree(Principal p, TreeShape t, ExposureService.Ask ask, TreeFigures f) {
+        ExposureDate d = t.date();
         Map<String, String> groupOf = new LinkedHashMap<>();
         d.groups().forEach((g, ms) -> ms.forEach(c -> groupOf.putIfAbsent(c, g)));
         Map<String, Map<String, Object>> cps = new java.util.TreeMap<>();
         for (ExposureDate.Known k : d.known().values()) {
-            int s = b.setOrdinal(k.id());
-            if (s >= 0 && !v.seesSet(s) || s < 0 && !v.full()) {
+            int s = t.set(k.id());
+            if (s >= 0 && !t.sees(s) || s < 0 && !t.full()) {
                 continue;
             }
             Map<String, Object> cp = cps.computeIfAbsent(String.valueOf(k.counterparty()), c -> {
@@ -432,11 +553,11 @@ final class ExposureViews {
             n.put("id", k.id());
             n.put("legalEntity", k.legalEntity());
             n.put("members", k.members());
-            n.put("csa", s >= 0 ? ExposureExplorer.csaLabel(b.set(s).csa()) : k.csa() == null ? "none" : k.csa());
+            n.put("csa", s >= 0 ? t.csa(s) : k.csa() == null ? "none" : k.csa());
             if (s < 0) {
                 n.put("noPaths", true);
-            } else if (v.detailsSet(s)) {
-                figures(n, svc.scoped(p, "NSET:" + k.id(), d.date(), ask));
+            } else if (t.details(s)) {
+                f.put(n, "NSET:" + k.id(), d);
             }
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> ch = (List<Map<String, Object>>) cp.get("children");
@@ -452,10 +573,9 @@ final class ExposureViews {
                     .sorted().toList();
             cp.put("legalEntities", les);
             if (any) {
-                ExposureService.Scoped cs = svc.scoped(p, "CPTY:" + cp.get("id"), d.date(), ask);
-                figures(cp, cs);
-                cp.put("homeLegalEntity", ExposureExplorer.homeLegalEntity(b, String.valueOf(cp.get("id"))));
-                cp.put("limit", explorer.limit(cs, String.valueOf(cp.get("id"))));
+                f.put(cp, "CPTY:" + cp.get("id"), d);
+                cp.put("homeLegalEntity", t.home(String.valueOf(cp.get("id"))));
+                cp.put("limit", f.limit(d, String.valueOf(cp.get("id"))));
             } else {
                 cp.put("noPaths", true);
             }
@@ -474,26 +594,31 @@ final class ExposureViews {
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("businessDate", d.date().toString());
-        out.put("runId", b.runId());
+        out.put("runId", f.runId(d));
         out.put("confidence", ask.q());
         out.put("bank", "BANK");
-        out.put("tenors", ExposureExplorer.tenors(b.grid()));
-        out.put("bankNode", nodeFigures(p, d, ask, "BANK", "Bank"));
+        out.put("tenors", t.tenors());
+        out.put("bankNode", nodeFigures(f, d, "BANK", "Bank"));
         List<Map<String, Object>> les = new ArrayList<>();
         new java.util.TreeSet<>(cps.values().stream().flatMap(cp -> {
             @SuppressWarnings("unchecked")
             List<String> l = (List<String>) cp.get("legalEntities");
             return l.stream();
         }).filter(x -> !x.equals("null")).toList()).forEach(le -> {
-            Map<String, Object> n = nodeFigures(p, d, ask, "LE:" + le, le);
+            Map<String, Object> n = nodeFigures(f, d, "LE:" + le, le);
             n.put("counterparties", cps.values().stream().filter(cp -> ((List<?>) cp.get("legalEntities")).contains(le)).map(cp -> cp.get("id")).toList());
             les.add(n);
         });
         out.put("legalEntities", les);
         out.put("groups", groups);
-        out.put("nettingSetsWithPaths", b.sets().size());
+        out.put("nettingSetsWithPaths", t.withPaths());
         out.put("nettingSetsKnown", d.known().size());
         return out;
+    }
+
+    /** A counterparty's stored credit limit and its use by the peak PFE {@code used} (the explorer's), for the tree on the engine path. */
+    Map<String, Object> limit(ExposureDate d, String counterparty, double used) {
+        return explorer.limit(d, counterparty, used);
     }
 
     private static void figures(Map<String, Object> n, ExposureService.Scoped s) {
@@ -509,15 +634,13 @@ final class ExposureViews {
     }
 
     /** The bank's or a legal entity's node of the tree: its figures, or why an interactive answer cannot sum it (a batch job). */
-    private Map<String, Object> nodeFigures(Principal p, ExposureDate d, ExposureService.Ask ask, String scope, String label) {
+    private static Map<String, Object> nodeFigures(TreeFigures f, ExposureDate d, String scope, String label) {
         Map<String, Object> n = new LinkedHashMap<>();
         n.put("scope", scope);
         n.put("id", scope.contains(":") ? scope.substring(scope.indexOf(':') + 1) : scope);
         n.put("label", label);
         try {
-            ExposureService.Scoped s = svc.scoped(p, scope, d.date(), ask);
-            figures(n, s);
-            n.put("nettingSets", s.result().pieces.size());
+            n.put("nettingSets", f.put(n, scope, d));
         } catch (DrishtiException e) {
             n.put("note", e.getMessage().replaceFirst("^DRS-\\d{4} ", ""));
         }

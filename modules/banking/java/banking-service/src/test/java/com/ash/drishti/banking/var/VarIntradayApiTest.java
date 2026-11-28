@@ -213,10 +213,19 @@ class VarIntradayApiTest {
             for (String node : full.book().nodes().keySet()) {
                 JsonNode a = ask("/api/v1/risk/var/scope/path?size=1", "NODE:" + node, DAY, ccy);
                 JsonNode e = ask("/api/v1/risk/var/scope/path?size=1", "NODE:" + node, FULL, ccy);
-                assertThat(a.get("var").asDouble()).as(node + " " + ccy).isEqualTo(e.get("var").asDouble());
-                assertThat(a.get("es").asDouble()).as(node + " " + ccy).isEqualTo(e.get("es").asDouble());
+                // another currency sums the converted book (R2_CUT_PLAN 6.6 (2)): its rows come from the mapped tier's float32 USD rows on
+                // a full reload and from the batch's own figures incrementally, a few millionths apart; the fixture's CAD figures sit on
+                // half units, so the whole units the API rounds to may tie either way: to the cent on the exact vectors, a unit on the API
+                double unit = ccy == null ? 0 : 1;
+                assertThat(a.get("var").asDouble()).as(node + " " + ccy).isCloseTo(e.get("var").asDouble(), within(unit));
+                assertThat(a.get("es").asDouble()).as(node + " " + ccy).isCloseTo(e.get("es").asDouble(), within(unit));
                 for (int j = 0; j < a.get("series").size(); j++) {
-                    assertThat(a.get("series").get(j).asDouble()).as(node + " " + ccy + " " + j).isEqualTo(e.get("series").get(j).asDouble());
+                    assertThat(a.get("series").get(j).asDouble()).as(node + " " + ccy + " " + j).isCloseTo(e.get("series").get(j).asDouble(), within(unit));
+                }
+                double[] xa = svc.scoped(null, "NODE:" + node, DAY, ccy).vector();
+                double[] xe = svc.scoped(null, "NODE:" + node, FULL, ccy).vector();
+                for (int j = 0; j < xa.length; j++) {
+                    assertThat(xa[j]).as(node + " " + ccy + " exact " + j).isCloseTo(xe[j], within(0.005));
                 }
             }
             VarService.Scoped sa = svc.scoped(null, "NODE:MGMT~BANK", DAY, ccy);

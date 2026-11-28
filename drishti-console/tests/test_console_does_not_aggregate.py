@@ -56,6 +56,7 @@ KNOWN = {
     "web/static/js/drishti_screen-grid.js: bar.setAttribute('aria-valuenow', String(Math.round(cols.slice(0, k).r": "LAYOUT: a column splitter's position",
     "web/static/js/drishti_screen-grid.js: function have() { return cols.slice(0, k).reduce(function (a, b) { ret": "LAYOUT: the same, for the resize handle",
     "web/static/js/drishti_admin-net-ring.js: var total = weights.reduce(function (a, b) { return a + b; }, 0) || 1;": "LAYOUT: a ring's arc lengths",
+    "core/home_cards.py: extra = width - sum(w for _, w in r)": "LAYOUT: the cards of a row share the grid width the Home declared",
     "web/static/js/drishti_table-chart-engine.js: var t = on.reduce(function (a, d) { return a + (num(d.data[j]) ? Math.":
         "LAYOUT: a stacked chart's height scale",
     # OWN: the console's own data, not a risk or BI figure

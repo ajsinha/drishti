@@ -44,9 +44,35 @@ public interface OfficialSink {
     /** The root the results go under (without a trailing slash). */
     String root();
 
-    /** The table's location: {@code <root>/risk-results/<table>}. */
+    /** The tables whose lake file entry names their own {@code uri:} (table name to location); none: every table is by the lake's layout. */
+    default Map<String, String> uris() {
+        return Map.of();
+    }
+
+    /** The table's location: its lake file entry's {@code uri:} when it has one, else {@code <root>/risk-results/<table>}. */
     default String where(String table) {
-        return root() + "/" + FOLDER + "/" + table;
+        String own = uris().get(table);
+        return own != null && !own.isBlank() ? own : com.ash.drishti.api.resolution.TableCatalogue.join(root(), FOLDER, table);
+    }
+
+    /**
+     * The own locations the official lake file {@code lake} ({@code var-official}, {@code ccr-official}) gives its {@code risk-results.<table>}
+     * entries: only a table with a {@code uri:} is in the map, so without one nothing moves (the default stays {@code <root>/risk-results/<table>}).
+     * A lake file that cannot be read gives an empty map.
+     */
+    static Map<String, String> uris(String lake, List<String> tables) {
+        Map<String, String> out = new java.util.LinkedHashMap<>();
+        try {
+            com.ash.lake.config.Lake l = com.ash.lake.config.Lakes.current(DrishtiLake.runtime()).find(lake).orElse(null);
+            if (l != null) {
+                for (String t : tables) {
+                    l.entry(FOLDER + "." + t).filter(e -> e.uri() != null && !e.uri().isBlank()).ifPresent(e -> out.put(t, l.location(e)));
+                }
+            }
+        } catch (RuntimeException e) {
+            return Map.of();                                         // no readable lake file: the layout decides
+        }
+        return Map.copyOf(out);
     }
 
     /**
@@ -75,7 +101,7 @@ public interface OfficialSink {
 
     /** The JSON Lines of one commit beside the table: written whole, on the sink's storage. */
     default void writeJsonl(String table, LocalDate date, long version, List<? extends Map<String, ?>> docs) throws IOException {
-        String path = root() + "/" + FOLDER + "/jsonl/" + table + "/" + date + "/" + table + "-v" + version + ".jsonl";
+        String path = com.ash.drishti.api.resolution.TableCatalogue.join(root(), FOLDER + "/jsonl", table) + "/" + date + "/" + table + "-v" + version + ".jsonl";
         if (LakeStorage.isLocal(path)) {
             JsonlWriter.writeFile(LakeStorage.localPath(path), docs);
             return;
@@ -98,6 +124,11 @@ public interface OfficialSink {
      * @param retentionYears how long time travel reaches back (7 years for the risk results)
      */
     static OfficialSink of(String format, String root, Map<String, String> settings, int retentionYears) {
+        return of(format, root, settings, retentionYears, Map.of());
+    }
+
+    /** As {@link #of(String, String, Map, int)} with the tables' own locations ({@link #uris(String, List)}). */
+    static OfficialSink of(String format, String root, Map<String, String> settings, int retentionYears, Map<String, String> uris) {
         if (root == null || root.isBlank()) {
             return null;
         }
@@ -106,8 +137,8 @@ public interface OfficialSink {
         int days = retentionYears * 365 + (retentionYears + 3) / 4;                  // whole years with their leap days
         String f = format == null || format.isBlank() ? "delta" : format.strip().toLowerCase(Locale.ROOT);
         return switch (f) {
-            case "delta" -> new DeltaSink(r, s, days);
-            case "iceberg" -> new IcebergSink(r, s, days);
+            case "delta" -> new DeltaSink(r, s, days, uris);
+            case "iceberg" -> new IcebergSink(r, s, days, uris);
             default -> throw new IllegalArgumentException("the official results' format is delta or iceberg, not '" + format + "'");
         };
     }
@@ -125,8 +156,8 @@ public interface OfficialSink {
         String t = where(table);
         boolean delta;
         boolean iceberg;
-        if (local(root())) {
-            java.nio.file.Path f = folder(root()).resolve(FOLDER).resolve(table);
+        if (local(t)) {
+            java.nio.file.Path f = folder(t);
             t = f.toString();
             delta = java.nio.file.Files.isDirectory(f.resolve("_delta_log"));
             iceberg = !delta && java.nio.file.Files.isDirectory(f.resolve("metadata"));

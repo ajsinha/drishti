@@ -67,14 +67,16 @@ public class ExposureController {
     private final ExposureWhatIf whatIf;
     private final ExposureOfficial official;
     private final Entitlements entitlements;
+    private final ExposureEnginePath enginePath;
 
-    ExposureController(ExposureService svc, ExposureViews views, ExposureOfficial official, Entitlements entitlements) {
+    ExposureController(ExposureService svc, ExposureViews views, ExposureOfficial official, Entitlements entitlements, ExposureEnginePath enginePath) {
         this.svc = svc;
         this.views = views;
         this.official = official;
         this.captures = new ExposureCaptures(svc, views);
         this.whatIf = new ExposureWhatIf(svc);
         this.entitlements = entitlements;
+        this.enginePath = enginePath;
     }
 
     private static LocalDate date(AsOf asOf) {
@@ -96,21 +98,36 @@ public class ExposureController {
     @GetMapping("/scope")
     public Map<String, Object> scope(@RequestParam String scope, @RequestParam(required = false) String q, @RequestParam(required = false) String collateral,
             @RequestParam(required = false) String run, @RequestParam(required = false) Boolean strict, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String path, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the ccr engine through the host (ExposureEnginePath)
+            ExposureEnginePath.offeredOnly(run, strict);
+            return enginePath.scope(p, scope(scope), date(asOf), new ExposureEnginePath.Measures(q, collateral));
+        }
         return views.scope(p, scope(scope), date(asOf), ask(q, collateral, run, strict));
     }
 
     /** The path form for a simple scope ({@code /exposure/scopes/NSET:NS-ALDERSHOT-FRA}). */
     @GetMapping("/scopes/{scope}")
     public Map<String, Object> scopePath(@PathVariable String scope, @RequestParam(required = false) String q, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String path, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {
+            return enginePath.scope(p, scope(scope), date(asOf), new ExposureEnginePath.Measures(q, null));
+        }
         return views.scope(p, scope(scope), date(asOf), ask(q, null, null, null));
     }
 
     @GetMapping("/scope/profile")
     public ResponseEntity<?> profile(@RequestParam String scope, @RequestParam(required = false) String q, @RequestParam(required = false) String collateral,
             @RequestParam(required = false) String run, @RequestParam(required = false) String dates, @RequestParam(required = false) String format,
-            AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            AsOf asOf, @RequestParam(required = false) String path, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {
+            ExposureEnginePath.offeredOnly(run, null);
+            if (format != null && !format.isBlank() || "all".equalsIgnoreCase(dates)) {
+                throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the engine path answers the profile at the primary dates as JSON "
+                        + "for now; the look-back dates and the CSV and JSON Lines files are answered in-tree (path=in-tree)");
+            }
+            return ResponseEntity.ok(enginePath.profile(p, scope(scope), date(asOf), new ExposureEnginePath.Measures(q, collateral)));
+        }
         ExposureService.Ask a = ask(q, collateral, run, null);
         if ("csv".equalsIgnoreCase(format)) {
             return ResponseEntity.ok().contentType(new MediaType("text", "csv"))
@@ -126,7 +143,11 @@ public class ExposureController {
     @GetMapping("/scope/distribution")
     public Map<String, Object> distribution(@RequestParam String scope, @RequestParam(required = false) String date,
             @RequestParam(defaultValue = "0") int bins, @RequestParam(required = false) String q, @RequestParam(required = false) String collateral,
-            @RequestParam(defaultValue = "false") boolean bands, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(defaultValue = "false") boolean bands, AsOf asOf, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the ccr engine's distribution through the host
+            return enginePath.distribution(p, scope(scope), date(asOf), new ExposureEnginePath.Measures(q, collateral), date, bins, bands);
+        }
         return views.distribution(p, scope(scope), date(asOf), ask(q, collateral, null, null), date, bins, bands);
     }
 
@@ -134,18 +155,30 @@ public class ExposureController {
     public Map<String, Object> contributions(@RequestParam String scope, @RequestParam(required = false) String by,
             @RequestParam(required = false) String figure, @RequestParam(required = false) String date, @RequestParam(required = false) String q,
             @RequestParam(required = false) String collateral, @RequestParam(defaultValue = "false") boolean alone,
-            @RequestParam(defaultValue = "false") boolean profile, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(defaultValue = "false") boolean profile, AsOf asOf, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the ccr engine's contributions through the host
+            return enginePath.contributions(p, scope(scope), date(asOf), new ExposureEnginePath.Measures(q, collateral), by, figure, date, alone, profile);
+        }
         return views.contributions(p, scope(scope), date(asOf), ask(q, collateral, null, null), by, figure, date, alone, profile);
     }
 
     @GetMapping("/tree")
-    public Map<String, Object> tree(@RequestParam(required = false) String q, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> tree(@RequestParam(required = false) String q, AsOf asOf, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the figures from the ccr engine, the tree's shape from the reference alone
+            return enginePath.tree(p, date(asOf), q);
+        }
         return views.tree(p, date(asOf), ask(q, null, null, null));
     }
 
     /** Incremental exposure before dealing: {@code {scope, method: addon|paths, q, candidates: [...]}}. */
     @PostMapping("/what-if")
-    public Map<String, Object> whatIf(@RequestBody Map<String, Object> body, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> whatIf(@RequestBody Map<String, Object> body, AsOf asOf, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath.engine(path)) {                                 // R2: the ccr engine's what-if through the host
+            return enginePath.whatIf(p, body, date(asOf), true);
+        }
         return whatIf.whatIf(p, body, date(asOf));
     }
 
@@ -208,12 +241,20 @@ public class ExposureController {
     // ------------------------------------------------------------------------------------------------------------------- official
 
     @GetMapping("/official")
-    public Map<String, Object> officialRecord(AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> officialRecord(AsOf asOf, @RequestParam(defaultValue = "false") boolean trades,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         if (!svc.access().seesAll(p)) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "the official record covers every counterparty: your role sees only some of them");
         }
         LocalDate d = svc.date(date(asOf)).date();
-        return svc.official().index(d).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no official exposure record of " + d));
+        Map<String, Object> index = svc.official().index(d).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND,
+                "no official exposure record of " + d));
+        if (!trades || !(index.get("trades") instanceof String key)) {
+            return index;
+        }
+        Map<String, Object> out = new LinkedHashMap<>(index);          // trades=true: the record's every trade EE contribution beside it
+        out.put("tradeContributions", svc.official().trades(key).orElse(null));
+        return out;
     }
 
     @PostMapping("/official")
@@ -228,11 +269,13 @@ public class ExposureController {
     /** Captures a scope's exposure now: {@code {"scope": "CPTY:CP-ALDERSHOT", "note": "before the unwind", "q": 0.95}}. */
     @PostMapping("/captures")
     @ResponseStatus(HttpStatus.CREATED)
-    public Map<String, Object> capture(@RequestBody Map<String, Object> body, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> capture(@RequestBody Map<String, Object> body, AsOf asOf, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         Object q = body.get("q");
         Object c = body.get("collateral");
         return captures.capture(p, scope((String) body.get("scope")), date(asOf), ask(q == null ? null : String.valueOf(q), c == null ? null
-                : String.valueOf(c), null, null), body.get("note") == null ? null : String.valueOf(body.get("note")));
+                : String.valueOf(c), null, null), body.get("note") == null ? null : String.valueOf(body.get("note")),
+                enginePath.engine(path) ? enginePath::overlay : null);   // R2: the figures from the path exposure.route (or path) selects
     }
 
     @GetMapping("/captures")
@@ -262,8 +305,9 @@ public class ExposureController {
     }
 
     @GetMapping("/compare")
-    public Map<String, Object> compare(@RequestParam String a, @RequestParam(required = false) String b, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> compare(@RequestParam String a, @RequestParam(required = false) String b, @RequestParam(required = false) String path,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, svc.props().kinds().paths());
-        return captures.compare(p, a, b);
+        return captures.compare(p, a, b, enginePath.engine(path) ? enginePath::overlay : null);   // R2: "now" from the selected path
     }
 }

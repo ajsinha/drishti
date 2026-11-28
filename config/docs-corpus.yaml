@@ -82,6 +82,7 @@ files:
   - {path: 'docs/admin/BENCHMARK.md', class: keep, lane: B}
   - {path: 'docs/admin/CONFIGURATION.md', class: generate, lane: B, tool: 'tools/settings_catalogue.py'}
   - {path: 'docs/admin/PRODUCTION_STANDARD.md', class: keep, lane: B}
+  - {path: 'docs/admin/TABLE_CATALOGUE.md', class: generate, lane: B, tool: 'tools/docs/table_catalogue.py'}
   - {path: 'docs/admin/UNDER_CONSTRUCTION.md', class: generate, lane: B, tool: 'tools/under_construction.py'}
   - {path: 'docs/architecture/ACCESS_MODEL.md', class: merge, lane: B}
   - {path: 'docs/architecture/ARCHITECTURE.md', class: keep, lane: B}

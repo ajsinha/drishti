@@ -214,14 +214,16 @@ async def save_settings(request: Request):
 
 
 async def _landing(request: Request, profile: dict, target: str) -> str:
-    """Where to go after signing in: the page asked for, or the user's chosen landing page when none was."""
+    """Where to go after signing in: the page asked for; else the landing page the person chose themselves; else Your Home (``/home``),
+    their role's Home as cards, for everyone."""
     if target != "/t":
         return target
     who = request.app.state.auth.identity_for(profile)
     try:
-        return _safe_next((await request.app.state.backend.settings(who)).get("landing") or "/t")
+        chosen = _safe_next((await request.app.state.backend.settings(who)).get("landing") or "/t")
     except Exception:  # noqa: BLE001 - a missing landing page never blocks a sign-in
-        return target
+        return "/home"
+    return "/home" if chosen == "/t" else chosen
 
 
 @router.post("/account/password")

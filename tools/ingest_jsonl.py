@@ -62,6 +62,7 @@ sys.path.insert(0, str(HERE / "samplegen"))
 import sutragen as SG  # noqa: E402  (reading, dotted paths, scalar option parsing)
 sys.path.insert(0, str(HERE / "lake"))
 import feedroute  # noqa: E402  (a file's .ready file)
+import lakeconfig  # noqa: E402  (the one join of lake/domain/table: locate)
 sys.path.insert(0, str(HERE / "packgen"))
 import childkinds as CK  # noqa: E402  (a parent's array of objects as rows of its child kind: the one explode, shared with pack new)
 import lakewheel  # noqa: F401  (the drishti-lake wheel on the path: tools/lake/lakewheel.py)
@@ -228,7 +229,7 @@ def write(lake: pathlib.Path, domain: str, data: dict[str, dict[date, list]], la
           report: Report, say=print) -> None:
     L = _layout()
     for kind in sorted(data):
-        table = str(lake / domain / kind)
+        table = lakeconfig.locate(lake, domain, kind)
         lay = layouts.get(kind) or None
         by_day = data[kind]
         first = True
@@ -253,11 +254,11 @@ def write_files(root: pathlib.Path, domain: str, data: dict, mode: str, report: 
     import os
     for kind in sorted(data):
         if mode == "replace":
-            for old in (root / domain).glob(f"*/{kind}.jsonl"):
+            for old in lakeconfig.locate_path(root, domain).glob(f"*/{kind}.jsonl"):
                 old.unlink()
         for day in sorted(data[kind]):
             rows = sorted(data[kind][day], key=lambda r: r[0])
-            target = root / domain / day.isoformat() / f"{kind}.jsonl"
+            target = lakeconfig.locate_path(root, domain) / day.isoformat() / f"{kind}.jsonl"
             target.parent.mkdir(parents=True, exist_ok=True)
             tmp = target.with_name(target.name + ".tmp")
             with open(tmp, "w" if mode != "append" else "a", encoding="utf-8") as fh:

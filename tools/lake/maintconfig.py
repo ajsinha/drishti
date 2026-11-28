@@ -192,7 +192,8 @@ def floor_days(name: str, retain: dict | None = None) -> int:
 
 def data_dir() -> pathlib.Path:
     """DRISHTI_DATA_DIR, else the repository's data folder (never ./data of wherever the command was started)."""
-    return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or pathlib.Path(__file__).resolve().parents[2] / "data")
+    import lakeconfig
+    return lakeconfig.data_dir()
 
 
 def default_path(data: pathlib.Path | None = None) -> pathlib.Path:

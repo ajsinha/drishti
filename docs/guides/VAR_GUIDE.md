@@ -4261,6 +4261,7 @@ is recorded in the date's record (`publishError`, naming the format and the tabl
 | `HORIZON`, `METHOD` | STRING | (contract 1.4): `1D` and null: official records are 1-day at `CONFIDENCE`; a future 10-day record says `10D` and `SQRT10`, `SUM` or `FULL` ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)). An older table keeps its columns (the lake writer adds none): the rows' `doc` carries them |
 
 | `SVAR`, `SES`, `STRESS_SET_ID` | DOUBLE, DOUBLE, STRING | contract 1.5: the node's stressed VaR and ES at `CONFIDENCE`, `ES_CONFIDENCE` and `HORIZON` on the date's stress set, and that set's id; null when the date has none, never zero ([section 18.8](#188-stressed-var)). A table written before keeps its columns: the rows' `doc` carries them |
+| `BACKTEST_CONFIDENCE`, `BACKTEST_VAR` | DOUBLE, DOUBLE | contract 1.6: the regulatory backtest's other confidence (the first of `drishti.regulatory.backtesting.confidences` other than `CONFIDENCE`: 0.975 as shipped) and the node's 1-day VaR at it from the same vector, so a reader backtests at both confidences ([section 18.11](#1811-backtesting-for-regulation)); null when none is configured. Rows published before lack it: a backtest at 97.5% through the engine refuses their dates in words |
 
 No vectors and no trade or position rows are published; the capture itself keeps the node's vector for audit.
 

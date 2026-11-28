@@ -35,6 +35,7 @@ for p in (str(HERE), str(ROOT / "tools")):
     if p not in sys.path:
         sys.path.append(p)
 import javaload  # noqa: E402
+import lakeconfig  # noqa: E402
 from javacmd import java_cmd  # noqa: E402
 
 
@@ -95,7 +96,7 @@ def load(rows, root, domain: str, table: str, workdir: pathlib.Path, fmt: str = 
         return {"rows": 0, "dates": [], "summary": {}}
     cfg = {"source": {"files": [str(f) for f in sorted(feed.glob("*.jsonl"))], "format": "loader-rows", "promote": promote,
                       "vectors": sorted(vecs)},
-           "target": {"format": fmt, "path": str(root).rstrip("/") + "/" + domain + "/" + table, "domain": domain, "kind": table,
+           "target": {"format": fmt, "path": lakeconfig.locate(root, domain, table), "domain": domain, "kind": table,
                       "mode": "replace-date"},
            "memory": {"spill-dir": str(workdir / "spill")}, "rejects": {"file": str(workdir / "rejects.jsonl")}}
     ice: dict[str, str] = {}

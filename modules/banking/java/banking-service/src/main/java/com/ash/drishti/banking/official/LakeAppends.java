@@ -31,7 +31,7 @@ public final class LakeAppends {
 
     /** Whether the table is an Iceberg table (its metadata folder, no Delta log). */
     public static boolean iceberg(Path lake, String domain, String kind) {
-        Path t = lake.resolve(domain).resolve(kind);
+        Path t = Path.of(com.ash.drishti.api.resolution.TableCatalogue.join(lake.toString(), domain, kind));
         return Files.isDirectory(t.resolve("metadata")) && !Files.isDirectory(t.resolve("_delta_log"));
     }
 }

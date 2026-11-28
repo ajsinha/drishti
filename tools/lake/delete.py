@@ -80,7 +80,8 @@ def format_of(root: str, name: str) -> str | None:
     if maintain_iceberg.is_table(t):
         return "iceberg"
     domain, _, kind = name.rpartition("/")
-    base = pathlib.Path(root) / domain
+    import lakeconfig
+    base = lakeconfig.locate_path(root, domain)
     if base.is_dir() and any(d.is_dir() and (d / f"{kind}.jsonl").is_file() for d in base.iterdir()):
         return "files"
     return None

@@ -55,6 +55,14 @@ public interface KindData {
     }
 
     /**
+     * Every business date the kind's sources hold, oldest first (an input the engine declares {@code per: []}, not read per date, is read
+     * on each of them: an official-records history, the desk P&amp;L of every day). Empty when the source cannot say or holds undated data.
+     */
+    default Optional<java.util.NavigableSet<LocalDate>> dates(String kind) {
+        return Optional.empty();
+    }
+
+    /**
      * The columns the kind's source keeps as columns (its promoted columns): a read asks only these, a contract column outside them reads
      * as absent. Empty: the source cannot say, and every asked column is tried.
      */

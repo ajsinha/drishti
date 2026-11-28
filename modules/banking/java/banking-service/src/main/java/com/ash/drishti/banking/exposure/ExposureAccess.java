@@ -96,6 +96,13 @@ final class ExposureAccess {
         return views;
     }
 
+    /** Refuses a caller who may not open the paths, as {@link #view} does (the engine path's reference-only reads, R2). */
+    void requireOpen(Principal p) {
+        if (p != null && !entitlements.mayOpen(p, props.kinds().paths())) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "your role may not see exposure (the kind " + props.kinds().paths() + ")");
+        }
+    }
+
     /** The viewer's view of the date (refused when the caller may not open the paths); the server itself ({@code p} null) sees all. */
     View view(Principal p, ExposureDate d) {
         if (p == null) {

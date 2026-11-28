@@ -43,19 +43,31 @@ class SiteWritersTest {
     Path dir;
     Path release;
     Path site;
+    String savedHome;
+    String savedSite;
 
     @BeforeEach
     void setUp() throws Exception {
         release = Files.createDirectories(dir.resolve("release/config"));
         site = Files.createDirectories(dir.resolve("etc-drishti"));
+        savedHome = System.getProperty(Roots.HOME);
+        savedSite = System.getProperty(Roots.SITE);
         System.setProperty(Roots.HOME, dir.resolve("release").toString());
         System.setProperty(Roots.SITE, site.toString());
     }
 
     @AfterEach
     void tearDown() {
-        System.clearProperty(Roots.HOME);
-        System.clearProperty(Roots.SITE);
+        restore(Roots.HOME, savedHome);          // the test JVM's own roots (TestRun) stay for the tests that follow
+        restore(Roots.SITE, savedSite);
+    }
+
+    private static void restore(String key, String value) {
+        if (value == null) {
+            System.clearProperty(key);
+        } else {
+            System.setProperty(key, value);
+        }
     }
 
     @Test
@@ -109,10 +121,11 @@ class SiteWritersTest {
         com.ash.drishti.server.admin.ArtifactPaths paths = new com.ash.drishti.server.admin.ArtifactPaths(dir.resolve("p"), dir.resolve("i"), dir.resolve("c"),
                 dir.resolve("b"), site.resolve("tables"));
         Path target = paths.biFile("table", "banking.another");
-        assertThat(target).startsWith(site);
+        assertThat(target.startsWith(site)).isTrue();
+        Files.createDirectories(target.getParent());
         Roots.guardWrite(target);                                    // allowed: the site layer
         assertThatThrownBy(() -> Roots.guardWrite(release.resolve("tables/banking/x.table.yaml"))).hasMessageContaining("release folder");
-        var tables = new com.ash.drishti.server.tables.TablesService(release.resolve("tables"), null, null, null, () -> false, 10, 10, null)
+        var tables = new com.ash.drishti.server.tables.TablesService(release.resolve("tables"), org.mockito.Mockito.mock(com.ash.drishti.server.data.DataViewService.class), null, null, () -> false, 10, 10, null)
                 .site(site.resolve("tables"));
         assertThat(tables.writeRoot()).isEqualTo(site.resolve("tables").toAbsolutePath().normalize());
         var names = tables.catalogue().entries().stream().map(e -> e.name()).toList();

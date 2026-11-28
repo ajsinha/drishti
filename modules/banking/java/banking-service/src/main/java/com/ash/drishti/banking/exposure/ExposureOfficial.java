@@ -60,6 +60,13 @@ final class ExposureOfficial implements AutoCloseable {
      * until the first capture, and a connector that found none waits for its back-off). */
     private volatile Runnable published = () -> { };
 
+    /** The engine path (R2), when the family switch {@code exposure.route} says {@code engine}: the record's figures come from the ccr engine. */
+    private volatile java.util.function.Supplier<ExposureEnginePath> engine = () -> null;
+
+    void engine(java.util.function.Supplier<ExposureEnginePath> e) {
+        this.engine = e == null ? () -> null : e;
+    }
+
     /** See {@link #published}. */
     void onPublished(Runnable r) {
         this.published = r == null ? () -> { } : r;
@@ -175,9 +182,59 @@ final class ExposureOfficial implements AutoCloseable {
             out.put("resultVersion", prev.get("resultVersion"));
             return out;
         }
+        ExposureService.Ask ask = new ExposureService.Ask(svc.props().limitConfidence(), svc.props().collateralModel(), "", false);
+        ExposureEnginePath ep = engine.get();
+        Figures figs = ep != null && ep.engine(null) ? ep.officialFigures(d, ask, scopesOf(d)) : null;   // R2: the engine's figures
+        this.figures.set(figs);
+        try {
+            return record(out, date, d, b, store, inputs, prev, ask, figs);
+        } finally {
+            this.figures.remove();
+        }
+    }
+
+    /** The figures of a record computed elsewhere (the engine path, R2): each scope's, and every trade's EE contribution. */
+    interface Figures {
+        /** A scope's figures as {@link #figures(ExposureDate, String, ExposureService.Ask)} gives them; ENTITY_NOT_FOUND when not answered. */
+        Map<String, Object> of(String scope);
+
+        Map<String, Object> trades();
+    }
+
+    private final ThreadLocal<Figures> figures = new ThreadLocal<>();
+
+    /** Every scope a record of the date holds, in the record's order: netting sets, counterparties, groups, then the hierarchy nodes. */
+    List<String> scopesOf(ExposureDate d) {
+        List<String> out = new ArrayList<>();
+        Set<String> cps = new LinkedHashSet<>();
+        for (ExposureBook.SetInfo s : d.book().sets()) {
+            out.add("NSET:" + s.id());
+            cps.add(s.counterparty());
+        }
+        Map<String, String> groupOf = new LinkedHashMap<>();
+        d.groups().forEach((g, ms) -> ms.forEach(c -> groupOf.putIfAbsent(c, g)));
+        Set<String> groups = new LinkedHashSet<>();
+        for (String c : cps) {
+            if (c != null) {
+                out.add("CPTY:" + c);
+                if (groupOf.get(c) != null) {
+                    groups.add(groupOf.get(c));
+                }
+            }
+        }
+        groups.forEach(g -> out.add("GROUP:" + g));
+        for (Node n : nodes(d)) {
+            if (n.scope() != null && !out.contains(n.scope())) {
+                out.add(n.scope());
+            }
+        }
+        return out;
+    }
+
+    private Map<String, Object> record(Map<String, Object> out, LocalDate date, ExposureDate d, ExposureBook b, ExposureOfficialStore store,
+            Map<String, Object> inputs, Map<String, Object> prev, ExposureService.Ask ask, Figures figs) {
         long version = prev == null ? 1 : ((Number) prev.get("resultVersion")).longValue() + 1;
         String computedAt = Instant.now().toString();
-        ExposureService.Ask ask = new ExposureService.Ask(svc.props().limitConfidence(), svc.props().collateralModel(), "", false);
         Map<String, Object> scopes = new LinkedHashMap<>();
         List<Map<String, Object>> cptyRows = new ArrayList<>();
         Set<String> cps = new LinkedHashSet<>();
@@ -215,7 +272,7 @@ final class ExposureOfficial implements AutoCloseable {
                 // a node with no trade of the run: not published
             }
         }
-        Map<String, Object> trades = tradeContributions(d, ask);
+        Map<String, Object> trades = figs != null ? figs.trades() : tradeContributions(d, ask);
         store.putTrades(date, version, trades);
         Map<String, Object> index = new LinkedHashMap<>();
         index.put("businessDate", date.toString());
@@ -228,11 +285,14 @@ final class ExposureOfficial implements AutoCloseable {
         index.put("collateralModel", ask.collateral());
         index.put("trades", ExposureOfficialStore.tradesKey(date, version));
         index.put("scopes", scopes);
+        if (figs != null) {
+            index.put("figuresFrom", "engine");                         // R2: the record's figures are the ccr engine's
+        }
         if (svc.props().official().publish() && publisher.where() != null) {
             try {
                 long vc = publisher.publish(ExposurePublisher.CPTY, date, cptyRows);
                 long vn = nodeRows.isEmpty() ? -1 : publisher.publish(ExposurePublisher.NODES, date, nodeRows);
-                index.put("published", "risk-results/" + ExposurePublisher.CPTY + " (" + publisher.describe(vc) + ")"
+                index.put("published", com.ash.drishti.banking.official.OfficialSink.FOLDER + "/" + ExposurePublisher.CPTY + " (" + publisher.describe(vc) + ")"
                         + (vn < 0 ? "" : ", risk-results/" + ExposurePublisher.NODES + " (" + publisher.describe(vn) + ")"));
                 published.run();
             } catch (java.io.IOException | RuntimeException e) {
@@ -267,6 +327,10 @@ final class ExposureOfficial implements AutoCloseable {
 
     /** A scope's official figures (as the server: everything, no interactive limit). */
     private Map<String, Object> figures(ExposureDate d, String scope, ExposureService.Ask ask) {
+        Figures figs = figures.get();
+        if (figs != null) {
+            return figs.of(scope);
+        }
         ExposureService.Scoped s = svc.scoped(null, scope, d.date(), ask);
         ExposureMath.Stats st = s.result().stats;
         ExposureGrid g = d.book().grid();

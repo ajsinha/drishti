@@ -300,7 +300,7 @@ final class VarOfficial implements AutoCloseable {
         } else if (svc.props().official().publish() && publisher.where() != null) {
             try {
                 long v = publisher.publish(date, rows);
-                index.put("published", "risk-results/var-official (" + publisher.describe(v) + ")");   // never the server's own folder
+                index.put("published", com.ash.drishti.banking.official.OfficialSink.FOLDER + "/" + VarPublisher.TABLE + " (" + publisher.describe(v) + ")");   // never the server's own folder
                 published.run();
             } catch (java.io.IOException | RuntimeException e) {
                 String fmt = publisher.sink().format();
@@ -485,6 +485,9 @@ final class VarOfficial implements AutoCloseable {
         r.put("SVAR", f.get("svar"));                                   // stressed VaR and ES on the date's stress set (null: none)
         r.put("SES", f.get("ses"));
         r.put("STRESS_SET_ID", f.get("stressSet"));
+        Map.Entry<?, ?> other = f.get("varAt") instanceof Map<?, ?> m && !m.isEmpty() ? m.entrySet().iterator().next() : null;
+        r.put("BACKTEST_CONFIDENCE", other == null ? null : Double.valueOf(String.valueOf(other.getKey())));   // contract 1.6: the backtest's
+        r.put("BACKTEST_VAR", other == null ? null : other.getValue());                                   // other confidence and its VaR
         r.put("SCENARIO_SET_ID", d.book().scenarioSet());
         r.put("SCENARIO_WINDOW", (long) d.book().width());             // the newest N scenarios used (drishti.module.banking.var.window)
         r.put("STANDALONE_SUM", f.get("sumStandalone"));

@@ -50,6 +50,14 @@ final class VarCaptures {
     }
 
     /** A capture in a reporting currency: every amount in it, and {@code currency} says which (a compare with now reads it the same way). */
+    /** The engine path of a capture: {@link VarEnginePath}, and the contributions with their parametric columns as the route shapes them. */
+    record Engine(VarEnginePath path, Contributions contributions) {}
+
+    /** A node's child contributions on the engine path, shaped as {@code GET /scope/contributions} answers them. */
+    interface Contributions {
+        Map<String, Object> of(Principal p, String scope, LocalDate date, String ccy);
+    }
+
     Map<String, Object> capture(Principal p, String scope, LocalDate date, String note, String ccy) {
         return capture(p, scope, date, note, ccy, null);
     }
@@ -60,12 +68,42 @@ final class VarCaptures {
      * now reads now through the same lens.
      */
     Map<String, Object> capture(Principal p, String scope, LocalDate date, String note, String ccy, com.ash.drishti.banking.compute.var.VarLens lens) {
+        return capture(p, scope, date, note, ccy, lens, null);
+    }
+
+    /**
+     * A capture whose figures come from the engine when {@code engine} is given (R2, decision 6.6 (6): {@code var.route} / {@code path}
+     * selects where the figures come from; the capture itself stays Drishti's): the headline, the child contributions and the P&amp;L path
+     * (its worst scenarios, the rounded vector, the scenario dates, k) from {@link VarEnginePath}; the host's fields (scope, label, kind,
+     * members, data version, provenance, the lens's words) from Drishti as in-tree. A lens other than the offered one, and a scope whose
+     * parts are terms or positions of a scope that is not a node, are refused in words by the engine path (capture them in-tree); a leaf node's positions are the host's parts measured by the engine (lane G part 6).
+     */
+    Map<String, Object> capture(Principal p, String scope, LocalDate date, String note, String ccy, com.ash.drishti.banking.compute.var.VarLens lens,
+            Engine engine) {
+        if (engine != null && lens != null && !lens.equals(svc.props().defaultLens())) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path captures the offered lens (1-day, the default confidences) for "
+                    + "now: capture " + lens.label() + " in-tree (path=in-tree)");
+        }
         VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
         String c0 = s.date().currency();
         VarBook b = s.date().book();
-        Map<String, Object> head = views.headline(p, scope, date, c0, lens);
-        Map<String, Object> contrib = views.contributions(p, scope, date, "child", null, c0, lens);
-        Map<String, Object> path = views.path(p, scope, date, 0, 25, c0, lens);
+        LocalDate day = s.date().date();
+        Map<String, Object> head = engine == null ? views.headline(p, scope, date, c0, lens) : engine.path().headline(p, scope, day, c0, (String) null);
+        Map<String, Object> contrib = engine == null ? views.contributions(p, scope, date, "child", null, c0, lens)
+                : engine.contributions().of(p, scope, day, c0);
+        Map<String, Object> path = engine == null ? views.path(p, scope, date, 0, 25, c0, lens) : engine.path().path(p, scope, day, 0, 25, c0);
+        if (engine != null) {                                          // the lens's words and the provenance are the host's, as in-tree
+            com.ash.drishti.banking.compute.var.VarLens l = views.lens(s);
+            head = new LinkedHashMap<>(head);
+            head.put("k", path.get("k"));
+            head.put("esCount", path.get("esCount"));
+            head.put("confidence", l.confidence());
+            head.put("esConfidence", l.esConfidence());
+            head.put("horizon", l.horizon());
+            head.put("method", l.methodName());
+            head.put("set", l.set());
+            head.put("provenance", views.provenance(p, s));
+        }
         Map<String, Object> c = new LinkedHashMap<>();
         c.put("scope", scope);
         c.put("canonical", s.res().canonical());
@@ -96,19 +134,26 @@ final class VarCaptures {
         c.put("componentsTotal", contrib.get("total"));
         c.put("componentsShown", contrib.get("shown"));
         c.put("worst", path.get("worst"));
-        long[] vector = new long[s.vector().length];
-        for (int j = 0; j < vector.length; j++) {
-            vector[j] = Math.round(s.vector()[j]);
+        if (engine == null) {
+            long[] vector = new long[s.vector().length];
+            for (int j = 0; j < vector.length; j++) {
+                vector[j] = Math.round(s.vector()[j]);
+            }
+            c.put("vector", vector);
+        } else {
+            c.put("vector", path.get("series"));                       // the engine's scope-path P&L, rounded as in-tree
         }
-        c.put("vector", vector);
         c.put("scenarioSet", b.scenarioSet());
-        c.put("scenarioDates", s.dates().stream().map(LocalDate::toString).toList());
+        c.put("scenarioDates", engine == null ? s.dates().stream().map(LocalDate::toString).toList() : path.get("scenarioDates"));
         List<String> members = new ArrayList<>();
         s.set().forEach(o -> members.add(b.tradeId(o)));
         c.put("members", members);
         c.put("memberCount", members.size());
         c.put("dataVersion", s.date().version());
         c.put("provenance", head.get("provenance"));
+        if (engine != null) {
+            c.put("figuresFrom", "engine");                              // where the figures came from (var.route); in-tree captures omit it
+        }
         String id = svc.saved().capture(p, c, s.date().date().toString());
         svc.audit(p, "var-capture", s, "capture=" + id);
         Map<String, Object> out = new LinkedHashMap<>();
@@ -182,18 +227,30 @@ final class VarCaptures {
      */
     @SuppressWarnings("unchecked")
     Map<String, Object> compare(Principal p, String a, String b) {
+        return compare(p, a, b, null);
+    }
+
+    /** {@link #compare(Principal, String, String)}, "now" from the engine when {@code engine} is given (the captures are Drishti's). */
+    @SuppressWarnings("unchecked")
+    Map<String, Object> compare(Principal p, String a, String b, Engine engine) {
         Map<String, Object> ca = get(p, a);
         Map<String, Object> cb;
         String ccy = currency(ca);
         if (b == null || b.isBlank() || b.equalsIgnoreCase("now")) {
             String scope = String.valueOf(ca.get("scope"));
             com.ash.drishti.banking.compute.var.VarLens lens = lensOf(ca);
-            Map<String, Object> head = views.headline(p, scope, null, ccy, lens);
-            Map<String, Object> contrib = views.contributions(p, scope, null, "child", null, ccy, lens);
+            if (engine != null && lens != null) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path compares a capture of the offered lens with now: compare "
+                        + a + " in-tree (path=in-tree)");
+            }
+            LocalDate newest = engine == null ? null : svc.scoped(p, scope, null, ccy).date().date();
+            Map<String, Object> head = engine == null ? views.headline(p, scope, null, ccy, lens) : engine.path().headline(p, scope, newest, ccy, (String) null);
+            Map<String, Object> contrib = engine == null ? views.contributions(p, scope, null, "child", null, ccy, lens)
+                    : engine.contributions().of(p, scope, newest, ccy);
             cb = new LinkedHashMap<>();
             cb.put("id", "now");
             cb.put("scope", scope);
-            cb.put("businessDate", head.get("businessDate"));
+            cb.put("businessDate", engine == null ? head.get("businessDate") : newest.toString());   // the engine's headline says asOf
             cb.put("currency", ccy);
             cb.put("capturedAt", Instant.now().toString());
             cb.put("var", head.get("var"));

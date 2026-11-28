@@ -46,10 +46,12 @@ final class VarHomeMeasures implements MeasureSource {
 
     private final VarService svc;
     private final VarViews views;
+    private final VarEnginePath engine;
 
-    VarHomeMeasures(VarService svc, VarViews views) {
+    VarHomeMeasures(VarService svc, VarViews views, VarEnginePath engine) {
         this.svc = svc;
         this.views = views;
+        this.engine = engine;
     }
 
     @Override
@@ -64,7 +66,7 @@ final class VarHomeMeasures implements MeasureSource {
 
     @Override
     public boolean on() {
-        return svc.running();
+        return engine.consumers() ? engine.running() : svc.running();     // R2: the family switch var.consumers.route
     }
 
     /** The firm's scope word; a KPI's {@code scope} arg names another ({@code own-desk} and {@code own-books} are the person's rows: the firm scope as they see it). */
@@ -77,6 +79,9 @@ final class VarHomeMeasures implements MeasureSource {
     public OptionalDouble kpi(Principal p, String measure, Map<String, Object> args, LocalDate date) {
         try {
             String scope = scope(args);
+            if (engine.consumers()) {
+                return engineKpi(p, measure, scope, date);
+            }
             return switch (measure) {
                 case "VAR" -> number(views.headline(p, scope, date).get("var"));
                 case "ES" -> number(views.headline(p, scope, date).get("es"));
@@ -86,8 +91,32 @@ final class VarHomeMeasures implements MeasureSource {
                 default -> OptionalDouble.empty();                  // TODO(R2): PNL_MTD, DV01
             };
         } catch (RuntimeException e) {
+            fault(e);
             return OptionalDouble.empty();                          // no data for the date, or the person may see none: said by the Home
         }
+    }
+
+    /**
+     * The engine path: the same scope word answered by the engine's routes that are proven equal to in-tree (RiskSideBySideTest): the
+     * headline ({@link VarEnginePath#headline}) for VAR, ES and LIM_USE, the scope's history on the offered lens
+     * ({@link VarEnginePath#history}) for PNL_DAY and BREACHES. The firm word {@code BANK} is resolved by Drishti's scope resolver to
+     * the first hierarchy's root, as in-tree (asking the engine's node list for an id {@code BANK} found none: the Home panels were empty).
+     */
+    private OptionalDouble engineKpi(Principal p, String measure, String scope, LocalDate date) {
+        return switch (measure) {
+            case "VAR" -> number(engine.headline(p, scope, date, null, (String) null).get("var"));
+            case "ES" -> number(engine.headline(p, scope, date, null, (String) null).get("es"));
+            case "LIM_USE" -> number(engine.headline(p, scope, date, null, (String) null).get("limitUse"));
+            case "PNL_DAY" -> lastPnl(engineHistory(p, scope, date));
+            case "BREACHES" -> breaches(engineHistory(p, scope, date));
+            default -> OptionalDouble.empty();
+        };
+    }
+
+    /** A scope's history on the engine path, on the offered lens (what the in-tree {@code views.history(p, scope, date)} reads). */
+    Map<String, Object> engineHistory(Principal p, String scope, LocalDate date) {
+        com.ash.drishti.banking.compute.var.VarLens l = svc.props().defaultLens();
+        return engine.history(p, scope, date, null, n -> views.lensNote(l, n, null));
     }
 
     @Override
@@ -127,10 +156,20 @@ final class VarHomeMeasures implements MeasureSource {
     @SuppressWarnings("unchecked")
     private List<Map<String, Object>> nodes(Principal p, LocalDate date) {
         try {
+            if (engine.consumers()) {
+                return engine.nodes(p, date);
+            }
             Object rows = views.tree(p, null, date).get("nodes");
             return rows instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
         } catch (RuntimeException e) {
+            fault(e);
             return List.of();
+        }
+    }
+
+    private void fault(RuntimeException e) {
+        if (engine.consumers()) {                                   // the engine path says why a Home panel is empty
+            org.slf4j.LoggerFactory.getLogger(VarHomeMeasures.class).warn("role Home measure from the market-risk engine: {}", e.toString());
         }
     }
 

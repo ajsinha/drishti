@@ -29,6 +29,7 @@ from __future__ import annotations
 import json
 import pathlib
 
+import lakeconfig
 import stage
 import writers
 
@@ -80,5 +81,5 @@ def write_lines(lake, domain: str, table: str, rows, dates: list[str], workdir: 
         raise writers.WriteError("the Iceberg load did not finish: " + str(e)) from None
     if done:
         done()
-    return {"format": "iceberg", "engine": "native", "table": str(lake).rstrip("/") + "/" + domain + "/" + table, "rows": loaded["rows"],
+    return {"format": "iceberg", "engine": "native", "table": lakeconfig.locate(lake, domain, table), "rows": loaded["rows"],
             "dates": dates}

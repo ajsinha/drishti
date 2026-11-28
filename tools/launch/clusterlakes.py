@@ -172,7 +172,7 @@ def definitions(modules: Iterable[Path], packs: Iterable[str], own: Path | None,
 
 def _held(lake: Path, table: str) -> bool:
     domain, _, name = table.partition(".")
-    return (lake / domain / name / "_delta_log").is_dir()
+    return (lakeconfig.locate_path(lake, domain, name) / "_delta_log").is_dir()
 
 
 def tables_missing(defs: dict[str, dict], lake: Path, lakes: set[str]) -> list[str]:

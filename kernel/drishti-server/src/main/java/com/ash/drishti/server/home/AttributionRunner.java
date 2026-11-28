@@ -66,7 +66,7 @@ public final class AttributionRunner {
         java.util.Set<String> done = new java.util.HashSet<>();
         for (HomeDefinition d : catalogue.all()) {
             for (HomeDefinition.Follow f : d.measures().follow()) {
-                MeasureSource s = sources.get(f.engine());
+                MeasureSource s = HomeSources.find(sources, f.engine());
                 if (f.drivers().isEmpty() || s == null || !s.on() || !done.add(f.engine() + "|" + f.measure() + "|" + f.subjects())) {
                     continue;
                 }

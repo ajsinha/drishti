@@ -200,6 +200,14 @@ final class LakeInputs implements Inputs {
             return l;
         }
 
+        /**
+         * True when the engine declares the input not per date ({@code per: []}: an official-records history, the desk P&amp;L, a
+         * parameter file by version) and the binding reads it plainly: every date the kind holds is read, the engine selects by date.
+         */
+        private boolean whole() {
+            return input.per() != null && input.per().isEmpty() && !bound.onOrBefore() && bound.field() == null;
+        }
+
         /** Reads {@code contractColumns} of every kind of the input (their union), applies each kind's rule and the site's where. */
         private Loaded read(List<String> contractColumns) throws EngineException {
             if (kinds.isEmpty()) {
@@ -220,6 +228,20 @@ final class LakeInputs implements Inputs {
                 }
                 paths.addAll(rule.fields());
                 paths.addAll(where.fields());
+                java.util.NavigableSet<LocalDate> held = whole() ? data.dates(kind).orElse(null) : null;
+                if (held != null && !held.isEmpty()) {                 // per: [] (not per date): every date the kind holds, oldest first
+                    for (LocalDate d : held) {
+                        check();
+                        Optional<ColumnSet> set = data.columns(kind, paths, d);
+                        if (set.isPresent()) {
+                            sets.add(set.get());
+                            rules.add(rule);
+                        }
+                    }
+                    stamp.append(stamp.length() == 0 ? "" : ";").append(kind).append('=').append(held.size()).append(" dates to ")
+                            .append(held.last()).append(':').append(data.stamp(kind, held.last()).orElse("?"));
+                    continue;
+                }
                 Optional<ColumnSet> set = bound.onOrBefore() || bound.field() != null
                         ? data.columns(kind, paths, date, bound.onOrBefore(), bound.field()) : data.columns(kind, paths, date);
                 stamp.append(stamp.length() == 0 ? "" : ";").append(kind).append('=').append(data.stamp(kind, date).orElse(set.isPresent() ? "?" : "absent"));

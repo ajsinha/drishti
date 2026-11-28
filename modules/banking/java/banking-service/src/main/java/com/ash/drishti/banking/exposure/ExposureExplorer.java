@@ -111,13 +111,21 @@ final class ExposureExplorer {
 
     /** A counterparty's stored credit limit and how much of it the peak PFE at the limit's confidence uses; null when it has none. */
     Map<String, Object> limit(ExposureService.Scoped s, String counterparty) {
-        ExposureDate.Limit l = s.date().limits().get(counterparty);
-        if (l == null) {
+        if (s.date().limits().get(counterparty) == null) {
             return null;
         }
         ExposureMath.Stats st = s.result().stats;
         int at = st.at(svc.props().limitConfidence());
         double used = at < 0 ? st.peakPfe[Math.max(0, st.at(s.ask().q()))] : st.peakPfe[at];
+        return limit(s.date(), counterparty, used);
+    }
+
+    /** A counterparty's stored credit limit and how much of it the peak PFE {@code used} uses; null when it has none. */
+    Map<String, Object> limit(ExposureDate d, String counterparty, double used) {
+        ExposureDate.Limit l = d.limits().get(counterparty);
+        if (l == null) {
+            return null;
+        }
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", l.id());
         m.put("limit", Math.round(l.amount()));

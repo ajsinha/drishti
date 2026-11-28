@@ -31,10 +31,12 @@ final class VarHomeBacktest implements HomeTable {
 
     private final VarService svc;
     private final VarViews views;
+    private final VarEnginePath engine;
 
-    VarHomeBacktest(VarService svc, VarViews views) {
+    VarHomeBacktest(VarService svc, VarViews views, VarEnginePath engine) {
         this.svc = svc;
         this.views = views;
+        this.engine = engine;
     }
 
     @Override
@@ -46,11 +48,19 @@ final class VarHomeBacktest implements HomeTable {
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> rows(Context c) {
         List<Map<String, Object>> out = new ArrayList<>();
-        if (!svc.running()) {
+        boolean viaEngine = engine.consumers();                  // R2: the family switch var.consumers.route
+        if (viaEngine ? !engine.running() : !svc.running()) {
             return out;
         }
         try {
-            for (Object r : views.history(c.person(), "BANK", c.today()).get("rows") instanceof List<?> l ? l : List.of()) {
+            Map<String, Object> history;
+            if (viaEngine) {                                      // the scope history route proven equal to in-tree (RiskSideBySideTest)
+                com.ash.drishti.banking.compute.var.VarLens l = svc.props().defaultLens();
+                history = engine.history(c.person(), "BANK", c.today(), null, n -> views.lensNote(l, n, null));
+            } else {
+                history = views.history(c.person(), "BANK", c.today());
+            }
+            for (Object r : history.get("rows") instanceof List<?> l ? l : List.of()) {
                 Map<String, Object> m = (Map<String, Object>) r;
                 Map<String, Object> row = new LinkedHashMap<>();
                 row.put("DATE", m.get("date"));
@@ -59,6 +69,9 @@ final class VarHomeBacktest implements HomeTable {
                 out.add(row);
             }
         } catch (RuntimeException e) {
+            if (viaEngine) {                                      // the engine path says why the panel is empty
+                org.slf4j.LoggerFactory.getLogger(VarHomeBacktest.class).warn("role Home backtest from the market-risk engine: {}", e.toString());
+            }
             return List.of();                                     // no history for the date, or none the person may see
         }
         return out;

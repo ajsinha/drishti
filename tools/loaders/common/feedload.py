@@ -77,7 +77,7 @@ def lake_build_args(f: dict, lake: str, engine: str | None, summary: Path, opts:
     else:
         args += ["--new-table", "--domain", f["pack"]]
     args += ["--kind", f["kind"], "--mode", "overwrite-dates", "--summary", str(summary), "-q"]
-    if f["table"] != f["kind"]:
+    if f["table"] != f["kind"] or has_pack(f["pack"]):   # a table is named, never guessed from its kind: a kind may have several tables in a lake
         args += ["--table", f["table"]]
     if f.get("key"):                                   # the dataset's id field (a lake entry without one takes it; one that has one must agree)
         args += ["--key", f["key"]]

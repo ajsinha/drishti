@@ -72,7 +72,7 @@ def test_the_redirect_target_is_same_origin_only(backend):
     assert safe_next("/v/trade/X?asOf=2026-09-29&a=//b") == "/v/trade/X?asOf=2026-09-29&a=//b"
     c = _secure(backend)
     for bad in ("//evil.example/x", "/\\evil.example", "https://evil.example"):
-        assert _sign_in(c, bad).headers["location"] == "/t", bad
+        assert _sign_in(c, bad).headers["location"] == "/home", bad          # the default landing is Your Home
     assert 'value="//evil.example"' not in c.get("/login?next=//evil.example").text
 
 
