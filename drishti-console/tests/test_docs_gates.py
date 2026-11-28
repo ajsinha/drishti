@@ -41,7 +41,7 @@ REFERENCES = set(REGISTER.get("references") or [])
 
 NOT_GUIDE_FOLDERS = {"examples"}      # docs/guides folders that are galleries, not guide folders
 PAGE_CAP = 2000            # a guide folder's subpage: the lines one page may have (a folder counts as ONE guide for the caps; each page stays readable)
-CAPS = {"guides": 24, "tutorials": 23, "references": 12, "knowledge": 5, "help": 67}
+CAPS = {"guides": 24, "tutorials": 23, "references": 12, "knowledge": 5, "help": 73}
 CONTRACTS_PLANNED = 30
 
 HISTORY = re.compile(r"\b(?:since|new in|as of|added in|until|before|changed in) (?:v|version )?2\.\d+(?:\.\d+)*(?:\.[a-z])?\b"

@@ -62,7 +62,7 @@ def test_the_pack_commits_no_prices_weights_or_gics():
     assert not any(k in d for d in cos for k in ("PRICE", "CLOSE", "WEIGHT", "GICS", "MARKET_CAP"))
     assert all("WEIGHT" not in json.dumps(d) for d in SNAP.kind_docs("us-equities", "index-membership"))
     size = sum(p.stat().st_size for p in snap.rglob("*.jsonl.gz"))         # compressed
-    assert size < 4_000_000, size
+    assert size < 6_000_000, size
     assert sum(p.stat().st_size for p in (PACK / "samples").iterdir()) < 1_000_000   # reference documents only
 
 

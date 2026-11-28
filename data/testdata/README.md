@@ -331,6 +331,8 @@ server error. `--server URL` uses a server you run instead. It replaces the olde
 sizes; then run `lake demo` and commit `data/testdata`. Exit 0 all captured, 2 some ids missing (the rest written), 1 nothing.
 Guarded by `tools/testdata/test_capture_market.py` (a stub server, never the internet) and `test_testdata.py`.
 
+<a id="public-data-us-equities-and-gleif"></a>
+
 ## Public data: every public pack's snapshot, one table
 
 The packs that carry published public data (us-equities, funds, gleif, the economy module's world-economy, news-and-markets and six

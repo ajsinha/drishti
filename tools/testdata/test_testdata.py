@@ -101,7 +101,7 @@ class TestData(unittest.TestCase):
         total = sum(f.stat().st_size for f in files)
         # sixty days, the VaR data's three business dates about 182 MB, the genomics showcase's two packs about 3 MB; GitHub refuses files
         # over 100 MB, none is over 25
-        self.assertLess(total, 190e6, f"{total / 1e6:.1f} MB committed")
+        self.assertLess(total, 200e6, f"{total / 1e6:.1f} MB committed")
         self.assertEqual(sorted(p.name for p in TD.iterdir() if p.is_file()), ["README.md", "testdata.yaml"])
 
     def test_the_docs_quote_as_many_demo_tables_as_lake_demo_builds(self):

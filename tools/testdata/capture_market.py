@@ -92,7 +92,8 @@ def targets(pack_dir: pathlib.Path, testdata: pathlib.Path | None = None) -> dic
         if id_ and str(id_) not in out[kind]:
             out[kind].append(str(id_))
     for name in ("listed-company", "news-topic"):
-        for d in sorted(publicsnap.kind_docs(PACK, name, testdata or publicsnap.TESTDATA), key=lambda x: str(x.get("COMPANY_ID") or x.get("TOPIC_ID"))):
+        docs = (publicsnap.kind_docs(PACK, name, testdata) if testdata else []) or publicsnap.kind_docs(PACK, name)   # else the committed lists
+        for d in sorted(docs, key=lambda x: str(x.get("COMPANY_ID") or x.get("TOPIC_ID"))):
             add("quote", d.get("QUOTE_ID"))
             add("news", d.get("NEWS_ID"))
             add("news", d.get("NEWS_ALL_ID"))
