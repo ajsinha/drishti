@@ -442,7 +442,7 @@ def test_the_inbox_loads_a_file_the_server_reads_it_and_delete_removes_it(server
     assert _rows_of(w, "desk", day) == 10
     assert cli(w, "data", "landed", "--pack", "core", "--kind", "desk", "--date", day, "--rows", "10", "--batch", "e2e").returncode == 0
     assert "desk" in cli(w, "data", "loads", "--pack", "core").stdout
-    cli(w, "lake", "delete", "--lake", "demo", "--table", "reference/desk", "--date", day, "--yes", "--jar", jar)       # tells the server
+    cli(w, "lake", "delete", "--lake", w.dir / "srv" / "delta" / "demo", "--table", "reference/desk", "--date", day, "--yes", "--jar", jar)       # tells the server (the lake by its folder: DRISHTI_DATA_DIR, a folder outside the checkout, is ignored)
     for _ in range(60):                       # the server has heard of the delete when it no longer finds the date: 0 rows, or no such folder
         p = cli(w, "data", "get", "desk", "--date", day, "--count", ok=False)
         if p.returncode != 0 or int(p.stdout.split("rows ")[1].split(" of")[0]) == 0:
