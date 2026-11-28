@@ -212,6 +212,80 @@ public class VarEnginePath {
     }
 
     /**
+     * A node's headline recomputed at a confidence outside the offered lists or at another ES confidence ({@code confidence},
+     * {@code es-confidence}), on the newest {@code window} scenarios or all of the date's (VAR_GUIDE.md section 18.5), as the in-tree
+     * route's override: the date's headline with {@code var}, {@code es} (and their exact doubles), {@code scenarios}, {@code confidence},
+     * {@code esConfidence} replaced by the engine's {@code node-var-horizon} at {@code lens-confidence}/{@code lens-es-confidence}, and the
+     * {@code override} block (window used, of, from, to, the confidences, never official). A scope that is not a node whole is answered
+     * in-tree for now (R2 VaR leftovers).
+     */
+    public Map<String, Object> override(Principal p, String scope, LocalDate date, String ccy, String window, Double conf, Double esConf) {
+        if (date == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path needs the business date: give asOf");
+        }
+        VarService svc = service.getIfAvailable();
+        if (svc == null) {
+            throw new DrishtiException(ErrorCode.ENGINE_BLOCKED, "the VaR service is not configured here: the override is answered nowhere");
+        }
+        Map<String, Object> h = headline(p, scope, date, ccy, (String) null);
+        if (!(h.get("node") instanceof String node)) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers a confidence outside the offered lists (an override) for a "
+                    + "node for now; " + scope + " is not a node: ask it in-tree (path=in-tree)");
+        }
+        String currency = (String) h.get("currency");
+        int of = dateWindow();
+        List<LocalDate> days = new ArrayList<>();
+        for (Map<String, Object> d : rows(ask(p, List.of("scope-scenarios"), Map.of("window", of), Map.of("date", date.toString())), "scope-scenarios")) {
+            days.add(LocalDate.parse(String.valueOf(d.get("DATE"))));
+        }
+        int full = days.size();
+        int w = full;
+        Map<String, Object> o = new LinkedHashMap<>();
+        if (window != null && !window.equals("all")) {
+            int n = Integer.parseInt(window);
+            if (n < full) {
+                w = n;
+            } else {
+                o.put("warning", "window " + n + " is more than the " + full + " scenarios loaded: all of them used");
+            }
+        }
+        double c = conf == null ? svc.props().confidence() : conf;
+        double ec = esConf == null ? svc.props().esConfidence() : esConf;
+        Map<String, Object> params = params(w == full ? of : w, currency);
+        params.put("stressed", false);
+        params.put("horizon", "1d");
+        params.put("lens-confidence", c);
+        params.put("lens-es-confidence", ec);
+        Map<String, Object> a = ask(p, List.of("node-var-horizon"), params, Map.of("date", date.toString()));
+        Map<String, Object> r = row(a, "node-var-horizon", "NODE_ID", node);
+        if (r == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "the engine " + ENGINE + " answered no VaR at " + c + " for NODE:" + node + " on "
+                    + date + missing(a));
+        }
+        double var = num(r.get("VAR"));
+        double es = num(r.get("ES"));
+        o.put("window", w);
+        o.put("of", full);
+        o.put("from", days.get(full - w).toString());
+        o.put("to", days.get(full - 1).toString());
+        o.put("confidence", c);
+        o.put("esConfidence", ec);
+        o.put("official", false);
+        o.put("note", "asked for this answer: the VaR and ES of the newest " + w + " of " + full + " scenarios at " + Math.round(c * 1000) / 10.0
+                + "% (ES " + Math.round(ec * 1000) / 10.0 + "%); never official; the rest of the answer is the date's");
+        Map<String, Object> out = new LinkedHashMap<>(h);
+        out.put("var", VarViews.round(var));
+        out.put("es", VarViews.round(es));
+        out.put("varExact", var);
+        out.put("esExact", es);
+        out.put("scenarios", ((Number) r.get("SCENARIOS")).intValue());
+        out.put("confidence", c);
+        out.put("esConfidence", ec);
+        out.put("override", o);
+        return out;
+    }
+
+    /**
      * A node's headline through a lens other than the offered one ({@code horizon} 10d by the square root of 10 or overlapping sums,
      * {@code set=stressed}), from the engine's {@code node-var-horizon}: {@code var}, {@code es} (and their exact doubles), {@code trades},
      * {@code limit}, and {@code limitUse} only when the limit is set for that lens (a 1-day limit is not compared with a 10-day VaR, a

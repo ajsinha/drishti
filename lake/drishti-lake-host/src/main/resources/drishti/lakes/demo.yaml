@@ -47,6 +47,9 @@ tables:
   collateral.collateral-balance: {id: BALANCE_ID}
   collateral.margin-call: {id: CALL_ID}
   collateral.simm: {id: CALC_ID}
+  collateral.simm-parameters:
+    promote: [VERSION, EFFECTIVE_FROM]
+    id: VERSION
   risk.simulation-run:
     promote: [RUN_ID, CALIBRATION, PATHS, STATUS, BATCH_ID]
     id: RUN_ID

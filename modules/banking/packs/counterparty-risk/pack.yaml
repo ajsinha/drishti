@@ -32,6 +32,7 @@ kinds:
 - collateral-balance
 - margin-call
 - simm
+- simm-parameters
 - simulation-run
 - exposure-path
 - exposure-result
@@ -194,9 +195,10 @@ connectors:
     - collateral-balance
     - margin-call
     - simm
+    - simm-parameters
     settings:
       lake: demo
-      lake-tables: collateral.collateral-balance,collateral.margin-call,collateral.simm
+      lake-tables: collateral.collateral-balance,collateral.margin-call,collateral.simm,collateral.simm-parameters
   ccr-derived:
     plugin: derived
     enabled: ${DRISHTI_CCR_DERIVED_ENABLED:true}
@@ -371,6 +373,7 @@ routes:
   collateral-balance: collateral-store
   margin-call: collateral-store
   simm: collateral-store
+  simm-parameters: collateral-store
   simulation-run: exposure-store
   exposure-path: exposure-store
   exposure-result: exposure-engine
@@ -673,6 +676,10 @@ lake:
     collateral.collateral-balance: null
     collateral.margin-call: null
     collateral.simm: null
+    collateral.simm-parameters:
+      promote:
+      - VERSION
+      - EFFECTIVE_FROM
     risk-results.exposure-official-cpty:
       promote:
       - HIERARCHY

@@ -254,7 +254,7 @@ public final class SimmService {
     }
 
     /** The trades and positions the person may see on the date, or null when no VaR engine resolves scopes here. */
-    private Set<String> visible(Principal p, LocalDate date) {
+    Set<String> visible(Principal p, LocalDate date) {
         if (scopes == null) {
             return null;
         }
@@ -264,7 +264,7 @@ public final class SimmService {
         return keep;
     }
 
-    private static boolean seen(Set<String> keep, FrtbData.Record r) {
+    static boolean seen(Set<String> keep, FrtbData.Record r) {
         return keep == null || keep.contains(r.positionKey()) || r.tradeId() != null && keep.contains(r.tradeId()) || r.tradeIds().stream().anyMatch(keep::contains);
     }
 
@@ -355,9 +355,10 @@ public final class SimmService {
         return run;
     }
 
-    private Run analytic(Principal p, SimmData.Day day, String scope, String asked, SimmChoices ch, byte[] bytes, Instant knownAt) {
-        Version ver = resolve(asked, null, bytes);
-        SimmParams prm = params(ver, ch, bytes);
+    /** An analytic scope's records the person sees, and the scope's canonical name (the in-tree run and the engine path, R2, read the same). */
+    record Analytic(String canonical, List<FrtbData.Record> records) {}
+
+    Analytic analyticRecords(Principal p, SimmData.Day day, String scope) {
         Set<String> keep;
         String canonical;
         if (scopes != null) {
@@ -378,6 +379,15 @@ public final class SimmService {
         if (recs.isEmpty() && !scope.contains(":") && !scope.equalsIgnoreCase("BANK")) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no netting set " + scope + " on " + day.date() + " (and no record in it as a scope)");
         }
+        return new Analytic(canonical, recs);
+    }
+
+    private Run analytic(Principal p, SimmData.Day day, String scope, String asked, SimmChoices ch, byte[] bytes, Instant knownAt) {
+        Version ver = resolve(asked, null, bytes);
+        SimmParams prm = params(ver, ch, bytes);
+        Analytic an = analyticRecords(p, day, scope);
+        String canonical = an.canonical();
+        List<FrtbData.Record> recs = an.records();
         Map<String, Integer> refused = new TreeMap<>();
         SimmInput in = input(day, recs, "USD", prm, SimmInput.AddOns.NONE, refused);
         Run run = assemble(scope, ANALYTIC, null, day.date(), knownAt, day, ver, prm, ch, in, List.of("NONE"), List.of("NONE"), null, recs.size(), 0);

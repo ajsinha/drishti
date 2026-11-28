@@ -1,0 +1,61 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Data contract of the simm-parameters kind: docs/contracts/README.md section 16.
+kind: simm-parameters
+pack: counterparty-risk
+version: '1.0'
+class: reference
+status: active
+title: ISDA SIMM parameter files
+description: The bank's licensed ISDA SIMM parameter files, one row a version, the file as delivered; the ccr engine reads them as a lake table (R2), never from a host folder.
+source: the bank's ISDA SIMM licence (the calibration ISDA publishes for each version)
+grain: One row per SIMM version, keyed by VERSION; a version is reference data, read on every date.
+key:
+- VERSION
+dated-by: business_date
+cadence:
+  frequency: when ISDA publishes a version (about twice a year)
+  due: before the version's effective date
+binding-hint:
+  lake-table: collateral.simm-parameters
+  test-data:
+  - data/testdata/counterparty-risk/simm-parameters
+fields:
+- name: VERSION
+  type: id
+  presence: required
+  description: The SIMM version as the file names it (its version key).
+  example: TOY-1
+- name: EFFECTIVE_FROM
+  type: date
+  presence: optional
+  description: The first date the version applies to, as the file states it.
+  example: '2026-01-01'
+- name: TEXT
+  type: text
+  presence: required
+  description: The parameter file as delivered (YAML, the structure of docs/architecture/capital-parameters/simm.yaml); its SHA-256 is the provenance of every SIMM figure.
+validation:
+- rule: required
+  fields:
+  - VERSION
+  - TEXT
+- rule: unique
+  key:
+  - VERSION
+  per: business_date
+notes:
+- 'The test data holds the TOY file of the SIMM tests (round illustrative numbers, NOT ISDA''s): it proves the formulas, never a margin. A bank loads its own licensed files.'

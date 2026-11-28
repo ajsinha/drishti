@@ -283,6 +283,14 @@ the CSA's terms used, the version and the file's checksum, the choices, what was
 `product-classes`, `default-product-class`, `max-factors` (1,500), `recipes-dir` (under the data folder), `cache-minutes`,
 `playground-template`. The sensitivity and dictionary kinds are FRTB-SA's (`drishti.frtb.sensitivity-kind`, `factor-kind`).
 
+**On Drishti Risk** (`drishti.module.banking.simm.route`, `DRISHTI_SIMM_ROUTE`: `in-tree` as shipped, or `engine`; a request may name its
+own `path=engine`): `GET /api/v1/risk/simm` is answered by the `ccr` engine of Drishti Risk through the host, with the same keys. The engine
+reads every SIMM input as a lake table, bound by kind in `config/engines/ccr.yaml`: the elements of `position-sensitivity`, `risk-factor`,
+`fx-spot`, and the licensed parameter files as the `simm-parameters` kind (one row a version: `VERSION`, `EFFECTIVE_FROM`, `TEXT` the file
+as delivered; lake table `collateral.simm-parameters`), never a server folder. Drishti places the records in the netting set and keeps the
+CSA's terms (version, regimes, calculation currency). Answered in-tree only for now, refused in words on the engine path: the hand-built
+examples, overrides, add-on terms and lines.
+
 ## 10. The hand-built cases
 
 With the **toy** parameter file (not ISDA's): each is a unit test of the engine to the cent; the worked netting set, the swaption and

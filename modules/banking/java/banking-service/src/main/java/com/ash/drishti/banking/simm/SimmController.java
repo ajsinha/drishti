@@ -43,7 +43,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 /**
  * ISDA SIMM (docs/guides/SIMM_GUIDE.md section 9), as the person:
  * <pre>
- *   GET  /api/v1/risk/simm?nettingSet=|scope=&amp;version=&amp;concentration=&amp;hvr=&amp;override=key=value   SIMM: collect and post, by product and risk class
+ *   GET  /api/v1/risk/simm?nettingSet=|scope=&amp;version=&amp;concentration=&amp;hvr=&amp;override=key=value&amp;path=engine|in-tree   SIMM: collect and post, by product and risk class
  *   GET  /api/v1/risk/simm/netting-sets?counterparty=            every netting set: computed, stored (labelled) or why not computed
  *   GET  /api/v1/risk/simm/explain?nettingSet=&amp;direction=collect|post&amp;class=   the steps: buckets, factors, CR, WS, K, S
  *   GET  /api/v1/risk/simm/against?nettingSet=                  the margin against the counterparty's call (crif-external)
@@ -60,11 +60,13 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 public class SimmController {
 
     private final SimmService svc;
+    private final SimmEnginePath enginePath;                            // R2: the engine path (simm.route), absent in a test of the controller alone
     private final SimmRecipes recipes;
     private final PlaygroundTemplate template;
 
-    public SimmController(SimmService svc) {
+    public SimmController(SimmService svc, org.springframework.beans.factory.ObjectProvider<SimmEnginePath> enginePath) {
         this.svc = svc;
+        this.enginePath = enginePath.getIfAvailable();
         this.recipes = new SimmRecipes(Path.of(svc.props().recipesDir()), svc);
         String t = svc.props().playgroundTemplate();
         this.template = t.isBlank() ? PlaygroundTemplate.builtIn("simm", SimmPlaygroundBook.STYLES) : PlaygroundTemplate.folder(Path.of(t), SimmPlaygroundBook.STYLES);
@@ -101,7 +103,11 @@ public class SimmController {
     @GetMapping("/api/v1/risk/simm")
     public Map<String, Object> simm(@RequestParam(required = false) String nettingSet, @RequestParam(required = false) String scope,
             @RequestParam(required = false) String version, @RequestParam(required = false) String concentration, @RequestParam(required = false) String hvr,
-            @RequestParam(required = false) List<String> override, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) List<String> override, @RequestParam(required = false) String path, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        if (enginePath != null && enginePath.engine(path)) {           // R2: Drishti Risk's ccr engine, the host's scope and CSA terms
+            return enginePath.result(svc, p, scope(nettingSet, scope), date(asOf), version, choices(concentration, hvr, override));
+        }
         return SimmAnswer.result(run(p, nettingSet, scope, asOf, version, choices(concentration, hvr, override)));
     }
 

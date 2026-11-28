@@ -21,6 +21,7 @@ drishti:
       simm:
         parameters-dir: ${DRISHTI_SIMM_PARAMETERS:${drishti.config.dir}/simm}   # the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed)
         default-version: ""              # the version for a CSA naming none and for analytic scopes; blank: the installed one with the latest effective date
+        route: ${DRISHTI_SIMM_ROUTE:in-tree}   # R2 (docs/plans/R2_CUT_PLAN.md): in-tree, or engine (GET /api/v1/risk/simm asked of Drishti Risk's ccr engine through the host, the inputs as lake tables); a request may name its own (path=)
   engines:
     simm:
       enabled: ${DRISHTI_SIMM_ENABLED:true}   # run SIMM on this node: /api/v1/simm, SIMM, PLAY SIMM; needs sensitivities (live)

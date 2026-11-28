@@ -1429,7 +1429,7 @@ public class ExposureEnginePath {
 
     /** A table of the answer as rows by column name (the answer's rows are positional, in the columns' order); null when it is not there. */
     @SuppressWarnings("unchecked")
-    static List<Map<String, Object>> rows(Map<String, Object> answer, String name) {
+    public static List<Map<String, Object>> rows(Map<String, Object> answer, String name) {
         for (Object t : (List<Object>) answer.getOrDefault("tables", List.of())) {
             Map<String, Object> tm = (Map<String, Object>) t;
             if (!name.equals(tm.get("name"))) {

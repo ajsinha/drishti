@@ -1025,6 +1025,41 @@ class RiskSideBySideTest {
         assertThat(asserted(sbs.bitDifferences)).as("raw bits that differ").isEmpty();
     }
 
+    /**
+     * The override (VAR_GUIDE.md section 18.5): a node's VaR and ES recomputed at a confidence outside the offered lists, at another ES
+     * confidence, on the newest scenarios of a window, never official; the engine's {@code node-var-horizon} at {@code lens-confidence} and
+     * {@code lens-es-confidence} (R2 VaR leftovers). Every golden node of every date, USD and EUR.
+     */
+    @Test
+    void theOverridesAreTheSameOnBothPaths() throws Exception {
+        SideBySide sbs = new SideBySide();
+        java.util.Set<String> dates = new java.util.TreeSet<>();
+        golden.fieldNames().forEachRemaining(c -> dates.add(c.split("/")[0]));
+        List<String[]> asks = List.of(new String[] {"USD", "confidence=0.98"}, new String[] {"USD", "es-confidence=0.99"},
+                new String[] {"USD", "confidence=0.97&es-confidence=0.985&window=100"}, new String[] {"EUR", "confidence=0.96&window=250"});
+        for (String date : dates) {
+            Iterator<String> ids = golden.path(date + "/509/USD").path("nodes").fieldNames();
+            while (ids.hasNext()) {
+                String id = ids.next();
+                for (String[] l : asks) {
+                    String what = date + "/" + l[0] + " " + l[1] + " NODE:" + id;
+                    JsonNode[] both = sbs.both(server, what, "/api/v1/risk/var/scope?scope=" + URLEncoder.encode("NODE:" + id, StandardCharsets.UTF_8)
+                            + "&asOf=" + date + "&ccy=" + l[0] + "&" + l[1] + "&exact=true&parametric=false", "currency", "var", "es", "confidence",
+                            "esConfidence", "scenarios", "trades", "limit", "limitUse", "override");
+                    sbs.bits(what + " VAR", both[0].path("varExact").asDouble(), both[1].path("varExact").asDouble());
+                    sbs.bits(what + " ES", both[0].path("esExact").asDouble(), both[1].path("esExact").asDouble());
+                }
+            }
+        }
+        System.out.println("side by side, overrides: " + sbs.compared + " node answers on both paths; " + sbs.sameBits
+                + " engine VaR and ES figures equal to the in-tree raw bits; differences " + sbs.differences.size() + "; first: "
+                + sbs.differences.stream().limit(8).map(x -> x.substring(0, Math.min(300, x.length()))).toList() + "; first raw-bit differences: "
+                + sbs.bitDifferences.stream().limit(8).toList());
+        assertThat(sbs.compared).as("answers compared").isGreaterThan(1000);
+        assertThat(asserted(sbs.differences)).as("answers that differ (EUR too, both tiers)").isEmpty();
+        assertThat(asserted(sbs.bitDifferences)).as("raw bits that differ").isEmpty();
+    }
+
     /** True when the date has a stress scenario set (the in-tree stressed headline of the firm answers). */
     private static boolean stressSet(String date) {
         try {

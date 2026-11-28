@@ -488,6 +488,7 @@ settings:                               # read as drishti.module.banking.<key> (
   - { key: exposure.rank-rule, type: string, retired: drishti.ccr.exposure.rank-rule, group: Exposure, meaning: "kth or interpolated" }
   - { key: exposure.route, type: string, group: Exposure, meaning: "in-tree, or engine: the exposure routes asked of Drishti Risk's ccr engine through the host (R2)" }
   - { key: frtb.parameters-dir, type: string, retired: drishti.frtb.parameters-dir, group: FRTB-SA, meaning: "The folder of the FRTB-SA parameter files" }
+  - { key: simm.route, type: string, group: SIMM, meaning: "in-tree, or engine: GET /api/v1/risk/simm asked of Drishti Risk's ccr engine through the host, the SIMM inputs as lake tables (R2)" }
   - { key: simm.parameters-dir, type: string, retired: drishti.simm.parameters-dir, group: SIMM, meaning: "The bank's licensed SIMM parameter files" }
   - { key: simm.default-version, type: string, retired: drishti.simm.default-version, group: SIMM, meaning: "The SIMM version for a CSA naming none" }
   - { key: sensitivities.cache-minutes, type: int, retired: drishti.sensitivities.cache-minutes, group: Sensitivities, meaning: "How long a date's sensitivities stay in memory" }

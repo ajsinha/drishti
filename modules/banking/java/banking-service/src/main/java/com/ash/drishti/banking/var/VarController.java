@@ -170,10 +170,22 @@ public class VarController {
     private Map<String, Object> headlineAnswer(String scope, String ccy, String window, Double confidence, Double esConfidence, String horizon,
             String method, Double esq, String set, AsOf asOf, Boolean parametric, boolean matured, String path, Principal p) {
         if (enginePath.engine(path)) {                                 // R2: the market-risk engine through the host (VarEnginePath)
-            if (esConfidence != null || matured || confidence != null && (window != null || !offered(confidence))) {
-                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the headline at an offered confidence (the lens) "
-                        + "for now; a confidence outside the offered lists (an override), es-confidence or matured items are answered in-tree "
-                        + "(path=in-tree)");
+            if (matured) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the engine path answers the headline without matured items for now; "
+                        + "matured items are answered in-tree (path=in-tree)");
+            }
+            if (esConfidence != null || confidence != null && (window != null || !offered(confidence))) {   // an override (VAR_GUIDE 18.5)
+                if (horizon != null || method != null || esq != null || set != null) {
+                    throw new DrishtiException(ErrorCode.BAD_REQUEST, "window and es-confidence recompute the normal set's 1-day VaR; a "
+                            + "horizon or the stress set takes confidence and esConfidence from the offered lists");
+                }
+                try {
+                    return parametric(enginePath.override(p, scope(scope), date(asOf), ccy, window == null ? null : VarProperties.checkWindow(window, "window"),
+                            confidence == null ? null : VarProperties.checkConfidence(confidence, "confidence"),
+                            esConfidence == null ? null : VarProperties.checkConfidence(esConfidence, "es-confidence")), parametric);
+                } catch (IllegalArgumentException e) {
+                    throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
+                }
             }
             com.ash.drishti.banking.compute.var.VarLens l = lens(horizon, method, confidence, esq, set);   // lane G part 6: the offered confidences
             if (l != null && !l.equals(svc.props().defaultLens())) {         // a horizon or the stress set (VAR_GUIDE 18.6, 18.8)

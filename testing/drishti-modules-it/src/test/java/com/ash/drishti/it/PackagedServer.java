@@ -55,6 +55,11 @@ final class PackagedServer implements AutoCloseable {
         this.base = "http://127.0.0.1:" + port;
     }
 
+    /** The server's process id (the speed check reads its resident memory). */
+    long pid() {
+        return process.pid();
+    }
+
     /** The exec jar of this reactor, as the pom names it. */
     static Path execJar() {
         String name = System.getProperty("drishti.exec.jar");
@@ -196,7 +201,7 @@ final class PackagedServer implements AutoCloseable {
             port = socket.getLocalPort();
         }
         Path jvmTmp = Files.createDirectories(work.resolve("jvm-tmp"));
-        List<String> cmd = List.of(Path.of(System.getProperty("java.home"), "bin", "java").toString(), "-Xmx1536m", "-Djava.io.tmpdir=" + jvmTmp,
+        List<String> cmd = List.of(Path.of(System.getProperty("java.home"), "bin", "java").toString(), "-Xmx" + System.getProperty("sbs.xmx", "1536m"), "-Djava.io.tmpdir=" + jvmTmp,
                 "-Ddrishti.home=" + work, "-Ddrishti.data.dir=" + work.resolve("data"), "-Ddrishti.modules.home=" + modules, "-jar", execJar().toString());
         ProcessBuilder pb = new ProcessBuilder(cmd).directory(work.toFile()).redirectErrorStream(true).redirectOutput(work.resolve("server.log").toFile());
         pb.environment().keySet().removeIf(k -> k.startsWith("DRISHTI_"));

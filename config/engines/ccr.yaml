@@ -30,6 +30,12 @@ drishti:
         trade-valuation: { kinds: [ trade-valuation ] }
         credit-limit: { kinds: [ credit-limit ] }
         credit-limit-bucket: { kinds: [ credit-limit ], as-of: on-or-before, field: BUCKETS }   # each limit's tenor buckets: the items of its BUCKETS list, under its LIMIT_ID
+        # SIMM (R2): every input a lake table known by its kind; the licensed parameter files are the simm-parameters kind (one row a
+        # version, TEXT the file as delivered), never a host folder; the elements are the items of each sensitivity record's SENSITIVITIES list
+        sensitivity-element: { kinds: [ position-sensitivity ], field: SENSITIVITIES }
+        risk-factor: { kinds: [ risk-factor ] }
+        simm-parameters: { kinds: [ simm-parameters ] }
+        fx-spot: { kinds: [ fx-spot ] }
       options:
         # the netting-set matrices as the exposure tier keeps them (drishti.ccr.exposure.tier): mapped = float32 rows as the hot file, so the two paths agree to the bit
         vector-tier: ${drishti.ccr.exposure.tier:${DRISHTI_EXPOSURE_TIER:mapped}}
